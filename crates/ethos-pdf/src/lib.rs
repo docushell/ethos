@@ -555,6 +555,8 @@ impl PdfTextPage<'_> {
         // SAFETY: handle is a live FPDF_TEXTPAGE.
         let count = unsafe { (self.funcs.text_count_chars)(self.handle) };
         if count < 0 {
+            // A PDFium text-page failure invalidates extraction for the whole document.
+            // Treating it as image-only would hide a backend read failure behind OCR fallback.
             return Err(EthosError::new(
                 ErrorCode::CorruptPdf,
                 "PDF text page could not be read",
@@ -925,7 +927,13 @@ mod dylib {
 
     impl Library {
         pub(super) fn open(path: &Path) -> Result<Self, EthosError> {
-            let wide_path: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+            let mut wide_path: Vec<u16> = path.as_os_str().encode_wide().collect();
+            if wide_path.contains(&0) {
+                return Err(EthosError::internal(
+                    "pdfium library path contains an interior NUL code unit",
+                ));
+            }
+            wide_path.push(0);
             // SAFETY: wide_path is NUL-terminated and lives for the call.
             let handle = unsafe { LoadLibraryW(wide_path.as_ptr()) };
             if handle.is_null() {
@@ -970,7 +978,7 @@ mod dylib {
     impl Drop for Library {
         fn drop(&mut self) {
             if !self.handle.is_null() {
-                // SAFETY: handle was returned by LoadLibraryA and is closed exactly once.
+                // SAFETY: handle was returned by LoadLibraryW and is closed exactly once.
                 unsafe {
                     let _ = FreeLibrary(self.handle);
                 }
@@ -980,11 +988,12 @@ mod dylib {
 }
 
 fn assert_symbol_pointer_size<T>() {
-    assert_eq!(
-        std::mem::size_of::<T>(),
-        std::mem::size_of::<*mut c_void>(),
-        "pdfium symbol pointer size mismatch"
-    );
+    const {
+        assert!(
+            std::mem::size_of::<T>() == std::mem::size_of::<*mut c_void>(),
+            "pdfium symbol pointer size mismatch"
+        );
+    }
 }
 
 fn symbol_name(name: &'static [u8]) -> String {

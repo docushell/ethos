@@ -11,8 +11,11 @@
 
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::io::{self, Read};
 use std::path::PathBuf;
-use std::process::ExitCode;
+use std::process::{Command as ProcessCommand, ExitCode, ExitStatus, Output, Stdio};
+use std::thread::{self, JoinHandle};
+use std::time::{Duration, Instant};
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use ethos_core::config::{PageSelection, ParseConfig};
@@ -55,10 +58,10 @@ enum Command {
     /// Citation evidence verification (ethos-verify)
     Verify(VerifyArgs),
     /// Recompute and check a document fingerprint
-    Fingerprint {
-        /// Canonical document (`*.ethos.json`). PDF input works once the engine lands.
-        input: PathBuf,
-    },
+    Fingerprint(FingerprintArgs),
+    /// Internal killable PDFium worker. Not a public CLI surface.
+    #[command(name = "__pdfium-worker", hide = true)]
+    PdfiumWorker(PdfiumWorkerArgs),
 }
 
 #[derive(Subcommand)]
@@ -82,6 +85,30 @@ struct DocParseArgs {
     #[arg(long)]
     pages: Option<String>,
     /// Include volatile runtime diagnostics (off by default so outputs stay byte-identical)
+    #[arg(long)]
+    diagnostics: bool,
+    /// Internal/test override for the parse timeout limit.
+    #[arg(long, hide = true)]
+    max_parse_ms: Option<u64>,
+}
+
+#[derive(Args)]
+struct FingerprintArgs {
+    /// Canonical document (`*.ethos.json`). PDF input is parsed under the deterministic profile.
+    input: PathBuf,
+    /// Internal/test override for the parse timeout limit.
+    #[arg(long, hide = true)]
+    max_parse_ms: Option<u64>,
+}
+
+#[derive(Args)]
+struct PdfiumWorkerArgs {
+    /// Input PDF.
+    input: PathBuf,
+    /// Page selection, e.g. `1-5,9` (1-based, inclusive; merged canonically).
+    #[arg(long)]
+    pages: Option<String>,
+    /// Include volatile runtime diagnostics.
     #[arg(long)]
     diagnostics: bool,
 }
@@ -182,7 +209,8 @@ fn run(cli: Cli) -> Result<(), Failure> {
             command: RagCommand::Chunk(args),
         } => rag_chunk(args),
         Command::Verify(args) => verify(args),
-        Command::Fingerprint { input } => fingerprint(input),
+        Command::Fingerprint(args) => fingerprint(args),
+        Command::PdfiumWorker(args) => pdfium_worker(args),
     }
 }
 
@@ -190,7 +218,7 @@ fn read_file(path: &PathBuf) -> Result<Vec<u8>, Failure> {
     fs::read(path).map_err(|_| Failure::Usage(format!("cannot read input: {}", path.display())))
 }
 
-fn read_file_limited(path: &PathBuf, max_bytes: u64) -> Result<Vec<u8>, Failure> {
+fn ensure_file_within_limit(path: &PathBuf, max_bytes: u64) -> Result<(), Failure> {
     let metadata = fs::metadata(path)
         .map_err(|_| Failure::Usage(format!("cannot read input: {}", path.display())))?;
     if metadata.len() > max_bytes {
@@ -198,7 +226,11 @@ fn read_file_limited(path: &PathBuf, max_bytes: u64) -> Result<Vec<u8>, Failure>
             EthosError::new(ErrorCode::FileTooLarge, "input exceeds max_file_bytes").into(),
         );
     }
+    Ok(())
+}
 
+fn read_file_limited(path: &PathBuf, max_bytes: u64) -> Result<Vec<u8>, Failure> {
+    ensure_file_within_limit(path, max_bytes)?;
     let bytes = read_file(path)?;
     if bytes.len() as u64 > max_bytes {
         return Err(
@@ -234,18 +266,43 @@ fn write_output(out: Option<PathBuf>, bytes: &[u8]) -> Result<(), Failure> {
 }
 
 fn doc_parse(args: DocParseArgs) -> Result<(), Failure> {
-    let pages = match &args.pages {
+    let config = parse_config(args.pages.as_deref(), args.max_parse_ms)?;
+    ensure_file_within_limit(&args.input, config.limits.max_file_bytes)?;
+    let doc = parse_pdf_with_worker(
+        &args.input,
+        args.pages.as_deref(),
+        &config,
+        args.diagnostics,
+    )?;
+    write_document(args.format, args.out, &doc)
+}
+
+fn parse_config(pages: Option<&str>, max_parse_ms: Option<u64>) -> Result<ParseConfig, Failure> {
+    let pages = match pages {
         Some(spec) => {
             PageSelection::parse(spec).map_err(|e| Failure::Usage(format!("--pages: {e}")))?
         }
         None => PageSelection::All,
     };
-    let config = ParseConfig {
+    let mut config = ParseConfig {
         pages,
         ..Default::default()
     };
-    let pdf_bytes = read_file_limited(&args.input, config.limits.max_file_bytes)?;
+    if let Some(max_parse_ms) = max_parse_ms {
+        if max_parse_ms == 0 {
+            return Err(Failure::Usage(
+                "--max-parse-ms must be greater than zero".to_string(),
+            ));
+        }
+        config.limits.max_parse_ms = max_parse_ms;
+    }
+    Ok(config)
+}
 
+fn pdfium_worker(args: PdfiumWorkerArgs) -> Result<(), Failure> {
+    maybe_sleep_for_worker_timeout_test();
+    let config = parse_config(args.pages.as_deref(), None)?;
+    let pdf_bytes = read_file_limited(&args.input, config.limits.max_file_bytes)?;
     let backend = ethos_pdf::PdfiumBackend::default();
     let page_count = backend.page_count(&pdf_bytes)?;
     config
@@ -260,7 +317,7 @@ fn doc_parse(args: DocParseArgs) -> Result<(), Failure> {
         backend.manifest(),
         args.diagnostics,
     )?;
-    write_document(args.format, args.out, &doc)
+    write_document(Format::Json, None, &doc)
 }
 
 fn rag_chunk(args: RagChunkArgs) -> Result<(), Failure> {
@@ -393,23 +450,164 @@ fn verify(args: VerifyArgs) -> Result<(), Failure> {
     write_output(args.out, &bytes)
 }
 
-fn fingerprint(input: PathBuf) -> Result<(), Failure> {
+fn fingerprint(args: FingerprintArgs) -> Result<(), Failure> {
+    let input = args.input;
     if input
         .extension()
         .is_some_and(|e| e.eq_ignore_ascii_case("pdf"))
     {
-        let config = ParseConfig::default();
-        let bytes = read_file_limited(&input, config.limits.max_file_bytes)?;
-        let backend = ethos_pdf::PdfiumBackend::default();
-        let extraction = backend.extract(&bytes, &config)?;
-        let doc = assemble_document(&bytes, &config, extraction, backend.manifest(), false);
-        println!("{}", doc?.fingerprint);
+        let config = parse_config(None, args.max_parse_ms)?;
+        ensure_file_within_limit(&input, config.limits.max_file_bytes)?;
+        let doc = parse_pdf_with_worker(&input, None, &config, false)?;
+        println!("{}", doc.fingerprint);
         return Ok(());
     }
     let doc = read_document(&input)?;
     println!("{}", doc.fingerprint);
     Ok(())
 }
+
+fn parse_pdf_with_worker(
+    input: &PathBuf,
+    pages: Option<&str>,
+    config: &ParseConfig,
+    diagnostics: bool,
+) -> Result<Document, Failure> {
+    let mut command = ProcessCommand::new(
+        std::env::current_exe()
+            .map_err(|_| EthosError::internal("failed to locate current executable"))?,
+    );
+    command.arg("__pdfium-worker").arg(input);
+    if let Some(pages) = pages {
+        command.arg("--pages").arg(pages);
+    }
+    if diagnostics {
+        command.arg("--diagnostics");
+    }
+
+    let output =
+        run_worker_with_timeout(command, Duration::from_millis(config.limits.max_parse_ms))?;
+    if output.status.success() {
+        let doc: Document = serde_json::from_slice(&output.stdout).map_err(|_| {
+            EthosError::internal("pdfium worker returned an invalid canonical document")
+        })?;
+        doc.verify_integrity()?;
+        return Ok(doc);
+    }
+
+    if output.status.code() == Some(EXIT_USAGE as i32) {
+        return Err(Failure::Usage(worker_usage_message(&output.stderr)));
+    }
+    if let Some(error) = worker_ethos_error(&output.stderr) {
+        return Err(error.into());
+    }
+    Err(EthosError::internal("pdfium worker failed").into())
+}
+
+fn run_worker_with_timeout(
+    mut command: ProcessCommand,
+    timeout: Duration,
+) -> Result<Output, Failure> {
+    command
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let mut child = command
+        .spawn()
+        .map_err(|_| EthosError::internal("failed to spawn pdfium worker"))?;
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| EthosError::internal("pdfium worker stdout unavailable"))?;
+    let stderr = child
+        .stderr
+        .take()
+        .ok_or_else(|| EthosError::internal("pdfium worker stderr unavailable"))?;
+    let stdout_handle = thread::spawn(move || read_pipe(stdout));
+    let stderr_handle = thread::spawn(move || read_pipe(stderr));
+
+    let start = Instant::now();
+    loop {
+        if let Some(status) = child
+            .try_wait()
+            .map_err(|_| EthosError::internal("pdfium worker wait failed"))?
+        {
+            return collect_worker_output(status, stdout_handle, stderr_handle);
+        }
+        if start.elapsed() >= timeout {
+            if let Some(status) = child
+                .try_wait()
+                .map_err(|_| EthosError::internal("pdfium worker wait failed"))?
+            {
+                return collect_worker_output(status, stdout_handle, stderr_handle);
+            }
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = join_reader(stdout_handle);
+            let _ = join_reader(stderr_handle);
+            return Err(
+                EthosError::new(ErrorCode::ParseTimeout, "parse exceeded max_parse_ms").into(),
+            );
+        }
+
+        let remaining = timeout.saturating_sub(start.elapsed());
+        thread::sleep(remaining.min(Duration::from_millis(10)));
+    }
+}
+
+fn read_pipe<R: Read>(mut pipe: R) -> io::Result<Vec<u8>> {
+    let mut bytes = Vec::new();
+    pipe.read_to_end(&mut bytes)?;
+    Ok(bytes)
+}
+
+fn collect_worker_output(
+    status: ExitStatus,
+    stdout_handle: JoinHandle<io::Result<Vec<u8>>>,
+    stderr_handle: JoinHandle<io::Result<Vec<u8>>>,
+) -> Result<Output, Failure> {
+    Ok(Output {
+        status,
+        stdout: join_reader(stdout_handle)?,
+        stderr: join_reader(stderr_handle)?,
+    })
+}
+
+fn join_reader(handle: JoinHandle<io::Result<Vec<u8>>>) -> Result<Vec<u8>, Failure> {
+    handle
+        .join()
+        .map_err(|_| EthosError::internal("pdfium worker pipe reader failed"))?
+        .map_err(|_| EthosError::internal("pdfium worker pipe read failed").into())
+}
+
+fn worker_usage_message(stderr: &[u8]) -> String {
+    let raw = String::from_utf8_lossy(stderr);
+    let trimmed = raw.trim();
+    trimmed
+        .strip_prefix("error (usage): ")
+        .unwrap_or(trimmed)
+        .to_string()
+}
+
+fn worker_ethos_error(stderr: &[u8]) -> Option<EthosError> {
+    let value: serde_json::Value = serde_json::from_slice(stderr).ok()?;
+    let error = value.get("error")?;
+    let code: ErrorCode = serde_json::from_value(error.get("code")?.clone()).ok()?;
+    let message = error.get("message")?.as_str()?;
+    Some(EthosError::new(code, message))
+}
+
+#[cfg(debug_assertions)]
+fn maybe_sleep_for_worker_timeout_test() {
+    if let Ok(raw) = std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_SLEEP_MS") {
+        if let Ok(ms) = raw.parse::<u64>() {
+            thread::sleep(Duration::from_millis(ms));
+        }
+    }
+}
+
+#[cfg(not(debug_assertions))]
+fn maybe_sleep_for_worker_timeout_test() {}
 
 fn assemble_document(
     source_bytes: &[u8],

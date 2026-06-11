@@ -32,6 +32,16 @@ fn run_ethos(args: &[&str]) -> Output {
         .expect("ethos command runs")
 }
 
+#[cfg(debug_assertions)]
+fn run_ethos_with_env(args: &[&str], envs: &[(&str, &str)]) -> Output {
+    let mut command = Command::new(ethos_bin());
+    command.args(args);
+    for (key, value) in envs {
+        command.env(key, value);
+    }
+    command.output().expect("ethos command runs")
+}
+
 fn parse_json(args: &[&str]) -> Value {
     let output = run_ethos(args);
     assert!(
@@ -49,6 +59,68 @@ fn assert_span_fonts(doc: &Value, expected_font_id: &str) {
         assert_eq!(span["font_id"], expected_font_id);
         assert!(span["font_size_q"].as_i64().unwrap() > 0);
     }
+}
+
+#[cfg(debug_assertions)]
+#[test]
+fn doc_parse_timeout_kills_pdfium_worker() {
+    let fixture = fixture_pdf();
+    let output = run_ethos_with_env(
+        &[
+            "doc",
+            "parse",
+            fixture.to_str().unwrap(),
+            "--format",
+            "json",
+            "--max-parse-ms",
+            "25",
+        ],
+        &[("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_SLEEP_MS", "250")],
+    );
+    assert_eq!(output.status.code(), Some(10));
+    assert!(output.stdout.is_empty());
+    let error: Value = serde_json::from_slice(&output.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "parse_timeout");
+    assert_eq!(error["error"]["message"], "parse exceeded max_parse_ms");
+}
+
+#[cfg(debug_assertions)]
+#[test]
+fn pdf_fingerprint_timeout_kills_pdfium_worker() {
+    let fixture = fixture_pdf();
+    let output = run_ethos_with_env(
+        &[
+            "fingerprint",
+            fixture.to_str().unwrap(),
+            "--max-parse-ms",
+            "25",
+        ],
+        &[("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_SLEEP_MS", "250")],
+    );
+    assert_eq!(output.status.code(), Some(10));
+    assert!(output.stdout.is_empty());
+    let error: Value = serde_json::from_slice(&output.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "parse_timeout");
+}
+
+#[test]
+fn doc_parse_relays_worker_stable_error_envelope() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../README.md");
+    let output = run_ethos(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+    assert_eq!(output.status.code(), Some(3));
+    assert!(output.stdout.is_empty());
+    let error: Value = serde_json::from_slice(&output.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "invalid_pdf");
+    assert_eq!(
+        error["error"]["message"],
+        "input does not contain a PDF header"
+    );
 }
 
 #[test]

@@ -172,7 +172,10 @@ as JSON with explicit codepoints; expected output is the exact c14n byte string 
 
 Profile artifact pin: sha256(c14n(`profiles/ethos-deterministic-v1.json`)) =
 `ebee49d1ef7b5704f0474150444b773eb36ffad58d7dfefa65f2a88224040feb` (asserted in
-`ethos-core` tests; changes only with a profile version bump).
+`ethos-core` tests). Until the first public release, unreleased profile artifacts may be
+rewritten in place while preserving their version identifiers; every rewrite must refresh
+this pin, the example fingerprints, and the contract vectors in the same change. After the
+first public release, profile artifact changes require a profile version bump.
 
 ## 11. Conformance (CI)
 
