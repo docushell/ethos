@@ -3,4 +3,5 @@
 __pycache__/
 *.pyc
 .DS_Store
+benchmarks/results/fixtures/*.json
 # Cargo.lock IS committed (determinism: pinned dependency graph). Do not add it here.

@@ -16,13 +16,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: gate zero readiness audit
         run: python3 .github/scripts/readiness_gate.py gate-zero --report-only
-      - name: run harness
+      - name: harness smoke
+        run: make -C benchmarks/harness smoke
+      - name: run gate zero harness
         run: |
-          if [ -f benchmarks/harness/Makefile ]; then
-            python3 .github/scripts/readiness_gate.py gate-zero
+          if python3 .github/scripts/readiness_gate.py gate-zero; then
             make -C benchmarks/harness bench
           else
-            echo "skipped: harness lands in WS-HARNESS lane (Milestone A, plan §6.3)"
+            echo "skipped: Gate Zero corpus/hardware/competitor pins are not ready"
           fi
       - name: upload results
         if: hashFiles('benchmarks/results/**/*.json') != ''

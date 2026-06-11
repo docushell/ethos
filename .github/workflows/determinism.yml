@@ -34,8 +34,8 @@ jobs:
       - name: full-corpus fingerprint equality
         shell: bash
         run: |
-          if compgen -G "fixtures/*/*/*.pdf" > /dev/null; then
-            echo "TODO(WS-ENGINE/WS-HARNESS): parse corpus, emit fingerprints, diff across matrix" && exit 1
+          if [ -n "${ETHOS_PDFIUM_LIBRARY_PATH:-}" ] && [ -f "${ETHOS_PDFIUM_LIBRARY_PATH:-}" ]; then
+            make -C benchmarks/harness fixtures
           else
-            echo "skipped: engine lane pending — vector tests above carry the guarantee for c14n"
+            echo "skipped: pinned PDFium runtime is not configured on this runner"
           fi
