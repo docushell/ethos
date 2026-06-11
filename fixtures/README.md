@@ -17,6 +17,16 @@ Each fixture is a directory: the PDF, a `fixture.json` (provenance, license, wha
 exercises, expected codes), and goldens added per pipeline stage as lanes land
 (`extraction.json`, `layout.json`, `tables.json`, `chunks.jsonl`, …).
 
+`manifest.json` indexes every fixture document and pins corpus identity: document SHA-256,
+page count, subset tags, provenance, and license. Run:
+
+```sh
+python3 fixtures/validate_fixtures.py
+```
+
+The validator rejects missing/unindexed fixtures and any drift between `manifest.json`,
+`fixture.json`, and `document.pdf` bytes or metadata.
+
 ## Contribution rules
 
 1. **License attestation is mandatory.** Only public-domain, synthetic, or

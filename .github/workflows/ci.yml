@@ -42,14 +42,11 @@ jobs:
       - uses: actions/checkout@v4
       - run: rustup show
       - run: cargo test --locked --workspace --all-features
+      - name: fixture manifest validation
+        run: python3 fixtures/validate_fixtures.py
       - name: same-platform double-parse byte-diff
         run: |
-          # Activates when WS-ENGINE lands the backend + PDF fixtures exist.
-          if compgen -G "fixtures/*/*/*.pdf" > /dev/null; then
-            echo "TODO(WS-ENGINE): wire double-parse diff over fixtures" && exit 1
-          else
-            echo "skipped: no PDF fixtures yet (engine lane pending)"
-          fi
+          echo "skipped: PDFium runtime is not configured in base CI yet"
 
   verify-portability:
     # Invariant 4: ethos-verify compiles against the grounding trait module alone and
@@ -82,6 +79,7 @@ jobs:
           python-version: "3.12"
       - run: pip install "jsonschema>=4.18"
       - run: python3 schemas/validate_examples.py
+      - run: python3 fixtures/validate_fixtures.py
 
   no-network-runtime:
     # Invariant 5c: the base CLI functions with zero network egress. Runs the CLI inside

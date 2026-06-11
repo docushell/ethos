@@ -40,6 +40,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo deny check
 cargo test --workspace
 python3 schemas/validate_examples.py     # schema/example validation
+python3 fixtures/validate_fixtures.py    # fixture manifest/hash validation
 ```
 
 ## Good first contributions
