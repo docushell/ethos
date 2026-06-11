@@ -28,6 +28,11 @@ fn hyphenated_line_break_fixture_pdf() -> PathBuf {
         .join("../../fixtures/synthetic/hyphenated-line-break/document.pdf")
 }
 
+fn ligature_fixture_pdf() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/synthetic/ligature-fi-embedded-font/document.pdf")
+}
+
 fn invalid_header_fixture_pdf() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/failure/invalid-header/document.pdf")
 }
@@ -432,6 +437,50 @@ fn parses_hyphenated_line_break_without_control_chars_when_pdfium_is_configured(
     assert_eq!(spans[0]["char_end"], 6);
     assert_eq!(spans[1]["char_start"], 7);
     assert_eq!(spans[1]["char_end"], 11);
+}
+
+#[test]
+fn parses_ligature_fixture_with_embedded_font_identity_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!("skipping ligature PDFium test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    let fixture = ligature_fixture_pdf();
+    let doc = parse_json(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+
+    let elements = doc["payload"]["elements"].as_array().unwrap();
+    assert_eq!(elements.len(), 1);
+    assert_eq!(elements[0]["text"], "office file");
+    assert_no_control_chars(elements[0]["text"].as_str().unwrap());
+    assert_eq!(
+        elements[0]["span_refs"],
+        serde_json::json!(["s000001", "s000002"])
+    );
+
+    let spans = doc["payload"]["spans"].as_array().unwrap();
+    assert_eq!(spans.len(), 2);
+    assert_eq!(spans[0]["text"], "office");
+    assert_eq!(spans[1]["text"], "file");
+    for span in spans {
+        assert_eq!(span["font_id"], "embedded:EthosLigatureFixture-Regular");
+        assert!(span["font_size_q"].as_i64().unwrap() > 0);
+        assert_no_control_chars(span["text"].as_str().unwrap());
+    }
+    assert_eq!(spans[0]["char_start"], 0);
+    assert_eq!(spans[0]["char_end"], 6);
+    assert_eq!(spans[1]["char_start"], 7);
+    assert_eq!(spans[1]["char_end"], 11);
+    assert_eq!(
+        doc["payload"]["parser_warnings"].as_array().unwrap().len(),
+        0
+    );
 }
 
 #[test]
