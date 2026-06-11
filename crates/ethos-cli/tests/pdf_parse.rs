@@ -1,50 +1,104 @@
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+use ethos_core::config::ParseConfig;
+use ethos_core::traits::{EthosPdfBackend as _, LayoutEngine as _};
 use serde_json::Value;
 
 fn ethos_bin() -> &'static str {
     env!("CARGO_BIN_EXE_ethos")
 }
 
+fn fixtures_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures")
+}
+
+fn fixture_manifest_entries() -> Vec<Value> {
+    let manifest_path = fixtures_root().join("manifest.json");
+    let bytes = std::fs::read(&manifest_path).expect("fixture manifest is readable");
+    let manifest: Value = serde_json::from_slice(&bytes).expect("fixture manifest is JSON");
+    manifest["fixtures"]
+        .as_array()
+        .expect("fixture manifest entries are an array")
+        .clone()
+}
+
+fn fixture_manifest_entry(id: &str) -> Value {
+    fixture_manifest_entries()
+        .into_iter()
+        .find(|entry| entry["id"].as_str() == Some(id))
+        .unwrap_or_else(|| panic!("fixture manifest contains {id}"))
+}
+
+fn fixture_pdf_by_id(id: &str) -> PathBuf {
+    let entry = fixture_manifest_entry(id);
+    fixtures_root().join(
+        entry["file"]
+            .as_str()
+            .expect("fixture file path is a string"),
+    )
+}
+
+fn fixture_dir_by_id(id: &str) -> PathBuf {
+    fixture_pdf_by_id(id)
+        .parent()
+        .expect("fixture document has a parent directory")
+        .to_path_buf()
+}
+
+fn successful_fixture_ids() -> Vec<String> {
+    fixture_manifest_entries()
+        .into_iter()
+        .filter(|entry| {
+            !entry["subsets"]
+                .as_array()
+                .expect("fixture subsets are an array")
+                .iter()
+                .any(|subset| subset.as_str() == Some("failure"))
+        })
+        .map(|entry| {
+            entry["id"]
+                .as_str()
+                .expect("fixture id is a string")
+                .to_string()
+        })
+        .collect()
+}
+
 fn fixture_pdf() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/simple-text/document.pdf")
+    fixture_pdf_by_id("simple-text")
 }
 
 fn two_line_fixture_pdf() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/two-lines/document.pdf")
+    fixture_pdf_by_id("synthetic-two-lines")
 }
 
 fn two_column_fixture_pdf() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/two-columns/document.pdf")
+    fixture_pdf_by_id("synthetic-two-columns")
 }
 
 fn rotation_fixture_pdf() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/rotation-90/document.pdf")
+    fixture_pdf_by_id("synthetic-rotation-90")
 }
 
 fn hyphenated_line_break_fixture_pdf() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/synthetic/hyphenated-line-break/document.pdf")
+    fixture_pdf_by_id("synthetic-hyphenated-line-break")
 }
 
 fn ligature_fixture_pdf() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/synthetic/ligature-fi-embedded-font/document.pdf")
+    fixture_pdf_by_id("synthetic-ligature-fi-embedded-font")
 }
 
 fn invalid_header_fixture_pdf() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/failure/invalid-header/document.pdf")
+    fixture_pdf_by_id("failure-invalid-header")
 }
 
 fn corrupt_header_valid_fixture_pdf() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/failure/corrupt-header-valid/document.pdf")
+    fixture_pdf_by_id("failure-corrupt-header-valid")
 }
 
 fn blank_page_fixture_pdf() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/failure/image-only-or-blank-page/document.pdf")
+    fixture_pdf_by_id("failure-image-only-or-blank-page")
 }
 
 fn pdfium_configured() -> bool {
@@ -94,6 +148,64 @@ fn assert_no_control_chars(text: &str) {
         !text.chars().any(char::is_control),
         "text contains a control character: {text:?}"
     );
+}
+
+fn assert_or_accept_golden(path: PathBuf, value: &Value) {
+    let mut expected = ethos_core::c14n::c14n_bytes(value).expect("golden value is canonical");
+    expected.push(b'\n');
+
+    if std::env::var("ETHOS_ACCEPT_GOLDENS").as_deref() == Ok("1") {
+        std::fs::write(&path, expected).expect("golden can be written");
+        return;
+    }
+
+    let actual = std::fs::read(&path).unwrap_or_else(|err| {
+        panic!(
+            "missing golden {}; rerun with ETHOS_ACCEPT_GOLDENS=1 after review: {err}",
+            path.display()
+        )
+    });
+    assert_eq!(
+        actual,
+        expected,
+        "golden drift for {}; rerun with ETHOS_ACCEPT_GOLDENS=1 only after reviewing the parser change",
+        path.display()
+    );
+}
+
+#[test]
+fn successful_fixtures_match_extraction_and_layout_goldens_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!("skipping stage golden test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    let backend = ethos_pdf::PdfiumBackend::default();
+    let config = ParseConfig::default();
+    let layout_engine = ethos_layout::BasicLayoutEngine;
+
+    for fixture_id in successful_fixture_ids() {
+        let fixture = fixture_pdf_by_id(&fixture_id);
+        let pdf_bytes = std::fs::read(&fixture).expect("fixture PDF is readable");
+        let extraction = backend
+            .extract(&pdf_bytes, &config)
+            .unwrap_or_else(|err| panic!("extracts {fixture_id}: {err:?}"));
+        let extraction_value =
+            serde_json::to_value(&extraction).expect("extraction serializes to JSON");
+        assert_or_accept_golden(
+            fixture_dir_by_id(&fixture_id).join("extraction.json"),
+            &extraction_value,
+        );
+
+        let layout = layout_engine
+            .layout(&extraction)
+            .unwrap_or_else(|err| panic!("layouts {fixture_id}: {err:?}"));
+        let layout_value = serde_json::to_value(&layout).expect("layout serializes to JSON");
+        assert_or_accept_golden(
+            fixture_dir_by_id(&fixture_id).join("layout.json"),
+            &layout_value,
+        );
+    }
 }
 
 #[cfg(debug_assertions)]

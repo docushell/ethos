@@ -6,7 +6,8 @@ Checks, in order:
 2. every fixture directory has a 1:1 fixture.json/document.pdf pair;
 3. every fixture document is indexed exactly once;
 4. manifest corpus metadata matches fixture.json;
-5. manifest sha256 == fixture.json sha256 == sha256(document.pdf).
+5. manifest sha256 == fixture.json sha256 == sha256(document.pdf);
+6. successful parse fixtures carry stage goldens with the expected v1 shape.
 
 Exit 0 = green. Any failure prints the offending file/context and exits 1.
 """
@@ -22,10 +23,13 @@ MANIFEST = ROOT / "manifest.json"
 ALLOWED_CATEGORIES = {"failure", "public", "security", "synthetic"}
 MANIFEST_KEYS = {"manifest_version", "root", "subsets_declared", "fixtures"}
 ENTRY_KEYS = {"id", "file", "sha256", "pages", "subsets", "provenance", "license"}
+EXTRACTION_GOLDEN_KEYS = {"pages", "spans", "regions", "warnings"}
+LAYOUT_GOLDEN_KEYS = {"elements", "warnings"}
 HEX256 = re.compile(r"^[0-9a-f]{64}$")
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 SUBSET = re.compile(r"^[a-z0-9][a-z0-9_]*$")
 PLACEHOLDER = re.compile(r"todo|_{4,}|found it somewhere", re.IGNORECASE)
+MAX_SAFE_INTEGER = 9_007_199_254_740_991
 
 failures = 0
 
@@ -69,6 +73,75 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def canonical_json_bytes(value) -> bytes:
+    text = json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+    return f"{text}\n".encode("utf-8")
+
+
+def validate_c14n_scalar_contract(value, ctx: str) -> None:
+    if value is None or isinstance(value, (bool, str)):
+        return
+    if isinstance(value, int):
+        if abs(value) > MAX_SAFE_INTEGER:
+            fail(f"{ctx} integer is outside c14n safe range")
+        return
+    if isinstance(value, float):
+        fail(f"{ctx} floats are not valid c14n values")
+        return
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            validate_c14n_scalar_contract(item, f"{ctx}[{index}]")
+        return
+    if isinstance(value, dict):
+        for key, item in value.items():
+            validate_c14n_scalar_contract(item, f"{ctx}.{key}")
+        return
+    fail(f"{ctx} is not a valid JSON scalar/container")
+
+
+def validate_golden_file(path: Path, stage: str, keys: set[str]) -> None:
+    if not path.is_file():
+        fail(f"{path.relative_to(ROOT)} missing for successful fixture")
+        return
+
+    golden = load_json(path)
+    if golden is None:
+        return
+    ctx = str(path.relative_to(ROOT))
+    if not isinstance(golden, dict):
+        fail(f"{ctx} must be an object")
+        return
+    validate_c14n_scalar_contract(golden, ctx)
+    if path.read_bytes() != canonical_json_bytes(golden):
+        fail(f"{ctx} must be canonical JSON with one trailing newline")
+    if set(golden) != keys:
+        fail(f"{ctx} must contain exactly {sorted(keys)}")
+
+    if stage == "extraction":
+        for key in ("pages", "spans", "regions", "warnings"):
+            if not isinstance(golden.get(key), list):
+                fail(f"{ctx} {key} must be an array")
+        validate_projection_items(ctx, "pages", golden.get("pages"), required=True)
+        validate_projection_items(ctx, "spans", golden.get("spans"), required=True)
+    elif stage == "layout":
+        if not isinstance(golden.get("elements"), list):
+            fail(f"{ctx} elements must be an array")
+        validate_projection_items(ctx, "elements", golden.get("elements"), required=True)
+
+
+def validate_projection_items(ctx: str, key: str, value, required: bool) -> None:
+    if not isinstance(value, list):
+        return
+    if required and not value:
+        fail(f"{ctx} {key} must not be empty")
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            fail(f"{ctx} {key}[{index}] must be an object")
+            continue
+        if not isinstance(item.get("id"), str) or not item["id"]:
+            fail(f"{ctx} {key}[{index}].id must be a non-empty string")
 
 
 manifest = load_json(MANIFEST)
@@ -199,6 +272,19 @@ for index, entry in enumerate(entries):
     if actual_sha != manifest_sha:
         fail(f"{fixture_file} sha256 {actual_sha} does not match manifest {manifest_sha}")
 
+    if "failure" not in manifest_subsets:
+        fixture_dir = metadata_path.parent
+        validate_golden_file(
+            fixture_dir / "extraction.json",
+            "extraction",
+            EXTRACTION_GOLDEN_KEYS,
+        )
+        validate_golden_file(
+            fixture_dir / "layout.json",
+            "layout",
+            LAYOUT_GOLDEN_KEYS,
+        )
+
 if indexed_files != sorted(indexed_files):
     fail("manifest fixture entries must be sorted by file")
 
@@ -221,6 +307,7 @@ if not failures:
     ok("fixture metadata matches manifest corpus identity")
     ok("fixture.json sha256 values match document.pdf bytes")
     ok("fixture manifest has no missing or extra fixture documents")
+    ok("successful fixture goldens have valid stage metadata")
 
 if failures:
     print(f"\n{failures} failure(s)")
