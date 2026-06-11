@@ -1,0 +1,13 @@
+{
+  "id": "synthetic-two-lines",
+  "kind": "pdf",
+  "description": "One-page synthetic PDF with two text lines for basic layout grouping.",
+  "document": "document.pdf",
+  "sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+  "expected_text": [
+    "First line",
+    "Second line"
+  ],
+  "expected_pages": 1,
+  "expected_elements": 2
+}

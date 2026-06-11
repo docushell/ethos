@@ -198,6 +198,7 @@ dependencies = [
  "clap",
  "ethos-core",
  "ethos-grounding-opendataloader-json",
+ "ethos-layout",
  "ethos-pdf",
  "ethos-verify",
  "serde_json",
@@ -221,6 +222,13 @@ dependencies = [
  "ethos-core",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "ethos-layout"
+version = "0.1.0"
+dependencies = [
+ "ethos-core",
 ]
 
 [[package]]

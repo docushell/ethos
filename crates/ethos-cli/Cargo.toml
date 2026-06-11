@@ -14,6 +14,7 @@ path = "src/main.rs"
 
 [dependencies]
 ethos-core = { workspace = true, features = ["full"] }
+ethos-layout = { workspace = true }
 ethos-pdf = { path = "../ethos-pdf", version = "0.1.0" }
 ethos-verify = { path = "../ethos-verify", version = "0.1.0" }
 ethos-grounding-opendataloader-json = { path = "../../adapters/grounding/opendataloader-json", version = "0.1.0" }

@@ -9,6 +9,7 @@
 //! fully functional over canonical JSON; `verify` emits a schema-valid report with zero
 //! checks (the check engine is the Milestone B alpha, WS-VERIFY-ALPHA).
 
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -17,12 +18,10 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 use ethos_core::config::{PageSelection, ParseConfig};
 use ethos_core::error::{ErrorCode, EthosError};
 use ethos_core::fingerprint::{source_fingerprint, FingerprintManifest};
-use ethos_core::geom::QRect;
-use ethos_core::ids::element_id;
 use ethos_core::model::{
-    CoordinateSystem, Document, Element, ElementType, ParserInfo, Payload, ProfileRef, SourceInfo,
+    CoordinateSystem, Document, Element, ParserInfo, Payload, ProfileRef, SourceInfo,
 };
-use ethos_core::traits::{BackendManifest, EthosPdfBackend as _, Extraction};
+use ethos_core::traits::{BackendManifest, EthosPdfBackend as _, Extraction, LayoutEngine as _};
 use ethos_core::verify_types::VerificationConfig;
 use ethos_grounding_opendataloader_json::OdlJsonSource;
 
@@ -392,11 +391,13 @@ fn assemble_document(
     backend_manifest: BackendManifest,
     include_diagnostics: bool,
 ) -> Result<Document, EthosError> {
+    let layout = ethos_layout::BasicLayoutEngine.layout(&extraction)?;
     let mut spans = extraction.spans;
-    let elements = build_page_elements(&extraction.pages, &mut spans)?;
+    assign_span_offsets(&layout.elements, &mut spans)?;
+    let elements = layout.elements;
     let mut security_warnings = Vec::new();
     let mut parser_warnings = Vec::new();
-    for warning in extraction.warnings {
+    for warning in extraction.warnings.into_iter().chain(layout.warnings) {
         if warning.code.is_security() {
             security_warnings.push(warning);
         } else {
@@ -470,71 +471,64 @@ fn assemble_document(
     })
 }
 
-fn build_page_elements(
-    pages: &[ethos_core::model::Page],
+fn assign_span_offsets(
+    elements: &[Element],
     spans: &mut [ethos_core::model::Span],
-) -> Result<Vec<Element>, EthosError> {
-    let mut elements = Vec::new();
-    let mut next_element = 1u32;
-    for page in pages {
-        let page_span_indices: Vec<usize> = spans
-            .iter()
-            .enumerate()
-            .filter_map(|(idx, span)| (span.page == page.id).then_some(idx))
-            .collect();
-        if page_span_indices.is_empty() {
+) -> Result<(), EthosError> {
+    for span in spans.iter_mut() {
+        span.char_start = None;
+        span.char_end = None;
+    }
+
+    let span_indices: HashMap<String, usize> = spans
+        .iter()
+        .enumerate()
+        .map(|(idx, span)| (span.id.clone(), idx))
+        .collect();
+    let mut assigned = HashSet::new();
+
+    for element in elements {
+        let Some(text) = element.text.as_deref() else {
+            continue;
+        };
+        if element.span_refs.is_empty() {
             continue;
         }
 
-        let mut text = String::new();
         let mut char_cursor = 0u32;
-        let mut bbox: Option<QRect> = None;
-        let mut span_refs = Vec::with_capacity(page_span_indices.len());
-
-        for idx in page_span_indices {
-            if !text.is_empty() {
-                text.push(' ');
-                char_cursor += 1;
+        for (pos, span_id) in element.span_refs.iter().enumerate() {
+            if !assigned.insert(span_id.clone()) {
+                return Err(EthosError::internal(
+                    "span is assigned to multiple elements",
+                ));
             }
+            if pos > 0 {
+                char_cursor = char_cursor
+                    .checked_add(1)
+                    .ok_or_else(|| EthosError::internal("span offset overflow"))?;
+            }
+
+            let idx = *span_indices
+                .get(span_id)
+                .ok_or_else(|| EthosError::internal("element references an unknown span"))?;
             let span_text_chars = spans[idx].text.chars().count();
             let span_text_chars = u32::try_from(span_text_chars)
                 .map_err(|_| EthosError::internal("span text length overflow"))?;
             spans[idx].char_start = Some(char_cursor);
-            char_cursor += span_text_chars;
+            char_cursor = char_cursor
+                .checked_add(span_text_chars)
+                .ok_or_else(|| EthosError::internal("span offset overflow"))?;
             spans[idx].char_end = Some(char_cursor);
-            text.push_str(&spans[idx].text);
-            bbox = Some(match bbox {
-                Some(existing) => union_rect(existing, spans[idx].bbox),
-                None => spans[idx].bbox,
-            });
-            span_refs.push(spans[idx].id.clone());
         }
 
-        elements.push(Element {
-            id: element_id(next_element)?,
-            element_type: ElementType::TextBlock,
-            page: page.id.clone(),
-            bbox: bbox.ok_or_else(|| EthosError::internal("element has no bbox"))?,
-            text: Some(text),
-            heading_level: None,
-            table_ref: None,
-            region_ref: None,
-            confidence: None,
-            span_refs,
-            warning_refs: Vec::new(),
-        });
-        next_element += 1;
+        let text_chars = u32::try_from(text.chars().count())
+            .map_err(|_| EthosError::internal("element text length overflow"))?;
+        if char_cursor != text_chars {
+            return Err(EthosError::internal("layout text/span offsets disagree"));
+        }
     }
-    Ok(elements)
-}
 
-fn union_rect(a: QRect, b: QRect) -> QRect {
-    QRect {
-        x0: a.x0.min(b.x0),
-        y0: a.y0.min(b.y0),
-        x1: a.x1.max(b.x1),
-        y1: a.y1.max(b.y1),
-    }
+    Ok(())
 }
 
 fn profile_sha256() -> Result<String, EthosError> {
@@ -614,6 +608,17 @@ mod tests {
                     char_end: None,
                     warning_refs: vec![],
                 },
+                Span {
+                    id: "s000003".to_string(),
+                    page: "p0001".to_string(),
+                    bbox: QRect::new(0, 300, 100, 400).unwrap(),
+                    text: "Again".to_string(),
+                    font_id: None,
+                    font_size_q: Some(1200),
+                    char_start: None,
+                    char_end: None,
+                    warning_refs: vec![],
+                },
             ],
             regions: vec![],
             warnings: vec![],
@@ -632,10 +637,14 @@ mod tests {
         )
         .unwrap();
         doc.verify_integrity().unwrap();
+        assert_eq!(doc.payload.elements.len(), 2);
         assert_eq!(doc.payload.elements[0].text.as_deref(), Some("Hello Ethos"));
+        assert_eq!(doc.payload.elements[1].text.as_deref(), Some("Again"));
         assert_eq!(doc.payload.spans[0].char_start, Some(0));
         assert_eq!(doc.payload.spans[0].char_end, Some(5));
         assert_eq!(doc.payload.spans[1].char_start, Some(6));
         assert_eq!(doc.payload.spans[1].char_end, Some(11));
+        assert_eq!(doc.payload.spans[2].char_start, Some(0));
+        assert_eq!(doc.payload.spans[2].char_end, Some(5));
     }
 }

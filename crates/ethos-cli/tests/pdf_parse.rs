@@ -11,6 +11,10 @@ fn fixture_pdf() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/simple-text/document.pdf")
 }
 
+fn two_line_fixture_pdf() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/two-lines/document.pdf")
+}
+
 fn pdfium_configured() -> bool {
     std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
         .map(PathBuf::from)
@@ -34,6 +38,49 @@ fn parse_json(args: &[&str]) -> Value {
         String::from_utf8_lossy(&output.stdout)
     );
     serde_json::from_slice(&output.stdout).expect("stdout is JSON")
+}
+
+#[test]
+fn parses_two_line_pdf_into_line_text_blocks_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!("skipping two-line layout test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    let fixture = two_line_fixture_pdf();
+    let doc = parse_json(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+
+    let elements = doc["payload"]["elements"].as_array().unwrap();
+    assert_eq!(elements.len(), 2);
+    assert_eq!(elements[0]["id"], "e000001");
+    assert_eq!(elements[0]["text"], "First line");
+    assert_eq!(
+        elements[0]["span_refs"],
+        serde_json::json!(["s000001", "s000002"])
+    );
+    assert_eq!(elements[1]["id"], "e000002");
+    assert_eq!(elements[1]["text"], "Second line");
+    assert_eq!(
+        elements[1]["span_refs"],
+        serde_json::json!(["s000003", "s000004"])
+    );
+
+    let spans = doc["payload"]["spans"].as_array().unwrap();
+    assert_eq!(spans.len(), 4);
+    assert_eq!(spans[0]["char_start"], 0);
+    assert_eq!(spans[0]["char_end"], 5);
+    assert_eq!(spans[1]["char_start"], 6);
+    assert_eq!(spans[1]["char_end"], 10);
+    assert_eq!(spans[2]["char_start"], 0);
+    assert_eq!(spans[2]["char_end"], 6);
+    assert_eq!(spans[3]["char_start"], 7);
+    assert_eq!(spans[3]["char_end"], 11);
 }
 
 #[test]
