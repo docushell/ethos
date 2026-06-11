@@ -1,0 +1,12 @@
+[package]
+name = "ethos-pdf"
+description = "PDFium backend behind EthosPdfBackend — quantize-at-extraction lives here (WS-ENGINE, Milestone A)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+ethos-core = { workspace = true, features = ["full"] }

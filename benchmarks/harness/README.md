@@ -1,0 +1,1 @@
+# benchmarks/harness — Milestone A (WS-HARNESS lane). Runner (p50/p95/p99 cold+warm, peak RSS, install size) + competitor adapters (ODL, EdgeParse, LiteParse, PyMuPDF4LLM). Self-test on PyMuPDF4LLM. One-command reproduction: make bench. Numbers leave this directory only as harness JSON (handoff §5.2.8).

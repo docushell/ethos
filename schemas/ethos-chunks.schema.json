@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:chunks:1",
+  "title": "Ethos chunk record (one line of chunks.jsonl)",
+  "description": "Self-describing RAG chunk: each JSONL line carries provenance so a chunk can be cited and later verified without the full document at hand. Derived deterministically from the canonical document (ethos.json) — same document + same config => byte-identical chunks.jsonl. Warning codes are inlined (not refs) so RAG consumers need no join; hidden/off-page/low-contrast content is never present in default chunks.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "document_fingerprint",
+    "source_fingerprint",
+    "config_sha256",
+    "id",
+    "text",
+    "element_refs",
+    "page_refs",
+    "bboxes",
+    "token_estimate",
+    "warnings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "document_fingerprint": { "$ref": "#/$defs/fingerprint", "description": "Composite fingerprint of the source canonical document — the staleness anchor for verification." },
+    "source_fingerprint": { "$ref": "#/$defs/fingerprint", "description": "sha256 of the original PDF bytes." },
+    "config_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Effective parse+chunk config hash (page selection included)." },
+    "id": { "type": "string", "pattern": "^c[0-9]{6}$" },
+    "text": { "type": "string" },
+    "element_refs": { "type": "array", "items": { "type": "string", "pattern": "^e[0-9]{6}$" }, "minItems": 1 },
+    "page_refs": { "type": "array", "items": { "type": "string", "pattern": "^p[0-9]{4}$" }, "minItems": 1 },
+    "bboxes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page", "bbox"],
+        "additionalProperties": false,
+        "properties": {
+          "page": { "type": "string", "pattern": "^p[0-9]{4}$" },
+          "bbox": { "$ref": "#/$defs/bbox" }
+        }
+      },
+      "minItems": 1
+    },
+    "token_estimate": {
+      "type": "object",
+      "required": ["count", "estimator", "approximate"],
+      "additionalProperties": false,
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "estimator": { "type": "string" },
+        "approximate": { "type": "boolean" }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Inherited warning codes from source regions (e.g. low_confidence_table_structure).",
+      "items": {
+        "enum": [
+          "low_confidence_reading_order",
+          "low_confidence_table_structure",
+          "hidden_text_detected",
+          "off_page_text_detected",
+          "low_contrast_text_detected",
+          "annotations_present",
+          "external_links_present",
+          "image_only_page",
+          "unsupported_annotation",
+          "partial_parse",
+          "capability_limited"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "bbox": { "type": "array", "items": { "type": "integer" }, "minItems": 4, "maxItems": 4 }
+  }
+}

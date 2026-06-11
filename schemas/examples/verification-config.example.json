@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "config_version": "default-v1",
+  "claim_kinds": ["quote", "value", "presence", "table_cell"],
+  "matching": {
+    "text_normalization": "collapse_whitespace",
+    "case_sensitive": true,
+    "bbox_containment_tolerance_q": 50
+  },
+  "staleness": {
+    "require_fingerprint_match": true
+  },
+  "limits": {
+    "max_checks": 256
+  },
+  "evidence": {
+    "include_text": true,
+    "include_crops": false
+  }
+}

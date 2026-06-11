@@ -1,0 +1,16 @@
+# Invariant 5b: static checks against direct network API use in base crates.
+# cargo-deny (5a) cannot catch direct std::net use; this can. Layer 5c (runtime no-egress
+# test) lives in CI. Sandbox IPC code (Milestone D) may carry an explicit, ADR-referenced
+# #[allow] with reviewer sign-off.
+
+disallowed-types = [
+    { path = "std::net::TcpStream", reason = "no network in base crates (invariant 5b)" },
+    { path = "std::net::TcpListener", reason = "no network in base crates (invariant 5b)" },
+    { path = "std::net::UdpSocket", reason = "no network in base crates (invariant 5b)" },
+]
+
+disallowed-methods = [
+    { path = "std::net::TcpStream::connect", reason = "no network in base crates (invariant 5b)" },
+    { path = "std::net::TcpListener::bind", reason = "no network in base crates (invariant 5b)" },
+    { path = "std::net::UdpSocket::bind", reason = "no network in base crates (invariant 5b)" },
+]

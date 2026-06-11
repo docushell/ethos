@@ -1,0 +1,114 @@
+# ci.yml — every PR (plan §9). Red = no merge.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show # installs the pinned toolchain from rust-toolchain.toml
+      - run: cargo fmt --all --check
+
+  clippy:
+    # includes the disallowed network API lints from clippy.toml (invariant 5b)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show
+      - run: cargo clippy --locked --workspace --all-targets -- -D warnings
+
+  deny:
+    # ADR-0004 license allowlist + network-crate bans + advisories (invariant 5a, 6)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+
+  test:
+    # unit + fixture tests, c14n idempotence property tests, contract vectors,
+    # deterministic-profile pin, same-platform double-parse (engine-gated below)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show
+      - run: cargo test --locked --workspace --all-features
+      - name: same-platform double-parse byte-diff
+        run: |
+          # Activates when WS-ENGINE lands the backend + PDF fixtures exist.
+          if compgen -G "fixtures/*/*/*.pdf" > /dev/null; then
+            echo "TODO(WS-ENGINE): wire double-parse diff over fixtures" && exit 1
+          else
+            echo "skipped: no PDF fixtures yet (engine lane pending)"
+          fi
+
+  verify-portability:
+    # Invariant 4: ethos-verify compiles against the grounding trait module alone and
+    # its dependency tree never contains parser internals.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show
+      - run: cargo check --locked -p ethos-verify
+      - run: cargo check --locked -p ethos-grounding-opendataloader-json
+      - name: no parser internals in the verify tree
+        run: |
+          tree=$(cargo tree -p ethos-verify -e normal)
+          echo "$tree"
+          if echo "$tree" | grep -qiE 'ethos-pdf|pdfium'; then
+            echo "ethos-verify depends on parser internals (invariant 4 violated)"; exit 1
+          fi
+      - name: grounding feature really is minimal
+        run: |
+          # the trait module must build without serde_json/sha2/thiserror
+          cargo check --locked -p ethos-core --no-default-features --features grounding
+          cargo check --locked -p ethos-core --no-default-features --features verify-types
+
+  schema-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "jsonschema>=4.18"
+      - run: python3 schemas/validate_examples.py
+
+  no-network-runtime:
+    # Invariant 5c: the base CLI functions with zero network egress. Runs the CLI inside
+    # a no-net namespace; any egress attempt fails hard. Extends to full parses when the
+    # engine lands.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show
+      - run: cargo build --locked -p ethos-cli
+      - name: run CLI under network-denied namespace
+        run: |
+          unshare -rn -- ./target/debug/ethos fingerprint schemas/examples/document.example.json
+          unshare -rn -- ./target/debug/ethos rag chunk schemas/examples/document.example.json > /tmp/chunks.jsonl
+          test -s /tmp/chunks.jsonl
+
+  claims-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/scripts/claims_gate.py
+
+  dco:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python3 .github/scripts/check_dco.py "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"

@@ -1,0 +1,55 @@
+# cargo-deny policy — implements ADR-0004 (licensing) and invariant 5a (no network in base).
+# Exceptions require an ADR before merge.
+
+[graph]
+all-features = false
+
+[advisories]
+version = 2
+yanked = "deny"
+
+[licenses]
+version = 2
+# ADR-0004 allowlist. Unicode-3.0 is the Unicode-DFS-2016 successor and is permitted per
+# the ADR's intent (permissive Unicode data licenses).
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "CC0-1.0",
+    "MPL-2.0",
+]
+confidence-threshold = 0.93
+# GPL/AGPL/LGPL/source-available/custom-condition are denied by omission from the allowlist.
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# Invariant 5a: network-capable crates are rejected in the base dependency tree.
+# Sandbox IPC (Milestone D, ethos-pdf subprocess mode) gets its own reviewed exception ADR.
+deny = [
+    { crate = "reqwest", reason = "no network in base (invariant 5)" },
+    { crate = "hyper", reason = "no network in base (invariant 5)" },
+    { crate = "hyper-util", reason = "no network in base (invariant 5)" },
+    { crate = "ureq", reason = "no network in base (invariant 5)" },
+    { crate = "curl", reason = "no network in base (invariant 5)" },
+    { crate = "curl-sys", reason = "no network in base (invariant 5)" },
+    { crate = "isahc", reason = "no network in base (invariant 5)" },
+    { crate = "attohttpc", reason = "no network in base (invariant 5)" },
+    { crate = "surf", reason = "no network in base (invariant 5)" },
+    { crate = "socket2", reason = "socket-bearing (invariant 5)" },
+    { crate = "mio", reason = "socket-bearing (invariant 5)" },
+    { crate = "openssl-sys", reason = "TLS stack implies network use in base (invariant 5)" },
+    { crate = "native-tls", reason = "TLS stack implies network use in base (invariant 5)" },
+    { crate = "rustls", reason = "TLS stack implies network use in base (invariant 5)" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

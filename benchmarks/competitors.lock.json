@@ -1,0 +1,49 @@
+{
+  "lock_version": "1.0.0",
+  "status": "PIN-PENDING",
+  "rules": {
+    "pinning": "Benchmark owner pins exact versions + artifact hashes on the benchmark hosts before Gate Zero (plan row 0.8). Harness refuses to run gating jobs while any gate_zero entry has pinned=false.",
+    "crashes": "Competitor crashes/timeouts are recorded as data, never patched around (PRD 11.3).",
+    "rerun": "Reference competitors are re-measured after their major releases; published tables always state versions and dates."
+  },
+  "gate_zero": [
+    {
+      "id": "opendataloader-pdf",
+      "role": "G1/G2 reference (2x throughput and 1/10 footprint comparisons; remeasured in-harness)",
+      "runtime": "JVM",
+      "source": "https://github.com/opendataloader-project/opendataloader-pdf",
+      "version": null,
+      "artifact_sha256": null,
+      "jvm_version": null,
+      "pinned": false
+    },
+    {
+      "id": "edgeparse",
+      "role": "context (non-gating)",
+      "version": null,
+      "artifact_sha256": null,
+      "pinned": false
+    },
+    {
+      "id": "liteparse",
+      "role": "context (non-gating); closest Release-1 overlap, watch per risk R5",
+      "publisher": "run-llama",
+      "version": null,
+      "artifact_sha256": null,
+      "pinned": false
+    },
+    {
+      "id": "pymupdf4llm",
+      "role": "harness self-test target + comparison row",
+      "runtime": "Python",
+      "version": null,
+      "python_version": null,
+      "artifact_sha256": null,
+      "pinned": false,
+      "license_note": "AGPL — run-only comparison, never a dependency (ADR-0004)"
+    }
+  ],
+  "milestone_e_candidates": [
+    "kreuzberg", "docling", "mineru", "marker", "markitdown", "unstructured", "pymupdf"
+  ]
+}

@@ -1,0 +1,12 @@
+Ethos
+Copyright 2026 The Ethos maintainers
+
+Licensed under the Apache License, Version 2.0.
+
+Third-party notices (maintained per ADR-0004; entries land with the assets):
+
+- PDFium (BSD-3-Clause) — added when the Phase 1 pinned binaries land (WS-ENGINE, Milestone A).
+- Liberation Fonts (SIL OFL 1.1) — added when the deterministic font bundle lands
+  (WS-ENGINE, Milestone A, ADR-0003).
+
+Generated third-party license manifests are published with release artifacts (plan §9).

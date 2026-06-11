@@ -1,0 +1,1 @@
+# ethos-security — Milestone C (WS-SECURITY). Hidden/off-page/low-contrast, annotations/actions/attachments/scripts/links; security_report.json; default-chunk exclusion. Joins workspace members when the lane opens.

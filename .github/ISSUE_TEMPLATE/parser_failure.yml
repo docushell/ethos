@@ -1,0 +1,31 @@
+name: Parser failure / wrong output
+description: A PDF parses incorrectly, fails, or produces a wrong graph
+labels: [parser-failure, needs-fixture, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The most valuable thing you can attach is a **redistributable fixture** (public-domain,
+        synthetic, or licensed for redistribution — see `fixtures/README.md`). Failures with
+        fixtures become regression tests; failures without fixtures often stall.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What is wrong
+      description: Wrong reading order? Missed table? Wrong error code? Include the stable error/warning codes you got.
+    validations:
+      required: true
+  - type: dropdown
+    id: fixture
+    attributes:
+      label: Can the PDF be contributed as a public fixture?
+      options:
+        - Yes — attached / linked, license attested
+        - Yes — I can produce a synthetic equivalent
+        - No — but I can run candidate fixes locally and report
+    validations:
+      required: true
+  - type: input
+    id: fingerprint
+    attributes:
+      label: Document fingerprint (`ethos fingerprint <file>`)

@@ -1,0 +1,43 @@
+# Ethos workspace — lockstep versioning (plan §9: release engineering).
+# Crates for later milestones (layout, tables, rag, security, render, mcp) join members
+# when their lane opens; their directories exist with README placeholders.
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/ethos-core",
+    "crates/ethos-pdf",
+    "crates/ethos-verify",
+    "crates/ethos-cli",
+    "adapters/grounding/opendataloader-json",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.87"
+license = "Apache-2.0"
+repository = "https://github.com/OWNER/ethos"
+authors = ["Ethos maintainers"]
+
+[workspace.dependencies]
+# Base-crate dependencies are restricted by deny.toml (ADR-0004): permissive licenses only,
+# no network-capable crates. Additions are reviewed against that policy.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+sha2 = "0.10"
+clap = { version = "4", features = ["derive"] }
+
+# dev-only
+proptest = "1"
+
+# internal
+ethos-core = { path = "crates/ethos-core", version = "0.1.0", default-features = false }
+
+[profile.release]
+# Footprint discipline for the G2 gate (≤ 30 MB installed): strip + LTO + size-lean codegen.
+strip = "symbols"
+lto = "thin"
+codegen-units = 1
+panic = "abort"

@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:verification-report:1",
+  "title": "Ethos verification report (verification_report.json)",
+  "description": "Citation evidence verification over any GroundingSource (Ethos or foreign parser output). Verification is EVIDENCE GROUNDING — the cited region exists, its text matches by a declared method, the fingerprint is fresh. It is never pixel-level, semantic, or arithmetic proof of an answer. Capability-driven downgrades are explicit: missing spans, missing fingerprints, or foreign coordinate systems appear as capability_limited warnings, never silent approximation. INVARIANT (PRD §8): all_evidence_grounded is true only when (a) at least one supported check exists, (b) every supported check has status 'grounded', (c) no check has semantic_unverified=true, (d) unsupported_claim_kinds is empty, and (e) fingerprint_stale is false. The reference implementation enforces this; the schema documents it.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "verification_config_sha256",
+    "grounding",
+    "fingerprint_stale",
+    "all_evidence_grounded",
+    "checks",
+    "unsupported_claim_kinds",
+    "warnings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "document_fingerprint": {
+      "$ref": "#/$defs/fingerprint",
+      "description": "Fingerprint of the grounding document when the source declares one; absent (with capability warning) otherwise."
+    },
+    "verification_config_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "grounding": {
+      "type": "object",
+      "required": ["parser", "capabilities"],
+      "additionalProperties": false,
+      "properties": {
+        "parser": {
+          "type": "object",
+          "required": ["name", "version"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "adapter": { "type": "string", "description": "Adapter identifier, e.g. 'opendataloader-json'." },
+            "adapter_version": { "type": "string" }
+          }
+        },
+        "capabilities": {
+          "type": "object",
+          "required": ["spans", "char_offsets", "fingerprint", "coordinate_origin", "crop_support"],
+          "additionalProperties": false,
+          "properties": {
+            "spans": { "type": "boolean" },
+            "char_offsets": { "type": "boolean" },
+            "fingerprint": { "type": "boolean" },
+            "coordinate_origin": { "enum": ["top-left", "bottom-left", "unknown"] },
+            "crop_support": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "fingerprint_stale": {
+      "type": "boolean",
+      "description": "True when the citations were produced against a different document fingerprint than the grounding source presents (staleness check). Stale evidence can never be grounded."
+    },
+    "all_evidence_grounded": { "type": "boolean" },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "claim", "status", "match_method", "semantic_unverified", "warnings"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^v[0-9]{4}$" },
+          "claim": {
+            "type": "object",
+            "required": ["kind", "citation"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "enum": ["quote", "value", "presence", "table_cell", "region", "other"] },
+              "text": { "type": "string", "description": "The claimed quote/value text, when textual." },
+              "citation": {
+                "type": "object",
+                "description": "Where the claim says the evidence lives. At least one locator required; id formats follow the grounding source.",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "page": { "type": "string" },
+                  "element_id": { "type": "string" },
+                  "span_id": { "type": "string" },
+                  "table_id": { "type": "string" },
+                  "cell": {
+                    "type": "object",
+                    "required": ["row", "col"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "row": { "type": "integer", "minimum": 0 },
+                      "col": { "type": "integer", "minimum": 0 }
+                    }
+                  },
+                  "bbox": { "$ref": "#/$defs/bbox" }
+                }
+              }
+            }
+          },
+          "status": {
+            "enum": ["grounded", "not_found", "mismatch", "stale", "unsupported_claim_kind", "capability_blocked", "error"]
+          },
+          "match_method": {
+            "enum": ["exact_text", "normalized_text", "table_cell_lookup", "bbox_containment", "presence_only", "none"],
+            "description": "How evidence was matched. 'normalized_text' uses ONLY the whitespace rule pinned in the verification config; nothing fuzzier exists in v1."
+          },
+          "semantic_unverified": {
+            "type": "boolean",
+            "description": "True whenever grounding the claim would require semantic judgment beyond the declared match method (e.g. paraphrase, arithmetic, cross-region synthesis). Such checks can never make all_evidence_grounded true."
+          },
+          "evidence": {
+            "type": "object",
+            "description": "What was found at the citation target (for audit; crop refs land with the L2 evidence plumbing in Milestone D).",
+            "additionalProperties": false,
+            "properties": {
+              "text": { "type": "string" },
+              "page": { "type": "string" },
+              "bbox": { "$ref": "#/$defs/bbox" },
+              "crop_ref": { "type": "string" }
+            }
+          },
+          "warnings": { "type": "array", "items": { "$ref": "#/$defs/warning_code" } }
+        }
+      }
+    },
+    "unsupported_claim_kinds": {
+      "type": "array",
+      "description": "Claim kinds present in the input that this verifier/config does not support. Non-empty => all_evidence_grounded=false.",
+      "items": { "type": "string" }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Report-level stable warning codes (capability downgrades land here as capability_limited).",
+      "items": { "$ref": "#/$defs/warning_code" }
+    }
+  },
+  "$defs": {
+    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "bbox": { "type": "array", "items": { "type": "integer" }, "minItems": 4, "maxItems": 4 },
+    "warning_code": {
+      "enum": [
+        "low_confidence_reading_order",
+        "low_confidence_table_structure",
+        "hidden_text_detected",
+        "off_page_text_detected",
+        "low_contrast_text_detected",
+        "annotations_present",
+        "external_links_present",
+        "image_only_page",
+        "unsupported_annotation",
+        "partial_parse",
+        "capability_limited"
+      ]
+    }
+  }
+}

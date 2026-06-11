@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:verification-config:1",
+  "title": "Ethos verification config",
+  "description": "Pinned verification behavior. verification_config_sha256 in the report = sha256 over c14n of this object, so two reports are comparable only under the same config hash. v1 match methods are deliberately literal: exact text, whitespace-normalized text, table cell lookup, bbox containment, presence. Nothing fuzzy, nothing semantic.",
+  "type": "object",
+  "required": ["schema_version", "config_version", "claim_kinds", "matching", "staleness", "limits"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "config_version": { "type": "string", "description": "User-facing label for this config (e.g. 'default-v1')." },
+    "claim_kinds": {
+      "type": "array",
+      "description": "Claim kinds this run supports; kinds in the input but not here are reported under unsupported_claim_kinds.",
+      "items": { "enum": ["quote", "value", "presence", "table_cell", "region"] },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "matching": {
+      "type": "object",
+      "required": ["text_normalization", "case_sensitive"],
+      "additionalProperties": false,
+      "properties": {
+        "text_normalization": {
+          "enum": ["none", "collapse_whitespace"],
+          "description": "'collapse_whitespace': trim + collapse runs of Unicode whitespace to a single ASCII space. The ONLY normalization in v1; no Unicode normalization (it would alter extraction fidelity)."
+        },
+        "case_sensitive": { "type": "boolean" },
+        "bbox_containment_tolerance_q": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Tolerance in quanta when checking citation bbox containment against evidence bbox. Integer quanta keep the config float-free."
+        }
+      }
+    },
+    "staleness": {
+      "type": "object",
+      "required": ["require_fingerprint_match"],
+      "additionalProperties": false,
+      "properties": {
+        "require_fingerprint_match": {
+          "type": "boolean",
+          "description": "When true and the grounding source declares a fingerprint, citations carrying a different fingerprint mark the report stale. When the source declares none, a capability_limited warning is emitted instead."
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "required": ["max_checks"],
+      "additionalProperties": false,
+      "properties": {
+        "max_checks": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include_text": { "type": "boolean", "description": "Echo found evidence text into the report." },
+        "include_crops": { "type": "boolean", "description": "Crop-aware L2 evidence (Milestone D; requires crop_support capability)." }
+      }
+    }
+  }
+}

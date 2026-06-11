@@ -1,0 +1,19 @@
+[package]
+name = "ethos-verify"
+description = "Parser-agnostic citation evidence verification over GroundingSource (alpha lands Milestone B)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+# INVARIANT 4 (enforced by CI no-parser-internals job): ethos-verify sees ONLY the
+# grounding trait module and verification schema types — never default features, never
+# the canonical model, never backend traits, never ethos-pdf.
+ethos-core = { workspace = true, features = ["grounding", "verify-types"] }
+serde = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

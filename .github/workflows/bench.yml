@@ -1,0 +1,32 @@
+# bench.yml — weekly + tags (plan §9). Harness output is JSON + repro attestation;
+# never prose claims. Competitor crashes are data, not patch targets (PRD §11.3).
+name: bench
+
+on:
+  schedule:
+    - cron: "41 4 * * 1" # weekly, Monday
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: gate zero readiness audit
+        run: python3 .github/scripts/readiness_gate.py gate-zero --report-only
+      - name: run harness
+        run: |
+          if [ -f benchmarks/harness/Makefile ]; then
+            python3 .github/scripts/readiness_gate.py gate-zero
+            make -C benchmarks/harness bench
+          else
+            echo "skipped: harness lands in WS-HARNESS lane (Milestone A, plan §6.3)"
+          fi
+      - name: upload results
+        if: hashFiles('benchmarks/results/**/*.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results-${{ github.run_id }}
+          path: benchmarks/results/

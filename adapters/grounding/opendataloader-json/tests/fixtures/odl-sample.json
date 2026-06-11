@@ -1,0 +1,11 @@
+{
+  "_comment": "SYNTHETIC fixture in the stub's documented assumed subset of OpenDataLoader PDF JSON. Not real ODL output. Replaced/extended with pinned real output in Milestone B (WS-VERIFY-ALPHA hardening).",
+  "tool": { "name": "opendataloader-pdf", "version": "0.0.0-synthetic" },
+  "pages": [
+    { "number": 1, "width": 612.0, "height": 792.0 }
+  ],
+  "elements": [
+    { "id": "h1", "page": 1, "bbox": [72.0, 72.0, 304.8, 90.0], "type": "Heading", "text": "Quarterly Report" },
+    { "page": 1, "bbox": [72.0, 101.0, 540.0, 115.0], "type": "Paragraph", "text": "Revenue grew to $12.4M in Q3 2025." }
+  ]
+}

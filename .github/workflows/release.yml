@@ -1,0 +1,77 @@
+# release.yml — tags (plan §9). Reproducible builds on the pinned toolchain; lockstep
+# workspace versions; footprint gate; profile + NOTICE manifests published with artifacts.
+# Public Beta gate: project-maintained PDFium Phase 2 builds (ADR-0002) — releases with an
+# unpinned backend are refused outright.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: pre-public readiness gate
+        run: python3 .github/scripts/readiness_gate.py public
+      - name: backend must be pinned before any release artifact exists
+        run: |
+          python3 - <<'EOF'
+          import json, sys
+          p = json.load(open("profiles/ethos-deterministic-v1.json"))
+          b = p["backend"]
+          if b["phase"] is None or b["version"] is None:
+              print("RELEASE BLOCKED: PDFium backend unpinned (ADR-0002; WS-ENGINE week 1)")
+              sys.exit(1)
+          if b["phase"] != 2:
+              print("NOTE: Phase 1 backend — internal pre-beta artifacts only; "
+                    "Public Beta requires Phase 2 project-maintained builds (ADR-0002)")
+          EOF
+      - name: claims gate (release surfaces)
+        run: python3 .github/scripts/claims_gate.py
+
+  build:
+    needs: guards
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show && rustup target add ${{ matrix.target }}
+      - run: cargo build --locked --release -p ethos-cli --target ${{ matrix.target }}
+      - name: footprint gate (G2 basis — 30 MB installed, stable base surface)
+        shell: bash
+        run: |
+          BIN=target/${{ matrix.target }}/release/ethos
+          TOTAL=$(stat -c%s "$BIN" 2>/dev/null || stat -f%z "$BIN")
+          # PDFium payload + fonts + schemas join this sum when WS-ENGINE lands
+          for extra in crates/ethos-pdf/assets schemas profiles; do
+            if [ -d "$extra" ]; then
+              TOTAL=$((TOTAL + $(du -sb "$extra" 2>/dev/null | cut -f1 || du -sk "$extra" | cut -f1 | awk '{print $1*1024}')))
+            fi
+          done
+          echo "installed footprint: $TOTAL bytes"
+          if [ "$TOTAL" -gt $((30 * 1024 * 1024)) ]; then
+            echo "RELEASE BLOCKED: footprint exceeds 30 MB (Gate Zero G2 basis)"; exit 1
+          fi
+      - name: assemble artifact with provenance manifests
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/ethos dist/
+          cp profiles/ethos-deterministic-v1.json dist/profile-manifest.json
+          cp NOTICE LICENSE dist/
+          tar -C dist -czf ethos-${{ matrix.target }}.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ethos-${{ matrix.target }}
+          path: ethos-${{ matrix.target }}.tar.gz
+
+  # Python wheels (Milestone B) and @ethos-pdf/core beta npm (Milestone D) join here
+  # via maturin/napi-rs jobs when WS-SURFACES opens those lanes.

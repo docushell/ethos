@@ -1,0 +1,323 @@
+{
+  "schema_version": "1.0.0",
+  "parser": {
+    "name": "ethos",
+    "version": "0.1.0"
+  },
+  "profile": {
+    "id": "ethos-deterministic-v1",
+    "sha256": "73c4883acfbe32727b97d4ede0dce7e65c9053a8a98883545cb02a2fe0733a77"
+  },
+  "source": {
+    "fingerprint": "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+    "bytes": 48213
+  },
+  "config_sha256": "68cc61753d299917cc7773f069c18aca31c8ac68f43736a94cb57eee05144084",
+  "payload_sha256": "ffbc011dd41764aaa3d1e4391cde435f9a1ed3c5d9bfbe64e897fc37f1a2547e",
+  "fingerprint": "sha256:ace86a9fd5f262ed22abb9dcfc7aa0b4eaea12d6f2de696272944f3d416fb194",
+  "payload": {
+    "coordinate_system": {
+      "origin": "top-left",
+      "unit": "quantum",
+      "quantum_per_point": 100
+    },
+    "pages": [
+      {
+        "id": "p0001",
+        "index": 1,
+        "width": 61200,
+        "height": 79200,
+        "rotation": 0
+      }
+    ],
+    "elements": [
+      {
+        "id": "e000001",
+        "type": "heading",
+        "page": "p0001",
+        "bbox": [
+          7200,
+          7200,
+          30480,
+          9000
+        ],
+        "text": "Q3 Financial Summary",
+        "heading_level": 1,
+        "span_refs": [
+          "s000001"
+        ]
+      },
+      {
+        "id": "e000002",
+        "type": "text_block",
+        "page": "p0001",
+        "bbox": [
+          7200,
+          10100,
+          54000,
+          11500
+        ],
+        "text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.",
+        "span_refs": [
+          "s000002"
+        ],
+        "warning_refs": [
+          "w0002"
+        ]
+      },
+      {
+        "id": "e000003",
+        "type": "table",
+        "page": "p0001",
+        "bbox": [
+          7200,
+          13000,
+          54000,
+          20000
+        ],
+        "table_ref": "t0001"
+      }
+    ],
+    "spans": [
+      {
+        "id": "s000001",
+        "page": "p0001",
+        "bbox": [
+          7200,
+          7200,
+          30480,
+          9000
+        ],
+        "text": "Q3 Financial Summary",
+        "font_id": "embedded:Helvetica-Bold",
+        "font_size_q": 1800,
+        "char_start": 0,
+        "char_end": 20
+      },
+      {
+        "id": "s000002",
+        "page": "p0001",
+        "bbox": [
+          7200,
+          10100,
+          54000,
+          11500
+        ],
+        "text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.",
+        "font_id": "embedded:Helvetica",
+        "font_size_q": 1100,
+        "char_start": 0,
+        "char_end": 66
+      },
+      {
+        "id": "s000003",
+        "page": "p0001",
+        "bbox": [
+          100,
+          79100,
+          6000,
+          79200
+        ],
+        "text": "internal-draft-do-not-cite",
+        "font_id": "subst:liberation-sans",
+        "font_size_q": 100,
+        "warning_refs": [
+          "w0001"
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "id": "t0001",
+        "page_refs": [
+          "p0001"
+        ],
+        "bbox": [
+          7200,
+          13000,
+          54000,
+          20000
+        ],
+        "n_rows": 2,
+        "n_cols": 2,
+        "header_rows": 1,
+        "header_cols": 0,
+        "cells": [
+          {
+            "row": 0,
+            "col": 0,
+            "row_span": 1,
+            "col_span": 1,
+            "bbox": [
+              7200,
+              13000,
+              30600,
+              16500
+            ],
+            "text": "Metric"
+          },
+          {
+            "row": 0,
+            "col": 1,
+            "row_span": 1,
+            "col_span": 1,
+            "bbox": [
+              30600,
+              13000,
+              54000,
+              16500
+            ],
+            "text": "Q3 2025"
+          },
+          {
+            "row": 1,
+            "col": 0,
+            "row_span": 1,
+            "col_span": 1,
+            "bbox": [
+              7200,
+              16500,
+              30600,
+              20000
+            ],
+            "text": "Revenue",
+            "element_refs": [
+              "e000003"
+            ]
+          },
+          {
+            "row": 1,
+            "col": 1,
+            "row_span": 1,
+            "col_span": 1,
+            "bbox": [
+              30600,
+              16500,
+              54000,
+              20000
+            ],
+            "text": "$12.4M"
+          }
+        ],
+        "confidence": 540,
+        "warning_refs": [
+          "w0003"
+        ],
+        "exports": {
+          "markdown": "| Metric | Q3 2025 |\n| --- | --- |\n| Revenue | $12.4M |"
+        }
+      }
+    ],
+    "chunks": [
+      {
+        "id": "c000001",
+        "text": "Q3 Financial Summary\n\nRevenue grew to $12.4M in Q3 2025, driven by enterprise expansion.",
+        "element_refs": [
+          "e000001",
+          "e000002"
+        ],
+        "page_refs": [
+          "p0001"
+        ],
+        "bboxes": [
+          {
+            "page": "p0001",
+            "bbox": [
+              7200,
+              7200,
+              30480,
+              9000
+            ]
+          },
+          {
+            "page": "p0001",
+            "bbox": [
+              7200,
+              10100,
+              54000,
+              11500
+            ]
+          }
+        ],
+        "token_estimate": {
+          "count": 21,
+          "estimator": "ethos-ws-heuristic@1",
+          "approximate": true
+        }
+      },
+      {
+        "id": "c000002",
+        "text": "Metric | Q3 2025\nRevenue | $12.4M",
+        "element_refs": [
+          "e000003"
+        ],
+        "page_refs": [
+          "p0001"
+        ],
+        "bboxes": [
+          {
+            "page": "p0001",
+            "bbox": [
+              7200,
+              13000,
+              54000,
+              20000
+            ]
+          }
+        ],
+        "token_estimate": {
+          "count": 12,
+          "estimator": "ethos-ws-heuristic@1",
+          "approximate": true
+        },
+        "warning_refs": [
+          "w0003"
+        ]
+      }
+    ],
+    "regions": [
+      {
+        "id": "r0001",
+        "page": "p0001",
+        "bbox": [
+          7200,
+          22000,
+          54000,
+          40000
+        ],
+        "kind": "unknown"
+      }
+    ],
+    "security_warnings": [
+      {
+        "id": "w0001",
+        "code": "hidden_text_detected",
+        "message": "hidden text detected: excluded from default chunks",
+        "page": "p0001",
+        "span_ref": "s000003"
+      }
+    ],
+    "parser_warnings": [
+      {
+        "id": "w0002",
+        "code": "low_confidence_reading_order",
+        "message": "reading order confidence below threshold",
+        "page": "p0001",
+        "element_ref": "e000002"
+      },
+      {
+        "id": "w0003",
+        "code": "low_confidence_table_structure",
+        "message": "table structure confidence below threshold",
+        "page": "p0001",
+        "element_ref": "e000003"
+      }
+    ]
+  },
+  "diagnostics": {
+    "parse_ms": 14,
+    "peak_rss_bytes": 28311552,
+    "host": "example — excluded from canonical equality",
+    "source_path": "/tmp/q3-summary.pdf"
+  }
+}

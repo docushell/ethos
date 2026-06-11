@@ -1,0 +1,29 @@
+name: Bug report
+description: Something broke that is not a parser-output quality issue
+labels: [bug, needs-triage]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include the exact command/API call, expected vs actual behavior.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Ethos version / commit
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform (OS, arch)
+      placeholder: macOS 15 arm64 / Ubuntu 24.04 x64 / Windows 11 x64
+    validations:
+      required: true
+  - type: textarea
+    id: determinism
+    attributes:
+      label: Determinism context
+      description: If output differs across runs or platforms, paste both fingerprints — that is release-blocking, say so loudly.

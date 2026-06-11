@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "document_fingerprint": "sha256:ace86a9fd5f262ed22abb9dcfc7aa0b4eaea12d6f2de696272944f3d416fb194",
+  "source_fingerprint": "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+  "profile": {
+    "id": "ethos-deterministic-v1",
+    "sha256": "73c4883acfbe32727b97d4ede0dce7e65c9053a8a98883545cb02a2fe0733a77"
+  },
+  "summary": {
+    "hidden_text_detected": 1,
+    "annotations_present": 1,
+    "external_links_present": 1
+  },
+  "findings": [
+    {
+      "id": "f0001",
+      "code": "hidden_text_detected",
+      "message": "hidden text detected: excluded from default chunks",
+      "page": "p0001",
+      "span_ref": "s000003",
+      "bbox": [
+        100,
+        79100,
+        6000,
+        79200
+      ],
+      "text_preview": "internal-draft-do-not-cite",
+      "excluded_from_default_chunks": true
+    },
+    {
+      "id": "f0002",
+      "code": "annotations_present",
+      "message": "annotations present on page",
+      "page": "p0001",
+      "excluded_from_default_chunks": false
+    },
+    {
+      "id": "f0003",
+      "code": "external_links_present",
+      "message": "external links present on page",
+      "page": "p0001",
+      "excluded_from_default_chunks": false
+    }
+  ],
+  "inventories": {
+    "annotations": [
+      {
+        "page": "p0001",
+        "kind": "link",
+        "bbox": [
+          7200,
+          10100,
+          20000,
+          11500
+        ],
+        "supported": true
+      }
+    ],
+    "actions": [
+      {
+        "kind": "uri",
+        "page": "p0001",
+        "target": "https://example.com/q3"
+      }
+    ],
+    "attachments": [],
+    "scripts": [],
+    "links": [
+      {
+        "page": "p0001",
+        "uri": "https://example.com/q3",
+        "external": true,
+        "bbox": [
+          7200,
+          10100,
+          20000,
+          11500
+        ]
+      }
+    ]
+  }
+}

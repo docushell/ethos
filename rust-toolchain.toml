@@ -1,0 +1,7 @@
+# Pinned toolchain: same compiler everywhere (plan §3.2). Determinism CI, release builds,
+# and local dev all use this exact version. Bump only via PR (it is an output-affecting
+# change candidate: re-run determinism suite on bump).
+[toolchain]
+channel = "1.87.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

@@ -1,0 +1,22 @@
+name: Grounding adapter request
+description: Request a GroundingSource adapter for another parser's output
+labels: [adapter, ethos-verify, needs-triage]
+body:
+  - type: input
+    id: parser
+    attributes:
+      label: Parser name + version
+    validations:
+      required: true
+  - type: textarea
+    id: format
+    attributes:
+      label: Output format
+      description: Link or sample of the parser's JSON/output. What does it expose — pages, elements, bboxes, text, spans, char offsets, fingerprints, coordinate origin?
+    validations:
+      required: true
+  - type: textarea
+    id: capabilities
+    attributes:
+      label: Expected capability gaps
+      description: Anything the format cannot provide becomes an explicit capability_limited downgrade in verification reports — never silently approximated.

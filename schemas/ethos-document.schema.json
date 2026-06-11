@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:document:1",
+  "title": "Ethos canonical document graph",
+  "description": "The primary artifact (ethos.json). Canonical equality is defined over c14n(payload) ONLY; 'diagnostics' is runtime-only and excluded (docs/determinism-contract.md). Every derived artifact (md/txt/chunks/reports/overlays) is reproducible from this document plus versioned config. All geometry is quantized integers (quantum defined by the deterministic profile); element array order IS reading order.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "parser",
+    "profile",
+    "source",
+    "config_sha256",
+    "payload_sha256",
+    "fingerprint",
+    "payload"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "$ref": "#/$defs/semver" },
+    "parser": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "const": "ethos" },
+        "version": { "$ref": "#/$defs/semver" }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "description": "Deterministic profile identity. The full manifest lives in profiles/; its sha256 binds backend build, font profile, quantization, and warning policy into the fingerprint.",
+      "required": ["id", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^ethos-deterministic-v[0-9]+$" },
+        "sha256": { "$ref": "#/$defs/hex256" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["fingerprint", "bytes"],
+      "additionalProperties": false,
+      "properties": {
+        "fingerprint": { "$ref": "#/$defs/fingerprint" },
+        "bytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "config_sha256": {
+      "$ref": "#/$defs/hex256",
+      "description": "sha256 of c14n(effective parse config). Page selection enters this hash: a different --pages range is a legitimately different canonical output."
+    },
+    "payload_sha256": {
+      "$ref": "#/$defs/hex256",
+      "description": "sha256 over c14n bytes of the 'payload' value."
+    },
+    "fingerprint": {
+      "$ref": "#/$defs/fingerprint",
+      "description": "Composite document fingerprint: sha256 over c14n of the fingerprint manifest {schema_version, payload_sha256, source_fingerprint, config_sha256, profile_id, profile_sha256} — see docs/determinism-contract.md §6."
+    },
+    "payload": {
+      "type": "object",
+      "description": "The canonical payload. Byte-identical across supported platforms under the same profile+config (G3). No runtime/diagnostic field may appear here.",
+      "required": ["coordinate_system", "pages", "elements", "spans", "tables", "chunks", "regions", "security_warnings", "parser_warnings"],
+      "additionalProperties": false,
+      "properties": {
+        "coordinate_system": {
+          "type": "object",
+          "description": "Uniform normalized coordinate system for every bbox in the payload (PRD §8 'normalized coordinate system').",
+          "required": ["origin", "unit", "quantum_per_point"],
+          "additionalProperties": false,
+          "properties": {
+            "origin": { "const": "top-left" },
+            "unit": { "const": "quantum" },
+            "quantum_per_point": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "pages": { "type": "array", "items": { "$ref": "#/$defs/page" } },
+        "elements": { "type": "array", "items": { "$ref": "#/$defs/element" } },
+        "spans": { "type": "array", "items": { "$ref": "#/$defs/span" } },
+        "tables": { "type": "array", "items": { "$ref": "#/$defs/table" } },
+        "chunks": { "type": "array", "items": { "$ref": "#/$defs/chunk" } },
+        "regions": { "type": "array", "items": { "$ref": "#/$defs/region" } },
+        "security_warnings": { "type": "array", "items": { "$ref": "#/$defs/warning" } },
+        "parser_warnings": { "type": "array", "items": { "$ref": "#/$defs/warning" } }
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "description": "Runtime-only. Excluded from canonical equality and from every fingerprint. Anything here may differ between runs/hosts (timings, memory, host info, source path).",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "semver": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "hex256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "page_id": { "type": "string", "pattern": "^p[0-9]{4}$" },
+    "element_id": { "type": "string", "pattern": "^e[0-9]{6}$" },
+    "span_id": { "type": "string", "pattern": "^s[0-9]{6}$" },
+    "table_id": { "type": "string", "pattern": "^t[0-9]{4}$" },
+    "chunk_id": { "type": "string", "pattern": "^c[0-9]{6}$" },
+    "region_id": { "type": "string", "pattern": "^r[0-9]{4}$" },
+    "warning_id": { "type": "string", "pattern": "^w[0-9]{4}$" },
+    "bbox": {
+      "type": "array",
+      "description": "[x0, y0, x1, y1] in quanta, top-left origin, x0<=x1, y0<=y1 (validated by the parser; JSON Schema cannot express the inequality).",
+      "items": { "type": "integer" },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "permille": { "type": "integer", "minimum": 0, "maximum": 1000 },
+    "page": {
+      "type": "object",
+      "required": ["id", "index", "width", "height", "rotation"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/page_id" },
+        "index": { "type": "integer", "minimum": 1, "description": "1-based index in the ORIGINAL document; page-range parses keep original indices." },
+        "width": { "type": "integer", "minimum": 0 },
+        "height": { "type": "integer", "minimum": 0 },
+        "rotation": { "enum": [0, 90, 180, 270] }
+      }
+    },
+    "element": {
+      "type": "object",
+      "required": ["id", "type", "page", "bbox"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/element_id" },
+        "type": { "enum": ["text_block", "heading", "list", "list_item", "table", "region", "header", "footer", "caption", "other"] },
+        "page": { "$ref": "#/$defs/page_id" },
+        "bbox": { "$ref": "#/$defs/bbox" },
+        "text": { "type": "string", "description": "Extracted text as-is (no Unicode normalization). Present when applicable." },
+        "heading_level": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "table_ref": { "$ref": "#/$defs/table_id" },
+        "region_ref": { "$ref": "#/$defs/region_id" },
+        "confidence": { "$ref": "#/$defs/permille", "description": "Heuristic confidence in per-mille (integers keep c14n float-free). Present where applicable." },
+        "span_refs": { "type": "array", "items": { "$ref": "#/$defs/span_id" } },
+        "warning_refs": { "type": "array", "items": { "$ref": "#/$defs/warning_id" } }
+      }
+    },
+    "span": {
+      "type": "object",
+      "required": ["id", "page", "bbox", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/span_id" },
+        "page": { "$ref": "#/$defs/page_id" },
+        "bbox": { "$ref": "#/$defs/bbox" },
+        "text": { "type": "string" },
+        "font_id": { "type": "string", "description": "Resolved font identity under the deterministic font profile (ADR-0003): embedded name or substitution-table key." },
+        "font_size_q": { "type": "integer", "minimum": 0, "description": "Font size in quanta." },
+        "char_start": { "type": "integer", "minimum": 0, "description": "Char offset range within the owning element's text, when span->element ownership exists." },
+        "char_end": { "type": "integer", "minimum": 0 },
+        "warning_refs": { "type": "array", "items": { "$ref": "#/$defs/warning_id" } }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": ["id", "page_refs", "bbox", "n_rows", "n_cols", "header_rows", "header_cols", "cells"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/table_id" },
+        "page_refs": { "type": "array", "items": { "$ref": "#/$defs/page_id" }, "minItems": 1 },
+        "bbox": { "$ref": "#/$defs/bbox" },
+        "n_rows": { "type": "integer", "minimum": 1 },
+        "n_cols": { "type": "integer", "minimum": 1 },
+        "header_rows": { "type": "integer", "minimum": 0 },
+        "header_cols": { "type": "integer", "minimum": 0 },
+        "cells": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["row", "col", "row_span", "col_span", "bbox", "text"],
+            "additionalProperties": false,
+            "properties": {
+              "row": { "type": "integer", "minimum": 0 },
+              "col": { "type": "integer", "minimum": 0 },
+              "row_span": { "type": "integer", "minimum": 1 },
+              "col_span": { "type": "integer", "minimum": 1 },
+              "bbox": { "$ref": "#/$defs/bbox" },
+              "text": { "type": "string" },
+              "element_refs": { "type": "array", "items": { "$ref": "#/$defs/element_id" } }
+            }
+          }
+        },
+        "confidence": { "$ref": "#/$defs/permille" },
+        "warning_refs": { "type": "array", "items": { "$ref": "#/$defs/warning_id" }, "description": "Structure warnings, e.g. low_confidence_table_structure." },
+        "exports": {
+          "type": "object",
+          "description": "Optional derived exports; deterministic functions of cells (never authored independently).",
+          "additionalProperties": false,
+          "properties": {
+            "csv": { "type": "string" },
+            "markdown": { "type": "string" }
+          }
+        }
+      }
+    },
+    "chunk": {
+      "type": "object",
+      "required": ["id", "text", "element_refs", "page_refs", "bboxes", "token_estimate"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/chunk_id" },
+        "text": { "type": "string" },
+        "element_refs": { "type": "array", "items": { "$ref": "#/$defs/element_id" }, "minItems": 1 },
+        "page_refs": { "type": "array", "items": { "$ref": "#/$defs/page_id" }, "minItems": 1 },
+        "bboxes": {
+          "type": "array",
+          "description": "Citation targets: one bbox per cited page region.",
+          "items": {
+            "type": "object",
+            "required": ["page", "bbox"],
+            "additionalProperties": false,
+            "properties": {
+              "page": { "$ref": "#/$defs/page_id" },
+              "bbox": { "$ref": "#/$defs/bbox" }
+            }
+          },
+          "minItems": 1
+        },
+        "token_estimate": {
+          "type": "object",
+          "required": ["count", "estimator", "approximate"],
+          "additionalProperties": false,
+          "properties": {
+            "count": { "type": "integer", "minimum": 0 },
+            "estimator": { "type": "string", "description": "Pinned estimator identifier (name@version)." },
+            "approximate": { "type": "boolean" }
+          }
+        },
+        "warning_refs": { "type": "array", "items": { "$ref": "#/$defs/warning_id" }, "description": "Inherited from source regions. Hidden/off-page/low-contrast content is NEVER in default chunks (PRD §14)." }
+      }
+    },
+    "region": {
+      "type": "object",
+      "description": "Non-text region with stable coordinates. Semantic labels (image/figure/formula/chart) are optional and move to enrichment unless deterministic quality gates are met; base tier may emit 'unknown'.",
+      "required": ["id", "page", "bbox", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/region_id" },
+        "page": { "$ref": "#/$defs/page_id" },
+        "bbox": { "$ref": "#/$defs/bbox" },
+        "kind": { "enum": ["unknown", "image", "figure", "formula", "chart"] },
+        "warning_refs": { "type": "array", "items": { "$ref": "#/$defs/warning_id" } }
+      }
+    },
+    "warning": {
+      "type": "object",
+      "description": "Stable, deterministic warning. Messages come from fixed templates — no timestamps, paths, or host data.",
+      "required": ["id", "code", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/warning_id" },
+        "code": {
+          "enum": [
+            "low_confidence_reading_order",
+            "low_confidence_table_structure",
+            "hidden_text_detected",
+            "off_page_text_detected",
+            "low_contrast_text_detected",
+            "annotations_present",
+            "external_links_present",
+            "image_only_page",
+            "unsupported_annotation",
+            "partial_parse",
+            "capability_limited"
+          ]
+        },
+        "message": { "type": "string" },
+        "page": { "$ref": "#/$defs/page_id" },
+        "element_ref": { "$ref": "#/$defs/element_id" },
+        "span_ref": { "$ref": "#/$defs/span_id" },
+        "region_ref": { "$ref": "#/$defs/region_id" }
+      }
+    }
+  }
+}

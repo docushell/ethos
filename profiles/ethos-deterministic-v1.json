@@ -1,0 +1,53 @@
+{
+  "profile_id": "ethos-deterministic-v1",
+  "profile_version": "1.0.0",
+  "schema_version": "1.0.0",
+  "c14n": {
+    "version": "c14n-v1",
+    "spec": "docs/determinism-contract.md"
+  },
+  "quantization": {
+    "quantum_per_point": 100,
+    "rounding": "half-away-from-zero",
+    "stage": "extraction"
+  },
+  "id_scheme": {
+    "version": "ids-v1"
+  },
+  "font_policy": {
+    "adr": "ADR-0003",
+    "substitution_table": {
+      "path": "crates/ethos-pdf/assets/font-substitution-table.json",
+      "sha256": null
+    },
+    "fallback_bundle": {
+      "name": "liberation",
+      "license": "OFL-1.1",
+      "sha256": null
+    },
+    "system_font_fallback": "disabled"
+  },
+  "backend": {
+    "id": "pdfium",
+    "phase": null,
+    "version": null,
+    "v8": "disabled",
+    "xfa": "disabled",
+    "platform_hashes": {
+      "macos-arm64": null,
+      "linux-x64": null,
+      "windows-x64": null
+    },
+    "profile_doc": "docs/pdfium-profile.md"
+  },
+  "warning_policy": {
+    "messages": "fixed-templates",
+    "ordering": "canonical-traversal"
+  },
+  "config_hash_inputs": [
+    "pages"
+  ],
+  "canonical_exclusions": [
+    "$.diagnostics"
+  ]
+}

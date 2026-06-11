@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:security-report:1",
+  "title": "Ethos security report (security_report.json)",
+  "description": "Hidden/off-page/low-contrast text, annotations, actions, attachments, scripts, and links surfaced explicitly. Derived from the canonical document + security pass; deterministic under the same profile+config. Findings flagged excluded_from_default_chunks=true are guaranteed absent from default chunks.jsonl.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "document_fingerprint",
+    "source_fingerprint",
+    "profile",
+    "summary",
+    "findings",
+    "inventories"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "document_fingerprint": { "$ref": "#/$defs/fingerprint" },
+    "source_fingerprint": { "$ref": "#/$defs/fingerprint" },
+    "profile": {
+      "type": "object",
+      "required": ["id", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^ethos-deterministic-v[0-9]+$" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Counts per finding code; keys are the security-relevant warning codes.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(hidden_text_detected|off_page_text_detected|low_contrast_text_detected|annotations_present|external_links_present|unsupported_annotation|image_only_page)$": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "code", "message", "excluded_from_default_chunks"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^f[0-9]{4}$" },
+          "code": {
+            "enum": [
+              "hidden_text_detected",
+              "off_page_text_detected",
+              "low_contrast_text_detected",
+              "annotations_present",
+              "external_links_present",
+              "unsupported_annotation",
+              "image_only_page"
+            ]
+          },
+          "message": { "type": "string", "description": "Fixed deterministic template — no timestamps/paths/host data." },
+          "page": { "type": "string", "pattern": "^p[0-9]{4}$" },
+          "element_ref": { "type": "string", "pattern": "^e[0-9]{6}$" },
+          "span_ref": { "type": "string", "pattern": "^s[0-9]{6}$" },
+          "bbox": { "$ref": "#/$defs/bbox" },
+          "text_preview": { "type": "string", "description": "Deterministically truncated preview of the suspicious text (truncation rule in determinism contract)." },
+          "excluded_from_default_chunks": { "type": "boolean" }
+        }
+      }
+    },
+    "inventories": {
+      "type": "object",
+      "required": ["annotations", "actions", "attachments", "scripts", "links"],
+      "additionalProperties": false,
+      "properties": {
+        "annotations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["page", "kind"],
+            "additionalProperties": false,
+            "properties": {
+              "page": { "type": "string", "pattern": "^p[0-9]{4}$" },
+              "kind": { "type": "string", "description": "PDF annotation subtype, lowercased (e.g. 'link', 'widget', 'popup')." },
+              "bbox": { "$ref": "#/$defs/bbox" },
+              "supported": { "type": "boolean" }
+            }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "type": "string", "description": "PDF action type, lowercased (e.g. 'javascript', 'launch', 'uri', 'gotor')." },
+              "page": { "type": "string", "pattern": "^p[0-9]{4}$" },
+              "target": { "type": "string", "description": "Deterministically truncated target descriptor. Never followed or executed." }
+            }
+          }
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "bytes"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "bytes": { "type": "integer", "minimum": 0 },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            }
+          }
+        },
+        "scripts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["location"],
+            "additionalProperties": false,
+            "properties": {
+              "location": { "enum": ["document", "page", "annotation", "field", "other"] },
+              "page": { "type": "string", "pattern": "^p[0-9]{4}$" },
+              "trigger": { "type": "string", "description": "Event name, lowercased. Scripts are never executed (no-JS guarantee)." }
+            }
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["page", "uri", "external"],
+            "additionalProperties": false,
+            "properties": {
+              "page": { "type": "string", "pattern": "^p[0-9]{4}$" },
+              "uri": { "type": "string", "description": "As declared in the PDF. Never fetched or followed." },
+              "external": { "type": "boolean" },
+              "bbox": { "$ref": "#/$defs/bbox" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "bbox": { "type": "array", "items": { "type": "integer" }, "minItems": 4, "maxItems": 4 }
+  }
+}

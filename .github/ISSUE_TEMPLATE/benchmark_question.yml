@@ -1,0 +1,21 @@
+name: Benchmark question
+description: Question or dispute about published benchmark numbers or methodology
+labels: [benchmarks, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every published table is one-command reproducible with pinned competitor versions
+        (`benchmarks/competitors.lock.json`). Disputes that include a reproduction attempt
+        get priority.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question / dispute
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Your reproduction attempt
+      description: Command, environment, hardware, versions, results JSON if you ran it.

@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:deterministic-profile:1",
+  "title": "Ethos deterministic profile manifest",
+  "description": "The checker schema for profiles/ethos-deterministic-*.json. The profile pins everything that may influence canonical output: c14n version, quantization, font policy, backend build identity, warning policy, config-hash inputs, and the runtime fields excluded from canonical equality. The profile artifact's own sha256 (over its c14n bytes) enters every document fingerprint.",
+  "type": "object",
+  "required": [
+    "profile_id",
+    "profile_version",
+    "schema_version",
+    "c14n",
+    "quantization",
+    "id_scheme",
+    "font_policy",
+    "backend",
+    "warning_policy",
+    "config_hash_inputs",
+    "canonical_exclusions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "profile_id": { "type": "string", "pattern": "^ethos-deterministic-v[0-9]+$" },
+    "profile_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "c14n": {
+      "type": "object",
+      "required": ["version", "spec"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string", "pattern": "^c14n-v[0-9]+$" },
+        "spec": { "const": "docs/determinism-contract.md" }
+      }
+    },
+    "quantization": {
+      "type": "object",
+      "required": ["quantum_per_point", "rounding", "stage"],
+      "additionalProperties": false,
+      "properties": {
+        "quantum_per_point": { "type": "integer", "minimum": 1 },
+        "rounding": { "const": "half-away-from-zero" },
+        "stage": {
+          "const": "extraction",
+          "description": "Invariant 1: quantization happens in ethos-pdf at extraction, before any heuristic consumes coordinates. Enforced by type (QuantizedGeom)."
+        }
+      }
+    },
+    "id_scheme": {
+      "type": "object",
+      "required": ["version"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string", "description": "ID derivation scheme version (determinism contract §5): ids are functions of canonical traversal order." }
+      }
+    },
+    "font_policy": {
+      "type": "object",
+      "required": ["adr", "substitution_table", "fallback_bundle", "system_font_fallback"],
+      "additionalProperties": false,
+      "properties": {
+        "adr": { "const": "ADR-0003" },
+        "substitution_table": {
+          "type": "object",
+          "required": ["path", "sha256"],
+          "additionalProperties": false,
+          "properties": {
+            "path": { "type": "string" },
+            "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$", "description": "null until WS-ENGINE lands the table (Milestone A week 2)." }
+          }
+        },
+        "fallback_bundle": {
+          "type": "object",
+          "required": ["name", "license", "sha256"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "const": "liberation" },
+            "license": { "const": "OFL-1.1" },
+            "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "system_font_fallback": { "const": "disabled" }
+      }
+    },
+    "backend": {
+      "type": "object",
+      "description": "PDFium build identity (ADR-0002). Placeholders are null until WS-ENGINE pins Phase 1; Gate Zero requires them filled; Public Beta requires phase=2.",
+      "required": ["id", "phase", "version", "v8", "xfa", "platform_hashes", "profile_doc"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "const": "pdfium" },
+        "phase": { "enum": [1, 2, null] },
+        "version": { "type": ["string", "null"] },
+        "v8": { "const": "disabled" },
+        "xfa": { "const": "disabled" },
+        "platform_hashes": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^(macos-arm64|macos-x64|linux-x64|linux-arm64|windows-x64)$": {
+              "type": ["string", "null"],
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "profile_doc": { "const": "docs/pdfium-profile.md" }
+      }
+    },
+    "warning_policy": {
+      "type": "object",
+      "required": ["messages", "ordering"],
+      "additionalProperties": false,
+      "properties": {
+        "messages": { "const": "fixed-templates" },
+        "ordering": { "const": "canonical-traversal" }
+      }
+    },
+    "config_hash_inputs": {
+      "type": "array",
+      "description": "Exactly which effective-config fields enter config_sha256 (determinism contract §7).",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "canonical_exclusions": {
+      "type": "array",
+      "description": "Runtime fields that exist in artifacts but sit OUTSIDE canonical equality.",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  }
+}

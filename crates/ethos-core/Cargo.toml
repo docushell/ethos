@@ -1,0 +1,29 @@
+[package]
+name = "ethos-core"
+description = "Ethos canonical document model, IDs, errors, schema types, traits, c14n and fingerprints"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[features]
+default = ["full"]
+# `grounding` is the ONLY feature ethos-verify may depend on (invariant 4): the
+# GroundingSource trait module with zero parser-internal types.
+grounding = []
+# Verification report/config schema types + stable warning codes (still parser-internal-free).
+verify-types = ["grounding"]
+# Everything: canonical model, c14n, fingerprints, geometry, config, backend/layout traits.
+full = ["verify-types", "dep:serde_json", "dep:sha2", "dep:thiserror"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+thiserror = { workspace = true, optional = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+serde_json = { workspace = true }

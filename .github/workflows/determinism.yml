@@ -1,0 +1,41 @@
+# determinism.yml — nightly + contract-change PRs (plan §9).
+# Gate Zero platforms first (macOS arm64 + Linux x64); Windows x64 joins no later than
+# Milestone B exit (week 8). Unresolved Windows divergence blocks or re-scopes Public Beta.
+# Determinism failures are NEVER retried into green — a flaky fingerprint IS the bug.
+name: determinism
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # nightly
+  pull_request:
+    types: [opened, synchronize, labeled]
+  workflow_dispatch:
+
+jobs:
+  cross-platform:
+    if: >-
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'contract-change')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, ubuntu-latest] # macOS arm64 + Linux x64 (Gate Zero platforms)
+        # TODO(week 8 / Milestone B exit): add windows-latest (risk R9; release-blocking
+        # for Public Beta if divergent)
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show
+      # The contract vectors pin exact c14n bytes + sha256 per platform: every platform
+      # asserting the same pinned hashes IS cross-platform byte equality for the
+      # serialization layer. Corpus-level fingerprint comparison joins when the engine
+      # parses the frozen manifest (WS-ENGINE + WS-HARNESS).
+      - run: cargo test --locked -p ethos-core --all-features
+      - name: full-corpus fingerprint equality
+        shell: bash
+        run: |
+          if compgen -G "fixtures/*/*/*.pdf" > /dev/null; then
+            echo "TODO(WS-ENGINE/WS-HARNESS): parse corpus, emit fingerprints, diff across matrix" && exit 1
+          else
+            echo "skipped: engine lane pending — vector tests above carry the guarantee for c14n"
+          fi
