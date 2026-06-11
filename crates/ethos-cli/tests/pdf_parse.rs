@@ -41,7 +41,7 @@ fn parse_json(args: &[&str]) -> Value {
 }
 
 #[test]
-fn parses_two_line_pdf_into_line_text_blocks_when_pdfium_is_configured() {
+fn parses_two_line_pdf_into_paragraph_text_block_when_pdfium_is_configured() {
     if !pdfium_configured() {
         eprintln!("skipping two-line layout test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
         return;
@@ -57,18 +57,12 @@ fn parses_two_line_pdf_into_line_text_blocks_when_pdfium_is_configured() {
     ]);
 
     let elements = doc["payload"]["elements"].as_array().unwrap();
-    assert_eq!(elements.len(), 2);
+    assert_eq!(elements.len(), 1);
     assert_eq!(elements[0]["id"], "e000001");
-    assert_eq!(elements[0]["text"], "First line");
+    assert_eq!(elements[0]["text"], "First line Second line");
     assert_eq!(
         elements[0]["span_refs"],
-        serde_json::json!(["s000001", "s000002"])
-    );
-    assert_eq!(elements[1]["id"], "e000002");
-    assert_eq!(elements[1]["text"], "Second line");
-    assert_eq!(
-        elements[1]["span_refs"],
-        serde_json::json!(["s000003", "s000004"])
+        serde_json::json!(["s000001", "s000002", "s000003", "s000004"])
     );
 
     let spans = doc["payload"]["spans"].as_array().unwrap();
@@ -77,10 +71,10 @@ fn parses_two_line_pdf_into_line_text_blocks_when_pdfium_is_configured() {
     assert_eq!(spans[0]["char_end"], 5);
     assert_eq!(spans[1]["char_start"], 6);
     assert_eq!(spans[1]["char_end"], 10);
-    assert_eq!(spans[2]["char_start"], 0);
-    assert_eq!(spans[2]["char_end"], 6);
-    assert_eq!(spans[3]["char_start"], 7);
-    assert_eq!(spans[3]["char_end"], 11);
+    assert_eq!(spans[2]["char_start"], 11);
+    assert_eq!(spans[2]["char_end"], 17);
+    assert_eq!(spans[3]["char_start"], 18);
+    assert_eq!(spans[3]["char_end"], 22);
 }
 
 #[test]

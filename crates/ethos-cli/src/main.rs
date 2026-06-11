@@ -637,14 +637,16 @@ mod tests {
         )
         .unwrap();
         doc.verify_integrity().unwrap();
-        assert_eq!(doc.payload.elements.len(), 2);
-        assert_eq!(doc.payload.elements[0].text.as_deref(), Some("Hello Ethos"));
-        assert_eq!(doc.payload.elements[1].text.as_deref(), Some("Again"));
+        assert_eq!(doc.payload.elements.len(), 1);
+        assert_eq!(
+            doc.payload.elements[0].text.as_deref(),
+            Some("Hello Ethos Again")
+        );
         assert_eq!(doc.payload.spans[0].char_start, Some(0));
         assert_eq!(doc.payload.spans[0].char_end, Some(5));
         assert_eq!(doc.payload.spans[1].char_start, Some(6));
         assert_eq!(doc.payload.spans[1].char_end, Some(11));
-        assert_eq!(doc.payload.spans[2].char_start, Some(0));
-        assert_eq!(doc.payload.spans[2].char_end, Some(5));
+        assert_eq!(doc.payload.spans[2].char_start, Some(12));
+        assert_eq!(doc.payload.spans[2].char_end, Some(17));
     }
 }
