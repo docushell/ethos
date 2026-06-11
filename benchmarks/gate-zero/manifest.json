@@ -50,7 +50,7 @@
     }
   ],
   "determinism_platforms": ["macos-arm64", "linux-x64"],
-  "windows_x64_note": "Windows x64 joins nightly determinism no later than Milestone B exit (week 8); unresolved divergence blocks or re-scopes Public Beta.",
+  "windows_x64_note": "Windows x64 joins nightly determinism no later than Milestone B exit (week 14 under ADR-0001 reduced-staff schedule); unresolved divergence blocks or re-scopes Public Beta.",
   "todo_before_freeze": [
     "Populate corpus[] with per-file sha256 and subset tags (corpus owner)",
     "Fill exact CPU/RAM/OS/kernel/runner strings for both hosts (recorded ONLY here)",

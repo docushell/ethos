@@ -4,6 +4,7 @@
 > use. Gate Zero (the go/no-go measurement for the parser core) has not run. No performance,
 > footprint, or quality claims are made until the published, reproducible benchmark report
 > exists (Milestone E).
+> Current execution status and blockers live in `docs/execution-status.md`.
 
 Ethos is a fast, deterministic, runtime-light PDF parser for RAG and AI agents. It turns
 born-digital PDFs into an auditable document graph: JSON, Markdown, text, chunks, tables,

@@ -16,8 +16,13 @@ use std::process::ExitCode;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use ethos_core::config::{PageSelection, ParseConfig};
 use ethos_core::error::{ErrorCode, EthosError};
-use ethos_core::model::Document;
-use ethos_core::traits::EthosPdfBackend as _;
+use ethos_core::fingerprint::{source_fingerprint, FingerprintManifest};
+use ethos_core::geom::QRect;
+use ethos_core::ids::element_id;
+use ethos_core::model::{
+    CoordinateSystem, Document, Element, ElementType, ParserInfo, Payload, ProfileRef, SourceInfo,
+};
+use ethos_core::traits::{BackendManifest, EthosPdfBackend as _, Extraction};
 use ethos_core::verify_types::VerificationConfig;
 use ethos_grounding_opendataloader_json::OdlJsonSource;
 
@@ -208,9 +213,6 @@ fn doc_parse(args: DocParseArgs) -> Result<(), Failure> {
         pages,
         ..Default::default()
     };
-    // config hash is live from the skeleton on: page selection is canonical-output identity
-    let _config_sha256 = config.config_sha256()?;
-
     let pdf_bytes = read_file(&args.input)?;
     if pdf_bytes.len() as u64 > config.limits.max_file_bytes {
         return Err(
@@ -218,13 +220,21 @@ fn doc_parse(args: DocParseArgs) -> Result<(), Failure> {
         );
     }
 
-    // Backend boundary (invariant 3). Fails with a stable code until WS-ENGINE lands.
-    let backend = ethos_pdf::PdfiumBackend;
-    let _extraction = backend.extract(&pdf_bytes, &config)?;
-
-    // Unreachable until the engine exists; the assembly pipeline (extraction → layout →
-    // payload → fingerprints → c14n output) is Milestone A/B lane work.
-    Err(EthosError::internal("document assembly lands with the engine (WS-ENGINE)").into())
+    let backend = ethos_pdf::PdfiumBackend::default();
+    let page_count = backend.page_count(&pdf_bytes)?;
+    config
+        .pages
+        .validate_against(page_count)
+        .map_err(|e| Failure::Usage(format!("--pages: {e}")))?;
+    let extraction = backend.extract(&pdf_bytes, &config)?;
+    let doc = assemble_document(
+        &pdf_bytes,
+        &config,
+        extraction,
+        backend.manifest(),
+        args.diagnostics,
+    )?;
+    write_document(args.format, args.out, &doc)
 }
 
 fn rag_chunk(args: RagChunkArgs) -> Result<(), Failure> {
@@ -362,16 +372,270 @@ fn fingerprint(input: PathBuf) -> Result<(), Failure> {
         .extension()
         .is_some_and(|e| e.eq_ignore_ascii_case("pdf"))
     {
-        // PDF path goes through the backend (stable failure until WS-ENGINE lands);
-        // once the engine exists this becomes parse → fingerprint of the canonical output.
         let bytes = read_file(&input)?;
-        let backend = ethos_pdf::PdfiumBackend;
-        backend.page_count(&bytes)?;
-        return Err(
-            EthosError::internal("pdf fingerprinting lands with the engine (WS-ENGINE)").into(),
-        );
+        let config = ParseConfig::default();
+        let backend = ethos_pdf::PdfiumBackend::default();
+        let extraction = backend.extract(&bytes, &config)?;
+        let doc = assemble_document(&bytes, &config, extraction, backend.manifest(), false);
+        println!("{}", doc?.fingerprint);
+        return Ok(());
     }
     let doc = read_document(&input)?;
     println!("{}", doc.fingerprint);
     Ok(())
+}
+
+fn assemble_document(
+    source_bytes: &[u8],
+    config: &ParseConfig,
+    extraction: Extraction,
+    backend_manifest: BackendManifest,
+    include_diagnostics: bool,
+) -> Result<Document, EthosError> {
+    let mut spans = extraction.spans;
+    let elements = build_page_elements(&extraction.pages, &mut spans)?;
+    let mut security_warnings = Vec::new();
+    let mut parser_warnings = Vec::new();
+    for warning in extraction.warnings {
+        if warning.code.is_security() {
+            security_warnings.push(warning);
+        } else {
+            parser_warnings.push(warning);
+        }
+    }
+
+    let payload = Payload {
+        coordinate_system: CoordinateSystem {
+            origin: "top-left".to_string(),
+            unit: "quantum".to_string(),
+            quantum_per_point: 100,
+        },
+        pages: extraction.pages,
+        elements,
+        spans,
+        tables: Vec::new(),
+        chunks: Vec::new(),
+        regions: extraction.regions,
+        security_warnings,
+        parser_warnings,
+    };
+
+    let payload_value =
+        serde_json::to_value(&payload).map_err(|e| EthosError::internal(e.to_string()))?;
+    let payload_sha256 = ethos_core::c14n::sha256_hex(&payload_value)
+        .map_err(|e| EthosError::internal(e.message))?;
+    let profile_sha256 = profile_sha256()?;
+    let source_fingerprint = source_fingerprint(source_bytes);
+    let config_sha256 = config.config_sha256()?;
+    let manifest = FingerprintManifest {
+        config_sha256: config_sha256.clone(),
+        payload_sha256: payload_sha256.clone(),
+        profile_id: ethos_core::PROFILE_ID.to_string(),
+        profile_sha256: profile_sha256.clone(),
+        schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+        source_fingerprint: source_fingerprint.clone(),
+    };
+    let fingerprint = manifest
+        .document_fingerprint()
+        .map_err(|e| EthosError::internal(e.message))?;
+
+    let diagnostics = if include_diagnostics {
+        Some(serde_json::json!({
+            "backend": backend_manifest,
+            "surface": "ethos-cli",
+        }))
+    } else {
+        None
+    };
+
+    Ok(Document {
+        schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+        parser: ParserInfo {
+            name: "ethos".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        },
+        profile: ProfileRef {
+            id: ethos_core::PROFILE_ID.to_string(),
+            sha256: profile_sha256,
+        },
+        source: SourceInfo {
+            fingerprint: source_fingerprint,
+            bytes: source_bytes.len() as u64,
+        },
+        config_sha256,
+        payload_sha256,
+        fingerprint,
+        payload,
+        diagnostics,
+    })
+}
+
+fn build_page_elements(
+    pages: &[ethos_core::model::Page],
+    spans: &mut [ethos_core::model::Span],
+) -> Result<Vec<Element>, EthosError> {
+    let mut elements = Vec::new();
+    let mut next_element = 1u32;
+    for page in pages {
+        let page_span_indices: Vec<usize> = spans
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, span)| (span.page == page.id).then_some(idx))
+            .collect();
+        if page_span_indices.is_empty() {
+            continue;
+        }
+
+        let mut text = String::new();
+        let mut char_cursor = 0u32;
+        let mut bbox: Option<QRect> = None;
+        let mut span_refs = Vec::with_capacity(page_span_indices.len());
+
+        for idx in page_span_indices {
+            if !text.is_empty() {
+                text.push(' ');
+                char_cursor += 1;
+            }
+            let span_text_chars = spans[idx].text.chars().count();
+            let span_text_chars = u32::try_from(span_text_chars)
+                .map_err(|_| EthosError::internal("span text length overflow"))?;
+            spans[idx].char_start = Some(char_cursor);
+            char_cursor += span_text_chars;
+            spans[idx].char_end = Some(char_cursor);
+            text.push_str(&spans[idx].text);
+            bbox = Some(match bbox {
+                Some(existing) => union_rect(existing, spans[idx].bbox),
+                None => spans[idx].bbox,
+            });
+            span_refs.push(spans[idx].id.clone());
+        }
+
+        elements.push(Element {
+            id: element_id(next_element)?,
+            element_type: ElementType::TextBlock,
+            page: page.id.clone(),
+            bbox: bbox.ok_or_else(|| EthosError::internal("element has no bbox"))?,
+            text: Some(text),
+            heading_level: None,
+            table_ref: None,
+            region_ref: None,
+            confidence: None,
+            span_refs,
+            warning_refs: Vec::new(),
+        });
+        next_element += 1;
+    }
+    Ok(elements)
+}
+
+fn union_rect(a: QRect, b: QRect) -> QRect {
+    QRect {
+        x0: a.x0.min(b.x0),
+        y0: a.y0.min(b.y0),
+        x1: a.x1.max(b.x1),
+        y1: a.y1.max(b.y1),
+    }
+}
+
+fn profile_sha256() -> Result<String, EthosError> {
+    let raw = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../profiles/ethos-deterministic-v1.json"
+    ));
+    let value: serde_json::Value =
+        serde_json::from_str(raw).map_err(|e| EthosError::internal(e.to_string()))?;
+    ethos_core::c14n::sha256_hex(&value).map_err(|e| EthosError::internal(e.message))
+}
+
+fn write_document(format: Format, out: Option<PathBuf>, doc: &Document) -> Result<(), Failure> {
+    let mut bytes = match format {
+        Format::Json => {
+            let value =
+                serde_json::to_value(doc).map_err(|e| EthosError::internal(e.to_string()))?;
+            ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?
+        }
+        Format::Markdown => render_markdown(doc).into_bytes(),
+        Format::Text => render_text(doc).into_bytes(),
+    };
+    bytes.push(b'\n');
+    write_output(out, &bytes)
+}
+
+fn render_text(doc: &Document) -> String {
+    doc.payload
+        .elements
+        .iter()
+        .filter_map(|element| element.text.as_deref())
+        .collect::<Vec<_>>()
+        .join("\n\n")
+}
+
+fn render_markdown(doc: &Document) -> String {
+    render_text(doc)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ethos_core::geom::QRect;
+    use ethos_core::model::{Page, Span};
+    use ethos_core::traits::Extraction;
+
+    #[test]
+    fn assembles_extraction_into_self_consistent_document() {
+        let extraction = Extraction {
+            pages: vec![Page {
+                id: "p0001".to_string(),
+                index: 1,
+                width: 1000,
+                height: 1000,
+                rotation: 0,
+            }],
+            spans: vec![
+                Span {
+                    id: "s000001".to_string(),
+                    page: "p0001".to_string(),
+                    bbox: QRect::new(0, 0, 100, 100).unwrap(),
+                    text: "Hello".to_string(),
+                    font_id: None,
+                    font_size_q: Some(1200),
+                    char_start: None,
+                    char_end: None,
+                    warning_refs: vec![],
+                },
+                Span {
+                    id: "s000002".to_string(),
+                    page: "p0001".to_string(),
+                    bbox: QRect::new(120, 0, 220, 100).unwrap(),
+                    text: "Ethos".to_string(),
+                    font_id: None,
+                    font_size_q: Some(1200),
+                    char_start: None,
+                    char_end: None,
+                    warning_refs: vec![],
+                },
+            ],
+            regions: vec![],
+            warnings: vec![],
+        };
+        let doc = assemble_document(
+            b"%PDF-1.7\n",
+            &ParseConfig::default(),
+            extraction,
+            BackendManifest {
+                id: "pdfium".to_string(),
+                phase: 1,
+                version: "test".to_string(),
+                platform_sha256: "0".repeat(64),
+            },
+            true,
+        )
+        .unwrap();
+        doc.verify_integrity().unwrap();
+        assert_eq!(doc.payload.elements[0].text.as_deref(), Some("Hello Ethos"));
+        assert_eq!(doc.payload.spans[0].char_start, Some(0));
+        assert_eq!(doc.payload.spans[0].char_end, Some(5));
+        assert_eq!(doc.payload.spans[1].char_start, Some(6));
+        assert_eq!(doc.payload.spans[1].char_end, Some(11));
+    }
 }

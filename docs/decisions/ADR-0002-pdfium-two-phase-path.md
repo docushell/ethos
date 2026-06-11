@@ -6,13 +6,13 @@
 
 ## Context
 
-PDFium is the Release 1 candidate backend, used only behind `EthosPdfBackend`. The archived `chromium/pdfium` GitHub repository is a mirror, not the source of truth; the canonical source is `pdfium.googlesource.com`. Gate Zero (week 4) cannot wait for project-maintained builds, but Public Beta cannot ship on third-party binaries.
+PDFium is the Release 1 candidate backend, used only behind `EthosPdfBackend`. The archived `chromium/pdfium` GitHub repository is a mirror, not the source of truth; the canonical source is `pdfium.googlesource.com`. Gate Zero cannot wait for project-maintained builds, but Public Beta cannot ship on third-party binaries. ADR-0001 moved Gate Zero to week 8 under the reduced-staff schedule; this ADR's distribution decision is unchanged.
 
 ## Decision
 
 Two phases:
 
-1. **Phase 1 — Milestone A / Gate Zero:** pinned `bblanchon/pdfium-binaries` artifacts, **V8 disabled, XFA disabled**, pinned by exact release/version and per-platform sha256. Pins land in `docs/pdfium-profile.md` and the deterministic profile manifest (WS-ENGINE week 1).
+1. **Phase 1 — Milestone A / Gate Zero:** pinned `bblanchon/pdfium-binaries` artifacts, **V8 disabled, XFA disabled**, pinned by exact release/version and per-platform sha256. Pins land in `docs/pdfium-profile.md` and the deterministic profile manifest during WS-ENGINE.
 2. **Phase 2 — by Milestone E / Public Beta:** project-maintained builds from `pdfium.googlesource.com` with pinned source revision, recorded build flags, toolchain, patches, and per-platform hashes.
 
 **Public Beta is blocked on Phase 2.** If project-maintained builds are not ready by Milestone E, Public Beta is blocked or re-scoped — never shipped on Phase 1 binaries.

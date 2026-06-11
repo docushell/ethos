@@ -30,6 +30,16 @@ The project name is **Ethos**; `ethos` is a loaded name with collision/trademark
 - [ ] Trademark scan (software classes) for "Ethos" in primary jurisdictions
 - [ ] Record outcomes here; if any conflict → rename via this ADR before any public artifact (risk R8 trigger)
 
+## Evidence required before acceptance
+
+| Check | Evidence to record |
+| --- | --- |
+| crates.io | Search date, exact names checked, availability/reservation result, owner account if reserved |
+| PyPI | Search date, normalized package name checked, availability/reservation result, owner account if reserved |
+| npm | Search date, scope/package checked, availability/reservation result, owner account if reserved |
+| GitHub | Search date, org/repo names checked, collision notes |
+| Trademark | Search date, jurisdictions/classes checked, conflict assessment |
+
 ## Decision
 
 Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.

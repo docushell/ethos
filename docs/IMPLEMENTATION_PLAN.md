@@ -1,11 +1,12 @@
 # Ethos - Implementation Plan
 
-Status: v2.1 - updated against PRD v3.5 (OSS-only); supersedes v2.0 where changed
-Date: 2026-06-10
+Status: v2.2 - reduced-staffing schedule after ADR-0001; updated against PRD v3.5 (OSS-only); supersedes v2.1 where changed
+Date: 2026-06-11
 Source of truth: the Ethos OSS product requirements document in this docs directory (**PRD v3.5 OSS-Only**). Where this plan and the PRD conflict, **the PRD wins**; raise an ADR to change either. Every task carries its governing v3.5 section.
 Scope rule (PRD preamble, 14): this plan is **Ethos OSS-only**. Hosted/platform integration, commercial packaging, and consuming-platform rollout are out of scope. Nothing in this plan depends on any platform.
 Method: contract-first architecture discipline (senior-architect); execution as a multi-agent workflow with explicit patterns, bounded handoffs, validation gates, and failure paths (agent-workflow-designer).
-Plan-level constructs: week numbers beyond Gate Zero's week-4 bound (PRD 1.3), the quarter checkpoints, and the staffing assumption are **plan commitments, not PRD requirements** - amend them here by PR with maintainer sign-off.
+Plan-level constructs: week numbers, checkpoint dates, and staffing assumptions are **plan commitments, not PRD requirements** - amend them here by PR with maintainer sign-off. ADR-0001 accepted reduced staffing and replaces the v2.1 week-4/13/26 schedule with the v2.2 week-8/22/40 schedule below.
+Current execution status, blockers, and active lane acceptance criteria live in `docs/execution-status.md`.
 
 ---
 
@@ -13,15 +14,15 @@ Plan-level constructs: week numbers beyond Gate Zero's week-4 bound (PRD 1.3), t
 
 ### 1.1 Workflow pattern selection
 
-- **Milestone A (weeks 1-4)** is an **orchestrator + parallel** workflow with one **evaluator gate** (Gate Zero, PRD 1.3). Three independent lanes - engine spike, contracts/schemas, harness/CI - converge on the gate. Parallel is mandatory; sequential misses week 4.
+- **Milestone A (weeks 1-8)** is an **orchestrator + serialized critical path** workflow with one **evaluator gate** (Gate Zero, PRD 1.3). Contracts/schemas land first, then engine and harness move through bounded handoffs. The only allowed parallelism is one implementation lane plus lightweight benchmark/devrel support; the accepted staffing cannot safely run three implementation lanes.
 - **Milestones B-E** run as **orchestrator** with bounded parallel lanes per crate, each gated by **evaluator loops** (fixtures-first, determinism CI, schema-compat - PRD 11.3, 14).
-- **Gate Zero G2/G3 failure** triggers a pre-scoped **router branch**: stop parser-core expansion and continue `ethos-verify` + chunk/citation tooling as a **standalone, parser-agnostic OSS layer over foreign parser output** (PRD 1.3). **G1-only failure** gets exactly one decider-owned choice: immediate fallback or one bounded remediation retry by week 6. This is a trust-layer pivot, not an OpenDataLoader fork - ODL JSON is simply the *first* grounding adapter; LiteParse and Docling adapters follow if useful (PRD 1.5, 2.1, 5.4). Salvage list in 6.5.
+- **Gate Zero G2/G3 failure** triggers a pre-scoped **router branch**: stop parser-core expansion and continue `ethos-verify` + chunk/citation tooling as a **standalone, parser-agnostic OSS layer over foreign parser output** (PRD 1.3). **G1-only failure** gets exactly one decider-owned choice: immediate fallback or one bounded remediation retry by week 10. This is a trust-layer pivot, not an OpenDataLoader fork - ODL JSON is simply the *first* grounding adapter; LiteParse and Docling adapters follow if useful (PRD 1.5, 2.1, 5.4). Salvage list in 6.5.
 
 What we deliberately do NOT do: one mega-agent building the whole workspace (context bloat, unreviewable diffs), or per-file agents (handoff overhead exceeds work). The unit of agent work is a **crate or contract**; the unit of handoff is an **artifact** (schema file, fixture set, harness JSON, ADR), never freeform context.
 
 ### 1.2 Roles vs. headcount
 
-Plan assumption (not in PRD v3.5): 2 senior Rust engineers + 1 bindings/infra engineer + 0.5 benchmark/devrel, dedicated. Lanes are **work lanes, not headcount**; humans own review/merge and the Gate Zero decision. Review capacity caps parallelism at ~3 concurrent lanes; the plan never schedules more.
+Accepted ADR-0001 staffing (not in PRD v3.5): 1 senior Rust engineer + 0.25 benchmark/devrel, part-time. This replaces the v2.1 assumption of 2 senior Rust engineers + 1 bindings/infra engineer + 0.5 benchmark/devrel, dedicated. Lanes are **work lanes, not headcount**; humans own review/merge and the Gate Zero decision. Review capacity caps parallelism at 1 active implementation lane plus lightweight benchmark/devrel support. Release-2-horizon scope sheds first; Node beta/MCP experimental work requires either a staffed bindings/infra owner or an explicit release-scope ADR before public claims.
 
 ### 1.3 Branch and isolation discipline
 
@@ -41,7 +42,7 @@ Plan assumption (not in PRD v3.5): 2 senior Rust engineers + 1 bindings/infra en
 | 0.4 | Record **ADR-0002 PDFium two-phase path**: Phase 1 for Milestone A/Gate Zero uses pinned `bblanchon/pdfium-binaries` V8/XFA-disabled binaries by exact version + per-platform hash; Phase 2 by Milestone E uses project-maintained builds from `pdfium.googlesource.com` with pinned revision, flags, toolchain, patches. Public Beta is blocked on Phase 2. | Infra | ADR-0002 | 6.1, 15 |
 | 0.5 | Record **ADR-0003 deterministic font policy**: embedded fonts first; missing-font -> `font-substitution-table.json` -> bundled Liberation family (SIL OFL 1.1, about 4 MB); glyph miss -> deterministic `.notdef` + warning; non-embedded CJK out of R1 with warning; PDFium mapper overridden to bundle. | Rust lead | ADR-0003 + font profile fixture | 6.1, 15 |
 | 0.6 | Record **ADR-0004 licensing**: Apache-2.0 core; DCO with CI sign-off; cargo-deny allowlist Apache-2.0/MIT/BSD-2-3/ISC/Zlib/Unicode-DFS/CC0/MPL-2.0; GPL/AGPL/LGPL/custom-condition denied in base including optional defaults; exceptions by ADR only; NOTICE for PDFium BSD-3 and Liberation OFL. | Legal | ADR-0004 + `deny.toml` policy draft | 12 |
-| 0.7 | CI matrix bootstrapped: macOS arm64 and Linux x64 Gate Zero hosts; Windows x64 determinism joins nightly no later than Milestone B exit, week 8; Linux arm64/macOS x64 build-only where available | Infra | `.github/workflows/` skeleton green on empty workspace | 1.3, 11 |
+| 0.7 | CI matrix bootstrapped: macOS arm64 and Linux x64 Gate Zero hosts; Windows x64 determinism joins nightly no later than Milestone B exit, week 14; Linux arm64/macOS x64 build-only where available | Infra | `.github/workflows/` skeleton green on empty workspace | 1.3, 11 |
 | 0.8 | Pin Gate Zero competitor versions: **OpenDataLoader, EdgeParse, LiteParse, PyMuPDF4LLM** (exact versions + hashes) | Benchmark owner | `benchmarks/competitors.lock.json` | 1.3, 11.2, 16 |
 | 0.9 | Seed `docs/landscape-log.md` (June 2026 validation + 14 watchlist incl. LiteParse, Kreuzberg) | Devrel | landscape-log.md | 2 |
 | 0.10 | Repo governance and hygiene: SECURITY.md, CONTRIBUTING.md (DCO), CODE_OF_CONDUCT.md, GOVERNANCE.md, maintainer ladder, honest-scope README draft (12 text), fixture contribution guide, public roadmap/discussion-channel plan, issue templates, triage SLO | Devrel | files in repo root + `docs/roadmap.md` | 12 |
@@ -101,11 +102,11 @@ ethos/
     ethos-verify/              # [B alpha, D v1] parser-agnostic via GroundingSource only (1.5, 5.4)
     ethos-render/              # [C] crops, overlays
     ethos-cli/                 # [A skeleton, grows each milestone] binary: `ethos`
-    ethos-mcp/                 # [D experimental] MCP server + 9.4 security rules; GA candidate in Release 2
+    ethos-mcp/                 # [D/E conditional] MCP experimental only if staffed or accepted by release-scope ADR; GA candidate in Release 2
     ethos-layout-ml/           # [F / Release 2] optional, never base
   bindings/
-    python/                   # [B] PyO3/maturin -> package `ethos-pdf`, import `ethos_pdf`
-    node/                     # [D] napi-rs -> `@ethos-pdf/core`
+    python/                   # [B scaffold, E stable] PyO3/maturin -> package `ethos-pdf`, import `ethos_pdf`
+    node/                     # [D/E conditional] napi-rs -> `@ethos-pdf/core` if staffed or accepted by release-scope ADR
     wasm/                     # [Release 2-or-later spike, 15]
   adapters/
     grounding/                # [A stub, B alpha, D v1] opendataloader-json first; liteparse/docling-json later if useful
@@ -181,7 +182,7 @@ Architectural invariants enforced from commit one:
 | **WS-SECURITY** | hidden/off-page/low-contrast, annotations/actions/attachments/scripts/links; security report; default-chunk exclusion | PRD 4.1, 8, 10 | `ethos-security`, `security_report.json`, security fixtures | C |
 | **WS-VERIFY-ALPHA** | early trust layer: A-stage ODL adapter stub, then `ethos verify` alpha, verification report/config schema, capability downgrades, foreign-parser demo | PRD 1.5, 5.4, 8 | `adapters/grounding/opendataloader-json` stub in A; `ethos-verify` alpha and demo fixture in B | A stub, B alpha |
 | **WS-VERIFY** | harden verify engine to v1, add crop-aware L2 evidence plumbing, expand adapter tests | PRD 5.4, 8 | `ethos-verify` v1, adapter test fixtures, `ethos verify` docs | D |
-| **WS-SURFACES** | Python binding (B, stable); **functional Node binding (beta)** + **MCP server (experimental) with 9.4 security rules** (D) | PRD 9 | `ethos-pdf` wheels, `@ethos-pdf/core`, `ethos-mcp` | B, D |
+| **WS-SURFACES** | Python binding scaffold (B) and stable CLI/Python packaging (E); **functional Node binding (beta)** + **MCP server (experimental) with 9.4 security rules** only if staffed or accepted by release-scope ADR | PRD 9 | `ethos-pdf` wheels; conditional `@ethos-pdf/core`, `ethos-mcp` | B, D/E |
 | **WS-PUBLISH** | internal benchmark snapshots (A-D), **public benchmark report + proof-of-trust demos + stable CLI/Python docs at E only**, README, landscape log | PRD 11.3, 11.4, 12, 13-E | publications, README, demos, ecosystem examples | A->E |
 | **WS-FALLBACK** (dormant) | fallback packaging posture: standalone `ethos-verify` + chunk/citation tooling over foreign parser output if parser-core stops | PRD 1.3, 1.5; Gate Zero ADR | activates on G2/G3 failure, G1 retry failure, or decider fallback | - |
 
@@ -199,33 +200,33 @@ Architectural invariants enforced from commit one:
 ### 5.3 Validation gates (evaluator loops)
 
 - **Per-PR:** schema-validate -> c14n idempotence property tests -> deterministic profile validation -> fixtures -> same-platform double-parse byte-diff -> clippy/deny/network-lints -> no-network base check. Red = no merge.
-- **Cross-platform (nightly + `contract-change` PRs):** Gate Zero platform fingerprint equality on macOS arm64 and Linux x64 first; Windows x64 joins nightly determinism no later than Milestone B exit, week 8. Windows failures before Public Beta are release-blockers-in-waiting. This makes week 4 and beta hardening measurements, not surprises.
+- **Cross-platform (nightly + `contract-change` PRs):** Gate Zero platform fingerprint equality on macOS arm64 and Linux x64 first; Windows x64 joins nightly determinism no later than Milestone B exit, week 14. Windows failures before Public Beta are release-blockers-in-waiting. This makes Gate Zero and beta hardening measurements, not surprises.
 - **Fixtures-first (PRD 14):** heuristic PRs ship fixtures in the same PR; reviewers reject otherwise.
-- **Gate Zero (week 4):** 6.4 below.
+- **Gate Zero (week 8):** 6.4 below.
 - **Milestone exits:** PRD 13 exit criteria checked as a checklist in the milestone-closing PR.
 
 ### 5.4 Failure handling & retries
 
 - CI flake policy: auto-retry once; second failure is real. **Determinism failures are never retried into green** - a flaky fingerprint IS the bug (PRD 14).
-- Lane >3 days late to a handoff -> re-scope at the twice-weekly check-in; Release-2-horizon scope sheds first.
-- G2/G3 Gate Zero failure -> WS-FALLBACK activates (6.5); parser-core expansion stops (PRD 1.3). G1-only failure with G2/G3 pass gets exactly one decider ADR branch: immediate fallback or a bounded week-6 retry. No other partial-credit path exists.
+- Lane >1 week late or idle under the reduced-staff schedule -> re-scope at the twice-weekly check-in; Release-2-horizon scope sheds first, then optional/unstaffed surfaces.
+- G2/G3 Gate Zero failure -> WS-FALLBACK activates (6.5); parser-core expansion stops (PRD 1.3). G1-only failure with G2/G3 pass gets exactly one decider ADR branch: immediate fallback or a bounded week-10 retry. No other partial-credit path exists.
 - Competitor harness runs get timeouts + pinned versions; competitor crashes are recorded as data, not patched around (PRD 11.3).
 
 ---
 
-## 6. Milestone A - Weeks 1-4 (Gate Zero, PRD 1.3, 13-A)
+## 6. Milestone A - Weeks 1-8 (Gate Zero, PRD 1.3, 13-A)
 
 ### 6.1 WS-ENGINE (critical path)
 
 | Week | Tasks | Acceptance | PRD |
 | --- | --- | --- | --- |
-| 1 | Integrate **Phase 1 PDFium**: pinned `bblanchon/pdfium-binaries` V8/XFA-disabled artifacts by exact version and per-platform hash for Gate Zero. Record that the archived GitHub mirror is not source of truth and that Phase 2 project-maintained builds from `pdfium.googlesource.com` block Public Beta. | Builds load on Gate Zero hosts; exact version + hashes recorded in `docs/pdfium-profile.md`; Public Beta blocker recorded | 6.1 |
-| 1-2 | Quirk validation on gate manifest subset: ligatures, hyphenation, CID fonts, rotation | Quirk report; blocking quirks escalated to decider by day 10 | 6.1 |
-| 2 | **Font mapper override**: embedded fonts first; `font-substitution-table.json`; bundled Liberation fallback; system-font fallback disabled; glyph miss -> deterministic `.notdef` + warning; non-embedded CJK warns as out of Release 1 | Same missing-font fixture -> identical spans on Gate Zero platforms | 6.1 |
-| 2-3 | **Quantize-at-extraction** (`QuantizedGeom`); coordinate/rotation normalization; page/span extraction with **page-range filtering at the backend boundary** (Release 1 requirement) -> schema via c14n | Extraction goldens - including page-subset fixtures - byte-identical across 3 platforms | 4.1, 5.3 |
-| 3 | Stable error codes: corrupt/encrypted/password/image-only; resource limits | 10 codes on failure fixtures | 10 |
-| 3-4 | Sandbox/subprocess feasibility: narrow IPC sketch, rlimits, perf delta | Feasibility report (build-out lands in D for service-deployment mode) | 6.3 |
-| 4 | Perf pass for G1: profile, batch page iteration | G1 measurement run | 1.3 |
+| 3-4 | Integrate **Phase 1 PDFium**: pinned `bblanchon/pdfium-binaries` V8/XFA-disabled artifacts by exact version and per-platform hash for Gate Zero. Record that the archived GitHub mirror is not source of truth and that Phase 2 project-maintained builds from `pdfium.googlesource.com` block Public Beta. | Builds load on Gate Zero hosts; exact version + hashes recorded in `docs/pdfium-profile.md`; Public Beta blocker recorded | 6.1 |
+| 4 | Quirk validation on gate manifest subset: ligatures, hyphenation, CID fonts, rotation | Quirk report; blocking quirks escalated to decider by week 4 exit | 6.1 |
+| 4-5 | **Font mapper override**: embedded fonts first; `font-substitution-table.json`; bundled Liberation fallback; system-font fallback disabled; glyph miss -> deterministic `.notdef` + warning; non-embedded CJK warns as out of Release 1 | Same missing-font fixture -> identical spans on Gate Zero platforms | 6.1 |
+| 5-6 | **Quantize-at-extraction** (`QuantizedGeom`); coordinate/rotation normalization; page/span extraction with **page-range filtering at the backend boundary** (Release 1 requirement) -> schema via c14n | Extraction goldens - including page-subset fixtures - byte-identical across Gate Zero platforms | 4.1, 5.3 |
+| 6 | Stable error codes: corrupt/encrypted/password/image-only; resource limits | 10 codes on failure fixtures | 10 |
+| 6-7 | Sandbox/subprocess feasibility: narrow IPC sketch, rlimits, perf delta | Feasibility report (build-out lands in D for service-deployment mode) | 6.3 |
+| 7-8 | Perf pass for G1: profile, batch page iteration | G1 measurement run | 1.3 |
 
 ### 6.2 WS-CONTRACTS
 
@@ -241,19 +242,19 @@ Architectural invariants enforced from commit one:
 
 | Week | Tasks | Acceptance | PRD |
 | --- | --- | --- | --- |
-| 1 | Runner: timing (p50/p95/p99 cold+warm), peak RSS, install-size method incl. PDFium + font assets | Self-test on PyMuPDF4LLM | 11.1, 1.3 |
-| 1-2 | Competitor adapters: ODL (JVM, pinned), EdgeParse, **LiteParse**, PyMuPDF4LLM; one-command reproduction | `make bench` reproduces full table incl. LiteParse | 11.2, 11.3 |
-| 2 | `determinism.yml`: Gate Zero platform fingerprint-equality job on macOS arm64 and Linux x64 (nightly + contract-change PRs); Windows x64 matrix job planned and scheduled for Milestone B exit, week 8 | Green on extraction goldens by week 3; Windows runner plan documented | 1.3 |
-| 3 | G1/G2/G3 measurement jobs emitting signed JSON + environment attestation | Dry run on week-3 build | 1.3 |
-| 4 | **Gate Zero run** on frozen manifest | g1/g2/g3.json + repro commands to decider | 1.3 |
+| 3-4 | Runner: timing (p50/p95/p99 cold+warm), peak RSS, install-size method incl. PDFium + font assets | Self-test on PyMuPDF4LLM | 11.1, 1.3 |
+| 4-6 | Competitor adapters: ODL (JVM, pinned), EdgeParse, **LiteParse**, PyMuPDF4LLM; one-command reproduction | `make bench` reproduces full table incl. LiteParse | 11.2, 11.3 |
+| 6 | `determinism.yml`: Gate Zero platform fingerprint-equality job on macOS arm64 and Linux x64 (nightly + contract-change PRs); Windows x64 matrix job planned and scheduled for Milestone B exit, week 14 | Green on extraction goldens by week 7; Windows runner plan documented | 1.3 |
+| 7 | G1/G2/G3 measurement jobs emitting signed JSON + environment attestation | Dry run on week-7 build | 1.3 |
+| 8 | **Gate Zero run** on frozen manifest | g1/g2/g3.json + repro commands to decider | 1.3 |
 
-### 6.4 Gate Zero execution (week 4, days 18-20)
+### 6.4 Gate Zero execution (week 8, days 38-40)
 
 Protocol: harness host matches the frozen hardware profile; all gates measured against `benchmarks/gate-zero/manifest.json` and its declared subsets - one artifact, one name (PRD 1.3).
 
 - **G1 - Throughput:** threshold = **max(120 pages/sec p50, 2x in-harness-remeasured OpenDataLoader pps)** on the manifest's `born_digital` subset, single core per host. G1 must pass independently on every recorded Gate Zero performance host in `benchmarks/gate-zero/manifest.json`; no averaging or host substitution is allowed. The PRD's 120 pps is a **floor** (1.3, 3.3); a low ODL remeasurement can never lower it. EdgeParse and LiteParse numbers are recorded alongside as context (non-gating). G1 failure alone cannot produce public speed claims and gets only the PRD-approved ADR branch below.
 - **G2 - Footprint:** total installed footprint (CLI + dynamic libs + PDFium payload + schemas + font assets, bytes on disk, no network) <= 30 MB **and** <= 1/10 of measured ODL footprint. V8/XFA-enabled builds auto-fail (1.3, 6.1).
-- **G3 - Determinism:** byte-identical canonical payload + equal fingerprints across Gate Zero supported platforms, at minimum macOS arm64 and Linux x64 on the **full frozen manifest**; font-mapper override and quantize-at-extraction implemented, not documented (1.3, 6.1). Windows x64 joins nightly determinism no later than Milestone B exit, week 8, and unresolved Windows divergence blocks or re-scopes Public Beta.
+- **G3 - Determinism:** byte-identical canonical payload + equal fingerprints across Gate Zero supported platforms, at minimum macOS arm64 and Linux x64 on the **full frozen manifest**; font-mapper override and quantize-at-extraction implemented, not documented (1.3, 6.1). Windows x64 joins nightly determinism no later than Milestone B exit, week 14, and unresolved Windows divergence blocks or re-scopes Public Beta.
 
 Decider records ADR-0005:
 
@@ -264,7 +265,7 @@ Inputs: benchmarks/results/gate-zero/{g1,g2,g3}.json @ commit <sha>, manifest <s
 G1: <measured pps> vs max(120, 2x <ODL-measured>) -> PASS|FAIL
 G2: <bytes> vs 30MB and <ratio> vs ODL -> PASS|FAIL
 G3: <platforms, divergence count> -> PASS|FAIL
-Decision: PROCEED (Milestone B) | G1_RETRY (bounded retry by week 6; corpus unchanged; no speed claim) | FALLBACK (6.5; parser-core expansion stops)
+Decision: PROCEED (Milestone B) | G1_RETRY (bounded retry by week 10; corpus unchanged; no speed claim) | FALLBACK (6.5; parser-core expansion stops)
 ```
 
 Decision rule: G2 or G3 failure always means FALLBACK. G1 failure with G2/G3 pass means the decider chooses either FALLBACK or G1_RETRY. A failed retry means FALLBACK.
@@ -275,49 +276,49 @@ On G2/G3 failure, G1 retry failure, or decider-selected G1 fallback, Ethos pivot
 
 ---
 
-## 7. Milestones B-C - Weeks 5-13 (plan-level one-quarter checkpoint)
+## 7. Milestones B-C - Weeks 9-22 (plan-level first checkpoint)
 
-### Milestone B (weeks 5-8): Layout And Exports (PRD 13-B)
+### Milestone B (weeks 9-14): Layout And Exports (PRD 13-B)
 
 | Lane | Deliverables | Acceptance (PRD 13-B exit) | PRD |
 | --- | --- | --- | --- |
 | WS-LAYOUT | Reading order, block grouping, heading/list inference; **Markdown + plain-text exporters** | Multi-column fixtures read correctly; md/txt useful for RAG | 4.1, 7 |
-| WS-SURFACES | PyO3 binding + maturin wheels: `ethos-pdf` / `ethos_pdf` | Python package parses local PDFs | 9.2 |
+| WS-SURFACES | PyO3 binding scaffold + maturin local wheels: `ethos-pdf` / `ethos_pdf`; stable packaging hardens in E | Python package parses local PDFs on supported dev platforms | 9.2 |
 | WS-VERIFY-ALPHA | `ethos verify` alpha; ODL JSON grounding adapter; capability downgrade warnings; parser-agnostic verification demo over foreign parser output | Trust layer works before parser-core is complete | 1.5, 5.4, 8 |
 | WS-HARNESS | Quality metrics: reading order, heading hierarchy, bbox IoU (evaluator support, not a fourth implementation lane) | Quality dashboard in `make bench` | 11.1 |
 
-### Milestone C (weeks 9-13): Tables, Chunks, Regions, Security, Overlay (PRD 13-C)
+### Milestone C (weeks 15-22): Tables, Chunks, Regions, Security, Overlay (PRD 13-C)
 
 | Lane | Deliverables | Acceptance (PRD 13-C exit) | PRD |
 | --- | --- | --- | --- |
 | WS-TABLES-RAG | Simple/bordered table detection + cell model; RAG chunker (`chunks.jsonl`) with page/element/bbox citations; **non-text region detection with stable coordinates** (no stable semantic image/chart/formula classification in R1) | Common tables retain structure; chunks cite source bboxes; non-text regions carry coordinates | 4.1, 7, 8 |
 | WS-SECURITY | Hidden/off-page/low-contrast detection; annotations/actions/attachments/scripts/links; `security_report.json`; default-chunk exclusion | Hidden/off-page text excluded from default chunks | 4.1, 8, 10 |
 | WS-OVERLAY | Crops + debug HTML overlay with click-to-highlight | Demo: select answer -> source bbox highlights | 4.1, 7 |
-| WS-PUBLISH | **Internal alpha benchmark snapshot** (speed/weight/determinism vs ODL, EdgeParse, LiteParse, PyMuPDF4LLM) - **not a public release claim**; Release 1 is incomplete until D's verification v1 and Node beta land (4.1) | Snapshot reproduces one-command; stays internal/dev-labeled | 11, 4.1 |
+| WS-PUBLISH | **Internal alpha benchmark snapshot** (speed/weight/determinism vs ODL, EdgeParse, LiteParse, PyMuPDF4LLM) - **not a public release claim**; Release 1 is incomplete until D's verification v1 and E's surface/claim audit land (4.1) | Snapshot reproduces one-command; stays internal/dev-labeled | 11, 4.1 |
 
-**One-quarter checkpoint (week 13, plan-level):** A-C complete. Miss -> decider reviews scope (shed Release-2-horizon items, re-plan D-E, or pivot posture) via ADR.
+**First checkpoint (week 22, plan-level):** A-C complete. Miss -> decider reviews scope (shed Release-2-horizon items, re-plan D-E, or pivot posture) via ADR.
 
 ---
 
-## 8. Milestones D-E - Weeks 14-26 (plan-level two-quarter checkpoint)
+## 8. Milestones D-E - Weeks 23-40 (plan-level public-beta checkpoint)
 
-### Milestone D (weeks 14-19): Agents And Verification (PRD 13-D)
+### Milestone D (weeks 23-30): Agents And Verification (PRD 13-D)
 
 | Lane | Deliverables | Acceptance (PRD 13-D exit) | PRD |
 | --- | --- | --- | --- |
 | WS-VERIFY | Harden Milestone B alpha to `verify_citations` v1: claim kinds, modes, per-check `semantic_unverified`, `all_evidence_grounded` per 8 definition, verification-config hash; ODL adapter hardening; capability downgrade warnings | Verification works over at least one foreign parser output with stable report schema | 5.4, 8 |
-| WS-SURFACES | **Functional Node binding labeled beta** (`@ethos-pdf/core`, async, non-blocking); **Crop API** - `crop_element` exposed as a first-class deliverable across CLI/Python/Node beta/MCP experimental, backed by the `ethos-render` crop primitive from Milestone C; **MCP server labeled experimental** with 9.4 security rules (allowlisted roots, opaque ids, TTL stores, size/page/time/concurrency limits, crop only already-parsed documents, no traversal) | Agent can parse, chunk, cite, verify, and crop over MCP experimental; `crop_element` returns region renders for L2 evidence | 9.3, 9.4, 13-D |
+| WS-SURFACES | **Crop API** - `crop_element` exposed as a first-class deliverable across CLI/Python and any staffed beta/experimental surfaces, backed by the `ethos-render` crop primitive from Milestone C. **Functional Node binding labeled beta** (`@ethos-pdf/core`) and **MCP server labeled experimental** require either a staffed bindings/infra owner or an explicit release-scope ADR before public claims. | Stable CLI/Python can parse, chunk, cite, verify, and crop; Node/MCP either smoke-test with labels or are re-scoped before E | 9.3, 9.4, 13-D |
 | WS-ENGINE | Sandbox/subprocess backend build-out for service deployments (rlimits + narrow IPC per 6.3) | Sandbox mode passes threat-model review | 6.3 |
 
-### Milestone E (weeks 20-26): Public Beta (PRD 13-E) - first public claim
+### Milestone E (weeks 31-40): Public Beta (PRD 13-E) - first public claim
 
 | Lane | Deliverables | Acceptance (PRD 13-E exit) | PRD |
 | --- | --- | --- | --- |
 | WS-PUBLISH | **Public benchmark report** vs ODL, EdgeParse, **LiteParse**, PyMuPDF4LLM + feasible others (Kreuzberg, Docling, MinerU, Marker, MarkItDown, Unstructured); OmniDocBench labeled neutral/community; ParseBench + competitor-owned suites labeled publisher-owned; tiers labeled; known Gate Zero host numbers paired with third-party reproducible cloud-runner numbers; honest-scope README per 12; proof-of-trust demos (RAG citations, agent verify+crop, foreign-parser verification) | Reproducible methodology; no "#1"/"best-in-class" anywhere; no laptop-only/local-host-only marketing numbers; launch demos run on pinned fixtures | 11.2, 11.3, 11.4, 12 |
-| WS-SURFACES + WS-CONTRACTS | Stable CLI/Python docs; Node beta docs; MCP experimental docs; lightweight LangChain/LlamaIndex examples over Python API; schema compatibility tests; determinism CI hardened; Windows x64 determinism green or release re-scoped; release artifacts for target platforms (footprint check as release gate); project-maintained PDFium Phase 2 builds from `pdfium.googlesource.com` with pinned revision, flags, toolchain, patches, and hashes | Users install stable CLI/Python, parse, inspect, chunk, verify born-digital PDFs; Node/MCP labels are explicit; Public Beta does not ship on Phase 1 PDFium binaries; unresolved Windows determinism divergence blocks or re-scopes Public Beta | 6.1, 13-E |
-| Gate | **Release 1 claim audit**: every 4.1 stable capability demonstrably present (Rust core, stable CLI, stable Python, Node beta smoke test, MCP experimental smoke test, canonical JSON, deterministic md, txt, chunks, page selection, rotation/coords, failure detection, spans, headings/lists/reading order, simple tables, non-text region coordinates, security report, verification report, parser-agnostic verification, debug overlay, crop API (`crop_element`, per 13-D), LiteParse-inclusive harness, launch examples) - checklist in the release PR | Public "Release 1" only after audit passes; Node beta and MCP experimental are labeled, not stable-surface blockers | 4.1, 11.4, 13-D |
+| WS-SURFACES + WS-CONTRACTS | Stable CLI/Python docs; Node beta docs and MCP experimental docs only if staffed or accepted by release-scope ADR; lightweight LangChain/LlamaIndex examples over Python API; schema compatibility tests; determinism CI hardened; Windows x64 determinism green or release re-scoped; release artifacts for target platforms (footprint check as release gate); project-maintained PDFium Phase 2 builds from `pdfium.googlesource.com` with pinned revision, flags, toolchain, patches, and hashes | Users install stable CLI/Python, parse, inspect, chunk, verify born-digital PDFs; any Node/MCP status is explicit; Public Beta does not ship on Phase 1 PDFium binaries; unresolved Windows determinism divergence blocks or re-scopes Public Beta | 6.1, 13-E |
+| Gate | **Release 1 claim audit**: every included 4.1 stable capability demonstrably present (Rust core, stable CLI, stable Python, canonical JSON, deterministic md, txt, chunks, page selection, rotation/coords, failure detection, spans, headings/lists/reading order, simple tables, non-text region coordinates, security report, verification report, parser-agnostic verification, debug overlay, crop API (`crop_element`, per 13-D), LiteParse-inclusive harness, launch examples); Node beta and MCP experimental either have smoke tests with explicit labels or are removed from public claims by ADR - checklist in the release PR | Public "Release 1" only after audit passes; optional surfaces are labeled or explicitly out of scope | 4.1, 11.4, 13-D |
 
-**Two-quarter checkpoint (week 26, plan-level):** A-E complete; public beta live. Milestone F (Release 2 enrichment: complex tables, formula/LaTeX, chart classification, optional enrichment modules - PRD 13-F) is scoped *after* E from fixtures gathered during beta. Platform/hosted adoption is out of scope here.
+**Public-beta checkpoint (week 40, plan-level):** A-E complete; public beta live. Milestone F (Release 2 enrichment: complex tables, formula/LaTeX, chart classification, optional enrichment modules - PRD 13-F) is scoped *after* E from fixtures gathered during beta. Platform/hosted adoption is out of scope here.
 
 ---
 
@@ -326,9 +327,9 @@ On G2/G3 failure, G1 retry failure, or decider-selected G1 fallback, Ethos pivot
 | Workflow | Trigger | Jobs |
 | --- | --- | --- |
 | `ci.yml` | every PR | fmt, clippy (incl. disallowed network APIs), cargo-deny (license/advisory/dep-allowlist, deny copyleft/custom-condition deps in base), unit+fixture tests, schema validation, deterministic-profile validation, c14n idempotence property tests, same-platform double-parse byte-diff, no-network base check |
-| `determinism.yml` | nightly + `contract-change` PRs | Gate Zero platforms first (macOS arm64 + Linux x64) -> parse fixtures -> fingerprint + canonical-payload comparison -> fail on any divergence; Windows x64 added no later than Milestone B exit, week 8; unresolved Windows divergence blocks or re-scopes Public Beta (PRD 14) |
+| `determinism.yml` | nightly + `contract-change` PRs | Gate Zero platforms first (macOS arm64 + Linux x64) -> parse fixtures -> fingerprint + canonical-payload comparison -> fail on any divergence; Windows x64 added no later than Milestone B exit, week 14; unresolved Windows divergence blocks or re-scopes Public Beta (PRD 14) |
 | `bench.yml` | weekly + tags | harness vs pinned ODL/EdgeParse/LiteParse/PyMuPDF4LLM; uploads results JSON + repro attestation; never prose claims |
-| `release.yml` | tags | reproducible builds, pinned toolchain; `ethos` CLI, `ethos-pdf` wheels, `@ethos-pdf/core` beta npm; project-maintained PDFium Phase 2 builds required for Public Beta; fonts bundled; <= 30 MB footprint release gate for the stable base surface; profile manifest (flags, hashes, provenance) and third-party license/NOTICE manifest published with artifacts |
+| `release.yml` | tags | reproducible builds, pinned toolchain; `ethos` CLI, `ethos-pdf` wheels, `@ethos-pdf/core` beta npm only if staffed or accepted by release-scope ADR; project-maintained PDFium Phase 2 builds required for Public Beta; fonts bundled; <= 30 MB footprint release gate for the stable base surface; profile manifest (flags, hashes, provenance) and third-party license/NOTICE manifest published with artifacts |
 
 Release engineering: lockstep workspace versions; output-changing merges bump versions with CHANGELOG (PRD 5.1); artifacts content-addressed in the profile manifest (PRD 6.1); network-egress runtime test runs in `ci.yml` (4 invariant 5c).
 
@@ -336,38 +337,38 @@ Release engineering: lockstep workspace versions; output-changing merges bump ve
 
 - **Golden fixtures** per pipeline stage (extraction spans, layout graphs, tables, regions, chunks) - fixtures-first enforced in review (PRD 14).
 - **Property tests:** c14n idempotence; deterministic-profile round-trip stability; quantization stability (parse == parse(parse) (idempotent re-serialization)); chunker never splits table rows; canonical payload contains no runtime/diagnostic field (PRD 8).
-- **Determinism:** double-parse diff per PR; Gate Zero platform fingerprint equality nightly; Windows x64 by Milestone B exit, week 8; verification-report determinism.
+- **Determinism:** double-parse diff per PR; Gate Zero platform fingerprint equality nightly; Windows x64 by Milestone B exit, week 14; verification-report determinism.
 - **Security suite:** hidden/off-page/white-on-white, annotations/actions/attachments/scripts/links - assert surfacing + default-chunk exclusion; warning precision/recall tracked (PRD 10, 11.1).
 - **Failure suite:** corrupt, encrypted, password, image-only, oversized, rotated - stable 10 codes, never panics; cargo-fuzz on `ethos-pdf` ingest from Milestone B.
-- **Compat tests:** schema round-trip CLI/Python stable surfaces; Node beta and MCP experimental smoke tests clearly labeled (PRD 13-E).
+- **Compat tests:** schema round-trip CLI/Python stable surfaces; Node beta and MCP experimental smoke tests when included, with labels enforced (PRD 13-E).
 
 ## 11. Risk Register
 
 | # | Risk | L/I | Mitigation | Trigger -> Action |
 | --- | --- | --- | --- | --- |
-| R1 | PDFium font substitution breaks G3 | M/Critical | Font-mapper override + bundled set in week 2; cross-platform substitution test | Week-2 test red -> escalate to decider day 10 |
-| R2 | FP divergence across platforms despite quantization | M/Critical | Quantize-at-extraction by type; nightly 3-platform diff from week 3 | Divergence found -> pin/patch backend build (PRD 6.1), never document around |
-| R3 | G1 floor missed | M/High | Profile week 3; PDFium batch APIs; trust layer already active in B | G1 fail + G2/G3 pass -> decider chooses fallback or one bounded retry by week 6; retry fail -> 6.5 trust-layer pivot |
-| R4 | G2 blows 30 MB (PDFium + fonts) | L-M/High | V8/XFA-off build; minimal font set; strip+LTO; weekly measurement | >30 MB at week 3 -> font diet or decider call |
+| R1 | PDFium font substitution breaks G3 | M/Critical | Font-mapper override + bundled set by week 5; cross-platform substitution test | Week-5 test red -> escalate to decider |
+| R2 | FP divergence across platforms despite quantization | M/Critical | Quantize-at-extraction by type; nightly Gate Zero-platform diff from week 6 | Divergence found -> pin/patch backend build (PRD 6.1), never document around |
+| R3 | G1 floor missed | M/High | Profile week 7; PDFium batch APIs; trust layer already active in B | G1 fail + G2/G3 pass -> decider chooses fallback or one bounded retry by week 10; retry fail -> 6.5 trust-layer pivot |
+| R4 | G2 blows 30 MB (PDFium + fonts) | L-M/High | V8/XFA-off build; minimal font set; strip+LTO; weekly measurement | >30 MB at week 7 -> font diet or decider call |
 | R5 | **LiteParse (run-llama) ships verification/fingerprint contract first** - LiteParse is corporate-backed and the closest Release 1 overlap (PRD 2.1); EdgeParse remains tracked but lower-weight unless community signal changes | M/High | Landscape log monthly (PRD 2); verify wedge lands as B alpha and D v1; differentiation checklist from 2.1 tracked per milestone | Wedge claimed -> re-review before next milestone; if trust layer is matched, 2.1 redundancy warning applies |
-| R6 | Staffing below plan assumption | M/High | Week-0 ADR-0001; Release-2-horizon scope sheds first | Lane idle >1 wk -> re-scope at check-in |
+| R6 | Staffing below original plan assumption | High/High | ADR-0001 accepted; v2.2 serial schedule; Release-2-horizon and optional/unstaffed surfaces shed first | Critical lane idle >1 wk -> re-scope at check-in; Node/MCP before trust layer |
 | R7 | Sandbox IPC overhead hurts service throughput | M/Medium | Feasibility spike in A measures delta; worker reuse | >15% overhead -> amortize + document modes |
 | R8 | Package-name collision/trademark (`ethos` is a loaded name) | M/Medium | Week-0 registry/trademark scan (0.11); names provisional per PRD 3.1 | Conflict -> rename via ADR-0006 before any public artifact |
-| R9 | Cross-platform CI runner availability, especially Windows x64 by Milestone B exit | L/Medium | Week-0 bootstrap for Gate Zero hosts; Windows determinism joins nightly by week 8; self-hosted fallback budgeted | Windows gap by Milestone D -> block or re-scope Public Beta, never waive determinism claim |
+| R9 | Cross-platform CI runner availability, especially Windows x64 by Milestone B exit | L/Medium | Week-0 bootstrap for Gate Zero hosts; Windows determinism joins nightly by week 14; self-hosted fallback budgeted | Windows gap by Milestone D -> block or re-scope Public Beta, never waive determinism claim |
 | R10 | Public failure-corpus process stalls (wedge #4 stays unearned) | M/Low (R1 horizon) | Fixture contribution guide at Week 0 (PRD 12); public fixtures only - no claims until earned (PRD 1.4) | Stall -> wedge #4 stays out of all marketing; no schedule impact |
 | R11 | Trust wedge arrives too late and Ethos is dismissed as yet another parser | M/Critical | WS-VERIFY-ALPHA in Milestone B; launch demos in E; parser-agnostic ODL adapter before public beta | Verify alpha misses B exit -> decider re-scopes Node/MCP first, not the trust layer |
 
 ## 12. Governance, Reporting, Change Control
 
 - **ADRs** in `docs/decisions/` for every closing 15 open question; Gate Zero ADR-0005 per 6.4 template; output-changing merges reference CHANGELOG entries (PRD 5.1).
-- **Cadence:** twice-weekly orchestrator check-in (lane status vs handoff dates); weekly tracker vs week-4/13/26 anchors; landscape refresh before each milestone and at least every 90 days (PRD 2) - watchlist per 14 including LiteParse and Kreuzberg.
+- **Cadence:** twice-weekly orchestrator check-in (lane status vs handoff dates); weekly tracker vs week-8/22/40 anchors; landscape refresh before each milestone and at least every 90 days (PRD 2) - watchlist per 14 including LiteParse and Kreuzberg.
 - **Governance metrics after public launch:** median first issue response under 48 hours, OpenSSF Scorecard tracked monthly, good-first-issue funnel reviewed monthly, and trust-loop activation tracked from documented examples/download telemetry where privacy-safe.
 - **Claims discipline in-repo** (PRD 11.3, 14, 1.4): CI grep-gate blocks "#1", "best-in-class", "pixel-level proof", "semantic proof", and unearned failure-corpus advantage claims in README/docs/announcements.
-- **Plan changes:** amended by PR; gates, the week-4 bound, or Release 1 scope require decider sign-off.
+- **Plan changes:** amended by PR; gates, the reduced-staff schedule, or Release 1 scope require decider sign-off.
 
 ## 13. Pre-Kickoff Decision Audit (PRD 15 - blocking subset)
 
-Closed decisions to record as ADR/files before coding starts: 1. Gate Zero decider Gate Zero decider (-> ADR-0000). 2. Staffing vs plan schedule still requires confirmation or replan (-> ADR-0001). 3. PDFium two-phase path: Phase 1 pinned bblanchon binaries for Gate Zero, Phase 2 project-maintained builds before Public Beta (-> ADR-0002). 4. Deterministic font policy: embedded fonts, substitution table, Liberation fallback, deterministic `.notdef`, non-embedded CJK warning (-> ADR-0003). 5. Legal: Apache-2.0 core, DCO CI sign-off, license allowlist/deny policy, NOTICE obligations (-> ADR-0004). 6. Gate Zero corpus + hardware manifest frozen and signed by project lead as interim corpus owner. 7. Ethos package identifiers registry/trademark validation due by Milestone A exit (-> ADR-0006). 8. Governance docs + triage SLO ready before public artifacts.
+Closed decisions to record as ADR/files before coding starts: 1. Gate Zero decider Gate Zero decider (-> ADR-0000). 2. Staffing differs from the original plan and v2.2 reduced-staff schedule is accepted (-> ADR-0001). 3. PDFium two-phase path: Phase 1 pinned bblanchon binaries for Gate Zero, Phase 2 project-maintained builds before Public Beta (-> ADR-0002). 4. Deterministic font policy: embedded fonts, substitution table, Liberation fallback, deterministic `.notdef`, non-embedded CJK warning (-> ADR-0003). 5. Legal: Apache-2.0 core, DCO CI sign-off, license allowlist/deny policy, NOTICE obligations (-> ADR-0004). 6. Gate Zero corpus + hardware manifest frozen and signed by project lead as interim corpus owner. 7. Ethos package identifiers registry/trademark validation due by Milestone A exit, week 8 (-> ADR-0006). 8. Governance docs + triage SLO ready before public artifacts.
 
 Still open but not first-code blockers: debug-overlay publicity level, footprint-gate application per surface (CLI vs wheel vs npm), and exact optional OCR/VLM adapter policy beyond the base license boundary.
 
@@ -379,21 +380,21 @@ Still open but not first-code blockers: debug-overlay publicity level, footprint
 {
   "workflow": "ethos-milestone-a",
   "pattern": "orchestrator",
-  "budget": { "max_active_lanes": 3, "checkin_cadence": "2x-week", "deadline": "week-4" },
+  "budget": { "max_active_lanes": 1, "benchmark_devrel_fraction": 0.25, "checkin_cadence": "2x-week", "deadline": "week-8" },
   "steps": [
     { "id": "ws-contracts", "agent": "rust-contracts", "inputs": ["PRD#8", "PRD#10"],
       "outputs": ["schemas/*.json", "docs/determinism-contract.md", "ethos-core"],
-      "gates": ["schema-validate", "c14n-property-tests"], "timeout_days": 14, "retry": "rescope-at-checkin" },
+      "gates": ["schema-validate", "c14n-property-tests"], "timeout_days": 21, "retry": "rescope-at-checkin" },
     { "id": "ws-engine", "agent": "rust-engine", "inputs": ["PRD#6", "ADR-0002", "ADR-0003"],
       "outputs": ["ethos-pdf", "docs/pdfium-profile.md", "fonts/"],
-      "gates": ["extraction-goldens-gate-zero-platforms", "quirk-report"], "timeout_days": 18, "depends_on": ["ws-contracts:ethos-core"] },
+      "gates": ["extraction-goldens-gate-zero-platforms", "quirk-report"], "timeout_days": 35, "depends_on": ["ws-contracts:ethos-core"] },
     { "id": "ws-harness", "agent": "bench-infra", "inputs": ["PRD#11", "PRD#1.3", "gate-zero/manifest.json", "competitors.lock.json"],
       "outputs": ["benchmarks/harness", "determinism.yml", "results/gate-zero/*.json"],
-      "gates": ["self-test-pymupdf", "adapters: odl+edgeparse+liteparse+pymupdf4llm", "dry-run-week3"], "timeout_days": 18 },
+      "gates": ["self-test-pymupdf", "adapters: odl+edgeparse+liteparse+pymupdf4llm", "dry-run-week7"], "timeout_days": 35 },
     { "id": "gate-zero", "agent": "named-decider", "pattern": "evaluator",
       "inputs": ["results/gate-zero/{g1,g2,g3}.json"], "outputs": ["docs/decisions/ADR-0005.md"],
       "rule": "G1 >= max(120pps, 2x odl-remeasured) independently on every recorded Gate Zero performance host; G2 <= min(30MB, odl/10); G3 byte-identical on Gate Zero platforms (macOS arm64 + Linux x64 minimum); Windows x64 nightly by Milestone B exit and green before Public Beta",
-      "on_pass": "milestone-b", "on_g1_only_fail": "decider chooses g1-retry-by-week6 or ws-fallback", "on_g2_or_g3_fail": "ws-fallback" }
+      "on_pass": "milestone-b", "on_g1_only_fail": "decider chooses g1-retry-by-week10 or ws-fallback", "on_g2_or_g3_fail": "ws-fallback" }
   ],
   "fallback": { "id": "ws-fallback",
     "charter": "parser-agnostic ethos-verify + chunk/citation layer over foreign parser output (PRD#1.3,#1.5); ODL JSON = first adapter, not a fork; also ships as B alpha if parser-core proceeds",
