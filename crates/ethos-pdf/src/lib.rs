@@ -305,6 +305,12 @@ type FpdfTextGetCharBox =
 type FpdfTextGetFontSize = unsafe extern "C" fn(FpdfTextPage, c_int) -> f64;
 #[cfg(windows)]
 type FpdfTextGetFontSize = unsafe extern "system" fn(FpdfTextPage, c_int) -> f64;
+#[cfg(not(windows))]
+type FpdfTextGetFontInfo =
+    unsafe extern "C" fn(FpdfTextPage, c_int, *mut c_void, c_ulong, *mut c_int) -> c_ulong;
+#[cfg(windows)]
+type FpdfTextGetFontInfo =
+    unsafe extern "system" fn(FpdfTextPage, c_int, *mut c_void, c_ulong, *mut c_int) -> c_ulong;
 
 #[derive(Clone, Copy)]
 struct PdfiumFunctions {
@@ -325,6 +331,7 @@ struct PdfiumFunctions {
     text_get_unicode: FpdfTextGetUnicode,
     text_get_char_box: FpdfTextGetCharBox,
     text_get_font_size: FpdfTextGetFontSize,
+    text_get_font_info: Option<FpdfTextGetFontInfo>,
 }
 
 impl PdfiumFunctions {
@@ -350,6 +357,7 @@ impl PdfiumFunctions {
                 text_get_unicode: library.symbol(b"FPDFText_GetUnicode\0")?,
                 text_get_char_box: library.symbol(b"FPDFText_GetCharBox\0")?,
                 text_get_font_size: library.symbol(b"FPDFText_GetFontSize\0")?,
+                text_get_font_info: library.optional_symbol(b"FPDFText_GetFontInfo\0"),
             })
         }
     }
@@ -568,7 +576,11 @@ impl PdfTextPage<'_> {
                 continue;
             };
             let font_size_q = self.font_size_q(index);
-            run.push(ch, bbox, font_size_q);
+            let font_id = self.font_id(index);
+            if run.has_style_change(&font_id, font_size_q) {
+                run.flush(page, next_span, spans)?;
+            }
+            run.push(ch, bbox, font_id, font_size_q);
         }
         run.flush(page, next_span, spans)
     }
@@ -606,6 +618,35 @@ impl PdfTextPage<'_> {
         let size = unsafe { (self.funcs.text_get_font_size)(self.handle, index) };
         quantize(size, QUANTUM_PER_POINT).ok()
     }
+
+    fn font_id(&self, index: c_int) -> Option<String> {
+        let get_font_info = self.funcs.text_get_font_info?;
+        // SAFETY: index is in range; null buffer asks PDFium for the UTF-8 byte length.
+        let len =
+            unsafe { (get_font_info)(self.handle, index, ptr::null_mut(), 0, ptr::null_mut()) };
+        if len == 0 || len > 4096 {
+            return None;
+        }
+
+        let mut buffer = vec![0u8; usize::try_from(len).ok()?];
+        let mut flags = 0;
+        // SAFETY: buffer is writable for len bytes; flags points to initialized storage.
+        let written = unsafe {
+            (get_font_info)(
+                self.handle,
+                index,
+                buffer.as_mut_ptr().cast(),
+                len,
+                &mut flags,
+            )
+        };
+        if written == 0 || written > len {
+            return None;
+        }
+        let nul = buffer.iter().position(|b| *b == 0).unwrap_or(buffer.len());
+        let raw = std::str::from_utf8(&buffer[..nul]).ok()?;
+        deterministic_font_id(raw)
+    }
 }
 
 impl Drop for PdfTextPage<'_> {
@@ -619,16 +660,24 @@ impl Drop for PdfTextPage<'_> {
 struct SpanRun {
     text: String,
     bbox: Option<QRect>,
+    font_id: Option<String>,
     font_size_q: Option<i64>,
 }
 
 impl SpanRun {
-    fn push(&mut self, ch: char, bbox: QRect, font_size_q: Option<i64>) {
+    fn has_style_change(&self, font_id: &Option<String>, font_size_q: Option<i64>) -> bool {
+        !self.text.is_empty() && (self.font_id != *font_id || self.font_size_q != font_size_q)
+    }
+
+    fn push(&mut self, ch: char, bbox: QRect, font_id: Option<String>, font_size_q: Option<i64>) {
         self.text.push(ch);
         self.bbox = Some(match self.bbox {
             Some(existing) => union_rect(existing, bbox),
             None => bbox,
         });
+        if self.font_id.is_none() {
+            self.font_id = font_id;
+        }
         if self.font_size_q.is_none() {
             self.font_size_q = font_size_q;
         }
@@ -651,7 +700,7 @@ impl SpanRun {
             page: page.id.clone(),
             bbox,
             text: std::mem::take(&mut self.text),
-            font_id: None,
+            font_id: self.font_id.take(),
             font_size_q: self.font_size_q,
             char_start: None,
             char_end: None,
@@ -659,8 +708,77 @@ impl SpanRun {
         });
         *next_span += 1;
         self.bbox = None;
+        self.font_id = None;
         self.font_size_q = None;
         Ok(())
+    }
+}
+
+fn deterministic_font_id(raw_name: &str) -> Option<String> {
+    let (name, subset) = strip_subset_prefix(raw_name.trim());
+    let normalized = normalize_font_name(name)?;
+    if subset {
+        return Some(format!("embedded:{normalized}"));
+    }
+    standard_14_substitution(&normalized)
+        .map(ToString::to_string)
+        .or_else(|| Some(format!("source:{normalized}")))
+}
+
+fn strip_subset_prefix(name: &str) -> (&str, bool) {
+    let bytes = name.as_bytes();
+    if bytes.len() > 7 && bytes[6] == b'+' && bytes[..6].iter().all(u8::is_ascii_uppercase) {
+        (&name[7..], true)
+    } else {
+        (name, false)
+    }
+}
+
+fn normalize_font_name(name: &str) -> Option<String> {
+    let mut out = String::new();
+    let mut previous_dash = false;
+    for ch in name.trim().chars() {
+        let mapped = if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') {
+            Some(ch)
+        } else if ch.is_whitespace()
+            || ch.is_control()
+            || matches!(ch, '/' | '\\' | ':' | ',' | '(' | ')' | '[' | ']')
+        {
+            Some('-')
+        } else {
+            Some(ch)
+        };
+        let Some(mapped) = mapped else {
+            continue;
+        };
+        if mapped == '-' {
+            if previous_dash {
+                continue;
+            }
+            previous_dash = true;
+        } else {
+            previous_dash = false;
+        }
+        out.push(mapped);
+    }
+    let out = out.trim_matches('-').to_string();
+    (!out.is_empty()).then_some(out)
+}
+
+fn standard_14_substitution(name: &str) -> Option<&'static str> {
+    match name {
+        "Courier" | "Courier-Bold" | "Courier-Oblique" | "Courier-BoldOblique" => {
+            Some("subst:liberation-mono")
+        }
+        "Helvetica" | "Helvetica-Bold" | "Helvetica-Oblique" | "Helvetica-BoldOblique" => {
+            Some("subst:liberation-sans")
+        }
+        "Times-Roman" | "Times-Bold" | "Times-Italic" | "Times-BoldItalic" => {
+            Some("subst:liberation-serif")
+        }
+        "Symbol" => Some("subst:standard-14-symbol"),
+        "ZapfDingbats" => Some("subst:standard-14-zapf-dingbats"),
+        _ => None,
     }
 }
 
@@ -863,5 +981,30 @@ mod tests {
             ethos_core::c14n::sha256_hex_bytes(b"pdfium bytes")
         );
         let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn deterministic_font_ids_strip_subset_prefixes() {
+        assert_eq!(
+            deterministic_font_id("ABCDEF+MinionPro-Regular").as_deref(),
+            Some("embedded:MinionPro-Regular")
+        );
+        assert_eq!(
+            deterministic_font_id("Helvetica-Bold").as_deref(),
+            Some("subst:liberation-sans")
+        );
+        assert_eq!(
+            deterministic_font_id("Courier").as_deref(),
+            Some("subst:liberation-mono")
+        );
+        assert_eq!(
+            deterministic_font_id("Times-Roman").as_deref(),
+            Some("subst:liberation-serif")
+        );
+        assert_eq!(
+            deterministic_font_id("Custom Font/Regular").as_deref(),
+            Some("source:Custom-Font-Regular")
+        );
+        assert_eq!(deterministic_font_id("   "), None);
     }
 }
