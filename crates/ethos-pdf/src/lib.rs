@@ -562,6 +562,14 @@ type FpdfTextGetFontInfo =
 #[cfg(windows)]
 type FpdfTextGetFontInfo =
     unsafe extern "system" fn(FpdfTextPage, c_int, *mut c_void, c_ulong, *mut c_int) -> c_ulong;
+#[cfg(not(windows))]
+type FpdfTextIsGenerated = unsafe extern "C" fn(FpdfTextPage, c_int) -> c_int;
+#[cfg(windows)]
+type FpdfTextIsGenerated = unsafe extern "system" fn(FpdfTextPage, c_int) -> c_int;
+#[cfg(not(windows))]
+type FpdfTextIsHyphen = unsafe extern "C" fn(FpdfTextPage, c_int) -> c_int;
+#[cfg(windows)]
+type FpdfTextIsHyphen = unsafe extern "system" fn(FpdfTextPage, c_int) -> c_int;
 
 #[derive(Clone, Copy)]
 struct PdfiumFunctions {
@@ -583,6 +591,8 @@ struct PdfiumFunctions {
     text_get_char_box: FpdfTextGetCharBox,
     text_get_font_size: FpdfTextGetFontSize,
     text_get_font_info: Option<FpdfTextGetFontInfo>,
+    text_is_generated: Option<FpdfTextIsGenerated>,
+    text_is_hyphen: Option<FpdfTextIsHyphen>,
 }
 
 impl PdfiumFunctions {
@@ -609,6 +619,8 @@ impl PdfiumFunctions {
                 text_get_char_box: library.symbol(b"FPDFText_GetCharBox\0")?,
                 text_get_font_size: library.symbol(b"FPDFText_GetFontSize\0")?,
                 text_get_font_info: library.optional_symbol(b"FPDFText_GetFontInfo\0"),
+                text_is_generated: library.optional_symbol(b"FPDFText_IsGenerated\0"),
+                text_is_hyphen: library.optional_symbol(b"FPDFText_IsHyphen\0"),
             })
         }
     }
@@ -821,11 +833,10 @@ impl PdfTextPage<'_> {
                 run.flush(page, next_span, spans)?;
                 continue;
             };
-            if ch == '\0' {
-                run.flush(page, next_span, spans)?;
+            if self.is_generated_hyphen(index) {
                 continue;
             }
-            if ch.is_whitespace() {
+            if should_break_text_run(ch) {
                 run.flush(page, next_span, spans)?;
                 continue;
             }
@@ -909,6 +920,18 @@ impl PdfTextPage<'_> {
         let raw = std::str::from_utf8(&buffer[..nul]).ok()?;
         deterministic_font_id(raw)
     }
+
+    fn is_generated_hyphen(&self, index: c_int) -> bool {
+        let (Some(text_is_generated), Some(text_is_hyphen)) =
+            (self.funcs.text_is_generated, self.funcs.text_is_hyphen)
+        else {
+            return false;
+        };
+        // SAFETY: index is in range for this text page.
+        unsafe {
+            text_is_generated(self.handle, index) == 1 && text_is_hyphen(self.handle, index) == 1
+        }
+    }
 }
 
 impl Drop for PdfTextPage<'_> {
@@ -916,6 +939,10 @@ impl Drop for PdfTextPage<'_> {
         // SAFETY: handle is a live FPDF_TEXTPAGE and is closed exactly once here.
         unsafe { (self.funcs.text_close_page)(self.handle) };
     }
+}
+
+fn should_break_text_run(ch: char) -> bool {
+    ch == '\0' || ch.is_whitespace() || ch.is_control()
 }
 
 #[derive(Default)]
@@ -1258,6 +1285,15 @@ mod tests {
             .page_count(b"not a pdf")
             .unwrap_err();
         assert_eq!(err.code, ErrorCode::InvalidPdf);
+    }
+
+    #[test]
+    fn text_run_breaks_on_pdfium_control_characters() {
+        assert!(should_break_text_run('\0'));
+        assert!(should_break_text_run('\n'));
+        assert!(should_break_text_run('\u{0002}'));
+        assert!(!should_break_text_run('-'));
+        assert!(!should_break_text_run('A'));
     }
 
     #[test]

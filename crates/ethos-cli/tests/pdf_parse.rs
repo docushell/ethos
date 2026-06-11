@@ -19,6 +19,15 @@ fn two_column_fixture_pdf() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/two-columns/document.pdf")
 }
 
+fn rotation_fixture_pdf() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/rotation-90/document.pdf")
+}
+
+fn hyphenated_line_break_fixture_pdf() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/synthetic/hyphenated-line-break/document.pdf")
+}
+
 fn invalid_header_fixture_pdf() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/failure/invalid-header/document.pdf")
 }
@@ -73,6 +82,13 @@ fn assert_span_fonts(doc: &Value, expected_font_id: &str) {
         assert_eq!(span["font_id"], expected_font_id);
         assert!(span["font_size_q"].as_i64().unwrap() > 0);
     }
+}
+
+fn assert_no_control_chars(text: &str) {
+    assert!(
+        !text.chars().any(char::is_control),
+        "text contains a control character: {text:?}"
+    );
 }
 
 #[cfg(debug_assertions)]
@@ -336,6 +352,86 @@ fn parses_two_line_pdf_into_paragraph_text_block_when_pdfium_is_configured() {
     assert_eq!(spans[2]["char_end"], 17);
     assert_eq!(spans[3]["char_start"], 18);
     assert_eq!(spans[3]["char_end"], 22);
+}
+
+#[test]
+fn parses_rotation_90_pdf_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!("skipping rotation PDFium test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    let fixture = rotation_fixture_pdf();
+    let doc = parse_json(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+
+    let pages = doc["payload"]["pages"].as_array().unwrap();
+    assert_eq!(pages.len(), 1);
+    assert_eq!(pages[0]["rotation"], 90);
+    assert_eq!(pages[0]["width"], 30000);
+    assert_eq!(pages[0]["height"], 14400);
+
+    let elements = doc["payload"]["elements"].as_array().unwrap();
+    assert_eq!(elements.len(), 1);
+    assert_eq!(elements[0]["text"], "Rotate Ninety");
+    assert_eq!(
+        elements[0]["span_refs"],
+        serde_json::json!(["s000001", "s000002"])
+    );
+
+    let spans = doc["payload"]["spans"].as_array().unwrap();
+    assert_eq!(spans.len(), 2);
+    assert_eq!(spans[0]["text"], "Rotate");
+    assert_eq!(spans[1]["text"], "Ninety");
+    assert_span_fonts(&doc, "subst:liberation-sans-regular");
+    assert_eq!(spans[0]["char_start"], 0);
+    assert_eq!(spans[0]["char_end"], 6);
+    assert_eq!(spans[1]["char_start"], 7);
+    assert_eq!(spans[1]["char_end"], 13);
+}
+
+#[test]
+fn parses_hyphenated_line_break_without_control_chars_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!("skipping hyphenation PDFium test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    let fixture = hyphenated_line_break_fixture_pdf();
+    let doc = parse_json(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+
+    let elements = doc["payload"]["elements"].as_array().unwrap();
+    assert_eq!(elements.len(), 1);
+    assert_eq!(elements[0]["text"], "hyphen ated");
+    assert_no_control_chars(elements[0]["text"].as_str().unwrap());
+    assert_eq!(
+        elements[0]["span_refs"],
+        serde_json::json!(["s000001", "s000002"])
+    );
+
+    let spans = doc["payload"]["spans"].as_array().unwrap();
+    assert_eq!(spans.len(), 2);
+    assert_eq!(spans[0]["text"], "hyphen");
+    assert_eq!(spans[1]["text"], "ated");
+    assert_span_fonts(&doc, "subst:liberation-sans-regular");
+    for span in spans {
+        assert_no_control_chars(span["text"].as_str().unwrap());
+    }
+    assert_eq!(spans[0]["char_start"], 0);
+    assert_eq!(spans[0]["char_end"], 6);
+    assert_eq!(spans[1]["char_start"], 7);
+    assert_eq!(spans[1]["char_end"], 11);
 }
 
 #[test]
