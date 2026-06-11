@@ -1,12 +1,14 @@
 # Ethos - Implementation Plan
 
-Status: v2.2 - reduced-staffing schedule after ADR-0001; updated against PRD v3.5 (OSS-only); supersedes v2.1 where changed
-Date: 2026-06-11
+Status: v2.3 - trust-layer-first sequencing after ADR-0007; reduced-staffing schedule after ADR-0001; updated against PRD v3.5 (OSS-only); supersedes v2.2 where changed
+Date: 2026-06-12
 Source of truth: the Ethos OSS product requirements document in this docs directory (**PRD v3.5 OSS-Only**). Where this plan and the PRD conflict, **the PRD wins**; raise an ADR to change either. Every task carries its governing v3.5 section.
 Scope rule (PRD preamble, 14): this plan is **Ethos OSS-only**. Hosted/platform integration, commercial packaging, and consuming-platform rollout are out of scope. Nothing in this plan depends on any platform.
 Method: contract-first architecture discipline (senior-architect); execution as a multi-agent workflow with explicit patterns, bounded handoffs, validation gates, and failure paths (agent-workflow-designer).
 Plan-level constructs: week numbers, checkpoint dates, and staffing assumptions are **plan commitments, not PRD requirements** - amend them here by PR with maintainer sign-off. ADR-0001 accepted reduced staffing and replaces the v2.1 week-4/13/26 schedule with the v2.2 week-8/22/40 schedule below.
 Current execution status, blockers, and active lane acceptance criteria live in `docs/execution-status.md`.
+Architectural principle (ADR-0007): Ethos is a verification and grounding layer that includes a
+deterministic parser, not a parser that may later add verification.
 
 ---
 
@@ -14,8 +16,8 @@ Current execution status, blockers, and active lane acceptance criteria live in 
 
 ### 1.1 Workflow pattern selection
 
-- **Milestone A (weeks 1-8)** is an **orchestrator + serialized critical path** workflow with one **evaluator gate** (Gate Zero, PRD 1.3). Contracts/schemas land first, then engine and harness move through bounded handoffs. The only allowed parallelism is one implementation lane plus lightweight benchmark/devrel support; the accepted staffing cannot safely run three implementation lanes.
-- **Milestones B-E** run as **orchestrator** with bounded parallel lanes per crate, each gated by **evaluator loops** (fixtures-first, determinism CI, schema-compat - PRD 11.3, 14).
+- **Milestone A (weeks 1-8)** is an **orchestrator + serialized critical path** workflow with one **evaluator gate** (Gate Zero, PRD 1.3). Contracts/schemas land first, then engine and harness move through bounded handoffs. Milestone A is incomplete unless the trust boundary is real: `GroundingSource`, verification report/config schemas, an OpenDataLoader grounding adapter stub, and an `ethos verify` CLI stub must exist even if parser work is still advancing. The only allowed parallelism is one implementation lane plus lightweight benchmark/devrel support; the accepted staffing cannot safely run three implementation lanes.
+- **Milestones B-E** run as **orchestrator** with bounded parallel lanes per crate, each gated by **evaluator loops** (fixtures-first, determinism CI, schema-compat - PRD 11.3, 14). Milestone B starts with verification alpha before broad parser/layout expansion.
 - **Gate Zero G2/G3 failure** triggers a pre-scoped **router branch**: stop parser-core expansion and continue `ethos-verify` + chunk/citation tooling as a **standalone, parser-agnostic OSS layer over foreign parser output** (PRD 1.3). **G1-only failure** gets exactly one decider-owned choice: immediate fallback or one bounded remediation retry by week 10. This is a trust-layer pivot, not an OpenDataLoader fork - ODL JSON is simply the *first* grounding adapter; LiteParse and Docling adapters follow if useful (PRD 1.5, 2.1, 5.4). Salvage list in 6.5.
 
 What we deliberately do NOT do: one mega-agent building the whole workspace (context bloat, unreviewable diffs), or per-file agents (handoff overhead exceeds work). The unit of agent work is a **crate or contract**; the unit of handoff is an **artifact** (schema file, fixture set, harness JSON, ADR), never freeform context.
@@ -278,13 +280,13 @@ On G2/G3 failure, G1 retry failure, or decider-selected G1 fallback, Ethos pivot
 
 ## 7. Milestones B-C - Weeks 9-22 (plan-level first checkpoint)
 
-### Milestone B (weeks 9-14): Layout And Exports (PRD 13-B)
+### Milestone B (weeks 9-14): Verify Alpha, Then Layout And Exports (PRD 13-B)
 
 | Lane | Deliverables | Acceptance (PRD 13-B exit) | PRD |
 | --- | --- | --- | --- |
-| WS-LAYOUT | Reading order, block grouping, heading/list inference; **Markdown + plain-text exporters** | Multi-column fixtures read correctly; md/txt useful for RAG | 4.1, 7 |
-| WS-SURFACES | PyO3 binding scaffold + maturin local wheels: `ethos-pdf` / `ethos_pdf`; stable packaging hardens in E | Python package parses local PDFs on supported dev platforms | 9.2 |
-| WS-VERIFY-ALPHA | `ethos verify` alpha; ODL JSON grounding adapter; capability downgrade warnings; parser-agnostic verification demo over foreign parser output | Trust layer works before parser-core is complete | 1.5, 5.4, 8 |
+| WS-VERIFY-ALPHA | `ethos verify` alpha over `GroundingSource`: quote/presence citation checks over native Ethos JSON and OpenDataLoader-style JSON; stale fingerprint checks; capability-limited reports; deterministic evidence matching; public CLI demo `ethos verify odl.json --grounding opendataloader-json --citations answer.json` | Trust layer works over foreign parser output before parser-core expansion continues | 1.5, 5.4, 8 |
+| WS-LAYOUT | Reading order, block grouping, heading/list inference; **Markdown + plain-text exporters** after the verify-alpha gate | Multi-column fixtures read correctly; md/txt useful for RAG | 4.1, 7 |
+| WS-SURFACES | PyO3 binding scaffold + maturin local wheels: `ethos-pdf` / `ethos_pdf`; stable packaging hardens in E after the verify-alpha gate | Python package parses local PDFs on supported dev platforms | 9.2 |
 | WS-HARNESS | Quality metrics: reading order, heading hierarchy, bbox IoU (evaluator support, not a fourth implementation lane) | Quality dashboard in `make bench` | 11.1 |
 
 ### Milestone C (weeks 15-22): Tables, Chunks, Regions, Security, Overlay (PRD 13-C)
@@ -356,7 +358,7 @@ Release engineering: lockstep workspace versions; output-changing merges bump ve
 | R8 | Package-name collision/trademark (`ethos` is a loaded name) | M/Medium | Week-0 registry/trademark scan (0.11); names provisional per PRD 3.1 | Conflict -> rename via ADR-0006 before any public artifact |
 | R9 | Cross-platform CI runner availability, especially Windows x64 by Milestone B exit | L/Medium | Week-0 bootstrap for Gate Zero hosts; Windows determinism joins nightly by week 14; self-hosted fallback budgeted | Windows gap by Milestone D -> block or re-scope Public Beta, never waive determinism claim |
 | R10 | Public failure-corpus process stalls (wedge #4 stays unearned) | M/Low (R1 horizon) | Fixture contribution guide at Week 0 (PRD 12); public fixtures only - no claims until earned (PRD 1.4) | Stall -> wedge #4 stays out of all marketing; no schedule impact |
-| R11 | Trust wedge arrives too late and Ethos is dismissed as yet another parser | M/Critical | WS-VERIFY-ALPHA in Milestone B; launch demos in E; parser-agnostic ODL adapter before public beta | Verify alpha misses B exit -> decider re-scopes Node/MCP first, not the trust layer |
+| R11 | Trust wedge arrives too late and Ethos is dismissed as yet another parser | M/Critical | ADR-0007 makes trust-layer-first non-optional; WS-VERIFY-ALPHA leads Milestone B; parser/layout expansion waits behind quote/presence verification over native Ethos JSON and ODL JSON | Verify alpha misses B exit -> decider cuts optional surfaces and parser breadth first, not the trust layer |
 
 ## 12. Governance, Reporting, Change Control
 

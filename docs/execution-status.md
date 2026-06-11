@@ -1,8 +1,8 @@
 # Ethos Execution Status
 
-Date: 2026-06-11
+Date: 2026-06-12
 Owner: product / decider
-Status: Pre-alpha. Week 0 governance is accepted, and commits `de82142` and `8f04bcd` landed the first WS-ENGINE implementation slice. External freeze/pin/name checks still block Gate Zero and all public claims.
+Status: Pre-alpha. Week 0 governance is accepted, the first WS-ENGINE, WS-HARNESS, and WS-VERIFY-ALPHA slices are landed, and ADR-0007 now locks the product direction: Ethos is a verification and grounding layer that includes a deterministic parser. External freeze/pin/name checks still block Gate Zero and all public claims.
 
 ## Current Reality
 
@@ -14,8 +14,9 @@ The repository is still pre-alpha, but it is no longer only contract/scaffold co
 - `ethos doc parse` / `ethos fingerprint` PDF execution through a worker process with `max_parse_ms` timeout enforcement, stable error-envelope relay, diagnostics-gated worker stderr, and page-range validation/filtering.
 - Quantized page/span extraction at the backend boundary, plus a basic deterministic layout pass that assembles paragraph `text_block` elements and simple column reading order for the current born-digital fixtures.
 - Schema/example/profile validation is green through `schemas/validate_examples.py` using `jsonschema` draft 2020-12 validation, including referential-integrity and bbox sanity checks outside JSON Schema.
+- `ethos verify` now produces non-empty quote/presence verification checks over native Ethos document JSON and synthetic OpenDataLoader-style JSON through `--grounding opendataloader-json`.
 
-Still absent or not claimable: frozen Gate Zero corpus/hardware records, reproducible benchmark result JSON, competitor pins/comparisons, public speed/quality/footprint claims, citation-checking verification, OCR/image-only support, table/list/heading semantics, Phase 2 project-maintained PDFium builds, release packaging, and multi-platform determinism evidence.
+Still absent or not claimable: frozen Gate Zero corpus/hardware records, reproducible benchmark result JSON, competitor pins/comparisons, public speed/quality/footprint claims, OCR/image-only support, table/list/heading semantics, value/table/semantic verification, Phase 2 project-maintained PDFium builds, release packaging, and multi-platform determinism evidence.
 
 ## Human / External Blockers
 
@@ -29,7 +30,7 @@ These are not engineering placeholders. Do not mark them done until the exact ex
 
 ## Active Engineering Lane
 
-WS-ENGINE remains the active lane under the reduced-staff plan. The first slice is implemented, but acceptance is limited to simple born-digital fixtures and local PDFium configuration.
+WS-VERIFY-ALPHA is now the active lane. The first slice is implemented; next work should harden the citation input contract and expand verification only within the trust-layer scope.
 
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
@@ -39,7 +40,8 @@ WS-ENGINE remains the active lane under the reduced-staff plan. The first slice 
 | Layout groundwork | Landed: basic paragraph text blocks and simple column reading order over quantized spans | Tables, headings, lists, rotation/quirk handling, and confidence policy remain future work |
 | Font policy groundwork | Partially landed: substitution table and profile policy are present; fixture output uses deterministic substitution IDs | Bundled fallback asset hashing and broader font/CID validation remain open |
 | Schema/example validation | Landed: schemas, examples, deterministic profile, referential integrity, and bbox sanity pass the `jsonschema` validation gate | Contract changes still require explicit versioning and compatibility review |
+| Trust-layer implementation | Landed: `ethos verify` quote/presence checks, stale fingerprint handling, unsupported claim reporting, capability-limited warnings, native Ethos JSON path, ODL-style adapter path, and demo fixtures | Still needed: citation-input schema, pinned real ODL output fixture, value/table verification, crop-aware evidence, and broader adapter hardening |
 
 ## PM Rule
 
-Public language stays at "pre-alpha / contracts phase" until all three external blockers are closed and Gate Zero has reproducible result JSON. Internal work can proceed on WS-ENGINE, but no speed, footprint, quality, or competitor claim is allowed before that point.
+Public language stays at "pre-alpha / contracts phase" until all three external blockers are closed and Gate Zero has reproducible result JSON. Internal parser work can proceed only when it supports Gate Zero or the trust layer; the next product-differentiating work is to harden WS-VERIFY-ALPHA toward the v1 verification contract.

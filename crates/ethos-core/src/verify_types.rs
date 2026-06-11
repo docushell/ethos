@@ -222,7 +222,7 @@ pub fn compute_all_evidence_grounded(
 pub enum TextNormalization {
     /// Byte-exact comparison.
     None,
-    /// Trim + collapse Unicode whitespace runs to one ASCII space. The only
+    /// Trim + collapse ASCII whitespace runs to one ASCII space. The only
     /// normalization in v1 (no Unicode normalization — it would alter fidelity).
     CollapseWhitespace,
 }

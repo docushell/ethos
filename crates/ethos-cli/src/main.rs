@@ -6,8 +6,8 @@
 //!
 //! Skeleton status (honest): `doc parse` is wired through the backend boundary and fails
 //! with a stable code until WS-ENGINE lands PDFium; `rag chunk` and `fingerprint` are
-//! fully functional over canonical JSON; `verify` emits a schema-valid report with zero
-//! checks (the check engine is the Milestone B alpha, WS-VERIFY-ALPHA).
+//! fully functional over canonical JSON; `verify` runs the WS-VERIFY-ALPHA literal
+//! quote/presence checks over native Ethos JSON and ODL-style JSON.
 
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -27,8 +27,9 @@ use ethos_core::model::{
     Warning,
 };
 use ethos_core::traits::{BackendManifest, EthosPdfBackend as _, Extraction, LayoutEngine as _};
-use ethos_core::verify_types::VerificationConfig;
+use ethos_core::verify_types::{ClaimKind, VerificationConfig};
 use ethos_grounding_opendataloader_json::OdlJsonSource;
+use ethos_verify::CitationInput;
 
 /// Usage-error exit code (also what clap uses).
 const EXIT_USAGE: u8 = 2;
@@ -141,8 +142,8 @@ struct RagChunkArgs {
 struct VerifyArgs {
     /// Grounding input: canonical Ethos document, or foreign output with --grounding
     input: PathBuf,
-    /// Citations file (JSON). NOTE (skeleton): accepted and validated, but checks land
-    /// in Milestone B — the report carries zero checks until then.
+    /// Citations file (JSON). Accepts either an array of claims or
+    /// {"document_fingerprint": "...", "claims": [...]}.
     #[arg(long)]
     citations: PathBuf,
     /// Foreign grounding adapter id (e.g. `opendataloader-json`)
@@ -445,10 +446,10 @@ fn rag_chunk(args: RagChunkArgs) -> Result<(), Failure> {
 }
 
 fn verify(args: VerifyArgs) -> Result<(), Failure> {
-    // citations must at least be valid JSON, even in the skeleton
     let citations_bytes = read_file(&args.citations)?;
-    serde_json::from_slice::<serde_json::Value>(&citations_bytes)
-        .map_err(|_| Failure::Usage("citations file is not valid JSON".to_string()))?;
+    let citations: CitationInput = serde_json::from_slice(&citations_bytes).map_err(|_| {
+        Failure::Usage("citations file does not match the alpha citation input shape".to_string())
+    })?;
 
     let config: VerificationConfig = match &args.config {
         Some(path) => serde_json::from_slice(&read_file(path)?).map_err(|_| {
@@ -456,6 +457,7 @@ fn verify(args: VerifyArgs) -> Result<(), Failure> {
         })?,
         None => VerificationConfig::default_v1(),
     };
+    validate_citation_input(&citations, &config)?;
     let config_value =
         serde_json::to_value(&config).map_err(|e| EthosError::internal(e.to_string()))?;
     let config_sha256 =
@@ -464,7 +466,7 @@ fn verify(args: VerifyArgs) -> Result<(), Failure> {
     let report = match args.grounding.as_deref() {
         None => {
             let doc = read_document(&args.input)?;
-            ethos_verify::verify_skeleton(&doc, &config, config_sha256)
+            ethos_verify::verify_claims(&doc, citations, &config, config_sha256)
         }
         Some("opendataloader-json") => {
             let bytes = read_file(&args.input)?;
@@ -472,7 +474,7 @@ fn verify(args: VerifyArgs) -> Result<(), Failure> {
                 .map_err(|_| Failure::Usage("grounding input is not UTF-8".to_string()))?;
             let source = OdlJsonSource::from_json_str(&text)
                 .map_err(|e| Failure::Usage(format!("opendataloader-json adapter: {e}")))?;
-            ethos_verify::verify_skeleton(&source, &config, config_sha256)
+            ethos_verify::verify_claims(&source, citations, &config, config_sha256)
         }
         Some(other) => {
             return Err(Failure::Usage(format!(
@@ -481,16 +483,49 @@ fn verify(args: VerifyArgs) -> Result<(), Failure> {
         }
     };
 
-    eprintln!(
-        "note: verify is a Milestone A skeleton — the report contains zero checks; \
-         the check engine lands as the Milestone B alpha (WS-VERIFY-ALPHA)"
-    );
-
     let value = serde_json::to_value(&report).map_err(|e| EthosError::internal(e.to_string()))?;
     let mut bytes =
         ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
     bytes.push(b'\n');
     write_output(args.out, &bytes)
+}
+
+fn validate_citation_input(
+    citations: &CitationInput,
+    config: &VerificationConfig,
+) -> Result<(), Failure> {
+    let claims = citations.claims();
+    if claims.is_empty() {
+        return Err(Failure::Usage(
+            "citations file must contain at least one claim".to_string(),
+        ));
+    }
+    if claims.len() > config.limits.max_checks as usize {
+        return Err(Failure::Usage(format!(
+            "citations file exceeds max_checks ({})",
+            config.limits.max_checks
+        )));
+    }
+    for (idx, claim) in claims.iter().enumerate() {
+        if !claim.citation.has_locator() {
+            return Err(Failure::Usage(format!(
+                "claim {} citation must contain at least one locator",
+                idx + 1
+            )));
+        }
+        if claim.kind == ClaimKind::Quote
+            && claim
+                .text
+                .as_ref()
+                .is_none_or(|text| text.trim().is_empty())
+        {
+            return Err(Failure::Usage(format!(
+                "claim {} quote text must be non-empty",
+                idx + 1
+            )));
+        }
+    }
+    Ok(())
 }
 
 fn fingerprint(args: FingerprintArgs) -> Result<(), Failure> {

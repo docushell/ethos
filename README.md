@@ -6,9 +6,10 @@
 > exists (Milestone E).
 > Current execution status and blockers live in `docs/execution-status.md`.
 
-Ethos is a fast, deterministic, runtime-light PDF parser for RAG and AI agents. It turns
-born-digital PDFs into an auditable document graph: JSON, Markdown, text, chunks, tables,
-citations, coordinates, crops, and security warnings.
+Ethos is a verification and grounding system for document evidence. It includes a fast,
+deterministic, runtime-light PDF parser that turns born-digital PDFs into auditable grounding
+artifacts: JSON, Markdown, text, chunks, tables, citations, coordinates, crops, and security
+warnings.
 
 Ethos can verify citation evidence against the parsed source and return the source crop for
 inspection.
@@ -28,8 +29,8 @@ Same input, same pinned profile, same canonical output.
   fingerprint is fresh). It is not a semantic correctness judgment of an answer.
 - Non-embedded CJK font fallback is out of Release 1 and warns explicitly.
 
-It is built for teams that need trustworthy, fast, local PDF parsing with verifiable source
-grounding.
+It is built for teams that need trustworthy local document grounding, deterministic native parsing
+when they want it, and citation evidence that can be inspected instead of trusted blindly.
 
 ## Public architecture
 

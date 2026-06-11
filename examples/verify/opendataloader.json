@@ -1,0 +1,40 @@
+{
+  "_comment": "Synthetic OpenDataLoader-style fixture for WS-VERIFY-ALPHA. It matches the adapter's documented alpha subset and is not real pinned ODL output.",
+  "tool": {
+    "name": "opendataloader-pdf",
+    "version": "0.0.0-synthetic"
+  },
+  "pages": [
+    {
+      "number": 1,
+      "width": 612.0,
+      "height": 792.0
+    }
+  ],
+  "elements": [
+    {
+      "id": "odl-h1",
+      "page": 1,
+      "bbox": [
+        72.0,
+        72.0,
+        304.8,
+        90.0
+      ],
+      "type": "Heading",
+      "text": "Quarterly Report"
+    },
+    {
+      "id": "odl-e2",
+      "page": 1,
+      "bbox": [
+        72.0,
+        101.0,
+        540.0,
+        115.0
+      ],
+      "type": "Paragraph",
+      "text": "Revenue grew to $12.4M in Q3 2025."
+    }
+  ]
+}

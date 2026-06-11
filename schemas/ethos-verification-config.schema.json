@@ -23,7 +23,7 @@
       "properties": {
         "text_normalization": {
           "enum": ["none", "collapse_whitespace"],
-          "description": "'collapse_whitespace': trim + collapse runs of Unicode whitespace to a single ASCII space. The ONLY normalization in v1; no Unicode normalization (it would alter extraction fidelity)."
+          "description": "'collapse_whitespace': normalize line endings, trim, and collapse runs of ASCII whitespace to a single ASCII space. The ONLY normalization in v1; no Unicode normalization (it would alter extraction fidelity)."
         },
         "case_sensitive": { "type": "boolean" },
         "bbox_containment_tolerance_q": {

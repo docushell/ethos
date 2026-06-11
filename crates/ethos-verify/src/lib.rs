@@ -8,18 +8,60 @@
 //! its text matches by a declared literal method, the fingerprint is fresh. It is never
 //! pixel-level, semantic, or arithmetic proof (PRD §14).
 //!
-//! Milestone A ships the crate boundary + capability-downgrade plumbing so CI can prove
-//! invariant 4 (this crate compiles against the trait module alone) from the first
-//! commit. The check engine lands as the Milestone B alpha (WS-VERIFY-ALPHA).
+//! The WS-VERIFY-ALPHA check engine intentionally supports only literal quote and
+//! presence claims. Unsupported claim kinds remain explicit; no fuzzy, semantic,
+//! arithmetic, table, crop, OCR, layout, or parser-internal behavior belongs here.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 use ethos_core::codes::WarningCode;
-use ethos_core::grounding::{CoordinateOrigin, GroundingSource};
+use ethos_core::grounding::{CoordinateOrigin, GroundingElement, GroundingSource, GroundingSpan};
 use ethos_core::verify_types::{
-    compute_all_evidence_grounded, Check, GroundingMeta, VerificationConfig, VerificationReport,
+    compute_all_evidence_grounded, Check, CheckStatus, Claim, ClaimKind, Evidence, GroundingMeta,
+    MatchMethod, TextNormalization, VerificationConfig, VerificationReport,
 };
+use serde::{Deserialize, Serialize};
+
+/// Citation input accepted by the alpha verifier.
+///
+/// The public CLI accepts either a bare array of [`Claim`] objects or this envelope
+/// form. `document_fingerprint`, when present, is compared with the grounding
+/// source fingerprint under the active staleness policy.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CitationInput {
+    /// Bare claim list.
+    Claims(Vec<Claim>),
+    /// Claim list with optional fingerprint anchor.
+    Envelope {
+        /// Fingerprint the citations were produced against.
+        #[serde(default)]
+        document_fingerprint: Option<String>,
+        /// Claims to verify, in deterministic input order.
+        claims: Vec<Claim>,
+    },
+}
+
+impl CitationInput {
+    /// Claims in deterministic input order.
+    pub fn claims(&self) -> &[Claim] {
+        match self {
+            CitationInput::Claims(claims) => claims,
+            CitationInput::Envelope { claims, .. } => claims,
+        }
+    }
+
+    fn into_parts(self) -> (Option<String>, Vec<Claim>) {
+        match self {
+            CitationInput::Claims(claims) => (None, claims),
+            CitationInput::Envelope {
+                document_fingerprint,
+                claims,
+            } => (document_fingerprint, claims),
+        }
+    }
+}
 
 /// Compute the capability-downgrade warnings for a source under a config (PRD §5.5):
 /// every missing capability the run would rely on surfaces as `capability_limited` —
@@ -31,32 +73,64 @@ pub fn capability_warnings(
     let caps = source.capabilities();
     let mut warnings = Vec::new();
     if !caps.fingerprint && config.staleness.require_fingerprint_match {
-        warnings.push(WarningCode::CapabilityLimited);
+        push_warning(&mut warnings, WarningCode::CapabilityLimited);
     }
     if !caps.spans {
-        warnings.push(WarningCode::CapabilityLimited);
+        push_warning(&mut warnings, WarningCode::CapabilityLimited);
+    }
+    if !caps.char_offsets {
+        push_warning(&mut warnings, WarningCode::CapabilityLimited);
     }
     if caps.coordinate_origin == CoordinateOrigin::Unknown {
-        warnings.push(WarningCode::CapabilityLimited);
+        push_warning(&mut warnings, WarningCode::CapabilityLimited);
+    }
+    if !caps.crop_support {
+        push_warning(&mut warnings, WarningCode::CapabilityLimited);
     }
     warnings
 }
 
-/// Milestone A placeholder run: validates the wiring end-to-end and emits a
-/// schema-valid report with **no checks** — `all_evidence_grounded` is therefore
-/// always `false` (the PRD §8 gate requires at least one supported grounded check).
-/// The real check engine replaces the body in Milestone B (WS-VERIFY-ALPHA).
-pub fn verify_skeleton(
+fn push_warning(warnings: &mut Vec<WarningCode>, warning: WarningCode) {
+    if !warnings.contains(&warning) {
+        warnings.push(warning);
+    }
+}
+
+/// Verify citation claims over a parser-agnostic [`GroundingSource`].
+pub fn verify_claims(
     source: &dyn GroundingSource,
+    citations: CitationInput,
     config: &VerificationConfig,
     config_sha256: String,
 ) -> VerificationReport {
-    let checks: Vec<Check> = Vec::new();
-    let unsupported: Vec<String> = Vec::new();
-    let fingerprint_stale = false;
+    let (citation_fingerprint, claims) = citations.into_parts();
+    let source_fingerprint = source.fingerprint();
+    let fingerprint_stale = config.staleness.require_fingerprint_match
+        && matches!(
+            (citation_fingerprint.as_deref(), source_fingerprint.as_deref()),
+            (Some(expected), Some(actual)) if expected != actual
+        );
+    let include_text = config.evidence.is_some_and(|e| e.include_text);
+    let mut unsupported = Vec::new();
+    let checks: Vec<Check> = claims
+        .into_iter()
+        .enumerate()
+        .map(|(idx, claim)| {
+            check_claim(
+                idx + 1,
+                source,
+                claim,
+                config,
+                fingerprint_stale,
+                include_text,
+                &mut unsupported,
+            )
+        })
+        .collect();
+
     VerificationReport {
         schema_version: ethos_core::SCHEMA_VERSION.to_string(),
-        document_fingerprint: source.fingerprint(),
+        document_fingerprint: source_fingerprint,
         verification_config_sha256: config_sha256,
         grounding: GroundingMeta {
             parser: source.parser(),
@@ -74,54 +148,561 @@ pub fn verify_skeleton(
     }
 }
 
+fn check_claim(
+    id: usize,
+    source: &dyn GroundingSource,
+    claim: Claim,
+    config: &VerificationConfig,
+    fingerprint_stale: bool,
+    include_text: bool,
+    unsupported: &mut Vec<String>,
+) -> Check {
+    let mut warnings = Vec::new();
+    let check_id = format!("v{id:04}");
+
+    if !claim.citation.has_locator() {
+        return Check {
+            id: check_id,
+            claim,
+            status: CheckStatus::Error,
+            match_method: MatchMethod::None,
+            semantic_unverified: false,
+            evidence: None,
+            warnings,
+        };
+    }
+
+    if !is_alpha_supported_kind(claim.kind) || !config.claim_kinds.contains(&claim.kind) {
+        push_unsupported(unsupported, claim.kind);
+        return Check {
+            id: check_id,
+            claim,
+            status: CheckStatus::UnsupportedClaimKind,
+            match_method: MatchMethod::None,
+            semantic_unverified: false,
+            evidence: None,
+            warnings,
+        };
+    }
+
+    if fingerprint_stale {
+        return Check {
+            id: check_id,
+            claim,
+            status: CheckStatus::Stale,
+            match_method: MatchMethod::None,
+            semantic_unverified: false,
+            evidence: None,
+            warnings,
+        };
+    }
+
+    let target = match resolve_target(source, &claim, config) {
+        TargetResolution::Found(target) => target,
+        TargetResolution::NotFound => {
+            return Check {
+                id: check_id,
+                claim,
+                status: CheckStatus::NotFound,
+                match_method: MatchMethod::None,
+                semantic_unverified: false,
+                evidence: None,
+                warnings,
+            };
+        }
+        TargetResolution::CapabilityBlocked => {
+            push_warning(&mut warnings, WarningCode::CapabilityLimited);
+            return Check {
+                id: check_id,
+                claim,
+                status: CheckStatus::CapabilityBlocked,
+                match_method: MatchMethod::None,
+                semantic_unverified: false,
+                evidence: None,
+                warnings,
+            };
+        }
+    };
+
+    let evidence = make_evidence(&target, include_text);
+    match claim.kind {
+        ClaimKind::Presence => Check {
+            id: check_id,
+            claim,
+            status: CheckStatus::Grounded,
+            match_method: MatchMethod::PresenceOnly,
+            semantic_unverified: false,
+            evidence,
+            warnings,
+        },
+        ClaimKind::Quote => {
+            let method = text_match_method(config);
+            let status = if let (Some(expected), Some(actual)) =
+                (claim.text.as_deref(), target.text.as_deref())
+            {
+                if text_matches(expected, actual, config) {
+                    CheckStatus::Grounded
+                } else {
+                    CheckStatus::Mismatch
+                }
+            } else {
+                CheckStatus::Mismatch
+            };
+            Check {
+                id: check_id,
+                claim,
+                status,
+                match_method: method,
+                semantic_unverified: false,
+                evidence,
+                warnings,
+            }
+        }
+        _ => unreachable!("unsupported kinds returned before matching"),
+    }
+}
+
+fn is_alpha_supported_kind(kind: ClaimKind) -> bool {
+    matches!(kind, ClaimKind::Quote | ClaimKind::Presence)
+}
+
+fn push_unsupported(unsupported: &mut Vec<String>, kind: ClaimKind) {
+    let name = claim_kind_name(kind).to_string();
+    if !unsupported.contains(&name) {
+        unsupported.push(name);
+    }
+}
+
+fn claim_kind_name(kind: ClaimKind) -> &'static str {
+    match kind {
+        ClaimKind::Quote => "quote",
+        ClaimKind::Value => "value",
+        ClaimKind::Presence => "presence",
+        ClaimKind::TableCell => "table_cell",
+        ClaimKind::Region => "region",
+        ClaimKind::Other => "other",
+    }
+}
+
+#[derive(Debug, Clone)]
+struct FoundTarget {
+    page: Option<String>,
+    bbox: Option<[i64; 4]>,
+    text: Option<String>,
+}
+
+enum TargetResolution {
+    Found(FoundTarget),
+    NotFound,
+    CapabilityBlocked,
+}
+
+fn resolve_target(
+    source: &dyn GroundingSource,
+    claim: &Claim,
+    config: &VerificationConfig,
+) -> TargetResolution {
+    if let Some(span_id) = claim.citation.span_id.as_deref() {
+        if !source.capabilities().spans {
+            return TargetResolution::CapabilityBlocked;
+        }
+        return source
+            .spans()
+            .into_iter()
+            .find(|span| span.id == span_id)
+            .map(target_from_span)
+            .map(TargetResolution::Found)
+            .unwrap_or(TargetResolution::NotFound);
+    }
+
+    if let Some(element_id) = claim.citation.element_id.as_deref() {
+        return source
+            .element_by_id(element_id)
+            .map(target_from_element)
+            .map(TargetResolution::Found)
+            .unwrap_or(TargetResolution::NotFound);
+    }
+
+    if let (Some(page), Some(bbox)) = (claim.citation.page.as_deref(), claim.citation.bbox) {
+        if source.capabilities().coordinate_origin == CoordinateOrigin::Unknown {
+            return TargetResolution::CapabilityBlocked;
+        }
+        let tolerance = config.matching.bbox_containment_tolerance_q.unwrap_or(0);
+        return source
+            .elements()
+            .into_iter()
+            .find(|element| element.page == page && contains_bbox(element.bbox, bbox, tolerance))
+            .map(target_from_element)
+            .map(TargetResolution::Found)
+            .unwrap_or(TargetResolution::NotFound);
+    }
+
+    if let Some(page) = claim.citation.page.as_deref() {
+        return source
+            .pages()
+            .into_iter()
+            .find(|candidate| candidate.id == page)
+            .map(|found| {
+                TargetResolution::Found(FoundTarget {
+                    page: Some(found.id),
+                    bbox: Some([0, 0, found.width, found.height]),
+                    text: None,
+                })
+            })
+            .unwrap_or(TargetResolution::NotFound);
+    }
+
+    TargetResolution::NotFound
+}
+
+fn target_from_element(element: GroundingElement) -> FoundTarget {
+    FoundTarget {
+        page: Some(element.page),
+        bbox: Some(element.bbox),
+        text: element.text,
+    }
+}
+
+fn target_from_span(span: GroundingSpan) -> FoundTarget {
+    FoundTarget {
+        page: Some(span.page),
+        bbox: Some(span.bbox),
+        text: Some(span.text),
+    }
+}
+
+fn make_evidence(target: &FoundTarget, include_text: bool) -> Option<Evidence> {
+    Some(Evidence {
+        text: include_text.then(|| target.text.clone()).flatten(),
+        page: target.page.clone(),
+        bbox: target.bbox,
+        crop_ref: None,
+    })
+}
+
+fn contains_bbox(container: [i64; 4], inner: [i64; 4], tolerance: i64) -> bool {
+    inner[0] >= container[0] - tolerance
+        && inner[1] >= container[1] - tolerance
+        && inner[2] <= container[2] + tolerance
+        && inner[3] <= container[3] + tolerance
+}
+
+fn text_match_method(config: &VerificationConfig) -> MatchMethod {
+    match config.matching.text_normalization {
+        TextNormalization::None => MatchMethod::ExactText,
+        TextNormalization::CollapseWhitespace => MatchMethod::NormalizedText,
+    }
+}
+
+fn text_matches(expected: &str, actual: &str, config: &VerificationConfig) -> bool {
+    let (expected, actual) = match config.matching.text_normalization {
+        TextNormalization::None => (expected.to_string(), actual.to_string()),
+        TextNormalization::CollapseWhitespace => {
+            (normalize_quote(expected), normalize_quote(actual))
+        }
+    };
+    if config.matching.case_sensitive {
+        actual.contains(&expected)
+    } else {
+        actual.to_lowercase().contains(&expected.to_lowercase())
+    }
+}
+
+/// Normalize a quote for literal matching: normalize line endings, collapse ASCII
+/// whitespace runs to one ASCII space, then trim.
+pub fn normalize_quote(input: &str) -> String {
+    let line_normalized = input.replace("\r\n", "\n").replace('\r', "\n");
+    let mut out = String::with_capacity(line_normalized.len());
+    let mut in_ascii_ws = false;
+    for ch in line_normalized.chars() {
+        if ch.is_ascii_whitespace() {
+            if !in_ascii_ws {
+                out.push(' ');
+                in_ascii_ws = true;
+            }
+        } else {
+            out.push(ch);
+            in_ascii_ws = false;
+        }
+    }
+    out.trim().to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ethos_core::grounding::{Capabilities, GroundingElement, PageGeometry, ParserIdentity};
+    use ethos_core::grounding::{
+        Capabilities, GroundingElement, GroundingSpan, PageGeometry, ParserIdentity,
+    };
+    use ethos_core::verify_types::{Citation, Claim};
 
-    struct Foreign;
-    impl GroundingSource for Foreign {
+    #[derive(Clone)]
+    struct TestSource {
+        caps: Capabilities,
+        fingerprint: Option<String>,
+    }
+
+    impl Default for TestSource {
+        fn default() -> Self {
+            Self {
+                caps: Capabilities {
+                    spans: true,
+                    char_offsets: true,
+                    fingerprint: true,
+                    coordinate_origin: CoordinateOrigin::TopLeft,
+                    crop_support: false,
+                },
+                fingerprint: Some(
+                    "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02"
+                        .into(),
+                ),
+            }
+        }
+    }
+
+    impl GroundingSource for TestSource {
         fn parser(&self) -> ParserIdentity {
             ParserIdentity {
-                name: "foreign-parser".into(),
-                version: "9.9.9".into(),
-                adapter: Some("test".into()),
-                adapter_version: Some("0.0.1".into()),
+                name: "test-parser".into(),
+                version: "0.1.0".into(),
+                adapter: None,
+                adapter_version: None,
             }
         }
         fn capabilities(&self) -> Capabilities {
-            Capabilities {
+            self.caps
+        }
+        fn fingerprint(&self) -> Option<String> {
+            self.fingerprint.clone()
+        }
+        fn pages(&self) -> Vec<PageGeometry> {
+            vec![PageGeometry {
+                id: "p0001".into(),
+                index: 1,
+                width: 61200,
+                height: 79200,
+                rotation: 0,
+            }]
+        }
+        fn elements(&self) -> Vec<GroundingElement> {
+            vec![GroundingElement {
+                id: "e000002".into(),
+                page: "p0001".into(),
+                bbox: [7200, 10100, 54000, 11500],
+                kind: "text_block".into(),
+                text: Some(
+                    "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.".into(),
+                ),
+            }]
+        }
+        fn spans(&self) -> Vec<GroundingSpan> {
+            vec![GroundingSpan {
+                id: "s000002".into(),
+                page: "p0001".into(),
+                bbox: [7200, 10100, 54000, 11500],
+                text: "Revenue grew to $12.4M in Q3 2025".into(),
+                element: Some("e000002".into()),
+                char_start: Some(0),
+                char_end: Some(34),
+            }]
+        }
+    }
+
+    fn claim(kind: ClaimKind, text: Option<&str>, citation: Citation) -> Claim {
+        Claim {
+            kind,
+            text: text.map(str::to_string),
+            citation,
+        }
+    }
+
+    fn input(source: &TestSource, claims: Vec<Claim>) -> CitationInput {
+        CitationInput::Envelope {
+            document_fingerprint: source.fingerprint(),
+            claims,
+        }
+    }
+
+    fn verify(source: &TestSource, claims: Vec<Claim>) -> VerificationReport {
+        let cfg = VerificationConfig::default_v1();
+        verify_claims(source, input(source, claims), &cfg, "0".repeat(64))
+    }
+
+    #[test]
+    fn quote_and_presence_claims_ground_with_literal_matching() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![
+                claim(
+                    ClaimKind::Quote,
+                    Some("Revenue grew to $12.4M in Q3 2025"),
+                    Citation {
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                ),
+                claim(
+                    ClaimKind::Presence,
+                    None,
+                    Citation {
+                        span_id: Some("s000002".into()),
+                        ..Default::default()
+                    },
+                ),
+            ],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.checks.len(), 2);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(report.checks[0].match_method, MatchMethod::NormalizedText);
+        assert_eq!(report.checks[1].status, CheckStatus::Grounded);
+        assert_eq!(report.checks[1].match_method, MatchMethod::PresenceOnly);
+        assert_eq!(
+            report.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.text.as_deref()),
+            Some("Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.")
+        );
+        assert!(report.warnings.contains(&WarningCode::CapabilityLimited));
+    }
+
+    #[test]
+    fn mismatch_and_not_found_keep_gate_false() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![
+                claim(
+                    ClaimKind::Quote,
+                    Some("Revenue fell to $1"),
+                    Citation {
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                ),
+                claim(
+                    ClaimKind::Presence,
+                    None,
+                    Citation {
+                        element_id: Some("missing".into()),
+                        ..Default::default()
+                    },
+                ),
+            ],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(report.checks[1].status, CheckStatus::NotFound);
+    }
+
+    #[test]
+    fn stale_fingerprint_marks_checks_stale_and_gate_false() {
+        let source = TestSource::default();
+        let cfg = VerificationConfig::default_v1();
+        let report = verify_claims(
+            &source,
+            CitationInput::Envelope {
+                document_fingerprint: Some(
+                    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+                        .into(),
+                ),
+                claims: vec![claim(
+                    ClaimKind::Presence,
+                    None,
+                    Citation {
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                )],
+            },
+            &cfg,
+            "0".repeat(64),
+        );
+
+        assert!(report.fingerprint_stale);
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Stale);
+    }
+
+    #[test]
+    fn unsupported_claim_kinds_are_explicit() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::Value,
+                Some("$12.4M"),
+                Citation {
+                    element_id: Some("e000002".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::UnsupportedClaimKind);
+        assert_eq!(report.unsupported_claim_kinds, vec!["value"]);
+    }
+
+    #[test]
+    fn missing_span_capability_blocks_span_locator() {
+        let source = TestSource {
+            caps: Capabilities {
                 spans: false,
                 char_offsets: false,
                 fingerprint: false,
                 coordinate_origin: CoordinateOrigin::Unknown,
                 crop_support: false,
-            }
-        }
-        fn fingerprint(&self) -> Option<String> {
-            None
-        }
-        fn pages(&self) -> Vec<PageGeometry> {
-            vec![]
-        }
-        fn elements(&self) -> Vec<GroundingElement> {
-            vec![]
-        }
+            },
+            fingerprint: None,
+        };
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::Presence,
+                None,
+                Citation {
+                    span_id: Some("s000002".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::CapabilityBlocked);
+        assert!(report.warnings.contains(&WarningCode::CapabilityLimited));
+        assert!(report.checks[0]
+            .warnings
+            .contains(&WarningCode::CapabilityLimited));
     }
 
     #[test]
-    fn skeleton_report_is_schema_shaped_and_never_grounded() {
-        let cfg = VerificationConfig::default_v1();
-        let report = verify_skeleton(&Foreign, &cfg, "0".repeat(64));
-        assert!(
-            !report.all_evidence_grounded,
-            "empty check set can never ground"
+    fn quote_normalization_is_ascii_whitespace_only() {
+        assert_eq!(normalize_quote("  a\r\n\t b  "), "a b");
+        assert_eq!(normalize_quote("a\u{00a0}b"), "a\u{00a0}b");
+    }
+
+    #[test]
+    fn report_serializes_to_schema_shape() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::Presence,
+                None,
+                Citation {
+                    element_id: Some("e000002".into()),
+                    ..Default::default()
+                },
+            )],
         );
-        assert!(report.warnings.contains(&WarningCode::CapabilityLimited));
-        assert!(report.document_fingerprint.is_none());
-        // serializes (schema-shape sanity; full schema validation runs in CI via python)
         let v = serde_json::to_value(&report).unwrap();
-        assert_eq!(v["grounding"]["parser"]["name"], "foreign-parser");
+        assert_eq!(v["grounding"]["parser"]["name"], "test-parser");
         assert_eq!(v["fingerprint_stale"], false);
+        assert_eq!(v["checks"].as_array().unwrap().len(), 1);
     }
 }
