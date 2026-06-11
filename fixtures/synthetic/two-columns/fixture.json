@@ -1,0 +1,18 @@
+{
+  "id": "synthetic-two-columns",
+  "kind": "pdf",
+  "description": "One-page synthetic PDF with two text columns; the content stream writes the right column before the left column.",
+  "document": "document.pdf",
+  "sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+  "expected_text": [
+    "Left top Left bottom",
+    "Right top Right bottom"
+  ],
+  "expected_pages": 1,
+  "expected_elements": 2,
+  "exercises": [
+    "two-column born-digital text extraction",
+    "geometry-based column ordering",
+    "content stream order differs from expected reading order"
+  ]
+}

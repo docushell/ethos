@@ -15,6 +15,10 @@ fn two_line_fixture_pdf() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/two-lines/document.pdf")
 }
 
+fn two_column_fixture_pdf() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/two-columns/document.pdf")
+}
+
 fn pdfium_configured() -> bool {
     std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
         .map(PathBuf::from)
@@ -38,6 +42,58 @@ fn parse_json(args: &[&str]) -> Value {
         String::from_utf8_lossy(&output.stdout)
     );
     serde_json::from_slice(&output.stdout).expect("stdout is JSON")
+}
+
+#[test]
+fn parses_two_column_pdf_in_geometry_reading_order_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!("skipping two-column layout test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    let fixture = two_column_fixture_pdf();
+    let doc = parse_json(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+
+    let elements = doc["payload"]["elements"].as_array().unwrap();
+    assert_eq!(elements.len(), 2);
+    assert_eq!(elements[0]["id"], "e000001");
+    assert_eq!(elements[0]["text"], "Left top Left bottom");
+    assert_eq!(elements[1]["id"], "e000002");
+    assert_eq!(elements[1]["text"], "Right top Right bottom");
+
+    let left_bbox = elements[0]["bbox"].as_array().unwrap();
+    let right_bbox = elements[1]["bbox"].as_array().unwrap();
+    assert!(
+        left_bbox[0].as_i64().unwrap() < right_bbox[0].as_i64().unwrap(),
+        "left column must sort before right column by geometry"
+    );
+
+    let spans = doc["payload"]["spans"].as_array().unwrap();
+    assert_eq!(spans.len(), 8);
+    for element in elements {
+        let text = element["text"].as_str().unwrap();
+        let joined = element["span_refs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|span_ref| {
+                let span_id = span_ref.as_str().unwrap();
+                spans
+                    .iter()
+                    .find(|span| span["id"] == span_id)
+                    .and_then(|span| span["text"].as_str())
+                    .unwrap()
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        assert_eq!(joined, text);
+    }
 }
 
 #[test]

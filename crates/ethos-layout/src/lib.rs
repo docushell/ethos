@@ -200,11 +200,8 @@ fn paragraph_gap_threshold(lines: &[Line<'_>]) -> i64 {
         .map(|line| line_height(line.bbox).max(1))
         .collect();
     heights.sort_unstable();
-    heights
-        .get(heights.len() / 2)
-        .copied()
-        .unwrap_or(1)
-        .max(250)
+    let median = heights.get(heights.len() / 2).copied().unwrap_or(1);
+    ((median * 5) / 4).max(250)
 }
 
 fn same_line(
