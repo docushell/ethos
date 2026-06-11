@@ -236,6 +236,8 @@ name = "ethos-pdf"
 version = "0.1.0"
 dependencies = [
  "ethos-core",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -18,7 +18,7 @@
     "adr": "ADR-0003",
     "substitution_table": {
       "path": "crates/ethos-pdf/assets/font-substitution-table.json",
-      "sha256": null
+      "sha256": "03fa84d44d5a0d0f44f9d156f7b504b37c216caaaa7e145ebee05051ef213d4d"
     },
     "fallback_bundle": {
       "name": "liberation",

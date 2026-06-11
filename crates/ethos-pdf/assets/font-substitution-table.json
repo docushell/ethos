@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0.0",
+  "table_id": "ethos-font-substitution-v1",
+  "version": "1.0.0",
+  "description": "Deterministic Release 1 substitution identities for PDF Standard 14 and known missing-font fallbacks. The actual Liberation font files are pinned separately in the deterministic profile.",
+  "default_unresolved_prefix": "source:",
+  "mappings": [
+    {
+      "source": "Courier",
+      "font_id": "subst:liberation-mono"
+    },
+    {
+      "source": "Courier-Bold",
+      "font_id": "subst:liberation-mono"
+    },
+    {
+      "source": "Courier-Oblique",
+      "font_id": "subst:liberation-mono"
+    },
+    {
+      "source": "Courier-BoldOblique",
+      "font_id": "subst:liberation-mono"
+    },
+    {
+      "source": "Helvetica",
+      "font_id": "subst:liberation-sans"
+    },
+    {
+      "source": "Helvetica-Bold",
+      "font_id": "subst:liberation-sans"
+    },
+    {
+      "source": "Helvetica-Oblique",
+      "font_id": "subst:liberation-sans"
+    },
+    {
+      "source": "Helvetica-BoldOblique",
+      "font_id": "subst:liberation-sans"
+    },
+    {
+      "source": "Times-Roman",
+      "font_id": "subst:liberation-serif"
+    },
+    {
+      "source": "Times-Bold",
+      "font_id": "subst:liberation-serif"
+    },
+    {
+      "source": "Times-Italic",
+      "font_id": "subst:liberation-serif"
+    },
+    {
+      "source": "Times-BoldItalic",
+      "font_id": "subst:liberation-serif"
+    },
+    {
+      "source": "Symbol",
+      "font_id": "subst:standard-14-symbol"
+    },
+    {
+      "source": "ZapfDingbats",
+      "font_id": "subst:standard-14-zapf-dingbats"
+    }
+  ]
+}

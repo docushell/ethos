@@ -11,11 +11,12 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(missing_docs)]
 
+use std::collections::HashSet;
 use std::env;
 use std::ffi::{c_char, c_int, c_ulong, c_void, CString};
 use std::path::{Path, PathBuf};
 use std::ptr;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 
 use ethos_core::codes::WarningCode;
 use ethos_core::config::{PageSelection, ParseConfig};
@@ -24,6 +25,7 @@ use ethos_core::geom::{quantize, QRect};
 use ethos_core::ids::{page_id, span_id, warning_id};
 use ethos_core::model::{Page, Span, Warning};
 use ethos_core::traits::{BackendManifest, EthosPdfBackend, Extraction};
+use serde::Deserialize;
 
 /// Environment variable containing the exact PDFium dynamic library path.
 pub const PDFIUM_LIBRARY_PATH_ENV: &str = "ETHOS_PDFIUM_LIBRARY_PATH";
@@ -34,8 +36,11 @@ pub const PDFIUM_VERSION_ENV: &str = "ETHOS_PDFIUM_VERSION";
 /// Profile quantization: 100 quanta per PDF point.
 const QUANTUM_PER_POINT: u32 = 100;
 
+const FONT_SUBSTITUTION_TABLE_JSON: &str = include_str!("../assets/font-substitution-table.json");
+
 /// PDFium has process-global library state; serialize init/load/destroy for now.
 static PDFIUM_LOCK: Mutex<()> = Mutex::new(());
+static FONT_SUBSTITUTION_TABLE: OnceLock<FontSubstitutionTable> = OnceLock::new();
 
 /// PDFium backend implementation.
 #[derive(Debug, Clone, Default)]
@@ -664,6 +669,21 @@ struct SpanRun {
     font_size_q: Option<i64>,
 }
 
+#[derive(Debug, Deserialize)]
+struct FontSubstitutionTable {
+    schema_version: String,
+    table_id: String,
+    version: String,
+    default_unresolved_prefix: String,
+    mappings: Vec<FontSubstitutionMapping>,
+}
+
+#[derive(Debug, Deserialize)]
+struct FontSubstitutionMapping {
+    source: String,
+    font_id: String,
+}
+
 impl SpanRun {
     fn has_style_change(&self, font_id: &Option<String>, font_size_q: Option<i64>) -> bool {
         !self.text.is_empty() && (self.font_id != *font_id || self.font_size_q != font_size_q)
@@ -720,9 +740,12 @@ fn deterministic_font_id(raw_name: &str) -> Option<String> {
     if subset {
         return Some(format!("embedded:{normalized}"));
     }
-    standard_14_substitution(&normalized)
-        .map(ToString::to_string)
-        .or_else(|| Some(format!("source:{normalized}")))
+    font_substitution(&normalized).or_else(|| {
+        Some(format!(
+            "{}{normalized}",
+            font_substitution_table().default_unresolved_prefix
+        ))
+    })
 }
 
 fn strip_subset_prefix(name: &str) -> (&str, bool) {
@@ -765,21 +788,44 @@ fn normalize_font_name(name: &str) -> Option<String> {
     (!out.is_empty()).then_some(out)
 }
 
-fn standard_14_substitution(name: &str) -> Option<&'static str> {
-    match name {
-        "Courier" | "Courier-Bold" | "Courier-Oblique" | "Courier-BoldOblique" => {
-            Some("subst:liberation-mono")
-        }
-        "Helvetica" | "Helvetica-Bold" | "Helvetica-Oblique" | "Helvetica-BoldOblique" => {
-            Some("subst:liberation-sans")
-        }
-        "Times-Roman" | "Times-Bold" | "Times-Italic" | "Times-BoldItalic" => {
-            Some("subst:liberation-serif")
-        }
-        "Symbol" => Some("subst:standard-14-symbol"),
-        "ZapfDingbats" => Some("subst:standard-14-zapf-dingbats"),
-        _ => None,
+fn font_substitution(name: &str) -> Option<String> {
+    font_substitution_table()
+        .mappings
+        .iter()
+        .find(|mapping| mapping.source == name)
+        .map(|mapping| mapping.font_id.clone())
+}
+
+fn font_substitution_table() -> &'static FontSubstitutionTable {
+    FONT_SUBSTITUTION_TABLE.get_or_init(|| {
+        let table: FontSubstitutionTable = serde_json::from_str(FONT_SUBSTITUTION_TABLE_JSON)
+            .expect("bundled font-substitution-table.json is valid JSON");
+        validate_font_substitution_table(&table)
+            .expect("bundled font-substitution-table.json is internally valid");
+        table
+    })
+}
+
+fn validate_font_substitution_table(table: &FontSubstitutionTable) -> Result<(), &'static str> {
+    if table.schema_version != "1.0.0"
+        || table.table_id != "ethos-font-substitution-v1"
+        || table.version != "1.0.0"
+        || table.default_unresolved_prefix != "source:"
+    {
+        return Err("unexpected font substitution table metadata");
     }
+
+    let mut seen = HashSet::new();
+    for mapping in &table.mappings {
+        if mapping.source.is_empty() || !mapping.font_id.starts_with("subst:") {
+            return Err("malformed font substitution mapping");
+        }
+        if !seen.insert(mapping.source.as_str()) {
+            return Err("duplicate font substitution mapping source");
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(unix)]
@@ -1006,5 +1052,45 @@ mod tests {
             Some("source:Custom-Font-Regular")
         );
         assert_eq!(deterministic_font_id("   "), None);
+    }
+
+    #[test]
+    fn font_substitution_table_is_well_formed() {
+        use std::collections::HashSet;
+
+        let table = font_substitution_table();
+        assert_eq!(table.schema_version, "1.0.0");
+        assert_eq!(table.table_id, "ethos-font-substitution-v1");
+        assert_eq!(table.version, "1.0.0");
+        assert_eq!(table.default_unresolved_prefix, "source:");
+
+        let mut seen = HashSet::new();
+        for mapping in &table.mappings {
+            assert!(!mapping.source.is_empty());
+            assert!(mapping.font_id.starts_with("subst:"));
+            assert!(
+                seen.insert(mapping.source.as_str()),
+                "duplicate font substitution source {}",
+                mapping.source
+            );
+        }
+        assert_eq!(table.mappings.len(), 14);
+    }
+
+    #[test]
+    fn profile_pins_font_substitution_table_bytes() {
+        const FONT_SUBSTITUTION_TABLE_PATH: &str =
+            "crates/ethos-pdf/assets/font-substitution-table.json";
+        let profile: serde_json::Value = serde_json::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../profiles/ethos-deterministic-v1.json"
+        )))
+        .unwrap();
+        let pin = &profile["font_policy"]["substitution_table"];
+        assert_eq!(pin["path"], FONT_SUBSTITUTION_TABLE_PATH);
+        assert_eq!(
+            pin["sha256"],
+            ethos_core::c14n::sha256_hex_bytes(FONT_SUBSTITUTION_TABLE_JSON.as_bytes())
+        );
     }
 }
