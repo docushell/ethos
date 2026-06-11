@@ -23,6 +23,16 @@ fn invalid_header_fixture_pdf() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/failure/invalid-header/document.pdf")
 }
 
+fn corrupt_header_valid_fixture_pdf() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/failure/corrupt-header-valid/document.pdf")
+}
+
+fn blank_page_fixture_pdf() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/failure/image-only-or-blank-page/document.pdf")
+}
+
 fn pdfium_configured() -> bool {
     std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
         .map(PathBuf::from)
@@ -186,6 +196,55 @@ fn doc_parse_relays_worker_stable_error_envelope() {
         error["error"]["message"],
         "input does not contain a PDF header"
     );
+}
+
+#[test]
+fn pdfium_failure_fixtures_emit_stable_error_envelopes_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!(
+            "skipping PDFium failure fixture test: ETHOS_PDFIUM_LIBRARY_PATH is not configured"
+        );
+        return;
+    }
+
+    let cases = [
+        (
+            corrupt_header_valid_fixture_pdf(),
+            4,
+            "corrupt_pdf",
+            "PDF structure is corrupt",
+        ),
+        (
+            blank_page_fixture_pdf(),
+            8,
+            "ocr_required",
+            "no extractable text; OCR is required",
+        ),
+    ];
+
+    for (fixture, exit_code, code, message) in cases {
+        let output = run_ethos(&[
+            "doc",
+            "parse",
+            fixture.to_str().unwrap(),
+            "--format",
+            "json",
+        ]);
+        assert_eq!(
+            output.status.code(),
+            Some(exit_code),
+            "unexpected exit code for {}",
+            fixture.display()
+        );
+        assert!(
+            output.stdout.is_empty(),
+            "failure case must not write stdout for {}",
+            fixture.display()
+        );
+        let error: Value = serde_json::from_slice(&output.stderr).unwrap();
+        assert_eq!(error["error"]["code"], code, "{}", fixture.display());
+        assert_eq!(error["error"]["message"], message, "{}", fixture.display());
+    }
 }
 
 #[test]
