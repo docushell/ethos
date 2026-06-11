@@ -83,7 +83,7 @@ fn parses_two_column_pdf_in_geometry_reading_order_when_pdfium_is_configured() {
 
     let spans = doc["payload"]["spans"].as_array().unwrap();
     assert_eq!(spans.len(), 8);
-    assert_span_fonts(&doc, "subst:liberation-sans");
+    assert_span_fonts(&doc, "subst:liberation-sans-regular");
     for element in elements {
         let text = element["text"].as_str().unwrap();
         let joined = element["span_refs"]
@@ -131,7 +131,7 @@ fn parses_two_line_pdf_into_paragraph_text_block_when_pdfium_is_configured() {
 
     let spans = doc["payload"]["spans"].as_array().unwrap();
     assert_eq!(spans.len(), 4);
-    assert_span_fonts(&doc, "subst:liberation-sans");
+    assert_span_fonts(&doc, "subst:liberation-sans-regular");
     assert_eq!(spans[0]["char_start"], 0);
     assert_eq!(spans[0]["char_end"], 5);
     assert_eq!(spans[1]["char_start"], 6);
@@ -164,7 +164,7 @@ fn parses_simple_pdf_into_quantized_spans_when_pdfium_is_configured() {
     assert_eq!(doc["payload"]["spans"].as_array().unwrap().len(), 2);
     assert_eq!(doc["payload"]["spans"][0]["text"], "Hello");
     assert_eq!(doc["payload"]["spans"][1]["text"], "Ethos");
-    assert_span_fonts(&doc, "subst:liberation-sans");
+    assert_span_fonts(&doc, "subst:liberation-sans-regular");
     assert_eq!(doc["payload"]["spans"][0]["char_start"], 0);
     assert_eq!(doc["payload"]["spans"][0]["char_end"], 5);
     assert_eq!(doc["payload"]["spans"][1]["char_start"], 6);

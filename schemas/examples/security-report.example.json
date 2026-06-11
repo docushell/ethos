@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "document_fingerprint": "sha256:575623b28349dda9fbc4746b305048ed1ac692a50365ac9bc6a21a7ceeba8755",
+  "document_fingerprint": "sha256:6a5405cdfd34367aeb54440f90bdd59e501f7aff6b4d3fb000a5d4d14379b6ed",
   "source_fingerprint": "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
   "profile": {
     "id": "ethos-deterministic-v1",
-    "sha256": "eaf73db8113d2138f9e806f13a5a33649f3e7b67b4a87489909c396565ad092a"
+    "sha256": "ebee49d1ef7b5704f0474150444b773eb36ffad58d7dfefa65f2a88224040feb"
   },
   "summary": {
     "hidden_text_detected": 1,

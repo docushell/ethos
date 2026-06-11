@@ -7,51 +7,51 @@
   "mappings": [
     {
       "source": "Courier",
-      "font_id": "subst:liberation-mono"
+      "font_id": "subst:liberation-mono-regular"
     },
     {
       "source": "Courier-Bold",
-      "font_id": "subst:liberation-mono"
+      "font_id": "subst:liberation-mono-bold"
     },
     {
       "source": "Courier-Oblique",
-      "font_id": "subst:liberation-mono"
+      "font_id": "subst:liberation-mono-italic"
     },
     {
       "source": "Courier-BoldOblique",
-      "font_id": "subst:liberation-mono"
+      "font_id": "subst:liberation-mono-bold-italic"
     },
     {
       "source": "Helvetica",
-      "font_id": "subst:liberation-sans"
+      "font_id": "subst:liberation-sans-regular"
     },
     {
       "source": "Helvetica-Bold",
-      "font_id": "subst:liberation-sans"
+      "font_id": "subst:liberation-sans-bold"
     },
     {
       "source": "Helvetica-Oblique",
-      "font_id": "subst:liberation-sans"
+      "font_id": "subst:liberation-sans-italic"
     },
     {
       "source": "Helvetica-BoldOblique",
-      "font_id": "subst:liberation-sans"
+      "font_id": "subst:liberation-sans-bold-italic"
     },
     {
       "source": "Times-Roman",
-      "font_id": "subst:liberation-serif"
+      "font_id": "subst:liberation-serif-regular"
     },
     {
       "source": "Times-Bold",
-      "font_id": "subst:liberation-serif"
+      "font_id": "subst:liberation-serif-bold"
     },
     {
       "source": "Times-Italic",
-      "font_id": "subst:liberation-serif"
+      "font_id": "subst:liberation-serif-italic"
     },
     {
       "source": "Times-BoldItalic",
-      "font_id": "subst:liberation-serif"
+      "font_id": "subst:liberation-serif-bold-italic"
     },
     {
       "source": "Symbol",

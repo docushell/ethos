@@ -148,15 +148,29 @@ fn main() -> ExitCode {
             ExitCode::from(EXIT_USAGE)
         }
         Err(Failure::Ethos(e)) => {
-            // deterministic machine-readable error envelope on stderr
-            eprintln!(
-                "{{\"error\":{{\"code\":\"{}\",\"message\":\"{}\"}}}}",
-                e.code.as_str(),
-                e.message.replace('\\', "\\\\").replace('"', "\\\"")
-            );
+            write_error_envelope(&e);
             ExitCode::from(e.code.exit_code() as u8)
         }
     }
+}
+
+fn error_envelope_bytes(e: &EthosError) -> Result<Vec<u8>, ethos_core::c14n::C14nError> {
+    let value = serde_json::json!({
+        "error": {
+            "code": e.code.as_str(),
+            "message": e.message,
+        }
+    });
+    let mut bytes = ethos_core::c14n::c14n_bytes(&value)?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+fn write_error_envelope(e: &EthosError) {
+    use std::io::Write as _;
+
+    let bytes = error_envelope_bytes(e).expect("error envelope contains only canonical values");
+    let _ = std::io::stderr().write_all(&bytes);
 }
 
 fn run(cli: Cli) -> Result<(), Failure> {
@@ -174,6 +188,24 @@ fn run(cli: Cli) -> Result<(), Failure> {
 
 fn read_file(path: &PathBuf) -> Result<Vec<u8>, Failure> {
     fs::read(path).map_err(|_| Failure::Usage(format!("cannot read input: {}", path.display())))
+}
+
+fn read_file_limited(path: &PathBuf, max_bytes: u64) -> Result<Vec<u8>, Failure> {
+    let metadata = fs::metadata(path)
+        .map_err(|_| Failure::Usage(format!("cannot read input: {}", path.display())))?;
+    if metadata.len() > max_bytes {
+        return Err(
+            EthosError::new(ErrorCode::FileTooLarge, "input exceeds max_file_bytes").into(),
+        );
+    }
+
+    let bytes = read_file(path)?;
+    if bytes.len() as u64 > max_bytes {
+        return Err(
+            EthosError::new(ErrorCode::FileTooLarge, "input exceeds max_file_bytes").into(),
+        );
+    }
+    Ok(bytes)
 }
 
 fn read_document(path: &PathBuf) -> Result<Document, Failure> {
@@ -212,12 +244,7 @@ fn doc_parse(args: DocParseArgs) -> Result<(), Failure> {
         pages,
         ..Default::default()
     };
-    let pdf_bytes = read_file(&args.input)?;
-    if pdf_bytes.len() as u64 > config.limits.max_file_bytes {
-        return Err(
-            EthosError::new(ErrorCode::FileTooLarge, "input exceeds max_file_bytes").into(),
-        );
-    }
+    let pdf_bytes = read_file_limited(&args.input, config.limits.max_file_bytes)?;
 
     let backend = ethos_pdf::PdfiumBackend::default();
     let page_count = backend.page_count(&pdf_bytes)?;
@@ -371,8 +398,8 @@ fn fingerprint(input: PathBuf) -> Result<(), Failure> {
         .extension()
         .is_some_and(|e| e.eq_ignore_ascii_case("pdf"))
     {
-        let bytes = read_file(&input)?;
         let config = ParseConfig::default();
+        let bytes = read_file_limited(&input, config.limits.max_file_bytes)?;
         let backend = ethos_pdf::PdfiumBackend::default();
         let extraction = backend.extract(&bytes, &config)?;
         let doc = assemble_document(&bytes, &config, extraction, backend.manifest(), false);
@@ -574,6 +601,18 @@ mod tests {
     use ethos_core::geom::QRect;
     use ethos_core::model::{Page, Span};
     use ethos_core::traits::Extraction;
+
+    #[test]
+    fn error_envelope_is_valid_json_for_control_characters() {
+        let err = EthosError::new(
+            ErrorCode::InternalError,
+            "loader said: line one\nline two\t\"quoted\" \\ \u{0007}",
+        );
+        let bytes = error_envelope_bytes(&err).unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(value["error"]["code"], "internal_error");
+        assert_eq!(value["error"]["message"], err.message);
+    }
 
     #[test]
     fn assembles_extraction_into_self_consistent_document() {

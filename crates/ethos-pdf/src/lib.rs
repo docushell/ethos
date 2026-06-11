@@ -382,10 +382,9 @@ impl PdfiumRuntime {
             ))
         })?;
         if !path.is_file() {
-            return Err(EthosError::internal(format!(
-                "pdfium library path does not point to a file: {}",
-                path.display()
-            )));
+            return Err(EthosError::internal(
+                "pdfium library path does not point to a file",
+            ));
         }
 
         let library = dylib::Library::open(&path)?;
@@ -555,7 +554,13 @@ impl PdfTextPage<'_> {
     ) -> Result<(), EthosError> {
         // SAFETY: handle is a live FPDF_TEXTPAGE.
         let count = unsafe { (self.funcs.text_count_chars)(self.handle) };
-        if count <= 0 {
+        if count < 0 {
+            return Err(EthosError::new(
+                ErrorCode::CorruptPdf,
+                "PDF text page could not be read",
+            ));
+        }
+        if count == 0 {
             return Ok(());
         }
 
@@ -621,6 +626,9 @@ impl PdfTextPage<'_> {
     fn font_size_q(&self, index: c_int) -> Option<i64> {
         // SAFETY: index is in range.
         let size = unsafe { (self.funcs.text_get_font_size)(self.handle, index) };
+        if size <= 0.0 {
+            return None;
+        }
         quantize(size, QUANTUM_PER_POINT).ok()
     }
 
@@ -762,17 +770,14 @@ fn normalize_font_name(name: &str) -> Option<String> {
     let mut previous_dash = false;
     for ch in name.trim().chars() {
         let mapped = if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') {
-            Some(ch)
+            ch
         } else if ch.is_whitespace()
             || ch.is_control()
             || matches!(ch, '/' | '\\' | ':' | ',' | '(' | ')' | '[' | ']')
         {
-            Some('-')
+            '-'
         } else {
-            Some(ch)
-        };
-        let Some(mapped) = mapped else {
-            continue;
+            ch
         };
         if mapped == '-' {
             if previous_dash {
@@ -831,7 +836,6 @@ fn validate_font_substitution_table(table: &FontSubstitutionTable) -> Result<(),
 #[cfg(unix)]
 mod dylib {
     use super::*;
-    use std::ffi::CStr;
     use std::os::unix::ffi::OsStrExt;
 
     const RTLD_NOW: c_int = 2;
@@ -840,7 +844,6 @@ mod dylib {
         fn dlopen(filename: *const c_char, flag: c_int) -> *mut c_void;
         fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
         fn dlclose(handle: *mut c_void) -> c_int;
-        fn dlerror() -> *const c_char;
     }
 
     pub(super) struct Library {
@@ -855,10 +858,9 @@ mod dylib {
             // SAFETY: c_path is NUL-terminated and lives for the call.
             let handle = unsafe { dlopen(c_path.as_ptr(), RTLD_NOW) };
             if handle.is_null() {
-                Err(EthosError::internal(format!(
-                    "failed to load pdfium library: {}",
-                    dl_error()
-                )))
+                Err(EthosError::internal(
+                    "failed to load configured pdfium library",
+                ))
             } else {
                 Ok(Library { handle })
             }
@@ -872,6 +874,7 @@ mod dylib {
                     symbol_name(name)
                 )));
             }
+            assert_symbol_pointer_size::<T>();
             // SAFETY: caller chooses T to match the named PDFium C symbol.
             Ok(unsafe { std::mem::transmute_copy::<*mut c_void, T>(&ptr) })
         }
@@ -881,6 +884,7 @@ mod dylib {
             if ptr.is_null() {
                 None
             } else {
+                assert_symbol_pointer_size::<T>();
                 // SAFETY: caller chooses T to match the named PDFium C symbol.
                 Some(unsafe { std::mem::transmute_copy::<*mut c_void, T>(&ptr) })
             }
@@ -902,27 +906,15 @@ mod dylib {
             }
         }
     }
-
-    fn dl_error() -> String {
-        // SAFETY: dlerror returns a thread-local C string or null.
-        let ptr = unsafe { dlerror() };
-        if ptr.is_null() {
-            "unknown loader error".to_string()
-        } else {
-            // SAFETY: ptr is a NUL-terminated C string owned by the loader.
-            unsafe { CStr::from_ptr(ptr) }
-                .to_string_lossy()
-                .into_owned()
-        }
-    }
 }
 
 #[cfg(windows)]
 mod dylib {
     use super::*;
+    use std::os::windows::ffi::OsStrExt;
 
     unsafe extern "system" {
-        fn LoadLibraryA(lp_lib_file_name: *const c_char) -> *mut c_void;
+        fn LoadLibraryW(lp_lib_file_name: *const u16) -> *mut c_void;
         fn GetProcAddress(h_module: *mut c_void, lp_proc_name: *const c_char) -> *mut c_void;
         fn FreeLibrary(h_lib_module: *mut c_void) -> c_int;
     }
@@ -933,13 +925,13 @@ mod dylib {
 
     impl Library {
         pub(super) fn open(path: &Path) -> Result<Self, EthosError> {
-            let c_path = CString::new(path.to_string_lossy().as_bytes()).map_err(|_| {
-                EthosError::internal("pdfium library path contains an interior NUL byte")
-            })?;
-            // SAFETY: c_path is NUL-terminated and lives for the call.
-            let handle = unsafe { LoadLibraryA(c_path.as_ptr()) };
+            let wide_path: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+            // SAFETY: wide_path is NUL-terminated and lives for the call.
+            let handle = unsafe { LoadLibraryW(wide_path.as_ptr()) };
             if handle.is_null() {
-                Err(EthosError::internal("failed to load pdfium library"))
+                Err(EthosError::internal(
+                    "failed to load configured pdfium library",
+                ))
             } else {
                 Ok(Library { handle })
             }
@@ -953,6 +945,7 @@ mod dylib {
                     symbol_name(name)
                 )));
             }
+            assert_symbol_pointer_size::<T>();
             // SAFETY: caller chooses T to match the named PDFium C symbol.
             Ok(unsafe { std::mem::transmute_copy::<*mut c_void, T>(&ptr) })
         }
@@ -962,6 +955,7 @@ mod dylib {
             if ptr.is_null() {
                 None
             } else {
+                assert_symbol_pointer_size::<T>();
                 // SAFETY: caller chooses T to match the named PDFium C symbol.
                 Some(unsafe { std::mem::transmute_copy::<*mut c_void, T>(&ptr) })
             }
@@ -983,6 +977,14 @@ mod dylib {
             }
         }
     }
+}
+
+fn assert_symbol_pointer_size<T>() {
+    assert_eq!(
+        std::mem::size_of::<T>(),
+        std::mem::size_of::<*mut c_void>(),
+        "pdfium symbol pointer size mismatch"
+    );
 }
 
 fn symbol_name(name: &'static [u8]) -> String {
@@ -1014,6 +1016,16 @@ mod tests {
     }
 
     #[test]
+    fn invalid_configured_library_path_does_not_leak_host_path() {
+        let path = env::temp_dir().join("ethos-missing-libpdfium\nwith-control.dylib");
+        let backend = PdfiumBackend::from_library_path(&path);
+        let err = backend.page_count(b"%PDF-1.7\n").unwrap_err();
+        assert_eq!(err.code, ErrorCode::InternalError);
+        assert_eq!(err.message, "pdfium library path does not point to a file");
+        assert!(!err.message.contains(path.to_string_lossy().as_ref()));
+    }
+
+    #[test]
     fn explicit_manifest_hashes_library_bytes() {
         let path = env::temp_dir().join("ethos-test-libpdfium-hash.bin");
         std::fs::write(&path, b"pdfium bytes").unwrap();
@@ -1037,15 +1049,27 @@ mod tests {
         );
         assert_eq!(
             deterministic_font_id("Helvetica-Bold").as_deref(),
-            Some("subst:liberation-sans")
+            Some("subst:liberation-sans-bold")
+        );
+        assert_eq!(
+            deterministic_font_id("Helvetica").as_deref(),
+            Some("subst:liberation-sans-regular")
+        );
+        assert_eq!(
+            deterministic_font_id("Helvetica-Oblique").as_deref(),
+            Some("subst:liberation-sans-italic")
+        );
+        assert_eq!(
+            deterministic_font_id("Helvetica-BoldOblique").as_deref(),
+            Some("subst:liberation-sans-bold-italic")
         );
         assert_eq!(
             deterministic_font_id("Courier").as_deref(),
-            Some("subst:liberation-mono")
+            Some("subst:liberation-mono-regular")
         );
         assert_eq!(
             deterministic_font_id("Times-Roman").as_deref(),
-            Some("subst:liberation-serif")
+            Some("subst:liberation-serif-regular")
         );
         assert_eq!(
             deterministic_font_id("Custom Font/Regular").as_deref(),
