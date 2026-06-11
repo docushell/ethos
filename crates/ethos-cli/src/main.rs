@@ -21,8 +21,10 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 use ethos_core::config::{PageSelection, ParseConfig};
 use ethos_core::error::{ErrorCode, EthosError};
 use ethos_core::fingerprint::{source_fingerprint, FingerprintManifest};
+use ethos_core::ids::warning_id;
 use ethos_core::model::{
-    CoordinateSystem, Document, Element, ParserInfo, Payload, ProfileRef, SourceInfo,
+    CoordinateSystem, Document, Element, ParserInfo, Payload, ProfileRef, Region, SourceInfo, Span,
+    Warning,
 };
 use ethos_core::traits::{BackendManifest, EthosPdfBackend as _, Extraction, LayoutEngine as _};
 use ethos_core::verify_types::VerificationConfig;
@@ -157,6 +159,10 @@ struct VerifyArgs {
 /// CLI failure: stable error code or usage error, rendered deterministically.
 enum Failure {
     Ethos(EthosError),
+    EthosWithDiagnostics {
+        error: EthosError,
+        diagnostics: serde_json::Value,
+    },
     Usage(String),
 }
 
@@ -178,16 +184,37 @@ fn main() -> ExitCode {
             write_error_envelope(&e);
             ExitCode::from(e.code.exit_code() as u8)
         }
+        Err(Failure::EthosWithDiagnostics { error, diagnostics }) => {
+            write_error_envelope_with_diagnostics(&error, diagnostics);
+            ExitCode::from(error.code.exit_code() as u8)
+        }
     }
 }
 
 fn error_envelope_bytes(e: &EthosError) -> Result<Vec<u8>, ethos_core::c14n::C14nError> {
+    error_output_bytes(e, None)
+}
+
+fn error_output_bytes(
+    e: &EthosError,
+    diagnostics: Option<serde_json::Value>,
+) -> Result<Vec<u8>, ethos_core::c14n::C14nError> {
     let value = serde_json::json!({
         "error": {
             "code": e.code.as_str(),
             "message": e.message,
         }
     });
+    let value = if let Some(diagnostics) = diagnostics {
+        let mut object = value
+            .as_object()
+            .cloned()
+            .expect("error envelope is object");
+        object.insert("diagnostics".to_string(), diagnostics);
+        serde_json::Value::Object(object)
+    } else {
+        value
+    };
     let mut bytes = ethos_core::c14n::c14n_bytes(&value)?;
     bytes.push(b'\n');
     Ok(bytes)
@@ -197,6 +224,14 @@ fn write_error_envelope(e: &EthosError) {
     use std::io::Write as _;
 
     let bytes = error_envelope_bytes(e).expect("error envelope contains only canonical values");
+    let _ = std::io::stderr().write_all(&bytes);
+}
+
+fn write_error_envelope_with_diagnostics(e: &EthosError, diagnostics: serde_json::Value) {
+    use std::io::Write as _;
+
+    let bytes = error_output_bytes(e, Some(diagnostics))
+        .expect("diagnostic error envelope contains only canonical values");
     let _ = std::io::stderr().write_all(&bytes);
 }
 
@@ -301,15 +336,13 @@ fn parse_config(pages: Option<&str>, max_parse_ms: Option<u64>) -> Result<ParseC
 
 fn pdfium_worker(args: PdfiumWorkerArgs) -> Result<(), Failure> {
     maybe_sleep_for_worker_timeout_test();
+    maybe_exit_for_worker_failure_diagnostics_test();
     let config = parse_config(args.pages.as_deref(), None)?;
     let pdf_bytes = read_file_limited(&args.input, config.limits.max_file_bytes)?;
     let backend = ethos_pdf::PdfiumBackend::default();
-    let page_count = backend.page_count(&pdf_bytes)?;
-    config
-        .pages
-        .validate_against(page_count)
-        .map_err(|e| Failure::Usage(format!("--pages: {e}")))?;
-    let extraction = backend.extract(&pdf_bytes, &config)?;
+    let extraction = backend
+        .extract(&pdf_bytes, &config)
+        .map_err(classify_worker_extract_error)?;
     let doc = assemble_document(
         &pdf_bytes,
         &config,
@@ -318,6 +351,16 @@ fn pdfium_worker(args: PdfiumWorkerArgs) -> Result<(), Failure> {
         args.diagnostics,
     )?;
     write_document(Format::Json, None, &doc)
+}
+
+fn classify_worker_extract_error(error: EthosError) -> Failure {
+    if error.code == ErrorCode::PageLimitExceeded
+        && error.message == "page selection out of document range"
+    {
+        Failure::Usage("--pages: page selection out of document range".to_string())
+    } else {
+        Failure::Ethos(error)
+    }
 }
 
 fn rag_chunk(args: RagChunkArgs) -> Result<(), Failure> {
@@ -501,7 +544,14 @@ fn parse_pdf_with_worker(
     if let Some(error) = worker_ethos_error(&output.stderr) {
         return Err(error.into());
     }
-    Err(EthosError::internal("pdfium worker failed").into())
+    let error = EthosError::internal("pdfium worker failed");
+    if diagnostics {
+        return Err(Failure::EthosWithDiagnostics {
+            error,
+            diagnostics: worker_failure_diagnostics(&output),
+        });
+    }
+    Err(error.into())
 }
 
 fn run_worker_with_timeout(
@@ -597,6 +647,30 @@ fn worker_ethos_error(stderr: &[u8]) -> Option<EthosError> {
     Some(EthosError::new(code, message))
 }
 
+fn worker_failure_diagnostics(output: &Output) -> serde_json::Value {
+    let mut worker = serde_json::Map::new();
+    if let Some(code) = output.status.code() {
+        worker.insert("exit_code".to_string(), serde_json::json!(code));
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt as _;
+
+        if let Some(signal) = output.status.signal() {
+            worker.insert("signal".to_string(), serde_json::json!(signal));
+        }
+    }
+    if !output.stderr.is_empty() {
+        worker.insert(
+            "stderr".to_string(),
+            serde_json::Value::String(String::from_utf8_lossy(&output.stderr).to_string()),
+        );
+    }
+    serde_json::json!({
+        "pdfium_worker": serde_json::Value::Object(worker),
+    })
+}
+
 #[cfg(debug_assertions)]
 fn maybe_sleep_for_worker_timeout_test() {
     if let Ok(raw) = std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_SLEEP_MS") {
@@ -609,6 +683,21 @@ fn maybe_sleep_for_worker_timeout_test() {
 #[cfg(not(debug_assertions))]
 fn maybe_sleep_for_worker_timeout_test() {}
 
+#[cfg(debug_assertions)]
+fn maybe_exit_for_worker_failure_diagnostics_test() {
+    if let Ok(stderr) = std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_STDERR") {
+        eprint!("{stderr}");
+        let code = std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_EXIT_CODE")
+            .ok()
+            .and_then(|raw| raw.parse::<i32>().ok())
+            .unwrap_or(101);
+        std::process::exit(code);
+    }
+}
+
+#[cfg(not(debug_assertions))]
+fn maybe_exit_for_worker_failure_diagnostics_test() {}
+
 fn assemble_document(
     source_bytes: &[u8],
     config: &ParseConfig,
@@ -619,16 +708,15 @@ fn assemble_document(
     let layout = ethos_layout::BasicLayoutEngine.layout(&extraction)?;
     let mut spans = extraction.spans;
     assign_span_offsets(&layout.elements, &mut spans)?;
-    let elements = layout.elements;
-    let mut security_warnings = Vec::new();
-    let mut parser_warnings = Vec::new();
-    for warning in extraction.warnings.into_iter().chain(layout.warnings) {
-        if warning.code.is_security() {
-            security_warnings.push(warning);
-        } else {
-            parser_warnings.push(warning);
-        }
-    }
+    let mut elements = layout.elements;
+    let mut regions = extraction.regions;
+    let (security_warnings, parser_warnings) = finalize_warnings(
+        &mut spans,
+        &mut regions,
+        &mut elements,
+        extraction.warnings,
+        layout.warnings,
+    )?;
 
     let payload = Payload {
         coordinate_system: CoordinateSystem {
@@ -641,7 +729,7 @@ fn assemble_document(
         spans,
         tables: Vec::new(),
         chunks: Vec::new(),
-        regions: extraction.regions,
+        regions,
         security_warnings,
         parser_warnings,
     };
@@ -694,6 +782,116 @@ fn assemble_document(
         payload,
         diagnostics,
     })
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum WarningOrigin {
+    Extraction,
+    Layout,
+}
+
+struct PendingWarning {
+    origin: WarningOrigin,
+    source_index: usize,
+    original_id: String,
+    warning: Warning,
+}
+
+fn finalize_warnings(
+    spans: &mut [Span],
+    regions: &mut [Region],
+    elements: &mut [Element],
+    extraction_warnings: Vec<Warning>,
+    layout_warnings: Vec<Warning>,
+) -> Result<(Vec<Warning>, Vec<Warning>), EthosError> {
+    let mut pending = Vec::with_capacity(extraction_warnings.len() + layout_warnings.len());
+    for (source_index, warning) in extraction_warnings.into_iter().enumerate() {
+        pending.push(PendingWarning {
+            origin: WarningOrigin::Extraction,
+            source_index,
+            original_id: warning.id.clone(),
+            warning,
+        });
+    }
+    for (source_index, warning) in layout_warnings.into_iter().enumerate() {
+        pending.push(PendingWarning {
+            origin: WarningOrigin::Layout,
+            source_index,
+            original_id: warning.id.clone(),
+            warning,
+        });
+    }
+
+    pending.sort_by(|a, b| {
+        warning_order(&a.warning, &b.warning)
+            .then_with(|| a.origin.cmp(&b.origin))
+            .then_with(|| a.source_index.cmp(&b.source_index))
+    });
+
+    let mut extraction_ids = HashMap::new();
+    let mut layout_ids = HashMap::new();
+    let mut security_warnings = Vec::new();
+    let mut parser_warnings = Vec::new();
+
+    for (index, pending_warning) in pending.into_iter().enumerate() {
+        let ordinal =
+            u32::try_from(index + 1).map_err(|_| EthosError::internal("warning id overflow"))?;
+        let final_id = warning_id(ordinal)?;
+        match pending_warning.origin {
+            WarningOrigin::Extraction => {
+                extraction_ids.insert(pending_warning.original_id, final_id.clone());
+            }
+            WarningOrigin::Layout => {
+                layout_ids.insert(pending_warning.original_id, final_id.clone());
+            }
+        }
+
+        let mut warning = pending_warning.warning;
+        warning.id = final_id;
+        if warning.code.is_security() {
+            security_warnings.push(warning);
+        } else {
+            parser_warnings.push(warning);
+        }
+    }
+
+    for span in spans {
+        rewrite_warning_refs(&mut span.warning_refs, &extraction_ids, &layout_ids);
+    }
+    for region in regions {
+        rewrite_warning_refs(&mut region.warning_refs, &extraction_ids, &layout_ids);
+    }
+    for element in elements {
+        rewrite_warning_refs(&mut element.warning_refs, &layout_ids, &extraction_ids);
+    }
+
+    Ok((security_warnings, parser_warnings))
+}
+
+fn warning_order(a: &Warning, b: &Warning) -> std::cmp::Ordering {
+    a.code
+        .as_str()
+        .cmp(b.code.as_str())
+        .then_with(|| a.page.cmp(&b.page))
+        .then_with(|| a.element_ref.cmp(&b.element_ref))
+        .then_with(|| a.span_ref.cmp(&b.span_ref))
+        .then_with(|| a.region_ref.cmp(&b.region_ref))
+        .then_with(|| a.message.cmp(&b.message))
+}
+
+fn rewrite_warning_refs(
+    warning_refs: &mut [String],
+    primary_ids: &HashMap<String, String>,
+    secondary_ids: &HashMap<String, String>,
+) {
+    for warning_ref in warning_refs {
+        if let Some(final_id) = primary_ids
+            .get(warning_ref)
+            .or_else(|| secondary_ids.get(warning_ref))
+        {
+            *warning_ref = final_id.clone();
+        }
+    }
 }
 
 fn assign_span_offsets(
@@ -796,9 +994,58 @@ fn render_markdown(doc: &Document) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ethos_core::codes::WarningCode;
     use ethos_core::geom::QRect;
-    use ethos_core::model::{Page, Span};
+    use ethos_core::model::{ElementType, Page, Span};
     use ethos_core::traits::Extraction;
+
+    fn test_span(id: &str, warning_refs: Vec<&str>) -> Span {
+        Span {
+            id: id.to_string(),
+            page: "p0001".to_string(),
+            bbox: QRect::new(0, 0, 100, 100).unwrap(),
+            text: "text".to_string(),
+            font_id: None,
+            font_size_q: Some(1200),
+            char_start: None,
+            char_end: None,
+            warning_refs: warning_refs.into_iter().map(str::to_string).collect(),
+        }
+    }
+
+    fn test_element(id: &str, warning_refs: Vec<&str>) -> Element {
+        Element {
+            id: id.to_string(),
+            element_type: ElementType::TextBlock,
+            page: "p0001".to_string(),
+            bbox: QRect::new(0, 0, 100, 100).unwrap(),
+            text: Some("text".to_string()),
+            heading_level: None,
+            table_ref: None,
+            region_ref: None,
+            confidence: None,
+            span_refs: Vec::new(),
+            warning_refs: warning_refs.into_iter().map(str::to_string).collect(),
+        }
+    }
+
+    fn test_warning(
+        id: &str,
+        code: WarningCode,
+        message: &str,
+        element_ref: Option<&str>,
+        span_ref: Option<&str>,
+    ) -> Warning {
+        Warning {
+            id: id.to_string(),
+            code,
+            message: message.to_string(),
+            page: Some("p0001".to_string()),
+            element_ref: element_ref.map(str::to_string),
+            span_ref: span_ref.map(str::to_string),
+            region_ref: None,
+        }
+    }
 
     #[test]
     fn error_envelope_is_valid_json_for_control_characters() {
@@ -885,5 +1132,80 @@ mod tests {
         assert_eq!(doc.payload.spans[1].char_end, Some(11));
         assert_eq!(doc.payload.spans[2].char_start, Some(12));
         assert_eq!(doc.payload.spans[2].char_end, Some(17));
+    }
+
+    #[test]
+    fn final_warning_ids_do_not_collide_between_extraction_and_layout() {
+        let mut spans = vec![test_span("s000001", vec!["w0001"])];
+        let mut regions = Vec::new();
+        let mut elements = vec![
+            test_element("e000001", vec!["w0001"]),
+            test_element("e000002", vec!["w0002"]),
+        ];
+        let extraction_warnings = vec![test_warning(
+            "w0001",
+            WarningCode::PartialParse,
+            "partial parse completed",
+            None,
+            Some("s000001"),
+        )];
+        let layout_warnings = vec![
+            test_warning(
+                "w0001",
+                WarningCode::LowConfidenceReadingOrder,
+                "reading order confidence below threshold",
+                Some("e000001"),
+                None,
+            ),
+            test_warning(
+                "w0002",
+                WarningCode::UnsupportedAnnotation,
+                "unsupported annotation ignored",
+                Some("e000002"),
+                None,
+            ),
+        ];
+
+        let (security_warnings, parser_warnings) = finalize_warnings(
+            &mut spans,
+            &mut regions,
+            &mut elements,
+            extraction_warnings,
+            layout_warnings,
+        )
+        .unwrap();
+
+        assert_eq!(
+            parser_warnings
+                .iter()
+                .map(|w| w.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["w0001", "w0002"]
+        );
+        assert_eq!(
+            parser_warnings.iter().map(|w| w.code).collect::<Vec<_>>(),
+            vec![
+                WarningCode::LowConfidenceReadingOrder,
+                WarningCode::PartialParse,
+            ]
+        );
+        assert_eq!(
+            security_warnings
+                .iter()
+                .map(|w| w.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["w0003"]
+        );
+
+        let ids: Vec<_> = security_warnings
+            .iter()
+            .chain(parser_warnings.iter())
+            .map(|w| w.id.as_str())
+            .collect();
+        let unique_ids: HashSet<_> = ids.iter().copied().collect();
+        assert_eq!(unique_ids.len(), ids.len());
+        assert_eq!(spans[0].warning_refs, vec!["w0002".to_string()]);
+        assert_eq!(elements[0].warning_refs, vec!["w0001".to_string()]);
+        assert_eq!(elements[1].warning_refs, vec!["w0003".to_string()]);
     }
 }

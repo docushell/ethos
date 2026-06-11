@@ -103,6 +103,67 @@ fn pdf_fingerprint_timeout_kills_pdfium_worker() {
     assert_eq!(error["error"]["code"], "parse_timeout");
 }
 
+#[cfg(debug_assertions)]
+#[test]
+fn doc_parse_non_envelope_worker_failure_stays_canonical_without_diagnostics() {
+    let fixture = fixture_pdf();
+    let output = run_ethos_with_env(
+        &[
+            "doc",
+            "parse",
+            fixture.to_str().unwrap(),
+            "--format",
+            "json",
+        ],
+        &[
+            (
+                "ETHOS_INTERNAL_TEST_PDFIUM_WORKER_STDERR",
+                "native pdfium stderr sentinel\nsecond line",
+            ),
+            ("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_EXIT_CODE", "101"),
+        ],
+    );
+    assert_eq!(output.status.code(), Some(12));
+    assert!(output.stdout.is_empty());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        "{\"error\":{\"code\":\"internal_error\",\"message\":\"pdfium worker failed\"}}\n"
+    );
+}
+
+#[cfg(debug_assertions)]
+#[test]
+fn doc_parse_non_envelope_worker_failure_includes_stderr_with_diagnostics() {
+    let fixture = fixture_pdf();
+    let output = run_ethos_with_env(
+        &[
+            "doc",
+            "parse",
+            fixture.to_str().unwrap(),
+            "--format",
+            "json",
+            "--diagnostics",
+        ],
+        &[
+            (
+                "ETHOS_INTERNAL_TEST_PDFIUM_WORKER_STDERR",
+                "native pdfium stderr sentinel\nsecond line",
+            ),
+            ("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_EXIT_CODE", "101"),
+        ],
+    );
+    assert_eq!(output.status.code(), Some(12));
+    assert!(output.stdout.is_empty());
+    let error: Value = serde_json::from_slice(&output.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "internal_error");
+    assert_eq!(error["error"]["message"], "pdfium worker failed");
+    assert_eq!(error["diagnostics"]["pdfium_worker"]["exit_code"], 101);
+    assert_eq!(
+        error["diagnostics"]["pdfium_worker"]["stderr"],
+        "native pdfium stderr sentinel\nsecond line"
+    );
+}
+
 #[test]
 fn doc_parse_relays_worker_stable_error_envelope() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../README.md");

@@ -79,7 +79,7 @@ mod tests {
             payload_sha256: "9a392e2e555770423214eb134d44b18b19cb496ee8145598cea9089afc78a074"
                 .into(),
             profile_id: "ethos-deterministic-v1".into(),
-            profile_sha256: "ebee49d1ef7b5704f0474150444b773eb36ffad58d7dfefa65f2a88224040feb"
+            profile_sha256: "fccd07bf42b787ea32b200dac52b9f84b6433448c182d650bf1726a504e7ffa0"
                 .into(),
             schema_version: "1.0.0".into(),
             source_fingerprint:
@@ -87,7 +87,7 @@ mod tests {
         };
         assert_eq!(
             m.document_fingerprint().unwrap(),
-            "sha256:6a5405cdfd34367aeb54440f90bdd59e501f7aff6b4d3fb000a5d4d14379b6ed"
+            "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02"
         );
     }
 

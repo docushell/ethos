@@ -210,13 +210,13 @@ mod tests {
             "config_sha256": "68cc61753d299917cc7773f069c18aca31c8ac68f43736a94cb57eee05144084",
             "payload_sha256": "9a392e2e555770423214eb134d44b18b19cb496ee8145598cea9089afc78a074",
             "profile_id": "ethos-deterministic-v1",
-            "profile_sha256": "ebee49d1ef7b5704f0474150444b773eb36ffad58d7dfefa65f2a88224040feb",
+            "profile_sha256": "fccd07bf42b787ea32b200dac52b9f84b6433448c182d650bf1726a504e7ffa0",
             "schema_version": "1.0.0",
             "source_fingerprint": "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
         });
         assert_eq!(
             sha256_hex(&v).unwrap(),
-            "6a5405cdfd34367aeb54440f90bdd59e501f7aff6b4d3fb000a5d4d14379b6ed"
+            "579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02"
         );
     }
 
@@ -229,7 +229,7 @@ mod tests {
         let v: Value = serde_json::from_str(raw).unwrap();
         assert_eq!(
             sha256_hex(&v).unwrap(),
-            "ebee49d1ef7b5704f0474150444b773eb36ffad58d7dfefa65f2a88224040feb",
+            "fccd07bf42b787ea32b200dac52b9f84b6433448c182d650bf1726a504e7ffa0",
             "profile artifact changed without a version bump (contract §10)"
         );
     }

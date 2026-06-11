@@ -11,7 +11,7 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(missing_docs)]
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::env;
 use std::ffi::{c_char, c_int, c_ulong, c_void, CString};
 use std::path::{Path, PathBuf};
@@ -33,19 +33,28 @@ pub const PDFIUM_LIBRARY_PATH_ENV: &str = "ETHOS_PDFIUM_LIBRARY_PATH";
 /// Optional environment variable carrying the pinned PDFium release/version string.
 pub const PDFIUM_VERSION_ENV: &str = "ETHOS_PDFIUM_VERSION";
 
+/// Optional environment variable containing the downloaded Phase 1 release artifact path.
+pub const PDFIUM_ARTIFACT_PATH_ENV: &str = "ETHOS_PDFIUM_ARTIFACT_PATH";
+
 /// Profile quantization: 100 quanta per PDF point.
 const QUANTUM_PER_POINT: u32 = 100;
 
+const DETERMINISTIC_PROFILE_JSON: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../profiles/ethos-deterministic-v1.json"
+));
 const FONT_SUBSTITUTION_TABLE_JSON: &str = include_str!("../assets/font-substitution-table.json");
 
 /// PDFium has process-global library state; serialize init/load/destroy for now.
 static PDFIUM_LOCK: Mutex<()> = Mutex::new(());
+static PINNED_PDFIUM_PROFILE: OnceLock<PinnedPdfiumBackend> = OnceLock::new();
 static FONT_SUBSTITUTION_TABLE: OnceLock<FontSubstitutionTable> = OnceLock::new();
 
 /// PDFium backend implementation.
 #[derive(Debug, Clone, Default)]
 pub struct PdfiumBackend {
     library_path: Option<PathBuf>,
+    artifact_path: Option<PathBuf>,
     version: Option<String>,
 }
 
@@ -54,8 +63,15 @@ impl PdfiumBackend {
     pub fn from_library_path(path: impl Into<PathBuf>) -> Self {
         PdfiumBackend {
             library_path: Some(path.into()),
+            artifact_path: None,
             version: None,
         }
+    }
+
+    /// Add an explicit downloaded PDFium release artifact path for archive-hash verification.
+    pub fn with_artifact_path(mut self, path: impl Into<PathBuf>) -> Self {
+        self.artifact_path = Some(path.into());
+        self
     }
 
     /// Construct a backend using an explicit PDFium path and pinned version string.
@@ -70,11 +86,21 @@ impl PdfiumBackend {
             .or_else(|| env::var_os(PDFIUM_LIBRARY_PATH_ENV).map(PathBuf::from))
     }
 
-    fn configured_version(&self) -> String {
+    fn configured_artifact_path(&self) -> Option<PathBuf> {
+        self.artifact_path
+            .clone()
+            .or_else(|| env::var_os(PDFIUM_ARTIFACT_PATH_ENV).map(PathBuf::from))
+    }
+
+    fn configured_version_override(&self) -> Option<String> {
         self.version
             .clone()
             .or_else(|| env::var(PDFIUM_VERSION_ENV).ok())
-            .unwrap_or_else(|| "runtime-dynamic".to_string())
+    }
+
+    fn configured_version(&self) -> String {
+        self.configured_version_override()
+            .unwrap_or_else(|| pinned_pdfium_profile().version.clone())
     }
 }
 
@@ -234,6 +260,226 @@ fn map_pdfium_error(code: c_ulong) -> EthosError {
     }
 }
 
+#[derive(Debug, Deserialize)]
+struct DeterministicProfile {
+    backend: PinnedPdfiumBackend,
+}
+
+#[derive(Debug, Deserialize)]
+struct PinnedPdfiumBackend {
+    id: String,
+    phase: u8,
+    version: String,
+    upstream_version: String,
+    v8: String,
+    xfa: String,
+    distribution: PinnedPdfiumDistribution,
+    build_flags: PinnedPdfiumBuildFlags,
+    platform_hashes: BTreeMap<String, String>,
+    platform_artifacts: BTreeMap<String, PinnedPdfiumArtifact>,
+    profile_doc: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct PinnedPdfiumDistribution {
+    source: String,
+    release_url: String,
+    published_at: String,
+    attestation: PinnedPdfiumAttestation,
+}
+
+#[derive(Debug, Deserialize)]
+struct PinnedPdfiumAttestation {
+    name: String,
+    sha256: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct PinnedPdfiumBuildFlags {
+    is_component_build: bool,
+    is_debug: bool,
+    pdf_enable_v8: bool,
+    pdf_enable_xfa: bool,
+    pdf_is_standalone: bool,
+    pdf_use_partition_alloc: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct PinnedPdfiumArtifact {
+    name: String,
+    target_os: String,
+    target_cpu: String,
+    runtime_library_path: String,
+    runtime_library_sha256: String,
+}
+
+fn pinned_pdfium_profile() -> &'static PinnedPdfiumBackend {
+    PINNED_PDFIUM_PROFILE.get_or_init(|| {
+        let profile: DeterministicProfile = serde_json::from_str(DETERMINISTIC_PROFILE_JSON)
+            .expect("profiles/ethos-deterministic-v1.json is valid JSON");
+        validate_pinned_pdfium_profile(&profile.backend)
+            .expect("profiles/ethos-deterministic-v1.json pins a valid PDFium Phase 1 profile");
+        profile.backend
+    })
+}
+
+fn validate_pinned_pdfium_profile(profile: &PinnedPdfiumBackend) -> Result<(), &'static str> {
+    if profile.id != "pdfium"
+        || profile.phase != 1
+        || profile.version != "chromium/7881"
+        || profile.upstream_version != "PDFium 151.0.7881.0"
+        || profile.v8 != "disabled"
+        || profile.xfa != "disabled"
+        || profile.profile_doc != "docs/pdfium-profile.md"
+    {
+        return Err("unexpected PDFium profile identity");
+    }
+    if profile.distribution.source != "bblanchon/pdfium-binaries"
+        || profile.distribution.attestation.name != "pdfium-attestation.json"
+        || !is_sha256_hex(&profile.distribution.attestation.sha256)
+        || !profile
+            .distribution
+            .release_url
+            .starts_with("https://github.com/bblanchon/pdfium-binaries/releases/tag/")
+        || !profile.distribution.published_at.ends_with('Z')
+    {
+        return Err("unexpected PDFium distribution metadata");
+    }
+    if profile.build_flags.is_component_build
+        || profile.build_flags.is_debug
+        || profile.build_flags.pdf_enable_v8
+        || profile.build_flags.pdf_enable_xfa
+        || !profile.build_flags.pdf_is_standalone
+        || profile.build_flags.pdf_use_partition_alloc
+    {
+        return Err("PDFium Phase 1 must be standalone release with V8/XFA disabled");
+    }
+
+    for platform in ["macos-arm64", "linux-x64", "windows-x64"] {
+        let artifact_hash = profile
+            .platform_hashes
+            .get(platform)
+            .ok_or("missing PDFium artifact hash")?;
+        if !is_sha256_hex(artifact_hash) {
+            return Err("malformed PDFium artifact hash");
+        }
+        let artifact = profile
+            .platform_artifacts
+            .get(platform)
+            .ok_or("missing PDFium platform artifact metadata")?;
+        if artifact.name.contains("-v8-")
+            || artifact.name.contains("xfa")
+            || !artifact.name.ends_with(".tgz")
+            || artifact.runtime_library_path.is_empty()
+            || !is_sha256_hex(&artifact.runtime_library_sha256)
+        {
+            return Err("malformed PDFium platform artifact metadata");
+        }
+        match platform {
+            "macos-arm64"
+                if artifact.name == "pdfium-mac-arm64.tgz"
+                    && artifact.target_os == "mac"
+                    && artifact.target_cpu == "arm64" => {}
+            "linux-x64"
+                if artifact.name == "pdfium-linux-x64.tgz"
+                    && artifact.target_os == "linux"
+                    && artifact.target_cpu == "x64" => {}
+            "windows-x64"
+                if artifact.name == "pdfium-win-x64.tgz"
+                    && artifact.target_os == "win"
+                    && artifact.target_cpu == "x64" => {}
+            _ => return Err("unexpected PDFium platform artifact"),
+        }
+    }
+
+    Ok(())
+}
+
+fn is_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+}
+
+fn current_platform_key() -> Option<&'static str> {
+    if cfg!(all(target_os = "macos", target_arch = "aarch64")) {
+        Some("macos-arm64")
+    } else if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+        Some("linux-x64")
+    } else if cfg!(all(target_os = "windows", target_arch = "x86_64")) {
+        Some("windows-x64")
+    } else {
+        None
+    }
+}
+
+fn current_pdfium_pins(
+    profile: &PinnedPdfiumBackend,
+) -> Result<(&'static str, &str, &PinnedPdfiumArtifact), EthosError> {
+    let platform = current_platform_key().ok_or_else(|| {
+        EthosError::internal("pdfium phase 1 profile has no hash for this platform")
+    })?;
+    let artifact_hash = profile.platform_hashes.get(platform).ok_or_else(|| {
+        EthosError::internal("pdfium phase 1 profile has no hash for this platform")
+    })?;
+    let artifact = profile.platform_artifacts.get(platform).ok_or_else(|| {
+        EthosError::internal("pdfium phase 1 profile has no artifact for this platform")
+    })?;
+    Ok((platform, artifact_hash.as_str(), artifact))
+}
+
+fn validate_pinned_pdfium_payload(
+    backend: &PdfiumBackend,
+    library_path: &Path,
+) -> Result<(), EthosError> {
+    let profile = pinned_pdfium_profile();
+    if let Some(version) = backend.configured_version_override() {
+        let upstream_number = profile
+            .upstream_version
+            .strip_prefix("PDFium ")
+            .unwrap_or(&profile.upstream_version);
+        if version != profile.version
+            && version != profile.upstream_version
+            && version != upstream_number
+        {
+            return Err(EthosError::internal(
+                "pdfium version does not match pinned phase 1 profile",
+            ));
+        }
+    }
+
+    let (_, artifact_hash, artifact) = current_pdfium_pins(profile)?;
+    if let Some(artifact_path) = backend.configured_artifact_path() {
+        if !artifact_path.is_file() {
+            return Err(EthosError::internal(
+                "pdfium artifact path does not point to a file",
+            ));
+        }
+        let actual_artifact_hash = sha256_file(&artifact_path)?;
+        if actual_artifact_hash != artifact_hash {
+            return Err(EthosError::internal(
+                "pdfium artifact does not match pinned phase 1 profile",
+            ));
+        }
+    }
+
+    let library_hash = sha256_file(library_path)?;
+    if library_hash != artifact.runtime_library_sha256 {
+        return Err(EthosError::internal(
+            "pdfium library does not match pinned phase 1 profile",
+        ));
+    }
+
+    Ok(())
+}
+
+fn sha256_file(path: &Path) -> Result<String, EthosError> {
+    let bytes =
+        std::fs::read(path).map_err(|_| EthosError::internal("failed to read pdfium payload"))?;
+    Ok(ethos_core::c14n::sha256_hex_bytes(&bytes))
+}
+
 type FpdfDocument = *mut c_void;
 type FpdfPage = *mut c_void;
 type FpdfTextPage = *mut c_void;
@@ -386,6 +632,7 @@ impl PdfiumRuntime {
                 "pdfium library path does not point to a file",
             ));
         }
+        validate_pinned_pdfium_payload(backend, &path)?;
 
         let library = dylib::Library::open(&path)?;
         let funcs = PdfiumFunctions::load(&library)?;
@@ -1046,6 +1293,131 @@ mod tests {
         assert_eq!(
             manifest.platform_sha256,
             ethos_core::c14n::sha256_hex_bytes(b"pdfium bytes")
+        );
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn phase1_pdfium_profile_is_pinned_and_v8_xfa_disabled() {
+        let profile = pinned_pdfium_profile();
+        assert_eq!(profile.id, "pdfium");
+        assert_eq!(profile.phase, 1);
+        assert_eq!(profile.version, "chromium/7881");
+        assert_eq!(profile.upstream_version, "PDFium 151.0.7881.0");
+        assert_eq!(profile.v8, "disabled");
+        assert_eq!(profile.xfa, "disabled");
+        assert_eq!(profile.distribution.source, "bblanchon/pdfium-binaries");
+        assert_eq!(
+            profile.distribution.attestation.sha256,
+            "24dec7cd76acb81106a0c29b908cceceef8215b050f6ff6ffbf875465811ef60"
+        );
+        assert!(!profile.build_flags.pdf_enable_v8);
+        assert!(!profile.build_flags.pdf_enable_xfa);
+        assert!(profile.build_flags.pdf_is_standalone);
+
+        let expected = [
+            (
+                "macos-arm64",
+                "pdfium-mac-arm64.tgz",
+                "52e94ca5aa8847934330daf3f8150c190682c5ca93831468794f8b90d4392e40",
+                "lib/libpdfium.dylib",
+                "1bc45b15466b34cef96641ce25c77a876e70010c6b114f909dda2f5325fc5bd7",
+            ),
+            (
+                "linux-x64",
+                "pdfium-linux-x64.tgz",
+                "1470e21b8b4a3b4ad7f85684e2da11d94f3b69a86d81dee11b9b6709d927ac1d",
+                "lib/libpdfium.so",
+                "f728930966f503652b92acc89b9374a2eeca00ce42e26dccd3e4b5c5161b2d64",
+            ),
+            (
+                "windows-x64",
+                "pdfium-win-x64.tgz",
+                "73cc0de638ac2095e7445bf56a38200a5b7c7ca0e9f4ba144598f2457377ac08",
+                "bin/pdfium.dll",
+                "79d4676b656cfb1abcea88f9ade3b4b0826c5200382db5f4ec72a636c598c118",
+            ),
+        ];
+        for (platform, name, archive_sha256, runtime_path, runtime_sha256) in expected {
+            assert_eq!(profile.platform_hashes[platform], archive_sha256);
+            let artifact = &profile.platform_artifacts[platform];
+            assert_eq!(artifact.name, name);
+            assert!(!artifact.name.contains("-v8-"));
+            assert!(!artifact.name.contains("xfa"));
+            assert_eq!(artifact.runtime_library_path, runtime_path);
+            assert_eq!(artifact.runtime_library_sha256, runtime_sha256);
+        }
+    }
+
+    #[test]
+    fn mismatched_pdfium_version_is_rejected_before_library_load() {
+        if current_platform_key().is_none() {
+            return;
+        }
+        let path = env::temp_dir().join("ethos-test-libpdfium-version-mismatch.bin");
+        std::fs::write(&path, b"not the pinned pdfium library").unwrap();
+        let backend = PdfiumBackend::from_library_path(&path).with_version("chromium/7869");
+        let err = backend.page_count(b"%PDF-1.7\n").unwrap_err();
+        assert_eq!(err.code, ErrorCode::InternalError);
+        assert_eq!(
+            err.message,
+            "pdfium version does not match pinned phase 1 profile"
+        );
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn pinned_upstream_pdfium_version_alias_is_accepted() {
+        if current_platform_key().is_none() {
+            return;
+        }
+        let path = env::temp_dir().join("ethos-test-libpdfium-upstream-version.bin");
+        std::fs::write(&path, b"not the pinned pdfium library").unwrap();
+        let backend = PdfiumBackend::from_library_path(&path).with_version("PDFium 151.0.7881.0");
+        let err = backend.page_count(b"%PDF-1.7\n").unwrap_err();
+        assert_eq!(err.code, ErrorCode::InternalError);
+        assert_eq!(
+            err.message,
+            "pdfium library does not match pinned phase 1 profile"
+        );
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn mismatched_pdfium_artifact_is_rejected_with_stable_error() {
+        if current_platform_key().is_none() {
+            return;
+        }
+        let library_path = env::temp_dir().join("ethos-test-libpdfium-artifact-mismatch.bin");
+        let artifact_path = env::temp_dir().join("ethos-test-pdfium-artifact-mismatch.tgz");
+        std::fs::write(&library_path, b"not the pinned pdfium library").unwrap();
+        std::fs::write(&artifact_path, b"not the pinned pdfium artifact").unwrap();
+        let backend = PdfiumBackend::from_library_path(&library_path)
+            .with_version("chromium/7881")
+            .with_artifact_path(&artifact_path);
+        let err = backend.page_count(b"%PDF-1.7\n").unwrap_err();
+        assert_eq!(err.code, ErrorCode::InternalError);
+        assert_eq!(
+            err.message,
+            "pdfium artifact does not match pinned phase 1 profile"
+        );
+        let _ = std::fs::remove_file(library_path);
+        let _ = std::fs::remove_file(artifact_path);
+    }
+
+    #[test]
+    fn mismatched_pdfium_library_is_rejected_before_dynamic_load() {
+        if current_platform_key().is_none() {
+            return;
+        }
+        let path = env::temp_dir().join("ethos-test-libpdfium-library-mismatch.bin");
+        std::fs::write(&path, b"not the pinned pdfium library").unwrap();
+        let backend = PdfiumBackend::from_library_path(&path).with_version("chromium/7881");
+        let err = backend.page_count(b"%PDF-1.7\n").unwrap_err();
+        assert_eq!(err.code, ErrorCode::InternalError);
+        assert_eq!(
+            err.message,
+            "pdfium library does not match pinned phase 1 profile"
         );
         let _ = std::fs::remove_file(path);
     }

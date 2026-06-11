@@ -29,14 +29,55 @@
   },
   "backend": {
     "id": "pdfium",
-    "phase": null,
-    "version": null,
+    "phase": 1,
+    "version": "chromium/7881",
+    "upstream_version": "PDFium 151.0.7881.0",
     "v8": "disabled",
     "xfa": "disabled",
+    "distribution": {
+      "source": "bblanchon/pdfium-binaries",
+      "release_url": "https://github.com/bblanchon/pdfium-binaries/releases/tag/chromium/7881",
+      "published_at": "2026-06-08T17:07:25Z",
+      "attestation": {
+        "name": "pdfium-attestation.json",
+        "sha256": "24dec7cd76acb81106a0c29b908cceceef8215b050f6ff6ffbf875465811ef60"
+      }
+    },
+    "build_flags": {
+      "is_component_build": false,
+      "is_debug": false,
+      "pdf_enable_v8": false,
+      "pdf_enable_xfa": false,
+      "pdf_is_standalone": true,
+      "pdf_use_partition_alloc": false
+    },
     "platform_hashes": {
-      "macos-arm64": null,
-      "linux-x64": null,
-      "windows-x64": null
+      "macos-arm64": "52e94ca5aa8847934330daf3f8150c190682c5ca93831468794f8b90d4392e40",
+      "linux-x64": "1470e21b8b4a3b4ad7f85684e2da11d94f3b69a86d81dee11b9b6709d927ac1d",
+      "windows-x64": "73cc0de638ac2095e7445bf56a38200a5b7c7ca0e9f4ba144598f2457377ac08"
+    },
+    "platform_artifacts": {
+      "macos-arm64": {
+        "name": "pdfium-mac-arm64.tgz",
+        "target_os": "mac",
+        "target_cpu": "arm64",
+        "runtime_library_path": "lib/libpdfium.dylib",
+        "runtime_library_sha256": "1bc45b15466b34cef96641ce25c77a876e70010c6b114f909dda2f5325fc5bd7"
+      },
+      "linux-x64": {
+        "name": "pdfium-linux-x64.tgz",
+        "target_os": "linux",
+        "target_cpu": "x64",
+        "runtime_library_path": "lib/libpdfium.so",
+        "runtime_library_sha256": "f728930966f503652b92acc89b9374a2eeca00ce42e26dccd3e4b5c5161b2d64"
+      },
+      "windows-x64": {
+        "name": "pdfium-win-x64.tgz",
+        "target_os": "win",
+        "target_cpu": "x64",
+        "runtime_library_path": "bin/pdfium.dll",
+        "runtime_library_sha256": "79d4676b656cfb1abcea88f9ade3b4b0826c5200382db5f4ec72a636c598c118"
+      }
     },
     "profile_doc": "docs/pdfium-profile.md"
   },

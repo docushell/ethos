@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "document_fingerprint": "sha256:6a5405cdfd34367aeb54440f90bdd59e501f7aff6b4d3fb000a5d4d14379b6ed",
+  "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
   "verification_config_sha256": "4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0",
   "grounding": {
     "parser": {
