@@ -19,6 +19,10 @@ fn two_column_fixture_pdf() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/synthetic/two-columns/document.pdf")
 }
 
+fn invalid_header_fixture_pdf() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/failure/invalid-header/document.pdf")
+}
+
 fn pdfium_configured() -> bool {
     std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
         .map(PathBuf::from)
@@ -166,7 +170,7 @@ fn doc_parse_non_envelope_worker_failure_includes_stderr_with_diagnostics() {
 
 #[test]
 fn doc_parse_relays_worker_stable_error_envelope() {
-    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../README.md");
+    let fixture = invalid_header_fixture_pdf();
     let output = run_ethos(&[
         "doc",
         "parse",

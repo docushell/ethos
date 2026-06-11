@@ -1,0 +1,16 @@
+{
+  "id": "failure-invalid-header",
+  "provenance": "Synthetic non-PDF byte fixture maintained by Ethos for stable error-envelope tests.",
+  "license": "CC0-1.0",
+  "subsets": ["failure"],
+  "sha256": "c52fa72b5f4be9a86cd7bf69559025bae760a974e1c9d998e33d6981993df412",
+  "pages": 0,
+  "exercises": [
+    "PDF header validation",
+    "worker stable error-envelope relay"
+  ],
+  "expected_error": {
+    "code": "invalid_pdf",
+    "message": "input does not contain a PDF header"
+  }
+}
