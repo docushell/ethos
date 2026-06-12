@@ -1,0 +1,189 @@
+{
+  "blockers": [],
+  "corpus": {
+    "id": "gate-zero-v1",
+    "manifest": "benchmarks/gate-zero/manifest.json",
+    "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
+  },
+  "definition": {
+    "definition_sha256": "ee7d0ac1f3b8447cf8337beef9fdca7d75c8342410df508128aa8bd73acf66ed",
+    "gate_status": "defined-not-run",
+    "gates": "benchmarks/gate-zero/gates.json",
+    "measurement_scope": {
+      "auto_fail": [
+        "PDFium build has V8 enabled",
+        "PDFium build has XFA enabled"
+      ],
+      "excludes": [
+        "network downloads during parse or verification",
+        "optional OCR or VLM assets outside the base parser surface",
+        "non-base parser adapters not required for the Ethos base distributable"
+      ],
+      "includes": [
+        "ethos CLI executable",
+        "native dynamic libraries required by the base parser",
+        "PDFium sidecar or static payload required by the base parser",
+        "default schemas required by the base parser",
+        "bundled deterministic font assets",
+        "all assets required to run the base parser without network access"
+      ],
+      "subject": "Ethos base distributable installed footprint, measured as bytes on disk with no network dependency."
+    },
+    "thresholds": {
+      "comparison_reference": "opendataloader-pdf",
+      "logic": "PASS only when ethos_install_size_bytes <= 30000000 and ethos_install_size_bytes <= opendataloader_install_size_bytes * 0.1, with all auto-fail checks false.",
+      "max_install_size_bytes": 30000000,
+      "max_install_size_label": "30 MB decimal",
+      "opendataloader_ratio_max": 0.1
+    }
+  },
+  "evaluation": {
+    "blockers": [],
+    "failures": [
+      "ethos install size exceeds OpenDataLoader ratio threshold"
+    ],
+    "status": "fail",
+    "thresholds": {
+      "max_install_size_bytes": 30000000,
+      "opendataloader_ratio_max": 0.1,
+      "opendataloader_ratio_max_bytes": 3575342.7
+    }
+  },
+  "failures": [
+    "ethos install size exceeds OpenDataLoader ratio threshold"
+  ],
+  "gate": "g2",
+  "host": {
+    "observed": {
+      "machine": "arm64",
+      "platform": "macOS-26.5.1-arm64-arm-64bit",
+      "platform_key": "macos-arm64",
+      "python": "3.9.6"
+    },
+    "selected": {
+      "cores_used_for_g1": 1,
+      "cpu": "Apple M4 Pro, 12 cores (8 performance, 4 efficiency)",
+      "id": "mac-m4pro-arm64",
+      "kernel": "Darwin 25.5.0",
+      "model": "MacBook Pro, Mac16,8",
+      "os": "macOS 26.5 (25F71)",
+      "platform": "macos-arm64",
+      "ram": "48 GB",
+      "role": "performance",
+      "runner": "local manual runner; runner id=mac-m4pro-arm64"
+    }
+  },
+  "inputs": {
+    "competitors_lock": "benchmarks/competitors.lock.json",
+    "competitors_lock_sha256": "35becebfbf2b4b10b14213ae4a986efc9805ed6b0cf7f5dc5878f7ba79b13afa",
+    "deterministic_profile": "profiles/ethos-deterministic-v1.json",
+    "deterministic_profile_sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070",
+    "gates": "benchmarks/gate-zero/gates.json",
+    "gates_sha256": "ee7d0ac1f3b8447cf8337beef9fdca7d75c8342410df508128aa8bd73acf66ed",
+    "manifest": "benchmarks/gate-zero/manifest.json",
+    "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
+  },
+  "measurements": {
+    "ethos": {
+      "install_size_bytes": 9009728,
+      "items": [
+        {
+          "exists": true,
+          "path": "target/release/ethos",
+          "path_kind": "file",
+          "role": "ethos-cli",
+          "sha256": "0de71fc5439e38215544bce53f1eb6bac9eccac848eee3922113cdc99c58600e",
+          "size_bytes": 1277392,
+          "tree_sha256": null
+        },
+        {
+          "exists": true,
+          "path": "/private/tmp/ethos-pdfium/lib/libpdfium.dylib",
+          "path_kind": "file",
+          "role": "pdfium-library",
+          "sha256": "1bc45b15466b34cef96641ce25c77a876e70010c6b114f909dda2f5325fc5bd7",
+          "size_bytes": 7732336,
+          "tree_sha256": null
+        }
+      ]
+    },
+    "opendataloader-pdf": {
+      "artifact": {
+        "exists": true,
+        "expected_sha256": "1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628",
+        "hash_matches_expected": true,
+        "path": "/private/tmp/opendataloader_pdf-2.4.7-py3-none-any.whl",
+        "path_kind": "file",
+        "role": "opendataloader-artifact",
+        "sha256": "1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628",
+        "size_bytes": 22568934,
+        "tree_sha256": null
+      },
+      "install_path": {
+        "exists": true,
+        "path": "/private/tmp/ethos-odl-wheel-venv312",
+        "path_kind": "directory",
+        "role": "opendataloader-install",
+        "sha256": null,
+        "size_bytes": 35753427,
+        "tree_sha256": "1a6dfd1db776762be4e486b77f3b982704c8f0bd32f3a1cbb7cf57e54f7103c2"
+      },
+      "install_size_bytes": 35753427
+    },
+    "pdfium": {
+      "artifact": {
+        "exists": true,
+        "expected_sha256": "52e94ca5aa8847934330daf3f8150c190682c5ca93831468794f8b90d4392e40",
+        "hash_matches_expected": true,
+        "path": "/private/tmp/ethos-pdfium-mac-arm64.tgz",
+        "path_kind": "file",
+        "role": "pdfium-artifact",
+        "sha256": "52e94ca5aa8847934330daf3f8150c190682c5ca93831468794f8b90d4392e40",
+        "size_bytes": 3533019,
+        "tree_sha256": null
+      },
+      "library": {
+        "exists": true,
+        "expected_sha256": "1bc45b15466b34cef96641ce25c77a876e70010c6b114f909dda2f5325fc5bd7",
+        "hash_matches_expected": true,
+        "path": "/private/tmp/ethos-pdfium/lib/libpdfium.dylib",
+        "path_kind": "file",
+        "role": "pdfium-library",
+        "sha256": "1bc45b15466b34cef96641ce25c77a876e70010c6b114f909dda2f5325fc5bd7",
+        "size_bytes": 7732336,
+        "tree_sha256": null
+      },
+      "platform_artifact": {
+        "name": "pdfium-mac-arm64.tgz",
+        "runtime_library_path": "lib/libpdfium.dylib",
+        "runtime_library_sha256": "1bc45b15466b34cef96641ce25c77a876e70010c6b114f909dda2f5325fc5bd7",
+        "target_cpu": "arm64",
+        "target_os": "mac"
+      },
+      "policy": {
+        "backend_id": "pdfium",
+        "backend_version": "chromium/7881",
+        "pdf_enable_v8": false,
+        "pdf_enable_xfa": false,
+        "upstream_version": "PDFium 151.0.7881.0",
+        "v8": "disabled",
+        "v8_enabled": false,
+        "xfa": "disabled",
+        "xfa_enabled": false
+      }
+    }
+  },
+  "platform": "macos-arm64",
+  "schema_version": "ethos-gate-zero-g2-result-v1",
+  "status": "fail",
+  "summary": {
+    "ethos_install_size_bytes": 9009728,
+    "ethos_to_opendataloader_ratio": 0.25199620724469296,
+    "max_install_size_bytes": 30000000,
+    "opendataloader_install_size_bytes": 35753427,
+    "opendataloader_ratio_max": 0.1,
+    "pdfium_v8_enabled": false,
+    "pdfium_xfa_enabled": false,
+    "status": "fail"
+  }
+}
