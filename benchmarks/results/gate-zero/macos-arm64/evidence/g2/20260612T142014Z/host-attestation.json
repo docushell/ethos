@@ -1,8 +1,8 @@
 {
-  "benchmark_commit": "999dfd0",
+  "benchmark_commit": "a05af67",
   "bundle_git": {
     "available": true,
-    "commit": "8a03b709b07a56cc1f19fe7b8eb2a3c3804c2bc5",
+    "commit": "db3ed5a8be67fb82b6138a3592f65bc0bd6f3f2e",
     "dirty": false,
     "status_short": []
   },
@@ -41,12 +41,12 @@
     "deterministic_profile": "profiles/ethos-deterministic-v1.json",
     "deterministic_profile_sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070",
     "gates": "benchmarks/gate-zero/gates.json",
-    "gates_sha256": "ee7d0ac1f3b8447cf8337beef9fdca7d75c8342410df508128aa8bd73acf66ed",
+    "gates_sha256": "602f82e3141e9826a893de509f3a1137430539a0166fd045d8c5f458d26efbb6",
     "manifest": "benchmarks/gate-zero/manifest.json",
     "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
   },
   "schema_version": "ethos-gate-zero-host-attestation-v1",
   "source_result": "benchmarks/results/gate-zero/macos-arm64/g2.json",
-  "source_result_canonical_sha256": "d9451eacfce1ba0ec306a2f14437074b3c9f3d24de536bd39cb613eef623cb78",
-  "source_result_sha256": "bf218d66123f1e1298337c2b7845e66c1ff26ceb0788f6f48748e00b6a60b770"
+  "source_result_canonical_sha256": "c4f2401099164aec99166f626906e2e3892d5b70ac9e74cd52e023feb124b27e",
+  "source_result_sha256": "7c66ef9e7b51628d0986feaed276ffc2d3528d011d3ee0e83f5164035c3c9dc4"
 }
