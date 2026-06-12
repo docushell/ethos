@@ -10,10 +10,14 @@
       }
     },
     {
-      "kind": "presence",
+      "kind": "table_cell",
+      "text": "$12.4M",
       "citation": {
-        "page": "p0001",
-        "element_id": "e000003"
+        "table_id": "t0001",
+        "cell": {
+          "row": 1,
+          "col": 1
+        }
       }
     }
   ]

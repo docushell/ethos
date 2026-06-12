@@ -8,15 +8,19 @@
 //! its text matches by a declared literal method, the fingerprint is fresh. It is never
 //! pixel-level, semantic, or arithmetic proof (PRD §14).
 //!
-//! The WS-VERIFY-ALPHA check engine intentionally supports only literal quote and
-//! presence claims. Unsupported claim kinds remain explicit; no fuzzy, semantic,
-//! arithmetic, table, crop, OCR, layout, or parser-internal behavior belongs here.
+//! The WS-VERIFY check engine intentionally supports only literal quote/value,
+//! presence, and table-cell lookup claims. Unsupported claim kinds remain
+//! explicit; no fuzzy, semantic, arithmetic, crop, OCR, layout, or
+//! parser-internal behavior belongs here.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 use ethos_core::codes::WarningCode;
-use ethos_core::grounding::{CoordinateOrigin, GroundingElement, GroundingSource, GroundingSpan};
+use ethos_core::grounding::{
+    CoordinateOrigin, GroundingCell, GroundingElement, GroundingSource, GroundingSpan,
+    GroundingTable,
+};
 use ethos_core::verify_types::{
     compute_all_evidence_grounded, Check, CheckStatus, Claim, ClaimKind, Evidence, GroundingMeta,
     MatchMethod, TextNormalization, VerificationConfig, VerificationReport,
@@ -172,7 +176,7 @@ fn check_claim(
         };
     }
 
-    if !is_alpha_supported_kind(claim.kind) || !config.claim_kinds.contains(&claim.kind) {
+    if !is_supported_kind(claim.kind) || !config.claim_kinds.contains(&claim.kind) {
         push_unsupported(unsupported, claim.kind);
         return Check {
             id: check_id,
@@ -235,7 +239,7 @@ fn check_claim(
             evidence,
             warnings,
         },
-        ClaimKind::Quote => {
+        ClaimKind::Quote | ClaimKind::Value | ClaimKind::TableCell => {
             let method = text_match_method(config);
             let status = if let (Some(expected), Some(actual)) =
                 (claim.text.as_deref(), target.text.as_deref())
@@ -252,7 +256,11 @@ fn check_claim(
                 id: check_id,
                 claim,
                 status,
-                match_method: method,
+                match_method: if target.from_table_cell {
+                    MatchMethod::TableCellLookup
+                } else {
+                    method
+                },
                 semantic_unverified: false,
                 evidence,
                 warnings,
@@ -262,8 +270,11 @@ fn check_claim(
     }
 }
 
-fn is_alpha_supported_kind(kind: ClaimKind) -> bool {
-    matches!(kind, ClaimKind::Quote | ClaimKind::Presence)
+fn is_supported_kind(kind: ClaimKind) -> bool {
+    matches!(
+        kind,
+        ClaimKind::Quote | ClaimKind::Value | ClaimKind::Presence | ClaimKind::TableCell
+    )
 }
 
 fn push_unsupported(unsupported: &mut Vec<String>, kind: ClaimKind) {
@@ -289,6 +300,7 @@ struct FoundTarget {
     page: Option<String>,
     bbox: Option<[i64; 4]>,
     text: Option<String>,
+    from_table_cell: bool,
 }
 
 enum TargetResolution {
@@ -302,6 +314,10 @@ fn resolve_target(
     claim: &Claim,
     config: &VerificationConfig,
 ) -> TargetResolution {
+    if claim.kind == ClaimKind::TableCell || claim.citation.table_id.is_some() {
+        return resolve_table_cell(source, claim);
+    }
+
     if let Some(span_id) = claim.citation.span_id.as_deref() {
         if !source.capabilities().spans {
             return TargetResolution::CapabilityBlocked;
@@ -347,6 +363,7 @@ fn resolve_target(
                     page: Some(found.id),
                     bbox: Some([0, 0, found.width, found.height]),
                     text: None,
+                    from_table_cell: false,
                 })
             })
             .unwrap_or(TargetResolution::NotFound);
@@ -360,6 +377,7 @@ fn target_from_element(element: GroundingElement) -> FoundTarget {
         page: Some(element.page),
         bbox: Some(element.bbox),
         text: element.text,
+        from_table_cell: false,
     }
 }
 
@@ -368,6 +386,49 @@ fn target_from_span(span: GroundingSpan) -> FoundTarget {
         page: Some(span.page),
         bbox: Some(span.bbox),
         text: Some(span.text),
+        from_table_cell: false,
+    }
+}
+
+fn resolve_table_cell(source: &dyn GroundingSource, claim: &Claim) -> TargetResolution {
+    let Some(table_id) = claim.citation.table_id.as_deref() else {
+        return TargetResolution::NotFound;
+    };
+    let Some(cell_ref) = claim.citation.cell else {
+        return TargetResolution::NotFound;
+    };
+    let tables = source.tables();
+    if tables.is_empty() {
+        return TargetResolution::CapabilityBlocked;
+    }
+    tables
+        .into_iter()
+        .find(|table| table.id == table_id)
+        .and_then(|table| target_from_table_cell(table, cell_ref.row, cell_ref.col))
+        .map(TargetResolution::Found)
+        .unwrap_or(TargetResolution::NotFound)
+}
+
+fn target_from_table_cell(table: GroundingTable, row: u32, col: u32) -> Option<FoundTarget> {
+    table
+        .cells
+        .into_iter()
+        .find(|cell| table_cell_covers(cell, row, col))
+        .map(|cell| target_from_cell(table.page, cell))
+}
+
+fn table_cell_covers(cell: &GroundingCell, row: u32, col: u32) -> bool {
+    let row_end = cell.row.saturating_add(cell.row_span.max(1));
+    let col_end = cell.col.saturating_add(cell.col_span.max(1));
+    row >= cell.row && row < row_end && col >= cell.col && col < col_end
+}
+
+fn target_from_cell(page: String, cell: GroundingCell) -> FoundTarget {
+    FoundTarget {
+        page: Some(page),
+        bbox: Some(cell.bbox),
+        text: Some(cell.text),
+        from_table_cell: true,
     }
 }
 
@@ -432,9 +493,10 @@ pub fn normalize_quote(input: &str) -> String {
 mod tests {
     use super::*;
     use ethos_core::grounding::{
-        Capabilities, GroundingElement, GroundingSpan, PageGeometry, ParserIdentity,
+        Capabilities, GroundingCell, GroundingElement, GroundingSpan, GroundingTable, PageGeometry,
+        ParserIdentity,
     };
-    use ethos_core::verify_types::{Citation, Claim};
+    use ethos_core::verify_types::{CellRef, Citation, Claim};
 
     #[derive(Clone)]
     struct TestSource {
@@ -485,15 +547,24 @@ mod tests {
             }]
         }
         fn elements(&self) -> Vec<GroundingElement> {
-            vec![GroundingElement {
-                id: "e000002".into(),
-                page: "p0001".into(),
-                bbox: [7200, 10100, 54000, 11500],
-                kind: "text_block".into(),
-                text: Some(
-                    "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.".into(),
-                ),
-            }]
+            vec![
+                GroundingElement {
+                    id: "e000002".into(),
+                    page: "p0001".into(),
+                    bbox: [7200, 10100, 54000, 11500],
+                    kind: "text_block".into(),
+                    text: Some(
+                        "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.".into(),
+                    ),
+                },
+                GroundingElement {
+                    id: "e000003".into(),
+                    page: "p0001".into(),
+                    bbox: [7200, 13000, 54000, 20000],
+                    kind: "table".into(),
+                    text: None,
+                },
+            ]
         }
         fn spans(&self) -> Vec<GroundingSpan> {
             vec![GroundingSpan {
@@ -504,6 +575,31 @@ mod tests {
                 element: Some("e000002".into()),
                 char_start: Some(0),
                 char_end: Some(34),
+            }]
+        }
+        fn tables(&self) -> Vec<GroundingTable> {
+            vec![GroundingTable {
+                id: "t0001".into(),
+                page: "p0001".into(),
+                bbox: [7200, 13000, 54000, 20000],
+                cells: vec![
+                    GroundingCell {
+                        row: 0,
+                        col: 0,
+                        row_span: 1,
+                        col_span: 1,
+                        bbox: [7200, 13000, 30600, 16500],
+                        text: "Metric".into(),
+                    },
+                    GroundingCell {
+                        row: 1,
+                        col: 1,
+                        row_span: 1,
+                        col_span: 1,
+                        bbox: [30600, 16500, 54000, 20000],
+                        text: "$12.4M".into(),
+                    },
+                ],
             }]
         }
     }
@@ -600,6 +696,77 @@ mod tests {
     }
 
     #[test]
+    fn value_claims_use_literal_text_matching() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::Value,
+                Some("$12.4M"),
+                Citation {
+                    element_id: Some("e000002".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.unsupported_claim_kinds, Vec::<String>::new());
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(report.checks[0].match_method, MatchMethod::NormalizedText);
+    }
+
+    #[test]
+    fn table_cell_claims_lookup_cell_and_match_text() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::TableCell,
+                Some("$12.4M"),
+                Citation {
+                    table_id: Some("t0001".into()),
+                    cell: Some(CellRef { row: 1, col: 1 }),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.unsupported_claim_kinds, Vec::<String>::new());
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(report.checks[0].match_method, MatchMethod::TableCellLookup);
+        assert_eq!(
+            report.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.text.as_deref()),
+            Some("$12.4M")
+        );
+    }
+
+    #[test]
+    fn table_cell_missing_cell_is_not_found() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::TableCell,
+                Some("$12.4M"),
+                Citation {
+                    table_id: Some("t0001".into()),
+                    cell: Some(CellRef { row: 9, col: 9 }),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::NotFound);
+        assert_eq!(report.checks[0].match_method, MatchMethod::None);
+    }
+
+    #[test]
     fn stale_fingerprint_marks_checks_stale_and_gate_false() {
         let source = TestSource::default();
         let cfg = VerificationConfig::default_v1();
@@ -634,8 +801,8 @@ mod tests {
         let report = verify(
             &source,
             vec![claim(
-                ClaimKind::Value,
-                Some("$12.4M"),
+                ClaimKind::Region,
+                None,
                 Citation {
                     element_id: Some("e000002".into()),
                     ..Default::default()
@@ -645,7 +812,7 @@ mod tests {
 
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::UnsupportedClaimKind);
-        assert_eq!(report.unsupported_claim_kinds, vec!["value"]);
+        assert_eq!(report.unsupported_claim_kinds, vec!["region"]);
     }
 
     #[test]

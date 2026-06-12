@@ -34,14 +34,16 @@
         "kind": { "enum": ["quote", "value", "presence", "table_cell", "region", "other"] },
         "text": {
           "type": "string",
-          "description": "Claimed quote/value text, when textual. Quote claims must include non-blank text."
+          "description": "Claimed quote/value/table-cell text, when textual. Quote, value, and table_cell claims must include non-blank text."
         },
         "citation": { "$ref": "#/$defs/citation" }
       },
       "allOf": [
         {
           "if": {
-            "properties": { "kind": { "const": "quote" } },
+            "properties": {
+              "kind": { "enum": ["quote", "value", "table_cell"] }
+            },
             "required": ["kind"]
           },
           "then": {

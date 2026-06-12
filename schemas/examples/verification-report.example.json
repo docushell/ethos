@@ -46,27 +46,32 @@
     {
       "id": "v0002",
       "claim": {
-        "kind": "presence",
+        "kind": "table_cell",
+        "text": "$12.4M",
         "citation": {
-          "span_id": "s000002"
+          "table_id": "t0001",
+          "cell": {
+            "row": 1,
+            "col": 1
+          }
         }
       },
       "status": "grounded",
-      "match_method": "presence_only",
+      "match_method": "table_cell_lookup",
       "semantic_unverified": false,
       "evidence": {
-        "text": "Revenue grew to $12.4M in Q3 2025",
+        "text": "$12.4M",
         "page": "p0001",
         "bbox": [
-          7200,
-          10100,
+          30600,
+          16500,
           54000,
-          11500
+          20000
         ]
       },
       "warnings": []
     }
   ],
   "unsupported_claim_kinds": [],
-  "warnings": []
+  "warnings": ["capability_limited"]
 }

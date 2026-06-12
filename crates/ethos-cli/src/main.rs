@@ -6,8 +6,8 @@
 //!
 //! Skeleton status (honest): `doc parse` is wired through the backend boundary and fails
 //! with a stable code until WS-ENGINE lands PDFium; `rag chunk` and `fingerprint` are
-//! fully functional over canonical JSON; `verify` runs the WS-VERIFY-ALPHA literal
-//! quote/presence checks over native Ethos JSON and ODL-style JSON.
+//! fully functional over canonical JSON; `verify` runs literal quote/value,
+//! presence, and table-cell checks over native Ethos JSON and ODL-style JSON.
 
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -513,14 +513,16 @@ fn validate_citation_input(
                 idx + 1
             )));
         }
-        if claim.kind == ClaimKind::Quote
-            && claim
-                .text
-                .as_ref()
-                .is_none_or(|text| text.trim().is_empty())
+        if matches!(
+            claim.kind,
+            ClaimKind::Quote | ClaimKind::Value | ClaimKind::TableCell
+        ) && claim
+            .text
+            .as_ref()
+            .is_none_or(|text| text.trim().is_empty())
         {
             return Err(Failure::Usage(format!(
-                "claim {} quote text must be non-empty",
+                "claim {} text must be non-empty for quote, value, and table_cell",
                 idx + 1
             )));
         }

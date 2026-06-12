@@ -64,10 +64,12 @@ fn native_ethos_verify_produces_non_empty_checks() {
 
     assert_eq!(report["grounding"]["parser"]["name"], "ethos");
     assert_eq!(report["fingerprint_stale"], false);
-    assert_eq!(report["checks"].as_array().unwrap().len(), 2);
+    assert_eq!(report["checks"].as_array().unwrap().len(), 3);
     assert_eq!(report["checks"][0]["status"], "grounded");
     assert_eq!(report["checks"][0]["match_method"], "normalized_text");
-    assert_eq!(report["checks"][1]["status"], "mismatch");
+    assert_eq!(report["checks"][1]["status"], "grounded");
+    assert_eq!(report["checks"][1]["match_method"], "table_cell_lookup");
+    assert_eq!(report["checks"][2]["status"], "mismatch");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 
@@ -226,6 +228,118 @@ fn max_checks_overflow_is_usage_error() {
 }
 
 #[test]
+fn value_claim_verifies_against_native_ethos_text() {
+    let doc = document_example();
+    let citations = temp_json(
+        "value-citations",
+        r#"{
+          "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+          "claims": [
+            {
+              "kind": "value",
+              "text": "$12.4M",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(report["checks"][0]["match_method"], "normalized_text");
+    assert_eq!(report["unsupported_claim_kinds"], serde_json::json!([]));
+    assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn table_cell_claim_verifies_against_native_ethos_table() {
+    let doc = document_example();
+    let citations = temp_json(
+        "table-cell-citations",
+        r#"{
+          "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+          "claims": [
+            {
+              "kind": "table_cell",
+              "text": "$12.4M",
+              "citation": {
+                "table_id": "t0001",
+                "cell": {
+                  "row": 1,
+                  "col": 1
+                }
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(report["checks"][0]["match_method"], "table_cell_lookup");
+    assert_eq!(report["checks"][0]["evidence"]["text"], "$12.4M");
+    assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn table_cell_mismatch_and_missing_cell_fail_gate() {
+    let doc = document_example();
+    let citations = temp_json(
+        "table-cell-negative-citations",
+        r#"{
+          "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+          "claims": [
+            {
+              "kind": "table_cell",
+              "text": "$99M",
+              "citation": {
+                "table_id": "t0001",
+                "cell": {
+                  "row": 1,
+                  "col": 1
+                }
+              }
+            },
+            {
+              "kind": "table_cell",
+              "text": "$12.4M",
+              "citation": {
+                "table_id": "t0001",
+                "cell": {
+                  "row": 9,
+                  "col": 9
+                }
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "mismatch");
+    assert_eq!(report["checks"][0]["match_method"], "table_cell_lookup");
+    assert_eq!(report["checks"][1]["status"], "not_found");
+    assert_eq!(report["all_evidence_grounded"], false);
+}
+
+#[test]
 fn quote_without_text_is_usage_error() {
     let doc = document_example();
     let citations = temp_json(
@@ -249,7 +363,132 @@ fn quote_without_text_is_usage_error() {
     ]);
 
     assert_eq!(output.status.code(), Some(2));
-    assert!(String::from_utf8_lossy(&output.stderr).contains("quote text must be non-empty"));
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("text must be non-empty for quote, value, and table_cell"));
+}
+
+#[test]
+fn value_without_text_is_usage_error() {
+    let doc = document_example();
+    let citations = temp_json(
+        "value-without-text",
+        r#"{
+          "claims": [
+            {
+              "kind": "value",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+    let output = run_ethos(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("text must be non-empty for quote, value, and table_cell"));
+}
+
+#[test]
+fn table_cell_is_capability_blocked_when_tables_are_missing() {
+    let grounding = odl_example();
+    let citations = temp_json(
+        "table-cell-no-tables",
+        r#"{
+          "claims": [
+            {
+              "kind": "table_cell",
+              "text": "$12.4M",
+              "citation": {
+                "table_id": "t0001",
+                "cell": {
+                  "row": 1,
+                  "col": 1
+                }
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "capability_blocked");
+    assert_eq!(
+        report["checks"][0]["warnings"],
+        serde_json::json!(["capability_limited"])
+    );
+    assert_eq!(report["all_evidence_grounded"], false);
+}
+
+#[test]
+fn config_excluded_value_claim_is_unsupported() {
+    let doc = document_example();
+    let config = temp_json(
+        "quote-presence-only-config",
+        r#"{
+          "schema_version": "1.0.0",
+          "config_version": "quote-presence-only",
+          "claim_kinds": ["quote", "presence"],
+          "matching": {
+            "text_normalization": "collapse_whitespace",
+            "case_sensitive": true,
+            "bbox_containment_tolerance_q": 50
+          },
+          "staleness": {
+            "require_fingerprint_match": true
+          },
+          "limits": {
+            "max_checks": 256
+          },
+          "evidence": {
+            "include_text": true,
+            "include_crops": false
+          }
+        }"#,
+    );
+    let citations = temp_json(
+        "excluded-value",
+        r#"{
+          "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+          "claims": [
+            {
+              "kind": "value",
+              "text": "$12.4M",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "unsupported_claim_kind");
+    assert_eq!(
+        report["unsupported_claim_kinds"],
+        serde_json::json!(["value"])
+    );
+    assert_eq!(report["all_evidence_grounded"], false);
 }
 
 #[test]

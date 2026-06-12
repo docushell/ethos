@@ -14,9 +14,9 @@ The repository is still pre-alpha, but it is no longer only contract/scaffold co
 - `ethos doc parse` / `ethos fingerprint` PDF execution through a worker process with `max_parse_ms` timeout enforcement, stable error-envelope relay, diagnostics-gated worker stderr, and page-range validation/filtering.
 - Quantized page/span extraction at the backend boundary, plus a basic deterministic layout pass that assembles paragraph `text_block` elements and simple column reading order for the current born-digital fixtures.
 - Schema/example/profile validation is green through `schemas/validate_examples.py` using `jsonschema` draft 2020-12 validation, including referential-integrity and bbox sanity checks outside JSON Schema.
-- `ethos verify` now produces non-empty quote/presence verification checks over native Ethos document JSON and synthetic OpenDataLoader-style JSON through `--grounding opendataloader-json`.
+- `ethos verify` now produces non-empty quote, value, presence, and table-cell verification checks over native Ethos document JSON and synthetic OpenDataLoader-style JSON through `--grounding opendataloader-json`.
 
-Still absent or not claimable: frozen Gate Zero corpus/hardware records, reproducible benchmark result JSON, competitor pins/comparisons, public speed/quality/footprint claims, OCR/image-only support, table/list/heading semantics, value/table/semantic verification, Phase 2 project-maintained PDFium builds, release packaging, and multi-platform determinism evidence.
+Still absent or not claimable: frozen Gate Zero corpus/hardware records, reproducible benchmark result JSON, competitor pins/comparisons, public speed/quality/footprint claims, OCR/image-only support, table/list/heading semantics, semantic verification beyond deterministic evidence lookup, Phase 2 project-maintained PDFium builds, release packaging, and multi-platform determinism evidence.
 
 ## Human / External Blockers
 
@@ -40,7 +40,7 @@ WS-VERIFY-ALPHA is now the active lane. The first slice is implemented; the cita
 | Layout groundwork | Landed: basic paragraph text blocks and simple column reading order over quantized spans | Tables, headings, lists, rotation/quirk handling, and confidence policy remain future work |
 | Font policy groundwork | Partially landed: substitution table and profile policy are present; fixture output uses deterministic substitution IDs | Bundled fallback asset hashing and broader font/CID validation remain open |
 | Schema/example validation | Landed: schemas, examples, deterministic profile, referential integrity, and bbox sanity pass the `jsonschema` validation gate | Contract changes still require explicit versioning and compatibility review |
-| Trust-layer implementation | Landed: `ethos verify` quote/presence checks, stale fingerprint handling, unsupported claim reporting, capability-limited warnings, native Ethos JSON path, ODL-style adapter path, citation input schema, and demo fixtures | Still needed: pinned real ODL output fixture, value/table verification, crop-aware evidence, and broader adapter hardening |
+| Trust-layer implementation | Landed: `ethos verify` quote/value/presence/table-cell checks, stale fingerprint handling, unsupported claim reporting, capability-limited warnings, native Ethos JSON path, ODL-style adapter path, citation input schema, and demo fixtures | Still needed: pinned real ODL output fixture, crop-aware evidence, and broader adapter hardening |
 
 ## PM Rule
 

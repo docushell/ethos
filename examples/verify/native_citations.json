@@ -10,6 +10,17 @@
       }
     },
     {
+      "kind": "table_cell",
+      "text": "$12.4M",
+      "citation": {
+        "table_id": "t0001",
+        "cell": {
+          "row": 1,
+          "col": 1
+        }
+      }
+    },
+    {
       "kind": "quote",
       "text": "Operating margin was 99%",
       "citation": {
