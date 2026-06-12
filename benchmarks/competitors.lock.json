@@ -10,7 +10,8 @@
     "pinning": "Benchmark owner pins exact versions + artifact hashes on the benchmark hosts before Gate Zero (plan row 0.8). Harness refuses to run gating jobs while any gate_zero entry has pinned=false.",
     "crashes": "Competitor crashes/timeouts are recorded as data, never patched around (PRD 11.3).",
     "rerun": "Reference competitors are re-measured after their major releases; published tables always state versions and dates.",
-    "artifact_hash": "artifact_sha256 must be the lowercase SHA256 of the exact package, binary, jar, wheel, or source archive executed by the benchmark harness. Repository commit hashes are not substitutes unless the source archive is the executed artifact."
+    "artifact_hash": "artifact_sha256 must be the lowercase SHA256 of the exact package, binary, jar, wheel, or source archive executed by the benchmark harness. Repository commit hashes are not substitutes unless the source archive is the executed artifact.",
+    "platform_artifacts": "When a competitor publishes platform-specific artifacts, platform_artifacts records the exact artifact selected for each Gate Zero host platform while artifact_sha256 remains the backward-compatible default."
   },
   "pinning_requirements": [
     "Record exact version for each Gate Zero competitor.",
@@ -46,6 +47,20 @@
       "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
       "artifact_filename": "edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl",
       "artifact_url": "https://files.pythonhosted.org/packages/85/26/0fcb829043ea9de9b5e4771294a027dca47fdf7b4cb7211f6035092d1082/edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl",
+      "platform_artifacts": {
+        "macos-arm64": {
+          "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
+          "artifact_filename": "edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl",
+          "artifact_sha256": "82a6fdd81f2bfac4a3b8aedd06e055ae67ec8a2d1c879fb6327259caa13f5a69",
+          "artifact_url": "https://files.pythonhosted.org/packages/85/26/0fcb829043ea9de9b5e4771294a027dca47fdf7b4cb7211f6035092d1082/edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl"
+        },
+        "linux-x64": {
+          "artifact_kind": "PyPI manylinux x86_64 cp312 wheel selected from PyPI JSON metadata",
+          "artifact_filename": "edgeparse-0.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "artifact_sha256": "77c6e82556cccd02e84b96149a98416559dde7456b1cbe83ac92dc9429531e38",
+          "artifact_url": "https://files.pythonhosted.org/packages/93/28/ba43e51eb931435b338dfbf3444977ba72b4dfbb4e674b31c70879ca70c8/edgeparse-0.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+        }
+      },
       "pin_status": "pinned",
       "pinned": true,
       "pinned_at": "2026-06-12T08:17:02Z",
@@ -62,6 +77,20 @@
       "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
       "artifact_filename": "liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl",
       "artifact_url": "https://files.pythonhosted.org/packages/8c/c9/d33d5baaedf0a753c6729ec5e2bc62f6bcf453986c071ef3ceba485bd922/liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl",
+      "platform_artifacts": {
+        "macos-arm64": {
+          "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
+          "artifact_filename": "liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl",
+          "artifact_sha256": "1486987ef620cec06b8dfc365505f15cd5cd4bb05dac3775d260633df7060779",
+          "artifact_url": "https://files.pythonhosted.org/packages/8c/c9/d33d5baaedf0a753c6729ec5e2bc62f6bcf453986c071ef3ceba485bd922/liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl"
+        },
+        "linux-x64": {
+          "artifact_kind": "PyPI manylinux x86_64 cp312 wheel selected from PyPI JSON metadata",
+          "artifact_filename": "liteparse-2.0.8-cp312-cp312-manylinux_2_28_x86_64.whl",
+          "artifact_sha256": "e3a94b83bc0d22b9b6c2a6b1669447114949b19d8fc3d2877aa2e60cf3e1bd6b",
+          "artifact_url": "https://files.pythonhosted.org/packages/70/a6/95b5ca961598e77879e9f3954b6274290ae77d29fb97e0abc6eee0fd5a35/liteparse-2.0.8-cp312-cp312-manylinux_2_28_x86_64.whl"
+        }
+      },
       "pin_status": "pinned",
       "pinned": true,
       "pinned_at": "2026-06-12T08:17:02Z",
@@ -78,6 +107,7 @@
       "artifact_kind": "PyPI universal wheel downloaded and SHA256-verified on the benchmark owner host",
       "artifact_filename": "pymupdf4llm-1.27.2.3-py3-none-any.whl",
       "artifact_url": "https://files.pythonhosted.org/packages/e6/38/84bf29f4dd72e6c450546df6ca8f53021f764fd945ba67dcc235d39bc20e/pymupdf4llm-1.27.2.3-py3-none-any.whl",
+      "dependency_artifacts_platform": "macos-arm64",
       "dependency_artifacts": [
         {
           "package": "PyMuPDF",
@@ -140,6 +170,80 @@
           "artifact_sha256": "24f857477359a85c0c235261b8ba905fd51b2562f4a64ca1df5473f29850cbf6"
         }
       ],
+      "platform_dependency_artifacts": {
+        "linux-x64": [
+          {
+            "package": "PyMuPDF",
+            "version": "1.27.2.3",
+            "artifact_filename": "pymupdf-1.27.2.3-cp310-abi3-manylinux_2_28_x86_64.whl",
+            "artifact_sha256": "857842b4888827bd6155a1131341b2822a7ebe9a8c15a975fd7d490d7a64a30c",
+            "artifact_url": "https://files.pythonhosted.org/packages/e4/a0/aa1ee2240f29481a04a827c313333b4ecd8a14d6ac3e15d3f41a30574781/pymupdf-1.27.2.3-cp310-abi3-manylinux_2_28_x86_64.whl"
+          },
+          {
+            "package": "pymupdf-layout",
+            "version": "1.27.2.3",
+            "artifact_filename": "pymupdf_layout-1.27.2.3-cp310-abi3-manylinux_2_28_x86_64.whl",
+            "artifact_sha256": "303b9414216dfaf711ec7d807b6f1e4c3e0a92bbb4569340fcedd9d5593d16ca",
+            "artifact_url": "https://files.pythonhosted.org/packages/32/e9/7ce6eaf97cebd46c3808593282e9eb99a60cddd6183e25a636980d5c7986/pymupdf_layout-1.27.2.3-cp310-abi3-manylinux_2_28_x86_64.whl"
+          },
+          {
+            "package": "PyYAML",
+            "version": "6.0.3",
+            "artifact_filename": "pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+            "artifact_sha256": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+            "artifact_url": "https://files.pythonhosted.org/packages/8b/9d/b3589d3877982d4f2329302ef98a8026e7f4443c765c46cfecc8858c6b4b/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+          },
+          {
+            "package": "numpy",
+            "version": "2.4.6",
+            "artifact_filename": "numpy-2.4.6-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+            "artifact_sha256": "90f9849678c75fe7afa2d348ac842c168b0a4d3d61919687216dfc547976d853",
+            "artifact_url": "https://files.pythonhosted.org/packages/99/60/14115e6364fa676c5397c2ad3004e527e9aa487abf5d0706ec81bbd08529/numpy-2.4.6-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+          },
+          {
+            "package": "onnxruntime",
+            "version": "1.26.0",
+            "artifact_filename": "onnxruntime-1.26.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+            "artifact_sha256": "9b6dd70599005bd1bf29779f04a91978b92b5e719c11a20068a8f8e535f725b6",
+            "artifact_url": "https://files.pythonhosted.org/packages/7c/43/2a4e04f8dbeffad19bbcced4bcd4289bf478921518437404d6b92bdf213b/onnxruntime-1.26.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+          },
+          {
+            "package": "networkx",
+            "version": "3.6.1",
+            "artifact_filename": "networkx-3.6.1-py3-none-any.whl",
+            "artifact_sha256": "d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762",
+            "artifact_url": "https://files.pythonhosted.org/packages/9e/c9/b2622292ea83fbb4ec318f5b9ab867d0a28ab43c5717bb85b0a5f6b3b0a4/networkx-3.6.1-py3-none-any.whl"
+          },
+          {
+            "package": "tabulate",
+            "version": "0.10.0",
+            "artifact_filename": "tabulate-0.10.0-py3-none-any.whl",
+            "artifact_sha256": "f0b0622e567335c8fabaaa659f1b33bcb6ddfe2e496071b743aa113f8774f2d3",
+            "artifact_url": "https://files.pythonhosted.org/packages/99/55/db07de81b5c630da5cbf5c7df646580ca26dfaefa593667fc6f2fe016d2e/tabulate-0.10.0-py3-none-any.whl"
+          },
+          {
+            "package": "flatbuffers",
+            "version": "25.12.19",
+            "artifact_filename": "flatbuffers-25.12.19-py2.py3-none-any.whl",
+            "artifact_sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4",
+            "artifact_url": "https://files.pythonhosted.org/packages/e8/2d/d2a548598be01649e2d46231d151a6c56d10b964d94043a335ae56ea2d92/flatbuffers-25.12.19-py2.py3-none-any.whl"
+          },
+          {
+            "package": "packaging",
+            "version": "26.2",
+            "artifact_filename": "packaging-26.2-py3-none-any.whl",
+            "artifact_sha256": "5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e",
+            "artifact_url": "https://files.pythonhosted.org/packages/df/b2/87e62e8c3e2f4b32e5fe99e0b86d576da1312593b39f47d8ceef365e95ed/packaging-26.2-py3-none-any.whl"
+          },
+          {
+            "package": "protobuf",
+            "version": "7.35.1",
+            "artifact_filename": "protobuf-7.35.1-cp310-abi3-manylinux2014_x86_64.whl",
+            "artifact_sha256": "74758715c53d7158fb76caf4f0cfdacc5329a4b1bb994f865d6cf302d413a1c4",
+            "artifact_url": "https://files.pythonhosted.org/packages/e4/be/5b3cfe508bfab6761414ff944e3366eb13be4fd71efcd69450f89ba39f43/protobuf-7.35.1-cp310-abi3-manylinux2014_x86_64.whl"
+          }
+        ]
+      },
       "pin_status": "pinned",
       "pinned": true,
       "pinned_at": "2026-06-12T08:17:02Z",

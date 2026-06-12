@@ -564,6 +564,128 @@ class GateZeroReadinessTests(unittest.TestCase):
             adapter["blockers"],
         )
 
+    def test_lock_artifact_hash_prefers_requested_platform_artifact(self) -> None:
+        lock_entry = {
+            "artifact_sha256": "a" * 64,
+            "platform_artifacts": {
+                "macos-arm64": {
+                    "artifact_filename": "package-macos.whl",
+                    "artifact_sha256": "b" * 64,
+                },
+                "linux-x64": {
+                    "artifact_filename": "package-linux.whl",
+                    "artifact_sha256": "c" * 64,
+                },
+            },
+        }
+
+        self.assertEqual(run_gate_zero.lock_artifact_hash(lock_entry, "macos-arm64"), "b" * 64)
+        self.assertEqual(run_gate_zero.lock_artifact_hash(lock_entry, "linux-x64"), "c" * 64)
+        self.assertEqual(run_gate_zero.lock_artifact_hash(lock_entry, "windows-x64"), "a" * 64)
+
+    def test_competitor_adapter_uses_selected_platform_artifact_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            command = fake_edgeparse(root)
+            artifact = root / "edgeparse-0.2.5-linux.whl"
+            artifact.write_bytes(b"linux artifact")
+            artifact_sha256 = run_gate_zero.sha256_file(artifact)
+            install_path = root / "venv"
+            install_path.mkdir()
+            lock_entry = {
+                "id": "edgeparse",
+                "version": "0.2.5",
+                "artifact_sha256": "a" * 64,
+                "pinned": True,
+                "platform_artifacts": {
+                    "macos-arm64": {
+                        "artifact_filename": "edgeparse-0.2.5-macos.whl",
+                        "artifact_sha256": "b" * 64,
+                    },
+                    "linux-x64": {
+                        "artifact_filename": artifact.name,
+                        "artifact_sha256": artifact_sha256,
+                    },
+                },
+            }
+
+            adapter = run_gate_zero.build_competitor_adapter(
+                "edgeparse",
+                command,
+                artifact,
+                install_path,
+                lock_entry,
+                "linux-x64",
+            )
+
+        self.assertEqual(adapter["status"], "ready")
+        self.assertEqual(adapter["artifact"]["sha256"], artifact_sha256)
+        self.assertEqual(adapter["artifact"]["expected_sha256"], artifact_sha256)
+
+    def test_result_report_selects_artifact_hash_from_selected_host_platform(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            profile = root / "profile.json"
+            profile.write_text("{}", encoding="utf-8")
+            manifest_path = frozen_manifest(root)
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["hardware"][0]["id"] = "linux-x64-1"
+            manifest["hardware"][0]["platform"] = "linux-x64"
+            write_json(manifest_path, manifest)
+            competitors_path = frozen_competitors(root)
+            ethos_bin = fake_ethos(root)
+            edgeparse_command = fake_edgeparse(root)
+            edgeparse_artifact = root / "edgeparse-0.2.5-linux.whl"
+            edgeparse_artifact.write_bytes(b"linux artifact")
+            linux_sha256 = run_gate_zero.sha256_file(edgeparse_artifact)
+            lock = json.loads(competitors_path.read_text(encoding="utf-8"))
+            edgeparse_entry = next(entry for entry in lock["gate_zero"] if entry["id"] == "edgeparse")
+            edgeparse_entry["platform_artifacts"] = {
+                "macos-arm64": {
+                    "artifact_filename": "edgeparse-0.2.5-macos.whl",
+                    "artifact_sha256": "b" * 64,
+                },
+                "linux-x64": {
+                    "artifact_filename": edgeparse_artifact.name,
+                    "artifact_sha256": linux_sha256,
+                },
+            }
+            write_json(competitors_path, lock)
+            args = result_args(root, manifest_path, competitors_path, ethos_bin, profile)
+            args.host_id = "linux-x64-1"
+            args.edgeparse_command = edgeparse_command
+            args.edgeparse_artifact = edgeparse_artifact
+            args.edgeparse_install_path = root
+
+            report = run_gate_zero.build_result_report(args)
+
+        adapters = {adapter["id"]: adapter for adapter in report["competitors"]["adapters"]}
+        self.assertEqual(report["status"], "pass")
+        self.assertEqual(adapters["edgeparse"]["status"], "ready")
+        self.assertEqual(adapters["edgeparse"]["artifact"]["expected_sha256"], linux_sha256)
+
+    def test_check_competitors_validates_platform_artifact_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = json.loads(frozen_competitors(Path(tmp)).read_text(encoding="utf-8"))
+            lock["gate_zero"][1]["platform_artifacts"] = {
+                "linux-x64": {
+                    "artifact_filename": "",
+                    "artifact_sha256": "not-a-sha",
+                }
+            }
+
+            blockers = run_gate_zero.check_competitors(lock)
+
+        self.assertIn(
+            "competitor edgeparse platform_artifacts.linux-x64 "
+            "artifact_sha256 is not lowercase hex",
+            blockers,
+        )
+        self.assertIn(
+            "competitor edgeparse platform_artifacts.linux-x64 missing artifact_filename",
+            blockers,
+        )
+
     def test_frozen_inputs_execute_opendataloader_competitor(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

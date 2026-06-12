@@ -337,6 +337,31 @@ def check_competitors(lock: dict[str, Any]) -> list[str]:
         sha = str(entry.get("artifact_sha256", ""))
         if not HEX64.fullmatch(sha):
             blockers.append(f"competitor {competitor_id} artifact_sha256 is not lowercase hex")
+        platform_artifacts = entry.get("platform_artifacts")
+        if platform_artifacts is not None:
+            if not isinstance(platform_artifacts, dict) or not platform_artifacts:
+                blockers.append(
+                    f"competitor {competitor_id} platform_artifacts is not a non-empty object"
+                )
+            else:
+                for platform_key, artifact in sorted(platform_artifacts.items()):
+                    if not isinstance(artifact, dict):
+                        blockers.append(
+                            f"competitor {competitor_id} platform_artifacts.{platform_key} "
+                            "is not an object"
+                        )
+                        continue
+                    platform_sha = str(artifact.get("artifact_sha256", ""))
+                    if not HEX64.fullmatch(platform_sha):
+                        blockers.append(
+                            f"competitor {competitor_id} platform_artifacts.{platform_key} "
+                            "artifact_sha256 is not lowercase hex"
+                        )
+                    if not is_filled(artifact.get("artifact_filename")):
+                        blockers.append(
+                            f"competitor {competitor_id} platform_artifacts.{platform_key} "
+                            "missing artifact_filename"
+                        )
         if "jvm_version" in entry and not is_filled(entry.get("jvm_version")):
             blockers.append(f"competitor {competitor_id} missing jvm_version")
         if "python_version" in entry and not is_filled(entry.get("python_version")):
@@ -597,10 +622,30 @@ def opendataloader_lock_entry(lock: dict[str, Any]) -> dict[str, Any] | None:
     return competitor_lock_entry(lock, "opendataloader-pdf")
 
 
-def lock_artifact_hash(lock_entry: dict[str, Any] | None) -> str | None:
+def lock_artifact_record(
+    lock_entry: dict[str, Any] | None,
+    platform_key: str | None,
+) -> dict[str, Any] | None:
     if lock_entry is None:
         return None
-    value = lock_entry.get("artifact_sha256")
+    platform_artifacts = lock_entry.get("platform_artifacts")
+    if platform_key and isinstance(platform_artifacts, dict):
+        record = platform_artifacts.get(platform_key)
+        if isinstance(record, dict):
+            return record
+    return lock_entry
+
+
+def lock_artifact_hash(
+    lock_entry: dict[str, Any] | None,
+    platform_key: str | None = None,
+) -> str | None:
+    if lock_entry is None:
+        return None
+    record = lock_artifact_record(lock_entry, platform_key)
+    if record is None:
+        return None
+    value = record.get("artifact_sha256")
     return value if isinstance(value, str) and HEX64.fullmatch(value) else None
 
 
@@ -662,6 +707,7 @@ def build_competitor_adapter(
     artifact_path: Path | None,
     install_path: Path | None,
     lock_entry: dict[str, Any] | None,
+    platform_key: str | None = None,
 ) -> dict[str, Any]:
     blockers: list[str] = []
     notes: list[str] = []
@@ -677,7 +723,7 @@ def build_competitor_adapter(
             blockers.append(f"{competitor_id} version is missing")
         if not is_filled(lock_entry.get("artifact_sha256")):
             blockers.append(f"{competitor_id} artifact_sha256 is missing")
-    expected_artifact_sha256 = lock_artifact_hash(lock_entry)
+    expected_artifact_sha256 = lock_artifact_hash(lock_entry, platform_key)
     if command_path is None:
         notes.append(f"command not configured; Ethos-only result mode does not execute {competitor_id}")
     elif not command_path.is_file():
@@ -1019,6 +1065,7 @@ def build_result_report(args: argparse.Namespace) -> dict[str, Any]:
         result_blockers.append("ethos binary is missing")
     if readiness["status"] != "ready":
         result_blockers.append("Gate Zero readiness is blocked")
+    artifact_platform = host.get("platform") if isinstance(host, dict) else current_platform_key()
 
     competitor_commands: dict[str, Path | None] = {}
     competitor_adapters: list[dict[str, Any]] = []
@@ -1031,6 +1078,7 @@ def build_result_report(args: argparse.Namespace) -> dict[str, Any]:
             artifact_path,
             install_path,
             competitor_lock_entry(competitors, competitor_id),
+            artifact_platform,
         )
         competitor_adapters.append(adapter)
         if command_path is not None and adapter["status"] == "blocked":

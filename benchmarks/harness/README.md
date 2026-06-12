@@ -50,6 +50,11 @@ competitor-lock hashes plus actionable blockers. The target exits non-zero until
 
 - `benchmarks/gate-zero/manifest.json` is frozen and signed.
 - `benchmarks/competitors.lock.json` pins ODL, EdgeParse, LiteParse, and PyMuPDF4LLM.
+  Platform-specific wheels are recorded under `platform_artifacts`; the harness selects the
+  artifact hash for the selected host platform and falls back to `artifact_sha256` only when no
+  platform-specific record exists. PyMuPDF4LLM Linux transitive wheels are recorded under
+  `platform_dependency_artifacts.linux-x64` because the top-level wheel is universal but the
+  installed dependency set is not.
 - Gate Zero hosts provide the pinned PDFium runtime.
 
 When readiness is green, the target still exits non-zero until the G1/G2/G3 measurement runner is
