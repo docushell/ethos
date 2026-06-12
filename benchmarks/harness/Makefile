@@ -13,6 +13,10 @@ GATE_ZERO_REPRODUCTION_COMMAND ?=
 GATE_ZERO_REPRODUCTION_COMMAND_FILE ?=
 GATE_ZERO_REPRODUCTION_ENV_FILE ?=
 GATE_ZERO_BENCHMARK_COMMIT ?=
+GATE_ZERO_G2_RESULT_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/$(GATE_ZERO_PLATFORM)/g2.json
+GATE_ZERO_ETHOS_FOOTPRINT ?=
+GATE_ZERO_PDFIUM_LIBRARY_PATH ?=
+GATE_ZERO_PDFIUM_ARTIFACT ?=
 OPENDATALOADER_ROOT ?=
 OPENDATALOADER_COMMAND ?=
 OPENDATALOADER_ARTIFACT ?=
@@ -28,7 +32,7 @@ PYMUPDF4LLM_ARTIFACT ?=
 PYMUPDF4LLM_INSTALL_PATH ?=
 ITERATIONS ?= 3
 
-.PHONY: bench fixtures gate-zero-evidence gate-zero-readiness gate-zero-results smoke test
+.PHONY: bench fixtures gate-zero-evidence gate-zero-g2 gate-zero-readiness gate-zero-results smoke test
 
 $(ETHOS_BIN):
 	cd $(ROOT) && cargo build --locked --release -p ethos-cli
@@ -70,6 +74,18 @@ gate-zero-results: $(ETHOS_BIN)
 		$(if $(PYMUPDF4LLM_INSTALL_PATH),--pymupdf4llm-install-path $(PYMUPDF4LLM_INSTALL_PATH),) \
 		--out $(GATE_ZERO_RESULT_REPORT)
 
+gate-zero-g2:
+	mkdir -p $(dir $(GATE_ZERO_G2_RESULT_REPORT))
+	python3 run_gate_zero_g2.py \
+		--repo-root $(ROOT) \
+		--platform $(GATE_ZERO_PLATFORM) \
+		$(if $(GATE_ZERO_ETHOS_FOOTPRINT),$(foreach item,$(GATE_ZERO_ETHOS_FOOTPRINT),--ethos-footprint $(item)),) \
+		--opendataloader-install-path $(OPENDATALOADER_INSTALL_PATH) \
+		$(if $(OPENDATALOADER_ARTIFACT),--opendataloader-artifact $(OPENDATALOADER_ARTIFACT),) \
+		$(if $(GATE_ZERO_PDFIUM_LIBRARY_PATH),--pdfium-library-path $(GATE_ZERO_PDFIUM_LIBRARY_PATH),) \
+		$(if $(GATE_ZERO_PDFIUM_ARTIFACT),--pdfium-artifact $(GATE_ZERO_PDFIUM_ARTIFACT),) \
+		--out $(GATE_ZERO_G2_RESULT_REPORT)
+
 gate-zero-evidence:
 	python3 build_gate_zero_evidence.py \
 		--repo-root $(ROOT) \
@@ -88,9 +104,11 @@ bench: gate-zero-results
 smoke:
 	python3 run_fixtures.py --help >/dev/null
 	python3 run_gate_zero.py --help >/dev/null
+	python3 run_gate_zero_g2.py --help >/dev/null
 	python3 build_gate_zero_evidence.py --help >/dev/null
 
 test:
 	python3 test_run_gate_zero.py
+	python3 test_run_gate_zero_g2.py
 	python3 test_gate_zero_evidence.py
 	python3 test_gate_zero_gates.py

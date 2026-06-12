@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:benchmarks:gate-zero-g2-result:1",
+  "title": "Ethos Gate Zero G2 footprint result",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "gate",
+    "status",
+    "platform",
+    "corpus",
+    "definition",
+    "host",
+    "inputs",
+    "measurements",
+    "evaluation",
+    "blockers",
+    "failures",
+    "summary"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "ethos-gate-zero-g2-result-v1" },
+    "gate": { "const": "g2" },
+    "status": { "enum": ["blocked", "pass", "fail"] },
+    "platform": { "type": "string" },
+    "corpus": {
+      "type": "object",
+      "required": ["id", "manifest", "manifest_sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "manifest": { "type": "string" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "definition": {
+      "type": "object",
+      "required": ["gates", "definition_sha256", "gate_status", "thresholds", "measurement_scope"],
+      "additionalProperties": true,
+      "properties": {
+        "gates": { "type": "string" },
+        "definition_sha256": { "$ref": "#/$defs/sha256" },
+        "gate_status": { "type": "string" },
+        "thresholds": { "type": "object" },
+        "measurement_scope": { "type": "object" }
+      }
+    },
+    "host": { "type": "object" },
+    "inputs": {
+      "type": "object",
+      "required": [
+        "competitors_lock",
+        "competitors_lock_sha256",
+        "deterministic_profile",
+        "deterministic_profile_sha256",
+        "gates",
+        "gates_sha256",
+        "manifest",
+        "manifest_sha256"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "competitors_lock": { "type": "string" },
+        "competitors_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "deterministic_profile": { "type": "string" },
+        "deterministic_profile_sha256": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "gates": { "type": "string" },
+        "gates_sha256": { "$ref": "#/$defs/sha256" },
+        "manifest": { "type": "string" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "measurements": {
+      "type": "object",
+      "required": ["ethos", "opendataloader-pdf", "pdfium"],
+      "additionalProperties": false,
+      "properties": {
+        "ethos": {
+          "type": "object",
+          "required": ["install_size_bytes", "items"],
+          "additionalProperties": false,
+          "properties": {
+            "install_size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+            "items": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/path_measurement" }
+            }
+          }
+        },
+        "opendataloader-pdf": {
+          "type": "object",
+          "required": ["install_size_bytes", "install_path", "artifact"],
+          "additionalProperties": false,
+          "properties": {
+            "install_size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+            "install_path": { "$ref": "#/$defs/path_measurement" },
+            "artifact": {
+              "anyOf": [{ "$ref": "#/$defs/artifact_measurement" }, { "type": "null" }]
+            }
+          }
+        },
+        "pdfium": {
+          "type": "object",
+          "required": ["policy", "platform_artifact", "library", "artifact"],
+          "additionalProperties": false,
+          "properties": {
+            "policy": { "type": "object" },
+            "platform_artifact": { "type": "object" },
+            "library": {
+              "anyOf": [{ "$ref": "#/$defs/artifact_measurement" }, { "type": "null" }]
+            },
+            "artifact": {
+              "anyOf": [{ "$ref": "#/$defs/artifact_measurement" }, { "type": "null" }]
+            }
+          }
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "required": ["status", "blockers", "failures"],
+      "additionalProperties": true,
+      "properties": {
+        "status": { "enum": ["blocked", "pass", "fail"] },
+        "blockers": { "type": "array", "items": { "type": "string" } },
+        "failures": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "failures": { "type": "array", "items": { "type": "string" } },
+    "summary": {
+      "type": "object",
+      "required": [
+        "status",
+        "ethos_install_size_bytes",
+        "opendataloader_install_size_bytes",
+        "ethos_to_opendataloader_ratio",
+        "max_install_size_bytes",
+        "opendataloader_ratio_max",
+        "pdfium_v8_enabled",
+        "pdfium_xfa_enabled"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "enum": ["blocked", "pass", "fail"] },
+        "ethos_install_size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "opendataloader_install_size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "ethos_to_opendataloader_ratio": { "type": ["number", "null"], "minimum": 0 },
+        "max_install_size_bytes": { "type": "integer", "minimum": 0 },
+        "opendataloader_ratio_max": { "type": "number", "minimum": 0 },
+        "pdfium_v8_enabled": { "type": ["boolean", "null"] },
+        "pdfium_xfa_enabled": { "type": ["boolean", "null"] }
+      }
+    }
+  },
+  "$defs": {
+    "artifact_measurement": {
+      "allOf": [
+        { "$ref": "#/$defs/path_measurement" },
+        {
+          "type": "object",
+          "required": ["expected_sha256", "hash_matches_expected"],
+          "properties": {
+            "expected_sha256": {
+              "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+            },
+            "hash_matches_expected": { "type": ["boolean", "null"] }
+          }
+        }
+      ]
+    },
+    "path_measurement": {
+      "type": "object",
+      "required": ["role", "path", "exists", "path_kind", "size_bytes", "sha256", "tree_sha256"],
+      "additionalProperties": true,
+      "properties": {
+        "role": { "type": "string" },
+        "path": { "type": "string" },
+        "exists": { "type": "boolean" },
+        "path_kind": { "type": ["string", "null"] },
+        "size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "sha256": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "tree_sha256": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        }
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

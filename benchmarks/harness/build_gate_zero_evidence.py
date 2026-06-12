@@ -35,6 +35,21 @@ REQUIRED_RESULT_KEYS = {
     "runs",
     "summary",
 }
+REQUIRED_G2_RESULT_KEYS = {
+    "schema_version",
+    "gate",
+    "status",
+    "platform",
+    "corpus",
+    "definition",
+    "host",
+    "inputs",
+    "measurements",
+    "evaluation",
+    "blockers",
+    "failures",
+    "summary",
+}
 PARSER_LABELS = {
     "ethos": "Ethos",
     "opendataloader-pdf": "OpenDataLoader",
@@ -142,6 +157,13 @@ REPRODUCTION_ENV_VARS = (
         "competitor_id": "pymupdf4llm",
     },
 )
+G2_REPRODUCTION_ENV_VAR_NAMES = {
+    "ETHOS_PDFIUM_LIBRARY_PATH",
+    "ETHOS_PDFIUM_VERSION",
+    "ETHOS_PDFIUM_ARTIFACT_PATH",
+    "ETHOS_OPENDATALOADER_PDF_ARTIFACT",
+    "ETHOS_OPENDATALOADER_PDF_INSTALL_PATH",
+}
 
 
 def utc_timestamp() -> str:
@@ -177,6 +199,13 @@ def load_result(path: Path) -> dict[str, Any]:
 
 
 def validate_result_shape(result: dict[str, Any], path: Path) -> None:
+    if result.get("schema_version") == "ethos-gate-zero-g2-result-v1":
+        missing = sorted(REQUIRED_G2_RESULT_KEYS - set(result))
+        if missing:
+            raise ValueError(f"result JSON is missing required keys in {path}: {', '.join(missing)}")
+        if result.get("gate") != "g2":
+            raise ValueError(f"G2 result JSON must set gate=g2 in {path}")
+        return
     missing = sorted(REQUIRED_RESULT_KEYS - set(result))
     if missing:
         raise ValueError(f"result JSON is missing required keys in {path}: {', '.join(missing)}")
@@ -323,6 +352,8 @@ def parser_rows(result: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
 
 
 def edgeparse_determinism_failures(result: dict[str, Any]) -> list[dict[str, Any]]:
+    if result.get("schema_version") != "ethos-gate-zero-result-v1":
+        return []
     runs = result["competitors"]["runs"].get("edgeparse", [])
     failures: list[dict[str, Any]] = []
     for run in runs:
@@ -340,6 +371,89 @@ def edgeparse_determinism_failures(result: dict[str, Any]) -> list[dict[str, Any
     return failures
 
 
+def build_g2_summary_markdown(
+    result: dict[str, Any],
+    *,
+    platform_key: str,
+    gate: str,
+    source_result: str,
+    raw_result_sha256: str,
+    created_at: str,
+    reproduction_env_status: str | None,
+) -> str:
+    host = result.get("host", {}).get("selected", {})
+    summary = result["summary"]
+    measurements = result["measurements"]
+    ethos_items = measurements["ethos"]["items"]
+    failures = result.get("failures", [])
+    blockers = result.get("blockers", [])
+    ratio = summary.get("ethos_to_opendataloader_ratio")
+    ratio_text = "n/a" if ratio is None else f"{ratio:.4f}"
+    lines = [
+        f"# Gate Zero {gate.upper()} {platform_key} Evidence Summary",
+        "",
+        f"- Source result: `{source_result}`",
+        f"- Source result SHA256: `{raw_result_sha256}`",
+        f"- Generated at: `{created_at}`",
+        f"- Overall status: `{result['status']}`",
+        f"- Host: `{host.get('id', 'unknown')}`",
+        f"- Corpus: `{result['corpus'].get('id', 'unknown')}`",
+        f"- Definition: `{result['definition'].get('gates', 'unknown')}`",
+        f"- Reproduction command: `reproduction-command.txt`",
+        f"- Reproduction env: `reproduction-env.json` (`{reproduction_env_status or 'unknown'}`)",
+        f"- Host attestation: `host-attestation.json`",
+        "",
+        "## Footprint Result",
+        "",
+        "| Subject | Bytes | MiB |",
+        "| --- | ---: | ---: |",
+        f"| Ethos base parser footprint | {summary['ethos_install_size_bytes'] or 'n/a'} | {mib(summary['ethos_install_size_bytes'])} |",
+        f"| OpenDataLoader install footprint | {summary['opendataloader_install_size_bytes'] or 'n/a'} | {mib(summary['opendataloader_install_size_bytes'])} |",
+        "",
+        "## Thresholds",
+        "",
+        f"- Max Ethos footprint: `{summary['max_install_size_bytes']}` bytes",
+        f"- Max Ethos/OpenDataLoader ratio: `{summary['opendataloader_ratio_max']}`",
+        f"- Measured Ethos/OpenDataLoader ratio: `{ratio_text}`",
+        f"- PDFium V8 enabled: `{summary['pdfium_v8_enabled']}`",
+        f"- PDFium XFA enabled: `{summary['pdfium_xfa_enabled']}`",
+        "",
+        "## Ethos Footprint Items",
+        "",
+        "| Role | Path | Bytes | SHA256 |",
+        "| --- | --- | ---: | --- |",
+    ]
+    for item in ethos_items:
+        lines.append(
+            "| "
+            f"{item['role']} | "
+            f"`{item['path']}` | "
+            f"{item['size_bytes'] if item['size_bytes'] is not None else 'n/a'} | "
+            f"{short_hash(item.get('sha256') or item.get('tree_sha256'))} |"
+        )
+
+    if failures:
+        lines.extend(["", "## Failures", ""])
+        for failure in failures:
+            lines.append(f"- {failure}")
+    if blockers:
+        lines.extend(["", "## Blockers", ""])
+        for blocker in blockers:
+            lines.append(f"- {blocker}")
+
+    lines.extend(
+        [
+            "",
+            "## Interpretation Guardrail",
+            "",
+            "G2 is a footprint gate only. It does not measure parser speed, output quality, "
+            "or cross-platform determinism.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def build_summary_markdown(
     result: dict[str, Any],
     *,
@@ -350,6 +464,16 @@ def build_summary_markdown(
     created_at: str,
     reproduction_env_status: str | None,
 ) -> str:
+    if result.get("schema_version") == "ethos-gate-zero-g2-result-v1":
+        return build_g2_summary_markdown(
+            result,
+            platform_key=platform_key,
+            gate=gate,
+            source_result=source_result,
+            raw_result_sha256=raw_result_sha256,
+            created_at=created_at,
+            reproduction_env_status=reproduction_env_status,
+        )
     host = result.get("host", {}).get("selected", {})
     lines = [
         f"# Gate Zero {gate.upper()} {platform_key} Evidence Summary",
@@ -461,6 +585,15 @@ def competitor_expected_hashes(result: dict[str, Any]) -> dict[str, str]:
     return hashes
 
 
+def reproduction_env_specs(result: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    if result.get("schema_version") == "ethos-gate-zero-g2-result-v1":
+        return tuple(
+            spec for spec in REPRODUCTION_ENV_VARS
+            if spec["name"] in G2_REPRODUCTION_ENV_VAR_NAMES
+        )
+    return REPRODUCTION_ENV_VARS
+
+
 def path_metadata(path_value: str, kind: str) -> dict[str, Any]:
     path = Path(path_value)
     exists = path.exists()
@@ -495,7 +628,7 @@ def build_reproduction_env(
     expected_hashes = competitor_expected_hashes(result)
     variables: list[dict[str, Any]] = []
     blockers: list[str] = []
-    for spec in REPRODUCTION_ENV_VARS:
+    for spec in reproduction_env_specs(result):
         name = spec["name"]
         kind = spec["kind"]
         value = environment.get(name)
@@ -686,6 +819,7 @@ def build_evidence_bundle(
         "source_result_status": result["status"],
         "ethos_status": result["summary"]["status"],
         "edgeparse_determinism_failures": edgeparse_determinism_failures(result),
+        "definition_sha256": result.get("definition", {}).get("definition_sha256"),
         "reproduction_env_status": reproduction_env.get("status"),
         "reproduction_env_blockers": reproduction_env.get("blockers", []),
         "benchmark_commit": benchmark_commit,
