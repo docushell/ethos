@@ -86,3 +86,26 @@ The adapter runs:
 
 The result file keeps Ethos runs at top level and records OpenDataLoader evidence under
 `competitors.runs.opendataloader-pdf`.
+
+## Gate Zero Evidence Bundle
+
+After a platform-scoped G1 result is saved, build the sidecar evidence bundle from that JSON:
+
+```sh
+make -C benchmarks/harness gate-zero-evidence \
+  GATE_ZERO_PLATFORM=macos-arm64 \
+  GATE_ZERO_GATE=g1 \
+  GATE_ZERO_REPRODUCTION_COMMAND_FILE=/tmp/ethos-g1-reproduction-command.txt \
+  GATE_ZERO_BENCHMARK_COMMIT=c68389c28535bbab74a1efbe5bd923c8ff4ec341
+```
+
+The reproduction command file must contain the exact command used to create the source
+`g1.json`. The evidence builder writes a timestamped bundle under:
+
+```text
+benchmarks/results/gate-zero/<platform>/evidence/<gate>/<timestamp>/
+```
+
+Each bundle contains the byte-preserved raw result archive, reproduction command,
+host attestation, human-readable summary, checksum manifest, and checksum-manifest
+digest. The digest is not a public-key signature.
