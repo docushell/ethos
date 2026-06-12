@@ -9,6 +9,24 @@ use serde::{Deserialize, Serialize};
 use crate::codes::WarningCode;
 use crate::grounding::{Capabilities, ParserIdentity};
 
+/// Structured capability limitations that caused `capability_limited` warnings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CapabilityLimit {
+    /// Source cannot expose text spans.
+    MissingSpans,
+    /// Source spans do not carry char offsets.
+    MissingCharOffsets,
+    /// Source cannot model tables/cells.
+    MissingTables,
+    /// Source cannot declare a document fingerprint.
+    MissingFingerprint,
+    /// Source coordinate origin is unknown.
+    UnknownCoordinateOrigin,
+    /// Source cannot produce crop references.
+    MissingCropSupport,
+}
+
 /// Claim kinds. `Other` appears only in reports (as an unsupported kind), never in configs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -55,6 +73,10 @@ pub enum MatchMethod {
     ExactText,
     /// Equality after the pinned whitespace normalization (config).
     NormalizedText,
+    /// Byte-exact substring containment, used only for quote evidence inside a larger target.
+    ExactTextContains,
+    /// Substring containment after the pinned whitespace normalization, used only for quotes.
+    NormalizedTextContains,
     /// Table cell lookup by (table id, row, col).
     TableCellLookup,
     /// Citation bbox contained in evidence bbox within pinned tolerance.
@@ -184,6 +206,8 @@ pub struct VerificationReport {
     pub verification_config_sha256: String,
     /// Grounding parser + capabilities.
     pub grounding: GroundingMeta,
+    /// Structured capability gaps that drove any `capability_limited` warning.
+    pub capability_limits: Vec<CapabilityLimit>,
     /// Staleness outcome (citations vs grounding fingerprint).
     pub fingerprint_stale: bool,
     /// The PRD §8 gate — see [`compute_all_evidence_grounded`].

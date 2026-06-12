@@ -1,6 +1,6 @@
 # Ethos Architecture
 
-Governing documents: PRD v3.5 (`docs/DOCUSHELL_ATOM_OSS_PRODUCT_REQUIREMENTS.md`, source of
+Governing documents: PRD v3.5 (`docs/ethos-product-requirements.md`, source of
 truth) and `docs/IMPLEMENTATION_PLAN.md`. Conflicts resolve PRD-first; changes by ADR.
 
 Architectural principle (ADR-0007): Ethos is a verification and grounding layer that includes a

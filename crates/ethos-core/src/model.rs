@@ -390,6 +390,7 @@ impl crate::grounding::GroundingSource for Document {
         crate::grounding::Capabilities {
             spans: true,
             char_offsets: true,
+            tables: true,
             fingerprint: true,
             coordinate_origin: crate::grounding::CoordinateOrigin::TopLeft,
             // crop support arrives with ethos-render (Milestone C/D)

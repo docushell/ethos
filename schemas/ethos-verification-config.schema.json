@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:verification-config:1",
   "title": "Ethos verification config",
-  "description": "Pinned verification behavior. verification_config_sha256 in the report = sha256 over c14n of this object, so two reports are comparable only under the same config hash. v1 match methods are deliberately literal: exact text, whitespace-normalized text, table cell lookup, bbox containment, presence. Nothing fuzzy, nothing semantic.",
+  "description": "Pinned verification behavior. verification_config_sha256 in the report = sha256 over c14n of this object, so two reports are comparable only under the same config hash. v1 match methods are deliberately literal: text equality, explicit quote containment, table cell lookup, bbox containment, presence. Nothing fuzzy, nothing semantic.",
   "type": "object",
   "required": ["schema_version", "config_version", "claim_kinds", "matching", "staleness", "limits"],
   "additionalProperties": false,

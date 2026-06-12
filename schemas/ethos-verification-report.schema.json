@@ -8,6 +8,7 @@
     "schema_version",
     "verification_config_sha256",
     "grounding",
+    "capability_limits",
     "fingerprint_stale",
     "all_evidence_grounded",
     "checks",
@@ -40,11 +41,12 @@
         },
         "capabilities": {
           "type": "object",
-          "required": ["spans", "char_offsets", "fingerprint", "coordinate_origin", "crop_support"],
+          "required": ["spans", "char_offsets", "tables", "fingerprint", "coordinate_origin", "crop_support"],
           "additionalProperties": false,
           "properties": {
             "spans": { "type": "boolean" },
             "char_offsets": { "type": "boolean" },
+            "tables": { "type": "boolean" },
             "fingerprint": { "type": "boolean" },
             "coordinate_origin": { "enum": ["top-left", "bottom-left", "unknown"] },
             "crop_support": { "type": "boolean" }
@@ -55,6 +57,21 @@
     "fingerprint_stale": {
       "type": "boolean",
       "description": "True when the citations were produced against a different document fingerprint than the grounding source presents (staleness check). Stale evidence can never be grounded."
+    },
+    "capability_limits": {
+      "type": "array",
+      "description": "Structured capability gaps that caused any capability_limited warning. Empty when the grounding source declares every capability the active verification config needs.",
+      "items": {
+        "enum": [
+          "missing_spans",
+          "missing_char_offsets",
+          "missing_tables",
+          "missing_fingerprint",
+          "unknown_coordinate_origin",
+          "missing_crop_support"
+        ]
+      },
+      "uniqueItems": true
     },
     "all_evidence_grounded": { "type": "boolean" },
     "checks": {
@@ -100,8 +117,8 @@
             "enum": ["grounded", "not_found", "mismatch", "stale", "unsupported_claim_kind", "capability_blocked", "error"]
           },
           "match_method": {
-            "enum": ["exact_text", "normalized_text", "table_cell_lookup", "bbox_containment", "presence_only", "none"],
-            "description": "How evidence was matched. 'normalized_text' uses ONLY the whitespace rule pinned in the verification config; nothing fuzzier exists in v1."
+            "enum": ["exact_text", "normalized_text", "exact_text_contains", "normalized_text_contains", "table_cell_lookup", "bbox_containment", "presence_only", "none"],
+            "description": "How evidence was matched. Equality methods require the target text to equal the claim text after the configured normalization. '*_contains' methods are explicit substring containment and are used only for quote evidence inside a larger target. 'normalized_text' uses ONLY the whitespace rule pinned in the verification config; nothing fuzzier exists in v1."
           },
           "semantic_unverified": {
             "type": "boolean",
@@ -109,7 +126,7 @@
           },
           "evidence": {
             "type": "object",
-            "description": "What was found at the citation target. crop_ref is an opaque audit pointer emitted only when the verification config requests crops and the GroundingSource declares crop_support.",
+            "description": "What was found at the citation target. Page-only presence checks synthesize bbox as the full page extent. crop_ref is an opaque audit pointer emitted only when the verification config requests crops and the GroundingSource declares crop_support.",
             "additionalProperties": false,
             "properties": {
               "text": { "type": "string" },

@@ -49,6 +49,8 @@ pub struct Capabilities {
     pub spans: bool,
     /// Spans carry char offsets into their owning element text.
     pub char_offsets: bool,
+    /// Source models tables and table cells.
+    pub tables: bool,
     /// Source declares a document fingerprint.
     pub fingerprint: bool,
     /// Declared coordinate origin.
@@ -193,6 +195,7 @@ mod tests {
             Capabilities {
                 spans: false,
                 char_offsets: false,
+                tables: false,
                 fingerprint: false,
                 coordinate_origin: CoordinateOrigin::Unknown,
                 crop_support: false,

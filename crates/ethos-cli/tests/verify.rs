@@ -66,7 +66,10 @@ fn native_ethos_verify_produces_non_empty_checks() {
     assert_eq!(report["fingerprint_stale"], false);
     assert_eq!(report["checks"].as_array().unwrap().len(), 3);
     assert_eq!(report["checks"][0]["status"], "grounded");
-    assert_eq!(report["checks"][0]["match_method"], "normalized_text");
+    assert_eq!(
+        report["checks"][0]["match_method"],
+        "normalized_text_contains"
+    );
     assert_eq!(report["checks"][1]["status"], "grounded");
     assert_eq!(report["checks"][1]["match_method"], "table_cell_lookup");
     assert_eq!(report["checks"][2]["status"], "mismatch");
@@ -99,8 +102,21 @@ fn opendataloader_verify_adapter_produces_capability_aware_report() {
         report["warnings"],
         serde_json::json!(["capability_limited"])
     );
+    assert_eq!(
+        report["capability_limits"],
+        serde_json::json!([
+            "missing_fingerprint",
+            "missing_spans",
+            "missing_char_offsets",
+            "unknown_coordinate_origin"
+        ])
+    );
     assert_eq!(report["checks"].as_array().unwrap().len(), 3);
     assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(
+        report["checks"][0]["match_method"],
+        "normalized_text_contains"
+    );
     assert_eq!(report["checks"][1]["status"], "grounded");
     assert_eq!(report["checks"][1]["match_method"], "table_cell_lookup");
     assert_eq!(report["checks"][1]["evidence"]["text"], "$12.4M");
@@ -709,7 +725,7 @@ fn value_claim_verifies_against_native_ethos_text() {
           "claims": [
             {
               "kind": "value",
-              "text": "$12.4M",
+              "text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.",
               "citation": {
                 "element_id": "e000002"
               }
@@ -728,6 +744,36 @@ fn value_claim_verifies_against_native_ethos_text() {
     assert_eq!(report["checks"][0]["match_method"], "normalized_text");
     assert_eq!(report["unsupported_claim_kinds"], serde_json::json!([]));
     assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn value_substrings_do_not_ground_against_native_ethos_text() {
+    let doc = document_example();
+    let citations = temp_json(
+        "value-substring-citations",
+        r#"{
+          "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+          "claims": [
+            {
+              "kind": "value",
+              "text": "1",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "mismatch");
+    assert_eq!(report["checks"][0]["match_method"], "normalized_text");
+    assert_eq!(report["all_evidence_grounded"], false);
 }
 
 #[test]
@@ -922,6 +968,122 @@ fn table_cell_is_capability_blocked_when_tables_are_missing() {
     ]);
 
     assert_eq!(report["checks"][0]["status"], "capability_blocked");
+    assert_eq!(report["grounding"]["capabilities"]["tables"], false);
+    assert_eq!(
+        report["capability_limits"],
+        serde_json::json!([
+            "missing_fingerprint",
+            "missing_spans",
+            "missing_char_offsets",
+            "missing_tables",
+            "unknown_coordinate_origin"
+        ])
+    );
+    assert_eq!(
+        report["checks"][0]["warnings"],
+        serde_json::json!(["capability_limited"])
+    );
+    assert_eq!(report["all_evidence_grounded"], false);
+}
+
+#[test]
+fn empty_tables_are_not_found_when_table_capability_is_declared() {
+    let grounding = temp_json(
+        "odl-empty-tables",
+        r#"{
+          "tool": {
+            "name": "opendataloader-pdf",
+            "version": "0.0.0-synthetic"
+          },
+          "pages": [
+            {
+              "number": 1,
+              "width": 612.0,
+              "height": 792.0
+            }
+          ],
+          "elements": [],
+          "tables": []
+        }"#,
+    );
+    let citations = temp_json(
+        "table-cell-empty-tables",
+        r#"{
+          "claims": [
+            {
+              "kind": "table_cell",
+              "text": "$12.4M",
+              "citation": {
+                "table_id": "t0001",
+                "cell": {
+                  "row": 1,
+                  "col": 1
+                }
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["grounding"]["capabilities"]["tables"], true);
+    assert_eq!(
+        report["capability_limits"],
+        serde_json::json!([
+            "missing_fingerprint",
+            "missing_spans",
+            "missing_char_offsets",
+            "unknown_coordinate_origin"
+        ])
+    );
+    assert_eq!(report["checks"][0]["status"], "not_found");
+    assert_eq!(report["all_evidence_grounded"], false);
+}
+
+#[test]
+fn foreign_source_without_fingerprint_blocks_fingerprint_pinned_citations() {
+    let grounding = odl_example();
+    let citations = temp_json(
+        "odl-fingerprint-pinned-citations",
+        r#"{
+          "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+          "claims": [
+            {
+              "kind": "presence",
+              "citation": {
+                "element_id": "odl-e2"
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["fingerprint_stale"], false);
+    assert_eq!(
+        report["capability_limits"],
+        serde_json::json!([
+            "missing_fingerprint",
+            "missing_spans",
+            "missing_char_offsets",
+            "unknown_coordinate_origin"
+        ])
+    );
+    assert_eq!(report["checks"][0]["status"], "capability_blocked");
     assert_eq!(
         report["checks"][0]["warnings"],
         serde_json::json!(["capability_limited"])
@@ -1079,6 +1241,15 @@ fn bbox_presence_is_capability_blocked_when_coordinate_origin_is_unknown() {
 
     assert_eq!(report["checks"][0]["status"], "capability_blocked");
     assert_eq!(
+        report["capability_limits"],
+        serde_json::json!([
+            "missing_fingerprint",
+            "missing_spans",
+            "missing_char_offsets",
+            "unknown_coordinate_origin"
+        ])
+    );
+    assert_eq!(
         report["checks"][0]["warnings"],
         serde_json::json!(["capability_limited"])
     );
@@ -1136,5 +1307,9 @@ fn case_insensitive_config_allows_literal_case_difference() {
     ]);
 
     assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(
+        report["checks"][0]["match_method"],
+        "normalized_text_contains"
+    );
     assert_eq!(report["all_evidence_grounded"], true);
 }

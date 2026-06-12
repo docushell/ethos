@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup show
-      - run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
   deny:
     # ADR-0004 license allowlist + network-crate bans + advisories (invariant 5a, 6)
@@ -63,7 +63,7 @@ jobs:
         run: |
           tree=$(cargo tree -p ethos-verify -e normal)
           echo "$tree"
-          if echo "$tree" | grep -qiE 'ethos-pdf|pdfium'; then
+          if echo "$tree" | grep -qiE 'ethos-pdf|ethos-layout|ethos-tables|ethos-render|pdfium'; then
             echo "ethos-verify depends on parser internals (invariant 4 violated)"; exit 1
           fi
       - name: grounding feature really is minimal

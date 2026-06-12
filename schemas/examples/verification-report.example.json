@@ -10,11 +10,13 @@
     "capabilities": {
       "spans": true,
       "char_offsets": true,
+      "tables": true,
       "fingerprint": true,
       "coordinate_origin": "top-left",
       "crop_support": false
     }
   },
+  "capability_limits": [],
   "fingerprint_stale": false,
   "all_evidence_grounded": true,
   "checks": [
@@ -29,7 +31,7 @@
         }
       },
       "status": "grounded",
-      "match_method": "normalized_text",
+      "match_method": "normalized_text_contains",
       "semantic_unverified": false,
       "evidence": {
         "text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.",
@@ -73,5 +75,5 @@
     }
   ],
   "unsupported_claim_kinds": [],
-  "warnings": ["capability_limited"]
+  "warnings": []
 }

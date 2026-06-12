@@ -22,8 +22,8 @@ use ethos_core::grounding::{
     GroundingTable,
 };
 use ethos_core::verify_types::{
-    compute_all_evidence_grounded, Check, CheckStatus, Claim, ClaimKind, Evidence, GroundingMeta,
-    MatchMethod, TextNormalization, VerificationConfig, VerificationReport,
+    compute_all_evidence_grounded, CapabilityLimit, Check, CheckStatus, Claim, ClaimKind, Evidence,
+    GroundingMeta, MatchMethod, TextNormalization, VerificationConfig, VerificationReport,
 };
 use serde::{Deserialize, Serialize};
 
@@ -84,24 +84,41 @@ pub fn capability_warnings(
     source: &dyn GroundingSource,
     config: &VerificationConfig,
 ) -> Vec<WarningCode> {
+    if capability_limits(source, config).is_empty() {
+        Vec::new()
+    } else {
+        vec![WarningCode::CapabilityLimited]
+    }
+}
+
+/// Compute structured capability gaps for the run. These explain the stable
+/// `capability_limited` warning without minting parser-warning codes for every
+/// verification capability.
+pub fn capability_limits(
+    source: &dyn GroundingSource,
+    config: &VerificationConfig,
+) -> Vec<CapabilityLimit> {
     let caps = source.capabilities();
-    let mut warnings = Vec::new();
+    let mut limits = Vec::new();
     if !caps.fingerprint && config.staleness.require_fingerprint_match {
-        push_warning(&mut warnings, WarningCode::CapabilityLimited);
+        limits.push(CapabilityLimit::MissingFingerprint);
     }
     if !caps.spans {
-        push_warning(&mut warnings, WarningCode::CapabilityLimited);
+        limits.push(CapabilityLimit::MissingSpans);
     }
     if !caps.char_offsets {
-        push_warning(&mut warnings, WarningCode::CapabilityLimited);
+        limits.push(CapabilityLimit::MissingCharOffsets);
+    }
+    if !caps.tables && config.claim_kinds.contains(&ClaimKind::TableCell) {
+        limits.push(CapabilityLimit::MissingTables);
     }
     if caps.coordinate_origin == CoordinateOrigin::Unknown {
-        push_warning(&mut warnings, WarningCode::CapabilityLimited);
+        limits.push(CapabilityLimit::UnknownCoordinateOrigin);
     }
-    if !caps.crop_support {
-        push_warning(&mut warnings, WarningCode::CapabilityLimited);
+    if config.evidence.is_some_and(|e| e.include_crops) && !caps.crop_support {
+        limits.push(CapabilityLimit::MissingCropSupport);
     }
-    warnings
+    limits
 }
 
 fn push_warning(warnings: &mut Vec<WarningCode>, warning: WarningCode) {
@@ -119,11 +136,20 @@ pub fn verify_claims(
 ) -> VerificationReport {
     let (citation_fingerprint, claims) = citations.into_parts();
     let source_fingerprint = source.fingerprint();
+    let capability_limits = capability_limits(source, config);
+    let warnings = if capability_limits.is_empty() {
+        Vec::new()
+    } else {
+        vec![WarningCode::CapabilityLimited]
+    };
     let fingerprint_stale = config.staleness.require_fingerprint_match
         && matches!(
             (citation_fingerprint.as_deref(), source_fingerprint.as_deref()),
             (Some(expected), Some(actual)) if expected != actual
         );
+    let fingerprint_unverifiable = config.staleness.require_fingerprint_match
+        && citation_fingerprint.is_some()
+        && source_fingerprint.is_none();
     let include_text = config.evidence.is_some_and(|e| e.include_text);
     let include_crops = config.evidence.is_some_and(|e| e.include_crops);
     let mut unsupported = Vec::new();
@@ -136,9 +162,12 @@ pub fn verify_claims(
                 source,
                 claim,
                 config,
-                fingerprint_stale,
-                include_text,
-                include_crops,
+                CheckContext {
+                    fingerprint_stale,
+                    fingerprint_unverifiable,
+                    include_text,
+                    include_crops,
+                },
                 &mut unsupported,
             )
         })
@@ -152,6 +181,7 @@ pub fn verify_claims(
             parser: source.parser(),
             capabilities: source.capabilities(),
         },
+        capability_limits,
         fingerprint_stale,
         all_evidence_grounded: compute_all_evidence_grounded(
             &checks,
@@ -160,8 +190,16 @@ pub fn verify_claims(
         ),
         checks,
         unsupported_claim_kinds: unsupported,
-        warnings: capability_warnings(source, config),
+        warnings,
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct CheckContext {
+    fingerprint_stale: bool,
+    fingerprint_unverifiable: bool,
+    include_text: bool,
+    include_crops: bool,
 }
 
 fn check_claim(
@@ -169,9 +207,7 @@ fn check_claim(
     source: &dyn GroundingSource,
     claim: Claim,
     config: &VerificationConfig,
-    fingerprint_stale: bool,
-    include_text: bool,
-    include_crops: bool,
+    context: CheckContext,
     unsupported: &mut Vec<String>,
 ) -> Check {
     let mut warnings = Vec::new();
@@ -202,11 +238,41 @@ fn check_claim(
         };
     }
 
-    if fingerprint_stale {
+    if requires_text(claim.kind)
+        && claim
+            .text
+            .as_deref()
+            .is_none_or(|text| text.trim().is_empty())
+    {
+        return Check {
+            id: check_id,
+            claim,
+            status: CheckStatus::Error,
+            match_method: MatchMethod::None,
+            semantic_unverified: false,
+            evidence: None,
+            warnings,
+        };
+    }
+
+    if context.fingerprint_stale {
         return Check {
             id: check_id,
             claim,
             status: CheckStatus::Stale,
+            match_method: MatchMethod::None,
+            semantic_unverified: false,
+            evidence: None,
+            warnings,
+        };
+    }
+
+    if context.fingerprint_unverifiable {
+        push_warning(&mut warnings, WarningCode::CapabilityLimited);
+        return Check {
+            id: check_id,
+            claim,
+            status: CheckStatus::CapabilityBlocked,
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
@@ -241,7 +307,7 @@ fn check_claim(
         }
     };
 
-    let evidence = make_evidence(source, &target, include_text, include_crops);
+    let evidence = make_evidence(source, &target, context.include_text, context.include_crops);
     match claim.kind {
         ClaimKind::Presence => Check {
             id: check_id,
@@ -253,11 +319,15 @@ fn check_claim(
             warnings,
         },
         ClaimKind::Quote | ClaimKind::Value | ClaimKind::TableCell => {
-            let method = text_match_method(config);
+            let match_method = if target.from_table_cell {
+                MatchMethod::TableCellLookup
+            } else {
+                text_match_method(claim.kind, config)
+            };
             let status = if let (Some(expected), Some(actual)) =
                 (claim.text.as_deref(), target.text.as_deref())
             {
-                if text_matches(expected, actual, config) {
+                if text_matches(claim.kind, expected, actual, config) {
                     CheckStatus::Grounded
                 } else {
                     CheckStatus::Mismatch
@@ -269,11 +339,7 @@ fn check_claim(
                 id: check_id,
                 claim,
                 status,
-                match_method: if target.from_table_cell {
-                    MatchMethod::TableCellLookup
-                } else {
-                    method
-                },
+                match_method,
                 semantic_unverified: false,
                 evidence,
                 warnings,
@@ -287,6 +353,13 @@ fn is_supported_kind(kind: ClaimKind) -> bool {
     matches!(
         kind,
         ClaimKind::Quote | ClaimKind::Value | ClaimKind::Presence | ClaimKind::TableCell
+    )
+}
+
+fn requires_text(kind: ClaimKind) -> bool {
+    matches!(
+        kind,
+        ClaimKind::Quote | ClaimKind::Value | ClaimKind::TableCell
     )
 }
 
@@ -410,10 +483,10 @@ fn resolve_table_cell(source: &dyn GroundingSource, claim: &Claim) -> TargetReso
     let Some(cell_ref) = claim.citation.cell else {
         return TargetResolution::NotFound;
     };
-    let tables = source.tables();
-    if tables.is_empty() {
+    if !source.capabilities().tables {
         return TargetResolution::CapabilityBlocked;
     }
+    let tables = source.tables();
     tables
         .into_iter()
         .find(|table| table.id == table_id)
@@ -475,24 +548,37 @@ fn contains_bbox(container: [i64; 4], inner: [i64; 4], tolerance: i64) -> bool {
         && inner[3] <= container[3] + tolerance
 }
 
-fn text_match_method(config: &VerificationConfig) -> MatchMethod {
-    match config.matching.text_normalization {
-        TextNormalization::None => MatchMethod::ExactText,
-        TextNormalization::CollapseWhitespace => MatchMethod::NormalizedText,
+fn text_match_method(kind: ClaimKind, config: &VerificationConfig) -> MatchMethod {
+    match (kind, config.matching.text_normalization) {
+        (ClaimKind::Quote, TextNormalization::None) => MatchMethod::ExactTextContains,
+        (ClaimKind::Quote, TextNormalization::CollapseWhitespace) => {
+            MatchMethod::NormalizedTextContains
+        }
+        (_, TextNormalization::None) => MatchMethod::ExactText,
+        (_, TextNormalization::CollapseWhitespace) => MatchMethod::NormalizedText,
     }
 }
 
-fn text_matches(expected: &str, actual: &str, config: &VerificationConfig) -> bool {
-    let (expected, actual) = match config.matching.text_normalization {
+fn text_matches(
+    kind: ClaimKind,
+    expected: &str,
+    actual: &str,
+    config: &VerificationConfig,
+) -> bool {
+    let (mut expected, mut actual) = match config.matching.text_normalization {
         TextNormalization::None => (expected.to_string(), actual.to_string()),
         TextNormalization::CollapseWhitespace => {
             (normalize_quote(expected), normalize_quote(actual))
         }
     };
-    if config.matching.case_sensitive {
+    if !config.matching.case_sensitive {
+        expected = expected.to_lowercase();
+        actual = actual.to_lowercase();
+    }
+    if kind == ClaimKind::Quote {
         actual.contains(&expected)
     } else {
-        actual.to_lowercase().contains(&expected.to_lowercase())
+        actual == expected
     }
 }
 
@@ -523,7 +609,7 @@ mod tests {
         Capabilities, GroundingCell, GroundingElement, GroundingSpan, GroundingTable, PageGeometry,
         ParserIdentity,
     };
-    use ethos_core::verify_types::{CellRef, Citation, Claim};
+    use ethos_core::verify_types::{CapabilityLimit, CellRef, Citation, Claim};
 
     #[derive(Clone)]
     struct TestSource {
@@ -538,6 +624,7 @@ mod tests {
                 caps: Capabilities {
                     spans: true,
                     char_offsets: true,
+                    tables: true,
                     fingerprint: true,
                     coordinate_origin: CoordinateOrigin::TopLeft,
                     crop_support: false,
@@ -695,8 +782,12 @@ mod tests {
 
         assert!(report.all_evidence_grounded);
         assert_eq!(report.checks.len(), 2);
+        assert_eq!(report.capability_limits, Vec::<CapabilityLimit>::new());
         assert_eq!(report.checks[0].status, CheckStatus::Grounded);
-        assert_eq!(report.checks[0].match_method, MatchMethod::NormalizedText);
+        assert_eq!(
+            report.checks[0].match_method,
+            MatchMethod::NormalizedTextContains
+        );
         assert_eq!(report.checks[1].status, CheckStatus::Grounded);
         assert_eq!(report.checks[1].match_method, MatchMethod::PresenceOnly);
         assert_eq!(
@@ -706,7 +797,7 @@ mod tests {
                 .and_then(|e| e.text.as_deref()),
             Some("Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.")
         );
-        assert!(report.warnings.contains(&WarningCode::CapabilityLimited));
+        assert_eq!(report.warnings, Vec::<WarningCode>::new());
     }
 
     #[test]
@@ -746,7 +837,7 @@ mod tests {
             &source,
             vec![claim(
                 ClaimKind::Value,
-                Some("$12.4M"),
+                Some("Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion."),
                 Citation {
                     element_id: Some("e000002".into()),
                     ..Default::default()
@@ -757,6 +848,26 @@ mod tests {
         assert!(report.all_evidence_grounded);
         assert_eq!(report.unsupported_claim_kinds, Vec::<String>::new());
         assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(report.checks[0].match_method, MatchMethod::NormalizedText);
+    }
+
+    #[test]
+    fn value_substrings_do_not_ground() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::Value,
+                Some("1"),
+                Citation {
+                    element_id: Some("e000002".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
         assert_eq!(report.checks[0].match_method, MatchMethod::NormalizedText);
     }
 
@@ -808,6 +919,107 @@ mod tests {
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::NotFound);
         assert_eq!(report.checks[0].match_method, MatchMethod::None);
+    }
+
+    #[test]
+    fn empty_table_collection_is_not_found_when_tables_are_supported() {
+        let source = TestSource {
+            caps: Capabilities {
+                tables: true,
+                ..TestSource::default().caps
+            },
+            ..TestSource::default()
+        };
+        struct NoTables(TestSource);
+        impl GroundingSource for NoTables {
+            fn parser(&self) -> ParserIdentity {
+                self.0.parser()
+            }
+            fn capabilities(&self) -> Capabilities {
+                self.0.capabilities()
+            }
+            fn fingerprint(&self) -> Option<String> {
+                self.0.fingerprint()
+            }
+            fn pages(&self) -> Vec<PageGeometry> {
+                self.0.pages()
+            }
+            fn elements(&self) -> Vec<GroundingElement> {
+                self.0.elements()
+            }
+            fn spans(&self) -> Vec<GroundingSpan> {
+                self.0.spans()
+            }
+            fn tables(&self) -> Vec<GroundingTable> {
+                Vec::new()
+            }
+        }
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::TableCell,
+                Some("$12.4M"),
+                Citation {
+                    table_id: Some("missing".into()),
+                    cell: Some(CellRef { row: 1, col: 1 }),
+                    ..Default::default()
+                },
+            )],
+        );
+        assert_eq!(report.checks[0].status, CheckStatus::NotFound);
+
+        let no_tables = NoTables(source);
+        let cfg = VerificationConfig::default_v1();
+        let report = verify_claims(
+            &no_tables,
+            CitationInput::Envelope(CitationEnvelope {
+                document_fingerprint: no_tables.fingerprint(),
+                claims: vec![claim(
+                    ClaimKind::TableCell,
+                    Some("$12.4M"),
+                    Citation {
+                        table_id: Some("missing".into()),
+                        cell: Some(CellRef { row: 1, col: 1 }),
+                        ..Default::default()
+                    },
+                )],
+            }),
+            &cfg,
+            "0".repeat(64),
+        );
+        assert_eq!(report.checks[0].status, CheckStatus::NotFound);
+    }
+
+    #[test]
+    fn missing_table_capability_blocks_table_cell_claims() {
+        let source = TestSource {
+            caps: Capabilities {
+                tables: false,
+                ..TestSource::default().caps
+            },
+            ..TestSource::default()
+        };
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::TableCell,
+                Some("$12.4M"),
+                Citation {
+                    table_id: Some("t0001".into()),
+                    cell: Some(CellRef { row: 1, col: 1 }),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert_eq!(report.checks[0].status, CheckStatus::CapabilityBlocked);
+        assert_eq!(
+            report.capability_limits,
+            vec![CapabilityLimit::MissingTables]
+        );
+        assert!(report.checks[0]
+            .warnings
+            .contains(&WarningCode::CapabilityLimited));
     }
 
     #[test]
@@ -874,6 +1086,10 @@ mod tests {
         );
 
         assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            report.capability_limits,
+            vec![CapabilityLimit::MissingCropSupport]
+        );
         assert!(report.warnings.contains(&WarningCode::CapabilityLimited));
         assert_eq!(
             report.checks[0]
@@ -939,6 +1155,7 @@ mod tests {
             caps: Capabilities {
                 spans: false,
                 char_offsets: false,
+                tables: false,
                 fingerprint: false,
                 coordinate_origin: CoordinateOrigin::Unknown,
                 crop_support: false,
@@ -960,10 +1177,84 @@ mod tests {
 
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::CapabilityBlocked);
+        assert_eq!(
+            report.capability_limits,
+            vec![
+                CapabilityLimit::MissingFingerprint,
+                CapabilityLimit::MissingSpans,
+                CapabilityLimit::MissingCharOffsets,
+                CapabilityLimit::MissingTables,
+                CapabilityLimit::UnknownCoordinateOrigin
+            ]
+        );
         assert!(report.warnings.contains(&WarningCode::CapabilityLimited));
         assert!(report.checks[0]
             .warnings
             .contains(&WarningCode::CapabilityLimited));
+    }
+
+    #[test]
+    fn citation_fingerprint_without_source_fingerprint_blocks_checks() {
+        let source = TestSource {
+            caps: Capabilities {
+                fingerprint: false,
+                ..TestSource::default().caps
+            },
+            fingerprint: None,
+            ..TestSource::default()
+        };
+        let cfg = VerificationConfig::default_v1();
+        let report = verify_claims(
+            &source,
+            CitationInput::Envelope(CitationEnvelope {
+                document_fingerprint: Some(
+                    "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02"
+                        .into(),
+                ),
+                claims: vec![claim(
+                    ClaimKind::Presence,
+                    None,
+                    Citation {
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                )],
+            }),
+            &cfg,
+            "0".repeat(64),
+        );
+
+        assert!(!report.fingerprint_stale);
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::CapabilityBlocked);
+        assert_eq!(
+            report.capability_limits,
+            vec![CapabilityLimit::MissingFingerprint]
+        );
+        assert!(report.warnings.contains(&WarningCode::CapabilityLimited));
+        assert!(report.checks[0]
+            .warnings
+            .contains(&WarningCode::CapabilityLimited));
+    }
+
+    #[test]
+    fn missing_text_is_error_for_library_callers() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![claim(
+                ClaimKind::Quote,
+                None,
+                Citation {
+                    element_id: Some("e000002".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Error);
+        assert_eq!(report.checks[0].match_method, MatchMethod::None);
     }
 
     #[test]

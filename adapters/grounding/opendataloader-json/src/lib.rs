@@ -17,8 +17,9 @@
 //!   half-away-from-zero) so units align with Ethos quanta. Origin is declared
 //!   [`CoordinateOrigin::Unknown`] until the B-alpha pin verifies ODL's convention —
 //!   capability-driven downgrade, never silent assumption.
-//! - No spans, no char offsets, no fingerprint, no crops: declared `false`, which
-//!   verification must surface as `capability_limited` (PRD §5.5).
+//! - No spans, no char offsets, no fingerprint, no crops: declared `false`.
+//!   Table capability is declared only when a `tables` array is present.
+//!   Verification surfaces missing capabilities as `capability_limited` (PRD §5.5).
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -89,6 +90,7 @@ pub struct OdlJsonSource {
     parser_version: String,
     pages: Vec<PageGeometry>,
     elements: Vec<GroundingElement>,
+    tables_capable: bool,
     tables: Vec<GroundingTable>,
 }
 
@@ -259,8 +261,10 @@ impl OdlJsonSource {
         }
 
         let mut tables = Vec::new();
+        let mut tables_capable = false;
         let mut table_ids = HashSet::new();
         if let Some(tables_value) = root.get("tables") {
+            tables_capable = true;
             let table_array = tables_value
                 .as_array()
                 .ok_or_else(|| err("'tables' is not an array"))?;
@@ -283,7 +287,6 @@ impl OdlJsonSource {
                 }
                 let bbox = bbox_from(table.get("bbox").ok_or_else(|| err("missing table.bbox"))?)?;
                 let mut cells = Vec::new();
-                let mut cell_addresses = HashSet::new();
                 for cell in table
                     .get("cells")
                     .and_then(Value::as_array)
@@ -291,9 +294,6 @@ impl OdlJsonSource {
                 {
                     let row = u32_field(cell, "row", "missing cell.row", "cell.row must fit u32")?;
                     let col = u32_field(cell, "col", "missing cell.col", "cell.col must fit u32")?;
-                    if !cell_addresses.insert((row, col)) {
-                        return Err(err("duplicate table cell address"));
-                    }
                     let row_span = optional_positive_u32_field(
                         cell,
                         "row_span",
@@ -311,14 +311,18 @@ impl OdlJsonSource {
                     let bbox =
                         bbox_from(cell.get("bbox").ok_or_else(|| err("missing cell.bbox"))?)?;
                     let text = string_field(cell, "text", "missing cell.text")?;
-                    cells.push(GroundingCell {
+                    let candidate = GroundingCell {
                         row,
                         col,
                         row_span,
                         col_span,
                         bbox,
                         text,
-                    });
+                    };
+                    if cells_overlap(&cells, &candidate) {
+                        return Err(err("overlapping table cell address range"));
+                    }
+                    cells.push(candidate);
                 }
                 tables.push(GroundingTable {
                     id,
@@ -334,6 +338,7 @@ impl OdlJsonSource {
             parser_version,
             pages,
             elements,
+            tables_capable,
             tables,
         })
     }
@@ -353,6 +358,7 @@ impl GroundingSource for OdlJsonSource {
         Capabilities {
             spans: false,
             char_offsets: false,
+            tables: self.tables_capable,
             fingerprint: false,
             coordinate_origin: CoordinateOrigin::Unknown,
             crop_support: false,
@@ -374,6 +380,26 @@ impl GroundingSource for OdlJsonSource {
     fn tables(&self) -> Vec<GroundingTable> {
         self.tables.clone()
     }
+}
+
+fn cells_overlap(cells: &[GroundingCell], candidate: &GroundingCell) -> bool {
+    cells.iter().any(|cell| {
+        ranges_overlap(
+            cell.row,
+            cell.row.saturating_add(cell.row_span),
+            candidate.row,
+            candidate.row.saturating_add(candidate.row_span),
+        ) && ranges_overlap(
+            cell.col,
+            cell.col.saturating_add(cell.col_span),
+            candidate.col,
+            candidate.col.saturating_add(candidate.col_span),
+        )
+    })
+}
+
+fn ranges_overlap(a_start: u32, a_end: u32, b_start: u32, b_end: u32) -> bool {
+    a_start < b_end && b_start < a_end
 }
 
 #[cfg(test)]
@@ -409,6 +435,7 @@ mod tests {
         assert_eq!(tables[0].cells[1].bbox, [30600, 16500, 54000, 20000]);
 
         let caps = src.capabilities();
+        assert!(caps.tables);
         assert!(!caps.spans && !caps.fingerprint && !caps.crop_support);
         assert_eq!(caps.coordinate_origin, CoordinateOrigin::Unknown);
         assert!(src.fingerprint().is_none());
@@ -494,7 +521,11 @@ mod tests {
         );
         assert_error_contains(
             r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[],"tables":[{"id":"t1","page":1,"bbox":[1,1,2,2],"cells":[{"row":1,"col":1,"bbox":[1,1,2,2],"text":"x"},{"row":1,"col":1,"bbox":[1,1,2,2],"text":"y"}]}]}"#,
-            "duplicate table cell address",
+            "overlapping table cell address range",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[],"tables":[{"id":"t1","page":1,"bbox":[1,1,2,2],"cells":[{"row":0,"col":0,"row_span":2,"bbox":[1,1,2,2],"text":"x"},{"row":1,"col":0,"bbox":[1,1,2,2],"text":"y"}]}]}"#,
+            "overlapping table cell address range",
         );
         assert_error_contains(
             r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[],"tables":[{"id":"t1","page":1,"bbox":[1,1,2,2],"cells":[{"row":1,"col":1,"row_span":0,"bbox":[1,1,2,2],"text":"x"}]}]}"#,
