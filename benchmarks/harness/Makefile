@@ -91,3 +91,4 @@ smoke:
 test:
 	python3 test_run_gate_zero.py
 	python3 test_gate_zero_evidence.py
+	python3 test_gate_zero_gates.py

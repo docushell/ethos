@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:benchmarks:gate-zero-gates:1",
+  "title": "Ethos Gate Zero gate definitions",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "authority",
+    "decision_rule",
+    "gates"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "ethos-gate-zero-gates-v1" },
+    "authority": {
+      "type": "object",
+      "required": ["normative_sources", "notes"],
+      "additionalProperties": false,
+      "properties": {
+        "normative_sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "decision_rule": {
+      "type": "object",
+      "required": ["all_pass", "g2_or_g3_fail", "g1_only_fail"],
+      "additionalProperties": false,
+      "properties": {
+        "all_pass": { "type": "string" },
+        "g2_or_g3_fail": { "type": "string" },
+        "g1_only_fail": { "type": "string" }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "required": ["g2", "g3"],
+      "additionalProperties": false,
+      "properties": {
+        "g2": { "$ref": "#/$defs/g2" },
+        "g3": { "$ref": "#/$defs/g3" }
+      }
+    }
+  },
+  "$defs": {
+    "source_ref": {
+      "type": "object",
+      "required": ["path", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "summary": { "type": "string" }
+      }
+    },
+    "g2": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "status",
+        "source_refs",
+        "measurement_scope",
+        "thresholds",
+        "required_evidence",
+        "platform_policy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "const": "g2" },
+        "name": { "const": "Footprint" },
+        "status": { "const": "defined-not-run" },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/source_ref" }
+        },
+        "measurement_scope": {
+          "type": "object",
+          "required": ["subject", "includes", "excludes", "auto_fail"],
+          "additionalProperties": false,
+          "properties": {
+            "subject": { "type": "string" },
+            "includes": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            },
+            "excludes": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "auto_fail": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "thresholds": {
+          "type": "object",
+          "required": [
+            "max_install_size_bytes",
+            "max_install_size_label",
+            "opendataloader_ratio_max",
+            "comparison_reference",
+            "logic"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "max_install_size_bytes": { "const": 30000000 },
+            "max_install_size_label": { "const": "30 MB decimal" },
+            "opendataloader_ratio_max": { "const": 0.1 },
+            "comparison_reference": { "const": "opendataloader-pdf" },
+            "logic": { "type": "string" }
+          }
+        },
+        "required_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "platform_policy": { "type": "string" }
+      }
+    },
+    "g3": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "status",
+        "source_refs",
+        "corpus_scope",
+        "platforms",
+        "deterministic_profile",
+        "thresholds",
+        "required_evidence",
+        "completion_policy",
+        "windows_x64_note"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "const": "g3" },
+        "name": { "const": "Determinism" },
+        "status": { "const": "defined-not-run" },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/source_ref" }
+        },
+        "corpus_scope": { "const": "full frozen Gate Zero manifest" },
+        "platforms": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string" }
+        },
+        "deterministic_profile": { "type": "string" },
+        "thresholds": {
+          "type": "object",
+          "required": [
+            "canonical_payload_divergences_allowed",
+            "document_fingerprint_divergences_allowed"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "canonical_payload_divergences_allowed": { "const": 0 },
+            "document_fingerprint_divergences_allowed": { "const": 0 }
+          }
+        },
+        "required_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "completion_policy": { "type": "string" },
+        "windows_x64_note": { "type": "string" }
+      }
+    }
+  }
+}

@@ -25,6 +25,7 @@ publishing comparison claims.
 | --- | --- | --- |
 | Frozen corpus and hardware | `benchmarks/gate-zero/manifest.json` | Complete: staged corpus accepted, `frozen=true`, status `FROZEN-SIGNED`, freeze timestamp, signed-by value |
 | Competitor pins | `benchmarks/competitors.lock.json` | Complete: exact versions, runtime versions where applicable, artifact SHA256 values, and `pinned=true` for all Gate Zero competitors |
+| G2/G3 definitions | `benchmarks/gate-zero/gates.json` | Complete: existing PRD/plan G2 footprint and G3 cross-platform determinism contracts encoded before result files are emitted |
 | Signed host results | `benchmarks/results/gate-zero/{macos-arm64,linux-x64}/g1.json` | Required before any benchmark claim; both hosts must pass independently |
 | Public naming acceptance | `docs/decisions/ADR-0006-package-identifiers.md` | Status `Accepted`; registry/trademark checks complete before public package/docs claims |
 
@@ -106,6 +107,11 @@ ethos-gate-zero-result-v1 status: pass
 
 The current runner can produce Ethos-only Gate Zero result files. Full competitor execution
 adapters and G2/G3 comparison rows remain separate implementation steps.
+
+G2/G3 definitions now live in `benchmarks/gate-zero/gates.json`. Do not produce `g2.json` or
+`g3.json` unless the result cites the definition hash and records the required evidence listed
+there. G3 cannot pass from macOS-only evidence; it requires the macOS arm64 and Linux x64
+cross-platform comparison on the full frozen manifest.
 
 ## Public-Claim Rule
 

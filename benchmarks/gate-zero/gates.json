@@ -1,0 +1,119 @@
+{
+  "authority": {
+    "normative_sources": [
+      "docs/ethos-product-requirements.md#gate-zero-metrics",
+      "docs/IMPLEMENTATION_PLAN.md#64-gate-zero-execution-week-8-days-38-40",
+      "docs/benchmark-plan.md#gate-zero-protocol-week-4-days-1820--plan-64",
+      "benchmarks/gate-zero/manifest.json",
+      "benchmarks/competitors.lock.json"
+    ],
+    "notes": [
+      "Definitions are encoded here from existing product and plan documents; this file does not record a benchmark run.",
+      "No G2 or G3 result file is valid unless it cites this definition file and the frozen Gate Zero manifest/competitor lock used for measurement."
+    ]
+  },
+  "decision_rule": {
+    "all_pass": "If G1, G2, and G3 all pass, parser-core expansion may continue to Milestone B.",
+    "g1_only_fail": "If G1 fails while G2 and G3 pass, the named Gate Zero decider chooses either parser-core fallback or one bounded performance remediation retry; no speed claim is allowed until G1 passes.",
+    "g2_or_g3_fail": "If G2 or G3 fails, parser-core expansion stops and Ethos continues as a parser-agnostic trust layer over foreign parser output."
+  },
+  "gates": {
+    "g2": {
+      "id": "g2",
+      "measurement_scope": {
+        "auto_fail": [
+          "PDFium build has V8 enabled",
+          "PDFium build has XFA enabled"
+        ],
+        "excludes": [
+          "network downloads during parse or verification",
+          "optional OCR or VLM assets outside the base parser surface",
+          "non-base parser adapters not required for the Ethos base distributable"
+        ],
+        "includes": [
+          "ethos CLI executable",
+          "native dynamic libraries required by the base parser",
+          "PDFium sidecar or static payload required by the base parser",
+          "default schemas required by the base parser",
+          "bundled deterministic font assets",
+          "all assets required to run the base parser without network access"
+        ],
+        "subject": "Ethos base distributable installed footprint, measured as bytes on disk with no network dependency."
+      },
+      "name": "Footprint",
+      "platform_policy": "Record G2 on each Gate Zero performance host where the installed artifact set can differ; do not average or substitute host measurements.",
+      "required_evidence": [
+        "ethos_install_size_bytes measured from the exact base distributable artifact set",
+        "opendataloader_install_size_bytes measured in-harness from the pinned opendataloader-pdf artifact/install path",
+        "PDFium V8/XFA disabled evidence from the deterministic profile or linked profile attestation",
+        "manifest_sha256 for benchmarks/gate-zero/manifest.json",
+        "competitors_lock_sha256 for benchmarks/competitors.lock.json",
+        "definition_sha256 for benchmarks/gate-zero/gates.json"
+      ],
+      "source_refs": [
+        {
+          "path": "docs/ethos-product-requirements.md",
+          "summary": "G2 footprint: no more than 30 MB and no more than one tenth of measured OpenDataLoader installed footprint; includes CLI, native libs, PDFium payload, schemas, deterministic fonts, and no-network base parser assets."
+        },
+        {
+          "path": "docs/IMPLEMENTATION_PLAN.md",
+          "summary": "G2 footprint: total installed footprint bytes on disk <= 30 MB and <= 1/10 measured ODL footprint; V8/XFA-enabled builds auto-fail."
+        },
+        {
+          "path": "benchmarks/competitors.lock.json",
+          "summary": "opendataloader-pdf is the G1/G2 reference competitor."
+        }
+      ],
+      "status": "defined-not-run",
+      "thresholds": {
+        "comparison_reference": "opendataloader-pdf",
+        "logic": "PASS only when ethos_install_size_bytes <= 30000000 and ethos_install_size_bytes <= opendataloader_install_size_bytes * 0.1, with all auto-fail checks false.",
+        "max_install_size_bytes": 30000000,
+        "max_install_size_label": "30 MB decimal",
+        "opendataloader_ratio_max": 0.1
+      }
+    },
+    "g3": {
+      "completion_policy": "G3 cannot pass from a single platform result. It requires at least macOS arm64 and Linux x64 evidence for the full frozen manifest, then a cross-platform comparison showing zero canonical payload and fingerprint divergences.",
+      "corpus_scope": "full frozen Gate Zero manifest",
+      "deterministic_profile": "profiles/ethos-deterministic-v1.json",
+      "id": "g3",
+      "name": "Determinism",
+      "platforms": [
+        "macos-arm64",
+        "linux-x64"
+      ],
+      "required_evidence": [
+        "schema-valid Ethos result evidence for every required determinism platform",
+        "matching corpus id, file path, corpus sha256, and actual sha256 for every compared corpus entry",
+        "equal canonical payload hash for every compared corpus entry across required platforms",
+        "equal document fingerprint for every compared corpus entry across required platforms",
+        "equal warning_ids for every compared corpus entry across required platforms",
+        "matching deterministic_profile_sha256 or an explicitly reviewed profile-difference blocker",
+        "manifest_sha256 for benchmarks/gate-zero/manifest.json",
+        "definition_sha256 for benchmarks/gate-zero/gates.json"
+      ],
+      "source_refs": [
+        {
+          "path": "docs/ethos-product-requirements.md",
+          "summary": "G3 determinism: byte-identical canonical document payload across Gate Zero supported platforms, at minimum macOS arm64 and Linux x64, under the deterministic profile on the full frozen manifest."
+        },
+        {
+          "path": "docs/IMPLEMENTATION_PLAN.md",
+          "summary": "G3 determinism: byte-identical canonical payload and equal fingerprints across supported platforms on the full frozen manifest; font mapper override and quantize-at-extraction must be implemented."
+        },
+        {
+          "path": "benchmarks/gate-zero/manifest.json",
+          "summary": "determinism_platforms declares macos-arm64 and linux-x64; G3 runs on the full frozen corpus."
+        }
+      ],
+      "status": "defined-not-run",
+      "thresholds": {
+        "canonical_payload_divergences_allowed": 0,
+        "document_fingerprint_divergences_allowed": 0
+      },
+      "windows_x64_note": "Windows x64 joins nightly determinism later and unresolved Windows divergence blocks or re-scopes Public Beta, but Windows is not part of the first local Gate Zero G3 pass/fail set."
+    }
+  },
+  "schema_version": "ethos-gate-zero-gates-v1"
+}

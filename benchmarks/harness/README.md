@@ -59,6 +59,26 @@ benchmark evidence.
 Until then, fixture baseline JSON is engineering evidence only. It is not a public benchmark
 claim.
 
+## Gate Zero G2/G3 Definitions
+
+G2 and G3 are defined before they are runnable:
+
+```text
+benchmarks/gate-zero/gates.json
+benchmarks/gate-zero/gates.schema.json
+```
+
+`gates.json` encodes the existing PRD/implementation-plan contract:
+
+- G2 is the base-parser installed footprint gate: `<= 30 MB decimal` and `<= 1/10`
+  in-harness measured OpenDataLoader footprint, with V8/XFA-enabled PDFium builds auto-failing.
+- G3 is the cross-platform determinism gate: byte-identical canonical payload and equal
+  document fingerprints across at least `macos-arm64` and `linux-x64` on the full frozen
+  manifest. A macOS-only result cannot pass G3 by itself.
+
+Do not emit `g2.json` or `g3.json` until the runner cites the definition file hash, manifest hash,
+competitor-lock hash, and required evidence listed in `gates.json`.
+
 ## OpenDataLoader PDF Adapter
 
 The Gate Zero runner can execute the pinned OpenDataLoader PDF wheel recorded in
