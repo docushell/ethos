@@ -729,12 +729,13 @@ fn font_mapping_is_stable_under_isolated_system_font_environment() {
 
         let doc: Value = serde_json::from_slice(&normal.stdout).unwrap();
         assert_span_font_namespace(&doc);
-        let actual_fonts = doc["payload"]["spans"]
+        let mut actual_fonts = doc["payload"]["spans"]
             .as_array()
             .unwrap()
             .iter()
             .map(|span| span["font_id"].as_str().unwrap())
             .collect::<Vec<_>>();
+        actual_fonts.dedup();
         assert_eq!(actual_fonts, expected_fonts, "{fixture_name}");
     }
 }

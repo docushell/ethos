@@ -108,10 +108,22 @@
         },
         "runs": {
           "type": "object",
-          "required": ["opendataloader-pdf"],
+          "required": ["opendataloader-pdf", "edgeparse", "liteparse", "pymupdf4llm"],
           "additionalProperties": false,
           "properties": {
             "opendataloader-pdf": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/run" }
+            },
+            "edgeparse": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/run" }
+            },
+            "liteparse": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/run" }
+            },
+            "pymupdf4llm": {
               "type": "array",
               "items": { "$ref": "#/$defs/run" }
             }
@@ -119,10 +131,13 @@
         },
         "summaries": {
           "type": "object",
-          "required": ["opendataloader-pdf"],
+          "required": ["opendataloader-pdf", "edgeparse", "liteparse", "pymupdf4llm"],
           "additionalProperties": false,
           "properties": {
-            "opendataloader-pdf": { "$ref": "#/$defs/parser_summary" }
+            "opendataloader-pdf": { "$ref": "#/$defs/parser_summary" },
+            "edgeparse": { "$ref": "#/$defs/parser_summary" },
+            "liteparse": { "$ref": "#/$defs/parser_summary" },
+            "pymupdf4llm": { "$ref": "#/$defs/parser_summary" }
           }
         }
       }

@@ -155,6 +155,15 @@ def result_args(
         opendataloader_command=None,
         opendataloader_artifact=None,
         opendataloader_install_path=None,
+        edgeparse_command=None,
+        edgeparse_artifact=None,
+        edgeparse_install_path=None,
+        liteparse_command=None,
+        liteparse_artifact=None,
+        liteparse_install_path=None,
+        pymupdf4llm_python=None,
+        pymupdf4llm_artifact=None,
+        pymupdf4llm_install_path=None,
     )
 
 
@@ -180,6 +189,60 @@ output_dir.mkdir(parents=True, exist_ok=True)
     json.dumps({"file name": input_pdf.name, "kids": [{"content": "Hello"}]}, sort_keys=True),
     encoding="utf-8",
 )
+"""
+    write_executable(script, text)
+    return script
+
+
+def fake_edgeparse(root: Path) -> Path:
+    script = root / "edgeparse"
+    text = """#!/usr/bin/env python3
+import json
+import pathlib
+import sys
+
+args = sys.argv[1:]
+input_pdf = pathlib.Path(args[0])
+output_dir = pathlib.Path(args[args.index("--output-dir") + 1])
+output_dir.mkdir(parents=True, exist_ok=True)
+(output_dir / f"{input_pdf.stem}.json").write_text(
+    json.dumps({"source": "edgeparse", "file": input_pdf.name}, sort_keys=True),
+    encoding="utf-8",
+)
+"""
+    write_executable(script, text)
+    return script
+
+
+def fake_liteparse(root: Path) -> Path:
+    script = root / "lit"
+    text = """#!/usr/bin/env python3
+import json
+import pathlib
+import sys
+
+args = sys.argv[1:]
+input_pdf = pathlib.Path(args[1])
+output_file = pathlib.Path(args[args.index("--output") + 1])
+output_file.parent.mkdir(parents=True, exist_ok=True)
+output_file.write_text(
+    json.dumps({"source": "liteparse", "file": input_pdf.name}, sort_keys=True),
+    encoding="utf-8",
+)
+"""
+    write_executable(script, text)
+    return script
+
+
+def fake_pymupdf4llm(root: Path) -> Path:
+    script = root / "python"
+    text = """#!/usr/bin/env python3
+import json
+import pathlib
+import sys
+
+input_pdf = pathlib.Path(sys.argv[-1])
+print(json.dumps({"source": "pymupdf4llm", "file": input_pdf.name}, sort_keys=True))
 """
     write_executable(script, text)
     return script
@@ -377,7 +440,17 @@ class GateZeroReadinessTests(unittest.TestCase):
         self.assertEqual(report["runs"][0]["status"], "pass")
         self.assertEqual(report["runs"][0]["document_fingerprint"], "sha256:" + HEX)
         self.assertIsNotNone(report["output_sha256"])
-        self.assertEqual(report["competitors"]["adapters"][0]["status"], "not_configured")
+        self.assertEqual(
+            set(report["competitors"]["runs"]),
+            set(run_gate_zero.COMPETITOR_IDS),
+        )
+        self.assertEqual(
+            set(report["competitors"]["summaries"]),
+            set(run_gate_zero.COMPETITOR_IDS),
+        )
+        self.assertTrue(
+            all(adapter["status"] == "not_configured" for adapter in report["competitors"]["adapters"])
+        )
         self.assertEqual(report["output_sha256"], second_report["output_sha256"])
         self.assertNotIn(str(root), json.dumps(report))
         self.assertEqual(report["runs"][0]["command"][0], "ethos")
@@ -464,7 +537,7 @@ class GateZeroReadinessTests(unittest.TestCase):
         self.assertEqual(adapter["mode"], "execute")
         self.assertEqual(adapter["command"], "<opendataloader-command>")
         self.assertEqual(adapter["command_template"][0], "<opendataloader-command>")
-        self.assertEqual(adapter["artifact"]["path"], "<opendataloader-artifact>")
+        self.assertEqual(adapter["artifact"]["path"], "<opendataloader-pdf-artifact>")
         self.assertEqual(adapter["artifact"]["sha256"], artifact_sha256)
         self.assertIn("<input-pdf>", adapter["command_template"])
 
@@ -527,6 +600,102 @@ class GateZeroReadinessTests(unittest.TestCase):
         self.assertEqual(runs[0]["failures"], [])
         self.assertRegex(runs[0]["output_sha256"], run_gate_zero.HEX64)
         self.assertNotIn(str(root), json.dumps(report))
+
+    def test_frozen_inputs_execute_all_configured_competitors(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            profile = root / "profile.json"
+            profile.write_text("{}", encoding="utf-8")
+            manifest_path = frozen_manifest(root)
+            competitors_path = frozen_competitors(root)
+            ethos_bin = fake_ethos(root)
+            args = result_args(root, manifest_path, competitors_path, ethos_bin, profile)
+            args.opendataloader_command = fake_odl(root)
+            args.edgeparse_command = fake_edgeparse(root)
+            args.liteparse_command = fake_liteparse(root)
+            args.pymupdf4llm_python = fake_pymupdf4llm(root)
+
+            lock = json.loads(competitors_path.read_text(encoding="utf-8"))
+            artifact_paths: dict[str, Path] = {}
+            for entry in lock["gate_zero"]:
+                artifact = root / f"{entry['id']}.artifact"
+                artifact.write_bytes(f"{entry['id']} artifact".encode("utf-8"))
+                entry["artifact_sha256"] = run_gate_zero.sha256_file(artifact)
+                artifact_paths[entry["id"]] = artifact
+            write_json(competitors_path, lock)
+
+            args.opendataloader_artifact = artifact_paths["opendataloader-pdf"]
+            args.opendataloader_install_path = root
+            args.edgeparse_artifact = artifact_paths["edgeparse"]
+            args.edgeparse_install_path = root
+            args.liteparse_artifact = artifact_paths["liteparse"]
+            args.liteparse_install_path = root
+            args.pymupdf4llm_artifact = artifact_paths["pymupdf4llm"]
+            args.pymupdf4llm_install_path = root
+
+            report = run_gate_zero.build_result_report(args)
+
+        self.assertEqual(report["status"], "pass")
+        self.assertEqual(report["parser_target"], "ethos")
+        self.assertEqual(report["summary"]["runs_total"], 1)
+        self.assertEqual(set(report["competitors"]["runs"]), set(run_gate_zero.COMPETITOR_IDS))
+        self.assertEqual(set(report["competitors"]["summaries"]), set(run_gate_zero.COMPETITOR_IDS))
+        adapters = {adapter["id"]: adapter for adapter in report["competitors"]["adapters"]}
+        self.assertEqual(set(adapters), set(run_gate_zero.COMPETITOR_IDS))
+        for competitor_id in run_gate_zero.COMPETITOR_IDS:
+            self.assertEqual(adapters[competitor_id]["status"], "ready")
+            self.assertEqual(adapters[competitor_id]["mode"], "execute")
+            summary = report["competitors"]["summaries"][competitor_id]
+            runs = report["competitors"]["runs"][competitor_id]
+            self.assertEqual(summary["runs_total"], 1)
+            self.assertEqual(summary["runs_failed"], 0)
+            self.assertEqual(runs[0]["parser_target"], competitor_id)
+            self.assertEqual(runs[0]["status"], "pass")
+            self.assertRegex(runs[0]["output_sha256"], run_gate_zero.HEX64)
+        self.assertNotIn(str(root), json.dumps(report))
+
+    def test_pymupdf4llm_runner_preserves_configured_python_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            profile = root / "profile.json"
+            profile.write_text("{}", encoding="utf-8")
+            manifest_path = frozen_manifest(root)
+            competitors_path = frozen_competitors(root)
+            ethos_bin = fake_ethos(root)
+            base_python = root / "base-python"
+            write_executable(
+                base_python,
+                """#!/usr/bin/env python3
+import json
+import sys
+
+if not sys.argv[0].endswith("/venv/bin/python"):
+    raise SystemExit(9)
+print(json.dumps({"source": "pymupdf4llm", "argv0": sys.argv[0]}, sort_keys=True))
+""",
+            )
+            venv_bin = root / "venv" / "bin"
+            venv_bin.mkdir(parents=True)
+            venv_python = venv_bin / "python"
+            venv_python.symlink_to(base_python)
+
+            lock = json.loads(competitors_path.read_text(encoding="utf-8"))
+            pymupdf_entry = next(entry for entry in lock["gate_zero"] if entry["id"] == "pymupdf4llm")
+            artifact = root / "pymupdf4llm.artifact"
+            artifact.write_bytes(b"pymupdf4llm artifact")
+            pymupdf_entry["artifact_sha256"] = run_gate_zero.sha256_file(artifact)
+            write_json(competitors_path, lock)
+
+            args = result_args(root, manifest_path, competitors_path, ethos_bin, profile)
+            args.pymupdf4llm_python = venv_python
+            args.pymupdf4llm_artifact = artifact
+            args.pymupdf4llm_install_path = root / "venv"
+
+            report = run_gate_zero.build_result_report(args)
+
+        run = report["competitors"]["runs"]["pymupdf4llm"][0]
+        self.assertEqual(report["status"], "pass")
+        self.assertEqual(run["status"], "pass")
 
     def test_opendataloader_competitor_failure_is_reported_as_data(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

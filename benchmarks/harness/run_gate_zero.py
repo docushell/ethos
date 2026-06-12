@@ -14,6 +14,7 @@ import json
 import os
 import platform
 import re
+import signal
 import statistics
 import subprocess
 import sys
@@ -21,11 +22,6 @@ import tempfile
 import time
 from pathlib import Path
 from typing import Any
-
-try:
-    import resource
-except ImportError:  # pragma: no cover - Windows is not a Gate Zero host yet.
-    resource = None
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -41,7 +37,23 @@ EXPECTED_GATE_ZERO_COMPETITORS = {
     "liteparse",
     "pymupdf4llm",
 }
+COMPETITOR_IDS = (
+    "opendataloader-pdf",
+    "edgeparse",
+    "liteparse",
+    "pymupdf4llm",
+)
+COMPETITOR_COMMAND_LABELS = {
+    "opendataloader-pdf": "<opendataloader-command>",
+    "edgeparse": "<edgeparse-command>",
+    "liteparse": "<liteparse-command>",
+    "pymupdf4llm": "<pymupdf4llm-python>",
+}
 RESULT_COMPETITOR_LOCK_STATUSES = {"FROZEN", "FROZEN-SIGNED"}
+PYMUPDF4LLM_SCRIPT = (
+    "import sys, pymupdf4llm; "
+    "sys.stdout.write(pymupdf4llm.to_json(sys.argv[1], show_progress=False, use_ocr=False))"
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -145,42 +157,117 @@ def current_platform_key() -> str:
     return f"{system}-{machine}"
 
 
-def peak_rss_bytes() -> int | None:
-    if resource is None:
+def child_pids(pid: int) -> list[int]:
+    if os.name != "posix":
+        return []
+    try:
+        completed = subprocess.run(
+            ["pgrep", "-P", str(pid)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except OSError:
+        return []
+    if completed.returncode not in {0, 1}:
+        return []
+    pids: list[int] = []
+    for line in completed.stdout.decode("utf-8", errors="replace").splitlines():
+        try:
+            pids.append(int(line.strip()))
+        except ValueError:
+            pass
+    return pids
+
+
+def process_tree_pids(root_pid: int) -> list[int]:
+    seen: set[int] = set()
+    pending = [root_pid]
+    while pending:
+        pid = pending.pop()
+        if pid in seen:
+            continue
+        seen.add(pid)
+        pending.extend(child_pids(pid))
+    return sorted(seen)
+
+
+def process_tree_rss_bytes(root_pid: int) -> int | None:
+    if os.name != "posix":
+        return None
+    pids = process_tree_pids(root_pid)
+    if not pids:
         return None
     try:
-        value = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-    except (AttributeError, ValueError):
+        completed = subprocess.run(
+            ["ps", "-o", "rss=", "-p", ",".join(str(pid) for pid in pids)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except OSError:
         return None
-    if value <= 0:
+    if completed.returncode != 0:
         return None
-    # Darwin reports bytes; Linux reports KiB.
-    return int(value if platform.system() == "Darwin" else value * 1024)
+    total_kib = 0
+    for line in completed.stdout.decode("utf-8", errors="replace").splitlines():
+        try:
+            total_kib += int(line.strip())
+        except ValueError:
+            pass
+    if total_kib <= 0:
+        return None
+    return total_kib * 1024
+
+
+def kill_process_tree(process: subprocess.Popen[bytes]) -> None:
+    if os.name == "posix":
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+            return
+        except ProcessLookupError:
+            return
+        except OSError:
+            pass
+    process.kill()
 
 
 def measure_command(args: list[str], timeout_sec: float) -> dict[str, Any]:
     start = time.perf_counter()
-    try:
-        completed = subprocess.run(
+    peak_rss: int | None = None
+    timeout = False
+    with tempfile.TemporaryFile() as stdout_file, tempfile.TemporaryFile() as stderr_file:
+        process = subprocess.Popen(
             args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=timeout_sec,
-            check=False,
+            stdout=stdout_file,
+            stderr=stderr_file,
+            start_new_session=os.name == "posix",
         )
-        timeout = False
-    except subprocess.TimeoutExpired as exc:
+        while True:
+            sampled_rss = process_tree_rss_bytes(process.pid)
+            if sampled_rss is not None:
+                peak_rss = max(peak_rss or 0, sampled_rss)
+            if process.poll() is not None:
+                break
+            if time.perf_counter() - start > timeout_sec:
+                timeout = True
+                kill_process_tree(process)
+                process.wait()
+                break
+            time.sleep(0.02)
+
+        stdout_file.seek(0)
+        stderr_file.seek(0)
         completed = subprocess.CompletedProcess(
             args,
-            124,
-            stdout=exc.stdout or b"",
-            stderr=exc.stderr or b"",
+            124 if timeout else process.returncode,
+            stdout=stdout_file.read(),
+            stderr=stderr_file.read(),
         )
-        timeout = True
     return {
         "completed": completed,
         "duration_ms": (time.perf_counter() - start) * 1000.0,
-        "peak_rss_bytes": peak_rss_bytes(),
+        "peak_rss_bytes": peak_rss,
         "timeout": timeout,
     }
 
@@ -319,6 +406,40 @@ def select_host(manifest: dict[str, Any], requested_host_id: str | None) -> dict
         return next((host for host in hosts if host.get("id") == requested_host_id), None)
     platform_key = current_platform_key()
     return next((host for host in hosts if host.get("platform") == platform_key), None)
+
+
+def env_path(name: str) -> Path | None:
+    value = os.environ.get(name)
+    return Path(value) if value else None
+
+
+def resolve_competitor_paths(
+    args: argparse.Namespace,
+    competitor_id: str,
+) -> tuple[Path | None, Path | None, Path | None]:
+    if competitor_id == "opendataloader-pdf":
+        command = args.opendataloader_command or env_path("ETHOS_OPENDATALOADER_PDF_BIN")
+        if command is None and args.opendataloader_root is not None:
+            command = args.opendataloader_root / "scripts" / "run-cli.sh"
+        artifact = args.opendataloader_artifact or env_path("ETHOS_OPENDATALOADER_PDF_ARTIFACT")
+        install_path = args.opendataloader_install_path or artifact
+        return command, artifact, install_path
+    if competitor_id == "edgeparse":
+        command = args.edgeparse_command or env_path("ETHOS_EDGEPARSE_BIN")
+        artifact = args.edgeparse_artifact or env_path("ETHOS_EDGEPARSE_ARTIFACT")
+        install_path = args.edgeparse_install_path or artifact
+        return command, artifact, install_path
+    if competitor_id == "liteparse":
+        command = args.liteparse_command or env_path("ETHOS_LITEPARSE_BIN")
+        artifact = args.liteparse_artifact or env_path("ETHOS_LITEPARSE_ARTIFACT")
+        install_path = args.liteparse_install_path or artifact
+        return command, artifact, install_path
+    if competitor_id == "pymupdf4llm":
+        command = args.pymupdf4llm_python or env_path("ETHOS_PYMUPDF4LLM_PYTHON")
+        artifact = args.pymupdf4llm_artifact or env_path("ETHOS_PYMUPDF4LLM_ARTIFACT")
+        install_path = args.pymupdf4llm_install_path or artifact
+        return command, artifact, install_path
+    raise ValueError(f"unknown competitor: {competitor_id}")
 
 
 def warning_ids(doc: dict[str, Any]) -> list[str]:
@@ -465,11 +586,15 @@ def run_ethos_entry(
     }
 
 
-def opendataloader_lock_entry(lock: dict[str, Any]) -> dict[str, Any] | None:
+def competitor_lock_entry(lock: dict[str, Any], competitor_id: str) -> dict[str, Any] | None:
     return next(
-        (entry for entry in lock.get("gate_zero", []) if entry.get("id") == "opendataloader-pdf"),
+        (entry for entry in lock.get("gate_zero", []) if entry.get("id") == competitor_id),
         None,
     )
+
+
+def opendataloader_lock_entry(lock: dict[str, Any]) -> dict[str, Any] | None:
+    return competitor_lock_entry(lock, "opendataloader-pdf")
 
 
 def lock_artifact_hash(lock_entry: dict[str, Any] | None) -> str | None:
@@ -479,51 +604,10 @@ def lock_artifact_hash(lock_entry: dict[str, Any] | None) -> str | None:
     return value if isinstance(value, str) and HEX64.fullmatch(value) else None
 
 
-def build_opendataloader_adapter(
-    command_path: Path | None,
-    artifact_path: Path | None,
-    install_path: Path | None,
-    lock_entry: dict[str, Any] | None,
-) -> dict[str, Any]:
-    blockers: list[str] = []
-    notes: list[str] = []
-    command: list[str] | None = None
-    artifact_sha256: str | None = None
-    install_size_bytes: int | None = None
-    if lock_entry is None:
-        blockers.append("opendataloader-pdf lock entry is missing")
-    else:
-        if lock_entry.get("pinned") is not True:
-            blockers.append("opendataloader-pdf is not pinned")
-        if not is_filled(lock_entry.get("version")):
-            blockers.append("opendataloader-pdf version is missing")
-        if not is_filled(lock_entry.get("artifact_sha256")):
-            blockers.append("opendataloader-pdf artifact_sha256 is missing")
-    expected_artifact_sha256 = lock_artifact_hash(lock_entry)
-    if command_path is None:
-        notes.append("command not configured; Ethos-only result mode does not execute OpenDataLoader")
-    elif not command_path.is_file():
-        blockers.append("opendataloader-pdf command does not exist")
-    elif not os.access(command_path, os.X_OK):
-        blockers.append("opendataloader-pdf command is not executable")
-    if command_path is not None:
-        if artifact_path is None:
-            blockers.append("opendataloader-pdf artifact path is not configured")
-        elif not artifact_path.is_file():
-            blockers.append("opendataloader-pdf artifact path does not exist")
-        else:
-            artifact_sha256 = sha256_file(artifact_path)
-            if expected_artifact_sha256 and artifact_sha256 != expected_artifact_sha256:
-                blockers.append("opendataloader-pdf artifact sha256 does not match lock")
-        if install_path is None:
-            blockers.append("opendataloader-pdf install path is not configured")
-        elif not install_path.exists():
-            blockers.append("opendataloader-pdf install path does not exist")
-        else:
-            install_size_bytes = path_size_bytes(install_path)
-    if command_path is not None and not blockers:
-        command = [
-            "<opendataloader-command>",
+def competitor_command_template(competitor_id: str) -> list[str]:
+    if competitor_id == "opendataloader-pdf":
+        return [
+            COMPETITOR_COMMAND_LABELS[competitor_id],
             "--quiet",
             "--format",
             "json",
@@ -539,19 +623,97 @@ def build_opendataloader_adapter(
             "<output-dir>",
             "<input-pdf>",
         ]
+    if competitor_id == "edgeparse":
+        return [
+            COMPETITOR_COMMAND_LABELS[competitor_id],
+            "<input-pdf>",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>",
+        ]
+    if competitor_id == "liteparse":
+        return [
+            COMPETITOR_COMMAND_LABELS[competitor_id],
+            "parse",
+            "<input-pdf>",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet",
+        ]
+    if competitor_id == "pymupdf4llm":
+        return [
+            COMPETITOR_COMMAND_LABELS[competitor_id],
+            "-c",
+            "<pymupdf4llm-script>",
+            "<input-pdf>",
+        ]
+    raise ValueError(f"unknown competitor: {competitor_id}")
+
+
+def build_competitor_adapter(
+    competitor_id: str,
+    command_path: Path | None,
+    artifact_path: Path | None,
+    install_path: Path | None,
+    lock_entry: dict[str, Any] | None,
+) -> dict[str, Any]:
+    blockers: list[str] = []
+    notes: list[str] = []
+    command: list[str] | None = None
+    artifact_sha256: str | None = None
+    install_size_bytes: int | None = None
+    if lock_entry is None:
+        blockers.append(f"{competitor_id} lock entry is missing")
+    else:
+        if lock_entry.get("pinned") is not True:
+            blockers.append(f"{competitor_id} is not pinned")
+        if not is_filled(lock_entry.get("version")):
+            blockers.append(f"{competitor_id} version is missing")
+        if not is_filled(lock_entry.get("artifact_sha256")):
+            blockers.append(f"{competitor_id} artifact_sha256 is missing")
+    expected_artifact_sha256 = lock_artifact_hash(lock_entry)
+    if command_path is None:
+        notes.append(f"command not configured; Ethos-only result mode does not execute {competitor_id}")
+    elif not command_path.is_file():
+        blockers.append(f"{competitor_id} command does not exist")
+    elif not os.access(command_path, os.X_OK):
+        blockers.append(f"{competitor_id} command is not executable")
+    if command_path is not None:
+        if artifact_path is None:
+            blockers.append(f"{competitor_id} artifact path is not configured")
+        elif not artifact_path.is_file():
+            blockers.append(f"{competitor_id} artifact path does not exist")
+        else:
+            artifact_sha256 = sha256_file(artifact_path)
+            if expected_artifact_sha256 and artifact_sha256 != expected_artifact_sha256:
+                blockers.append(f"{competitor_id} artifact sha256 does not match lock")
+        if install_path is None:
+            blockers.append(f"{competitor_id} install path is not configured")
+        elif not install_path.exists():
+            blockers.append(f"{competitor_id} install path does not exist")
+        else:
+            install_size_bytes = path_size_bytes(install_path)
+    if command_path is not None and not blockers:
+        command = competitor_command_template(competitor_id)
     else:
         command = None
     status = "ready" if command and not blockers else "not_configured"
     if blockers:
         status = "blocked"
     return {
-        "id": "opendataloader-pdf",
+        "id": competitor_id,
         "status": status,
         "mode": "execute" if command else "metadata_only",
-        "command": "<opendataloader-command>" if command_path else None,
+        "command": COMPETITOR_COMMAND_LABELS[competitor_id] if command_path else None,
         "command_template": command,
         "artifact": {
-            "path": "<opendataloader-artifact>" if artifact_path else None,
+            "path": f"<{competitor_id}-artifact>" if artifact_path else None,
             "sha256": artifact_sha256,
             "expected_sha256": expected_artifact_sha256,
         },
@@ -562,62 +724,39 @@ def build_opendataloader_adapter(
     }
 
 
-def run_opendataloader_entry(
-    repo_root: Path,
-    command_path: Path,
-    entry: dict[str, Any],
-    iterations: int,
-    timeout_sec: float,
+def build_opendataloader_adapter(
+    command_path: Path | None,
+    artifact_path: Path | None,
+    install_path: Path | None,
+    lock_entry: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    file_path = repo_root / entry["file"]
-    report_command = [
-        "<opendataloader-command>",
-        "--quiet",
-        "--format",
-        "json",
-        "--image-output",
-        "external",
-        "--reading-order",
-        "xycut",
-        "--table-method",
-        "default",
-        "--threads",
-        "1",
-        "--output-dir",
-        "<output-dir>",
-        entry["file"],
+    return build_competitor_adapter(
+        "opendataloader-pdf",
+        command_path,
+        artifact_path,
+        install_path,
+        lock_entry,
+    )
+
+
+def report_competitor_command(competitor_id: str, entry: dict[str, Any]) -> list[str]:
+    command = competitor_command_template(competitor_id)
+    return [
+        entry["file"] if value == "<input-pdf>" else value
+        for value in command
     ]
-    try:
-        actual_sha256 = sha256_file(file_path)
-    except FileNotFoundError:
-        return run_entry_result(
-            entry,
-            "opendataloader-pdf",
-            report_command,
-            ["corpus file is missing"],
-        )
-    if actual_sha256 != entry["sha256"]:
-        return run_entry_result(
-            entry,
-            "opendataloader-pdf",
-            report_command,
+
+
+def competitor_execution_command(
+    competitor_id: str,
+    command_path: Path,
+    file_path: Path,
+    output_dir: Path,
+) -> tuple[list[str], Path | None, bool]:
+    if competitor_id == "opendataloader-pdf":
+        output_file = output_dir / f"{file_path.stem}.json"
+        return (
             [
-                "corpus sha256 mismatch: "
-                f"manifest={entry['sha256']} actual={actual_sha256}"
-            ],
-            actual_sha256,
-        )
-
-    durations: list[float] = []
-    rss_values: list[int] = []
-    output_hashes: list[str] = []
-    exit_codes: list[int] = []
-    failures: list[str] = []
-
-    for _ in range(iterations):
-        with tempfile.TemporaryDirectory(prefix="ethos-odl-") as tmp:
-            output_dir = Path(tmp)
-            command = [
                 str(command_path),
                 "--quiet",
                 "--format",
@@ -633,7 +772,98 @@ def run_opendataloader_entry(
                 "--output-dir",
                 str(output_dir),
                 str(file_path),
-            ]
+            ],
+            output_file,
+            True,
+        )
+    if competitor_id == "edgeparse":
+        output_file = output_dir / f"{file_path.stem}.json"
+        return (
+            [
+                str(command_path),
+                str(file_path),
+                "--format",
+                "json",
+                "--output-dir",
+                str(output_dir),
+            ],
+            output_file,
+            True,
+        )
+    if competitor_id == "liteparse":
+        output_file = output_dir / f"{file_path.stem}.json"
+        return (
+            [
+                str(command_path),
+                "parse",
+                str(file_path),
+                "--format",
+                "json",
+                "--output",
+                str(output_file),
+                "--no-ocr",
+                "--num-workers",
+                "1",
+                "--quiet",
+            ],
+            output_file,
+            True,
+        )
+    if competitor_id == "pymupdf4llm":
+        return (
+            [str(command_path), "-c", PYMUPDF4LLM_SCRIPT, str(file_path)],
+            None,
+            False,
+        )
+    raise ValueError(f"unknown competitor: {competitor_id}")
+
+
+def run_competitor_entry(
+    repo_root: Path,
+    competitor_id: str,
+    command_path: Path,
+    entry: dict[str, Any],
+    iterations: int,
+    timeout_sec: float,
+) -> dict[str, Any]:
+    file_path = repo_root / entry["file"]
+    report_command = report_competitor_command(competitor_id, entry)
+    try:
+        actual_sha256 = sha256_file(file_path)
+    except FileNotFoundError:
+        return run_entry_result(
+            entry,
+            competitor_id,
+            report_command,
+            ["corpus file is missing"],
+        )
+    if actual_sha256 != entry["sha256"]:
+        return run_entry_result(
+            entry,
+            competitor_id,
+            report_command,
+            [
+                "corpus sha256 mismatch: "
+                f"manifest={entry['sha256']} actual={actual_sha256}"
+            ],
+            actual_sha256,
+        )
+
+    durations: list[float] = []
+    rss_values: list[int] = []
+    output_hashes: list[str] = []
+    exit_codes: list[int] = []
+    failures: list[str] = []
+
+    for _ in range(iterations):
+        with tempfile.TemporaryDirectory(prefix=f"ethos-{competitor_id}-") as tmp:
+            output_dir = Path(tmp)
+            command, output_file, expects_json_file = competitor_execution_command(
+                competitor_id,
+                command_path,
+                file_path,
+                output_dir,
+            )
             measured = measure_command(command, timeout_sec)
             completed: subprocess.CompletedProcess[bytes] = measured["completed"]
             durations.append(measured["duration_ms"])
@@ -649,17 +879,30 @@ def run_opendataloader_entry(
                 detail = stderr or stdout
                 failures.append(f"exit {completed.returncode}: {detail}")
                 continue
-            output_file = output_dir / f"{file_path.stem}.json"
-            if not output_file.is_file():
-                failures.append("expected JSON output file was not produced")
+            if expects_json_file:
+                assert output_file is not None
+                if not output_file.is_file():
+                    failures.append("expected JSON output file was not produced")
+                    continue
+                output = output_file.read_bytes()
+                try:
+                    json.loads(output)
+                except json.JSONDecodeError as exc:
+                    failures.append(f"output JSON is invalid: {exc}")
+                    continue
+                output_hashes.append(output_tree_hash(output_dir))
                 continue
-            output = output_file.read_bytes()
-            try:
-                json.loads(output)
-            except json.JSONDecodeError as exc:
-                failures.append(f"output JSON is invalid: {exc}")
+            output = completed.stdout
+            if not output.strip():
+                failures.append("expected text output was not produced")
                 continue
-            output_hashes.append(output_tree_hash(output_dir))
+            if competitor_id == "pymupdf4llm":
+                try:
+                    json.loads(output)
+                except json.JSONDecodeError as exc:
+                    failures.append(f"stdout JSON is invalid: {exc}")
+                    continue
+            output_hashes.append(sha256_bytes(output))
 
     if len(set(output_hashes)) > 1:
         failures.append("output_sha256 changed across iterations")
@@ -673,7 +916,7 @@ def run_opendataloader_entry(
             "pages": entry["pages"],
             "subsets": entry["subsets"],
         },
-        "parser_target": "opendataloader-pdf",
+        "parser_target": competitor_id,
         "command": report_command,
         "exit_code": exit_codes[-1] if exit_codes else None,
         "duration_ms_p50": percentile(durations, 0.50),
@@ -686,6 +929,23 @@ def run_opendataloader_entry(
         "status": "pass" if not failures else "fail",
         "failures": failures,
     }
+
+
+def run_opendataloader_entry(
+    repo_root: Path,
+    command_path: Path,
+    entry: dict[str, Any],
+    iterations: int,
+    timeout_sec: float,
+) -> dict[str, Any]:
+    return run_competitor_entry(
+        repo_root,
+        "opendataloader-pdf",
+        command_path,
+        entry,
+        iterations,
+        timeout_sec,
+    )
 
 
 def aggregate_output_hash(runs: list[dict[str, Any]]) -> str | None:
@@ -760,28 +1020,26 @@ def build_result_report(args: argparse.Namespace) -> dict[str, Any]:
     if readiness["status"] != "ready":
         result_blockers.append("Gate Zero readiness is blocked")
 
-    opendataloader_command = args.opendataloader_command
-    if opendataloader_command is None:
-        env_path = os.environ.get("ETHOS_OPENDATALOADER_PDF_BIN")
-        opendataloader_command = Path(env_path) if env_path else None
-    if opendataloader_command is None and args.opendataloader_root is not None:
-        opendataloader_command = args.opendataloader_root / "scripts" / "run-cli.sh"
-    opendataloader_artifact = args.opendataloader_artifact
-    if opendataloader_artifact is None:
-        env_path = os.environ.get("ETHOS_OPENDATALOADER_PDF_ARTIFACT")
-        opendataloader_artifact = Path(env_path) if env_path else None
-    opendataloader_install_path = args.opendataloader_install_path or opendataloader_artifact
-    opendataloader = build_opendataloader_adapter(
-        opendataloader_command,
-        opendataloader_artifact,
-        opendataloader_install_path,
-        opendataloader_lock_entry(competitors),
-    )
-    if opendataloader_command is not None and opendataloader["status"] == "blocked":
-        result_blockers.extend(opendataloader["blockers"])
+    competitor_commands: dict[str, Path | None] = {}
+    competitor_adapters: list[dict[str, Any]] = []
+    for competitor_id in COMPETITOR_IDS:
+        command_path, artifact_path, install_path = resolve_competitor_paths(args, competitor_id)
+        competitor_commands[competitor_id] = command_path
+        adapter = build_competitor_adapter(
+            competitor_id,
+            command_path,
+            artifact_path,
+            install_path,
+            competitor_lock_entry(competitors, competitor_id),
+        )
+        competitor_adapters.append(adapter)
+        if command_path is not None and adapter["status"] == "blocked":
+            result_blockers.extend(adapter["blockers"])
 
     runs: list[dict[str, Any]] = []
-    opendataloader_runs: list[dict[str, Any]] = []
+    competitor_runs: dict[str, list[dict[str, Any]]] = {
+        competitor_id: [] for competitor_id in COMPETITOR_IDS
+    }
     if not result_blockers:
         for entry in manifest.get("corpus", []):
             runs.append(
@@ -793,13 +1051,18 @@ def build_result_report(args: argparse.Namespace) -> dict[str, Any]:
                     args.timeout_sec,
                 )
             )
-        if opendataloader["status"] == "ready":
-            assert opendataloader_command is not None
+        for adapter in competitor_adapters:
+            competitor_id = adapter["id"]
+            if adapter["status"] != "ready":
+                continue
+            command_path = competitor_commands[competitor_id]
+            assert command_path is not None
             for entry in manifest.get("corpus", []):
-                opendataloader_runs.append(
-                    run_opendataloader_entry(
+                competitor_runs[competitor_id].append(
+                    run_competitor_entry(
                         repo_root,
-                        opendataloader_command.resolve(),
+                        competitor_id,
+                        command_path,
                         entry,
                         args.iterations,
                         args.timeout_sec,
@@ -807,17 +1070,23 @@ def build_result_report(args: argparse.Namespace) -> dict[str, Any]:
                 )
 
     ethos_summary = parser_summary(runs, args.iterations, path_size_bytes(args.install_path))
-    opendataloader_summary = parser_summary(
-        opendataloader_runs,
-        args.iterations,
-        opendataloader["install_size_bytes"],
-    )
+    competitor_summaries = {
+        adapter["id"]: parser_summary(
+            competitor_runs[adapter["id"]],
+            args.iterations,
+            adapter["install_size_bytes"],
+        )
+        for adapter in competitor_adapters
+    }
     failed_runs = [run for run in runs if run["status"] != "pass"]
-    failed_opendataloader_runs = [
-        run for run in opendataloader_runs if run["status"] != "pass"
+    failed_competitor_runs = [
+        run
+        for runs_for_competitor in competitor_runs.values()
+        for run in runs_for_competitor
+        if run["status"] != "pass"
     ]
     status = "blocked" if result_blockers else (
-        "fail" if failed_runs or failed_opendataloader_runs else "pass"
+        "fail" if failed_runs or failed_competitor_runs else "pass"
     )
     command = [
         report_path(repo_root, args.ethos_bin),
@@ -874,13 +1143,9 @@ def build_result_report(args: argparse.Namespace) -> dict[str, Any]:
         },
         "blockers": result_blockers,
         "competitors": {
-            "adapters": [opendataloader],
-            "runs": {
-                "opendataloader-pdf": opendataloader_runs,
-            },
-            "summaries": {
-                "opendataloader-pdf": opendataloader_summary,
-            },
+            "adapters": competitor_adapters,
+            "runs": competitor_runs,
+            "summaries": competitor_summaries,
         },
         "runs": runs,
         "summary": ethos_summary,
@@ -905,6 +1170,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--opendataloader-command", type=Path)
     parser.add_argument("--opendataloader-artifact", type=Path)
     parser.add_argument("--opendataloader-install-path", type=Path)
+    parser.add_argument("--edgeparse-command", type=Path)
+    parser.add_argument("--edgeparse-artifact", type=Path)
+    parser.add_argument("--edgeparse-install-path", type=Path)
+    parser.add_argument("--liteparse-command", type=Path)
+    parser.add_argument("--liteparse-artifact", type=Path)
+    parser.add_argument("--liteparse-install-path", type=Path)
+    parser.add_argument("--pymupdf4llm-python", type=Path)
+    parser.add_argument("--pymupdf4llm-artifact", type=Path)
+    parser.add_argument("--pymupdf4llm-install-path", type=Path)
     args = parser.parse_args(argv)
 
     if not args.manifest.is_file():

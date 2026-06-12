@@ -42,10 +42,10 @@
       "source": "https://github.com/raphaelmansuy/edgeparse",
       "package": "edgeparse",
       "version": "0.2.5",
-      "artifact_sha256": "46c4b84c5a8f5e85a1699614360037535bf2aba15c5b7a4db3aec37865038935",
-      "artifact_kind": "PyPI source distribution downloaded and SHA256-verified on the benchmark owner host",
-      "artifact_filename": "edgeparse-0.2.5.tar.gz",
-      "artifact_url": "https://files.pythonhosted.org/packages/c3/18/8262b7121f18667879854b6d1bc623ff8b8cb8ca57c3750a3d44e12bebc9/edgeparse-0.2.5.tar.gz",
+      "artifact_sha256": "82a6fdd81f2bfac4a3b8aedd06e055ae67ec8a2d1c879fb6327259caa13f5a69",
+      "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
+      "artifact_filename": "edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl",
+      "artifact_url": "https://files.pythonhosted.org/packages/85/26/0fcb829043ea9de9b5e4771294a027dca47fdf7b4cb7211f6035092d1082/edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl",
       "pin_status": "pinned",
       "pinned": true,
       "pinned_at": "2026-06-12T08:17:02Z",
@@ -58,10 +58,10 @@
       "source": "https://github.com/run-llama/liteparse",
       "package": "liteparse",
       "version": "2.0.8",
-      "artifact_sha256": "c03b7b32508cf35e7ee01ea3fa7dd5d45592bc4a7c42696f7505e445ad5474c4",
-      "artifact_kind": "PyPI source distribution downloaded and SHA256-verified on the benchmark owner host",
-      "artifact_filename": "liteparse-2.0.8.tar.gz",
-      "artifact_url": "https://files.pythonhosted.org/packages/74/3d/fd55e7e3d35630da403a5283b054e4a08e0025a04dda9988d5c3b37970a3/liteparse-2.0.8.tar.gz",
+      "artifact_sha256": "1486987ef620cec06b8dfc365505f15cd5cd4bb05dac3775d260633df7060779",
+      "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
+      "artifact_filename": "liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl",
+      "artifact_url": "https://files.pythonhosted.org/packages/8c/c9/d33d5baaedf0a753c6729ec5e2bc62f6bcf453986c071ef3ceba485bd922/liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl",
       "pin_status": "pinned",
       "pinned": true,
       "pinned_at": "2026-06-12T08:17:02Z",
@@ -73,11 +73,73 @@
       "runtime": "Python",
       "package": "pymupdf4llm",
       "version": "1.27.2.3",
-      "python_version": "Python 3.9.6",
+      "python_version": "Python 3.12.13",
       "artifact_sha256": "bd724b79fa3f06a5b28d7a65f7acfa8de56e04bdb603ac2d6dff315e0d151aaa",
       "artifact_kind": "PyPI universal wheel downloaded and SHA256-verified on the benchmark owner host",
       "artifact_filename": "pymupdf4llm-1.27.2.3-py3-none-any.whl",
       "artifact_url": "https://files.pythonhosted.org/packages/e6/38/84bf29f4dd72e6c450546df6ca8f53021f764fd945ba67dcc235d39bc20e/pymupdf4llm-1.27.2.3-py3-none-any.whl",
+      "dependency_artifacts": [
+        {
+          "package": "PyMuPDF",
+          "version": "1.27.2.3",
+          "artifact_filename": "pymupdf-1.27.2.3-cp310-abi3-macosx_11_0_arm64.whl",
+          "artifact_sha256": "660d93cb6da5bbddf11d3982ae27745dd3a9902d9f24cdb69adab83962294b5a"
+        },
+        {
+          "package": "pymupdf-layout",
+          "version": "1.27.2.3",
+          "artifact_filename": "pymupdf_layout-1.27.2.3-cp310-abi3-macosx_11_0_arm64.whl",
+          "artifact_sha256": "5656b09669dcd7c51f539afb6fdaf853602bab4cbc20479ee5ee1a85a4e32b60"
+        },
+        {
+          "package": "PyYAML",
+          "version": "6.0.3",
+          "artifact_filename": "pyyaml-6.0.3-cp312-cp312-macosx_11_0_arm64.whl",
+          "artifact_sha256": "fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0"
+        },
+        {
+          "package": "numpy",
+          "version": "2.4.6",
+          "artifact_filename": "numpy-2.4.6-cp312-cp312-macosx_14_0_arm64.whl",
+          "artifact_sha256": "3213d622a0283a39a93d188f3cf72b26862df52fbb4ca3697f51705016523d41"
+        },
+        {
+          "package": "onnxruntime",
+          "version": "1.26.0",
+          "artifact_filename": "onnxruntime-1.26.0-cp312-cp312-macosx_14_0_arm64.whl",
+          "artifact_sha256": "05b028781b322ad74b57ce5b50aa5280bb1fe96ceec334628ade681e0b24c1ac"
+        },
+        {
+          "package": "networkx",
+          "version": "3.6.1",
+          "artifact_filename": "networkx-3.6.1-py3-none-any.whl",
+          "artifact_sha256": "d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762"
+        },
+        {
+          "package": "tabulate",
+          "version": "0.10.0",
+          "artifact_filename": "tabulate-0.10.0-py3-none-any.whl",
+          "artifact_sha256": "f0b0622e567335c8fabaaa659f1b33bcb6ddfe2e496071b743aa113f8774f2d3"
+        },
+        {
+          "package": "flatbuffers",
+          "version": "25.12.19",
+          "artifact_filename": "flatbuffers-25.12.19-py2.py3-none-any.whl",
+          "artifact_sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4"
+        },
+        {
+          "package": "packaging",
+          "version": "26.2",
+          "artifact_filename": "packaging-26.2-py3-none-any.whl",
+          "artifact_sha256": "5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e"
+        },
+        {
+          "package": "protobuf",
+          "version": "7.35.1",
+          "artifact_filename": "protobuf-7.35.1-cp310-abi3-macosx_10_9_universal2.whl",
+          "artifact_sha256": "24f857477359a85c0c235261b8ba905fd51b2562f4a64ca1df5473f29850cbf6"
+        }
+      ],
       "pin_status": "pinned",
       "pinned": true,
       "pinned_at": "2026-06-12T08:17:02Z",
