@@ -20,6 +20,8 @@ Still absent or not claimable: frozen Gate Zero corpus/hardware records, reprodu
 
 ## Human / External Blockers
 
+PM execution packet: `benchmarks/gate-zero/FREEZE_PACKET.md`.
+
 | ID | Blocker | Required output | Owner | Blocks |
 | --- | --- | --- | --- | --- |
 | H1 | Freeze Gate Zero corpus and hardware | `benchmarks/gate-zero/manifest.json` has corpus entries with exact sha256 values, complete hardware CPU/RAM/OS/kernel/runner fields, `frozen=true`, and signed freeze record | Gate Zero decider interim corpus owner / decider | Valid Gate Zero run, public benchmark trust |

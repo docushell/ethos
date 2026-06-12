@@ -28,25 +28,25 @@
       "id": "mac-m4pro-arm64",
       "role": "performance",
       "platform": "macos-arm64",
-      "model": "Mac (M4 Pro)",
-      "cpu": null,
+      "model": "MacBook Pro, Mac16,8",
+      "cpu": "Apple M4 Pro, 12 cores (8 performance, 4 efficiency)",
       "cores_used_for_g1": 1,
-      "ram": null,
-      "os": null,
-      "kernel": null,
-      "runner": null
+      "ram": "48 GB",
+      "os": "macOS 26.5 (25F71)",
+      "kernel": "Darwin 25.5.0",
+      "runner": "local manual runner; hostname=<private-host-pattern>-Pro.local"
     },
     {
       "id": "linux-x64-1",
       "role": "performance",
       "platform": "linux-x64",
-      "model": null,
-      "cpu": null,
+      "model": "KVM virtualized enterprise Linux 8.8 x86_64 host",
+      "cpu": "AMD EPYC 7742 64-Core Processor, 2 vCPU, 1 core/socket, 2 threads/core",
       "cores_used_for_g1": 1,
-      "ram": null,
-      "os": null,
-      "kernel": null,
-      "runner": null
+      "ram": "32565968 kB MemTotal",
+      "os": "Enterprise Linux 8.8 compatible server",
+      "kernel": "Linux 5.15.0 enterprise x86_64",
+      "runner": "manual runner; host id=linux-x64-1"
     }
   ],
   "determinism_platforms": ["macos-arm64", "linux-x64"],
