@@ -109,7 +109,7 @@
           },
           "evidence": {
             "type": "object",
-            "description": "What was found at the citation target (for audit; crop refs land with the L2 evidence plumbing in Milestone D).",
+            "description": "What was found at the citation target. crop_ref is an opaque audit pointer emitted only when the verification config requests crops and the GroundingSource declares crop_support.",
             "additionalProperties": false,
             "properties": {
               "text": { "type": "string" },

@@ -115,6 +115,7 @@ pub fn verify_claims(
             (Some(expected), Some(actual)) if expected != actual
         );
     let include_text = config.evidence.is_some_and(|e| e.include_text);
+    let include_crops = config.evidence.is_some_and(|e| e.include_crops);
     let mut unsupported = Vec::new();
     let checks: Vec<Check> = claims
         .into_iter()
@@ -127,6 +128,7 @@ pub fn verify_claims(
                 config,
                 fingerprint_stale,
                 include_text,
+                include_crops,
                 &mut unsupported,
             )
         })
@@ -159,6 +161,7 @@ fn check_claim(
     config: &VerificationConfig,
     fingerprint_stale: bool,
     include_text: bool,
+    include_crops: bool,
     unsupported: &mut Vec<String>,
 ) -> Check {
     let mut warnings = Vec::new();
@@ -228,7 +231,7 @@ fn check_claim(
         }
     };
 
-    let evidence = make_evidence(&target, include_text);
+    let evidence = make_evidence(source, &target, include_text, include_crops);
     match claim.kind {
         ClaimKind::Presence => Check {
             id: check_id,
@@ -432,12 +435,26 @@ fn target_from_cell(page: String, cell: GroundingCell) -> FoundTarget {
     }
 }
 
-fn make_evidence(target: &FoundTarget, include_text: bool) -> Option<Evidence> {
+fn make_evidence(
+    source: &dyn GroundingSource,
+    target: &FoundTarget,
+    include_text: bool,
+    include_crops: bool,
+) -> Option<Evidence> {
+    let crop_ref = if include_crops && source.capabilities().crop_support {
+        target
+            .page
+            .as_deref()
+            .zip(target.bbox)
+            .and_then(|(page, bbox)| source.crop_ref(page, bbox))
+    } else {
+        None
+    };
     Some(Evidence {
         text: include_text.then(|| target.text.clone()).flatten(),
         page: target.page.clone(),
         bbox: target.bbox,
-        crop_ref: None,
+        crop_ref,
     })
 }
 
@@ -502,6 +519,7 @@ mod tests {
     struct TestSource {
         caps: Capabilities,
         fingerprint: Option<String>,
+        crop_ref: Option<String>,
     }
 
     impl Default for TestSource {
@@ -518,6 +536,7 @@ mod tests {
                     "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02"
                         .into(),
                 ),
+                crop_ref: None,
             }
         }
     }
@@ -602,6 +621,13 @@ mod tests {
                 ],
             }]
         }
+        fn crop_ref(&self, page: &str, bbox: [i64; 4]) -> Option<String> {
+            if page == "p0001" && bbox == [7200, 10100, 54000, 11500] {
+                self.crop_ref.clone()
+            } else {
+                None
+            }
+        }
     }
 
     fn claim(kind: ClaimKind, text: Option<&str>, citation: Citation) -> Claim {
@@ -622,6 +648,14 @@ mod tests {
     fn verify(source: &TestSource, claims: Vec<Claim>) -> VerificationReport {
         let cfg = VerificationConfig::default_v1();
         verify_claims(source, input(source, claims), &cfg, "0".repeat(64))
+    }
+
+    fn verify_with_config(
+        source: &TestSource,
+        claims: Vec<Claim>,
+        cfg: &VerificationConfig,
+    ) -> VerificationReport {
+        verify_claims(source, input(source, claims), cfg, "0".repeat(64))
     }
 
     #[test]
@@ -767,6 +801,80 @@ mod tests {
     }
 
     #[test]
+    fn crop_refs_are_echoed_only_when_requested_and_supported() {
+        let source = TestSource {
+            caps: Capabilities {
+                crop_support: true,
+                ..TestSource::default().caps
+            },
+            crop_ref: Some("crop://p0001/e000002.png".into()),
+            ..TestSource::default()
+        };
+        let claim = claim(
+            ClaimKind::Quote,
+            Some("Revenue grew to $12.4M in Q3 2025"),
+            Citation {
+                element_id: Some("e000002".into()),
+                ..Default::default()
+            },
+        );
+
+        let mut cfg = VerificationConfig::default_v1();
+        cfg.evidence.as_mut().unwrap().include_crops = true;
+        let with_crops = verify_with_config(&source, vec![claim.clone()], &cfg);
+        assert_eq!(
+            with_crops.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.crop_ref.as_deref()),
+            Some("crop://p0001/e000002.png")
+        );
+
+        cfg.evidence.as_mut().unwrap().include_crops = false;
+        let without_crops = verify_with_config(&source, vec![claim], &cfg);
+        assert_eq!(
+            without_crops.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.crop_ref.as_deref()),
+            None
+        );
+    }
+
+    #[test]
+    fn requested_crop_refs_without_source_support_remain_capability_limited() {
+        let source = TestSource {
+            crop_ref: Some("crop://p0001/e000002.png".into()),
+            ..TestSource::default()
+        };
+        let mut cfg = VerificationConfig::default_v1();
+        cfg.evidence.as_mut().unwrap().include_crops = true;
+
+        let report = verify_with_config(
+            &source,
+            vec![claim(
+                ClaimKind::Quote,
+                Some("Revenue grew to $12.4M in Q3 2025"),
+                Citation {
+                    element_id: Some("e000002".into()),
+                    ..Default::default()
+                },
+            )],
+            &cfg,
+        );
+
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert!(report.warnings.contains(&WarningCode::CapabilityLimited));
+        assert_eq!(
+            report.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.crop_ref.as_deref()),
+            None
+        );
+    }
+
+    #[test]
     fn stale_fingerprint_marks_checks_stale_and_gate_false() {
         let source = TestSource::default();
         let cfg = VerificationConfig::default_v1();
@@ -826,6 +934,7 @@ mod tests {
                 crop_support: false,
             },
             fingerprint: None,
+            crop_ref: None,
         };
         let report = verify(
             &source,

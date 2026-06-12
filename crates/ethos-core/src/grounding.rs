@@ -163,6 +163,12 @@ pub trait GroundingSource {
     fn tables(&self) -> Vec<GroundingTable> {
         Vec::new()
     }
+    /// Stable crop reference for an evidence region, when `crop_support` is true.
+    /// The verify layer treats this as an opaque audit pointer; sources own how the
+    /// referenced crop artifact is generated and stored.
+    fn crop_ref(&self, _page: &str, _bbox: [i64; 4]) -> Option<String> {
+        None
+    }
     /// Element lookup by id. Default: linear scan over [`Self::elements`].
     fn element_by_id(&self, id: &str) -> Option<GroundingElement> {
         self.elements().into_iter().find(|e| e.id == id)
@@ -225,5 +231,6 @@ mod tests {
             Some("hello")
         );
         assert!(t.element_by_id("nope").is_none());
+        assert!(t.crop_ref("p1", [0, 0, 5, 5]).is_none());
     }
 }
