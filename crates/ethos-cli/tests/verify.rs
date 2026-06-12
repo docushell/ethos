@@ -106,6 +106,49 @@ fn opendataloader_verify_adapter_produces_capability_aware_report() {
 }
 
 #[test]
+fn opendataloader_adapter_errors_are_usage_errors() {
+    let grounding = temp_json(
+        "bad-odl-grounding",
+        r#"{
+          "tool": {
+            "name": "opendataloader-pdf",
+            "version": "0.0.0-synthetic"
+          },
+          "pages": [
+            {
+              "number": 1,
+              "width": 612.0,
+              "height": 792.0
+            }
+          ],
+          "elements": [
+            {
+              "id": "bad-ref",
+              "page": 2,
+              "bbox": [72.0, 101.0, 540.0, 115.0],
+              "type": "Paragraph",
+              "text": "Revenue grew to $12.4M in Q3 2025."
+            }
+          ]
+        }"#,
+    );
+    let citations = repo_root().join("examples/verify/answer_citations.json");
+    let output = run_ethos(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("opendataloader-json adapter: element.page references unknown page"));
+}
+
+#[test]
 fn stale_fingerprint_is_report_level_failure() {
     let doc = document_example();
     let citations = temp_json(

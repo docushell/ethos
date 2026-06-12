@@ -21,6 +21,8 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+use std::collections::HashSet;
+
 use ethos_core::grounding::{
     Capabilities, CoordinateOrigin, GroundingElement, GroundingSource, PageGeometry, ParserIdentity,
 };
@@ -49,6 +51,34 @@ fn err(message: &str) -> AdapterError {
     }
 }
 
+fn string_field(
+    object: &Value,
+    field: &str,
+    missing_message: &str,
+) -> Result<String, AdapterError> {
+    let value = object
+        .get(field)
+        .and_then(Value::as_str)
+        .ok_or_else(|| err(missing_message))?;
+    if value.trim().is_empty() {
+        return Err(err(missing_message));
+    }
+    Ok(value.to_string())
+}
+
+fn u32_field(
+    object: &Value,
+    field: &str,
+    missing_message: &str,
+    overflow_message: &str,
+) -> Result<u32, AdapterError> {
+    let value = object
+        .get(field)
+        .and_then(Value::as_u64)
+        .ok_or_else(|| err(missing_message))?;
+    u32::try_from(value).map_err(|_| err(overflow_message))
+}
+
 /// A parsed ODL JSON document exposed as a [`GroundingSource`].
 #[derive(Debug, Clone)]
 pub struct OdlJsonSource {
@@ -74,6 +104,18 @@ fn to_centipoints(v: f64) -> Option<i64> {
         return None;
     }
     Some(rounded as i64)
+}
+
+fn positive_centipoints(object: &Value, field: &str, message: &str) -> Result<i64, AdapterError> {
+    let raw = object
+        .get(field)
+        .and_then(Value::as_f64)
+        .ok_or_else(|| err(message))?;
+    let value = to_centipoints(raw).ok_or_else(|| err(message))?;
+    if value <= 0 {
+        return Err(err(message));
+    }
+    Ok(value)
 }
 
 fn bbox_from(value: &Value) -> Result<[i64; 4], AdapterError> {
@@ -108,43 +150,43 @@ impl OdlJsonSource {
         let tool = root
             .get("tool")
             .ok_or_else(|| err("missing 'tool' object"))?;
-        let parser_name = tool
-            .get("name")
-            .and_then(Value::as_str)
-            .ok_or_else(|| err("missing tool.name"))?
-            .to_string();
-        let parser_version = tool
-            .get("version")
-            .and_then(Value::as_str)
-            .ok_or_else(|| err("missing tool.version"))?
-            .to_string();
+        let parser_name = string_field(tool, "name", "missing tool.name")?;
+        let parser_version = string_field(tool, "version", "missing tool.version")?;
 
         let mut pages = Vec::new();
+        let mut page_numbers = HashSet::new();
         for page in root
             .get("pages")
             .and_then(Value::as_array)
             .ok_or_else(|| err("missing 'pages' array"))?
         {
-            let number = page
-                .get("number")
-                .and_then(Value::as_u64)
-                .ok_or_else(|| err("missing page.number"))? as u32;
+            let number = u32_field(
+                page,
+                "number",
+                "missing page.number",
+                "page.number must fit u32",
+            )?;
             if number == 0 {
                 return Err(err("page.number must be 1-based"));
             }
-            let width = page.get("width").and_then(Value::as_f64).unwrap_or(0.0);
-            let height = page.get("height").and_then(Value::as_f64).unwrap_or(0.0);
+            if !page_numbers.insert(number) {
+                return Err(err("duplicate page.number"));
+            }
+            let width = positive_centipoints(page, "width", "page width must be positive finite")?;
+            let height =
+                positive_centipoints(page, "height", "page height must be positive finite")?;
             pages.push(PageGeometry {
                 id: format!("page-{number}"),
                 index: number,
-                width: to_centipoints(width).ok_or_else(|| err("page width not finite"))?,
-                height: to_centipoints(height).ok_or_else(|| err("page height not finite"))?,
+                width,
+                height,
                 rotation: 0,
             });
         }
         pages.sort_by_key(|p| p.index);
 
         let mut elements = Vec::new();
+        let mut element_ids = HashSet::new();
         for (i, el) in root
             .get("elements")
             .and_then(Value::as_array)
@@ -152,19 +194,34 @@ impl OdlJsonSource {
             .iter()
             .enumerate()
         {
-            let page_number = el
-                .get("page")
-                .and_then(Value::as_u64)
-                .ok_or_else(|| err("missing element.page"))? as u32;
+            let page_number = u32_field(
+                el,
+                "page",
+                "missing element.page",
+                "element.page must fit u32",
+            )?;
+            if page_number == 0 {
+                return Err(err("element.page must be 1-based"));
+            }
+            if !page_numbers.contains(&page_number) {
+                return Err(err("element.page references unknown page"));
+            }
             let id = el
                 .get("id")
                 .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
                 .map(str::to_string)
                 .unwrap_or_else(|| format!("odl-el-{}", i + 1));
+            if !element_ids.insert(id.clone()) {
+                return Err(err("duplicate element.id"));
+            }
             let bbox = bbox_from(el.get("bbox").ok_or_else(|| err("missing element.bbox"))?)?;
             let kind = el
                 .get("type")
                 .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|kind| !kind.is_empty())
                 .unwrap_or("unknown")
                 .to_ascii_lowercase();
             let text = el.get("text").and_then(Value::as_str).map(str::to_string);
@@ -254,5 +311,70 @@ mod tests {
         assert!(OdlJsonSource::from_json_str("not json").is_err());
         assert!(OdlJsonSource::from_json_str("{}").is_err());
         assert!(OdlJsonSource::from_json_str(r#"{"tool":{"name":"x","version":"1"},"pages":[],"elements":[{"page":1,"bbox":[5,5,1,1]}]}"#).is_err());
+    }
+
+    fn assert_error_contains(json: &str, expected: &str) {
+        let error = OdlJsonSource::from_json_str(json).unwrap_err();
+        assert!(
+            error.message.contains(expected),
+            "expected error containing {expected:?}, got {:?}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_ambiguous_or_unbounded_identity_fields() {
+        assert_error_contains(
+            r#"{"tool":{"name":" ","version":"1"},"pages":[],"elements":[]}"#,
+            "missing tool.name",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792},{"number":1,"width":612,"height":792}],"elements":[]}"#,
+            "duplicate page.number",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[{"id":"dup","page":1,"bbox":[1,1,2,2]},{"id":"dup","page":1,"bbox":[3,3,4,4]}]}"#,
+            "duplicate element.id",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[{"id":"odl-el-2","page":1,"bbox":[1,1,2,2]},{"page":1,"bbox":[3,3,4,4]}]}"#,
+            "duplicate element.id",
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_page_numbers_and_references() {
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":0,"width":612,"height":792}],"elements":[]}"#,
+            "page.number must be 1-based",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":4294967296,"width":612,"height":792}],"elements":[]}"#,
+            "page.number must fit u32",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[{"page":2,"bbox":[1,1,2,2]}]}"#,
+            "element.page references unknown page",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[{"page":4294967296,"bbox":[1,1,2,2]}]}"#,
+            "element.page must fit u32",
+        );
+    }
+
+    #[test]
+    fn rejects_missing_or_nonpositive_page_dimensions() {
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"height":792}],"elements":[]}"#,
+            "page width must be positive finite",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":0,"height":792}],"elements":[]}"#,
+            "page width must be positive finite",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":-1}],"elements":[]}"#,
+            "page height must be positive finite",
+        );
     }
 }
