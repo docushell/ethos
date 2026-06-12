@@ -46,6 +46,8 @@ jobs:
         run: python3 fixtures/validate_fixtures.py
       - name: readiness gate tests
         run: python3 .github/scripts/test_readiness_gate.py
+      - name: Gate Zero harness tests
+        run: python3 benchmarks/harness/test_run_gate_zero.py
       - name: same-platform double-parse byte-diff
         run: |
           echo "skipped: PDFium runtime is not configured in base CI yet"
@@ -81,6 +83,16 @@ jobs:
           python-version: "3.12"
       - run: pip install "jsonschema>=4.18"
       - run: python3 schemas/validate_examples.py
+      - name: Gate Zero result schema validation
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          schema = json.loads(Path("benchmarks/gate-zero/result.schema.json").read_text())
+          Draft202012Validator.check_schema(schema)
+          PY
       - run: python3 fixtures/validate_fixtures.py
 
   no-network-runtime:

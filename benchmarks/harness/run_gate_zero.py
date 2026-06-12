@@ -11,16 +11,28 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import platform
 import re
+import statistics
+import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
+
+try:
+    import resource
+except ImportError:  # pragma: no cover - Windows is not a Gate Zero host yet.
+    resource = None
 
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MANIFEST = ROOT / "benchmarks" / "gate-zero" / "manifest.json"
 DEFAULT_COMPETITORS = ROOT / "benchmarks" / "competitors.lock.json"
 DEFAULT_RESULTS = ROOT / "benchmarks" / "results" / "gate-zero" / "readiness.json"
+DEFAULT_GATE_ZERO_RESULT = ROOT / "benchmarks" / "results" / "gate-zero" / "g1.json"
+DEFAULT_PROFILE = ROOT / "profiles" / "ethos-deterministic-v1.json"
 HEX64 = re.compile(r"[0-9a-f]{64}")
 EXPECTED_GATE_ZERO_COMPETITORS = {
     "opendataloader-pdf",
@@ -28,6 +40,7 @@ EXPECTED_GATE_ZERO_COMPETITORS = {
     "liteparse",
     "pymupdf4llm",
 }
+RESULT_COMPETITOR_LOCK_STATUSES = {"FROZEN", "FROZEN-SIGNED"}
 
 
 def sha256_file(path: Path) -> str:
@@ -36,6 +49,27 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def sha256_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
+
+
+def c14n_json_bytes(value: Any) -> bytes:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def sha256_c14n_value(value: Any) -> str:
+    return sha256_bytes(c14n_json_bytes(value))
+
+
+def sha256_c14n_file(path: Path) -> str:
+    return sha256_c14n_value(load_json(path))
 
 
 def load_json(path: Path) -> Any:
@@ -49,6 +83,81 @@ def write_json(path: Path | None, value: Any) -> None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"{text}\n", encoding="utf-8")
+
+
+def percentile(values: list[float], pct: float) -> float | None:
+    if not values:
+        return None
+    if len(values) == 1:
+        return values[0]
+    ordered = sorted(values)
+    rank = (len(ordered) - 1) * pct
+    lower = int(rank)
+    upper = min(lower + 1, len(ordered) - 1)
+    weight = rank - lower
+    return ordered[lower] * (1 - weight) + ordered[upper] * weight
+
+
+def path_size_bytes(path: Path) -> int:
+    if path.is_file():
+        return path.stat().st_size
+    total = 0
+    for child in path.rglob("*"):
+        if child.is_file():
+            total += child.stat().st_size
+    return total
+
+
+def current_platform_key() -> str:
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+    if system == "darwin" and machine in {"arm64", "aarch64"}:
+        return "macos-arm64"
+    if system == "linux" and machine in {"x86_64", "amd64"}:
+        return "linux-x64"
+    if system == "windows" and machine in {"amd64", "x86_64"}:
+        return "windows-x64"
+    return f"{system}-{machine}"
+
+
+def peak_rss_bytes() -> int | None:
+    if resource is None:
+        return None
+    try:
+        value = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+    except (AttributeError, ValueError):
+        return None
+    if value <= 0:
+        return None
+    # Darwin reports bytes; Linux reports KiB.
+    return int(value if platform.system() == "Darwin" else value * 1024)
+
+
+def measure_command(args: list[str], timeout_sec: float) -> dict[str, Any]:
+    start = time.perf_counter()
+    try:
+        completed = subprocess.run(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=timeout_sec,
+            check=False,
+        )
+        timeout = False
+    except subprocess.TimeoutExpired as exc:
+        completed = subprocess.CompletedProcess(
+            args,
+            124,
+            stdout=exc.stdout or b"",
+            stderr=exc.stderr or b"",
+        )
+        timeout = True
+    return {
+        "completed": completed,
+        "duration_ms": (time.perf_counter() - start) * 1000.0,
+        "peak_rss_bytes": peak_rss_bytes(),
+        "timeout": timeout,
+    }
 
 
 def is_filled(value: Any) -> bool:
@@ -124,7 +233,7 @@ def check_competitors(lock: dict[str, Any]) -> list[str]:
     return blockers
 
 
-def build_report(
+def build_readiness_report(
     repo_root: Path,
     manifest_path: Path,
     competitors_path: Path,
@@ -162,19 +271,388 @@ def build_report(
     }
 
 
+def build_report(
+    repo_root: Path,
+    manifest_path: Path,
+    competitors_path: Path,
+) -> dict[str, Any]:
+    return build_readiness_report(repo_root, manifest_path, competitors_path)
+
+
+def result_freeze_blockers(competitors: dict[str, Any]) -> list[str]:
+    status = str(competitors.get("status", "")).upper()
+    if status not in RESULT_COMPETITOR_LOCK_STATUSES:
+        return ["competitors lock status is not FROZEN/FROZEN-SIGNED for result generation"]
+    return []
+
+
+def select_host(manifest: dict[str, Any], requested_host_id: str | None) -> dict[str, Any] | None:
+    hosts = [
+        host for host in manifest.get("hardware", []) if host.get("role") == "performance"
+    ]
+    if requested_host_id:
+        return next((host for host in hosts if host.get("id") == requested_host_id), None)
+    platform_key = current_platform_key()
+    return next((host for host in hosts if host.get("platform") == platform_key), None)
+
+
+def warning_ids(doc: dict[str, Any]) -> list[str]:
+    payload = doc.get("payload", {})
+    warnings = payload.get("security_warnings", []) + payload.get("parser_warnings", [])
+    return [warning.get("id") for warning in warnings if isinstance(warning.get("id"), str)]
+
+
+def is_fingerprint_form(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and value.startswith("sha256:")
+        and HEX64.fullmatch(value[7:]) is not None
+    )
+
+
+def run_entry_result(
+    entry: dict[str, Any],
+    command: list[str],
+    failures: list[str],
+    actual_sha256: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "corpus_file": {
+            "id": entry.get("id"),
+            "file": entry["file"],
+            "sha256": entry["sha256"],
+            "actual_sha256": actual_sha256,
+            "pages": entry["pages"],
+            "subsets": entry["subsets"],
+        },
+        "parser_target": "ethos",
+        "command": command,
+        "exit_code": None,
+        "duration_ms_p50": None,
+        "duration_ms_p95": None,
+        "duration_ms_p99": None,
+        "peak_rss_bytes": None,
+        "output_sha256": None,
+        "document_fingerprint": None,
+        "warning_ids": [],
+        "status": "fail",
+        "failures": failures,
+    }
+
+
+def run_ethos_entry(
+    repo_root: Path,
+    ethos_bin: Path,
+    entry: dict[str, Any],
+    iterations: int,
+    timeout_sec: float,
+) -> dict[str, Any]:
+    file_path = repo_root / entry["file"]
+    command = [str(ethos_bin), "doc", "parse", str(file_path), "--format", "json"]
+    try:
+        actual_sha256 = sha256_file(file_path)
+    except FileNotFoundError:
+        return run_entry_result(entry, command, ["corpus file is missing"])
+    if actual_sha256 != entry["sha256"]:
+        return run_entry_result(
+            entry,
+            command,
+            [
+                "corpus sha256 mismatch: "
+                f"manifest={entry['sha256']} actual={actual_sha256}"
+            ],
+            actual_sha256,
+        )
+
+    durations: list[float] = []
+    rss_values: list[int] = []
+    output_hashes: list[str] = []
+    fingerprints: list[str] = []
+    warning_id_sets: list[list[str]] = []
+    exit_codes: list[int] = []
+    failures: list[str] = []
+
+    for _ in range(iterations):
+        measured = measure_command(command, timeout_sec)
+        completed: subprocess.CompletedProcess[bytes] = measured["completed"]
+        durations.append(measured["duration_ms"])
+        if measured["peak_rss_bytes"] is not None:
+            rss_values.append(measured["peak_rss_bytes"])
+        exit_codes.append(completed.returncode)
+        if measured["timeout"]:
+            failures.append(f"command timed out after {timeout_sec:g}s")
+            continue
+        if completed.returncode != 0:
+            stderr = completed.stderr.decode("utf-8", errors="replace").strip()
+            failures.append(f"exit {completed.returncode}: {stderr}")
+            continue
+        output_hashes.append(sha256_bytes(completed.stdout))
+        try:
+            doc = json.loads(completed.stdout)
+        except json.JSONDecodeError as exc:
+            failures.append(f"stdout is not JSON: {exc}")
+            continue
+        fingerprint = doc.get("fingerprint")
+        if not is_fingerprint_form(fingerprint):
+            failures.append("document fingerprint is missing or malformed")
+        else:
+            fingerprints.append(fingerprint)
+        warning_id_sets.append(warning_ids(doc))
+
+    if len(set(output_hashes)) > 1:
+        failures.append("output_sha256 changed across iterations")
+    if len(set(fingerprints)) > 1:
+        failures.append("document fingerprint changed across iterations")
+    if len({tuple(ids) for ids in warning_id_sets}) > 1:
+        failures.append("warning ids changed across iterations")
+
+    return {
+        "corpus_file": {
+            "id": entry.get("id"),
+            "file": entry["file"],
+            "sha256": entry["sha256"],
+            "actual_sha256": actual_sha256,
+            "pages": entry["pages"],
+            "subsets": entry["subsets"],
+        },
+        "parser_target": "ethos",
+        "command": command,
+        "exit_code": exit_codes[-1] if exit_codes else None,
+        "duration_ms_p50": percentile(durations, 0.50),
+        "duration_ms_p95": percentile(durations, 0.95),
+        "duration_ms_p99": percentile(durations, 0.99),
+        "peak_rss_bytes": max(rss_values) if rss_values else None,
+        "output_sha256": output_hashes[0] if output_hashes else None,
+        "document_fingerprint": fingerprints[0] if fingerprints else None,
+        "warning_ids": warning_id_sets[0] if warning_id_sets else [],
+        "status": "pass" if not failures else "fail",
+        "failures": failures,
+    }
+
+
+def opendataloader_lock_entry(lock: dict[str, Any]) -> dict[str, Any] | None:
+    return next(
+        (entry for entry in lock.get("gate_zero", []) if entry.get("id") == "opendataloader-pdf"),
+        None,
+    )
+
+
+def build_opendataloader_adapter(
+    local_path: Path | None,
+    lock_entry: dict[str, Any] | None,
+) -> dict[str, Any]:
+    blockers: list[str] = []
+    notes: list[str] = []
+    command: list[str] | None = None
+    if lock_entry is None:
+        blockers.append("opendataloader-pdf lock entry is missing")
+    else:
+        if lock_entry.get("pinned") is not True:
+            blockers.append("opendataloader-pdf is not pinned")
+        if not is_filled(lock_entry.get("version")):
+            blockers.append("opendataloader-pdf version is missing")
+        if not is_filled(lock_entry.get("artifact_sha256")):
+            blockers.append("opendataloader-pdf artifact_sha256 is missing")
+    if local_path is None:
+        notes.append("local path not configured; Ethos-only result mode does not execute competitors")
+    elif not (local_path / "scripts" / "run-cli.sh").is_file():
+        blockers.append("opendataloader-pdf scripts/run-cli.sh is missing")
+    else:
+        command = [
+            str(local_path / "scripts" / "run-cli.sh"),
+            "-f",
+            "json",
+            "-o",
+            "<output-dir>",
+            "<input-pdf>",
+        ]
+    status = "ready" if command and not blockers else "not_configured"
+    if blockers:
+        status = "blocked"
+    return {
+        "id": "opendataloader-pdf",
+        "status": status,
+        "mode": "metadata_only",
+        "local_path": str(local_path) if local_path else None,
+        "command_template": command,
+        "lock": lock_entry,
+        "blockers": blockers,
+        "notes": notes,
+    }
+
+
+def aggregate_output_hash(runs: list[dict[str, Any]]) -> str | None:
+    if not runs or any(run["status"] != "pass" for run in runs):
+        return None
+    projection = [
+        {
+            "corpus_file": {
+                "id": run["corpus_file"]["id"],
+                "file": run["corpus_file"]["file"],
+                "sha256": run["corpus_file"]["sha256"],
+            },
+            "document_fingerprint": run["document_fingerprint"],
+            "output_sha256": run["output_sha256"],
+            "warning_ids": run["warning_ids"],
+        }
+        for run in runs
+    ]
+    return sha256_c14n_value(projection)
+
+
+def build_result_report(args: argparse.Namespace) -> dict[str, Any]:
+    repo_root = args.repo_root.resolve()
+    manifest_path = args.manifest.resolve()
+    competitors_path = args.competitors_lock.resolve()
+    manifest = load_json(manifest_path)
+    competitors = load_json(competitors_path)
+    readiness = build_readiness_report(repo_root, manifest_path, competitors_path)
+    freeze_blockers = result_freeze_blockers(competitors)
+    host = select_host(manifest, args.host_id)
+    result_blockers = list(freeze_blockers)
+    if host is None:
+        result_blockers.append("no matching performance host for this runner")
+    if not args.deterministic_profile.is_file():
+        result_blockers.append("deterministic profile is missing")
+    if not args.ethos_bin.is_file():
+        result_blockers.append("ethos binary is missing")
+    if readiness["status"] != "ready":
+        result_blockers.append("Gate Zero readiness is blocked")
+
+    opendataloader_root = args.opendataloader_root
+    if opendataloader_root is None:
+        env_path = os.environ.get("ETHOS_OPENDATALOADER_PDF_ROOT")
+        opendataloader_root = Path(env_path) if env_path else None
+    opendataloader = build_opendataloader_adapter(
+        opendataloader_root,
+        opendataloader_lock_entry(competitors),
+    )
+
+    runs: list[dict[str, Any]] = []
+    if not result_blockers:
+        for entry in manifest.get("corpus", []):
+            runs.append(
+                run_ethos_entry(
+                    repo_root,
+                    args.ethos_bin.resolve(),
+                    entry,
+                    args.iterations,
+                    args.timeout_sec,
+                )
+            )
+
+    failed_runs = [run for run in runs if run["status"] != "pass"]
+    duration_p50_values = [
+        run["duration_ms_p50"] for run in runs if run["duration_ms_p50"] is not None
+    ]
+    duration_p95_values = [
+        run["duration_ms_p95"] for run in runs if run["duration_ms_p95"] is not None
+    ]
+    duration_p99_values = [
+        run["duration_ms_p99"] for run in runs if run["duration_ms_p99"] is not None
+    ]
+    rss_values = [
+        run["peak_rss_bytes"] for run in runs if run["peak_rss_bytes"] is not None
+    ]
+    status = "blocked" if result_blockers else ("fail" if failed_runs else "pass")
+    command = [
+        str(args.ethos_bin),
+        "doc",
+        "parse",
+        "<corpus-file>",
+        "--format",
+        "json",
+    ]
+    return {
+        "schema_version": "ethos-gate-zero-result-v1",
+        "status": status,
+        "corpus": {
+            "id": manifest.get("corpus_id", "gate-zero-v1"),
+            "manifest": str(manifest_path.relative_to(repo_root)),
+            "manifest_sha256": sha256_file(manifest_path),
+        },
+        "parser_target": "ethos",
+        "command": command,
+        "exit_code": None if not runs else runs[-1]["exit_code"],
+        "duration_ms_p50": statistics.median(duration_p50_values)
+        if duration_p50_values
+        else None,
+        "duration_ms_p95": max(duration_p95_values, default=None),
+        "duration_ms_p99": max(duration_p99_values, default=None),
+        "peak_rss_bytes": max(rss_values, default=None),
+        "output_sha256": aggregate_output_hash(runs),
+        "install_size_bytes": path_size_bytes(args.install_path),
+        "host": {
+            "selected": host,
+            "observed": {
+                "platform": platform.platform(),
+                "machine": platform.machine(),
+                "python": platform.python_version(),
+                "platform_key": current_platform_key(),
+            },
+        },
+        "deterministic_profile_sha256": sha256_c14n_file(args.deterministic_profile)
+        if args.deterministic_profile.is_file()
+        else None,
+        "inputs": {
+            "competitors_lock": str(competitors_path.relative_to(repo_root)),
+            "competitors_lock_sha256": sha256_file(competitors_path),
+            "deterministic_profile": str(args.deterministic_profile),
+            "deterministic_profile_file_sha256": sha256_file(args.deterministic_profile)
+            if args.deterministic_profile.is_file()
+            else None,
+            "ethos_bin": str(args.ethos_bin),
+            "ethos_bin_sha256": sha256_file(args.ethos_bin) if args.ethos_bin.is_file() else None,
+            "install_path": str(args.install_path),
+        },
+        "readiness": {
+            "status": readiness["status"],
+            "summary": readiness["summary"],
+            "blockers": readiness["blockers"],
+        },
+        "blockers": result_blockers,
+        "competitors": {
+            "adapters": [opendataloader],
+        },
+        "runs": runs,
+        "summary": {
+            "runs_total": len(runs),
+            "runs_failed": len(failed_runs),
+            "iterations": args.iterations,
+        },
+    }
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", choices=["readiness", "ethos"], default="readiness")
     parser.add_argument("--repo-root", type=Path, default=ROOT)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--competitors-lock", type=Path, default=DEFAULT_COMPETITORS)
     parser.add_argument("--out", type=Path, default=DEFAULT_RESULTS)
     parser.add_argument("--stdout", action="store_true", help="write report to stdout instead of --out")
+    parser.add_argument("--ethos-bin", type=Path, default=ROOT / "target" / "release" / "ethos")
+    parser.add_argument("--host-id")
+    parser.add_argument("--deterministic-profile", type=Path, default=DEFAULT_PROFILE)
+    parser.add_argument("--install-path", type=Path, default=ROOT / "target" / "release" / "ethos")
+    parser.add_argument("--iterations", type=int, default=3)
+    parser.add_argument("--timeout-sec", type=float, default=120.0)
+    parser.add_argument("--opendataloader-root", type=Path)
     args = parser.parse_args(argv)
 
     if not args.manifest.is_file():
         parser.error(f"--manifest does not exist: {args.manifest}")
     if not args.competitors_lock.is_file():
         parser.error(f"--competitors-lock does not exist: {args.competitors_lock}")
+    if args.iterations < 1:
+        parser.error("--iterations must be >= 1")
+    if args.timeout_sec <= 0:
+        parser.error("--timeout-sec must be > 0")
+    if args.mode == "ethos":
+        if args.out == DEFAULT_RESULTS:
+            args.out = DEFAULT_GATE_ZERO_RESULT
+        if not args.install_path.exists():
+            parser.error(f"--install-path does not exist: {args.install_path}")
     return args
 
 
@@ -183,14 +661,26 @@ def main(argv: list[str]) -> int:
     repo_root = args.repo_root.resolve()
     manifest_path = args.manifest.resolve()
     competitors_path = args.competitors_lock.resolve()
-    report = build_report(repo_root, manifest_path, competitors_path)
+    report = (
+        build_readiness_report(repo_root, manifest_path, competitors_path)
+        if args.mode == "readiness"
+        else build_result_report(args)
+    )
     write_json(None if args.stdout else args.out, report)
     if report["status"] == "ready":
         print("Gate Zero readiness: ready")
         return 0
-    print("Gate Zero readiness: blocked", file=sys.stderr)
-    for group in report["blockers"].values():
-        for blocker in group:
+    if report["status"] == "pass":
+        print("Gate Zero result: pass")
+        return 0
+    print(f"Gate Zero {args.mode}: {report['status']}", file=sys.stderr)
+    blockers = report["blockers"]
+    if isinstance(blockers, dict):
+        for group in blockers.values():
+            for blocker in group:
+                print(f"- {blocker}", file=sys.stderr)
+    else:
+        for blocker in blockers:
             print(f"- {blocker}", file=sys.stderr)
     return 2
 

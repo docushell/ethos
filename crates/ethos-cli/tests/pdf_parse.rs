@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use ethos_core::config::ParseConfig;
 use ethos_core::traits::{EthosPdfBackend as _, LayoutEngine as _};
@@ -11,6 +12,10 @@ fn ethos_bin() -> &'static str {
 
 fn fixtures_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures")
+}
+
+fn cli_test_fixtures_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
 }
 
 fn fixture_manifest_entries() -> Vec<Value> {
@@ -109,6 +114,12 @@ fn password_protected_fixture_pdf() -> PathBuf {
     fixture_pdf_by_id("failure-password-protected")
 }
 
+fn font_isolation_fixture_pdf(name: &str) -> PathBuf {
+    cli_test_fixtures_root()
+        .join("font-isolation")
+        .join(format!("{name}.pdf"))
+}
+
 fn pdfium_configured() -> bool {
     std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
         .map(PathBuf::from)
@@ -122,7 +133,6 @@ fn run_ethos(args: &[&str]) -> Output {
         .expect("ethos command runs")
 }
 
-#[cfg(debug_assertions)]
 fn run_ethos_with_env(args: &[&str], envs: &[(&str, &str)]) -> Output {
     let mut command = Command::new(ethos_bin());
     command.args(args);
@@ -149,6 +159,45 @@ fn assert_span_fonts(doc: &Value, expected_font_id: &str) {
         assert_eq!(span["font_id"], expected_font_id);
         assert!(span["font_size_q"].as_i64().unwrap() > 0);
     }
+}
+
+fn assert_span_font_namespace(doc: &Value) {
+    for span in doc["payload"]["spans"].as_array().unwrap() {
+        let font_id = span["font_id"].as_str().expect("span font_id is string");
+        assert!(
+            font_id.starts_with("subst:") || font_id.starts_with("embedded:"),
+            "font_id must be deterministic, got {font_id}"
+        );
+    }
+}
+
+fn font_isolation_env() -> Vec<(String, String)> {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock after unix epoch")
+        .as_nanos();
+    let root = std::env::temp_dir().join(format!("ethos-font-isolation-{nanos}"));
+    vec![
+        ("FONTCONFIG_FILE".to_string(), "/dev/null".to_string()),
+        (
+            "FONTCONFIG_PATH".to_string(),
+            root.join("fontconfig").to_string_lossy().to_string(),
+        ),
+        (
+            "XDG_CACHE_HOME".to_string(),
+            root.join("cache").to_string_lossy().to_string(),
+        ),
+        (
+            "HOME".to_string(),
+            root.join("home").to_string_lossy().to_string(),
+        ),
+    ]
+}
+
+fn env_pairs(env: &[(String, String)]) -> Vec<(&str, &str)> {
+    env.iter()
+        .map(|(key, value)| (key.as_str(), value.as_str()))
+        .collect()
 }
 
 fn assert_no_control_chars(text: &str) {
@@ -628,6 +677,111 @@ fn parses_ligature_fixture_with_embedded_font_identity_when_pdfium_is_configured
         doc["payload"]["parser_warnings"].as_array().unwrap().len(),
         0
     );
+}
+
+#[test]
+fn font_mapping_is_stable_under_isolated_system_font_environment() {
+    if !pdfium_configured() {
+        eprintln!("skipping font isolation test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    let cases = [
+        (
+            "standard14-fonts",
+            vec![
+                "subst:liberation-sans-bold",
+                "subst:liberation-mono-italic",
+                "subst:liberation-serif-italic",
+            ],
+        ),
+        ("missing-font", vec!["subst:liberation-sans-regular"]),
+    ];
+    let isolated_env = font_isolation_env();
+    let isolated_pairs = env_pairs(&isolated_env);
+
+    for (fixture_name, expected_fonts) in cases {
+        let fixture = font_isolation_fixture_pdf(fixture_name);
+        let args = [
+            "doc",
+            "parse",
+            fixture.to_str().unwrap(),
+            "--format",
+            "json",
+        ];
+        let normal = run_ethos(&args);
+        let isolated = run_ethos_with_env(&args, &isolated_pairs);
+
+        assert!(
+            normal.status.success(),
+            "normal font run failed for {fixture_name}: {}",
+            String::from_utf8_lossy(&normal.stderr)
+        );
+        assert!(
+            isolated.status.success(),
+            "isolated font run failed for {fixture_name}: {}",
+            String::from_utf8_lossy(&isolated.stderr)
+        );
+        assert_eq!(
+            normal.stdout, isolated.stdout,
+            "font-isolated output drifted for {fixture_name}"
+        );
+
+        let doc: Value = serde_json::from_slice(&normal.stdout).unwrap();
+        assert_span_font_namespace(&doc);
+        let actual_fonts = doc["payload"]["spans"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|span| span["font_id"].as_str().unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(actual_fonts, expected_fonts, "{fixture_name}");
+    }
+}
+
+#[test]
+fn cid_cjk_like_font_fixture_is_deterministic_under_isolated_system_font_environment() {
+    if !pdfium_configured() {
+        eprintln!("skipping CID/CJK-like font isolation test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    let fixture = font_isolation_fixture_pdf("cid-cjk-like");
+    let args = [
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ];
+    let isolated_env = font_isolation_env();
+    let isolated_pairs = env_pairs(&isolated_env);
+    let normal = run_ethos(&args);
+    let isolated = run_ethos_with_env(&args, &isolated_pairs);
+
+    assert_eq!(normal.status.code(), isolated.status.code());
+    assert_eq!(
+        normal.stdout, isolated.stdout,
+        "CID/CJK-like output drifted under font isolation"
+    );
+    assert_eq!(
+        normal.stderr, isolated.stderr,
+        "CID/CJK-like error envelope drifted under font isolation"
+    );
+
+    if normal.status.success() {
+        let doc: Value = serde_json::from_slice(&normal.stdout).unwrap();
+        assert_span_font_namespace(&doc);
+    } else {
+        let error: Value = serde_json::from_slice(&normal.stderr).unwrap();
+        assert!(
+            matches!(
+                error["error"]["code"].as_str(),
+                Some("ocr_required" | "unsupported_pdf_feature" | "corrupt_pdf")
+            ),
+            "unexpected CID/CJK-like stable error: {error}"
+        );
+    }
 }
 
 #[test]

@@ -958,7 +958,7 @@ struct FontSubstitutionTable {
     schema_version: String,
     table_id: String,
     version: String,
-    default_unresolved_prefix: String,
+    default_unresolved_font_id: String,
     mappings: Vec<FontSubstitutionMapping>,
 }
 
@@ -1024,12 +1024,8 @@ fn deterministic_font_id(raw_name: &str) -> Option<String> {
     if subset {
         return Some(format!("embedded:{normalized}"));
     }
-    font_substitution(&normalized).or_else(|| {
-        Some(format!(
-            "{}{normalized}",
-            font_substitution_table().default_unresolved_prefix
-        ))
-    })
+    font_substitution(&normalized)
+        .or_else(|| Some(font_substitution_table().default_unresolved_font_id.clone()))
 }
 
 fn strip_subset_prefix(name: &str) -> (&str, bool) {
@@ -1091,7 +1087,7 @@ fn validate_font_substitution_table(table: &FontSubstitutionTable) -> Result<(),
     if table.schema_version != "1.0.0"
         || table.table_id != "ethos-font-substitution-v1"
         || table.version != "1.0.0"
-        || table.default_unresolved_prefix != "source:"
+        || table.default_unresolved_font_id != "subst:liberation-sans-regular"
     {
         return Err("unexpected font substitution table metadata");
     }
@@ -1490,7 +1486,7 @@ mod tests {
         );
         assert_eq!(
             deterministic_font_id("Custom Font/Regular").as_deref(),
-            Some("source:Custom-Font-Regular")
+            Some("subst:liberation-sans-regular")
         );
         assert_eq!(deterministic_font_id("   "), None);
     }
@@ -1503,7 +1499,10 @@ mod tests {
         assert_eq!(table.schema_version, "1.0.0");
         assert_eq!(table.table_id, "ethos-font-substitution-v1");
         assert_eq!(table.version, "1.0.0");
-        assert_eq!(table.default_unresolved_prefix, "source:");
+        assert_eq!(
+            table.default_unresolved_font_id,
+            "subst:liberation-sans-regular"
+        );
 
         let mut seen = HashSet::new();
         for mapping in &table.mappings {

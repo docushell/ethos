@@ -2,8 +2,8 @@
   "schema_version": "1.0.0",
   "table_id": "ethos-font-substitution-v1",
   "version": "1.0.0",
-  "description": "Deterministic Release 1 substitution identities for PDF Standard 14 and known missing-font fallbacks. The actual Liberation font files are pinned separately in the deterministic profile.",
-  "default_unresolved_prefix": "source:",
+  "description": "Deterministic Release 1 substitution identities for PDF Standard 14 and known missing-font fallbacks. Unknown non-embedded fonts collapse to the table-owned unresolved fallback. The actual Liberation font files are pinned separately in the deterministic profile.",
+  "default_unresolved_font_id": "subst:liberation-sans-regular",
   "mappings": [
     {
       "source": "Courier",

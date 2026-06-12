@@ -630,7 +630,7 @@ mod tests {
                     crop_support: false,
                 },
                 fingerprint: Some(
-                    "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02"
+                    "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2"
                         .into(),
                 ),
                 crop_ref: None,
@@ -1208,7 +1208,7 @@ mod tests {
             &source,
             CitationInput::Envelope(CitationEnvelope {
                 document_fingerprint: Some(
-                    "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02"
+                    "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2"
                         .into(),
                 ),
                 claims: vec![claim(

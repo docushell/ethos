@@ -4,9 +4,11 @@ FIXTURE_RESULTS_DIR ?= $(ROOT)/benchmarks/results/fixtures
 GATE_ZERO_RESULTS_DIR ?= $(ROOT)/benchmarks/results/gate-zero
 FIXTURE_REPORT ?= $(FIXTURE_RESULTS_DIR)/baseline.json
 GATE_ZERO_READINESS_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/readiness.json
+GATE_ZERO_RESULT_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/g1.json
+OPENDATALOADER_ROOT ?=
 ITERATIONS ?= 3
 
-.PHONY: bench fixtures gate-zero-readiness smoke test
+.PHONY: bench fixtures gate-zero-readiness gate-zero-results smoke test
 
 $(ETHOS_BIN):
 	cd $(ROOT) && cargo build --locked --release -p ethos-cli
@@ -25,9 +27,18 @@ gate-zero-readiness:
 		--repo-root $(ROOT) \
 		--out $(GATE_ZERO_READINESS_REPORT)
 
-bench: gate-zero-readiness
-	@echo "Gate Zero G1/G2/G3 measurement runner is not implemented yet; readiness JSON is the only allowed output for this target." >&2
-	@exit 2
+gate-zero-results: $(ETHOS_BIN)
+	mkdir -p $(GATE_ZERO_RESULTS_DIR)
+	python3 run_gate_zero.py \
+		--mode ethos \
+		--repo-root $(ROOT) \
+		--ethos-bin $(ETHOS_BIN) \
+		--install-path $(ETHOS_BIN) \
+		--iterations $(ITERATIONS) \
+		$(if $(OPENDATALOADER_ROOT),--opendataloader-root $(OPENDATALOADER_ROOT),) \
+		--out $(GATE_ZERO_RESULT_REPORT)
+
+bench: gate-zero-results
 
 smoke:
 	python3 run_fixtures.py --help >/dev/null

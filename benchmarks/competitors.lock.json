@@ -1,11 +1,24 @@
 {
   "lock_version": "1.0.0",
   "status": "PIN-PENDING",
+  "product_state": {
+    "as_of": "2026-06-12",
+    "public_claims_allowed": false,
+    "decision": "Gate Zero competitor comparison is blocked until benchmark-owned artifacts are downloaded, hashed, and recorded here. Do not publish comparison claims from placeholder or local-development tool versions."
+  },
   "rules": {
     "pinning": "Benchmark owner pins exact versions + artifact hashes on the benchmark hosts before Gate Zero (plan row 0.8). Harness refuses to run gating jobs while any gate_zero entry has pinned=false.",
     "crashes": "Competitor crashes/timeouts are recorded as data, never patched around (PRD 11.3).",
-    "rerun": "Reference competitors are re-measured after their major releases; published tables always state versions and dates."
+    "rerun": "Reference competitors are re-measured after their major releases; published tables always state versions and dates.",
+    "artifact_hash": "artifact_sha256 must be the lowercase SHA256 of the exact package, binary, jar, wheel, or source archive executed by the benchmark harness. Repository commit hashes are not substitutes unless the source archive is the executed artifact."
   },
+  "pinning_requirements": [
+    "Record exact version for each Gate Zero competitor.",
+    "Record runtime version when applicable, including JVM for OpenDataLoader PDF and Python for PyMuPDF4LLM.",
+    "Record artifact_sha256 for the exact artifact used by the runner.",
+    "Set pinned=true only after the artifact has been verified on the benchmark host.",
+    "Change status to FROZEN or FROZEN-SIGNED only when every gate_zero entry is pinned."
+  ],
   "gate_zero": [
     {
       "id": "opendataloader-pdf",
@@ -15,35 +28,52 @@
       "version": null,
       "artifact_sha256": null,
       "jvm_version": null,
+      "artifact_kind": "release artifact, runnable jar, or signed source archive used by scripts/run-cli.sh",
+      "pin_status": "external-artifact-required",
       "pinned": false
     },
     {
       "id": "edgeparse",
       "role": "context (non-gating)",
+      "source": "https://github.com/raphaelmansuy/edgeparse",
       "version": null,
       "artifact_sha256": null,
+      "artifact_kind": "release artifact, package, binary, or signed source archive executed by the adapter",
+      "pin_status": "external-artifact-required",
       "pinned": false
     },
     {
       "id": "liteparse",
       "role": "context (non-gating); closest Release-1 overlap, watch per risk R5",
       "publisher": "run-llama",
+      "source": "https://github.com/run-llama/liteparse",
       "version": null,
       "artifact_sha256": null,
+      "artifact_kind": "release artifact, package, wheel, or signed source archive executed by the adapter",
+      "pin_status": "external-artifact-required",
       "pinned": false
     },
     {
       "id": "pymupdf4llm",
       "role": "harness self-test target + comparison row",
       "runtime": "Python",
+      "package": "pymupdf4llm",
       "version": null,
       "python_version": null,
       "artifact_sha256": null,
+      "artifact_kind": "wheel or source distribution installed into the benchmark environment",
+      "pin_status": "external-artifact-required",
       "pinned": false,
-      "license_note": "AGPL — run-only comparison, never a dependency (ADR-0004)"
+      "license_note": "AGPL - run-only comparison, never a dependency (ADR-0004)"
     }
   ],
   "milestone_e_candidates": [
-    "kreuzberg", "docling", "mineru", "marker", "markitdown", "unstructured", "pymupdf"
+    "kreuzberg",
+    "docling",
+    "mineru",
+    "marker",
+    "markitdown",
+    "unstructured",
+    "pymupdf"
   ]
 }
