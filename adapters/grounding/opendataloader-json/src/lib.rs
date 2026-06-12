@@ -1,15 +1,17 @@
 //! # OpenDataLoader JSON grounding adapter (Milestone A stub)
 //!
 //! Proves that foreign parser output can enter the [`GroundingSource`] interface
-//! (PRD §16 acceptance): maps parser identity, pages, elements, bbox, text, and
-//! capabilities. This is **not** an ODL fork — ODL output is consumed as data from a
-//! pinned upstream version (plan §6.5).
+//! (PRD §16 acceptance): maps parser identity, pages, elements, optional tables,
+//! bbox, text, and capabilities. This is **not** an ODL fork — ODL output is
+//! consumed as data from a pinned upstream version (plan §6.5).
 //!
 //! ## Stub mapping assumptions (hardened against pinned real output in Milestone B)
 //!
 //! The stub reads a conservative subset:
 //! `{"tool": {"name", "version"}, "pages": [{"number", "width", "height"}],
-//!   "elements": [{"id"?, "page", "bbox": [x0,y0,x1,y1], "type"?, "text"?}]}`
+//!   "elements": [{"id"?, "page", "bbox": [x0,y0,x1,y1], "type"?, "text"?}],
+//!   "tables"?: [{"id", "page", "bbox", "cells": [{"row", "col", "row_span"?,
+//!     "col_span"?, "bbox", "text"}]}]}`
 //!
 //! - Geometry: source floats (points) are scaled to **centipoints** (×100,
 //!   half-away-from-zero) so units align with Ethos quanta. Origin is declared
@@ -24,7 +26,8 @@
 use std::collections::HashSet;
 
 use ethos_core::grounding::{
-    Capabilities, CoordinateOrigin, GroundingElement, GroundingSource, PageGeometry, ParserIdentity,
+    Capabilities, CoordinateOrigin, GroundingCell, GroundingElement, GroundingSource,
+    GroundingTable, PageGeometry, ParserIdentity,
 };
 use serde_json::Value;
 
@@ -86,6 +89,7 @@ pub struct OdlJsonSource {
     parser_version: String,
     pages: Vec<PageGeometry>,
     elements: Vec<GroundingElement>,
+    tables: Vec<GroundingTable>,
 }
 
 /// Scale points → centipoints, half-away-from-zero (kept local: this crate deliberately
@@ -136,6 +140,26 @@ fn bbox_from(value: &Value) -> Result<[i64; 4], AdapterError> {
         return Err(err("bbox is malformed (x0>x1 or y0>y1)"));
     }
     Ok(out)
+}
+
+fn optional_positive_u32_field(
+    object: &Value,
+    field: &str,
+    default: u32,
+    overflow_message: &str,
+    zero_message: &str,
+) -> Result<u32, AdapterError> {
+    let Some(value) = object.get(field) else {
+        return Ok(default);
+    };
+    let Some(raw) = value.as_u64() else {
+        return Err(err(overflow_message));
+    };
+    let value = u32::try_from(raw).map_err(|_| err(overflow_message))?;
+    if value == 0 {
+        return Err(err(zero_message));
+    }
+    Ok(value)
 }
 
 impl OdlJsonSource {
@@ -234,11 +258,83 @@ impl OdlJsonSource {
             });
         }
 
+        let mut tables = Vec::new();
+        let mut table_ids = HashSet::new();
+        if let Some(tables_value) = root.get("tables") {
+            let table_array = tables_value
+                .as_array()
+                .ok_or_else(|| err("'tables' is not an array"))?;
+            for table in table_array {
+                let id = string_field(table, "id", "missing table.id")?;
+                if !table_ids.insert(id.clone()) {
+                    return Err(err("duplicate table.id"));
+                }
+                let page_number = u32_field(
+                    table,
+                    "page",
+                    "missing table.page",
+                    "table.page must fit u32",
+                )?;
+                if page_number == 0 {
+                    return Err(err("table.page must be 1-based"));
+                }
+                if !page_numbers.contains(&page_number) {
+                    return Err(err("table.page references unknown page"));
+                }
+                let bbox = bbox_from(table.get("bbox").ok_or_else(|| err("missing table.bbox"))?)?;
+                let mut cells = Vec::new();
+                let mut cell_addresses = HashSet::new();
+                for cell in table
+                    .get("cells")
+                    .and_then(Value::as_array)
+                    .ok_or_else(|| err("missing table.cells array"))?
+                {
+                    let row = u32_field(cell, "row", "missing cell.row", "cell.row must fit u32")?;
+                    let col = u32_field(cell, "col", "missing cell.col", "cell.col must fit u32")?;
+                    if !cell_addresses.insert((row, col)) {
+                        return Err(err("duplicate table cell address"));
+                    }
+                    let row_span = optional_positive_u32_field(
+                        cell,
+                        "row_span",
+                        1,
+                        "cell.row_span must fit u32",
+                        "cell.row_span must be positive",
+                    )?;
+                    let col_span = optional_positive_u32_field(
+                        cell,
+                        "col_span",
+                        1,
+                        "cell.col_span must fit u32",
+                        "cell.col_span must be positive",
+                    )?;
+                    let bbox =
+                        bbox_from(cell.get("bbox").ok_or_else(|| err("missing cell.bbox"))?)?;
+                    let text = string_field(cell, "text", "missing cell.text")?;
+                    cells.push(GroundingCell {
+                        row,
+                        col,
+                        row_span,
+                        col_span,
+                        bbox,
+                        text,
+                    });
+                }
+                tables.push(GroundingTable {
+                    id,
+                    page: format!("page-{page_number}"),
+                    bbox,
+                    cells,
+                });
+            }
+        }
+
         Ok(OdlJsonSource {
             parser_name,
             parser_version,
             pages,
             elements,
+            tables,
         })
     }
 }
@@ -274,6 +370,10 @@ impl GroundingSource for OdlJsonSource {
     fn elements(&self) -> Vec<GroundingElement> {
         self.elements.clone()
     }
+
+    fn tables(&self) -> Vec<GroundingTable> {
+        self.tables.clone()
+    }
 }
 
 #[cfg(test)]
@@ -299,6 +399,14 @@ mod tests {
         assert_eq!(els[0].kind, "heading");
         assert_eq!(els[0].text.as_deref(), Some("Quarterly Report"));
         assert_eq!(els[0].bbox, [7200, 7200, 30480, 9000]);
+
+        let tables = src.tables();
+        assert_eq!(tables.len(), 1);
+        assert_eq!(tables[0].id, "odl-t1");
+        assert_eq!(tables[0].page, "page-1");
+        assert_eq!(tables[0].cells.len(), 2);
+        assert_eq!(tables[0].cells[1].text, "$12.4M");
+        assert_eq!(tables[0].cells[1].bbox, [30600, 16500, 54000, 20000]);
 
         let caps = src.capabilities();
         assert!(!caps.spans && !caps.fingerprint && !caps.crop_support);
@@ -375,6 +483,22 @@ mod tests {
         assert_error_contains(
             r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":-1}],"elements":[]}"#,
             "page height must be positive finite",
+        );
+    }
+
+    #[test]
+    fn rejects_malformed_tables() {
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[],"tables":[{"id":"t1","page":2,"bbox":[1,1,2,2],"cells":[]}]}"#,
+            "table.page references unknown page",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[],"tables":[{"id":"t1","page":1,"bbox":[1,1,2,2],"cells":[{"row":1,"col":1,"bbox":[1,1,2,2],"text":"x"},{"row":1,"col":1,"bbox":[1,1,2,2],"text":"y"}]}]}"#,
+            "duplicate table cell address",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[],"tables":[{"id":"t1","page":1,"bbox":[1,1,2,2],"cells":[{"row":1,"col":1,"row_span":0,"bbox":[1,1,2,2],"text":"x"}]}]}"#,
+            "cell.row_span must be positive",
         );
     }
 }

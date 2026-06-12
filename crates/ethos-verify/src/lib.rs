@@ -61,6 +61,14 @@ impl CitationInput {
         }
     }
 
+    /// Fingerprint anchor declared by the citation envelope, when present.
+    pub fn document_fingerprint(&self) -> Option<&str> {
+        match self {
+            CitationInput::Claims(_) => None,
+            CitationInput::Envelope(envelope) => envelope.document_fingerprint.as_deref(),
+        }
+    }
+
     fn into_parts(self) -> (Option<String>, Vec<Claim>) {
         match self {
             CitationInput::Claims(claims) => (None, claims),

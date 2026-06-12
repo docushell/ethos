@@ -99,9 +99,12 @@ fn opendataloader_verify_adapter_produces_capability_aware_report() {
         report["warnings"],
         serde_json::json!(["capability_limited"])
     );
-    assert_eq!(report["checks"].as_array().unwrap().len(), 2);
+    assert_eq!(report["checks"].as_array().unwrap().len(), 3);
     assert_eq!(report["checks"][0]["status"], "grounded");
-    assert_eq!(report["checks"][1]["status"], "mismatch");
+    assert_eq!(report["checks"][1]["status"], "grounded");
+    assert_eq!(report["checks"][1]["match_method"], "table_cell_lookup");
+    assert_eq!(report["checks"][1]["evidence"]["text"], "$12.4M");
+    assert_eq!(report["checks"][2]["status"], "mismatch");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 
@@ -175,6 +178,63 @@ fn stale_fingerprint_is_report_level_failure() {
     assert_eq!(report["fingerprint_stale"], true);
     assert_eq!(report["checks"][0]["status"], "stale");
     assert_eq!(report["all_evidence_grounded"], false);
+}
+
+#[test]
+fn malformed_citation_fingerprint_is_usage_error() {
+    let doc = document_example();
+    let cases = [
+        (
+            "fingerprint-missing-prefix",
+            "579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+        ),
+        (
+            "fingerprint-uppercase",
+            "sha256:579DBF857DB19649463CD6716A6F7C5F43C44DD9A5E798E47F25760F0FFAAE02",
+        ),
+        (
+            "fingerprint-short",
+            "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae0",
+        ),
+        (
+            "fingerprint-nonhex",
+            "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae0z",
+        ),
+    ];
+
+    for (name, fingerprint) in cases {
+        let citations = temp_json(
+            name,
+            &format!(
+                r#"{{
+                  "document_fingerprint": "{fingerprint}",
+                  "claims": [
+                    {{
+                      "kind": "presence",
+                      "citation": {{
+                        "element_id": "e000002"
+                      }}
+                    }}
+                  ]
+                }}"#
+            ),
+        );
+        let output = run_ethos(&[
+            "verify",
+            doc.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+        ]);
+
+        assert_eq!(output.status.code(), Some(2), "case {name}");
+        assert!(output.stdout.is_empty(), "case {name}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr)
+                .contains("citations document_fingerprint must be sha256:<64 lowercase hex chars>"),
+            "case {name} stderr:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
 }
 
 #[test]
@@ -809,7 +869,31 @@ fn value_without_text_is_usage_error() {
 
 #[test]
 fn table_cell_is_capability_blocked_when_tables_are_missing() {
-    let grounding = odl_example();
+    let grounding = temp_json(
+        "odl-no-tables",
+        r#"{
+          "tool": {
+            "name": "opendataloader-pdf",
+            "version": "0.0.0-synthetic"
+          },
+          "pages": [
+            {
+              "number": 1,
+              "width": 612.0,
+              "height": 792.0
+            }
+          ],
+          "elements": [
+            {
+              "id": "odl-e2",
+              "page": 1,
+              "bbox": [72.0, 101.0, 540.0, 115.0],
+              "type": "Paragraph",
+              "text": "Revenue grew to $12.4M in Q3 2025."
+            }
+          ]
+        }"#,
+    );
     let citations = temp_json(
         "table-cell-no-tables",
         r#"{

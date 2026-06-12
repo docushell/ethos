@@ -19,8 +19,7 @@ ethos verify examples/verify/opendataloader.json \
   --out verification_report.json
 ```
 
-The native Ethos citations file contains one grounded quote, one grounded table-cell
-lookup, and one fake quote that must fail with `mismatch`. The ODL citations file
-contains one grounded quote and one fake quote. The ODL fixture is synthetic and
+Both citation files contain one grounded quote, one grounded table-cell lookup, and
+one fake quote that must fail with `mismatch`. The ODL fixture is synthetic and
 limited to the adapter's documented alpha subset; it is not a real pinned
 OpenDataLoader artifact.

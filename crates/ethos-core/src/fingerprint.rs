@@ -10,6 +10,18 @@ pub fn fingerprint_form(hex: &str) -> String {
     format!("sha256:{hex}")
 }
 
+/// True when `value` is the public fingerprint wire form: `sha256:` plus
+/// exactly 64 lowercase hexadecimal characters.
+pub fn is_fingerprint_form(value: &str) -> bool {
+    let Some(hex) = value.strip_prefix("sha256:") else {
+        return false;
+    };
+    hex.len() == 64
+        && hex
+            .bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+}
+
 /// `source.fingerprint`: sha256 over the original input bytes.
 pub fn source_fingerprint(bytes: &[u8]) -> String {
     fingerprint_form(&c14n::sha256_hex_bytes(bytes))
@@ -98,5 +110,24 @@ mod tests {
             source_fingerprint(b""),
             "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         );
+    }
+
+    #[test]
+    fn fingerprint_form_validation_is_strict() {
+        assert!(is_fingerprint_form(
+            "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ));
+        assert!(!is_fingerprint_form(
+            "sha256:E3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ));
+        assert!(!is_fingerprint_form(
+            "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b85"
+        ));
+        assert!(!is_fingerprint_form(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ));
+        assert!(!is_fingerprint_form(
+            "sha256:g3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ));
     }
 }

@@ -20,7 +20,7 @@ use std::time::{Duration, Instant};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use ethos_core::config::{PageSelection, ParseConfig};
 use ethos_core::error::{ErrorCode, EthosError};
-use ethos_core::fingerprint::{source_fingerprint, FingerprintManifest};
+use ethos_core::fingerprint::{is_fingerprint_form, source_fingerprint, FingerprintManifest};
 use ethos_core::ids::warning_id;
 use ethos_core::model::{
     CoordinateSystem, Document, Element, ParserInfo, Payload, ProfileRef, Region, SourceInfo, Span,
@@ -506,6 +506,14 @@ fn validate_citation_input(
             "citations file exceeds max_checks ({})",
             config.limits.max_checks
         )));
+    }
+    if citations
+        .document_fingerprint()
+        .is_some_and(|fingerprint| !is_fingerprint_form(fingerprint))
+    {
+        return Err(Failure::Usage(
+            "citations document_fingerprint must be sha256:<64 lowercase hex chars>".to_string(),
+        ));
     }
     for (idx, claim) in claims.iter().enumerate() {
         if !claim.citation.has_locator() {

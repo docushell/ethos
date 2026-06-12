@@ -11,8 +11,9 @@ This is not an ODL fork: ODL output is consumed as data from a pinned upstream v
 ## What the stub maps
 
 Parser identity (`tool.name`/`tool.version` + adapter id/version), pages (number, width,
-height → centipoints), elements (id, page, bbox, type, text). That is exactly the PRD §16
-acceptance subset.
+height → centipoints), elements (id, page, bbox, type, text), and optional synthetic
+tables/cells (id, page, bbox, row/col, spans, bbox, text). This remains the documented
+alpha subset until pinned real ODL output replaces or extends it.
 
 ## Declared capabilities (honest downgrades)
 
@@ -24,4 +25,5 @@ approximation (PRD §5.5).
 ## Fixtures
 
 `tests/fixtures/odl-sample.json` is synthetic and labeled as such. B-alpha replaces/extends
-it with pinned real output. Every mapping change ships fixtures in the same PR.
+it with pinned real output. Every mapping change ships fixtures and CLI verification coverage
+in the same PR.
