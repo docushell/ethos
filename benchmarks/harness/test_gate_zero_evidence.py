@@ -39,6 +39,7 @@ def build_real_bundle(out_root: Path) -> Path:
         gate="g1",
         timestamp=TIMESTAMP,
         reproduction_command=REPRODUCTION_COMMAND,
+        environment={},
         benchmark_commit=BENCHMARK_COMMIT,
     )
     return Path(report["bundle_dir"])
@@ -54,6 +55,7 @@ class GateZeroEvidenceBundleTests(unittest.TestCase):
             manifest_path = bundle_dir / "evidence-manifest.json"
             checksums_path = bundle_dir / "SHA256SUMS"
             digest_path = bundle_dir / "SHA256SUMS.digest.json"
+            reproduction_env_path = bundle_dir / "reproduction-env.json"
 
             self.assertEqual(bundle_dir.name, TIMESTAMP)
             self.assertEqual(bundle_dir.parent.name, "g1")
@@ -63,14 +65,54 @@ class GateZeroEvidenceBundleTests(unittest.TestCase):
             self.assertTrue(manifest_path.is_file())
             self.assertTrue(checksums_path.is_file())
             self.assertTrue(digest_path.is_file())
+            self.assertTrue(reproduction_env_path.is_file())
             self.assertEqual(raw_path.read_bytes(), REAL_MACOS_G1.read_bytes())
             self.assertEqual(build_gate_zero_evidence.verify_checksums(bundle_dir), [])
+            reproduction_env = json.loads(reproduction_env_path.read_text(encoding="utf-8"))
+            self.assertEqual(reproduction_env["schema_version"], "ethos-gate-zero-reproduction-env-v1")
+            self.assertEqual(reproduction_env["status"], "incomplete")
+            self.assertIn("ETHOS_EDGEPARSE_BIN is not set", reproduction_env["blockers"])
 
             digest = json.loads(digest_path.read_text(encoding="utf-8"))
             self.assertEqual(digest["digest_type"], "sha256")
             self.assertEqual(digest["payload"], "SHA256SUMS")
             self.assertEqual(digest["payload_sha256"], run_gate_zero.sha256_file(checksums_path))
             self.assertIn("not a public-key signature", digest["note"])
+
+    def test_reproduction_env_records_resolved_paths_and_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            artifact = root / "edgeparse.whl"
+            artifact.write_bytes(b"edgeparse artifact")
+            artifact_sha256 = run_gate_zero.sha256_file(artifact)
+            command = root / "edgeparse"
+            command.write_text("#!/bin/sh\n", encoding="utf-8")
+            install_path = root / "edgeparse-install"
+            install_path.mkdir()
+            (install_path / "installed.txt").write_text("installed", encoding="utf-8")
+            result = json.loads(REAL_MACOS_G1.read_text(encoding="utf-8"))
+            for adapter in result["competitors"]["adapters"]:
+                if adapter["id"] == "edgeparse":
+                    adapter["artifact"]["expected_sha256"] = artifact_sha256
+
+            reproduction_env = build_gate_zero_evidence.build_reproduction_env(
+                result,
+                {
+                    "ETHOS_EDGEPARSE_BIN": str(command),
+                    "ETHOS_EDGEPARSE_ARTIFACT": str(artifact),
+                    "ETHOS_EDGEPARSE_INSTALL_PATH": str(install_path),
+                },
+            )
+
+        variables = {entry["name"]: entry for entry in reproduction_env["variables"]}
+        artifact_entry = variables["ETHOS_EDGEPARSE_ARTIFACT"]
+        install_entry = variables["ETHOS_EDGEPARSE_INSTALL_PATH"]
+        self.assertEqual(artifact_entry["status"], "resolved")
+        self.assertEqual(artifact_entry["sha256"], artifact_sha256)
+        self.assertTrue(artifact_entry["hash_matches_expected"])
+        self.assertEqual(install_entry["path_kind"], "directory")
+        self.assertIsNotNone(install_entry["tree_sha256"])
+        self.assertIn("ETHOS_LITEPARSE_BIN is not set", reproduction_env["blockers"])
 
     def test_host_attestation_matches_result(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

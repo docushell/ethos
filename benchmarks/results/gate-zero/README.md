@@ -22,6 +22,10 @@ Publishable evidence sidecars are generated from saved result JSON and land unde
 <platform>/evidence/<gate>/<timestamp>/
 ```
 
-Each evidence bundle contains the raw result archive, reproduction command, host attestation,
-human-readable summary, checksum manifest, and checksum-manifest digest. The digest is not a
-public-key signature.
+Each evidence bundle contains the raw result archive, reproduction command, reproduction
+environment sidecar, host attestation, human-readable summary, checksum manifest, and
+checksum-manifest digest. The digest is not a public-key signature.
+
+`reproduction-env.json` records the resolved benchmark environment variables when available.
+If local artifact paths are unavailable, the sidecar must say so explicitly with `status:
+incomplete` and blocker messages.

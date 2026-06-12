@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import re
 import shutil
@@ -12,7 +13,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import run_gate_zero
 
@@ -47,6 +48,99 @@ PARSER_ORDER = (
     "edgeparse",
     "liteparse",
     "pymupdf4llm",
+)
+REPRODUCTION_ENV_VARS = (
+    {
+        "name": "ETHOS_PDFIUM_LIBRARY_PATH",
+        "kind": "file",
+        "role": "Pinned PDFium dynamic library loaded by ethos-pdf.",
+    },
+    {
+        "name": "ETHOS_PDFIUM_VERSION",
+        "kind": "value",
+        "role": "Pinned upstream PDFium version string.",
+    },
+    {
+        "name": "ETHOS_PDFIUM_ARTIFACT_PATH",
+        "kind": "file",
+        "role": "Pinned PDFium artifact archive.",
+    },
+    {
+        "name": "ETHOS_OPENDATALOADER_PDF_BIN",
+        "kind": "file",
+        "role": "OpenDataLoader command used by the Gate Zero harness.",
+        "competitor_id": "opendataloader-pdf",
+    },
+    {
+        "name": "ETHOS_OPENDATALOADER_PDF_ARTIFACT",
+        "kind": "file",
+        "role": "OpenDataLoader pinned artifact used to install/run the command.",
+        "competitor_id": "opendataloader-pdf",
+        "artifact": True,
+    },
+    {
+        "name": "ETHOS_OPENDATALOADER_PDF_INSTALL_PATH",
+        "kind": "directory",
+        "role": "OpenDataLoader installed footprint path measured by the harness.",
+        "competitor_id": "opendataloader-pdf",
+    },
+    {
+        "name": "ETHOS_EDGEPARSE_BIN",
+        "kind": "file",
+        "role": "EdgeParse command used by the Gate Zero harness.",
+        "competitor_id": "edgeparse",
+    },
+    {
+        "name": "ETHOS_EDGEPARSE_ARTIFACT",
+        "kind": "file",
+        "role": "EdgeParse pinned artifact used to install/run the command.",
+        "competitor_id": "edgeparse",
+        "artifact": True,
+    },
+    {
+        "name": "ETHOS_EDGEPARSE_INSTALL_PATH",
+        "kind": "directory",
+        "role": "EdgeParse installed footprint path measured by the harness.",
+        "competitor_id": "edgeparse",
+    },
+    {
+        "name": "ETHOS_LITEPARSE_BIN",
+        "kind": "file",
+        "role": "LiteParse command used by the Gate Zero harness.",
+        "competitor_id": "liteparse",
+    },
+    {
+        "name": "ETHOS_LITEPARSE_ARTIFACT",
+        "kind": "file",
+        "role": "LiteParse pinned artifact used to install/run the command.",
+        "competitor_id": "liteparse",
+        "artifact": True,
+    },
+    {
+        "name": "ETHOS_LITEPARSE_INSTALL_PATH",
+        "kind": "directory",
+        "role": "LiteParse installed footprint path measured by the harness.",
+        "competitor_id": "liteparse",
+    },
+    {
+        "name": "ETHOS_PYMUPDF4LLM_PYTHON",
+        "kind": "file",
+        "role": "PyMuPDF4LLM Python interpreter used by the Gate Zero harness.",
+        "competitor_id": "pymupdf4llm",
+    },
+    {
+        "name": "ETHOS_PYMUPDF4LLM_ARTIFACT",
+        "kind": "file",
+        "role": "PyMuPDF4LLM pinned artifact used to install/run the command.",
+        "competitor_id": "pymupdf4llm",
+        "artifact": True,
+    },
+    {
+        "name": "ETHOS_PYMUPDF4LLM_INSTALL_PATH",
+        "kind": "directory",
+        "role": "PyMuPDF4LLM installed footprint path measured by the harness.",
+        "competitor_id": "pymupdf4llm",
+    },
 )
 
 
@@ -108,6 +202,36 @@ def read_reproduction_command(command: str | None, command_file: Path | None) ->
     if not command:
         raise ValueError("reproduction command is required")
     return command
+
+
+def read_reproduction_env(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(f"reproduction env file does not exist: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"reproduction env JSON is invalid: {path}: {exc}") from exc
+    validate_reproduction_env(value, path)
+    return value
+
+
+def validate_reproduction_env(value: Any, path: Path) -> None:
+    if not isinstance(value, dict):
+        raise ValueError(f"reproduction env JSON must be an object: {path}")
+    required = {"schema_version", "status", "variables", "blockers"}
+    missing = sorted(required - set(value))
+    if missing:
+        raise ValueError(f"reproduction env JSON is missing required keys in {path}: {', '.join(missing)}")
+    if value.get("schema_version") != "ethos-gate-zero-reproduction-env-v1":
+        raise ValueError(f"reproduction env JSON has unsupported schema_version in {path}")
+    if value.get("status") not in {"complete", "incomplete"}:
+        raise ValueError(f"reproduction env JSON status must be complete or incomplete in {path}")
+    if not isinstance(value.get("variables"), list):
+        raise ValueError(f"reproduction env JSON variables must be an array in {path}")
+    if not isinstance(value.get("blockers"), list):
+        raise ValueError(f"reproduction env JSON blockers must be an array in {path}")
 
 
 def status_line_path(line: str) -> str:
@@ -224,6 +348,7 @@ def build_summary_markdown(
     source_result: str,
     raw_result_sha256: str,
     created_at: str,
+    reproduction_env_status: str | None,
 ) -> str:
     host = result.get("host", {}).get("selected", {})
     lines = [
@@ -237,6 +362,7 @@ def build_summary_markdown(
         f"- Host: `{host.get('id', 'unknown')}`",
         f"- Corpus: `{result['corpus'].get('id', 'unknown')}`",
         f"- Reproduction command: `reproduction-command.txt`",
+        f"- Reproduction env: `reproduction-env.json` (`{reproduction_env_status or 'unknown'}`)",
         f"- Host attestation: `host-attestation.json`",
         "",
         "## Parser Results",
@@ -324,6 +450,102 @@ def build_host_attestation(
     }
 
 
+def competitor_expected_hashes(result: dict[str, Any]) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for adapter in result.get("competitors", {}).get("adapters", []):
+        competitor_id = adapter.get("id")
+        artifact = adapter.get("artifact", {})
+        expected = artifact.get("expected_sha256")
+        if isinstance(competitor_id, str) and isinstance(expected, str):
+            hashes[competitor_id] = expected
+    return hashes
+
+
+def path_metadata(path_value: str, kind: str) -> dict[str, Any]:
+    path = Path(path_value)
+    exists = path.exists()
+    metadata: dict[str, Any] = {
+        "path": path_value,
+        "exists": exists,
+        "path_kind": kind,
+        "size_bytes": None,
+        "sha256": None,
+        "tree_sha256": None,
+    }
+    if not exists:
+        return metadata
+    if path.is_file():
+        metadata["path_kind"] = "file"
+        metadata["size_bytes"] = path.stat().st_size
+        metadata["sha256"] = run_gate_zero.sha256_file(path)
+        return metadata
+    if path.is_dir():
+        metadata["path_kind"] = "directory"
+        metadata["size_bytes"] = run_gate_zero.path_size_bytes(path)
+        metadata["tree_sha256"] = run_gate_zero.output_tree_hash(path)
+        return metadata
+    metadata["path_kind"] = "other"
+    return metadata
+
+
+def build_reproduction_env(
+    result: dict[str, Any],
+    environment: Mapping[str, str],
+) -> dict[str, Any]:
+    expected_hashes = competitor_expected_hashes(result)
+    variables: list[dict[str, Any]] = []
+    blockers: list[str] = []
+    for spec in REPRODUCTION_ENV_VARS:
+        name = spec["name"]
+        kind = spec["kind"]
+        value = environment.get(name)
+        entry: dict[str, Any] = {
+            "name": name,
+            "role": spec["role"],
+            "kind": kind,
+            "status": "resolved" if value else "unresolved",
+            "value": value if value else None,
+            "path": None,
+            "exists": None,
+            "path_kind": None,
+            "size_bytes": None,
+            "sha256": None,
+            "tree_sha256": None,
+            "expected_sha256": None,
+            "hash_matches_expected": None,
+            "notes": [],
+        }
+        competitor_id = spec.get("competitor_id")
+        if isinstance(competitor_id, str):
+            entry["competitor_id"] = competitor_id
+        if spec.get("artifact") and isinstance(competitor_id, str):
+            entry["expected_sha256"] = expected_hashes.get(competitor_id)
+        if not value:
+            blockers.append(f"{name} is not set")
+            variables.append(entry)
+            continue
+        if kind in {"file", "directory"}:
+            metadata = path_metadata(value, kind)
+            entry.update(metadata)
+            if not metadata["exists"]:
+                blockers.append(f"{name} path does not exist: {value}")
+            expected_sha256 = entry["expected_sha256"]
+            if expected_sha256 and metadata["sha256"]:
+                entry["hash_matches_expected"] = metadata["sha256"] == expected_sha256
+                if not entry["hash_matches_expected"]:
+                    blockers.append(f"{name} sha256 does not match expected artifact hash")
+        variables.append(entry)
+
+    status = "complete" if not blockers else "incomplete"
+    return {
+        "schema_version": "ethos-gate-zero-reproduction-env-v1",
+        "status": status,
+        "source": "environment",
+        "blockers": blockers,
+        "variables": variables,
+    }
+
+
 def write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text if text.endswith("\n") else f"{text}\n", encoding="utf-8")
@@ -380,6 +602,8 @@ def build_evidence_bundle(
     gate: str,
     timestamp: str,
     reproduction_command: str,
+    reproduction_env: dict[str, Any] | None = None,
+    environment: Mapping[str, str] | None = None,
     benchmark_commit: str | None = None,
     force: bool = False,
 ) -> dict[str, Any]:
@@ -399,6 +623,10 @@ def build_evidence_bundle(
     created_at = timestamp_to_iso(timestamp)
     source_result = repo_path(repo_root, result_path)
     raw_result_sha256 = run_gate_zero.sha256_file(result_path)
+    if reproduction_env is None:
+        reproduction_env = build_reproduction_env(result, environment or {})
+    else:
+        validate_reproduction_env(reproduction_env, Path("<in-memory-reproduction-env>"))
     host_attestation = build_host_attestation(
         result,
         repo_root=repo_root,
@@ -417,6 +645,7 @@ def build_evidence_bundle(
         source_result=source_result,
         raw_result_sha256=raw_result_sha256,
         created_at=created_at,
+        reproduction_env_status=reproduction_env.get("status"),
     )
 
     if bundle_dir.exists() and not force:
@@ -434,6 +663,9 @@ def build_evidence_bundle(
     reproduction_path = bundle_dir / "reproduction-command.txt"
     write_text(reproduction_path, reproduction_command.strip())
 
+    reproduction_env_path = bundle_dir / "reproduction-env.json"
+    write_json(reproduction_env_path, reproduction_env)
+
     host_path = bundle_dir / "host-attestation.json"
     write_json(host_path, host_attestation)
 
@@ -441,7 +673,7 @@ def build_evidence_bundle(
     write_text(summary_path, summary_text)
 
     manifest_path = bundle_dir / "evidence-manifest.json"
-    preliminary_artifacts = [host_path, raw_path, reproduction_path, summary_path]
+    preliminary_artifacts = [host_path, raw_path, reproduction_env_path, reproduction_path, summary_path]
     artifact_rows = checksums_for(preliminary_artifacts, bundle_dir)
     manifest = {
         "schema_version": "ethos-gate-zero-evidence-v1",
@@ -454,6 +686,8 @@ def build_evidence_bundle(
         "source_result_status": result["status"],
         "ethos_status": result["summary"]["status"],
         "edgeparse_determinism_failures": edgeparse_determinism_failures(result),
+        "reproduction_env_status": reproduction_env.get("status"),
+        "reproduction_env_blockers": reproduction_env.get("blockers", []),
         "benchmark_commit": benchmark_commit,
         "artifacts": artifact_rows,
     }
@@ -491,6 +725,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--timestamp", default=utc_timestamp())
     parser.add_argument("--reproduction-command")
     parser.add_argument("--reproduction-command-file", type=Path)
+    parser.add_argument("--reproduction-env-file", type=Path)
     parser.add_argument("--benchmark-commit")
     parser.add_argument("--force", action="store_true")
     return parser.parse_args(argv)
@@ -503,6 +738,7 @@ def main(argv: list[str]) -> int:
             args.reproduction_command,
             args.reproduction_command_file,
         )
+        reproduction_env = read_reproduction_env(args.reproduction_env_file)
         report = build_evidence_bundle(
             repo_root=args.repo_root,
             result_path=args.result,
@@ -511,6 +747,8 @@ def main(argv: list[str]) -> int:
             gate=args.gate,
             timestamp=args.timestamp,
             reproduction_command=reproduction_command,
+            reproduction_env=reproduction_env,
+            environment=dict(os.environ),
             benchmark_commit=args.benchmark_commit,
             force=args.force,
         )

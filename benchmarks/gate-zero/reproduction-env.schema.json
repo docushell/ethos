@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:benchmarks:gate-zero-reproduction-env:1",
+  "title": "Ethos Gate Zero reproduction environment",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "source",
+    "blockers",
+    "variables"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "ethos-gate-zero-reproduction-env-v1" },
+    "status": { "enum": ["complete", "incomplete"] },
+    "source": { "enum": ["environment", "file"] },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "variables": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/variable" }
+    }
+  },
+  "$defs": {
+    "sha256_or_null": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        { "type": "null" }
+      ]
+    },
+    "variable": {
+      "type": "object",
+      "required": [
+        "name",
+        "role",
+        "kind",
+        "status",
+        "value",
+        "path",
+        "exists",
+        "path_kind",
+        "size_bytes",
+        "sha256",
+        "tree_sha256",
+        "expected_sha256",
+        "hash_matches_expected",
+        "notes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "kind": { "enum": ["file", "directory", "value"] },
+        "status": { "enum": ["resolved", "unresolved"] },
+        "value": { "type": ["string", "null"] },
+        "path": { "type": ["string", "null"] },
+        "exists": { "type": ["boolean", "null"] },
+        "path_kind": {
+          "anyOf": [
+            { "enum": ["file", "directory", "other"] },
+            { "type": "null" }
+          ]
+        },
+        "size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "sha256": { "$ref": "#/$defs/sha256_or_null" },
+        "tree_sha256": { "$ref": "#/$defs/sha256_or_null" },
+        "expected_sha256": { "$ref": "#/$defs/sha256_or_null" },
+        "hash_matches_expected": { "type": ["boolean", "null"] },
+        "competitor_id": { "type": "string" },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
