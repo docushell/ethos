@@ -85,6 +85,14 @@ def write_json(path: Path | None, value: Any) -> None:
     path.write_text(f"{text}\n", encoding="utf-8")
 
 
+def report_path(repo_root: Path, path: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(repo_root.resolve()))
+    except ValueError:
+        return str(path)
+
+
 def percentile(values: list[float], pct: float) -> float | None:
     if not values:
         return None
@@ -349,14 +357,22 @@ def run_ethos_entry(
 ) -> dict[str, Any]:
     file_path = repo_root / entry["file"]
     command = [str(ethos_bin), "doc", "parse", str(file_path), "--format", "json"]
+    report_command = [
+        report_path(repo_root, ethos_bin),
+        "doc",
+        "parse",
+        entry["file"],
+        "--format",
+        "json",
+    ]
     try:
         actual_sha256 = sha256_file(file_path)
     except FileNotFoundError:
-        return run_entry_result(entry, command, ["corpus file is missing"])
+        return run_entry_result(entry, report_command, ["corpus file is missing"])
     if actual_sha256 != entry["sha256"]:
         return run_entry_result(
             entry,
-            command,
+            report_command,
             [
                 "corpus sha256 mismatch: "
                 f"manifest={entry['sha256']} actual={actual_sha256}"
@@ -416,7 +432,7 @@ def run_ethos_entry(
             "subsets": entry["subsets"],
         },
         "parser_target": "ethos",
-        "command": command,
+        "command": report_command,
         "exit_code": exit_codes[-1] if exit_codes else None,
         "duration_ms_p50": percentile(durations, 0.50),
         "duration_ms_p95": percentile(durations, 0.95),
@@ -459,7 +475,7 @@ def build_opendataloader_adapter(
         blockers.append("opendataloader-pdf scripts/run-cli.sh is missing")
     else:
         command = [
-            str(local_path / "scripts" / "run-cli.sh"),
+            "<opendataloader-root>/scripts/run-cli.sh",
             "-f",
             "json",
             "-o",
@@ -473,7 +489,7 @@ def build_opendataloader_adapter(
         "id": "opendataloader-pdf",
         "status": status,
         "mode": "metadata_only",
-        "local_path": str(local_path) if local_path else None,
+        "local_path": "<opendataloader-root>" if local_path else None,
         "command_template": command,
         "lock": lock_entry,
         "blockers": blockers,
@@ -556,7 +572,7 @@ def build_result_report(args: argparse.Namespace) -> dict[str, Any]:
     ]
     status = "blocked" if result_blockers else ("fail" if failed_runs else "pass")
     command = [
-        str(args.ethos_bin),
+        report_path(repo_root, args.ethos_bin),
         "doc",
         "parse",
         "<corpus-file>",
@@ -597,13 +613,13 @@ def build_result_report(args: argparse.Namespace) -> dict[str, Any]:
         "inputs": {
             "competitors_lock": str(competitors_path.relative_to(repo_root)),
             "competitors_lock_sha256": sha256_file(competitors_path),
-            "deterministic_profile": str(args.deterministic_profile),
+            "deterministic_profile": report_path(repo_root, args.deterministic_profile),
             "deterministic_profile_file_sha256": sha256_file(args.deterministic_profile)
             if args.deterministic_profile.is_file()
             else None,
-            "ethos_bin": str(args.ethos_bin),
+            "ethos_bin": report_path(repo_root, args.ethos_bin),
             "ethos_bin_sha256": sha256_file(args.ethos_bin) if args.ethos_bin.is_file() else None,
-            "install_path": str(args.install_path),
+            "install_path": report_path(repo_root, args.install_path),
         },
         "readiness": {
             "status": readiness["status"],

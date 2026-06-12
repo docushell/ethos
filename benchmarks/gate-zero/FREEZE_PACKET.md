@@ -2,28 +2,30 @@
 
 Date: 2026-06-12
 Owner: product / decider
-Status: Blocked pending corpus sign-off and competitor pins
+Status: Frozen corpus and pinned direct competitor artifacts; blocked pending signed host results
 
 This packet is the product checklist for turning Gate Zero from an engineering placeholder into a
-valid benchmark decision input. Do not mark `benchmarks/gate-zero/manifest.json` frozen and do not
-publish benchmark claims until every required fact below is recorded.
+valid benchmark decision input. Do not publish benchmark claims until every required result file
+below is recorded from the frozen manifest and pinned competitor lock.
 
 ## Product Decision
 
-Ethos remains pre-alpha. Gate Zero is not ready to run.
+Ethos remains pre-alpha. Gate Zero is ready for controlled host runs, not public claims.
 
 The engineering harness now fails closed when the corpus/hardware manifest or competitor lock is
-incomplete. A staged corpus now exists in `benchmarks/gate-zero/corpus/` with synthetic CC0 PDFs
-and real redistributable official PDFs, but it is not a frozen benchmark corpus until the decider
-signs it. The remaining work is product/benchmark-owner evidence gathering, not parser
-implementation.
+incomplete. The Gate Zero v1 corpus is now frozen in `benchmarks/gate-zero/corpus/` with synthetic
+CC0 PDFs and real redistributable official PDFs. The direct competitor artifacts are pinned in
+`benchmarks/competitors.lock.json`. The remaining work is signed result generation across the
+macOS arm64 and Linux x64 benchmark hosts, followed by full competitor execution adapters before
+publishing comparison claims.
 
 ## Required External Outputs
 
 | Output | Required file | Product acceptance |
 | --- | --- | --- |
-| Frozen corpus and hardware | `benchmarks/gate-zero/manifest.json` | staged corpus accepted, `frozen=true`, status `FROZEN-SIGNED`, freeze timestamp, signed-by value |
-| Competitor pins | `benchmarks/competitors.lock.json` | Exact versions, runtime versions where applicable, artifact SHA256 values, and `pinned=true` for all Gate Zero competitors |
+| Frozen corpus and hardware | `benchmarks/gate-zero/manifest.json` | Complete: staged corpus accepted, `frozen=true`, status `FROZEN-SIGNED`, freeze timestamp, signed-by value |
+| Competitor pins | `benchmarks/competitors.lock.json` | Complete: exact versions, runtime versions where applicable, artifact SHA256 values, and `pinned=true` for all Gate Zero competitors |
+| Signed host results | `benchmarks/results/gate-zero/{macos-arm64,linux-x64}/g1.json` | Required before any benchmark claim; both hosts must pass independently |
 | Public naming acceptance | `docs/decisions/ADR-0006-package-identifiers.md` | Status `Accepted`; registry/trademark checks complete before public package/docs claims |
 
 ## Staged Corpus Seed
@@ -31,7 +33,7 @@ implementation.
 The existing CC0 synthetic fixtures have been copied into `benchmarks/gate-zero/corpus/` as a
 staged Gate Zero seed. Four real official PDFs have also been added to exercise harder document
 classes: forms, worksheets, long technical reports, tables, and dense requirements text. The
-decider must still accept or amend this corpus before freezing.
+decider accepted this as the Gate Zero v1 corpus on 2026-06-12.
 
 | Candidate ID | Corpus file | SHA256 | Pages | Subsets | Product note |
 | --- | --- | --- | ---: | --- | --- |
@@ -64,19 +66,18 @@ The benchmark host hardware fields are now recorded in `benchmarks/gate-zero/man
 | `mac-m4pro-arm64` | MacBook Pro `Mac16,8`; Apple M4 Pro, 12 cores (8 performance, 4 efficiency); 48 GB RAM; macOS 26.5 (25F71); Darwin 25.5.0; manual runner `mac-m4pro-arm64` |
 | `linux-x64-1` | KVM virtualized EL-compatible 8.8 x86_64 host; AMD EPYC 7742 64-Core Processor, 2 vCPU; `32565968 kB` MemTotal; Linux 5.15.0-316.196.4.1.el8uek.x86_64 kernel; manual runner `linux-x64-1` |
 
-Remaining manifest blockers are corpus freeze/signature fields, not hardware fields or staged
-corpus hashes.
+Remaining manifest work is result production, not corpus or hardware evidence.
 
 ## Competitor Pin Checklist
 
-Every Gate Zero competitor must be recorded as the exact artifact measured by the harness.
+Every Gate Zero competitor is recorded as the exact direct artifact selected for the harness.
 
 | Competitor | Required fields |
 | --- | --- |
-| OpenDataLoader PDF | `version`, `artifact_sha256`, `jvm_version`, `pinned=true` |
-| EdgeParse | `version`, `artifact_sha256`, `pinned=true` |
-| LiteParse | `version`, `artifact_sha256`, `pinned=true` |
-| PyMuPDF4LLM | `version`, `artifact_sha256`, `python_version`, `pinned=true` |
+| OpenDataLoader PDF | `2.4.7`; PyPI wheel `sha256:1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628`; JVM `OpenJDK Temurin 26+35` |
+| EdgeParse | `0.2.5`; PyPI source distribution `sha256:46c4b84c5a8f5e85a1699614360037535bf2aba15c5b7a4db3aec37865038935` |
+| LiteParse | `2.0.8`; PyPI source distribution `sha256:c03b7b32508cf35e7ee01ea3fa7dd5d45592bc4a7c42696f7505e445ad5474c4` |
+| PyMuPDF4LLM | `1.27.2.3`; PyPI wheel `sha256:bd724b79fa3f06a5b28d7a65f7acfa8de56e04bdb603ac2d6dff315e0d151aaa`; Python `3.9.6` |
 
 Artifact hashes must be lowercase SHA256 of the downloaded package, binary, jar, wheel, or pinned
 source archive actually used by the benchmark runner. Do not use a repository commit hash as a
@@ -84,27 +85,27 @@ substitute unless the benchmark artifact is the source archive itself.
 
 ## Execution Commands
 
-Use these commands after the manifest and lockfile are updated:
+Use these commands after checking out this frozen manifest and lockfile:
 
 ```sh
 python3 .github/scripts/readiness_gate.py gate-zero
 make -C benchmarks/harness bench
 ```
 
-Expected state today:
-
-```text
-gate-zero readiness: BLOCKED
-```
-
-Expected state after all required facts are recorded:
+Expected readiness state:
 
 ```text
 gate-zero readiness: green
 ```
 
-The current runner can produce an Ethos-only Gate Zero result file after readiness turns green.
-Competitor execution adapters and G2/G3 comparison rows remain separate implementation steps.
+Expected result state after a host run with pinned PDFium:
+
+```text
+ethos-gate-zero-result-v1 status: pass
+```
+
+The current runner can produce Ethos-only Gate Zero result files. Full competitor execution
+adapters and G2/G3 comparison rows remain separate implementation steps.
 
 ## Public-Claim Rule
 

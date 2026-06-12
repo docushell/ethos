@@ -1,11 +1,11 @@
 {
   "manifest_version": "1.0.0",
-  "status": "DRAFT-CORPUS-STAGED",
-  "frozen": false,
+  "status": "FROZEN-SIGNED",
+  "frozen": true,
   "product_state": {
     "as_of": "2026-06-12",
     "public_claims_allowed": false,
-    "decision": "Candidate corpus is staged for Gate Zero dry runs with CC0 synthetic PDFs plus real redistributable U.S. federal/public documents. It is not a frozen benchmark corpus until the decider signs freeze_record.signed_by and competitors are pinned."
+    "decision": "Gate Zero v1 corpus is frozen and signed with CC0 synthetic PDFs plus real redistributable U.S. federal/public documents. Public benchmark claims remain blocked until signed macOS arm64 and Linux x64 harness results exist."
   },
   "rules": {
     "freeze": "Gate Zero is invalid until frozen=true with decider sign-off (ADR-0000, plan row 0.3). Corpus changes after kickoff void the measurement (PRD 1.3). One artifact, one name: every gate measures against this file only.",
@@ -13,10 +13,10 @@
     "subsets": "Gates reference declared subsets by name; born_digital is the G1 subset. G3 runs on the full frozen corpus."
   },
   "freeze_record": {
-    "frozen_at": null,
-    "signed_by": null,
-    "corpus_owner": "benchmark owner (pending final staffing assignment)",
-    "decider": "project decider (pending Gate Zero sign-off)"
+    "frozen_at": "2026-06-12T08:17:02Z",
+    "signed_by": "docushell-admin <hello@docushell.com>",
+    "corpus_owner": "docushell-admin <hello@docushell.com>",
+    "decider": "docushell-admin <hello@docushell.com>"
   },
   "corpus": [
     {
@@ -173,11 +173,10 @@
   ],
   "determinism_platforms": ["macos-arm64", "linux-x64"],
   "windows_x64_note": "Windows x64 joins nightly determinism no later than Milestone B exit (week 14 under ADR-0001 reduced-staff schedule); unresolved divergence blocks or re-scopes Public Beta.",
-  "todo_before_freeze": [
-    "Decider either accepts this staged synthetic + real redistributable corpus as Gate Zero v1 or adds broader redistributable PDFs.",
-    "Set frozen=true only after corpus scope is final.",
-    "Fill freeze_record.frozen_at and freeze_record.signed_by.",
-    "Freeze benchmarks/competitors.lock.json with exact versions and artifact hashes.",
-    "Run python3 .github/scripts/readiness_gate.py gate-zero and make -C benchmarks/harness bench."
+  "post_freeze_todo": [
+    "Run python3 .github/scripts/readiness_gate.py gate-zero.",
+    "Run make -C benchmarks/harness bench on macOS arm64 and Linux x64 with the pinned PDFium runtime.",
+    "Store signed host result files under benchmarks/results/gate-zero/ before any public benchmark claim.",
+    "Implement full competitor execution adapters before publishing G2/G3 comparison claims."
   ]
 }

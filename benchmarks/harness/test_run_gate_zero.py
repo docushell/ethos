@@ -349,6 +349,10 @@ class GateZeroReadinessTests(unittest.TestCase):
         self.assertIsNotNone(report["output_sha256"])
         self.assertEqual(report["competitors"]["adapters"][0]["status"], "not_configured")
         self.assertEqual(report["output_sha256"], second_report["output_sha256"])
+        self.assertNotIn(str(root), json.dumps(report))
+        self.assertEqual(report["runs"][0]["command"][0], "ethos")
+        self.assertEqual(report["runs"][0]["command"][3], "benchmarks/gate-zero/corpus/sample.pdf")
+        self.assertEqual(report["inputs"]["deterministic_profile"], "profile.json")
 
     def test_output_hash_instability_fails_result(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -423,6 +427,8 @@ class GateZeroReadinessTests(unittest.TestCase):
 
         self.assertEqual(adapter["status"], "ready")
         self.assertEqual(adapter["mode"], "metadata_only")
+        self.assertEqual(adapter["local_path"], "<opendataloader-root>")
+        self.assertEqual(adapter["command_template"][0], "<opendataloader-root>/scripts/run-cli.sh")
         self.assertIn("<input-pdf>", adapter["command_template"])
 
     def test_missing_deterministic_profile_blocks_result(self) -> None:
