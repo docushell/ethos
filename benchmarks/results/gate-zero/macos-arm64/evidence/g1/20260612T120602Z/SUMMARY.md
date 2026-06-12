@@ -8,6 +8,7 @@
 - Host: `mac-m4pro-arm64`
 - Corpus: `gate-zero-v1`
 - Reproduction command: `reproduction-command.txt`
+- Reproduction env: `reproduction-env.json` (`incomplete`)
 - Host attestation: `host-attestation.json`
 
 ## Parser Results

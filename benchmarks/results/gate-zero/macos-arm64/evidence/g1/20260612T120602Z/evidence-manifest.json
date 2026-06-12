@@ -2,11 +2,11 @@
   "artifacts": [
     {
       "path": "SUMMARY.md",
-      "sha256": "86e5aa540fe5b296f0566f1e802769cd8bd4921f12e9578f966de3bce870194a"
+      "sha256": "f107421529d2ea83f0389b621756be637d751978169d43361c60ccf79eb8dd6c"
     },
     {
       "path": "host-attestation.json",
-      "sha256": "7688b50cac600ffa29e760f0107fae5dcecd40edee70277322c7ddb5cf3bbe0f"
+      "sha256": "88e6d4a5de3bc2d3507b89f969184d645e0c0bc835ed0fceb61d031bf92618c8"
     },
     {
       "path": "raw/g1-macos-arm64-20260612T120602Z.json",
@@ -15,6 +15,10 @@
     {
       "path": "reproduction-command.txt",
       "sha256": "f4b1d7773282cbac1e8da62a36b5cf5ba2efda4c6214696cd07cae73aab4e24a"
+    },
+    {
+      "path": "reproduction-env.json",
+      "sha256": "59a1ee350e9131af2266ff5e1733b168935dd41a5e651bdb17ff7c3f15dc72af"
     }
   ],
   "benchmark_commit": "c68389c28535bbab74a1efbe5bd923c8ff4ec341",
@@ -45,6 +49,24 @@
   "ethos_status": "pass",
   "gate": "g1",
   "platform": "macos-arm64",
+  "reproduction_env_blockers": [
+    "ETHOS_PDFIUM_LIBRARY_PATH is not set",
+    "ETHOS_PDFIUM_VERSION is not set",
+    "ETHOS_PDFIUM_ARTIFACT_PATH is not set",
+    "ETHOS_OPENDATALOADER_PDF_BIN is not set",
+    "ETHOS_OPENDATALOADER_PDF_ARTIFACT is not set",
+    "ETHOS_OPENDATALOADER_PDF_INSTALL_PATH is not set",
+    "ETHOS_EDGEPARSE_BIN is not set",
+    "ETHOS_EDGEPARSE_ARTIFACT is not set",
+    "ETHOS_EDGEPARSE_INSTALL_PATH is not set",
+    "ETHOS_LITEPARSE_BIN is not set",
+    "ETHOS_LITEPARSE_ARTIFACT is not set",
+    "ETHOS_LITEPARSE_INSTALL_PATH is not set",
+    "ETHOS_PYMUPDF4LLM_PYTHON is not set",
+    "ETHOS_PYMUPDF4LLM_ARTIFACT is not set",
+    "ETHOS_PYMUPDF4LLM_INSTALL_PATH is not set"
+  ],
+  "reproduction_env_status": "incomplete",
   "schema_version": "ethos-gate-zero-evidence-v1",
   "source_result": "benchmarks/results/gate-zero/macos-arm64/g1.json",
   "source_result_canonical_sha256": "4f92b517cda6e06ba9de5540ec8c396519777f97dc06eb976a9cb292c61542c9",
