@@ -152,7 +152,37 @@ def result_args(
         iterations=2,
         timeout_sec=5.0,
         opendataloader_root=None,
+        opendataloader_command=None,
+        opendataloader_artifact=None,
+        opendataloader_install_path=None,
     )
+
+
+def fake_odl(root: Path, *, fail: bool = False) -> Path:
+    script = root / "opendataloader-pdf"
+    if fail:
+        text = """#!/usr/bin/env python3
+import sys
+print("intentional odl failure", file=sys.stderr)
+raise SystemExit(7)
+"""
+    else:
+        text = """#!/usr/bin/env python3
+import json
+import pathlib
+import sys
+
+args = sys.argv[1:]
+output_dir = pathlib.Path(args[args.index("--output-dir") + 1])
+input_pdf = pathlib.Path(args[-1])
+output_dir.mkdir(parents=True, exist_ok=True)
+(output_dir / f"{input_pdf.stem}.json").write_text(
+    json.dumps({"file name": input_pdf.name, "kids": [{"content": "Hello"}]}, sort_keys=True),
+    encoding="utf-8",
+)
+"""
+    write_executable(script, text)
+    return script
 
 
 class GateZeroReadinessTests(unittest.TestCase):
@@ -411,25 +441,118 @@ class GateZeroReadinessTests(unittest.TestCase):
             report["runs"][0]["failures"],
         )
 
-    def test_opendataloader_adapter_wrapper_is_ready_when_configured(self) -> None:
+    def test_opendataloader_adapter_is_ready_when_artifact_command_and_install_are_valid(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            odl_root = root / "opendataloader-pdf"
-            script = odl_root / "scripts" / "run-cli.sh"
-            script.parent.mkdir(parents=True)
-            write_executable(script, "#!/bin/sh\nexit 0\n")
+            command = fake_odl(root)
+            artifact = root / "opendataloader_pdf-1.0.0-py3-none-any.whl"
+            artifact.write_bytes(b"artifact")
+            artifact_sha256 = run_gate_zero.sha256_file(artifact)
+            install_path = root / "venv"
+            install_path.mkdir()
             lock = json.loads(frozen_competitors(root).read_text(encoding="utf-8"))
+            lock["gate_zero"][0]["artifact_sha256"] = artifact_sha256
 
             adapter = run_gate_zero.build_opendataloader_adapter(
-                odl_root,
+                command,
+                artifact,
+                install_path,
                 run_gate_zero.opendataloader_lock_entry(lock),
             )
 
         self.assertEqual(adapter["status"], "ready")
-        self.assertEqual(adapter["mode"], "metadata_only")
-        self.assertEqual(adapter["local_path"], "<opendataloader-root>")
-        self.assertEqual(adapter["command_template"][0], "<opendataloader-root>/scripts/run-cli.sh")
+        self.assertEqual(adapter["mode"], "execute")
+        self.assertEqual(adapter["command"], "<opendataloader-command>")
+        self.assertEqual(adapter["command_template"][0], "<opendataloader-command>")
+        self.assertEqual(adapter["artifact"]["path"], "<opendataloader-artifact>")
+        self.assertEqual(adapter["artifact"]["sha256"], artifact_sha256)
         self.assertIn("<input-pdf>", adapter["command_template"])
+
+    def test_opendataloader_adapter_blocks_mismatched_artifact_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            command = fake_odl(root)
+            artifact = root / "opendataloader_pdf-1.0.0-py3-none-any.whl"
+            artifact.write_bytes(b"not the locked artifact")
+            install_path = root / "venv"
+            install_path.mkdir()
+            lock = json.loads(frozen_competitors(root).read_text(encoding="utf-8"))
+
+            adapter = run_gate_zero.build_opendataloader_adapter(
+                command,
+                artifact,
+                install_path,
+                run_gate_zero.opendataloader_lock_entry(lock),
+            )
+
+        self.assertEqual(adapter["status"], "blocked")
+        self.assertIn(
+            "opendataloader-pdf artifact sha256 does not match lock",
+            adapter["blockers"],
+        )
+
+    def test_frozen_inputs_execute_opendataloader_competitor(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            profile = root / "profile.json"
+            profile.write_text("{}", encoding="utf-8")
+            manifest_path = frozen_manifest(root)
+            competitors_path = frozen_competitors(root)
+            ethos_bin = fake_ethos(root)
+            odl_command = fake_odl(root)
+            odl_artifact = root / "opendataloader_pdf-1.0.0-py3-none-any.whl"
+            odl_artifact.write_bytes(b"artifact")
+            lock = json.loads(competitors_path.read_text(encoding="utf-8"))
+            lock["gate_zero"][0]["artifact_sha256"] = run_gate_zero.sha256_file(odl_artifact)
+            write_json(competitors_path, lock)
+            args = result_args(root, manifest_path, competitors_path, ethos_bin, profile)
+            args.opendataloader_command = odl_command
+            args.opendataloader_artifact = odl_artifact
+            args.opendataloader_install_path = root
+
+            report = run_gate_zero.build_result_report(args)
+
+        runs = report["competitors"]["runs"]["opendataloader-pdf"]
+        summary = report["competitors"]["summaries"]["opendataloader-pdf"]
+        adapter = report["competitors"]["adapters"][0]
+        self.assertEqual(report["status"], "pass")
+        self.assertEqual(adapter["status"], "ready")
+        self.assertEqual(adapter["mode"], "execute")
+        self.assertEqual(summary["runs_total"], 1)
+        self.assertEqual(summary["runs_failed"], 0)
+        self.assertEqual(runs[0]["parser_target"], "opendataloader-pdf")
+        self.assertIsNone(runs[0]["document_fingerprint"])
+        self.assertEqual(runs[0]["warning_ids"], [])
+        self.assertEqual(runs[0]["status"], "pass")
+        self.assertEqual(runs[0]["failures"], [])
+        self.assertRegex(runs[0]["output_sha256"], run_gate_zero.HEX64)
+        self.assertNotIn(str(root), json.dumps(report))
+
+    def test_opendataloader_competitor_failure_is_reported_as_data(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            profile = root / "profile.json"
+            profile.write_text("{}", encoding="utf-8")
+            manifest_path = frozen_manifest(root)
+            competitors_path = frozen_competitors(root)
+            ethos_bin = fake_ethos(root)
+            odl_command = fake_odl(root, fail=True)
+            odl_artifact = root / "opendataloader_pdf-1.0.0-py3-none-any.whl"
+            odl_artifact.write_bytes(b"artifact")
+            lock = json.loads(competitors_path.read_text(encoding="utf-8"))
+            lock["gate_zero"][0]["artifact_sha256"] = run_gate_zero.sha256_file(odl_artifact)
+            write_json(competitors_path, lock)
+            args = result_args(root, manifest_path, competitors_path, ethos_bin, profile)
+            args.opendataloader_command = odl_command
+            args.opendataloader_artifact = odl_artifact
+            args.opendataloader_install_path = root
+
+            report = run_gate_zero.build_result_report(args)
+
+        run = report["competitors"]["runs"]["opendataloader-pdf"][0]
+        self.assertEqual(report["status"], "fail")
+        self.assertEqual(run["status"], "fail")
+        self.assertIn("exit 7:", run["failures"][0])
 
     def test_missing_deterministic_profile_blocks_result(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

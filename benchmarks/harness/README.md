@@ -58,3 +58,31 @@ benchmark evidence.
 
 Until then, fixture baseline JSON is engineering evidence only. It is not a public benchmark
 claim.
+
+## OpenDataLoader PDF Adapter
+
+The Gate Zero runner can execute the pinned OpenDataLoader PDF wheel recorded in
+`benchmarks/competitors.lock.json`. Use the wheel entrypoint, not a mutable source checkout helper:
+
+```sh
+python3.12 -m venv /tmp/ethos-odl-wheel-venv312
+/tmp/ethos-odl-wheel-venv312/bin/pip install --no-index /tmp/opendataloader_pdf-2.4.7-py3-none-any.whl
+
+env \
+  ETHOS_PDFIUM_LIBRARY_PATH=/tmp/ethos-pdfium/lib/libpdfium.dylib \
+  ETHOS_PDFIUM_VERSION=chromium/7881 \
+  ETHOS_PDFIUM_ARTIFACT_PATH=/tmp/ethos-pdfium-mac-arm64.tgz \
+  make -C benchmarks/harness gate-zero-results \
+    OPENDATALOADER_COMMAND=/tmp/ethos-odl-wheel-venv312/bin/opendataloader-pdf \
+    OPENDATALOADER_ARTIFACT=/tmp/opendataloader_pdf-2.4.7-py3-none-any.whl \
+    OPENDATALOADER_INSTALL_PATH=/tmp/ethos-odl-wheel-venv312
+```
+
+The adapter runs:
+
+```text
+<opendataloader-command> --quiet --format json --image-output external --reading-order xycut --table-method default --threads 1 --output-dir <output-dir> <input-pdf>
+```
+
+The result file keeps Ethos runs at top level and records OpenDataLoader evidence under
+`competitors.runs.opendataloader-pdf`.

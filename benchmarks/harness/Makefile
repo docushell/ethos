@@ -6,6 +6,9 @@ FIXTURE_REPORT ?= $(FIXTURE_RESULTS_DIR)/baseline.json
 GATE_ZERO_READINESS_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/readiness.json
 GATE_ZERO_RESULT_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/g1.json
 OPENDATALOADER_ROOT ?=
+OPENDATALOADER_COMMAND ?=
+OPENDATALOADER_ARTIFACT ?=
+OPENDATALOADER_INSTALL_PATH ?=
 ITERATIONS ?= 3
 
 .PHONY: bench fixtures gate-zero-readiness gate-zero-results smoke test
@@ -36,6 +39,9 @@ gate-zero-results: $(ETHOS_BIN)
 		--install-path $(ETHOS_BIN) \
 		--iterations $(ITERATIONS) \
 		$(if $(OPENDATALOADER_ROOT),--opendataloader-root $(OPENDATALOADER_ROOT),) \
+		$(if $(OPENDATALOADER_COMMAND),--opendataloader-command $(OPENDATALOADER_COMMAND),) \
+		$(if $(OPENDATALOADER_ARTIFACT),--opendataloader-artifact $(OPENDATALOADER_ARTIFACT),) \
+		$(if $(OPENDATALOADER_INSTALL_PATH),--opendataloader-install-path $(OPENDATALOADER_INSTALL_PATH),) \
 		--out $(GATE_ZERO_RESULT_REPORT)
 
 bench: gate-zero-results

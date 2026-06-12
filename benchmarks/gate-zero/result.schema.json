@@ -55,49 +55,153 @@
     "inputs": { "type": "object" },
     "readiness": { "type": "object" },
     "blockers": { "type": "array", "items": { "type": "string" } },
-    "competitors": { "type": "object" },
-    "runs": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "corpus_file",
-          "parser_target",
-          "command",
-          "exit_code",
-          "duration_ms_p50",
-          "duration_ms_p95",
-          "duration_ms_p99",
-          "peak_rss_bytes",
-          "output_sha256",
-          "document_fingerprint",
-          "warning_ids",
-          "status",
-          "failures"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "corpus_file": { "type": "object" },
-          "parser_target": { "type": "string" },
-          "command": { "type": "array", "items": { "type": "string" } },
-          "exit_code": { "type": ["integer", "null"] },
-          "duration_ms_p50": { "type": ["number", "null"], "minimum": 0 },
-          "duration_ms_p95": { "type": ["number", "null"], "minimum": 0 },
-          "duration_ms_p99": { "type": ["number", "null"], "minimum": 0 },
-          "peak_rss_bytes": { "type": ["integer", "null"], "minimum": 0 },
-          "output_sha256": {
-            "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
-          },
-          "document_fingerprint": { "type": ["string", "null"] },
-          "warning_ids": { "type": "array", "items": { "type": "string" } },
-          "status": { "enum": ["pass", "fail"] },
-          "failures": { "type": "array", "items": { "type": "string" } }
+    "competitors": {
+      "type": "object",
+      "required": ["adapters", "runs", "summaries"],
+      "additionalProperties": false,
+      "properties": {
+        "adapters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "status",
+              "mode",
+              "command",
+              "command_template",
+              "artifact",
+              "install_size_bytes",
+              "lock",
+              "blockers",
+              "notes"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "id": { "type": "string" },
+              "status": { "enum": ["ready", "not_configured", "blocked"] },
+              "mode": { "enum": ["execute", "metadata_only"] },
+              "command": { "type": ["string", "null"] },
+              "command_template": {
+                "type": ["array", "null"],
+                "items": { "type": "string" }
+              },
+              "artifact": {
+                "type": "object",
+                "required": ["path", "sha256", "expected_sha256"],
+                "additionalProperties": false,
+                "properties": {
+                  "path": { "type": ["string", "null"] },
+                  "sha256": {
+                    "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+                  },
+                  "expected_sha256": {
+                    "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+                  }
+                }
+              },
+              "install_size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+              "blockers": { "type": "array", "items": { "type": "string" } },
+              "notes": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "runs": {
+          "type": "object",
+          "required": ["opendataloader-pdf"],
+          "additionalProperties": false,
+          "properties": {
+            "opendataloader-pdf": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/run" }
+            }
+          }
+        },
+        "summaries": {
+          "type": "object",
+          "required": ["opendataloader-pdf"],
+          "additionalProperties": false,
+          "properties": {
+            "opendataloader-pdf": { "$ref": "#/$defs/parser_summary" }
+          }
         }
       }
     },
-    "summary": { "type": "object" }
+    "runs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/run"
+      }
+    },
+    "summary": { "$ref": "#/$defs/parser_summary" }
   },
   "$defs": {
+    "parser_summary": {
+      "type": "object",
+      "required": [
+        "status",
+        "runs_total",
+        "runs_failed",
+        "iterations",
+        "duration_ms_p50",
+        "duration_ms_p95",
+        "duration_ms_p99",
+        "peak_rss_bytes",
+        "output_sha256",
+        "install_size_bytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "enum": ["pass", "fail"] },
+        "runs_total": { "type": "integer", "minimum": 0 },
+        "runs_failed": { "type": "integer", "minimum": 0 },
+        "iterations": { "type": "integer", "minimum": 1 },
+        "duration_ms_p50": { "type": ["number", "null"], "minimum": 0 },
+        "duration_ms_p95": { "type": ["number", "null"], "minimum": 0 },
+        "duration_ms_p99": { "type": ["number", "null"], "minimum": 0 },
+        "peak_rss_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "output_sha256": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "install_size_bytes": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "corpus_file",
+        "parser_target",
+        "command",
+        "exit_code",
+        "duration_ms_p50",
+        "duration_ms_p95",
+        "duration_ms_p99",
+        "peak_rss_bytes",
+        "output_sha256",
+        "document_fingerprint",
+        "warning_ids",
+        "status",
+        "failures"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "corpus_file": { "type": "object" },
+        "parser_target": { "type": "string" },
+        "command": { "type": "array", "items": { "type": "string" } },
+        "exit_code": { "type": ["integer", "null"] },
+        "duration_ms_p50": { "type": ["number", "null"], "minimum": 0 },
+        "duration_ms_p95": { "type": ["number", "null"], "minimum": 0 },
+        "duration_ms_p99": { "type": ["number", "null"], "minimum": 0 },
+        "peak_rss_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "output_sha256": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "document_fingerprint": { "type": ["string", "null"] },
+        "warning_ids": { "type": "array", "items": { "type": "string" } },
+        "status": { "enum": ["pass", "fail"] },
+        "failures": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"

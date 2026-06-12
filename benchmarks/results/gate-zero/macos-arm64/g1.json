@@ -11,17 +11,32 @@
   "competitors": {
     "adapters": [
       {
+        "artifact": {
+          "expected_sha256": "1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628",
+          "path": "<opendataloader-artifact>",
+          "sha256": "1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628"
+        },
         "blockers": [],
+        "command": "<opendataloader-command>",
         "command_template": [
-          "<opendataloader-root>/scripts/run-cli.sh",
-          "-f",
+          "<opendataloader-command>",
+          "--quiet",
+          "--format",
           "json",
-          "-o",
+          "--image-output",
+          "external",
+          "--reading-order",
+          "xycut",
+          "--table-method",
+          "default",
+          "--threads",
+          "1",
+          "--output-dir",
           "<output-dir>",
           "<input-pdf>"
         ],
         "id": "opendataloader-pdf",
-        "local_path": "<opendataloader-root>",
+        "install_size_bytes": 35753427,
         "lock": {
           "artifact_filename": "opendataloader_pdf-2.4.7-py3-none-any.whl",
           "artifact_kind": "PyPI universal wheel downloaded and SHA256-verified on the benchmark owner host",
@@ -38,11 +53,449 @@
           "source": "https://github.com/opendataloader-project/opendataloader-pdf",
           "version": "2.4.7"
         },
-        "mode": "metadata_only",
+        "mode": "execute",
         "notes": [],
         "status": "ready"
       }
-    ]
+    ],
+    "runs": {
+      "opendataloader-pdf": [
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/simple-text.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "file": "benchmarks/gate-zero/corpus/simple-text.pdf",
+            "id": "simple-text",
+            "pages": 1,
+            "sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 304.309292000001,
+          "duration_ms_p95": 304.9227535999997,
+          "duration_ms_p99": 304.97728351999956,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "fff0143be4c241d4fc047d4afebed5810476e7a3c0eddd4fd8a028677a6bee1e",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 541278208,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/two-lines.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "file": "benchmarks/gate-zero/corpus/two-lines.pdf",
+            "id": "two-lines",
+            "pages": 1,
+            "sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 298.1743330000004,
+          "duration_ms_p95": 303.1524588999995,
+          "duration_ms_p99": 303.5949589799994,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "32fffa8fdda60b935deb411229d140a1701ec31a9c10b08d8996ab6080719b7f",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 541278208,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/two-columns.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "file": "benchmarks/gate-zero/corpus/two-columns.pdf",
+            "id": "two-columns",
+            "pages": 1,
+            "sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "subsets": [
+              "born_digital",
+              "multi_column"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 279.76545799999997,
+          "duration_ms_p95": 284.2786582999993,
+          "duration_ms_p99": 284.67983165999925,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "a12268e3d49729eddf827e7fdcb3c6229388339d3a0a2e8abd4f86a0f4da4471",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 541278208,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/rotation-90.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "file": "benchmarks/gate-zero/corpus/rotation-90.pdf",
+            "id": "rotation-90",
+            "pages": 1,
+            "sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "subsets": [
+              "born_digital",
+              "rotation"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 281.1622089999997,
+          "duration_ms_p95": 281.72275779999916,
+          "duration_ms_p99": 281.7725843599991,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "415bdd8e8e6092bca324d2a3afa3ef4bc802ca47dd3450b4efac39c77951ee45",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 541278208,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "file": "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf",
+            "id": "hyphenated-line-break",
+            "pages": 1,
+            "sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "subsets": [
+              "born_digital",
+              "hyphenation",
+              "fonts"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 289.4218329999987,
+          "duration_ms_p95": 290.7878089000001,
+          "duration_ms_p99": 290.9092289800002,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "1600fbec10989cc879a0ae589815eb80a022742dc692dd03d8c9a6ff3bee3360",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 541278208,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "file": "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf",
+            "id": "ligature-fi-embedded-font",
+            "pages": 1,
+            "sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "subsets": [
+              "born_digital",
+              "fonts",
+              "ligatures"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 261.24929200000224,
+          "duration_ms_p95": 262.15735420000215,
+          "duration_ms_p99": 262.23807084000214,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "5f63d71bde5b915e1ac24e0d62a6aaec49910b5d0b2a1087e240278b200b067d",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 541278208,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "file": "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+            "id": "irs-form-1040-2025",
+            "pages": 2,
+            "sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "subsets": [
+              "born_digital",
+              "forms",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 475.81724999999864,
+          "duration_ms_p95": 477.4363122000004,
+          "duration_ms_p99": 477.5802288400006,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "a5a8153f1d7a401ea8a7c2fbb794bcb4f360936ba763c539743b83f135e316ce",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 541278208,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "file": "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+            "id": "cfpb-home-loan-toolkit",
+            "pages": 28,
+            "sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "subsets": [
+              "born_digital",
+              "guide",
+              "worksheets",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 752.9340419999996,
+          "duration_ms_p95": 758.2217291999989,
+          "duration_ms_p99": 758.6917458399987,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "aff36a031b3960d18d097c9bbdc2f7f87281f2c28a0d955007b473fc2ef6a842",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 627015680,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+            "id": "nist-sp-800-53r5",
+            "pages": 492,
+            "sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "long_document",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 13577.232499999995,
+          "duration_ms_p95": 13622.127237800005,
+          "duration_ms_p99": 13626.117881160004,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "7542eae5a0f69451e13dadc08db3543f38a61c5a399069e9a337a32eebf92171",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 3741515776,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+            "id": "nist-sp-800-63b",
+            "pages": 80,
+            "sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 2043.3514169999967,
+          "duration_ms_p95": 2047.382854499999,
+          "duration_ms_p99": 2047.7412044999992,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "71ff570d8c8c819310108825ec60d6e75235b66b48cb96ecae4038f0334aa677",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 3741515776,
+          "status": "pass",
+          "warning_ids": []
+        }
+      ]
+    },
+    "summaries": {
+      "opendataloader-pdf": {
+        "duration_ms_p50": 301.2418125000007,
+        "duration_ms_p95": 13622.127237800005,
+        "duration_ms_p99": 13626.117881160004,
+        "install_size_bytes": 35753427,
+        "iterations": 3,
+        "output_sha256": "9e6c611e5c3ce975f19cf6b5c80f700e9f8e986957cc80a98c3e89b216015585",
+        "peak_rss_bytes": 3741515776,
+        "runs_failed": 0,
+        "runs_total": 10,
+        "status": "pass"
+      }
+    }
   },
   "corpus": {
     "id": "gate-zero-v1",
@@ -50,9 +503,9 @@
     "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
   },
   "deterministic_profile_sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070",
-  "duration_ms_p50": 83.32245800000004,
-  "duration_ms_p95": 2639.4691205,
-  "duration_ms_p99": 2642.1007905,
+  "duration_ms_p50": 79.5547085,
+  "duration_ms_p95": 2600.684799999999,
+  "duration_ms_p99": 2604.6581599999986,
   "exit_code": 0,
   "host": {
     "observed": {
@@ -86,7 +539,7 @@
   "install_size_bytes": 1277392,
   "output_sha256": "4b7b1225544fed6e4b5d3aee1482c8def1342109ed0ab392ba40b4cdb147dd5d",
   "parser_target": "ethos",
-  "peak_rss_bytes": 540114944,
+  "peak_rss_bytes": 541278208,
   "readiness": {
     "blockers": {
       "competitors": [],
@@ -120,14 +573,14 @@
         ]
       },
       "document_fingerprint": "sha256:848c520e31807d0f809b3812deff02506296a66dc4ac81733941e1d15c7bdde3",
-      "duration_ms_p50": 76.395916,
-      "duration_ms_p95": 91.38519099999999,
-      "duration_ms_p99": 92.71757099999999,
+      "duration_ms_p50": 68.67449999999997,
+      "duration_ms_p95": 99.5611869,
+      "duration_ms_p99": 102.30667018000001,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "6b1e8d03c4ea3f227e20c9a094e963baf225fb65dcf70bb87252a0c36c64195a",
       "parser_target": "ethos",
-      "peak_rss_bytes": 33013760,
+      "peak_rss_bytes": 32980992,
       "status": "pass",
       "warning_ids": []
     },
@@ -151,14 +604,14 @@
         ]
       },
       "document_fingerprint": "sha256:b2ad345abbb3ca65aa8972c15351f5de2ce2988f6c7ebd893497ec8b90a2ec2d",
-      "duration_ms_p50": 68.17283299999998,
-      "duration_ms_p95": 68.8502711,
-      "duration_ms_p99": 68.91048782,
+      "duration_ms_p50": 76.650667,
+      "duration_ms_p95": 81.36531610000007,
+      "duration_ms_p99": 81.78439602000007,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "c290ee82894c9177016ee3faa6204d2a32975dde74b7fed2c3fc7dd8b1babd3d",
       "parser_target": "ethos",
-      "peak_rss_bytes": 33013760,
+      "peak_rss_bytes": 32980992,
       "status": "pass",
       "warning_ids": []
     },
@@ -183,9 +636,9 @@
         ]
       },
       "document_fingerprint": "sha256:6ee77265327009e3c13bb4512e29fb925cef9624ef0d87fddcae66aa8d277db7",
-      "duration_ms_p50": 82.24466600000002,
-      "duration_ms_p95": 82.64201690000003,
-      "duration_ms_p99": 82.67733698000004,
+      "duration_ms_p50": 68.10299999999991,
+      "duration_ms_p95": 68.63418810000006,
+      "duration_ms_p99": 68.68140482000008,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "3e70732d20e70c84a1f17cf6de59d9ef03f60bd15910b91e0db410f05666d815",
@@ -215,9 +668,9 @@
         ]
       },
       "document_fingerprint": "sha256:7ea56edfa2fa5407aa56910f8cc63e0a3d0318df9778a90b054ed393e4bfea48",
-      "duration_ms_p50": 84.40025000000007,
-      "duration_ms_p95": 85.20998720000001,
-      "duration_ms_p99": 85.28196384,
+      "duration_ms_p50": 68.59674999999999,
+      "duration_ms_p95": 68.92378749999995,
+      "duration_ms_p99": 68.95285749999994,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "de99598242f385aca96d432fc83d449355335a17385e5cd452f26b58fafa409a",
@@ -248,9 +701,9 @@
         ]
       },
       "document_fingerprint": "sha256:04a2c755a685d9435c3b3f23aad458da3df17572dfc1d84ae29e815b3a9307bc",
-      "duration_ms_p50": 68.20970800000015,
-      "duration_ms_p95": 79.43154520000004,
-      "duration_ms_p99": 80.42904184000004,
+      "duration_ms_p50": 82.45875000000002,
+      "duration_ms_p95": 84.81292500000016,
+      "duration_ms_p99": 85.02218500000016,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "54d81a171f80ad0d0e59f3c2a38f708906fc909e15b7529dd738176feda3dcf9",
@@ -281,9 +734,9 @@
         ]
       },
       "document_fingerprint": "sha256:225d2eb6e3c5868a00d9bc877ec1cff47395472acbf7d015f2d1a426ded3fd27",
-      "duration_ms_p50": 55.427415999999894,
-      "duration_ms_p95": 57.80191660000011,
-      "duration_ms_p99": 58.01298332000013,
+      "duration_ms_p50": 56.499375000000015,
+      "duration_ms_p95": 60.03307469999992,
+      "duration_ms_p99": 60.34718133999991,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "cf828ab5b1b53a80c1c90077d02bf77a50ca0d6bbb692890209e4ad0dcc74e45",
@@ -315,14 +768,14 @@
         ]
       },
       "document_fingerprint": "sha256:3d5e4041488d40305d662623dd155ac9fff28010f57b20baf02dd7b87cb79b9b",
-      "duration_ms_p50": 99.84599999999988,
-      "duration_ms_p95": 100.09601279999998,
-      "duration_ms_p99": 100.11823616,
+      "duration_ms_p50": 93.53662500000004,
+      "duration_ms_p95": 100.35532559999996,
+      "duration_ms_p99": 100.96143231999994,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "8d6f1e9f4b4db1d3f51c7319c41f7e44d449ed229b04e17478625e452eea5ff5",
       "parser_target": "ethos",
-      "peak_rss_bytes": 39501824,
+      "peak_rss_bytes": 40108032,
       "status": "pass",
       "warning_ids": []
     },
@@ -350,14 +803,14 @@
         ]
       },
       "document_fingerprint": "sha256:a28c428b2745bf6e630ac8cb14acc9d1a2942bdaef95c1b74e8618a7d5baf531",
-      "duration_ms_p50": 176.65579200000002,
-      "duration_ms_p95": 180.85999169999974,
-      "duration_ms_p99": 181.2336983399997,
+      "duration_ms_p50": 175.93466699999993,
+      "duration_ms_p95": 178.55306669999976,
+      "duration_ms_p99": 178.78581333999978,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "68ec926b0a30cb853750bb7dea4e4e1eb79e1de046c221082f4dcf6be345dcd9",
       "parser_target": "ethos",
-      "peak_rss_bytes": 54640640,
+      "peak_rss_bytes": 54476800,
       "status": "pass",
       "warning_ids": [
         "w0001"
@@ -387,14 +840,14 @@
         ]
       },
       "document_fingerprint": "sha256:63dfc7841a2d35d2b5097ae25039fe63cef22df5bfa2798923de8fe874b5097f",
-      "duration_ms_p50": 2609.8628329999997,
-      "duration_ms_p95": 2639.4691205,
-      "duration_ms_p99": 2642.1007905,
+      "duration_ms_p50": 2555.9845,
+      "duration_ms_p95": 2600.684799999999,
+      "duration_ms_p99": 2604.6581599999986,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "09d612fdcf7c4f78adba1cef875ce8312788bd157a6220991dbf75340c44ba15",
       "parser_target": "ethos",
-      "peak_rss_bytes": 540114944,
+      "peak_rss_bytes": 541278208,
       "status": "pass",
       "warning_ids": []
     },
@@ -421,14 +874,14 @@
         ]
       },
       "document_fingerprint": "sha256:2a818c45d3d028b607092edddf1adfd816a424e793f62c71bef3426787e3cf34",
-      "duration_ms_p50": 380.72125000000057,
-      "duration_ms_p95": 381.01945060000077,
-      "duration_ms_p99": 381.0459573200008,
+      "duration_ms_p50": 377.7252499999992,
+      "duration_ms_p95": 379.1740997000007,
+      "duration_ms_p99": 379.30288634000084,
       "exit_code": 0,
       "failures": [],
       "output_sha256": "79cd0469e6a6d55f425e4ef25244fc2e4805a0cc38b4402a1134c2dcbefdae27",
       "parser_target": "ethos",
-      "peak_rss_bytes": 540114944,
+      "peak_rss_bytes": 541278208,
       "status": "pass",
       "warning_ids": []
     }
@@ -436,8 +889,15 @@
   "schema_version": "ethos-gate-zero-result-v1",
   "status": "pass",
   "summary": {
+    "duration_ms_p50": 79.5547085,
+    "duration_ms_p95": 2600.684799999999,
+    "duration_ms_p99": 2604.6581599999986,
+    "install_size_bytes": 1277392,
     "iterations": 3,
+    "output_sha256": "4b7b1225544fed6e4b5d3aee1482c8def1342109ed0ab392ba40b4cdb147dd5d",
+    "peak_rss_bytes": 541278208,
     "runs_failed": 0,
-    "runs_total": 10
+    "runs_total": 10,
+    "status": "pass"
   }
 }
