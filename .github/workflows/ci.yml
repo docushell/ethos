@@ -44,6 +44,8 @@ jobs:
       - run: cargo test --locked --workspace --all-features
       - name: fixture manifest validation
         run: python3 fixtures/validate_fixtures.py
+      - name: readiness gate tests
+        run: python3 .github/scripts/test_readiness_gate.py
       - name: same-platform double-parse byte-diff
         run: |
           echo "skipped: PDFium runtime is not configured in base CI yet"

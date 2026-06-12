@@ -23,6 +23,12 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+EXPECTED_GATE_ZERO_COMPETITORS = {
+    "opendataloader-pdf",
+    "edgeparse",
+    "liteparse",
+    "pymupdf4llm",
+}
 
 
 class Gate:
@@ -81,7 +87,11 @@ def check_gate_zero_manifest(gate: Gate) -> None:
         sha = str(entry.get("sha256", ""))
         gate.require(bool(re.fullmatch(r"[0-9a-f]{64}", sha)), f"{prefix} sha256 is not lowercase hex")
 
-    for host in manifest.get("hardware", []):
+    performance_hosts = [
+        host for host in manifest.get("hardware", []) if host.get("role") == "performance"
+    ]
+    gate.require(bool(performance_hosts), "Gate Zero manifest has no performance hardware host")
+    for host in performance_hosts:
         if host.get("role") != "performance":
             continue
         host_id = host.get("id", "<unknown>")
@@ -92,7 +102,12 @@ def check_gate_zero_manifest(gate: Gate) -> None:
 def check_competitor_pins(gate: Gate) -> None:
     path = ROOT / "benchmarks/competitors.lock.json"
     lock = json.loads(path.read_text(encoding="utf-8"))
-    for entry in lock.get("gate_zero", []):
+    entries = lock.get("gate_zero", [])
+    found = {entry.get("id") for entry in entries}
+    missing = sorted(EXPECTED_GATE_ZERO_COMPETITORS - found)
+    for cid in missing:
+        gate.require(False, f"competitor {cid} missing from gate_zero lock")
+    for entry in entries:
         cid = entry.get("id", "<unknown>")
         gate.require(entry.get("pinned") is True, f"competitor {cid} is not pinned")
         gate.require(is_filled(entry.get("version")), f"competitor {cid} missing version")

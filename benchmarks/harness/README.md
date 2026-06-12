@@ -37,14 +37,24 @@ export ETHOS_PDFIUM_ARTIFACT_PATH=/tmp/ethos-pdfium-mac-arm64.tgz
 Use the matching artifact and runtime library path from
 `profiles/ethos-deterministic-v1.json` on other platforms.
 
-## Gate Zero
+## Gate Zero Readiness
 
-`make -C benchmarks/harness bench` currently aliases the fixture baseline. The real Gate Zero
-G1/G2/G3 runner remains blocked until:
+`make -C benchmarks/harness bench` is fail-closed. It first writes:
+
+```text
+benchmarks/results/gate-zero/readiness.json
+```
+
+The report schema is `ethos-gate-zero-readiness-v1`. It records the exact manifest and
+competitor-lock hashes plus actionable blockers. The target exits non-zero until:
 
 - `benchmarks/gate-zero/manifest.json` is frozen and signed.
 - `benchmarks/competitors.lock.json` pins ODL, EdgeParse, LiteParse, and PyMuPDF4LLM.
 - Gate Zero hosts provide the pinned PDFium runtime.
+
+When readiness is green, the target still exits non-zero until the G1/G2/G3 measurement runner is
+implemented. This prevents `bench` from accidentally emitting fixture-baseline evidence as public
+benchmark evidence.
 
 Until then, fixture baseline JSON is engineering evidence only. It is not a public benchmark
 claim.
