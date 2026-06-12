@@ -38,13 +38,18 @@ pub enum CitationInput {
     /// Bare claim list.
     Claims(Vec<Claim>),
     /// Claim list with optional fingerprint anchor.
-    Envelope {
-        /// Fingerprint the citations were produced against.
-        #[serde(default)]
-        document_fingerprint: Option<String>,
-        /// Claims to verify, in deterministic input order.
-        claims: Vec<Claim>,
-    },
+    Envelope(CitationEnvelope),
+}
+
+/// Envelope form of citation input.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CitationEnvelope {
+    /// Fingerprint the citations were produced against.
+    #[serde(default)]
+    pub document_fingerprint: Option<String>,
+    /// Claims to verify, in deterministic input order.
+    pub claims: Vec<Claim>,
 }
 
 impl CitationInput {
@@ -52,17 +57,14 @@ impl CitationInput {
     pub fn claims(&self) -> &[Claim] {
         match self {
             CitationInput::Claims(claims) => claims,
-            CitationInput::Envelope { claims, .. } => claims,
+            CitationInput::Envelope(envelope) => &envelope.claims,
         }
     }
 
     fn into_parts(self) -> (Option<String>, Vec<Claim>) {
         match self {
             CitationInput::Claims(claims) => (None, claims),
-            CitationInput::Envelope {
-                document_fingerprint,
-                claims,
-            } => (document_fingerprint, claims),
+            CitationInput::Envelope(envelope) => (envelope.document_fingerprint, envelope.claims),
         }
     }
 }
@@ -639,10 +641,10 @@ mod tests {
     }
 
     fn input(source: &TestSource, claims: Vec<Claim>) -> CitationInput {
-        CitationInput::Envelope {
+        CitationInput::Envelope(CitationEnvelope {
             document_fingerprint: source.fingerprint(),
             claims,
-        }
+        })
     }
 
     fn verify(source: &TestSource, claims: Vec<Claim>) -> VerificationReport {
@@ -880,7 +882,7 @@ mod tests {
         let cfg = VerificationConfig::default_v1();
         let report = verify_claims(
             &source,
-            CitationInput::Envelope {
+            CitationInput::Envelope(CitationEnvelope {
                 document_fingerprint: Some(
                     "sha256:0000000000000000000000000000000000000000000000000000000000000000"
                         .into(),
@@ -893,7 +895,7 @@ mod tests {
                         ..Default::default()
                     },
                 )],
-            },
+            }),
             &cfg,
             "0".repeat(64),
         );

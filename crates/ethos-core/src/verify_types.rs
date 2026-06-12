@@ -68,6 +68,7 @@ pub enum MatchMethod {
 /// Citation locator — where the claim says the evidence lives. At least one field must be
 /// present (schema `minProperties: 1`); [`Citation::has_locator`] checks it.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Citation {
     /// Page id in the grounding source's namespace.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -103,6 +104,7 @@ impl Citation {
 
 /// 0-based cell address.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CellRef {
     /// Row index.
     pub row: u32,
@@ -112,6 +114,7 @@ pub struct CellRef {
 
 /// A single claim to verify.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Claim {
     /// Claim kind.
     pub kind: ClaimKind,
@@ -229,6 +232,7 @@ pub enum TextNormalization {
 
 /// Matching parameters.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Matching {
     /// Normalization applied before text comparison.
     pub text_normalization: TextNormalization,
@@ -241,6 +245,7 @@ pub struct Matching {
 
 /// Staleness policy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Staleness {
     /// Require fingerprint equality when the source declares one.
     pub require_fingerprint_match: bool,
@@ -248,6 +253,7 @@ pub struct Staleness {
 
 /// Resource limits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Limits {
     /// Maximum number of checks per run.
     pub max_checks: u32,
@@ -255,6 +261,7 @@ pub struct Limits {
 
 /// Evidence echo options.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EvidenceOptions {
     /// Echo found evidence text into the report.
     #[serde(default)]
@@ -267,6 +274,7 @@ pub struct EvidenceOptions {
 /// The verification config (`urn:ethos:schema:verification-config:1`). Its c14n hash is
 /// `verification_config_sha256` in reports — comparable runs share the hash.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct VerificationConfig {
     /// Config schema version.
     pub schema_version: String,

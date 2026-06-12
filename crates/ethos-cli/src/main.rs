@@ -457,6 +457,7 @@ fn verify(args: VerifyArgs) -> Result<(), Failure> {
         })?,
         None => VerificationConfig::default_v1(),
     };
+    validate_verification_config(&config)?;
     validate_citation_input(&citations, &config)?;
     let config_value =
         serde_json::to_value(&config).map_err(|e| EthosError::internal(e.to_string()))?;
@@ -526,6 +527,48 @@ fn validate_citation_input(
                 idx + 1
             )));
         }
+    }
+    Ok(())
+}
+
+fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failure> {
+    if config.schema_version != ethos_core::SCHEMA_VERSION {
+        return Err(Failure::Usage(format!(
+            "verification config schema_version must be {}",
+            ethos_core::SCHEMA_VERSION
+        )));
+    }
+    if config.claim_kinds.is_empty() {
+        return Err(Failure::Usage(
+            "verification config claim_kinds must not be empty".to_string(),
+        ));
+    }
+    let mut seen = HashSet::new();
+    for kind in &config.claim_kinds {
+        if *kind == ClaimKind::Other {
+            return Err(Failure::Usage(
+                "verification config claim_kinds must not include other".to_string(),
+            ));
+        }
+        if !seen.insert(*kind) {
+            return Err(Failure::Usage(
+                "verification config claim_kinds must be unique".to_string(),
+            ));
+        }
+    }
+    if config
+        .matching
+        .bbox_containment_tolerance_q
+        .is_some_and(|tolerance| tolerance < 0)
+    {
+        return Err(Failure::Usage(
+            "verification config bbox_containment_tolerance_q must be non-negative".to_string(),
+        ));
+    }
+    if config.limits.max_checks == 0 {
+        return Err(Failure::Usage(
+            "verification config max_checks must be at least 1".to_string(),
+        ));
     }
     Ok(())
 }

@@ -205,6 +205,93 @@ fn invalid_citation_shape_is_usage_error() {
 }
 
 #[test]
+fn unknown_citation_fields_are_usage_errors() {
+    let doc = document_example();
+    let cases = [
+        (
+            "unknown-citation-envelope-field",
+            r#"{
+              "claims": [
+                {
+                  "kind": "presence",
+                  "citation": {
+                    "element_id": "e000002"
+                  }
+                }
+              ],
+              "confidence": 0.99
+            }"#,
+        ),
+        (
+            "unknown-claim-field",
+            r#"{
+              "claims": [
+                {
+                  "kind": "presence",
+                  "citation": {
+                    "element_id": "e000002"
+                  },
+                  "confidence": 0.99
+                }
+              ]
+            }"#,
+        ),
+        (
+            "unknown-citation-field",
+            r#"{
+              "claims": [
+                {
+                  "kind": "presence",
+                  "citation": {
+                    "element_id": "e000002",
+                    "confidence": 0.99
+                  }
+                }
+              ]
+            }"#,
+        ),
+        (
+            "unknown-cell-field",
+            r#"{
+              "claims": [
+                {
+                  "kind": "table_cell",
+                  "text": "$12.4M",
+                  "citation": {
+                    "table_id": "t0001",
+                    "cell": {
+                      "row": 1,
+                      "col": 1,
+                      "confidence": 0.99
+                    }
+                  }
+                }
+              ]
+            }"#,
+        ),
+    ];
+
+    for (name, json) in cases {
+        let citations = temp_json(name, json);
+        let output = run_ethos(&[
+            "verify",
+            doc.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+        ]);
+
+        assert_eq!(output.status.code(), Some(2), "case {name}");
+        assert!(output.stdout.is_empty(), "case {name}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr)
+                .contains("citations file does not match the alpha citation input shape"),
+            "case {name} stderr:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}
+
+#[test]
 fn bare_array_citation_input_works() {
     let doc = document_example();
     let citations = temp_json(
@@ -228,6 +315,288 @@ fn bare_array_citation_input_works() {
     assert_eq!(report["checks"].as_array().unwrap().len(), 1);
     assert_eq!(report["checks"][0]["status"], "grounded");
     assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn unknown_config_fields_are_usage_errors() {
+    let doc = document_example();
+    let citations = temp_json(
+        "presence-citations",
+        r#"{
+          "claims": [
+            {
+              "kind": "presence",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+    let cases = [
+        (
+            "unknown-config-top-level-field",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "unknown-field",
+              "claim_kinds": ["quote", "presence"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": 50
+              },
+              "staleness": {
+                "require_fingerprint_match": true
+              },
+              "limits": {
+                "max_checks": 256
+              },
+              "evidence": {
+                "include_text": true,
+                "include_crops": false
+              },
+              "fuzzy": true
+            }"#,
+        ),
+        (
+            "unknown-config-matching-field",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "unknown-field",
+              "claim_kinds": ["quote", "presence"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": 50,
+                "fuzzy": true
+              },
+              "staleness": {
+                "require_fingerprint_match": true
+              },
+              "limits": {
+                "max_checks": 256
+              },
+              "evidence": {
+                "include_text": true,
+                "include_crops": false
+              }
+            }"#,
+        ),
+        (
+            "unknown-config-staleness-field",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "unknown-field",
+              "claim_kinds": ["quote", "presence"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": 50
+              },
+              "staleness": {
+                "require_fingerprint_match": true,
+                "mode": "strict"
+              },
+              "limits": {
+                "max_checks": 256
+              },
+              "evidence": {
+                "include_text": true,
+                "include_crops": false
+              }
+            }"#,
+        ),
+        (
+            "unknown-config-limits-field",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "unknown-field",
+              "claim_kinds": ["quote", "presence"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": 50
+              },
+              "staleness": {
+                "require_fingerprint_match": true
+              },
+              "limits": {
+                "max_checks": 256,
+                "max_parse_ms": 1000
+              },
+              "evidence": {
+                "include_text": true,
+                "include_crops": false
+              }
+            }"#,
+        ),
+        (
+            "unknown-config-evidence-field",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "unknown-field",
+              "claim_kinds": ["quote", "presence"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": 50
+              },
+              "staleness": {
+                "require_fingerprint_match": true
+              },
+              "limits": {
+                "max_checks": 256
+              },
+              "evidence": {
+                "include_text": true,
+                "include_crops": false,
+                "crop_format": "png"
+              }
+            }"#,
+        ),
+    ];
+
+    for (name, json) in cases {
+        let config = temp_json(name, json);
+        let output = run_ethos(&[
+            "verify",
+            doc.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+            "--config",
+            config.to_str().unwrap(),
+        ]);
+
+        assert_eq!(output.status.code(), Some(2), "case {name}");
+        assert!(output.stdout.is_empty(), "case {name}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr)
+                .contains("verification config does not match the schema"),
+            "case {name} stderr:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}
+
+#[test]
+fn invalid_config_constraints_are_usage_errors() {
+    let doc = document_example();
+    let citations = temp_json(
+        "presence-citations",
+        r#"{
+          "claims": [
+            {
+              "kind": "presence",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+
+    let cases = [
+        (
+            "duplicate-claim-kind-config",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "duplicate-kind",
+              "claim_kinds": ["quote", "quote"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": 50
+              },
+              "staleness": {
+                "require_fingerprint_match": true
+              },
+              "limits": {
+                "max_checks": 256
+              }
+            }"#,
+            "verification config claim_kinds must be unique",
+        ),
+        (
+            "other-claim-kind-config",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "other-kind",
+              "claim_kinds": ["other"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": 50
+              },
+              "staleness": {
+                "require_fingerprint_match": true
+              },
+              "limits": {
+                "max_checks": 256
+              }
+            }"#,
+            "verification config claim_kinds must not include other",
+        ),
+        (
+            "negative-bbox-tolerance-config",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "negative-tolerance",
+              "claim_kinds": ["quote"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": -1
+              },
+              "staleness": {
+                "require_fingerprint_match": true
+              },
+              "limits": {
+                "max_checks": 256
+              }
+            }"#,
+            "verification config bbox_containment_tolerance_q must be non-negative",
+        ),
+        (
+            "zero-max-checks-config",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "zero-max-checks",
+              "claim_kinds": ["quote"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": 50
+              },
+              "staleness": {
+                "require_fingerprint_match": true
+              },
+              "limits": {
+                "max_checks": 0
+              }
+            }"#,
+            "verification config max_checks must be at least 1",
+        ),
+    ];
+
+    for (name, config_json, expected) in cases {
+        let config = temp_json(name, config_json);
+        let output = run_ethos(&[
+            "verify",
+            doc.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+            "--config",
+            config.to_str().unwrap(),
+        ]);
+
+        assert_eq!(output.status.code(), Some(2), "case {name}");
+        assert!(output.stdout.is_empty(), "case {name}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(expected),
+            "case {name} stderr:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
 }
 
 #[test]
