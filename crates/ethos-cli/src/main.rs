@@ -338,6 +338,7 @@ fn parse_config(pages: Option<&str>, max_parse_ms: Option<u64>) -> Result<ParseC
 fn pdfium_worker(args: PdfiumWorkerArgs) -> Result<(), Failure> {
     maybe_sleep_for_worker_timeout_test();
     maybe_exit_for_worker_failure_diagnostics_test();
+    maybe_fail_for_worker_memory_limit_test()?;
     let config = parse_config(args.pages.as_deref(), None)?;
     let pdf_bytes = read_file_limited(&args.input, config.limits.max_file_bytes)?;
     let backend = ethos_pdf::PdfiumBackend::default();
@@ -785,6 +786,23 @@ fn maybe_exit_for_worker_failure_diagnostics_test() {
 
 #[cfg(not(debug_assertions))]
 fn maybe_exit_for_worker_failure_diagnostics_test() {}
+
+#[cfg(debug_assertions)]
+fn maybe_fail_for_worker_memory_limit_test() -> Result<(), Failure> {
+    if std::env::var_os("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_MEMORY_LIMIT").is_some() {
+        return Err(EthosError::new(
+            ErrorCode::MemoryLimitExceeded,
+            "parse exceeded memory limit",
+        )
+        .into());
+    }
+    Ok(())
+}
+
+#[cfg(not(debug_assertions))]
+fn maybe_fail_for_worker_memory_limit_test() -> Result<(), Failure> {
+    Ok(())
+}
 
 fn assemble_document(
     source_bytes: &[u8],

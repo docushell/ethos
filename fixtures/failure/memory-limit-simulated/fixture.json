@@ -1,0 +1,16 @@
+{
+  "id": "failure-memory-limit-simulated",
+  "provenance": "Synthetic one-page PDF reused by Ethos maintainers for stable memory-limit error-envelope tests through the debug worker hook.",
+  "license": "CC0-1.0",
+  "subsets": ["failure"],
+  "sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+  "pages": 1,
+  "exercises": [
+    "worker memory-limit stable error-envelope relay",
+    "memory_limit_exceeded exit code"
+  ],
+  "expected_error": {
+    "code": "memory_limit_exceeded",
+    "message": "parse exceeded memory limit"
+  }
+}

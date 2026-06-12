@@ -101,6 +101,14 @@ fn blank_page_fixture_pdf() -> PathBuf {
     fixture_pdf_by_id("failure-image-only-or-blank-page")
 }
 
+fn memory_limit_fixture_pdf() -> PathBuf {
+    fixture_pdf_by_id("failure-memory-limit-simulated")
+}
+
+fn password_protected_fixture_pdf() -> PathBuf {
+    fixture_pdf_by_id("failure-password-protected")
+}
+
 fn pdfium_configured() -> bool {
     std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
         .map(PathBuf::from)
@@ -311,6 +319,27 @@ fn doc_parse_non_envelope_worker_failure_includes_stderr_with_diagnostics() {
     );
 }
 
+#[cfg(debug_assertions)]
+#[test]
+fn doc_parse_memory_limit_worker_failure_is_stable() {
+    let fixture = memory_limit_fixture_pdf();
+    let output = run_ethos_with_env(
+        &[
+            "doc",
+            "parse",
+            fixture.to_str().unwrap(),
+            "--format",
+            "json",
+        ],
+        &[("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_MEMORY_LIMIT", "1")],
+    );
+    assert_eq!(output.status.code(), Some(11));
+    assert!(output.stdout.is_empty());
+    let error: Value = serde_json::from_slice(&output.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "memory_limit_exceeded");
+    assert_eq!(error["error"]["message"], "parse exceeded memory limit");
+}
+
 #[test]
 fn doc_parse_relays_worker_stable_error_envelope() {
     let fixture = invalid_header_fixture_pdf();
@@ -352,6 +381,12 @@ fn pdfium_failure_fixtures_emit_stable_error_envelopes_when_pdfium_is_configured
             8,
             "ocr_required",
             "no extractable text; OCR is required",
+        ),
+        (
+            password_protected_fixture_pdf(),
+            5,
+            "password_protected",
+            "document is encrypted or password-protected",
         ),
     ];
 
