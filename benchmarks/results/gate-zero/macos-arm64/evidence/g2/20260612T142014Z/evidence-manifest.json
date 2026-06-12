@@ -1,0 +1,38 @@
+{
+  "artifacts": [
+    {
+      "path": "SUMMARY.md",
+      "sha256": "72d3e37be0749b8e3f34faa9320a52154d2a5612b4b134f90a531cadc04cca40"
+    },
+    {
+      "path": "host-attestation.json",
+      "sha256": "e2359cd9f8c60dcc83e6690181e288bae0f3153b329ac7c83efe6cdb0d0ea591"
+    },
+    {
+      "path": "raw/g2-macos-arm64-20260612T142014Z.json",
+      "sha256": "bf218d66123f1e1298337c2b7845e66c1ff26ceb0788f6f48748e00b6a60b770"
+    },
+    {
+      "path": "reproduction-command.txt",
+      "sha256": "8a90a836232efc505d097f2562041e69ffe1dd31af523afa19b168ae0efa90a6"
+    },
+    {
+      "path": "reproduction-env.json",
+      "sha256": "5cde97387c2ab3af90f48a274a9d841dbb530c318f5d6a473fdf7a6b42a21fde"
+    }
+  ],
+  "benchmark_commit": "999dfd0",
+  "created_at": "2026-06-12T14:20:14Z",
+  "definition_sha256": "ee7d0ac1f3b8447cf8337beef9fdca7d75c8342410df508128aa8bd73acf66ed",
+  "edgeparse_determinism_failures": [],
+  "ethos_status": "fail",
+  "gate": "g2",
+  "platform": "macos-arm64",
+  "reproduction_env_blockers": [],
+  "reproduction_env_status": "complete",
+  "schema_version": "ethos-gate-zero-evidence-v1",
+  "source_result": "benchmarks/results/gate-zero/macos-arm64/g2.json",
+  "source_result_canonical_sha256": "d9451eacfce1ba0ec306a2f14437074b3c9f3d24de536bd39cb613eef623cb78",
+  "source_result_sha256": "bf218d66123f1e1298337c2b7845e66c1ff26ceb0788f6f48748e00b6a60b770",
+  "source_result_status": "fail"
+}

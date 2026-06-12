@@ -1,0 +1,52 @@
+{
+  "benchmark_commit": "999dfd0",
+  "bundle_git": {
+    "available": true,
+    "commit": "8a03b709b07a56cc1f19fe7b8eb2a3c3804c2bc5",
+    "dirty": false,
+    "status_short": []
+  },
+  "bundle_host_observed": {
+    "machine": "arm64",
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "platform_key": "macos-arm64",
+    "python": "3.9.6"
+  },
+  "gate": "g2",
+  "generated_at": "2026-06-12T14:20:14Z",
+  "platform": "macos-arm64",
+  "result_host": {
+    "observed": {
+      "machine": "arm64",
+      "platform": "macOS-26.5.1-arm64-arm-64bit",
+      "platform_key": "macos-arm64",
+      "python": "3.9.6"
+    },
+    "selected": {
+      "cores_used_for_g1": 1,
+      "cpu": "Apple M4 Pro, 12 cores (8 performance, 4 efficiency)",
+      "id": "mac-m4pro-arm64",
+      "kernel": "Darwin 25.5.0",
+      "model": "MacBook Pro, Mac16,8",
+      "os": "macOS 26.5 (25F71)",
+      "platform": "macos-arm64",
+      "ram": "48 GB",
+      "role": "performance",
+      "runner": "local manual runner; runner id=mac-m4pro-arm64"
+    }
+  },
+  "result_inputs": {
+    "competitors_lock": "benchmarks/competitors.lock.json",
+    "competitors_lock_sha256": "35becebfbf2b4b10b14213ae4a986efc9805ed6b0cf7f5dc5878f7ba79b13afa",
+    "deterministic_profile": "profiles/ethos-deterministic-v1.json",
+    "deterministic_profile_sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070",
+    "gates": "benchmarks/gate-zero/gates.json",
+    "gates_sha256": "ee7d0ac1f3b8447cf8337beef9fdca7d75c8342410df508128aa8bd73acf66ed",
+    "manifest": "benchmarks/gate-zero/manifest.json",
+    "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
+  },
+  "schema_version": "ethos-gate-zero-host-attestation-v1",
+  "source_result": "benchmarks/results/gate-zero/macos-arm64/g2.json",
+  "source_result_canonical_sha256": "d9451eacfce1ba0ec306a2f14437074b3c9f3d24de536bd39cb613eef623cb78",
+  "source_result_sha256": "bf218d66123f1e1298337c2b7845e66c1ff26ceb0788f6f48748e00b6a60b770"
+}
