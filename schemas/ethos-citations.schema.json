@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:citations:1",
+  "title": "Ethos citation input",
+  "description": "Input consumed by `ethos verify --citations`. The alpha verifier accepts either a bare non-empty array of claims or an envelope carrying an optional document fingerprint plus a non-empty claim list. Claim checks remain literal and parser-agnostic; unsupported kinds are reported by the verifier rather than approximated.",
+  "oneOf": [
+    {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    {
+      "type": "object",
+      "required": ["claims"],
+      "additionalProperties": false,
+      "properties": {
+        "document_fingerprint": { "$ref": "#/$defs/fingerprint" },
+        "claims": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/claim" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "bbox": { "type": "array", "items": { "type": "integer" }, "minItems": 4, "maxItems": 4 },
+    "claim": {
+      "type": "object",
+      "required": ["kind", "citation"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["quote", "value", "presence", "table_cell", "region", "other"] },
+        "text": {
+          "type": "string",
+          "description": "Claimed quote/value text, when textual. Quote claims must include non-blank text."
+        },
+        "citation": { "$ref": "#/$defs/citation" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "const": "quote" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "required": ["text"],
+            "properties": {
+              "text": {
+                "type": "string",
+                "pattern": "\\S"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "citation": {
+      "type": "object",
+      "description": "Where the claim says the evidence lives. At least one locator is required; id formats follow the grounding source.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "page": { "type": "string" },
+        "element_id": { "type": "string" },
+        "span_id": { "type": "string" },
+        "table_id": { "type": "string" },
+        "cell": {
+          "type": "object",
+          "required": ["row", "col"],
+          "additionalProperties": false,
+          "properties": {
+            "row": { "type": "integer", "minimum": 0 },
+            "col": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "bbox": { "$ref": "#/$defs/bbox" }
+      }
+    }
+  }
+}

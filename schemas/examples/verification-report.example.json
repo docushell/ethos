@@ -46,27 +46,22 @@
     {
       "id": "v0002",
       "claim": {
-        "kind": "table_cell",
-        "text": "$12.4M",
+        "kind": "presence",
         "citation": {
-          "table_id": "t0001",
-          "cell": {
-            "row": 1,
-            "col": 1
-          }
+          "span_id": "s000002"
         }
       },
       "status": "grounded",
-      "match_method": "table_cell_lookup",
+      "match_method": "presence_only",
       "semantic_unverified": false,
       "evidence": {
-        "text": "$12.4M",
+        "text": "Revenue grew to $12.4M in Q3 2025",
         "page": "p0001",
         "bbox": [
-          30600,
-          16500,
+          7200,
+          10100,
           54000,
-          20000
+          11500
         ]
       },
       "warnings": []

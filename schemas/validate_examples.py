@@ -31,6 +31,10 @@ EXAMPLES = SCHEMAS / "examples"
 PAIRS = [
     ("ethos-document.schema.json", [EXAMPLES / "document.example.json"]),
     ("ethos-chunks.schema.json", [EXAMPLES / "chunks.example.jsonl"]),
+    ("ethos-citations.schema.json", [
+        EXAMPLES / "citations.example.json",
+        EXAMPLES / "citations-array.example.json",
+    ]),
     ("ethos-security-report.schema.json", [EXAMPLES / "security-report.example.json"]),
     ("ethos-verification-report.schema.json", [EXAMPLES / "verification-report.example.json"]),
     ("ethos-verification-config.schema.json", [EXAMPLES / "verification-config.example.json"]),

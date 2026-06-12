@@ -1,0 +1,16 @@
+[
+  {
+    "kind": "quote",
+    "text": "Revenue grew to $12.4M in Q3 2025",
+    "citation": {
+      "page": "page-1",
+      "element_id": "odl-e2"
+    }
+  },
+  {
+    "kind": "presence",
+    "citation": {
+      "page": "page-1"
+    }
+  }
+]

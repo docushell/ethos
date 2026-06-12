@@ -9,6 +9,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-document.schema.json` | `ethos.json` — canonical document graph (primary artifact) |
 | `ethos-chunks.schema.json` | `chunks.jsonl` — one self-describing RAG chunk per line |
 | `ethos-security-report.schema.json` | `security_report.json` |
+| `ethos-citations.schema.json` | citation input consumed by `ethos verify --citations` |
 | `ethos-verification-report.schema.json` | `verification_report.json` |
 | `ethos-verification-config.schema.json` | verification config (its c14n hash stamps reports) |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |

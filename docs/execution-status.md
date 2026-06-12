@@ -30,7 +30,7 @@ These are not engineering placeholders. Do not mark them done until the exact ex
 
 ## Active Engineering Lane
 
-WS-VERIFY-ALPHA is now the active lane. The first slice is implemented; next work should harden the citation input contract and expand verification only within the trust-layer scope.
+WS-VERIFY-ALPHA is now the active lane. The first slice is implemented; the citation input contract is schema'd, and next work should expand verification only within the trust-layer scope.
 
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ WS-VERIFY-ALPHA is now the active lane. The first slice is implemented; next wor
 | Layout groundwork | Landed: basic paragraph text blocks and simple column reading order over quantized spans | Tables, headings, lists, rotation/quirk handling, and confidence policy remain future work |
 | Font policy groundwork | Partially landed: substitution table and profile policy are present; fixture output uses deterministic substitution IDs | Bundled fallback asset hashing and broader font/CID validation remain open |
 | Schema/example validation | Landed: schemas, examples, deterministic profile, referential integrity, and bbox sanity pass the `jsonschema` validation gate | Contract changes still require explicit versioning and compatibility review |
-| Trust-layer implementation | Landed: `ethos verify` quote/presence checks, stale fingerprint handling, unsupported claim reporting, capability-limited warnings, native Ethos JSON path, ODL-style adapter path, and demo fixtures | Still needed: citation-input schema, pinned real ODL output fixture, value/table verification, crop-aware evidence, and broader adapter hardening |
+| Trust-layer implementation | Landed: `ethos verify` quote/presence checks, stale fingerprint handling, unsupported claim reporting, capability-limited warnings, native Ethos JSON path, ODL-style adapter path, citation input schema, and demo fixtures | Still needed: pinned real ODL output fixture, value/table verification, crop-aware evidence, and broader adapter hardening |
 
 ## PM Rule
 

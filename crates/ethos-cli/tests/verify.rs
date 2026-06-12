@@ -42,10 +42,18 @@ fn temp_json(name: &str, json: &str) -> PathBuf {
     path
 }
 
+fn document_example() -> PathBuf {
+    repo_root().join("schemas/examples/document.example.json")
+}
+
+fn odl_example() -> PathBuf {
+    repo_root().join("examples/verify/opendataloader.json")
+}
+
 #[test]
 fn native_ethos_verify_produces_non_empty_checks() {
+    let doc = document_example();
     let root = repo_root();
-    let doc = root.join("schemas/examples/document.example.json");
     let citations = root.join("examples/verify/native_citations.json");
     let report = parse_success(&[
         "verify",
@@ -65,8 +73,8 @@ fn native_ethos_verify_produces_non_empty_checks() {
 
 #[test]
 fn opendataloader_verify_adapter_produces_capability_aware_report() {
+    let grounding = odl_example();
     let root = repo_root();
-    let grounding = root.join("examples/verify/opendataloader.json");
     let citations = root.join("examples/verify/answer_citations.json");
     let report = parse_success(&[
         "verify",
@@ -97,8 +105,7 @@ fn opendataloader_verify_adapter_produces_capability_aware_report() {
 
 #[test]
 fn stale_fingerprint_is_report_level_failure() {
-    let root = repo_root();
-    let doc = root.join("schemas/examples/document.example.json");
+    let doc = document_example();
     let citations = temp_json(
         "stale-citations",
         r#"{
@@ -127,8 +134,7 @@ fn stale_fingerprint_is_report_level_failure() {
 
 #[test]
 fn invalid_citation_shape_is_usage_error() {
-    let root = repo_root();
-    let doc = root.join("schemas/examples/document.example.json");
+    let doc = document_example();
     let citations = temp_json(
         "invalid-citations",
         r#"{
@@ -151,4 +157,249 @@ fn invalid_citation_shape_is_usage_error() {
     assert!(output.stdout.is_empty());
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("claim 1 citation must contain at least one locator"));
+}
+
+#[test]
+fn bare_array_citation_input_works() {
+    let doc = document_example();
+    let citations = temp_json(
+        "bare-array-citations",
+        r#"[
+          {
+            "kind": "presence",
+            "citation": {
+              "element_id": "e000002"
+            }
+          }
+        ]"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"].as_array().unwrap().len(), 1);
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn max_checks_overflow_is_usage_error() {
+    let doc = document_example();
+    let config = temp_json(
+        "max-checks-one-config",
+        r#"{
+          "schema_version": "1.0.0",
+          "config_version": "max-checks-one",
+          "claim_kinds": ["quote", "presence"],
+          "matching": {
+            "text_normalization": "collapse_whitespace",
+            "case_sensitive": true,
+            "bbox_containment_tolerance_q": 50
+          },
+          "staleness": {
+            "require_fingerprint_match": true
+          },
+          "limits": {
+            "max_checks": 1
+          },
+          "evidence": {
+            "include_text": true,
+            "include_crops": false
+          }
+        }"#,
+    );
+    let citations = repo_root().join("examples/verify/native_citations.json");
+    let output = run_ethos(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("citations file exceeds max_checks"));
+}
+
+#[test]
+fn quote_without_text_is_usage_error() {
+    let doc = document_example();
+    let citations = temp_json(
+        "quote-without-text",
+        r#"{
+          "claims": [
+            {
+              "kind": "quote",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+    let output = run_ethos(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("quote text must be non-empty"));
+}
+
+#[test]
+fn page_only_presence_works() {
+    let doc = document_example();
+    let citations = temp_json(
+        "page-only-presence",
+        r#"{
+          "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+          "claims": [
+            {
+              "kind": "presence",
+              "citation": {
+                "page": "p0001"
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(report["checks"][0]["match_method"], "presence_only");
+    assert_eq!(
+        report["checks"][0]["evidence"]["bbox"],
+        serde_json::json!([0, 0, 61200, 79200])
+    );
+}
+
+#[test]
+fn bbox_presence_works_when_coordinate_origin_is_known() {
+    let doc = document_example();
+    let citations = temp_json(
+        "bbox-known-origin",
+        r#"{
+          "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+          "claims": [
+            {
+              "kind": "presence",
+              "citation": {
+                "page": "p0001",
+                "bbox": [7300, 10200, 8000, 11000]
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(
+        report["checks"][0]["evidence"]["text"],
+        "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion."
+    );
+}
+
+#[test]
+fn bbox_presence_is_capability_blocked_when_coordinate_origin_is_unknown() {
+    let grounding = odl_example();
+    let citations = temp_json(
+        "bbox-unknown-origin",
+        r#"{
+          "claims": [
+            {
+              "kind": "presence",
+              "citation": {
+                "page": "page-1",
+                "bbox": [7300, 10200, 8000, 11000]
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "capability_blocked");
+    assert_eq!(
+        report["checks"][0]["warnings"],
+        serde_json::json!(["capability_limited"])
+    );
+    assert_eq!(report["all_evidence_grounded"], false);
+}
+
+#[test]
+fn case_insensitive_config_allows_literal_case_difference() {
+    let doc = document_example();
+    let config = temp_json(
+        "case-insensitive-config",
+        r#"{
+          "schema_version": "1.0.0",
+          "config_version": "case-insensitive",
+          "claim_kinds": ["quote", "presence"],
+          "matching": {
+            "text_normalization": "collapse_whitespace",
+            "case_sensitive": false,
+            "bbox_containment_tolerance_q": 50
+          },
+          "staleness": {
+            "require_fingerprint_match": true
+          },
+          "limits": {
+            "max_checks": 256
+          },
+          "evidence": {
+            "include_text": true,
+            "include_crops": false
+          }
+        }"#,
+    );
+    let citations = temp_json(
+        "case-insensitive-citations",
+        r#"{
+          "document_fingerprint": "sha256:579dbf857db19649463cd6716a6f7c5f43c44dd9a5e798e47f25760f0ffaae02",
+          "claims": [
+            {
+              "kind": "quote",
+              "text": "revenue grew to $12.4m in q3 2025",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(report["all_evidence_grounded"], true);
 }

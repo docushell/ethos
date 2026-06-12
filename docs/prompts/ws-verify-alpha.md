@@ -83,9 +83,9 @@ Do not implement:
 **Objective:** Map the existing verification schemas, `GroundingSource` trait, CLI surface, and
 fixture layout. Produce the smallest implementation plan that satisfies this prompt.
 
-**Context Provided:** `schemas/verification-report.schema.json`,
-`schemas/verification-config.schema.json`, `crates/ethos-core`, `crates/ethos-verify`,
-`crates/ethos-cli`, and `adapters/grounding`.
+**Context Provided:** `schemas/ethos-citations.schema.json`,
+`schemas/ethos-verification-report.schema.json`, `schemas/ethos-verification-config.schema.json`,
+`crates/ethos-core`, `crates/ethos-verify`, `crates/ethos-cli`, and `adapters/grounding`.
 
 **Output Hand-off:** File-level edit plan and any schema constraints discovered. No code changes.
 
