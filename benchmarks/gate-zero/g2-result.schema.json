@@ -36,13 +36,21 @@
     },
     "definition": {
       "type": "object",
-      "required": ["gates", "definition_sha256", "gate_status", "thresholds", "measurement_scope"],
+      "required": [
+        "gates",
+        "definition_sha256",
+        "gate_status",
+        "thresholds",
+        "claim_thresholds",
+        "measurement_scope"
+      ],
       "additionalProperties": true,
       "properties": {
         "gates": { "type": "string" },
         "definition_sha256": { "$ref": "#/$defs/sha256" },
         "gate_status": { "type": "string" },
         "thresholds": { "type": "object" },
+        "claim_thresholds": { "type": "object" },
         "measurement_scope": { "type": "object" }
       }
     },
@@ -140,6 +148,7 @@
         "ethos_to_opendataloader_ratio",
         "max_install_size_bytes",
         "opendataloader_ratio_max",
+        "opendataloader_ratio_claim_supported",
         "pdfium_v8_enabled",
         "pdfium_xfa_enabled"
       ],
@@ -151,6 +160,7 @@
         "ethos_to_opendataloader_ratio": { "type": ["number", "null"], "minimum": 0 },
         "max_install_size_bytes": { "type": "integer", "minimum": 0 },
         "opendataloader_ratio_max": { "type": "number", "minimum": 0 },
+        "opendataloader_ratio_claim_supported": { "type": ["boolean", "null"] },
         "pdfium_v8_enabled": { "type": ["boolean", "null"] },
         "pdfium_xfa_enabled": { "type": ["boolean", "null"] }
       }

@@ -63,6 +63,12 @@ def fake_gates(root: Path, *, max_bytes: int = 1_000, ratio: float = 0.1) -> Pat
                     "thresholds": {
                         "comparison_reference": "opendataloader-pdf",
                         "max_install_size_bytes": max_bytes,
+                        "max_install_size_label": "30 MB decimal",
+                        "logic": "PASS when max footprint is respected.",
+                    },
+                    "claim_thresholds": {
+                        "claim": "one tenth OpenDataLoader footprint",
+                        "logic": "Record whether ratio claim is supported.",
                         "opendataloader_ratio_max": ratio,
                     },
                     "measurement_scope": {
@@ -192,10 +198,11 @@ class GateZeroG2ResultTests(unittest.TestCase):
         self.assertEqual(result["status"], gate_zero_gates.PASS)
         self.assertEqual(result["summary"]["ethos_install_size_bytes"], 200)
         self.assertEqual(result["summary"]["opendataloader_install_size_bytes"], 3000)
+        self.assertTrue(result["summary"]["opendataloader_ratio_claim_supported"])
         self.assertEqual(result["blockers"], [])
         self.assertEqual(result["failures"], [])
 
-    def test_g2_result_fails_when_ratio_threshold_is_exceeded(self) -> None:
+    def test_g2_result_passes_but_marks_ratio_claim_unsupported(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             ethos_cli = write_bytes(root / "target" / "release" / "ethos", 201)
@@ -224,8 +231,9 @@ class GateZeroG2ResultTests(unittest.TestCase):
                 )
             )
 
-        self.assertEqual(result["status"], gate_zero_gates.FAIL)
-        self.assertIn("ethos install size exceeds OpenDataLoader ratio threshold", result["failures"])
+        self.assertEqual(result["status"], gate_zero_gates.PASS)
+        self.assertFalse(result["summary"]["opendataloader_ratio_claim_supported"])
+        self.assertEqual(result["failures"], [])
 
     def test_g2_result_blocks_overlapping_footprint_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

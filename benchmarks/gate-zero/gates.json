@@ -3,6 +3,7 @@
     "normative_sources": [
       "docs/ethos-product-requirements.md#gate-zero-metrics",
       "docs/IMPLEMENTATION_PLAN.md#64-gate-zero-execution-week-8-days-38-40",
+      "docs/decisions/ADR-0008-g2-footprint-policy.md",
       "docs/benchmark-plan.md#gate-zero-protocol-week-4-days-1820--plan-64",
       "benchmarks/gate-zero/manifest.json",
       "benchmarks/competitors.lock.json"
@@ -45,6 +46,7 @@
       "required_evidence": [
         "ethos_install_size_bytes measured from the exact base distributable artifact set",
         "opendataloader_install_size_bytes measured in-harness from the pinned opendataloader-pdf artifact/install path",
+        "ethos_to_opendataloader_ratio measured and claim support recorded",
         "PDFium V8/XFA disabled evidence from the deterministic profile or linked profile attestation",
         "manifest_sha256 for benchmarks/gate-zero/manifest.json",
         "competitors_lock_sha256 for benchmarks/competitors.lock.json",
@@ -52,12 +54,16 @@
       ],
       "source_refs": [
         {
+          "path": "docs/decisions/ADR-0008-g2-footprint-policy.md",
+          "summary": "G2 hard pass is no more than 30 MB with PDFium V8/XFA disabled; the one-tenth OpenDataLoader comparison is a claim threshold, not a parser-core kill switch."
+        },
+        {
           "path": "docs/ethos-product-requirements.md",
-          "summary": "G2 footprint: no more than 30 MB and no more than one tenth of measured OpenDataLoader installed footprint; includes CLI, native libs, PDFium payload, schemas, deterministic fonts, and no-network base parser assets."
+          "summary": "G2 footprint measurement includes CLI, native libs, PDFium payload, schemas, deterministic fonts, and no-network base parser assets."
         },
         {
           "path": "docs/IMPLEMENTATION_PLAN.md",
-          "summary": "G2 footprint: total installed footprint bytes on disk <= 30 MB and <= 1/10 measured ODL footprint; V8/XFA-enabled builds auto-fail."
+          "summary": "G2 footprint: total installed footprint bytes on disk <= 30 MB; V8/XFA-enabled builds auto-fail; ODL ratio is reported for claims."
         },
         {
           "path": "benchmarks/competitors.lock.json",
@@ -67,9 +73,13 @@
       "status": "defined-not-run",
       "thresholds": {
         "comparison_reference": "opendataloader-pdf",
-        "logic": "PASS only when ethos_install_size_bytes <= 30000000 and ethos_install_size_bytes <= opendataloader_install_size_bytes * 0.1, with all auto-fail checks false.",
+        "logic": "PASS only when ethos_install_size_bytes <= 30000000, with all auto-fail checks false. The OpenDataLoader ratio is measured for claim support, not pass/fail.",
         "max_install_size_bytes": 30000000,
-        "max_install_size_label": "30 MB decimal",
+        "max_install_size_label": "30 MB decimal"
+      },
+      "claim_thresholds": {
+        "claim": "Ethos may claim a footprint no more than one tenth of measured OpenDataLoader only when ethos_install_size_bytes <= opendataloader_install_size_bytes * 0.1.",
+        "logic": "claim threshold: record one_tenth_opendataloader_footprint_supported=true only when the measured Ethos/OpenDataLoader ratio is <= 0.1.",
         "opendataloader_ratio_max": 0.1
       }
     },

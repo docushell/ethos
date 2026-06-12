@@ -26,8 +26,9 @@ class GateZeroGateDefinitionTests(unittest.TestCase):
         self.assertEqual(g2["status"], "defined-not-run")
         self.assertEqual(g2["thresholds"]["max_install_size_bytes"], 30_000_000)
         self.assertEqual(g2["thresholds"]["max_install_size_label"], "30 MB decimal")
-        self.assertEqual(g2["thresholds"]["opendataloader_ratio_max"], 0.1)
+        self.assertEqual(g2["claim_thresholds"]["opendataloader_ratio_max"], 0.1)
         self.assertEqual(g2["thresholds"]["comparison_reference"], "opendataloader-pdf")
+        self.assertIn("claim threshold", g2["claim_thresholds"]["logic"])
         self.assertIn("PDFium sidecar or static payload", " ".join(g2["measurement_scope"]["includes"]))
         self.assertIn("bundled deterministic font assets", g2["measurement_scope"]["includes"])
         self.assertIn("PDFium build has V8 enabled", g2["measurement_scope"]["auto_fail"])
@@ -65,11 +66,12 @@ class GateZeroGateDefinitionTests(unittest.TestCase):
         self.assertIn("parser-core expansion stops", gates["decision_rule"]["g2_or_g3_fail"])
         self.assertIn("G1 fails while G2 and G3 pass", gates["decision_rule"]["g1_only_fail"])
 
-    def test_g2_evaluator_enforces_byte_and_ratio_boundaries(self) -> None:
+    def test_g2_evaluator_enforces_byte_boundary_and_reports_ratio_claim(self) -> None:
         gates = load_json(GATES)
         g2_thresholds = gates["gates"]["g2"]["thresholds"]
+        claim_thresholds = gates["gates"]["g2"]["claim_thresholds"]
         max_bytes = g2_thresholds["max_install_size_bytes"]
-        ratio = g2_thresholds["opendataloader_ratio_max"]
+        ratio = claim_thresholds["opendataloader_ratio_max"]
 
         self.assertEqual(
             gate_zero_gates.evaluate_g2_footprint(
@@ -93,27 +95,27 @@ class GateZeroGateDefinitionTests(unittest.TestCase):
             )["status"],
             gate_zero_gates.FAIL,
         )
-        self.assertEqual(
-            gate_zero_gates.evaluate_g2_footprint(
-                ethos_install_size_bytes=101,
-                opendataloader_install_size_bytes=1000,
-                max_install_size_bytes=max_bytes,
-                opendataloader_ratio_max=ratio,
-                pdfium_v8_enabled=False,
-                pdfium_xfa_enabled=False,
-            )["status"],
-            gate_zero_gates.FAIL,
+        ratio_miss = gate_zero_gates.evaluate_g2_footprint(
+            ethos_install_size_bytes=101,
+            opendataloader_install_size_bytes=1000,
+            max_install_size_bytes=max_bytes,
+            opendataloader_ratio_max=ratio,
+            pdfium_v8_enabled=False,
+            pdfium_xfa_enabled=False,
         )
+        self.assertEqual(ratio_miss["status"], gate_zero_gates.PASS)
+        self.assertFalse(ratio_miss["claims"]["one_tenth_opendataloader_footprint_supported"])
 
     def test_g2_evaluator_blocks_missing_reference_and_auto_fails_v8_xfa(self) -> None:
         gates = load_json(GATES)
         thresholds = gates["gates"]["g2"]["thresholds"]
+        claim_thresholds = gates["gates"]["g2"]["claim_thresholds"]
 
         blocked = gate_zero_gates.evaluate_g2_footprint(
             ethos_install_size_bytes=1,
             opendataloader_install_size_bytes=0,
             max_install_size_bytes=thresholds["max_install_size_bytes"],
-            opendataloader_ratio_max=thresholds["opendataloader_ratio_max"],
+            opendataloader_ratio_max=claim_thresholds["opendataloader_ratio_max"],
             pdfium_v8_enabled=False,
             pdfium_xfa_enabled=False,
         )
@@ -124,7 +126,7 @@ class GateZeroGateDefinitionTests(unittest.TestCase):
             ethos_install_size_bytes=1,
             opendataloader_install_size_bytes=100,
             max_install_size_bytes=thresholds["max_install_size_bytes"],
-            opendataloader_ratio_max=thresholds["opendataloader_ratio_max"],
+            opendataloader_ratio_max=claim_thresholds["opendataloader_ratio_max"],
             pdfium_v8_enabled=True,
             pdfium_xfa_enabled=True,
         )

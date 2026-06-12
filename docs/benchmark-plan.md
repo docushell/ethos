@@ -25,7 +25,9 @@ hardware attestation → decider → ADR-0005.
   120 pps floor can never be lowered by a slow ODL remeasurement. EdgeParse/LiteParse numbers
   recorded as context, non-gating.
 - **G2 footprint:** installed bytes on disk (CLI + dynamic libs + PDFium + schemas + fonts,
-  no network) ≤ 30 MB AND ≤ 1/10 of measured ODL. V8/XFA-enabled builds auto-fail.
+  no network) ≤ 30 MB. V8/XFA-enabled builds auto-fail. The measured Ethos/OpenDataLoader
+  ratio is recorded for claims; ≤ 1/10 measured ODL is a claim threshold, not a hard gate
+  (ADR-0008).
 - **G3 determinism:** byte-identical canonical payload + equal fingerprints across Gate Zero
   platforms (macOS arm64 + Linux x64 minimum) on the full frozen manifest.
 

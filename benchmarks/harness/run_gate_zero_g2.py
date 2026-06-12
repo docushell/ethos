@@ -178,6 +178,7 @@ def build_g2_result(args: argparse.Namespace) -> dict[str, Any]:
 
     g2 = gates.get("gates", {}).get("g2", {})
     thresholds = g2.get("thresholds", {})
+    claim_thresholds = g2.get("claim_thresholds", {})
     reference_id = thresholds.get("comparison_reference")
     if reference_id != "opendataloader-pdf":
         blockers.append("G2 comparison reference is not opendataloader-pdf")
@@ -228,7 +229,7 @@ def build_g2_result(args: argparse.Namespace) -> dict[str, Any]:
         ethos_install_size_bytes=ethos_size,
         opendataloader_install_size_bytes=odl_size if isinstance(odl_size, int) else None,
         max_install_size_bytes=thresholds.get("max_install_size_bytes", 30_000_000),
-        opendataloader_ratio_max=thresholds.get("opendataloader_ratio_max", 0.1),
+        opendataloader_ratio_max=claim_thresholds.get("opendataloader_ratio_max", 0.1),
         pdfium_v8_enabled=policy["v8_enabled"],
         pdfium_xfa_enabled=policy["xfa_enabled"],
     )
@@ -249,7 +250,10 @@ def build_g2_result(args: argparse.Namespace) -> dict[str, Any]:
         "opendataloader_install_size_bytes": odl_size,
         "ethos_to_opendataloader_ratio": ratio,
         "max_install_size_bytes": thresholds.get("max_install_size_bytes"),
-        "opendataloader_ratio_max": thresholds.get("opendataloader_ratio_max"),
+        "opendataloader_ratio_max": claim_thresholds.get("opendataloader_ratio_max"),
+        "opendataloader_ratio_claim_supported": evaluation.get("claims", {}).get(
+            "one_tenth_opendataloader_footprint_supported"
+        ),
         "pdfium_v8_enabled": policy["v8_enabled"],
         "pdfium_xfa_enabled": policy["xfa_enabled"],
     }
@@ -269,6 +273,7 @@ def build_g2_result(args: argparse.Namespace) -> dict[str, Any]:
             "definition_sha256": run_gate_zero.sha256_file(gates_path),
             "gate_status": g2.get("status"),
             "thresholds": thresholds,
+            "claim_thresholds": claim_thresholds,
             "measurement_scope": g2.get("measurement_scope"),
         },
         "host": {

@@ -75,8 +75,9 @@ benchmarks/gate-zero/gates.schema.json
 
 `gates.json` encodes the existing PRD/implementation-plan contract:
 
-- G2 is the base-parser installed footprint gate: `<= 30 MB decimal` and `<= 1/10`
-  in-harness measured OpenDataLoader footprint, with V8/XFA-enabled PDFium builds auto-failing.
+- G2 is the base-parser installed footprint gate: `<= 30 MB decimal`, with V8/XFA-enabled
+  PDFium builds auto-failing. The `<= 1/10` in-harness measured OpenDataLoader comparison is
+  reported as a claim threshold, not a hard pass/fail threshold (ADR-0008).
 - G3 is the cross-platform determinism gate: byte-identical canonical payload and equal
   document fingerprints across at least `macos-arm64` and `linux-x64` on the full frozen
   manifest. A macOS-only result cannot pass G3 by itself.
@@ -102,9 +103,9 @@ make -C benchmarks/harness gate-zero-g2 \
   GATE_ZERO_PDFIUM_ARTIFACT=/private/tmp/ethos-pdfium-mac-arm64.tgz
 ```
 
-The macOS result is allowed to fail G2 if the measured full base parser footprint exceeds
-`0.1 * opendataloader_install_size_bytes`; failures are recorded as gate evidence, not patched
-around by switching back to a CLI-only measurement.
+The macOS result records whether the measured full base parser footprint supports the
+`0.1 * opendataloader_install_size_bytes` claim. That claim status must not be patched around by
+switching back to a CLI-only measurement.
 
 ## OpenDataLoader PDF Adapter
 

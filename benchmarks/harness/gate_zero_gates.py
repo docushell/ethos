@@ -51,12 +51,14 @@ def evaluate_g2_footprint(
     max_by_reference = opendataloader_install_size_bytes * opendataloader_ratio_max
     if ethos_install_size_bytes > max_install_size_bytes:
         failures.append("ethos install size exceeds max byte threshold")
-    if ethos_install_size_bytes > max_by_reference:
-        failures.append("ethos install size exceeds OpenDataLoader ratio threshold")
+    claim_supported = ethos_install_size_bytes <= max_by_reference
     return {
         "status": FAIL if failures else PASS,
         "blockers": [],
         "failures": failures,
+        "claims": {
+            "one_tenth_opendataloader_footprint_supported": claim_supported,
+        },
         "thresholds": {
             "max_install_size_bytes": max_install_size_bytes,
             "opendataloader_ratio_max": opendataloader_ratio_max,

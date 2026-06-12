@@ -255,7 +255,7 @@ Architectural invariants enforced from commit one:
 Protocol: harness host matches the frozen hardware profile; all gates measured against `benchmarks/gate-zero/manifest.json` and its declared subsets - one artifact, one name (PRD 1.3).
 
 - **G1 - Throughput:** threshold = **max(120 pages/sec p50, 2x in-harness-remeasured OpenDataLoader pps)** on the manifest's `born_digital` subset, single core per host. G1 must pass independently on every recorded Gate Zero performance host in `benchmarks/gate-zero/manifest.json`; no averaging or host substitution is allowed. The PRD's 120 pps is a **floor** (1.3, 3.3); a low ODL remeasurement can never lower it. EdgeParse and LiteParse numbers are recorded alongside as context (non-gating). G1 failure alone cannot produce public speed claims and gets only the PRD-approved ADR branch below.
-- **G2 - Footprint:** total installed footprint (CLI + dynamic libs + PDFium payload + schemas + font assets, bytes on disk, no network) <= 30 MB **and** <= 1/10 of measured ODL footprint. V8/XFA-enabled builds auto-fail (1.3, 6.1).
+- **G2 - Footprint:** total installed footprint (CLI + dynamic libs + PDFium payload + schemas + font assets, bytes on disk, no network) <= 30 MB. V8/XFA-enabled builds auto-fail (1.3, 6.1). The measured Ethos/OpenDataLoader footprint ratio is recorded for claims; <= 1/10 measured ODL footprint is a claim threshold, not a hard parser-core decision threshold (ADR-0008).
 - **G3 - Determinism:** byte-identical canonical payload + equal fingerprints across Gate Zero supported platforms, at minimum macOS arm64 and Linux x64 on the **full frozen manifest**; font-mapper override and quantize-at-extraction implemented, not documented (1.3, 6.1). Windows x64 joins nightly determinism no later than Milestone B exit, week 14, and unresolved Windows divergence blocks or re-scopes Public Beta.
 
 Decider records ADR-0005:
@@ -265,7 +265,7 @@ Decider records ADR-0005:
 Date / Decider:
 Inputs: benchmarks/results/gate-zero/{g1,g2,g3}.json @ commit <sha>, manifest <sha>
 G1: <measured pps> vs max(120, 2x <ODL-measured>) -> PASS|FAIL
-G2: <bytes> vs 30MB and <ratio> vs ODL -> PASS|FAIL
+G2: <bytes> vs 30MB; <ratio> vs ODL claim threshold -> PASS|FAIL + CLAIM_SUPPORTED|UNSUPPORTED
 G3: <platforms, divergence count> -> PASS|FAIL
 Decision: PROCEED (Milestone B) | G1_RETRY (bounded retry by week 10; corpus unchanged; no speed claim) | FALLBACK (6.5; parser-core expansion stops)
 ```
@@ -395,7 +395,7 @@ Still open but not first-code blockers: debug-overlay publicity level, footprint
       "gates": ["self-test-pymupdf", "adapters: odl+edgeparse+liteparse+pymupdf4llm", "dry-run-week7"], "timeout_days": 35 },
     { "id": "gate-zero", "agent": "named-decider", "pattern": "evaluator",
       "inputs": ["results/gate-zero/{g1,g2,g3}.json"], "outputs": ["docs/decisions/ADR-0005.md"],
-      "rule": "G1 >= max(120pps, 2x odl-remeasured) independently on every recorded Gate Zero performance host; G2 <= min(30MB, odl/10); G3 byte-identical on Gate Zero platforms (macOS arm64 + Linux x64 minimum); Windows x64 nightly by Milestone B exit and green before Public Beta",
+      "rule": "G1 >= max(120pps, 2x odl-remeasured) independently on every recorded Gate Zero performance host; G2 <= 30MB hard gate with ODL/10 recorded as a claim threshold per ADR-0008; G3 byte-identical on Gate Zero platforms (macOS arm64 + Linux x64 minimum); Windows x64 nightly by Milestone B exit and green before Public Beta",
       "on_pass": "milestone-b", "on_g1_only_fail": "decider chooses g1-retry-by-week10 or ws-fallback", "on_g2_or_g3_fail": "ws-fallback" }
   ],
   "fallback": { "id": "ws-fallback",

@@ -15,9 +15,10 @@ Inputs: benchmarks/results/gate-zero/{g1,g2,g3}.json @ commit <sha>, manifest <s
 G1 - Throughput: <measured pps> vs max(120 pps p50, 2x <ODL-remeasured pps>)
      on manifest subset `born_digital`, single core, independently on every
      recorded performance host (no averaging, no host substitution) -> PASS|FAIL
-G2 - Footprint:  <bytes> vs 30 MB AND <ratio> vs 1/10 ODL footprint
+G2 - Footprint:  <bytes> vs 30 MB; <ratio> vs 1/10 ODL claim threshold
      (CLI + dynamic libs + PDFium payload + schemas + font assets;
-      V8/XFA-enabled build = automatic FAIL)                        -> PASS|FAIL
+      V8/XFA-enabled build = automatic FAIL; ratio miss blocks only the
+      one-tenth-footprint claim per ADR-0008)                        -> PASS|FAIL + CLAIM_SUPPORTED|UNSUPPORTED
 G3 - Determinism: <platforms>, <divergence count> on the FULL frozen manifest
      (byte-identical canonical payload + equal fingerprints;
       macOS arm64 + Linux x64 minimum)                              -> PASS|FAIL

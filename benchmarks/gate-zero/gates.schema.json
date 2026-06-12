@@ -67,6 +67,7 @@
         "source_refs",
         "measurement_scope",
         "thresholds",
+        "claim_thresholds",
         "required_evidence",
         "platform_policy"
       ],
@@ -106,7 +107,6 @@
           "required": [
             "max_install_size_bytes",
             "max_install_size_label",
-            "opendataloader_ratio_max",
             "comparison_reference",
             "logic"
           ],
@@ -114,8 +114,21 @@
           "properties": {
             "max_install_size_bytes": { "const": 30000000 },
             "max_install_size_label": { "const": "30 MB decimal" },
-            "opendataloader_ratio_max": { "const": 0.1 },
             "comparison_reference": { "const": "opendataloader-pdf" },
+            "logic": { "type": "string" }
+          }
+        },
+        "claim_thresholds": {
+          "type": "object",
+          "required": [
+            "opendataloader_ratio_max",
+            "claim",
+            "logic"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "opendataloader_ratio_max": { "const": 0.1 },
+            "claim": { "type": "string" },
             "logic": { "type": "string" }
           }
         },
