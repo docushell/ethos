@@ -5,7 +5,7 @@
   "product_state": {
     "as_of": "2026-06-12",
     "public_claims_allowed": false,
-    "decision": "Candidate CC0 seed corpus is staged for Gate Zero dry runs. It is not a frozen benchmark corpus until the decider signs freeze_record.signed_by and competitors are pinned."
+    "decision": "Candidate corpus is staged for Gate Zero dry runs with CC0 synthetic PDFs plus real redistributable U.S. federal/public documents. It is not a frozen benchmark corpus until the decider signs freeze_record.signed_by and competitors are pinned."
   },
   "rules": {
     "freeze": "Gate Zero is invalid until frozen=true with decider sign-off (ADR-0000, plan row 0.3). Corpus changes after kickoff void the measurement (PRD 1.3). One artifact, one name: every gate measures against this file only.",
@@ -72,14 +72,60 @@
       "subsets": ["born_digital", "fonts", "ligatures"],
       "provenance": "Copied from fixtures/synthetic/ligature-fi-embedded-font/document.pdf; synthetic CC0 embedded-font ligature seed.",
       "license": "CC0-1.0"
+    },
+    {
+      "id": "irs-form-1040-2025",
+      "file": "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+      "sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+      "pages": 2,
+      "subsets": ["born_digital", "forms", "tables", "real_world"],
+      "provenance": "Downloaded from the official IRS PDF endpoint on 2026-06-12; real federal tax form with dense labels, boxes, line items, and two-page form layout.",
+      "source_url": "https://www.irs.gov/pub/irs-pdf/f1040.pdf",
+      "downloaded_at": "2026-06-12",
+      "license": "U.S. federal government work; public domain in the United States unless third-party material is separately marked."
+    },
+    {
+      "id": "cfpb-home-loan-toolkit",
+      "file": "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+      "sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+      "pages": 28,
+      "subsets": ["born_digital", "guide", "worksheets", "tables", "real_world"],
+      "provenance": "Downloaded from the official Consumer Financial Protection Bureau files endpoint on 2026-06-12; real guide-style PDF with worksheets, icons, bullets, sidebars, and table-like forms.",
+      "source_url": "https://files.consumerfinance.gov/f/201503_cfpb_your-home-loan-toolkit-web.pdf",
+      "downloaded_at": "2026-06-12",
+      "license": "U.S. federal government work; public domain in the United States unless third-party material is separately marked."
+    },
+    {
+      "id": "nist-sp-800-53r5",
+      "file": "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+      "sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+      "pages": 492,
+      "subsets": ["born_digital", "technical_report", "long_document", "tables", "real_world"],
+      "provenance": "Downloaded from the official NIST NVL Publications PDF endpoint on 2026-06-12; large real technical report with hundreds of pages, dense control catalog structure, tables, cross-references, and appendices.",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-53r5.pdf",
+      "downloaded_at": "2026-06-12",
+      "license": "NIST publication states it is not subject to copyright in the United States; attribution appreciated by NIST."
+    },
+    {
+      "id": "nist-sp-800-63b",
+      "file": "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+      "sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+      "pages": 80,
+      "subsets": ["born_digital", "technical_report", "tables", "real_world"],
+      "provenance": "Downloaded from the official NIST NVL Publications PDF endpoint on 2026-06-12; real technical guideline with structured sections, requirements language, tables, and references.",
+      "source_url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-63b.pdf",
+      "downloaded_at": "2026-06-12",
+      "license": "U.S. federal government/NIST publication; public-domain-compatible for benchmark redistribution in the United States unless third-party material is separately marked."
     }
   ],
   "corpus_entry_schema": {
     "file": "relative path under benchmarks/gate-zero/corpus/",
     "sha256": "lowercase hex, required",
     "pages": "integer, required",
-    "subsets": ["born_digital | security | failure | fonts | rotation | tables | multi_column | hyphenation | ligatures"],
+    "subsets": ["born_digital | security | failure | fonts | rotation | tables | multi_column | hyphenation | ligatures | forms | worksheets | guide | technical_report | long_document | real_world"],
     "provenance": "string, required",
+    "source_url": "string, optional but required for downloaded real-world corpus files",
+    "downloaded_at": "ISO date, optional but required for downloaded real-world corpus files",
     "license": "string, required (redistributable only)"
   },
   "subsets_declared": [
@@ -91,7 +137,13 @@
     "tables",
     "multi_column",
     "hyphenation",
-    "ligatures"
+    "ligatures",
+    "forms",
+    "worksheets",
+    "guide",
+    "technical_report",
+    "long_document",
+    "real_world"
   ],
   "hardware": [
     {
@@ -122,7 +174,7 @@
   "determinism_platforms": ["macos-arm64", "linux-x64"],
   "windows_x64_note": "Windows x64 joins nightly determinism no later than Milestone B exit (week 14 under ADR-0001 reduced-staff schedule); unresolved divergence blocks or re-scopes Public Beta.",
   "todo_before_freeze": [
-    "Decider either accepts this staged CC0 seed corpus as Gate Zero v1 or adds broader redistributable born-digital PDFs.",
+    "Decider either accepts this staged synthetic + real redistributable corpus as Gate Zero v1 or adds broader redistributable PDFs.",
     "Set frozen=true only after corpus scope is final.",
     "Fill freeze_record.frozen_at and freeze_record.signed_by.",
     "Freeze benchmarks/competitors.lock.json with exact versions and artifact hashes.",

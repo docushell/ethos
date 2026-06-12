@@ -13,9 +13,10 @@ publish benchmark claims until every required fact below is recorded.
 Ethos remains pre-alpha. Gate Zero is not ready to run.
 
 The engineering harness now fails closed when the corpus/hardware manifest or competitor lock is
-incomplete. A small CC0 seed corpus has been staged in `benchmarks/gate-zero/corpus/`, but it is
-not a frozen benchmark corpus until the decider signs it. The remaining work is
-product/benchmark-owner evidence gathering, not parser implementation.
+incomplete. A staged corpus now exists in `benchmarks/gate-zero/corpus/` with synthetic CC0 PDFs
+and real redistributable official PDFs, but it is not a frozen benchmark corpus until the decider
+signs it. The remaining work is product/benchmark-owner evidence gathering, not parser
+implementation.
 
 ## Required External Outputs
 
@@ -28,9 +29,9 @@ product/benchmark-owner evidence gathering, not parser implementation.
 ## Staged Corpus Seed
 
 The existing CC0 synthetic fixtures have been copied into `benchmarks/gate-zero/corpus/` as a
-staged Gate Zero seed. They are valid engineering seed material, but they are not sufficient by
-themselves for a representative public benchmark. The decider must either accept these as a small
-Gate Zero seed or add broader redistributable born-digital PDFs before freezing.
+staged Gate Zero seed. Four real official PDFs have also been added to exercise harder document
+classes: forms, worksheets, long technical reports, tables, and dense requirements text. The
+decider must still accept or amend this corpus before freezing.
 
 | Candidate ID | Corpus file | SHA256 | Pages | Subsets | Product note |
 | --- | --- | --- | ---: | --- | --- |
@@ -40,6 +41,19 @@ Gate Zero seed or add broader redistributable born-digital PDFs before freezing.
 | rotation-90 | `benchmarks/gate-zero/corpus/rotation-90.pdf` | `1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d` | 1 | born_digital, rotation | Rotation seed |
 | hyphenated-line-break | `benchmarks/gate-zero/corpus/hyphenated-line-break.pdf` | `7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb` | 1 | born_digital, hyphenation, fonts | Hyphenation/font quirk seed |
 | ligature-fi-embedded-font | `benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf` | `7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e` | 1 | born_digital, fonts, ligatures | Embedded-font ligature seed |
+| irs-form-1040-2025 | `benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf` | `3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982` | 2 | born_digital, forms, tables, real_world | Dense government form with boxes, line items, labels, and two-page form layout |
+| cfpb-home-loan-toolkit | `benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf` | `eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9` | 28 | born_digital, guide, worksheets, tables, real_world | Guide-style layout with worksheets, icons, bullets, sidebars, and table-like forms |
+| nist-sp-800-53r5 | `benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf` | `fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6` | 492 | born_digital, technical_report, long_document, tables, real_world | Large technical control catalog with dense controls, appendices, references, and table-like structure |
+| nist-sp-800-63b | `benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf` | `ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e` | 80 | born_digital, technical_report, tables, real_world | Technical guideline with structured requirements, tables, and references |
+
+## Redistribution Notes
+
+| Corpus file | Source | Redistribution note |
+| --- | --- | --- |
+| `irs-form-1040-2025.pdf` | `https://www.irs.gov/pub/irs-pdf/f1040.pdf` | Official Treasury/IRS form; treated as a U.S. federal government work for benchmark redistribution unless third-party material is separately marked |
+| `cfpb-home-loan-toolkit.pdf` | `https://files.consumerfinance.gov/f/201503_cfpb_your-home-loan-toolkit-web.pdf` | Official Consumer Financial Protection Bureau guide; treated as a U.S. federal government work for benchmark redistribution unless third-party material is separately marked |
+| `nist-sp-800-53r5.pdf` | `https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-53r5.pdf` | The NIST PDF states it is not subject to copyright in the United States and that attribution is appreciated |
+| `nist-sp-800-63b.pdf` | `https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-63b.pdf` | Official NIST publication from the NVL Publications endpoint; public-domain-compatible federal technical publication unless third-party material is separately marked |
 
 ## Hardware Evidence Recorded
 
