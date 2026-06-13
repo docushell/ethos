@@ -7,6 +7,9 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+use std::cmp::Ordering;
+use std::collections::BTreeSet;
+
 use ethos_core::error::EthosError;
 use ethos_core::geom::QRect;
 use ethos_core::ids::table_id;
@@ -40,7 +43,9 @@ impl Default for TableCandidateConfig {
 ///
 /// This function is deterministic for a fixed `(page_id, spans, first_table_ordinal,
 /// config)` tuple. It sorts by quantized geometry and span id, never by caller input
-/// order. If the spans do not form a complete regular grid, it returns an empty vector.
+/// order. Surrounding prose is allowed; the emitted candidate is the highest-scoring
+/// contiguous row sub-grid. If no spans form a complete regular sub-grid, it returns
+/// an empty vector.
 pub fn detect_regular_grid_candidates(
     page_id: &str,
     spans: &[Span],
@@ -68,34 +73,11 @@ pub fn detect_regular_grid_candidates(
         return Ok(Vec::new());
     }
 
-    let columns = group_columns(&rows);
-    if columns.len() < config.min_cols {
-        return Ok(Vec::new());
-    }
-
-    let Some(cells) = build_cells(&rows, &columns) else {
-        return Ok(Vec::new());
-    };
-
-    let Some(bbox) = cells.iter().map(|cell| cell.bbox).reduce(union_rect) else {
-        return Ok(Vec::new());
-    };
-
-    let table = Table {
-        id: table_id(first_table_ordinal)?,
-        page_refs: vec![page_id.to_string()],
-        bbox,
-        n_rows: rows.len() as u32,
-        n_cols: columns.len() as u32,
-        header_rows: config.header_rows.min(rows.len() as u32),
-        header_cols: 0,
-        cells,
-        confidence: Some(config.confidence),
-        warning_refs: Vec::new(),
-        exports: None,
-    };
-
-    Ok(vec![table])
+    Ok(
+        best_contiguous_grid(page_id, &rows, first_table_ordinal, config)?
+            .into_iter()
+            .collect(),
+    )
 }
 
 /// Detect regular-grid table candidates across every page in a canonical document.
@@ -171,9 +153,24 @@ struct Row<'a> {
     center_y: i64,
 }
 
+#[derive(Clone)]
 struct Column {
     bbox: QRect,
     center_x: i64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+struct CandidateScore {
+    cells: usize,
+    rows: usize,
+    cols: usize,
+    included_spans: usize,
+}
+
+struct Candidate {
+    table: Table,
+    score: CandidateScore,
+    start_row: usize,
 }
 
 fn validate_config(config: &TableCandidateConfig) -> Result<(), EthosError> {
@@ -240,15 +237,121 @@ fn group_columns(rows: &[Row<'_>]) -> Vec<Column> {
     columns
 }
 
-fn build_cells(rows: &[Row<'_>], columns: &[Column]) -> Option<Vec<Cell>> {
+fn best_contiguous_grid(
+    page_id: &str,
+    rows: &[Row<'_>],
+    first_table_ordinal: u32,
+    config: &TableCandidateConfig,
+) -> Result<Option<Table>, EthosError> {
+    let mut best: Option<Candidate> = None;
+
+    for start in 0..rows.len() {
+        for end in (start + config.min_rows)..=rows.len() {
+            let window = &rows[start..end];
+            let Some(candidate) =
+                build_candidate(page_id, window, start, first_table_ordinal, config)?
+            else {
+                continue;
+            };
+            let replace = best
+                .as_ref()
+                .is_none_or(|existing| compare_candidate(&candidate, existing).is_gt());
+            if replace {
+                best = Some(candidate);
+            }
+        }
+    }
+
+    Ok(best.map(|candidate| candidate.table))
+}
+
+fn build_candidate(
+    page_id: &str,
+    rows: &[Row<'_>],
+    start_row: usize,
+    table_ordinal: u32,
+    config: &TableCandidateConfig,
+) -> Result<Option<Candidate>, EthosError> {
+    let all_columns = group_columns(rows);
+    let columns = common_columns(rows, &all_columns);
+    if columns.len() < config.min_cols {
+        return Ok(None);
+    }
+
+    let Some((cells, included_spans)) = build_cells(rows, &columns) else {
+        return Ok(None);
+    };
+    let Some(bbox) = cells.iter().map(|cell| cell.bbox).reduce(union_rect) else {
+        return Ok(None);
+    };
+    let table = Table {
+        id: table_id(table_ordinal)?,
+        page_refs: vec![page_id.to_string()],
+        bbox,
+        n_rows: rows.len() as u32,
+        n_cols: columns.len() as u32,
+        header_rows: config.header_rows.min(rows.len() as u32),
+        header_cols: 0,
+        cells,
+        confidence: Some(config.confidence),
+        warning_refs: Vec::new(),
+        exports: None,
+    };
+    Ok(Some(Candidate {
+        table,
+        score: CandidateScore {
+            cells: rows.len() * columns.len(),
+            rows: rows.len(),
+            cols: columns.len(),
+            included_spans,
+        },
+        start_row,
+    }))
+}
+
+fn compare_candidate(a: &Candidate, b: &Candidate) -> Ordering {
+    a.score
+        .cmp(&b.score)
+        .then_with(|| b.start_row.cmp(&a.start_row))
+        .then_with(|| b.table.bbox.y0.cmp(&a.table.bbox.y0))
+        .then_with(|| b.table.bbox.x0.cmp(&a.table.bbox.x0))
+}
+
+fn common_columns(rows: &[Row<'_>], columns: &[Column]) -> Vec<Column> {
+    let mut common: Option<BTreeSet<usize>> = None;
+
+    for row in rows {
+        let mut present = BTreeSet::new();
+        for span_ref in &row.spans {
+            if let Some(index) = nearest_column(*span_ref, columns) {
+                present.insert(index);
+            }
+        }
+        common = Some(match common {
+            Some(existing) => existing.intersection(&present).copied().collect(),
+            None => present,
+        });
+    }
+
+    common
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|index| columns.get(index))
+        .cloned()
+        .collect()
+}
+
+fn build_cells(rows: &[Row<'_>], columns: &[Column]) -> Option<(Vec<Cell>, usize)> {
     let mut cells = Vec::with_capacity(rows.len() * columns.len());
+    let mut included_spans = 0usize;
 
     for (row_index, row) in rows.iter().enumerate() {
         let mut buckets: Vec<Vec<SpanRef<'_>>> = vec![Vec::new(); columns.len()];
 
         for span_ref in &row.spans {
-            let col_index = nearest_column(*span_ref, columns)?;
-            buckets[col_index].push(*span_ref);
+            if let Some(col_index) = column_interval(*span_ref, columns) {
+                buckets[col_index].push(*span_ref);
+            }
         }
 
         if buckets.iter().any(Vec::is_empty) {
@@ -281,10 +384,11 @@ fn build_cells(rows: &[Row<'_>], columns: &[Column]) -> Option<Vec<Cell>> {
                 span_refs,
                 element_refs: Vec::new(),
             });
+            included_spans += bucket.len();
         }
     }
 
-    Some(cells)
+    Some((cells, included_spans))
 }
 
 fn nearest_column(span_ref: SpanRef<'_>, columns: &[Column]) -> Option<usize> {
@@ -294,6 +398,26 @@ fn nearest_column(span_ref: SpanRef<'_>, columns: &[Column]) -> Option<usize> {
         .min_by_key(|(_, column)| {
             (span_ref.span.bbox.x0 - column.bbox.x0).abs()
                 + (span_ref.center_x - column.center_x).abs()
+        })
+        .map(|(index, _)| index)
+}
+
+fn column_interval(span_ref: SpanRef<'_>, columns: &[Column]) -> Option<usize> {
+    columns
+        .iter()
+        .enumerate()
+        .find(|(index, column)| {
+            let left = if *index == 0 {
+                i64::MIN
+            } else {
+                column.bbox.x0
+            };
+            let right = if *index + 1 == columns.len() {
+                i64::MAX
+            } else {
+                columns[*index + 1].bbox.x0
+            };
+            span_ref.center_x >= left && span_ref.center_x < right
         })
         .map(|(index, _)| index)
 }
@@ -516,6 +640,66 @@ mod tests {
         assert_eq!(
             render_markdown(&table),
             "| Name | Score | Year |\n| --- | --- | --- |\n| Alpha | 10\\|11 | 2024 |\n| Beta | 12 | 2025 |\n"
+        );
+    }
+
+    #[test]
+    fn detects_best_subgrid_when_page_has_surrounding_prose() {
+        let spans = vec![
+            span("s000010", 0, 0, 700, 400, "Intro"),
+            span("s000011", 900, 0, 1_800, 400, "paragraph"),
+            span("s000001", 0, 1_000, 600, 1_400, "Name"),
+            span("s000002", 1_000, 1_000, 1_600, 1_400, "Score"),
+            span("s000003", 2_000, 1_000, 2_600, 1_400, "Year"),
+            span("s000004", 0, 2_000, 600, 2_400, "Alpha"),
+            span("s000005", 1_000, 2_000, 1_600, 2_400, "10"),
+            span("s000006", 2_000, 2_000, 2_600, 2_400, "2024"),
+            span("s000007", 0, 3_000, 600, 3_400, "Beta"),
+            span("s000008", 1_000, 3_000, 1_600, 3_400, "12"),
+            span("s000009", 2_000, 3_000, 2_600, 3_400, "2025"),
+            span("s000012", 0, 5_000, 700, 5_400, "Outro"),
+        ];
+
+        let tables =
+            detect_regular_grid_candidates("p0001", &spans, 1, &TableCandidateConfig::default())
+                .unwrap();
+
+        assert_eq!(tables.len(), 1);
+        assert_eq!(tables[0].n_rows, 3);
+        assert_eq!(tables[0].n_cols, 3);
+        assert_eq!(tables[0].cells[0].text, "Name");
+        assert_eq!(tables[0].cells[8].text, "2025");
+    }
+
+    #[test]
+    fn merges_extra_spans_inside_column_intervals() {
+        let spans = vec![
+            span("s000001", 0, 0, 600, 400, "No."),
+            span("s000002", 1_000, 0, 1_600, 400, "Party"),
+            span("s000003", 5_000, 0, 5_600, 400, "Votes"),
+            span("s000004", 0, 1_000, 600, 1_400, "1"),
+            span("s000005", 1_000, 1_000, 1_600, 1_400, "Khmer"),
+            span("s000006", 2_000, 1_000, 2_600, 1_400, "United"),
+            span("s000007", 3_000, 1_000, 3_600, 1_400, "Party"),
+            span("s000008", 5_000, 1_000, 5_600, 1_400, "498"),
+            span("s000009", 0, 2_000, 600, 2_400, "2"),
+            span("s000010", 1_000, 2_000, 1_800, 2_400, "Grassroots"),
+            span("s000011", 2_200, 2_000, 3_000, 2_400, "Democracy"),
+            span("s000012", 3_400, 2_000, 4_000, 2_400, "Party"),
+            span("s000013", 5_000, 2_000, 5_600, 2_400, "435"),
+        ];
+
+        let tables =
+            detect_regular_grid_candidates("p0001", &spans, 1, &TableCandidateConfig::default())
+                .unwrap();
+
+        assert_eq!(tables.len(), 1);
+        assert_eq!(tables[0].n_rows, 3);
+        assert_eq!(tables[0].n_cols, 3);
+        assert_eq!(tables[0].cells[4].text, "Khmer United Party");
+        assert_eq!(
+            tables[0].cells[7].span_refs,
+            vec!["s000010", "s000011", "s000012"]
         );
     }
 
