@@ -16,6 +16,9 @@ GATE_ZERO_BENCHMARK_COMMIT ?=
 GATE_ZERO_G2_RESULT_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/$(GATE_ZERO_PLATFORM)/g2.json
 GATE_ZERO_G3_RESULT_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/g3.json
 GATE_ZERO_G3_PLATFORM_RESULTS ?=
+GATE_ZERO_GEOMETRY_LEFT_DIR ?=
+GATE_ZERO_GEOMETRY_RIGHT_DIR ?=
+GATE_ZERO_GEOMETRY_RESULT_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/geometry-stability-experiment.json
 GATE_ZERO_ETHOS_FOOTPRINT ?=
 GATE_ZERO_PDFIUM_LIBRARY_PATH ?=
 GATE_ZERO_PDFIUM_ARTIFACT ?=
@@ -34,7 +37,7 @@ PYMUPDF4LLM_ARTIFACT ?=
 PYMUPDF4LLM_INSTALL_PATH ?=
 ITERATIONS ?= 3
 
-.PHONY: bench fixtures gate-zero-evidence gate-zero-g2 gate-zero-g3 gate-zero-readiness gate-zero-results smoke test
+.PHONY: bench fixtures gate-zero-evidence gate-zero-g2 gate-zero-g3 gate-zero-geometry-experiment gate-zero-readiness gate-zero-results smoke test
 
 $(ETHOS_BIN):
 	cd $(ROOT) && cargo build --locked --release -p ethos-cli
@@ -95,6 +98,13 @@ gate-zero-g3:
 		$(if $(GATE_ZERO_G3_PLATFORM_RESULTS),$(foreach item,$(GATE_ZERO_G3_PLATFORM_RESULTS),--platform-result $(item)),) \
 		--out $(GATE_ZERO_G3_RESULT_REPORT)
 
+gate-zero-geometry-experiment:
+	mkdir -p $(dir $(GATE_ZERO_GEOMETRY_RESULT_REPORT))
+	python3 experiment_gate_zero_geometry_stability.py \
+		--left-dir $(GATE_ZERO_GEOMETRY_LEFT_DIR) \
+		--right-dir $(GATE_ZERO_GEOMETRY_RIGHT_DIR) \
+		--out $(GATE_ZERO_GEOMETRY_RESULT_REPORT)
+
 gate-zero-evidence:
 	python3 build_gate_zero_evidence.py \
 		--repo-root $(ROOT) \
@@ -116,10 +126,12 @@ smoke:
 	python3 run_gate_zero_g2.py --help >/dev/null
 	python3 run_gate_zero_g3.py --help >/dev/null
 	python3 diff_gate_zero_docs.py --help >/dev/null
+	python3 experiment_gate_zero_geometry_stability.py --help >/dev/null
 	python3 build_gate_zero_evidence.py --help >/dev/null
 
 test:
 	python3 test_diff_gate_zero_docs.py
+	python3 test_experiment_gate_zero_geometry_stability.py
 	python3 test_run_gate_zero.py
 	python3 test_run_gate_zero_g2.py
 	python3 test_run_gate_zero_g3.py

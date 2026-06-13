@@ -128,6 +128,25 @@ only when comparing explicitly staged G1 files. The G3 result fails if any requi
 has a different canonical payload hash, document fingerprint, warning ID list, or corpus binding
 across required platforms. It blocks rather than infers if a required platform result is missing.
 
+## Gate Zero Geometry Stability Experiments
+
+`experiment_gate_zero_geometry_stability.py` is a diagnostic-only helper for investigating G3
+geometry divergences from raw Ethos document JSON directories. It applies candidate bbox
+canonicalization transforms in memory and reports whether those candidates would resolve raw JSON
+differences after derived hashes are removed.
+
+Example:
+
+```sh
+make -C benchmarks/harness gate-zero-geometry-experiment \
+  GATE_ZERO_GEOMETRY_LEFT_DIR=/tmp/ethos-g3-raw/macos-arm64 \
+  GATE_ZERO_GEOMETRY_RIGHT_DIR=/tmp/ethos-g3-raw/linux-x64
+```
+
+The output is not a Gate Zero result and must not be used as a public benchmark claim. A resolved
+candidate only means the tested transform explains the staged raw-document divergence; G3 still
+requires a real canonical output and fingerprint policy change before it can pass.
+
 ## OpenDataLoader PDF Adapter
 
 The Gate Zero runner can execute the pinned OpenDataLoader PDF wheel recorded in
