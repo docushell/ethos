@@ -34,6 +34,7 @@ use ethos_verify::CitationInput;
 /// Usage-error exit code (also what clap uses).
 const EXIT_USAGE: u8 = 2;
 const INTERNAL_GEOMETRY_PROBE_ENV: &str = "ETHOS_INTERNAL_GEOMETRY_PROBE";
+const INTERNAL_TABLE_CANDIDATE_PROBE_ENV: &str = "ETHOS_INTERNAL_TABLE_CANDIDATE_PROBE";
 
 #[derive(Parser)]
 #[command(
@@ -69,6 +70,9 @@ enum Command {
     /// Internal PDFium geometry source probe. Not a public CLI surface.
     #[command(name = "__pdfium-geometry-probe", hide = true)]
     PdfiumGeometryProbe(PdfiumGeometryProbeArgs),
+    /// Internal deterministic table-candidate probe. Not a public CLI surface.
+    #[command(name = "__table-candidate-probe", hide = true)]
+    TableCandidateProbe(TableCandidateProbeArgs),
 }
 
 #[derive(Subcommand)]
@@ -127,6 +131,15 @@ struct PdfiumGeometryProbeArgs {
     /// Page selection, e.g. `1-5,9` (1-based, inclusive; merged canonically).
     #[arg(long)]
     pages: Option<String>,
+}
+
+#[derive(Args)]
+struct TableCandidateProbeArgs {
+    /// Canonical Ethos document JSON.
+    input: PathBuf,
+    /// Output path for the probe report (default: stdout).
+    #[arg(long)]
+    out: Option<PathBuf>,
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -261,6 +274,7 @@ fn run(cli: Cli) -> Result<(), Failure> {
         Command::Fingerprint(args) => fingerprint(args),
         Command::PdfiumWorker(args) => pdfium_worker(args),
         Command::PdfiumGeometryProbe(args) => pdfium_geometry_probe(args),
+        Command::TableCandidateProbe(args) => table_candidate_probe(args),
     }
 }
 
@@ -386,6 +400,17 @@ fn pdfium_geometry_probe(args: PdfiumGeometryProbeArgs) -> Result<(), Failure> {
         ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
     bytes.push(b'\n');
     write_output(None, &bytes)
+}
+
+fn table_candidate_probe(args: TableCandidateProbeArgs) -> Result<(), Failure> {
+    if std::env::var(INTERNAL_TABLE_CANDIDATE_PROBE_ENV).as_deref() != Ok("1") {
+        return Err(Failure::Usage(format!(
+            "__table-candidate-probe requires {INTERNAL_TABLE_CANDIDATE_PROBE_ENV}=1"
+        )));
+    }
+    let doc = read_document(&args.input)?;
+    let bytes = table_candidate_probe_report_bytes(&doc)?;
+    write_output(args.out, &bytes)
 }
 
 fn classify_worker_extract_error(error: EthosError) -> Failure {
@@ -1127,6 +1152,34 @@ fn render_markdown(doc: &Document) -> String {
     render_text(doc)
 }
 
+fn table_candidate_probe_report_bytes(doc: &Document) -> Result<Vec<u8>, EthosError> {
+    let tables = ethos_tables::detect_document_regular_grid_candidates(
+        doc,
+        &ethos_tables::TableCandidateConfig::default(),
+    )?;
+    let table_reports: Vec<serde_json::Value> = tables
+        .iter()
+        .map(|table| {
+            serde_json::json!({
+                "table": table,
+                "markdown": ethos_tables::render_markdown(table),
+            })
+        })
+        .collect();
+    let value = serde_json::json!({
+        "schema_version": ethos_core::SCHEMA_VERSION,
+        "document_fingerprint": doc.fingerprint,
+        "summary": {
+            "tables_total": table_reports.len(),
+        },
+        "tables": table_reports,
+    });
+    let mut bytes =
+        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1181,6 +1234,30 @@ mod tests {
             element_ref: element_ref.map(str::to_string),
             span_ref: span_ref.map(str::to_string),
             region_ref: None,
+        }
+    }
+
+    fn test_backend_manifest() -> BackendManifest {
+        BackendManifest {
+            id: "pdfium".to_string(),
+            phase: 1,
+            version: "test".to_string(),
+            platform_sha256: "0".repeat(64),
+        }
+    }
+
+    fn grid_span(id: &str, x0: i64, y0: i64, x1: i64, y1: i64, text: &str) -> Span {
+        Span {
+            id: id.to_string(),
+            page: "p0001".to_string(),
+            bbox: QRect::new(x0, y0, x1, y1).unwrap(),
+            origin_locator: None,
+            text: text.to_string(),
+            font_id: None,
+            font_size_q: Some(1200),
+            char_start: None,
+            char_end: None,
+            warning_refs: vec![],
         }
     }
 
@@ -1251,12 +1328,7 @@ mod tests {
             b"%PDF-1.7\n",
             &ParseConfig::default(),
             extraction,
-            BackendManifest {
-                id: "pdfium".to_string(),
-                phase: 1,
-                version: "test".to_string(),
-                platform_sha256: "0".repeat(64),
-            },
+            test_backend_manifest(),
             true,
         )
         .unwrap();
@@ -1272,6 +1344,58 @@ mod tests {
         assert_eq!(doc.payload.spans[1].char_end, Some(11));
         assert_eq!(doc.payload.spans[2].char_start, Some(12));
         assert_eq!(doc.payload.spans[2].char_end, Some(17));
+    }
+
+    #[test]
+    fn table_candidate_probe_report_detects_regular_grid_without_mutating_document() {
+        let extraction = Extraction {
+            pages: vec![Page {
+                id: "p0001".to_string(),
+                index: 1,
+                width: 5000,
+                height: 5000,
+                rotation: 0,
+            }],
+            spans: vec![
+                grid_span("s000006", 1_000, 2_000, 1_600, 2_400, "12"),
+                grid_span("s000001", 0, 0, 600, 400, "Name"),
+                grid_span("s000004", 1_000, 1_000, 1_600, 1_400, "10"),
+                grid_span("s000003", 0, 1_000, 600, 1_400, "Alpha"),
+                grid_span("s000002", 1_000, 0, 1_600, 400, "Score"),
+                grid_span("s000005", 0, 2_000, 600, 2_400, "Beta"),
+            ],
+            regions: vec![],
+            warnings: vec![],
+        };
+        let doc = assemble_document(
+            b"%PDF-1.7\n",
+            &ParseConfig::default(),
+            extraction,
+            test_backend_manifest(),
+            false,
+        )
+        .unwrap();
+
+        assert!(doc.payload.tables.is_empty());
+
+        let bytes = table_candidate_probe_report_bytes(&doc).unwrap();
+        let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+
+        assert_eq!(value["schema_version"], ethos_core::SCHEMA_VERSION);
+        assert_eq!(value["document_fingerprint"], doc.fingerprint);
+        assert_eq!(value["summary"]["tables_total"], 1);
+        assert_eq!(value["tables"][0]["table"]["id"], "t0001");
+        assert_eq!(value["tables"][0]["table"]["n_rows"], 3);
+        assert_eq!(value["tables"][0]["table"]["n_cols"], 2);
+        assert_eq!(
+            value["tables"][0]["table"]["cells"][0]["span_refs"],
+            serde_json::json!(["s000001"])
+        );
+        assert_eq!(
+            value["tables"][0]["markdown"],
+            "| Name | Score |\n| --- | --- |\n| Alpha | 10 |\n| Beta | 12 |\n"
+        );
+        assert!(doc.payload.tables.is_empty());
     }
 
     #[test]

@@ -200,6 +200,7 @@ dependencies = [
  "ethos-grounding-opendataloader-json",
  "ethos-layout",
  "ethos-pdf",
+ "ethos-tables",
  "ethos-verify",
  "serde_json",
 ]
@@ -238,6 +239,13 @@ dependencies = [
  "ethos-core",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "ethos-tables"
+version = "0.1.0"
+dependencies = [
+ "ethos-core",
 ]
 
 [[package]]

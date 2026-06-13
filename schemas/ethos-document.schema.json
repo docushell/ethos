@@ -201,6 +201,7 @@
               "col_span": { "type": "integer", "minimum": 1 },
               "bbox": { "$ref": "#/$defs/bbox" },
               "text": { "type": "string" },
+              "span_refs": { "type": "array", "items": { "$ref": "#/$defs/span_id" } },
               "element_refs": { "type": "array", "items": { "$ref": "#/$defs/element_id" } }
             }
           }

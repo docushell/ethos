@@ -8,6 +8,7 @@ members = [
     "crates/ethos-core",
     "crates/ethos-pdf",
     "crates/ethos-layout",
+    "crates/ethos-tables",
     "crates/ethos-verify",
     "crates/ethos-cli",
     "adapters/grounding/opendataloader-json",
@@ -36,6 +37,7 @@ proptest = "1"
 # internal
 ethos-core = { path = "crates/ethos-core", version = "0.1.0", default-features = false }
 ethos-layout = { path = "crates/ethos-layout", version = "0.1.0" }
+ethos-tables = { path = "crates/ethos-tables", version = "0.1.0" }
 
 [profile.release]
 # Footprint discipline for the G2 gate (≤ 30 MB installed): strip + LTO + size-lean codegen.

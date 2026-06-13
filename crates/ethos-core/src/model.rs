@@ -269,6 +269,9 @@ pub struct Cell {
     pub bbox: QRect,
     /// Cell text.
     pub text: String,
+    /// Contributing spans.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub span_refs: Vec<String>,
     /// Contributing elements.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub element_refs: Vec<String>,
