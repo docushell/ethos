@@ -1,0 +1,38 @@
+{
+  "artifacts": [
+    {
+      "path": "SUMMARY.md",
+      "sha256": "7bd885cff97c92b436523af6b49f0294add3df9f2f20328bf38ea1ea6b5767ad"
+    },
+    {
+      "path": "host-attestation.json",
+      "sha256": "02b8ae0b893cfeeedf0080be40813ac95f155f6eabe995924863bea8c94f76a4"
+    },
+    {
+      "path": "raw/g3-cross-platform-20260613T161449Z.json",
+      "sha256": "07d134d9ebcf5cd01f821d3d7e556bcb467f43435835429e1478bafc95bcc058"
+    },
+    {
+      "path": "reproduction-command.txt",
+      "sha256": "e1627414fc7df1201e9ccc4039bccbc7716e2aa5b39d5bbd13b9484287d9436b"
+    },
+    {
+      "path": "reproduction-env.json",
+      "sha256": "8a523651762742dcabd04a62c4333a422adf8d581c21e392f17e80dc72c78c8c"
+    }
+  ],
+  "benchmark_commit": "cfbc0a89512a82cccadc2fe435d8d80e54214898",
+  "created_at": "2026-06-13T16:14:49Z",
+  "definition_sha256": "7c85a0c60a0e0c71de3860a75c6f545cabaa5c6a23fa88bd3aff602e11d18e65",
+  "edgeparse_determinism_failures": [],
+  "ethos_status": "pass",
+  "gate": "g3",
+  "platform": "cross-platform",
+  "reproduction_env_blockers": [],
+  "reproduction_env_status": "complete",
+  "schema_version": "ethos-gate-zero-evidence-v1",
+  "source_result": "benchmarks/results/gate-zero/g3.json",
+  "source_result_canonical_sha256": "4e4c7cc941c0ebbf0d7e78a322e1c7b2c6a2d0f26b04531655259b08b9a6f266",
+  "source_result_sha256": "07d134d9ebcf5cd01f821d3d7e556bcb467f43435835429e1478bafc95bcc058",
+  "source_result_status": "pass"
+}
