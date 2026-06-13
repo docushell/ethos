@@ -270,7 +270,10 @@ fn best_contiguous_grid(
     }
 
     match best {
-        Some(candidate) => Ok(Some(expand_candidate(rows, candidate)?)),
+        Some(mut candidate) => {
+            candidate.columns = refine_sparse_columns(rows, &candidate, config);
+            Ok(Some(expand_candidate(rows, candidate)?))
+        }
         None => Ok(None),
     }
 }
@@ -328,6 +331,99 @@ fn compare_candidate(a: &Candidate, b: &Candidate) -> Ordering {
         .then_with(|| b.start_row.cmp(&a.start_row))
         .then_with(|| b.table.bbox.y0.cmp(&a.table.bbox.y0))
         .then_with(|| b.table.bbox.x0.cmp(&a.table.bbox.x0))
+}
+
+fn refine_sparse_columns(
+    rows: &[Row<'_>],
+    candidate: &Candidate,
+    config: &TableCandidateConfig,
+) -> Vec<Column> {
+    let gap_threshold = expansion_gap_threshold(&rows[candidate.start_row..candidate.end_row]);
+    let mut scan_start = candidate.start_row;
+    let mut scan_end = candidate.end_row;
+
+    while scan_start > 0 && row_gap(&rows[scan_start - 1], &rows[scan_start]) <= gap_threshold {
+        scan_start -= 1;
+    }
+
+    while scan_end < rows.len() && row_gap(&rows[scan_end - 1], &rows[scan_end]) <= gap_threshold {
+        scan_end += 1;
+    }
+
+    let scan_rows: Vec<&Row<'_>> = rows[scan_start..scan_end]
+        .iter()
+        .filter(|row| row.spans.len() >= candidate.columns.len().min(3))
+        .collect();
+    if scan_rows.is_empty() {
+        return candidate.columns.clone();
+    }
+
+    let mut supported = group_supported_columns(&scan_rows, config.min_rows);
+    for seed_column in &candidate.columns {
+        if !supported
+            .iter()
+            .any(|column| column.bbox.x0 == seed_column.bbox.x0)
+        {
+            supported.push(seed_column.clone());
+        }
+    }
+    supported.sort_by(column_order);
+
+    let added_columns = supported.len().saturating_sub(candidate.columns.len());
+    // Sparse refinement is for latent spreadsheet-like columns, not for splitting
+    // multi-word text columns into many repeated word positions.
+    if supported.len() > candidate.columns.len() && added_columns <= 2 {
+        supported
+    } else {
+        candidate.columns.clone()
+    }
+}
+
+fn group_supported_columns(rows: &[&Row<'_>], min_row_support: usize) -> Vec<Column> {
+    struct SupportedColumn {
+        column: Column,
+        row_indices: BTreeSet<usize>,
+    }
+
+    let mut spans: Vec<(usize, SpanRef<'_>)> = rows
+        .iter()
+        .enumerate()
+        .flat_map(|(row_index, row)| {
+            row.spans
+                .iter()
+                .copied()
+                .map(move |span_ref| (row_index, span_ref))
+        })
+        .collect();
+    spans.sort_by(|a, b| span_column_order(&a.1, &b.1));
+    let span_refs: Vec<SpanRef<'_>> = spans.iter().map(|(_, span_ref)| *span_ref).collect();
+    let tolerance = column_tolerance(&span_refs);
+    let mut columns: Vec<SupportedColumn> = Vec::new();
+
+    for (row_index, span_ref) in spans {
+        if let Some(column) = columns
+            .iter_mut()
+            .find(|column| same_column(&column.column, span_ref, tolerance))
+        {
+            column.column.bbox = union_rect(column.column.bbox, span_ref.span.bbox);
+            column.column.center_x = center_x(column.column.bbox);
+            column.row_indices.insert(row_index);
+        } else {
+            columns.push(SupportedColumn {
+                column: Column {
+                    bbox: span_ref.span.bbox,
+                    center_x: span_ref.center_x,
+                },
+                row_indices: BTreeSet::from([row_index]),
+            });
+        }
+    }
+
+    columns
+        .into_iter()
+        .filter(|column| column.row_indices.len() >= min_row_support)
+        .map(|column| column.column)
+        .collect()
 }
 
 fn expand_candidate(rows: &[Row<'_>], candidate: Candidate) -> Result<Table, EthosError> {
@@ -988,6 +1084,66 @@ mod tests {
             vec!["s000010", "s000013", "s000014"]
         );
         assert_eq!(table.cells[13].text, "Delta");
+    }
+
+    #[test]
+    fn expands_sparse_internal_columns_from_supported_rows() {
+        let spans = vec![
+            span("s000001", 1_000, 0, 1_600, 400, "A"),
+            span("s000002", 2_000, 0, 2_600, 400, "B"),
+            span("s000003", 3_000, 0, 3_600, 400, "C"),
+            span("s000004", 4_000, 0, 4_600, 400, "D"),
+            span("s000005", 5_000, 0, 5_600, 400, "E"),
+            span("s000006", 0, 1_000, 600, 1_400, "1"),
+            span("s000007", 1_000, 1_000, 1_600, 1_400, "time"),
+            span("s000008", 2_000, 1_000, 2_600, 1_400, "observed"),
+            span("s000009", 3_000, 1_000, 3_600, 1_400, "Forecast"),
+            span("s000010", 4_000, 1_000, 4_600, 1_400, "Lower"),
+            span("s000011", 5_000, 1_000, 5_600, 1_400, "Upper"),
+            span("s000012", 0, 2_000, 600, 2_400, "2"),
+            span("s000013", 1_000, 2_000, 1_600, 2_400, "0"),
+            span("s000014", 2_000, 2_000, 2_600, 2_400, "13"),
+            span("s000015", 0, 3_000, 600, 3_400, "3"),
+            span("s000016", 1_000, 3_000, 1_600, 3_400, "1"),
+            span("s000017", 2_000, 3_000, 2_600, 3_400, "12"),
+            span("s000018", 0, 4_000, 600, 4_400, "4"),
+            span("s000019", 1_000, 4_000, 1_600, 4_400, "2"),
+            span("s000020", 2_000, 4_000, 2_600, 4_400, "13.5"),
+            span("s000021", 0, 5_000, 600, 5_400, "5"),
+            span("s000022", 1_000, 5_000, 1_600, 5_400, "3"),
+            span("s000023", 3_000, 5_000, 3_600, 5_400, "15.2"),
+            span("s000024", 4_000, 5_000, 4_600, 5_400, "14.0"),
+            span("s000025", 5_000, 5_000, 5_600, 5_400, "16.4"),
+            span("s000026", 0, 6_000, 600, 6_400, "6"),
+            span("s000027", 1_000, 6_000, 1_600, 6_400, "4"),
+            span("s000028", 3_000, 6_000, 3_600, 6_400, "16.8"),
+            span("s000029", 4_000, 6_000, 4_600, 6_400, "15.1"),
+            span("s000030", 5_000, 6_000, 5_600, 6_400, "18.5"),
+            span("s000031", 0, 7_000, 600, 7_400, "7"),
+            span("s000032", 1_000, 7_000, 1_600, 7_400, "5"),
+            span("s000033", 3_000, 7_000, 3_600, 7_400, "17.9"),
+            span("s000034", 4_000, 7_000, 4_600, 7_400, "16.2"),
+            span("s000035", 5_000, 7_000, 5_600, 7_400, "19.6"),
+        ];
+
+        let tables =
+            detect_regular_grid_candidates("p0001", &spans, 1, &TableCandidateConfig::default())
+                .unwrap();
+
+        assert_eq!(tables.len(), 1);
+        let table = &tables[0];
+        assert_eq!(table.n_rows, 8);
+        assert_eq!(table.n_cols, 6);
+        assert_eq!(table.cells[0].text, "");
+        assert_eq!(table.cells[1].text, "A");
+        assert_eq!(table.cells[2].text, "B");
+        assert_eq!(table.cells[3].text, "C");
+        assert_eq!(table.cells[4].text, "D");
+        assert_eq!(table.cells[5].text, "E");
+        assert_eq!(table.cells[14].text, "13");
+        assert_eq!(table.cells[32].text, "");
+        assert!(table.cells[32].span_refs.is_empty());
+        assert_eq!(table.cells[33].text, "15.2");
     }
 
     #[test]
