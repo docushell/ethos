@@ -162,15 +162,22 @@ struct Column {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct CandidateScore {
     cells: usize,
-    rows: usize,
     cols: usize,
+    rows: usize,
     included_spans: usize,
 }
 
 struct Candidate {
     table: Table,
+    columns: Vec<Column>,
     score: CandidateScore,
     start_row: usize,
+    end_row: usize,
+}
+
+struct ExpandedRow<'row, 'span> {
+    row: &'row Row<'span>,
+    continuation_spans: Vec<SpanRef<'span>>,
 }
 
 fn validate_config(config: &TableCandidateConfig) -> Result<(), EthosError> {
@@ -262,7 +269,10 @@ fn best_contiguous_grid(
         }
     }
 
-    Ok(best.map(|candidate| candidate.table))
+    match best {
+        Some(candidate) => Ok(Some(expand_candidate(rows, candidate)?)),
+        None => Ok(None),
+    }
 }
 
 fn build_candidate(
@@ -284,12 +294,13 @@ fn build_candidate(
     let Some(bbox) = cells.iter().map(|cell| cell.bbox).reduce(union_rect) else {
         return Ok(None);
     };
+    let col_count = columns.len();
     let table = Table {
         id: table_id(table_ordinal)?,
         page_refs: vec![page_id.to_string()],
         bbox,
         n_rows: rows.len() as u32,
-        n_cols: columns.len() as u32,
+        n_cols: col_count as u32,
         header_rows: config.header_rows.min(rows.len() as u32),
         header_cols: 0,
         cells,
@@ -299,13 +310,15 @@ fn build_candidate(
     };
     Ok(Some(Candidate {
         table,
+        columns,
         score: CandidateScore {
-            cells: rows.len() * columns.len(),
+            cells: rows.len() * col_count,
+            cols: col_count,
             rows: rows.len(),
-            cols: columns.len(),
             included_spans,
         },
         start_row,
+        end_row: start_row + rows.len(),
     }))
 }
 
@@ -315,6 +328,202 @@ fn compare_candidate(a: &Candidate, b: &Candidate) -> Ordering {
         .then_with(|| b.start_row.cmp(&a.start_row))
         .then_with(|| b.table.bbox.y0.cmp(&a.table.bbox.y0))
         .then_with(|| b.table.bbox.x0.cmp(&a.table.bbox.x0))
+}
+
+fn expand_candidate(rows: &[Row<'_>], candidate: Candidate) -> Result<Table, EthosError> {
+    let gap_threshold = expansion_gap_threshold(&rows[candidate.start_row..candidate.end_row]);
+    let mut physical_start = candidate.start_row;
+    let mut physical_end = candidate.end_row;
+    let mut expanded: Vec<ExpandedRow<'_, '_>> = rows[candidate.start_row..candidate.end_row]
+        .iter()
+        .map(|row| ExpandedRow {
+            row,
+            continuation_spans: Vec::new(),
+        })
+        .collect();
+
+    while physical_start > 0 {
+        let idx = physical_start - 1;
+        if row_gap(&rows[idx], &rows[physical_start]) > gap_threshold {
+            break;
+        }
+        if sparse_row_compatible(&rows[idx], &candidate.columns) {
+            expanded.insert(
+                0,
+                ExpandedRow {
+                    row: &rows[idx],
+                    continuation_spans: Vec::new(),
+                },
+            );
+            physical_start = idx;
+        } else {
+            break;
+        }
+    }
+
+    while physical_end < rows.len() {
+        if row_gap(&rows[physical_end - 1], &rows[physical_end]) > gap_threshold {
+            break;
+        }
+        if sparse_row_compatible(&rows[physical_end], &candidate.columns) {
+            expanded.push(ExpandedRow {
+                row: &rows[physical_end],
+                continuation_spans: Vec::new(),
+            });
+            physical_end += 1;
+        } else if continuation_row(&rows[physical_end], &candidate.columns) {
+            if let Some(previous) = expanded.last_mut() {
+                previous
+                    .continuation_spans
+                    .extend(rows[physical_end].spans.iter().copied());
+                physical_end += 1;
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+
+    build_table_from_expanded_rows(&candidate.table, &candidate.columns, &expanded)
+}
+
+fn expansion_gap_threshold(rows: &[Row<'_>]) -> i64 {
+    let mut gaps: Vec<i64> = rows
+        .windows(2)
+        .map(|pair| row_gap(&pair[0], &pair[1]).max(0))
+        .collect();
+    gaps.sort_unstable();
+    let median = gaps.get(gaps.len() / 2).copied().unwrap_or(0);
+    (median * 3).max(1_500)
+}
+
+fn row_gap(previous: &Row<'_>, current: &Row<'_>) -> i64 {
+    current.bbox.y0 - previous.bbox.y1
+}
+
+fn sparse_row_compatible(row: &Row<'_>, columns: &[Column]) -> bool {
+    let present = present_column_indices(row, columns);
+    if present.len() == columns.len() {
+        return true;
+    }
+    if present.len() < 2 {
+        return false;
+    }
+    let first = present.first().copied().unwrap_or(0);
+    let last = present.last().copied().unwrap_or(first);
+    last.saturating_sub(first) >= 2
+}
+
+fn continuation_row(row: &Row<'_>, columns: &[Column]) -> bool {
+    let present = present_column_indices(row, columns);
+    present.len() == 1 && present[0] > 0 && row.spans.len() <= 3
+}
+
+fn present_column_indices(row: &Row<'_>, columns: &[Column]) -> Vec<usize> {
+    let mut present = BTreeSet::new();
+    for span_ref in &row.spans {
+        if let Some(index) = column_interval(*span_ref, columns) {
+            present.insert(index);
+        }
+    }
+    present.into_iter().collect()
+}
+
+fn build_table_from_expanded_rows(
+    seed_table: &Table,
+    columns: &[Column],
+    rows: &[ExpandedRow<'_, '_>],
+) -> Result<Table, EthosError> {
+    let mut cells = Vec::with_capacity(rows.len() * columns.len());
+    let mut table_bbox: Option<QRect> = None;
+
+    for (row_index, row) in rows.iter().enumerate() {
+        let mut buckets: Vec<Vec<SpanRef<'_>>> = vec![Vec::new(); columns.len()];
+        let mut row_spans = row.row.spans.clone();
+        row_spans.extend(row.continuation_spans.iter().copied());
+        row_spans.sort_by(span_column_order);
+
+        for span_ref in row_spans {
+            if let Some(col_index) = column_interval(span_ref, columns) {
+                buckets[col_index].push(span_ref);
+            }
+        }
+
+        for (col_index, bucket) in buckets.into_iter().enumerate() {
+            let (bbox, text, span_refs) = if bucket.is_empty() {
+                (
+                    empty_cell_bbox(row.row.bbox, columns, col_index)?,
+                    String::new(),
+                    Vec::new(),
+                )
+            } else {
+                let bbox = bucket
+                    .iter()
+                    .map(|span_ref| span_ref.span.bbox)
+                    .reduce(union_rect)
+                    .expect("non-empty bucket has bbox");
+                table_bbox = Some(match table_bbox {
+                    Some(existing) => union_rect(existing, bbox),
+                    None => bbox,
+                });
+                let text = bucket
+                    .iter()
+                    .map(|span_ref| span_ref.span.text.as_str())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                let span_refs = bucket
+                    .iter()
+                    .map(|span_ref| span_ref.span.id.clone())
+                    .collect();
+                (bbox, text, span_refs)
+            };
+
+            cells.push(Cell {
+                row: row_index as u32,
+                col: col_index as u32,
+                row_span: 1,
+                col_span: 1,
+                bbox,
+                text,
+                span_refs,
+                element_refs: Vec::new(),
+            });
+        }
+    }
+
+    let bbox = table_bbox.unwrap_or(seed_table.bbox);
+    Ok(Table {
+        id: seed_table.id.clone(),
+        page_refs: seed_table.page_refs.clone(),
+        bbox,
+        n_rows: rows.len() as u32,
+        n_cols: columns.len() as u32,
+        header_rows: seed_table.header_rows.min(rows.len() as u32),
+        header_cols: seed_table.header_cols,
+        cells,
+        confidence: seed_table.confidence,
+        warning_refs: seed_table.warning_refs.clone(),
+        exports: seed_table.exports.clone(),
+    })
+}
+
+fn empty_cell_bbox(
+    row_bbox: QRect,
+    columns: &[Column],
+    col_index: usize,
+) -> Result<QRect, EthosError> {
+    let column = columns
+        .get(col_index)
+        .ok_or_else(|| EthosError::internal("empty table cell column out of bounds"))?;
+    let x0 = column.bbox.x0;
+    let x1 = columns
+        .get(col_index + 1)
+        .map(|next| next.bbox.x0)
+        .unwrap_or(column.bbox.x1)
+        .max(x0);
+    QRect::new(x0, row_bbox.y0, x1, row_bbox.y1)
+        .map_err(|_| EthosError::internal("invalid synthesized empty table cell bbox"))
 }
 
 fn common_columns(rows: &[Row<'_>], columns: &[Column]) -> Vec<Column> {
@@ -701,6 +910,84 @@ mod tests {
             tables[0].cells[7].span_refs,
             vec!["s000010", "s000011", "s000012"]
         );
+    }
+
+    #[test]
+    fn expands_sparse_leading_rows_with_empty_cells() {
+        let spans = vec![
+            span("s000001", 0, 0, 600, 400, "A"),
+            span("s000002", 2_000, 0, 2_600, 400, "C"),
+            span("s000003", 3_000, 0, 3_600, 400, "D"),
+            span("s000004", 0, 1_000, 600, 1_400, "Name"),
+            span("s000005", 1_000, 1_000, 1_600, 1_400, "Score"),
+            span("s000006", 2_000, 1_000, 2_600, 1_400, "Year"),
+            span("s000007", 3_000, 1_000, 3_600, 1_400, "Rank"),
+            span("s000008", 0, 2_000, 600, 2_400, "Alpha"),
+            span("s000009", 1_000, 2_000, 1_600, 2_400, "10"),
+            span("s000010", 2_000, 2_000, 2_600, 2_400, "2024"),
+            span("s000011", 3_000, 2_000, 3_600, 2_400, "1"),
+            span("s000012", 0, 3_000, 600, 3_400, "Beta"),
+            span("s000013", 1_000, 3_000, 1_600, 3_400, "12"),
+            span("s000014", 2_000, 3_000, 2_600, 3_400, "2025"),
+            span("s000015", 3_000, 3_000, 3_600, 3_400, "2"),
+        ];
+
+        let tables =
+            detect_regular_grid_candidates("p0001", &spans, 1, &TableCandidateConfig::default())
+                .unwrap();
+
+        assert_eq!(tables.len(), 1);
+        let table = &tables[0];
+        assert_eq!(table.n_rows, 4);
+        assert_eq!(table.n_cols, 4);
+        assert_eq!(table.cells[0].text, "A");
+        assert_eq!(table.cells[1].text, "");
+        assert!(table.cells[1].span_refs.is_empty());
+        assert_eq!(table.cells[2].text, "C");
+        assert_eq!(table.cells[3].text, "D");
+        assert_eq!(
+            render_markdown(table),
+            "| A |  | C | D |\n| --- | --- | --- | --- |\n| Name | Score | Year | Rank |\n| Alpha | 10 | 2024 | 1 |\n| Beta | 12 | 2025 | 2 |\n"
+        );
+    }
+
+    #[test]
+    fn merges_single_column_continuation_rows_and_keeps_scanning() {
+        let spans = vec![
+            span("s000001", 0, 0, 600, 400, "No."),
+            span("s000002", 1_000, 0, 1_600, 400, "Party"),
+            span("s000003", 3_000, 0, 3_600, 400, "Votes"),
+            span("s000004", 4_000, 0, 4_600, 400, "Share"),
+            span("s000005", 0, 1_000, 600, 1_400, "1"),
+            span("s000006", 1_000, 1_000, 1_600, 1_400, "Alpha"),
+            span("s000007", 3_000, 1_000, 3_600, 1_400, "100"),
+            span("s000008", 4_000, 1_000, 4_600, 1_400, "10"),
+            span("s000009", 0, 2_000, 600, 2_400, "2"),
+            span("s000010", 1_000, 2_000, 1_800, 2_400, "Grassroots"),
+            span("s000011", 3_000, 2_000, 3_600, 2_400, "200"),
+            span("s000012", 4_000, 2_000, 4_600, 2_400, "20"),
+            span("s000013", 1_000, 3_000, 1_900, 3_400, "Democracy"),
+            span("s000014", 2_100, 3_000, 2_700, 3_400, "Party"),
+            span("s000015", 0, 4_000, 600, 4_400, "3"),
+            span("s000016", 1_000, 4_000, 1_600, 4_400, "Delta"),
+            span("s000017", 3_000, 4_000, 3_600, 4_400, "300"),
+            span("s000018", 4_000, 4_000, 4_600, 4_400, "30"),
+        ];
+
+        let tables =
+            detect_regular_grid_candidates("p0001", &spans, 1, &TableCandidateConfig::default())
+                .unwrap();
+
+        assert_eq!(tables.len(), 1);
+        let table = &tables[0];
+        assert_eq!(table.n_rows, 4);
+        assert_eq!(table.n_cols, 4);
+        assert_eq!(table.cells[9].text, "Grassroots Democracy Party");
+        assert_eq!(
+            table.cells[9].span_refs,
+            vec!["s000010", "s000013", "s000014"]
+        );
+        assert_eq!(table.cells[13].text, "Delta");
     }
 
     #[test]
