@@ -25,7 +25,7 @@ use ethos_core::geom::{quantize, QRect};
 use ethos_core::ids::{page_id, span_id, warning_id};
 use ethos_core::model::{Page, Span, Warning};
 use ethos_core::traits::{BackendManifest, EthosPdfBackend, Extraction};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Environment variable containing the exact PDFium dynamic library path.
 pub const PDFIUM_LIBRARY_PATH_ENV: &str = "ETHOS_PDFIUM_LIBRARY_PATH";
@@ -56,6 +56,111 @@ pub struct PdfiumBackend {
     library_path: Option<PathBuf>,
     artifact_path: Option<PathBuf>,
     version: Option<String>,
+}
+
+/// Debug-only report of PDFium text geometry signals.
+///
+/// This is not part of the canonical document contract. It exists so Gate Zero
+/// investigations can compare native PDFium geometry sources across platforms
+/// before changing parser output or fingerprint policy.
+#[derive(Debug, Serialize)]
+pub struct GeometryProbeReport {
+    /// Report schema identifier.
+    pub schema_version: String,
+    /// Quantization used for every reported coordinate.
+    pub quantum_per_point: u32,
+    /// Backend manifest for the loaded PDFium runtime.
+    pub backend: BackendManifest,
+    /// Probed pages.
+    pub pages: Vec<GeometryProbePage>,
+}
+
+/// Per-page debug geometry signals.
+#[derive(Debug, Serialize)]
+pub struct GeometryProbePage {
+    /// Canonical page id.
+    pub id: String,
+    /// 1-based original page index.
+    pub index: u32,
+    /// Quantized page width.
+    pub width: i64,
+    /// Quantized page height.
+    pub height: i64,
+    /// Page rotation in degrees.
+    pub rotation: u16,
+    /// PDFium text character count.
+    pub char_count: i32,
+    /// Optional PDFium text symbols available in this runtime.
+    pub symbols: GeometryProbeSymbols,
+    /// Per-character geometry records.
+    pub chars: Vec<GeometryProbeChar>,
+    /// Parser-like text runs with alternative geometry unions.
+    pub runs: Vec<GeometryProbeRun>,
+}
+
+/// Optional PDFium geometry symbols discovered at runtime.
+#[derive(Debug, Serialize)]
+pub struct GeometryProbeSymbols {
+    /// Whether FPDFText_GetCharOrigin is available.
+    pub char_origin: bool,
+    /// Whether FPDFText_GetLooseCharBox is available.
+    pub loose_char_box: bool,
+    /// Whether FPDFText_CountRects and FPDFText_GetRect are available.
+    pub text_rects: bool,
+}
+
+/// Per-character geometry probe record.
+#[derive(Debug, Serialize)]
+pub struct GeometryProbeChar {
+    /// Zero-based PDFium character index.
+    pub index: i32,
+    /// Unicode scalar value reported by PDFium.
+    pub unicode: u32,
+    /// Character as a string when it is a valid scalar value.
+    pub text: Option<String>,
+    /// Why this character would break or be skipped by the parser run builder.
+    pub parser_action: String,
+    /// Current parser-critical FPDFText_GetCharBox geometry.
+    pub char_box: Option<QRect>,
+    /// FPDFText_GetLooseCharBox geometry when the symbol is present.
+    pub loose_char_box: Option<QRect>,
+    /// FPDFText_GetCharOrigin point when the symbol is present.
+    pub char_origin: Option<[i64; 2]>,
+    /// Deterministic font id used by the parser.
+    pub font_id: Option<String>,
+    /// Quantized font size used by the parser.
+    pub font_size_q: Option<i64>,
+}
+
+/// Parser-like text run with alternative PDFium geometry sources.
+#[derive(Debug, Serialize)]
+pub struct GeometryProbeRun {
+    /// One-based run index on this page.
+    pub index: u32,
+    /// Run text after parser skip/break rules.
+    pub text: String,
+    /// First included PDFium character index.
+    pub char_start: i32,
+    /// Exclusive end PDFium character index.
+    pub char_end: i32,
+    /// Included character indices.
+    pub char_indices: Vec<i32>,
+    /// Current parser span bbox: union of FPDFText_GetCharBox records.
+    pub char_box_union: Option<QRect>,
+    /// Union of FPDFText_GetLooseCharBox records when available.
+    pub loose_char_box_union: Option<QRect>,
+    /// Rectangles from FPDFText_CountRects/GetRect for the run range when available.
+    pub text_rects: Vec<QRect>,
+    /// Union of text_rects when available.
+    pub text_rect_union: Option<QRect>,
+    /// Origin of first included character when available.
+    pub first_origin: Option<[i64; 2]>,
+    /// Origin of last included character when available.
+    pub last_origin: Option<[i64; 2]>,
+    /// Deterministic font id used by the parser.
+    pub font_id: Option<String>,
+    /// Quantized font size used by the parser.
+    pub font_size_q: Option<i64>,
 }
 
 impl PdfiumBackend {
@@ -101,6 +206,47 @@ impl PdfiumBackend {
     fn configured_version(&self) -> String {
         self.configured_version_override()
             .unwrap_or_else(|| pinned_pdfium_profile().version.clone())
+    }
+
+    /// Produce a debug-only geometry-source probe from PDFium text APIs.
+    ///
+    /// The returned data is diagnostic evidence only. It is intentionally
+    /// separate from [`EthosPdfBackend::extract`] so parser behavior,
+    /// canonical JSON, and document fingerprints cannot change by accident.
+    pub fn geometry_probe(
+        &self,
+        pdf_bytes: &[u8],
+        config: &ParseConfig,
+    ) -> Result<GeometryProbeReport, EthosError> {
+        validate_pdf_header(pdf_bytes)?;
+        let _guard = PDFIUM_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let runtime = PdfiumRuntime::load(self)?;
+        let doc = runtime.load_document(pdf_bytes)?;
+        let page_count = doc.page_count()?;
+        if page_count > config.limits.max_pages {
+            return Err(EthosError::new(
+                ErrorCode::PageLimitExceeded,
+                "page count exceeds configured limit",
+            ));
+        }
+        validate_page_selection(&config.pages, page_count)?;
+
+        let mut pages = Vec::new();
+        for page_index in 0..page_count {
+            let original_page = page_index + 1;
+            if !config.pages.contains(original_page) {
+                continue;
+            }
+            let page = doc.load_page(page_index)?;
+            pages.push(page.geometry_probe_page(original_page)?);
+        }
+
+        Ok(GeometryProbeReport {
+            schema_version: "ethos-pdfium-geometry-probe-v1".to_string(),
+            quantum_per_point: QUANTUM_PER_POINT,
+            backend: self.manifest(),
+            pages,
+        })
     }
 }
 
@@ -553,6 +699,26 @@ type FpdfTextGetCharBox =
 type FpdfTextGetCharBox =
     unsafe extern "system" fn(FpdfTextPage, c_int, *mut f64, *mut f64, *mut f64, *mut f64) -> c_int;
 #[cfg(not(windows))]
+type FpdfTextGetLooseCharBox = unsafe extern "C" fn(FpdfTextPage, c_int, *mut FsRectF) -> c_int;
+#[cfg(windows)]
+type FpdfTextGetLooseCharBox =
+    unsafe extern "system" fn(FpdfTextPage, c_int, *mut FsRectF) -> c_int;
+#[cfg(not(windows))]
+type FpdfTextGetCharOrigin = unsafe extern "C" fn(FpdfTextPage, c_int, *mut f64, *mut f64) -> c_int;
+#[cfg(windows)]
+type FpdfTextGetCharOrigin =
+    unsafe extern "system" fn(FpdfTextPage, c_int, *mut f64, *mut f64) -> c_int;
+#[cfg(not(windows))]
+type FpdfTextCountRects = unsafe extern "C" fn(FpdfTextPage, c_int, c_int) -> c_int;
+#[cfg(windows)]
+type FpdfTextCountRects = unsafe extern "system" fn(FpdfTextPage, c_int, c_int) -> c_int;
+#[cfg(not(windows))]
+type FpdfTextGetRect =
+    unsafe extern "C" fn(FpdfTextPage, c_int, *mut f64, *mut f64, *mut f64, *mut f64) -> c_int;
+#[cfg(windows)]
+type FpdfTextGetRect =
+    unsafe extern "system" fn(FpdfTextPage, c_int, *mut f64, *mut f64, *mut f64, *mut f64) -> c_int;
+#[cfg(not(windows))]
 type FpdfTextGetFontSize = unsafe extern "C" fn(FpdfTextPage, c_int) -> f64;
 #[cfg(windows)]
 type FpdfTextGetFontSize = unsafe extern "system" fn(FpdfTextPage, c_int) -> f64;
@@ -570,6 +736,15 @@ type FpdfTextIsGenerated = unsafe extern "system" fn(FpdfTextPage, c_int) -> c_i
 type FpdfTextIsHyphen = unsafe extern "C" fn(FpdfTextPage, c_int) -> c_int;
 #[cfg(windows)]
 type FpdfTextIsHyphen = unsafe extern "system" fn(FpdfTextPage, c_int) -> c_int;
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default)]
+struct FsRectF {
+    left: f32,
+    top: f32,
+    right: f32,
+    bottom: f32,
+}
 
 #[derive(Clone, Copy)]
 struct PdfiumFunctions {
@@ -589,6 +764,10 @@ struct PdfiumFunctions {
     text_count_chars: FpdfTextCountChars,
     text_get_unicode: FpdfTextGetUnicode,
     text_get_char_box: FpdfTextGetCharBox,
+    text_get_loose_char_box: Option<FpdfTextGetLooseCharBox>,
+    text_get_char_origin: Option<FpdfTextGetCharOrigin>,
+    text_count_rects: Option<FpdfTextCountRects>,
+    text_get_rect: Option<FpdfTextGetRect>,
     text_get_font_size: FpdfTextGetFontSize,
     text_get_font_info: Option<FpdfTextGetFontInfo>,
     text_is_generated: Option<FpdfTextIsGenerated>,
@@ -617,11 +796,23 @@ impl PdfiumFunctions {
                 text_count_chars: library.symbol(b"FPDFText_CountChars\0")?,
                 text_get_unicode: library.symbol(b"FPDFText_GetUnicode\0")?,
                 text_get_char_box: library.symbol(b"FPDFText_GetCharBox\0")?,
+                text_get_loose_char_box: library.optional_symbol(b"FPDFText_GetLooseCharBox\0"),
+                text_get_char_origin: library.optional_symbol(b"FPDFText_GetCharOrigin\0"),
+                text_count_rects: library.optional_symbol(b"FPDFText_CountRects\0"),
+                text_get_rect: library.optional_symbol(b"FPDFText_GetRect\0"),
                 text_get_font_size: library.symbol(b"FPDFText_GetFontSize\0")?,
                 text_get_font_info: library.optional_symbol(b"FPDFText_GetFontInfo\0"),
                 text_is_generated: library.optional_symbol(b"FPDFText_IsGenerated\0"),
                 text_is_hyphen: library.optional_symbol(b"FPDFText_IsHyphen\0"),
             })
+        }
+    }
+
+    fn geometry_probe_symbols(self) -> GeometryProbeSymbols {
+        GeometryProbeSymbols {
+            char_origin: self.text_get_char_origin.is_some(),
+            loose_char_box: self.text_get_loose_char_box.is_some(),
+            text_rects: self.text_count_rects.is_some() && self.text_get_rect.is_some(),
         }
     }
 }
@@ -772,6 +963,30 @@ impl PdfPage<'_> {
         })
     }
 
+    fn geometry_probe_page(&self, original_page: u32) -> Result<GeometryProbePage, EthosError> {
+        let page = self.model_page(original_page)?;
+        // SAFETY: handle is a live FPDF_PAGE. Text page is closed by PdfTextPage::drop.
+        let text_handle = unsafe { (self.funcs.text_load_page)(self.handle) };
+        if text_handle.is_null() {
+            return Ok(GeometryProbePage {
+                id: page.id,
+                index: page.index,
+                width: page.width,
+                height: page.height,
+                rotation: page.rotation,
+                char_count: 0,
+                symbols: self.funcs.geometry_probe_symbols(),
+                chars: Vec::new(),
+                runs: Vec::new(),
+            });
+        }
+        let text_page = PdfTextPage {
+            funcs: self.funcs,
+            handle: text_handle,
+        };
+        text_page.geometry_probe(&page, self.height_pts())
+    }
+
     fn extract_text_spans(
         &self,
         page: &Page,
@@ -804,6 +1019,81 @@ struct PdfTextPage<'a> {
 }
 
 impl PdfTextPage<'_> {
+    fn geometry_probe(
+        &self,
+        page: &Page,
+        page_height_pts: f64,
+    ) -> Result<GeometryProbePage, EthosError> {
+        // SAFETY: handle is a live FPDF_TEXTPAGE.
+        let count = unsafe { (self.funcs.text_count_chars)(self.handle) };
+        if count < 0 {
+            return Err(EthosError::new(
+                ErrorCode::CorruptPdf,
+                "PDF text page could not be read",
+            ));
+        }
+
+        let mut chars = Vec::new();
+        let mut run = GeometryRunBuilder::default();
+        let mut runs = Vec::new();
+        let mut next_run = 1u32;
+        for index in 0..count {
+            let record = self.geometry_probe_char(index, page_height_pts)?;
+            match record.parser_action.as_str() {
+                "include" => {
+                    if run.has_style_change(&record.font_id, record.font_size_q) {
+                        run.flush(self, page_height_pts, &mut next_run, &mut runs)?;
+                    }
+                    run.push(&record);
+                }
+                "skip_generated_hyphen" => {}
+                _ => run.flush(self, page_height_pts, &mut next_run, &mut runs)?,
+            }
+            chars.push(record);
+        }
+        run.flush(self, page_height_pts, &mut next_run, &mut runs)?;
+
+        Ok(GeometryProbePage {
+            id: page.id.clone(),
+            index: page.index,
+            width: page.width,
+            height: page.height,
+            rotation: page.rotation,
+            char_count: count,
+            symbols: self.funcs.geometry_probe_symbols(),
+            chars,
+            runs,
+        })
+    }
+
+    fn geometry_probe_char(
+        &self,
+        index: c_int,
+        page_height_pts: f64,
+    ) -> Result<GeometryProbeChar, EthosError> {
+        // SAFETY: index is in range for this text page.
+        let unicode = unsafe { (self.funcs.text_get_unicode)(self.handle, index) };
+        let ch = char::from_u32(unicode);
+        let parser_action = match ch {
+            None => "break_invalid_unicode",
+            Some(_) if self.is_generated_hyphen(index) => "skip_generated_hyphen",
+            Some(ch) if should_break_text_run(ch) => "break_whitespace_or_control",
+            Some(_) => "include",
+        };
+
+        Ok(GeometryProbeChar {
+            index,
+            unicode,
+            text: ch.map(|ch| ch.to_string()),
+            parser_action: parser_action.to_string(),
+            char_box: self.char_bbox(index, page_height_pts)?,
+            loose_char_box: self.loose_char_bbox(index, page_height_pts)?,
+            char_origin: self.char_origin(index, page_height_pts)?,
+            font_id: self.font_id(index),
+            font_size_q: self.font_size_q(index),
+        })
+    }
+
     fn extract_runs(
         &self,
         page: &Page,
@@ -883,6 +1173,99 @@ impl PdfTextPage<'_> {
         )?))
     }
 
+    fn loose_char_bbox(
+        &self,
+        index: c_int,
+        page_height_pts: f64,
+    ) -> Result<Option<QRect>, EthosError> {
+        let Some(get_loose_char_box) = self.funcs.text_get_loose_char_box else {
+            return Ok(None);
+        };
+        let mut rect = FsRectF::default();
+        // SAFETY: rect points to initialized writable storage and index is in range.
+        let ok = unsafe { get_loose_char_box(self.handle, index, &mut rect) };
+        if ok == 0 {
+            return Ok(None);
+        }
+        Ok(Some(qrect_from_pdfium_char_box(
+            page_height_pts,
+            f64::from(rect.left),
+            f64::from(rect.right),
+            f64::from(rect.bottom),
+            f64::from(rect.top),
+        )?))
+    }
+
+    fn char_origin(
+        &self,
+        index: c_int,
+        page_height_pts: f64,
+    ) -> Result<Option<[i64; 2]>, EthosError> {
+        let Some(get_char_origin) = self.funcs.text_get_char_origin else {
+            return Ok(None);
+        };
+        let mut x = 0.0f64;
+        let mut y = 0.0f64;
+        // SAFETY: pointers refer to initialized writable f64 values and index is in range.
+        let ok = unsafe { get_char_origin(self.handle, index, &mut x, &mut y) };
+        if ok == 0 {
+            return Ok(None);
+        }
+        Ok(Some([
+            quantize_coord(x)?,
+            quantize_coord(page_height_pts - y)?,
+        ]))
+    }
+
+    fn text_rects(
+        &self,
+        char_start: c_int,
+        char_count: c_int,
+        page_height_pts: f64,
+    ) -> Result<Vec<QRect>, EthosError> {
+        let (Some(count_rects), Some(get_rect)) =
+            (self.funcs.text_count_rects, self.funcs.text_get_rect)
+        else {
+            return Ok(Vec::new());
+        };
+        if char_count <= 0 {
+            return Ok(Vec::new());
+        }
+        // SAFETY: char_start/char_count identify a range observed from this text page.
+        let rect_count = unsafe { count_rects(self.handle, char_start, char_count) };
+        if rect_count <= 0 {
+            return Ok(Vec::new());
+        }
+        let mut rects = Vec::new();
+        for rect_index in 0..rect_count {
+            let mut left = 0.0f64;
+            let mut top = 0.0f64;
+            let mut right = 0.0f64;
+            let mut bottom = 0.0f64;
+            // SAFETY: pointers refer to initialized writable f64 values.
+            let ok = unsafe {
+                get_rect(
+                    self.handle,
+                    rect_index,
+                    &mut left,
+                    &mut top,
+                    &mut right,
+                    &mut bottom,
+                )
+            };
+            if ok != 0 {
+                rects.push(qrect_from_pdfium_char_box(
+                    page_height_pts,
+                    left,
+                    right,
+                    bottom,
+                    top,
+                )?);
+            }
+        }
+        Ok(rects)
+    }
+
     fn font_size_q(&self, index: c_int) -> Option<i64> {
         // SAFETY: index is in range.
         let size = unsafe { (self.funcs.text_get_font_size)(self.handle, index) };
@@ -953,6 +1336,18 @@ struct SpanRun {
     font_size_q: Option<i64>,
 }
 
+#[derive(Default)]
+struct GeometryRunBuilder {
+    text: String,
+    char_indices: Vec<i32>,
+    char_box_union: Option<QRect>,
+    loose_char_box_union: Option<QRect>,
+    first_origin: Option<[i64; 2]>,
+    last_origin: Option<[i64; 2]>,
+    font_id: Option<String>,
+    font_size_q: Option<i64>,
+}
+
 #[derive(Debug, Deserialize)]
 struct FontSubstitutionTable {
     schema_version: String,
@@ -1016,6 +1411,84 @@ impl SpanRun {
         self.font_size_q = None;
         Ok(())
     }
+}
+
+impl GeometryRunBuilder {
+    fn has_style_change(&self, font_id: &Option<String>, font_size_q: Option<i64>) -> bool {
+        !self.text.is_empty() && (self.font_id != *font_id || self.font_size_q != font_size_q)
+    }
+
+    fn push(&mut self, ch: &GeometryProbeChar) {
+        if let Some(text) = &ch.text {
+            self.text.push_str(text);
+        }
+        self.char_indices.push(ch.index);
+        self.char_box_union = union_option_rect(self.char_box_union, ch.char_box);
+        self.loose_char_box_union = union_option_rect(self.loose_char_box_union, ch.loose_char_box);
+        if self.first_origin.is_none() {
+            self.first_origin = ch.char_origin;
+        }
+        self.last_origin = ch.char_origin;
+        if self.font_id.is_none() {
+            self.font_id = ch.font_id.clone();
+        }
+        if self.font_size_q.is_none() {
+            self.font_size_q = ch.font_size_q;
+        }
+    }
+
+    fn flush(
+        &mut self,
+        text_page: &PdfTextPage<'_>,
+        page_height_pts: f64,
+        next_run: &mut u32,
+        runs: &mut Vec<GeometryProbeRun>,
+    ) -> Result<(), EthosError> {
+        if self.text.is_empty() {
+            return Ok(());
+        }
+        let char_start = self.char_indices.first().copied().unwrap_or_default();
+        let char_end = self
+            .char_indices
+            .last()
+            .copied()
+            .map(|index| index + 1)
+            .unwrap_or(char_start);
+        let text_rects =
+            text_page.text_rects(char_start, char_end - char_start, page_height_pts)?;
+        runs.push(GeometryProbeRun {
+            index: *next_run,
+            text: std::mem::take(&mut self.text),
+            char_start,
+            char_end,
+            char_indices: std::mem::take(&mut self.char_indices),
+            char_box_union: self.char_box_union.take(),
+            loose_char_box_union: self.loose_char_box_union.take(),
+            text_rect_union: union_rects(text_rects.iter().copied()),
+            text_rects,
+            first_origin: self.first_origin.take(),
+            last_origin: self.last_origin.take(),
+            font_id: self.font_id.take(),
+            font_size_q: self.font_size_q.take(),
+        });
+        *next_run += 1;
+        self.font_size_q = None;
+        Ok(())
+    }
+}
+
+fn union_option_rect(existing: Option<QRect>, next: Option<QRect>) -> Option<QRect> {
+    match (existing, next) {
+        (Some(a), Some(b)) => Some(union_rect(a, b)),
+        (Some(a), None) => Some(a),
+        (None, Some(b)) => Some(b),
+        (None, None) => None,
+    }
+}
+
+fn union_rects(mut rects: impl Iterator<Item = QRect>) -> Option<QRect> {
+    let first = rects.next()?;
+    Some(rects.fold(first, union_rect))
 }
 
 fn deterministic_font_id(raw_name: &str) -> Option<String> {

@@ -147,6 +147,30 @@ The output is not a Gate Zero result and must not be used as a public benchmark 
 candidate only means the tested transform explains the staged raw-document divergence; G3 still
 requires a real canonical output and fingerprint policy change before it can pass.
 
+For deeper geometry-source investigation, use the hidden PDFium probe command with the explicit
+internal opt-in flag:
+
+```sh
+ETHOS_INTERNAL_GEOMETRY_PROBE=1 \
+  target/release/ethos __pdfium-geometry-probe benchmarks/gate-zero/corpus/simple-text.pdf \
+  > /tmp/ethos-g3-geometry-probe/macos-arm64/simple-text.json
+```
+
+The probe reports current `FPDFText_GetCharBox` geometry plus optional PDFium signals such as
+`FPDFText_GetLooseCharBox`, `FPDFText_GetCharOrigin`, and text rects when the pinned runtime
+exports them. Compare staged macOS/Linux probe directories with:
+
+```sh
+python3 benchmarks/harness/compare_gate_zero_geometry_probes.py \
+  --left-dir /tmp/ethos-g3-geometry-probe/macos-arm64 \
+  --right-dir /tmp/ethos-g3-geometry-probe/linux-x64 \
+  --left-label macos-arm64 \
+  --right-label linux-x64
+```
+
+The probe command is intentionally hidden and environment-gated. It loads PDFium in-process and is
+for synthetic/debug investigations only.
+
 ## OpenDataLoader PDF Adapter
 
 The Gate Zero runner can execute the pinned OpenDataLoader PDF wheel recorded in

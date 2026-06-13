@@ -33,6 +33,7 @@ use ethos_verify::CitationInput;
 
 /// Usage-error exit code (also what clap uses).
 const EXIT_USAGE: u8 = 2;
+const INTERNAL_GEOMETRY_PROBE_ENV: &str = "ETHOS_INTERNAL_GEOMETRY_PROBE";
 
 #[derive(Parser)]
 #[command(
@@ -65,6 +66,9 @@ enum Command {
     /// Internal killable PDFium worker. Not a public CLI surface.
     #[command(name = "__pdfium-worker", hide = true)]
     PdfiumWorker(PdfiumWorkerArgs),
+    /// Internal PDFium geometry source probe. Not a public CLI surface.
+    #[command(name = "__pdfium-geometry-probe", hide = true)]
+    PdfiumGeometryProbe(PdfiumGeometryProbeArgs),
 }
 
 #[derive(Subcommand)]
@@ -114,6 +118,15 @@ struct PdfiumWorkerArgs {
     /// Include volatile runtime diagnostics.
     #[arg(long)]
     diagnostics: bool,
+}
+
+#[derive(Args)]
+struct PdfiumGeometryProbeArgs {
+    /// Input PDF.
+    input: PathBuf,
+    /// Page selection, e.g. `1-5,9` (1-based, inclusive; merged canonically).
+    #[arg(long)]
+    pages: Option<String>,
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -247,6 +260,7 @@ fn run(cli: Cli) -> Result<(), Failure> {
         Command::Verify(args) => verify(args),
         Command::Fingerprint(args) => fingerprint(args),
         Command::PdfiumWorker(args) => pdfium_worker(args),
+        Command::PdfiumGeometryProbe(args) => pdfium_geometry_probe(args),
     }
 }
 
@@ -353,6 +367,25 @@ fn pdfium_worker(args: PdfiumWorkerArgs) -> Result<(), Failure> {
         args.diagnostics,
     )?;
     write_document(Format::Json, None, &doc)
+}
+
+fn pdfium_geometry_probe(args: PdfiumGeometryProbeArgs) -> Result<(), Failure> {
+    if std::env::var(INTERNAL_GEOMETRY_PROBE_ENV).as_deref() != Ok("1") {
+        return Err(Failure::Usage(format!(
+            "__pdfium-geometry-probe requires {INTERNAL_GEOMETRY_PROBE_ENV}=1"
+        )));
+    }
+    let config = parse_config(args.pages.as_deref(), None)?;
+    let pdf_bytes = read_file_limited(&args.input, config.limits.max_file_bytes)?;
+    let backend = ethos_pdf::PdfiumBackend::default();
+    let report = backend
+        .geometry_probe(&pdf_bytes, &config)
+        .map_err(classify_worker_extract_error)?;
+    let value = serde_json::to_value(&report).map_err(|e| EthosError::internal(e.to_string()))?;
+    let mut bytes =
+        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
+    bytes.push(b'\n');
+    write_output(None, &bytes)
 }
 
 fn classify_worker_extract_error(error: EthosError) -> Failure {

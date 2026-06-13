@@ -819,6 +819,53 @@ fn parses_simple_pdf_into_quantized_spans_when_pdfium_is_configured() {
 }
 
 #[test]
+fn pdfium_geometry_probe_reports_alternative_geometry_signals_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!(
+            "skipping PDFium geometry probe test: ETHOS_PDFIUM_LIBRARY_PATH is not configured"
+        );
+        return;
+    }
+
+    let fixture = fixture_pdf();
+    let output = run_ethos_with_env(
+        &["__pdfium-geometry-probe", fixture.to_str().unwrap()],
+        &[("ETHOS_INTERNAL_GEOMETRY_PROBE", "1")],
+    );
+    assert!(
+        output.status.success(),
+        "geometry probe failed\nstatus: {:?}\nstderr:\n{}\nstdout:\n{}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    let probe: Value = serde_json::from_slice(&output.stdout).expect("stdout is JSON");
+
+    assert_eq!(probe["schema_version"], "ethos-pdfium-geometry-probe-v1");
+    assert_eq!(probe["quantum_per_point"], 100);
+    assert_eq!(probe["backend"]["id"], "pdfium");
+    let page = &probe["pages"].as_array().unwrap()[0];
+    assert_eq!(page["id"], "p0001");
+    assert_eq!(page["index"], 1);
+    assert!(page["symbols"]["char_origin"].is_boolean());
+    assert!(page["symbols"]["loose_char_box"].is_boolean());
+    assert!(page["symbols"]["text_rects"].is_boolean());
+
+    let chars = page["chars"].as_array().unwrap();
+    assert!(!chars.is_empty());
+    assert_eq!(chars[0]["parser_action"], "include");
+    assert_eq!(chars[0]["char_box"].as_array().unwrap().len(), 4);
+
+    let runs = page["runs"].as_array().unwrap();
+    assert_eq!(runs.len(), 2);
+    assert_eq!(runs[0]["text"], "Hello");
+    assert_eq!(runs[1]["text"], "Ethos");
+    assert_eq!(runs[0]["char_box_union"].as_array().unwrap().len(), 4);
+    assert_eq!(runs[0]["char_start"], 0);
+    assert_eq!(runs[0]["char_end"], 5);
+}
+
+#[test]
 fn page_range_filters_and_out_of_range_fails_when_pdfium_is_configured() {
     if !pdfium_configured() {
         eprintln!("skipping page-range PDFium test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
