@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:benchmarks:gate-zero-g3-result:1",
+  "title": "Ethos Gate Zero G3 determinism result",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "gate",
+    "status",
+    "platforms",
+    "corpus",
+    "definition",
+    "host",
+    "inputs",
+    "comparison",
+    "evaluation",
+    "blockers",
+    "failures",
+    "summary"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "ethos-gate-zero-g3-result-v1" },
+    "gate": { "const": "g3" },
+    "status": { "enum": ["blocked", "pass", "fail"] },
+    "platforms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "corpus": {
+      "type": "object",
+      "required": ["id", "manifest", "manifest_sha256", "corpus_ids"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "manifest": { "type": "string" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "corpus_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "definition": {
+      "type": "object",
+      "required": [
+        "gates",
+        "definition_sha256",
+        "gate_status",
+        "completion_policy",
+        "corpus_scope",
+        "thresholds",
+        "required_evidence"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "gates": { "type": "string" },
+        "definition_sha256": { "$ref": "#/$defs/sha256" },
+        "gate_status": { "type": "string" },
+        "completion_policy": { "type": "string" },
+        "corpus_scope": { "type": "string" },
+        "thresholds": { "type": "object" },
+        "required_evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "host": { "type": "object" },
+    "inputs": {
+      "type": "object",
+      "required": [
+        "competitors_lock",
+        "competitors_lock_sha256",
+        "deterministic_profile",
+        "deterministic_profile_sha256",
+        "gates",
+        "gates_sha256",
+        "manifest",
+        "manifest_sha256",
+        "platform_results"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "competitors_lock": { "type": "string" },
+        "competitors_lock_sha256": { "$ref": "#/$defs/sha256" },
+        "deterministic_profile": { "type": "string" },
+        "deterministic_profile_sha256": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "gates": { "type": "string" },
+        "gates_sha256": { "$ref": "#/$defs/sha256" },
+        "manifest": { "type": "string" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "platform_results": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/platform_result" }
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "baseline_platform",
+        "required_platforms",
+        "corpus_ids",
+        "platform_results"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "baseline_platform": { "type": ["string", "null"] },
+        "required_platforms": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "corpus_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "platform_results": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/platform_result" }
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "required": ["status", "blockers", "failures"],
+      "additionalProperties": true,
+      "properties": {
+        "status": { "enum": ["blocked", "pass", "fail"] },
+        "blockers": { "type": "array", "items": { "type": "string" } },
+        "failures": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "failures": { "type": "array", "items": { "type": "string" } },
+    "summary": {
+      "type": "object",
+      "required": [
+        "status",
+        "platforms_total",
+        "corpus_files_total",
+        "blockers_total",
+        "failures_total",
+        "canonical_payload_divergences",
+        "document_fingerprint_divergences",
+        "warning_id_divergences",
+        "corpus_binding_divergences"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "enum": ["blocked", "pass", "fail"] },
+        "platforms_total": { "type": "integer", "minimum": 0 },
+        "corpus_files_total": { "type": "integer", "minimum": 0 },
+        "blockers_total": { "type": "integer", "minimum": 0 },
+        "failures_total": { "type": "integer", "minimum": 0 },
+        "canonical_payload_divergences": { "type": "integer", "minimum": 0 },
+        "document_fingerprint_divergences": { "type": "integer", "minimum": 0 },
+        "warning_id_divergences": { "type": "integer", "minimum": 0 },
+        "corpus_binding_divergences": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "platform_result": {
+      "type": "object",
+      "required": [
+        "platform",
+        "path",
+        "exists",
+        "sha256",
+        "canonical_sha256",
+        "schema_version",
+        "result_status",
+        "ethos_status",
+        "host_id",
+        "host_platform",
+        "runs_total"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "platform": { "type": "string" },
+        "path": { "type": "string" },
+        "exists": { "type": "boolean" },
+        "sha256": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "canonical_sha256": {
+          "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "schema_version": { "type": ["string", "null"] },
+        "result_status": { "type": ["string", "null"] },
+        "ethos_status": { "type": ["string", "null"] },
+        "host_id": { "type": ["string", "null"] },
+        "host_platform": { "type": ["string", "null"] },
+        "runs_total": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

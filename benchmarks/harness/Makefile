@@ -14,6 +14,8 @@ GATE_ZERO_REPRODUCTION_COMMAND_FILE ?=
 GATE_ZERO_REPRODUCTION_ENV_FILE ?=
 GATE_ZERO_BENCHMARK_COMMIT ?=
 GATE_ZERO_G2_RESULT_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/$(GATE_ZERO_PLATFORM)/g2.json
+GATE_ZERO_G3_RESULT_REPORT ?= $(GATE_ZERO_RESULTS_DIR)/g3.json
+GATE_ZERO_G3_PLATFORM_RESULTS ?=
 GATE_ZERO_ETHOS_FOOTPRINT ?=
 GATE_ZERO_PDFIUM_LIBRARY_PATH ?=
 GATE_ZERO_PDFIUM_ARTIFACT ?=
@@ -32,7 +34,7 @@ PYMUPDF4LLM_ARTIFACT ?=
 PYMUPDF4LLM_INSTALL_PATH ?=
 ITERATIONS ?= 3
 
-.PHONY: bench fixtures gate-zero-evidence gate-zero-g2 gate-zero-readiness gate-zero-results smoke test
+.PHONY: bench fixtures gate-zero-evidence gate-zero-g2 gate-zero-g3 gate-zero-readiness gate-zero-results smoke test
 
 $(ETHOS_BIN):
 	cd $(ROOT) && cargo build --locked --release -p ethos-cli
@@ -86,6 +88,13 @@ gate-zero-g2:
 		$(if $(GATE_ZERO_PDFIUM_ARTIFACT),--pdfium-artifact $(GATE_ZERO_PDFIUM_ARTIFACT),) \
 		--out $(GATE_ZERO_G2_RESULT_REPORT)
 
+gate-zero-g3:
+	mkdir -p $(dir $(GATE_ZERO_G3_RESULT_REPORT))
+	python3 run_gate_zero_g3.py \
+		--repo-root $(ROOT) \
+		$(if $(GATE_ZERO_G3_PLATFORM_RESULTS),$(foreach item,$(GATE_ZERO_G3_PLATFORM_RESULTS),--platform-result $(item)),) \
+		--out $(GATE_ZERO_G3_RESULT_REPORT)
+
 gate-zero-evidence:
 	python3 build_gate_zero_evidence.py \
 		--repo-root $(ROOT) \
@@ -105,10 +114,12 @@ smoke:
 	python3 run_fixtures.py --help >/dev/null
 	python3 run_gate_zero.py --help >/dev/null
 	python3 run_gate_zero_g2.py --help >/dev/null
+	python3 run_gate_zero_g3.py --help >/dev/null
 	python3 build_gate_zero_evidence.py --help >/dev/null
 
 test:
 	python3 test_run_gate_zero.py
 	python3 test_run_gate_zero_g2.py
+	python3 test_run_gate_zero_g3.py
 	python3 test_gate_zero_evidence.py
 	python3 test_gate_zero_gates.py

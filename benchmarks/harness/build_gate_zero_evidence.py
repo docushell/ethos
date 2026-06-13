@@ -50,6 +50,21 @@ REQUIRED_G2_RESULT_KEYS = {
     "failures",
     "summary",
 }
+REQUIRED_G3_RESULT_KEYS = {
+    "schema_version",
+    "gate",
+    "status",
+    "platforms",
+    "corpus",
+    "definition",
+    "host",
+    "inputs",
+    "comparison",
+    "evaluation",
+    "blockers",
+    "failures",
+    "summary",
+}
 PARSER_LABELS = {
     "ethos": "Ethos",
     "opendataloader-pdf": "OpenDataLoader",
@@ -205,6 +220,13 @@ def validate_result_shape(result: dict[str, Any], path: Path) -> None:
             raise ValueError(f"result JSON is missing required keys in {path}: {', '.join(missing)}")
         if result.get("gate") != "g2":
             raise ValueError(f"G2 result JSON must set gate=g2 in {path}")
+        return
+    if result.get("schema_version") == "ethos-gate-zero-g3-result-v1":
+        missing = sorted(REQUIRED_G3_RESULT_KEYS - set(result))
+        if missing:
+            raise ValueError(f"result JSON is missing required keys in {path}: {', '.join(missing)}")
+        if result.get("gate") != "g3":
+            raise ValueError(f"G3 result JSON must set gate=g3 in {path}")
         return
     missing = sorted(REQUIRED_RESULT_KEYS - set(result))
     if missing:
@@ -455,6 +477,83 @@ def build_g2_summary_markdown(
     return "\n".join(lines)
 
 
+def build_g3_summary_markdown(
+    result: dict[str, Any],
+    *,
+    platform_key: str,
+    gate: str,
+    source_result: str,
+    raw_result_sha256: str,
+    created_at: str,
+    reproduction_env_status: str | None,
+) -> str:
+    summary = result["summary"]
+    platforms = result.get("platforms", [])
+    failures = result.get("failures", [])
+    blockers = result.get("blockers", [])
+    lines = [
+        f"# Gate Zero {gate.upper()} {platform_key} Evidence Summary",
+        "",
+        f"- Source result: `{source_result}`",
+        f"- Source result SHA256: `{raw_result_sha256}`",
+        f"- Generated at: `{created_at}`",
+        f"- Overall status: `{result['status']}`",
+        f"- Platforms: `{', '.join(platforms)}`",
+        f"- Corpus: `{result['corpus'].get('id', 'unknown')}`",
+        f"- Corpus files compared: `{summary['corpus_files_total']}`",
+        f"- Definition: `{result['definition'].get('gates', 'unknown')}`",
+        f"- Reproduction command: `reproduction-command.txt`",
+        f"- Reproduction env: `reproduction-env.json` (`{reproduction_env_status or 'unknown'}`)",
+        f"- Host attestation: `host-attestation.json`",
+        "",
+        "## Determinism Result",
+        "",
+        "| Check | Divergences |",
+        "| --- | ---: |",
+        f"| Canonical payload hash | {summary['canonical_payload_divergences']} |",
+        f"| Document fingerprint | {summary['document_fingerprint_divergences']} |",
+        f"| Warning IDs | {summary['warning_id_divergences']} |",
+        f"| Corpus binding | {summary['corpus_binding_divergences']} |",
+        "",
+        "## Platform Inputs",
+        "",
+        "| Platform | Result | Status | Ethos Status | Runs | SHA256 |",
+        "| --- | --- | --- | --- | ---: | --- |",
+    ]
+    for platform_name, record in result["comparison"]["platform_results"].items():
+        lines.append(
+            "| "
+            f"{platform_name} | "
+            f"`{record['path']}` | "
+            f"`{record['result_status']}` | "
+            f"`{record['ethos_status']}` | "
+            f"{record['runs_total']} | "
+            f"{short_hash(record['sha256'])} |"
+        )
+
+    if failures:
+        lines.extend(["", "## Failures", ""])
+        for failure in failures:
+            lines.append(f"- {failure}")
+    if blockers:
+        lines.extend(["", "## Blockers", ""])
+        for blocker in blockers:
+            lines.append(f"- {blocker}")
+
+    lines.extend(
+        [
+            "",
+            "## Interpretation Guardrail",
+            "",
+            "G3 compares existing G1 Ethos canonical payload hashes, document fingerprints, "
+            "warning IDs, and corpus bindings across required platforms. It does not run "
+            "parsers or measure extraction quality.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def build_summary_markdown(
     result: dict[str, Any],
     *,
@@ -467,6 +566,16 @@ def build_summary_markdown(
 ) -> str:
     if result.get("schema_version") == "ethos-gate-zero-g2-result-v1":
         return build_g2_summary_markdown(
+            result,
+            platform_key=platform_key,
+            gate=gate,
+            source_result=source_result,
+            raw_result_sha256=raw_result_sha256,
+            created_at=created_at,
+            reproduction_env_status=reproduction_env_status,
+        )
+    if result.get("schema_version") == "ethos-gate-zero-g3-result-v1":
+        return build_g3_summary_markdown(
             result,
             platform_key=platform_key,
             gate=gate,
@@ -592,6 +701,8 @@ def reproduction_env_specs(result: dict[str, Any]) -> tuple[dict[str, Any], ...]
             spec for spec in REPRODUCTION_ENV_VARS
             if spec["name"] in G2_REPRODUCTION_ENV_VAR_NAMES
         )
+    if result.get("schema_version") == "ethos-gate-zero-g3-result-v1":
+        return ()
     return REPRODUCTION_ENV_VARS
 
 
