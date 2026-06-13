@@ -1,0 +1,181 @@
+{
+  "blockers": [],
+  "comparison": {
+    "baseline_platform": "macos-arm64",
+    "corpus_ids": [
+      "simple-text",
+      "two-lines",
+      "two-columns",
+      "rotation-90",
+      "hyphenated-line-break",
+      "ligature-fi-embedded-font",
+      "irs-form-1040-2025",
+      "cfpb-home-loan-toolkit",
+      "nist-sp-800-53r5",
+      "nist-sp-800-63b"
+    ],
+    "platform_results": {
+      "linux-x64": {
+        "canonical_sha256": "ef87bfb250e62b96cdc25059e8fe1d6328623c9713ad55ab184d4c2afb7ae65d",
+        "ethos_status": "pass",
+        "exists": true,
+        "host_id": "linux-x64-1",
+        "host_platform": "linux-x64",
+        "path": "benchmarks/results/gate-zero/linux-x64/g1.json",
+        "platform": "linux-x64",
+        "result_status": "fail",
+        "runs_total": 10,
+        "schema_version": "ethos-gate-zero-result-v1",
+        "sha256": "d3e8009d85c40073fe687f1fd2ea2e329fd960aaad244027082bc0fc3abb4e0a"
+      },
+      "macos-arm64": {
+        "canonical_sha256": "4f92b517cda6e06ba9de5540ec8c396519777f97dc06eb976a9cb292c61542c9",
+        "ethos_status": "pass",
+        "exists": true,
+        "host_id": "mac-m4pro-arm64",
+        "host_platform": "macos-arm64",
+        "path": "benchmarks/results/gate-zero/macos-arm64/g1.json",
+        "platform": "macos-arm64",
+        "result_status": "fail",
+        "runs_total": 10,
+        "schema_version": "ethos-gate-zero-result-v1",
+        "sha256": "d35516c5d10e02cc3c581cf518252df7350351dc7c071e03ca2f51d9694e870f"
+      }
+    },
+    "required_platforms": [
+      "macos-arm64",
+      "linux-x64"
+    ]
+  },
+  "corpus": {
+    "corpus_ids": [
+      "simple-text",
+      "two-lines",
+      "two-columns",
+      "rotation-90",
+      "hyphenated-line-break",
+      "ligature-fi-embedded-font",
+      "irs-form-1040-2025",
+      "cfpb-home-loan-toolkit",
+      "nist-sp-800-53r5",
+      "nist-sp-800-63b"
+    ],
+    "id": "gate-zero-v1",
+    "manifest": "benchmarks/gate-zero/manifest.json",
+    "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
+  },
+  "definition": {
+    "completion_policy": "G3 cannot pass from a single platform result. It requires at least macOS arm64 and Linux x64 evidence for the full frozen manifest, then a cross-platform comparison showing zero canonical payload and fingerprint divergences.",
+    "corpus_scope": "full frozen Gate Zero manifest",
+    "definition_sha256": "602f82e3141e9826a893de509f3a1137430539a0166fd045d8c5f458d26efbb6",
+    "gate_status": "defined-not-run",
+    "gates": "benchmarks/gate-zero/gates.json",
+    "required_evidence": [
+      "schema-valid Ethos result evidence for every required determinism platform",
+      "matching corpus id, file path, corpus sha256, and actual sha256 for every compared corpus entry",
+      "equal canonical payload hash for every compared corpus entry across required platforms",
+      "equal document fingerprint for every compared corpus entry across required platforms",
+      "equal warning_ids for every compared corpus entry across required platforms",
+      "matching deterministic_profile_sha256 or an explicitly reviewed profile-difference blocker",
+      "manifest_sha256 for benchmarks/gate-zero/manifest.json",
+      "definition_sha256 for benchmarks/gate-zero/gates.json"
+    ],
+    "thresholds": {
+      "canonical_payload_divergences_allowed": 0,
+      "document_fingerprint_divergences_allowed": 0
+    }
+  },
+  "evaluation": {
+    "blockers": [],
+    "failures": [
+      "simple-text canonical payload differs on linux-x64",
+      "simple-text document fingerprint differs on linux-x64",
+      "two-lines canonical payload differs on linux-x64",
+      "two-lines document fingerprint differs on linux-x64",
+      "two-columns canonical payload differs on linux-x64",
+      "two-columns document fingerprint differs on linux-x64",
+      "rotation-90 canonical payload differs on linux-x64",
+      "rotation-90 document fingerprint differs on linux-x64",
+      "hyphenated-line-break canonical payload differs on linux-x64",
+      "hyphenated-line-break document fingerprint differs on linux-x64"
+    ],
+    "status": "fail"
+  },
+  "failures": [
+    "simple-text canonical payload differs on linux-x64",
+    "simple-text document fingerprint differs on linux-x64",
+    "two-lines canonical payload differs on linux-x64",
+    "two-lines document fingerprint differs on linux-x64",
+    "two-columns canonical payload differs on linux-x64",
+    "two-columns document fingerprint differs on linux-x64",
+    "rotation-90 canonical payload differs on linux-x64",
+    "rotation-90 document fingerprint differs on linux-x64",
+    "hyphenated-line-break canonical payload differs on linux-x64",
+    "hyphenated-line-break document fingerprint differs on linux-x64"
+  ],
+  "gate": "g3",
+  "host": {
+    "observed": {
+      "machine": "arm64",
+      "platform": "macOS-26.5.1-arm64-arm-64bit",
+      "platform_key": "macos-arm64",
+      "python": "3.9.6"
+    },
+    "selected": null
+  },
+  "inputs": {
+    "competitors_lock": "benchmarks/competitors.lock.json",
+    "competitors_lock_sha256": "35becebfbf2b4b10b14213ae4a986efc9805ed6b0cf7f5dc5878f7ba79b13afa",
+    "deterministic_profile": "profiles/ethos-deterministic-v1.json",
+    "deterministic_profile_sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070",
+    "gates": "benchmarks/gate-zero/gates.json",
+    "gates_sha256": "602f82e3141e9826a893de509f3a1137430539a0166fd045d8c5f458d26efbb6",
+    "manifest": "benchmarks/gate-zero/manifest.json",
+    "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729",
+    "platform_results": {
+      "linux-x64": {
+        "canonical_sha256": "ef87bfb250e62b96cdc25059e8fe1d6328623c9713ad55ab184d4c2afb7ae65d",
+        "ethos_status": "pass",
+        "exists": true,
+        "host_id": "linux-x64-1",
+        "host_platform": "linux-x64",
+        "path": "benchmarks/results/gate-zero/linux-x64/g1.json",
+        "platform": "linux-x64",
+        "result_status": "fail",
+        "runs_total": 10,
+        "schema_version": "ethos-gate-zero-result-v1",
+        "sha256": "d3e8009d85c40073fe687f1fd2ea2e329fd960aaad244027082bc0fc3abb4e0a"
+      },
+      "macos-arm64": {
+        "canonical_sha256": "4f92b517cda6e06ba9de5540ec8c396519777f97dc06eb976a9cb292c61542c9",
+        "ethos_status": "pass",
+        "exists": true,
+        "host_id": "mac-m4pro-arm64",
+        "host_platform": "macos-arm64",
+        "path": "benchmarks/results/gate-zero/macos-arm64/g1.json",
+        "platform": "macos-arm64",
+        "result_status": "fail",
+        "runs_total": 10,
+        "schema_version": "ethos-gate-zero-result-v1",
+        "sha256": "d35516c5d10e02cc3c581cf518252df7350351dc7c071e03ca2f51d9694e870f"
+      }
+    }
+  },
+  "platforms": [
+    "macos-arm64",
+    "linux-x64"
+  ],
+  "schema_version": "ethos-gate-zero-g3-result-v1",
+  "status": "fail",
+  "summary": {
+    "blockers_total": 0,
+    "canonical_payload_divergences": 5,
+    "corpus_binding_divergences": 0,
+    "corpus_files_total": 10,
+    "document_fingerprint_divergences": 5,
+    "failures_total": 10,
+    "platforms_total": 2,
+    "status": "fail",
+    "warning_id_divergences": 0
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "benchmark_commit": "66af801f274ff354ca1808cea70e2cb32aa7002d",
+  "bundle_git": {
+    "available": true,
+    "commit": "66af801f274ff354ca1808cea70e2cb32aa7002d",
+    "dirty": true,
+    "status_short": [
+      "?? benchmarks/results/gate-zero/g3.json"
+    ]
+  },
+  "bundle_host_observed": {
+    "machine": "arm64",
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "platform_key": "macos-arm64",
+    "python": "3.9.6"
+  },
+  "gate": "g3",
+  "generated_at": "2026-06-13T12:34:58Z",
+  "platform": "cross-platform",
+  "result_host": {
+    "observed": {
+      "machine": "arm64",
+      "platform": "macOS-26.5.1-arm64-arm-64bit",
+      "platform_key": "macos-arm64",
+      "python": "3.9.6"
+    },
+    "selected": null
+  },
+  "result_inputs": {
+    "competitors_lock": "benchmarks/competitors.lock.json",
+    "competitors_lock_sha256": "35becebfbf2b4b10b14213ae4a986efc9805ed6b0cf7f5dc5878f7ba79b13afa",
+    "deterministic_profile": "profiles/ethos-deterministic-v1.json",
+    "deterministic_profile_sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070",
+    "gates": "benchmarks/gate-zero/gates.json",
+    "gates_sha256": "602f82e3141e9826a893de509f3a1137430539a0166fd045d8c5f458d26efbb6",
+    "manifest": "benchmarks/gate-zero/manifest.json",
+    "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729",
+    "platform_results": {
+      "linux-x64": {
+        "canonical_sha256": "ef87bfb250e62b96cdc25059e8fe1d6328623c9713ad55ab184d4c2afb7ae65d",
+        "ethos_status": "pass",
+        "exists": true,
+        "host_id": "linux-x64-1",
+        "host_platform": "linux-x64",
+        "path": "benchmarks/results/gate-zero/linux-x64/g1.json",
+        "platform": "linux-x64",
+        "result_status": "fail",
+        "runs_total": 10,
+        "schema_version": "ethos-gate-zero-result-v1",
+        "sha256": "d3e8009d85c40073fe687f1fd2ea2e329fd960aaad244027082bc0fc3abb4e0a"
+      },
+      "macos-arm64": {
+        "canonical_sha256": "4f92b517cda6e06ba9de5540ec8c396519777f97dc06eb976a9cb292c61542c9",
+        "ethos_status": "pass",
+        "exists": true,
+        "host_id": "mac-m4pro-arm64",
+        "host_platform": "macos-arm64",
+        "path": "benchmarks/results/gate-zero/macos-arm64/g1.json",
+        "platform": "macos-arm64",
+        "result_status": "fail",
+        "runs_total": 10,
+        "schema_version": "ethos-gate-zero-result-v1",
+        "sha256": "d35516c5d10e02cc3c581cf518252df7350351dc7c071e03ca2f51d9694e870f"
+      }
+    }
+  },
+  "schema_version": "ethos-gate-zero-host-attestation-v1",
+  "source_result": "benchmarks/results/gate-zero/g3.json",
+  "source_result_canonical_sha256": "bb11942d120517591656c78c1fcd6a706ee4af7a284aa026a7bbc2b798cf3ec2",
+  "source_result_sha256": "9051afa565b3128c251603137c59930da502298cdde4780c65ce2e78a7d53a4e"
+}

@@ -1,0 +1,1 @@
+python3 benchmarks/harness/run_gate_zero_g3.py --repo-root . --out benchmarks/results/gate-zero/g3.json
