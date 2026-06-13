@@ -37,7 +37,7 @@ pub const PDFIUM_VERSION_ENV: &str = "ETHOS_PDFIUM_VERSION";
 pub const PDFIUM_ARTIFACT_PATH_ENV: &str = "ETHOS_PDFIUM_ARTIFACT_PATH";
 
 /// Profile quantization: 100 quanta per PDF point.
-const QUANTUM_PER_POINT: u32 = 100;
+pub const QUANTUM_PER_POINT: u32 = 100;
 const ORIGIN_LOCATOR_POLICY: &str = "origin-run-locator-v1";
 
 const DETERMINISTIC_PROFILE_JSON: &str = include_str!(concat!(
@@ -471,6 +471,14 @@ fn pinned_pdfium_profile() -> &'static PinnedPdfiumBackend {
 }
 
 fn validate_pinned_pdfium_profile(profile: &PinnedPdfiumBackend) -> Result<(), &'static str> {
+    validate_pinned_pdfium_identity(profile)?;
+    validate_pinned_pdfium_distribution(&profile.distribution)?;
+    validate_pinned_pdfium_build_flags(&profile.build_flags)?;
+    validate_pinned_pdfium_platforms(profile)?;
+    Ok(())
+}
+
+fn validate_pinned_pdfium_identity(profile: &PinnedPdfiumBackend) -> Result<(), &'static str> {
     if profile.id != "pdfium"
         || profile.phase != 1
         || profile.version != "chromium/7881"
@@ -481,27 +489,41 @@ fn validate_pinned_pdfium_profile(profile: &PinnedPdfiumBackend) -> Result<(), &
     {
         return Err("unexpected PDFium profile identity");
     }
-    if profile.distribution.source != "bblanchon/pdfium-binaries"
-        || profile.distribution.attestation.name != "pdfium-attestation.json"
-        || !is_sha256_hex(&profile.distribution.attestation.sha256)
-        || !profile
-            .distribution
+    Ok(())
+}
+
+fn validate_pinned_pdfium_distribution(
+    distribution: &PinnedPdfiumDistribution,
+) -> Result<(), &'static str> {
+    if distribution.source != "bblanchon/pdfium-binaries"
+        || distribution.attestation.name != "pdfium-attestation.json"
+        || !is_sha256_hex(&distribution.attestation.sha256)
+        || !distribution
             .release_url
             .starts_with("https://github.com/bblanchon/pdfium-binaries/releases/tag/")
-        || !profile.distribution.published_at.ends_with('Z')
+        || !distribution.published_at.ends_with('Z')
     {
         return Err("unexpected PDFium distribution metadata");
     }
-    if profile.build_flags.is_component_build
-        || profile.build_flags.is_debug
-        || profile.build_flags.pdf_enable_v8
-        || profile.build_flags.pdf_enable_xfa
-        || !profile.build_flags.pdf_is_standalone
-        || profile.build_flags.pdf_use_partition_alloc
+    Ok(())
+}
+
+fn validate_pinned_pdfium_build_flags(
+    build_flags: &PinnedPdfiumBuildFlags,
+) -> Result<(), &'static str> {
+    if build_flags.is_component_build
+        || build_flags.is_debug
+        || build_flags.pdf_enable_v8
+        || build_flags.pdf_enable_xfa
+        || !build_flags.pdf_is_standalone
+        || build_flags.pdf_use_partition_alloc
     {
         return Err("PDFium Phase 1 must be standalone release with V8/XFA disabled");
     }
+    Ok(())
+}
 
+fn validate_pinned_pdfium_platforms(profile: &PinnedPdfiumBackend) -> Result<(), &'static str> {
     for platform in ["macos-arm64", "linux-x64", "windows-x64"] {
         let artifact_hash = profile
             .platform_hashes
@@ -538,7 +560,6 @@ fn validate_pinned_pdfium_profile(profile: &PinnedPdfiumBackend) -> Result<(), &
             _ => return Err("unexpected PDFium platform artifact"),
         }
     }
-
     Ok(())
 }
 

@@ -308,45 +308,56 @@ fn check_claim(
     };
 
     let evidence = make_evidence(source, &target, context.include_text, context.include_crops);
-    match claim.kind {
-        ClaimKind::Presence => Check {
-            id: check_id,
-            claim,
-            status: CheckStatus::Grounded,
-            match_method: MatchMethod::PresenceOnly,
-            semantic_unverified: false,
-            evidence,
-            warnings,
-        },
+    let (status, match_method) =
+        check_resolved_claim(claim.kind, claim.text.as_deref(), &target, config);
+    Check {
+        id: check_id,
+        claim,
+        status,
+        match_method,
+        semantic_unverified: false,
+        evidence,
+        warnings,
+    }
+}
+
+fn check_resolved_claim(
+    kind: ClaimKind,
+    expected_text: Option<&str>,
+    target: &FoundTarget,
+    config: &VerificationConfig,
+) -> (CheckStatus, MatchMethod) {
+    match kind {
+        ClaimKind::Presence => check_presence_claim(),
         ClaimKind::Quote | ClaimKind::Value | ClaimKind::TableCell => {
-            let match_method = if target.from_table_cell {
-                MatchMethod::TableCellLookup
-            } else {
-                text_match_method(claim.kind, config)
-            };
-            let status = if let (Some(expected), Some(actual)) =
-                (claim.text.as_deref(), target.text.as_deref())
-            {
-                if text_matches(claim.kind, expected, actual, config) {
-                    CheckStatus::Grounded
-                } else {
-                    CheckStatus::Mismatch
-                }
-            } else {
-                CheckStatus::Mismatch
-            };
-            Check {
-                id: check_id,
-                claim,
-                status,
-                match_method,
-                semantic_unverified: false,
-                evidence,
-                warnings,
-            }
+            check_text_claim(kind, expected_text, target, config)
         }
         _ => unreachable!("unsupported kinds returned before matching"),
     }
+}
+
+fn check_presence_claim() -> (CheckStatus, MatchMethod) {
+    (CheckStatus::Grounded, MatchMethod::PresenceOnly)
+}
+
+fn check_text_claim(
+    kind: ClaimKind,
+    expected_text: Option<&str>,
+    target: &FoundTarget,
+    config: &VerificationConfig,
+) -> (CheckStatus, MatchMethod) {
+    let match_method = if target.from_table_cell {
+        MatchMethod::TableCellLookup
+    } else {
+        text_match_method(kind, config)
+    };
+    let status = match (expected_text, target.text.as_deref()) {
+        (Some(expected), Some(actual)) if text_matches(kind, expected, actual, config) => {
+            CheckStatus::Grounded
+        }
+        _ => CheckStatus::Mismatch,
+    };
+    (status, match_method)
 }
 
 fn is_supported_kind(kind: ClaimKind) -> bool {

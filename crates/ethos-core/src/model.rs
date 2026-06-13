@@ -391,6 +391,16 @@ impl ElementType {
     }
 }
 
+fn grounding_element_from_element(e: &Element) -> crate::grounding::GroundingElement {
+    crate::grounding::GroundingElement {
+        id: e.id.clone(),
+        page: e.page.clone(),
+        bbox: e.bbox.to_array(),
+        kind: e.element_type.as_str().to_string(),
+        text: e.text.clone(),
+    }
+}
+
 /// Ethos output is itself just another grounding source (PRD §1.5): the verify layer
 /// sees Ethos through the same trait as any foreign parser.
 impl crate::grounding::GroundingSource for Document {
@@ -437,14 +447,16 @@ impl crate::grounding::GroundingSource for Document {
         self.payload
             .elements
             .iter()
-            .map(|e| crate::grounding::GroundingElement {
-                id: e.id.clone(),
-                page: e.page.clone(),
-                bbox: e.bbox.to_array(),
-                kind: e.element_type.as_str().to_string(),
-                text: e.text.clone(),
-            })
+            .map(grounding_element_from_element)
             .collect()
+    }
+
+    fn element_by_id(&self, id: &str) -> Option<crate::grounding::GroundingElement> {
+        self.payload
+            .elements
+            .iter()
+            .find(|e| e.id == id)
+            .map(grounding_element_from_element)
     }
 
     fn spans(&self) -> Vec<crate::grounding::GroundingSpan> {

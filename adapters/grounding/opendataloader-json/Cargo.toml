@@ -13,3 +13,7 @@ authors.workspace = true
 ethos-core = { workspace = true, features = ["grounding"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+# Test-only cross-check for the adapter's local centipoint rounding semantics.
+ethos-core = { workspace = true, features = ["full"] }

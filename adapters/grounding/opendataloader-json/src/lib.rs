@@ -94,8 +94,10 @@ pub struct OdlJsonSource {
     tables: Vec<GroundingTable>,
 }
 
-/// Scale points → centipoints, half-away-from-zero (kept local: this crate deliberately
-/// cannot see `ethos-core::geom`, which is behind the `full` feature).
+/// Scale points → centipoints, half-away-from-zero.
+///
+/// This intentionally mirrors `ethos_core::geom::quantize(pts, 100)` while staying local:
+/// the production adapter depends only on the parser-free `grounding` feature.
 fn to_centipoints(v: f64) -> Option<i64> {
     if !v.is_finite() {
         return None;
@@ -164,6 +166,192 @@ fn optional_positive_u32_field(
     Ok(value)
 }
 
+fn parse_tool(root: &Value) -> Result<(String, String), AdapterError> {
+    let tool = root
+        .get("tool")
+        .ok_or_else(|| err("missing 'tool' object"))?;
+    Ok((
+        string_field(tool, "name", "missing tool.name")?,
+        string_field(tool, "version", "missing tool.version")?,
+    ))
+}
+
+fn parse_pages(root: &Value) -> Result<(Vec<PageGeometry>, HashSet<u32>), AdapterError> {
+    let mut pages = Vec::new();
+    let mut page_numbers = HashSet::new();
+    for page in root
+        .get("pages")
+        .and_then(Value::as_array)
+        .ok_or_else(|| err("missing 'pages' array"))?
+    {
+        let number = u32_field(
+            page,
+            "number",
+            "missing page.number",
+            "page.number must fit u32",
+        )?;
+        if number == 0 {
+            return Err(err("page.number must be 1-based"));
+        }
+        if !page_numbers.insert(number) {
+            return Err(err("duplicate page.number"));
+        }
+        let width = positive_centipoints(page, "width", "page width must be positive finite")?;
+        let height = positive_centipoints(page, "height", "page height must be positive finite")?;
+        pages.push(PageGeometry {
+            id: format!("page-{number}"),
+            index: number,
+            width,
+            height,
+            rotation: 0,
+        });
+    }
+    pages.sort_by_key(|p| p.index);
+    Ok((pages, page_numbers))
+}
+
+fn parse_elements(
+    root: &Value,
+    page_numbers: &HashSet<u32>,
+) -> Result<Vec<GroundingElement>, AdapterError> {
+    let mut elements = Vec::new();
+    let mut element_ids = HashSet::new();
+    for (i, el) in root
+        .get("elements")
+        .and_then(Value::as_array)
+        .ok_or_else(|| err("missing 'elements' array"))?
+        .iter()
+        .enumerate()
+    {
+        let page_number = u32_field(
+            el,
+            "page",
+            "missing element.page",
+            "element.page must fit u32",
+        )?;
+        if page_number == 0 {
+            return Err(err("element.page must be 1-based"));
+        }
+        if !page_numbers.contains(&page_number) {
+            return Err(err("element.page references unknown page"));
+        }
+        let id = el
+            .get("id")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .map(str::to_string)
+            .unwrap_or_else(|| format!("odl-el-{}", i + 1));
+        if !element_ids.insert(id.clone()) {
+            return Err(err("duplicate element.id"));
+        }
+        let bbox = bbox_from(el.get("bbox").ok_or_else(|| err("missing element.bbox"))?)?;
+        let kind = el
+            .get("type")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|kind| !kind.is_empty())
+            .unwrap_or("unknown")
+            .to_ascii_lowercase();
+        let text = el.get("text").and_then(Value::as_str).map(str::to_string);
+        elements.push(GroundingElement {
+            id,
+            page: format!("page-{page_number}"),
+            bbox,
+            kind,
+            text,
+        });
+    }
+    Ok(elements)
+}
+
+fn parse_tables(
+    root: &Value,
+    page_numbers: &HashSet<u32>,
+) -> Result<(bool, Vec<GroundingTable>), AdapterError> {
+    let Some(tables_value) = root.get("tables") else {
+        return Ok((false, Vec::new()));
+    };
+
+    let mut tables = Vec::new();
+    let mut table_ids = HashSet::new();
+    let table_array = tables_value
+        .as_array()
+        .ok_or_else(|| err("'tables' is not an array"))?;
+    for table in table_array {
+        let id = string_field(table, "id", "missing table.id")?;
+        if !table_ids.insert(id.clone()) {
+            return Err(err("duplicate table.id"));
+        }
+        let page_number = u32_field(
+            table,
+            "page",
+            "missing table.page",
+            "table.page must fit u32",
+        )?;
+        if page_number == 0 {
+            return Err(err("table.page must be 1-based"));
+        }
+        if !page_numbers.contains(&page_number) {
+            return Err(err("table.page references unknown page"));
+        }
+        let bbox = bbox_from(table.get("bbox").ok_or_else(|| err("missing table.bbox"))?)?;
+        let cells = parse_table_cells(table)?;
+        tables.push(GroundingTable {
+            id,
+            page: format!("page-{page_number}"),
+            bbox,
+            cells,
+        });
+    }
+    Ok((true, tables))
+}
+
+fn parse_table_cells(table: &Value) -> Result<Vec<GroundingCell>, AdapterError> {
+    let mut cells = Vec::new();
+    for cell in table
+        .get("cells")
+        .and_then(Value::as_array)
+        .ok_or_else(|| err("missing table.cells array"))?
+    {
+        let candidate = parse_table_cell(cell)?;
+        if cells_overlap(&cells, &candidate) {
+            return Err(err("overlapping table cell address range"));
+        }
+        cells.push(candidate);
+    }
+    Ok(cells)
+}
+
+fn parse_table_cell(cell: &Value) -> Result<GroundingCell, AdapterError> {
+    let row = u32_field(cell, "row", "missing cell.row", "cell.row must fit u32")?;
+    let col = u32_field(cell, "col", "missing cell.col", "cell.col must fit u32")?;
+    let row_span = optional_positive_u32_field(
+        cell,
+        "row_span",
+        1,
+        "cell.row_span must fit u32",
+        "cell.row_span must be positive",
+    )?;
+    let col_span = optional_positive_u32_field(
+        cell,
+        "col_span",
+        1,
+        "cell.col_span must fit u32",
+        "cell.col_span must be positive",
+    )?;
+    let bbox = bbox_from(cell.get("bbox").ok_or_else(|| err("missing cell.bbox"))?)?;
+    let text = string_field(cell, "text", "missing cell.text")?;
+    Ok(GroundingCell {
+        row,
+        col,
+        row_span,
+        col_span,
+        bbox,
+        text,
+    })
+}
+
 impl OdlJsonSource {
     /// Build from ODL JSON text.
     pub fn from_json_str(json: &str) -> Result<Self, AdapterError> {
@@ -173,165 +361,10 @@ impl OdlJsonSource {
 
     /// Build from a parsed JSON value.
     pub fn from_value(root: &Value) -> Result<Self, AdapterError> {
-        let tool = root
-            .get("tool")
-            .ok_or_else(|| err("missing 'tool' object"))?;
-        let parser_name = string_field(tool, "name", "missing tool.name")?;
-        let parser_version = string_field(tool, "version", "missing tool.version")?;
-
-        let mut pages = Vec::new();
-        let mut page_numbers = HashSet::new();
-        for page in root
-            .get("pages")
-            .and_then(Value::as_array)
-            .ok_or_else(|| err("missing 'pages' array"))?
-        {
-            let number = u32_field(
-                page,
-                "number",
-                "missing page.number",
-                "page.number must fit u32",
-            )?;
-            if number == 0 {
-                return Err(err("page.number must be 1-based"));
-            }
-            if !page_numbers.insert(number) {
-                return Err(err("duplicate page.number"));
-            }
-            let width = positive_centipoints(page, "width", "page width must be positive finite")?;
-            let height =
-                positive_centipoints(page, "height", "page height must be positive finite")?;
-            pages.push(PageGeometry {
-                id: format!("page-{number}"),
-                index: number,
-                width,
-                height,
-                rotation: 0,
-            });
-        }
-        pages.sort_by_key(|p| p.index);
-
-        let mut elements = Vec::new();
-        let mut element_ids = HashSet::new();
-        for (i, el) in root
-            .get("elements")
-            .and_then(Value::as_array)
-            .ok_or_else(|| err("missing 'elements' array"))?
-            .iter()
-            .enumerate()
-        {
-            let page_number = u32_field(
-                el,
-                "page",
-                "missing element.page",
-                "element.page must fit u32",
-            )?;
-            if page_number == 0 {
-                return Err(err("element.page must be 1-based"));
-            }
-            if !page_numbers.contains(&page_number) {
-                return Err(err("element.page references unknown page"));
-            }
-            let id = el
-                .get("id")
-                .and_then(Value::as_str)
-                .map(str::trim)
-                .filter(|id| !id.is_empty())
-                .map(str::to_string)
-                .unwrap_or_else(|| format!("odl-el-{}", i + 1));
-            if !element_ids.insert(id.clone()) {
-                return Err(err("duplicate element.id"));
-            }
-            let bbox = bbox_from(el.get("bbox").ok_or_else(|| err("missing element.bbox"))?)?;
-            let kind = el
-                .get("type")
-                .and_then(Value::as_str)
-                .map(str::trim)
-                .filter(|kind| !kind.is_empty())
-                .unwrap_or("unknown")
-                .to_ascii_lowercase();
-            let text = el.get("text").and_then(Value::as_str).map(str::to_string);
-            elements.push(GroundingElement {
-                id,
-                page: format!("page-{page_number}"),
-                bbox,
-                kind,
-                text,
-            });
-        }
-
-        let mut tables = Vec::new();
-        let mut tables_capable = false;
-        let mut table_ids = HashSet::new();
-        if let Some(tables_value) = root.get("tables") {
-            tables_capable = true;
-            let table_array = tables_value
-                .as_array()
-                .ok_or_else(|| err("'tables' is not an array"))?;
-            for table in table_array {
-                let id = string_field(table, "id", "missing table.id")?;
-                if !table_ids.insert(id.clone()) {
-                    return Err(err("duplicate table.id"));
-                }
-                let page_number = u32_field(
-                    table,
-                    "page",
-                    "missing table.page",
-                    "table.page must fit u32",
-                )?;
-                if page_number == 0 {
-                    return Err(err("table.page must be 1-based"));
-                }
-                if !page_numbers.contains(&page_number) {
-                    return Err(err("table.page references unknown page"));
-                }
-                let bbox = bbox_from(table.get("bbox").ok_or_else(|| err("missing table.bbox"))?)?;
-                let mut cells = Vec::new();
-                for cell in table
-                    .get("cells")
-                    .and_then(Value::as_array)
-                    .ok_or_else(|| err("missing table.cells array"))?
-                {
-                    let row = u32_field(cell, "row", "missing cell.row", "cell.row must fit u32")?;
-                    let col = u32_field(cell, "col", "missing cell.col", "cell.col must fit u32")?;
-                    let row_span = optional_positive_u32_field(
-                        cell,
-                        "row_span",
-                        1,
-                        "cell.row_span must fit u32",
-                        "cell.row_span must be positive",
-                    )?;
-                    let col_span = optional_positive_u32_field(
-                        cell,
-                        "col_span",
-                        1,
-                        "cell.col_span must fit u32",
-                        "cell.col_span must be positive",
-                    )?;
-                    let bbox =
-                        bbox_from(cell.get("bbox").ok_or_else(|| err("missing cell.bbox"))?)?;
-                    let text = string_field(cell, "text", "missing cell.text")?;
-                    let candidate = GroundingCell {
-                        row,
-                        col,
-                        row_span,
-                        col_span,
-                        bbox,
-                        text,
-                    };
-                    if cells_overlap(&cells, &candidate) {
-                        return Err(err("overlapping table cell address range"));
-                    }
-                    cells.push(candidate);
-                }
-                tables.push(GroundingTable {
-                    id,
-                    page: format!("page-{page_number}"),
-                    bbox,
-                    cells,
-                });
-            }
-        }
+        let (parser_name, parser_version) = parse_tool(root)?;
+        let (pages, page_numbers) = parse_pages(root)?;
+        let elements = parse_elements(root, &page_numbers)?;
+        let (tables_capable, tables) = parse_tables(root, &page_numbers)?;
 
         Ok(OdlJsonSource {
             parser_name,
@@ -375,6 +408,13 @@ impl GroundingSource for OdlJsonSource {
 
     fn elements(&self) -> Vec<GroundingElement> {
         self.elements.clone()
+    }
+
+    fn element_by_id(&self, id: &str) -> Option<GroundingElement> {
+        self.elements
+            .iter()
+            .find(|element| element.id == id)
+            .cloned()
     }
 
     fn tables(&self) -> Vec<GroundingTable> {
@@ -439,6 +479,32 @@ mod tests {
         assert!(!caps.spans && !caps.fingerprint && !caps.crop_support);
         assert_eq!(caps.coordinate_origin, CoordinateOrigin::Unknown);
         assert!(src.fingerprint().is_none());
+    }
+
+    #[test]
+    fn centipoint_quantization_matches_core_semantics() {
+        let samples = [
+            f64::NAN,
+            f64::INFINITY,
+            1e17,
+            -0.0,
+            0.0,
+            0.004,
+            -0.004,
+            0.005,
+            -0.005,
+            1.234,
+            -1.234,
+            612.0,
+            -612.0,
+        ];
+
+        for sample in samples {
+            assert_eq!(
+                to_centipoints(sample),
+                ethos_core::geom::quantize(sample, 100).ok()
+            );
+        }
     }
 
     #[test]
