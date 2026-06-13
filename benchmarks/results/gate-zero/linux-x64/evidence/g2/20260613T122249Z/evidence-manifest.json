@@ -1,0 +1,38 @@
+{
+  "artifacts": [
+    {
+      "path": "SUMMARY.md",
+      "sha256": "ac660f8a7334911e8c3c34d1b0d434087ddba60c4ea7e245cce908570b01409e"
+    },
+    {
+      "path": "host-attestation.json",
+      "sha256": "7b911c3ee2f889815c510b670ea6bb1d40b2e1ec3175d1bb6f524e3ff7fabd10"
+    },
+    {
+      "path": "raw/g2-linux-x64-20260613T122249Z.json",
+      "sha256": "351202a378beec450ad34515fbeee999fd7c452123de52a09b612f7cf812685e"
+    },
+    {
+      "path": "reproduction-command.txt",
+      "sha256": "255c8b93131fbadf311dfe9106146a8a5144b72adeb00671dbef095cb0f7a0af"
+    },
+    {
+      "path": "reproduction-env.json",
+      "sha256": "9d35251cd609a150a9e427bbf36a24b06babd55eb191767f7afa06a239e7c6c6"
+    }
+  ],
+  "benchmark_commit": "51a5438e1f560f403a12aadf470ae9471e37d4e1",
+  "created_at": "2026-06-13T12:22:49Z",
+  "definition_sha256": "602f82e3141e9826a893de509f3a1137430539a0166fd045d8c5f458d26efbb6",
+  "edgeparse_determinism_failures": [],
+  "ethos_status": "pass",
+  "gate": "g2",
+  "platform": "linux-x64",
+  "reproduction_env_blockers": [],
+  "reproduction_env_status": "complete",
+  "schema_version": "ethos-gate-zero-evidence-v1",
+  "source_result": "benchmarks/results/gate-zero/linux-x64/g2.json",
+  "source_result_canonical_sha256": "a3b65ceba210f5f4a99db7fb4859256891ee182ab50ceabe26ee7bee7f85910a",
+  "source_result_sha256": "351202a378beec450ad34515fbeee999fd7c452123de52a09b612f7cf812685e",
+  "source_result_status": "pass"
+}

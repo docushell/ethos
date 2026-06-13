@@ -1,0 +1,60 @@
+{
+  "artifacts": [
+    {
+      "path": "SUMMARY.md",
+      "sha256": "ae80d29d3eb95498ea9176f55e34f94ed9765ab4892ca61607a9fe29faafc008"
+    },
+    {
+      "path": "host-attestation.json",
+      "sha256": "467e5e06d731c5e76318c190ce8a24d2117605f8349f231fb2734f4f68e44eae"
+    },
+    {
+      "path": "raw/g1-linux-x64-20260613T121439Z.json",
+      "sha256": "d3e8009d85c40073fe687f1fd2ea2e329fd960aaad244027082bc0fc3abb4e0a"
+    },
+    {
+      "path": "reproduction-command.txt",
+      "sha256": "9d8773b49b812be6570bc608fa2465e936264d4798da2721277ce4b8f7a09334"
+    },
+    {
+      "path": "reproduction-env.json",
+      "sha256": "9a395c3372732fc16885f0ec98ca672f8169a740f18fc33fa8cdae94711ed683"
+    }
+  ],
+  "benchmark_commit": "51a5438e1f560f403a12aadf470ae9471e37d4e1",
+  "created_at": "2026-06-13T12:14:39Z",
+  "definition_sha256": null,
+  "edgeparse_determinism_failures": [
+    {
+      "failures": [
+        "output_sha256 changed across iterations"
+      ],
+      "file": "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+      "id": "cfpb-home-loan-toolkit"
+    },
+    {
+      "failures": [
+        "output_sha256 changed across iterations"
+      ],
+      "file": "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+      "id": "nist-sp-800-53r5"
+    },
+    {
+      "failures": [
+        "output_sha256 changed across iterations"
+      ],
+      "file": "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+      "id": "nist-sp-800-63b"
+    }
+  ],
+  "ethos_status": "pass",
+  "gate": "g1",
+  "platform": "linux-x64",
+  "reproduction_env_blockers": [],
+  "reproduction_env_status": "complete",
+  "schema_version": "ethos-gate-zero-evidence-v1",
+  "source_result": "benchmarks/results/gate-zero/linux-x64/g1.json",
+  "source_result_canonical_sha256": "ef87bfb250e62b96cdc25059e8fe1d6328623c9713ad55ab184d4c2afb7ae65d",
+  "source_result_sha256": "d3e8009d85c40073fe687f1fd2ea2e329fd960aaad244027082bc0fc3abb4e0a",
+  "source_result_status": "fail"
+}

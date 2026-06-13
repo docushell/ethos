@@ -1,0 +1,49 @@
+{
+  "benchmark_commit": "51a5438e1f560f403a12aadf470ae9471e37d4e1",
+  "bundle_git": {
+    "available": false,
+    "error": "fatal: not a git repository (or any parent up to mount point /)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set)."
+  },
+  "bundle_host_observed": {
+    "machine": "x86_64",
+    "platform": "Linux-5.15.0-316.196.4.1.el8uek.x86_64-x86_64-with-glibc2.28",
+    "platform_key": "linux-x64",
+    "python": "3.13.13"
+  },
+  "gate": "g1",
+  "generated_at": "2026-06-13T12:14:39Z",
+  "platform": "linux-x64",
+  "result_host": {
+    "observed": {
+      "machine": "x86_64",
+      "platform": "Linux-5.15.0-316.196.4.1.el8uek.x86_64-x86_64-with-glibc2.28",
+      "platform_key": "linux-x64",
+      "python": "3.13.13"
+    },
+    "selected": {
+      "cores_used_for_g1": 1,
+      "cpu": "AMD EPYC 7742 64-Core Processor, 2 vCPU, 1 core/socket, 2 threads/core",
+      "id": "linux-x64-1",
+      "kernel": "Linux 5.15.0-316.196.4.1.el8uek.x86_64",
+      "model": "KVM virtualized EL-compatible 8.8 x86_64 host",
+      "os": "EL-compatible Server 8.8",
+      "platform": "linux-x64",
+      "ram": "32565968 kB MemTotal",
+      "role": "performance",
+      "runner": "manual runner; runner id=linux-x64-1"
+    }
+  },
+  "result_inputs": {
+    "competitors_lock": "benchmarks/competitors.lock.json",
+    "competitors_lock_sha256": "35becebfbf2b4b10b14213ae4a986efc9805ed6b0cf7f5dc5878f7ba79b13afa",
+    "deterministic_profile": "profiles/ethos-deterministic-v1.json",
+    "deterministic_profile_file_sha256": "537ec4b4352a8c873929fc61df15a79da3038994267f3655314262e293334e1f",
+    "ethos_bin": "target/release/ethos",
+    "ethos_bin_sha256": "684a45479b3e0e24f9eaed373cb5d244b71f49616bf760ee5fb4de8d34d8f62e",
+    "install_path": "target/release/ethos"
+  },
+  "schema_version": "ethos-gate-zero-host-attestation-v1",
+  "source_result": "benchmarks/results/gate-zero/linux-x64/g1.json",
+  "source_result_canonical_sha256": "ef87bfb250e62b96cdc25059e8fe1d6328623c9713ad55ab184d4c2afb7ae65d",
+  "source_result_sha256": "d3e8009d85c40073fe687f1fd2ea2e329fd960aaad244027082bc0fc3abb4e0a"
+}

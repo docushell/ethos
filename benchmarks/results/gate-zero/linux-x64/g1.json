@@ -1,0 +1,2264 @@
+{
+  "blockers": [],
+  "command": [
+    "target/release/ethos",
+    "doc",
+    "parse",
+    "<corpus-file>",
+    "--format",
+    "json"
+  ],
+  "competitors": {
+    "adapters": [
+      {
+        "artifact": {
+          "expected_sha256": "1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628",
+          "path": "<opendataloader-pdf-artifact>",
+          "sha256": "1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628"
+        },
+        "blockers": [],
+        "command": "<opendataloader-command>",
+        "command_template": [
+          "<opendataloader-command>",
+          "--quiet",
+          "--format",
+          "json",
+          "--image-output",
+          "external",
+          "--reading-order",
+          "xycut",
+          "--table-method",
+          "default",
+          "--threads",
+          "1",
+          "--output-dir",
+          "<output-dir>",
+          "<input-pdf>"
+        ],
+        "id": "opendataloader-pdf",
+        "install_size_bytes": 128392275,
+        "lock": {
+          "artifact_filename": "opendataloader_pdf-2.4.7-py3-none-any.whl",
+          "artifact_kind": "PyPI universal wheel downloaded and SHA256-verified on the benchmark owner host",
+          "artifact_sha256": "1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628",
+          "artifact_url": "https://files.pythonhosted.org/packages/b7/14/f897eabf04eab4e6a40dce9214d921558165f3eaed68335892a5b1a004d0/opendataloader_pdf-2.4.7-py3-none-any.whl",
+          "id": "opendataloader-pdf",
+          "jvm_version": "OpenJDK Temurin 26+35",
+          "pin_status": "pinned",
+          "pinned": true,
+          "pinned_at": "2026-06-12T08:17:02Z",
+          "pinned_by": "docushell-admin <hello@docushell.com>",
+          "role": "G1/G2 reference (2x throughput and 1/10 footprint comparisons; remeasured in-harness)",
+          "runtime": "JVM",
+          "source": "https://github.com/opendataloader-project/opendataloader-pdf",
+          "version": "2.4.7"
+        },
+        "mode": "execute",
+        "notes": [],
+        "status": "ready"
+      },
+      {
+        "artifact": {
+          "expected_sha256": "77c6e82556cccd02e84b96149a98416559dde7456b1cbe83ac92dc9429531e38",
+          "path": "<edgeparse-artifact>",
+          "sha256": "77c6e82556cccd02e84b96149a98416559dde7456b1cbe83ac92dc9429531e38"
+        },
+        "blockers": [],
+        "command": "<edgeparse-command>",
+        "command_template": [
+          "<edgeparse-command>",
+          "<input-pdf>",
+          "--format",
+          "json",
+          "--output-dir",
+          "<output-dir>"
+        ],
+        "id": "edgeparse",
+        "install_size_bytes": 115020757,
+        "lock": {
+          "artifact_filename": "edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl",
+          "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
+          "artifact_sha256": "82a6fdd81f2bfac4a3b8aedd06e055ae67ec8a2d1c879fb6327259caa13f5a69",
+          "artifact_url": "https://files.pythonhosted.org/packages/85/26/0fcb829043ea9de9b5e4771294a027dca47fdf7b4cb7211f6035092d1082/edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl",
+          "id": "edgeparse",
+          "package": "edgeparse",
+          "pin_status": "pinned",
+          "pinned": true,
+          "pinned_at": "2026-06-12T08:17:02Z",
+          "pinned_by": "docushell-admin <hello@docushell.com>",
+          "platform_artifacts": {
+            "linux-x64": {
+              "artifact_filename": "edgeparse-0.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+              "artifact_kind": "PyPI manylinux x86_64 cp312 wheel selected from PyPI JSON metadata",
+              "artifact_sha256": "77c6e82556cccd02e84b96149a98416559dde7456b1cbe83ac92dc9429531e38",
+              "artifact_url": "https://files.pythonhosted.org/packages/93/28/ba43e51eb931435b338dfbf3444977ba72b4dfbb4e674b31c70879ca70c8/edgeparse-0.2.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            "macos-arm64": {
+              "artifact_filename": "edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl",
+              "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
+              "artifact_sha256": "82a6fdd81f2bfac4a3b8aedd06e055ae67ec8a2d1c879fb6327259caa13f5a69",
+              "artifact_url": "https://files.pythonhosted.org/packages/85/26/0fcb829043ea9de9b5e4771294a027dca47fdf7b4cb7211f6035092d1082/edgeparse-0.2.5-cp312-cp312-macosx_11_0_arm64.whl"
+            }
+          },
+          "role": "context (non-gating)",
+          "source": "https://github.com/raphaelmansuy/edgeparse",
+          "version": "0.2.5"
+        },
+        "mode": "execute",
+        "notes": [],
+        "status": "ready"
+      },
+      {
+        "artifact": {
+          "expected_sha256": "e3a94b83bc0d22b9b6c2a6b1669447114949b19d8fc3d2877aa2e60cf3e1bd6b",
+          "path": "<liteparse-artifact>",
+          "sha256": "e3a94b83bc0d22b9b6c2a6b1669447114949b19d8fc3d2877aa2e60cf3e1bd6b"
+        },
+        "blockers": [],
+        "command": "<liteparse-command>",
+        "command_template": [
+          "<liteparse-command>",
+          "parse",
+          "<input-pdf>",
+          "--format",
+          "json",
+          "--output",
+          "<output-file>",
+          "--no-ocr",
+          "--num-workers",
+          "1",
+          "--quiet"
+        ],
+        "id": "liteparse",
+        "install_size_bytes": 125616211,
+        "lock": {
+          "artifact_filename": "liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl",
+          "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
+          "artifact_sha256": "1486987ef620cec06b8dfc365505f15cd5cd4bb05dac3775d260633df7060779",
+          "artifact_url": "https://files.pythonhosted.org/packages/8c/c9/d33d5baaedf0a753c6729ec5e2bc62f6bcf453986c071ef3ceba485bd922/liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl",
+          "id": "liteparse",
+          "package": "liteparse",
+          "pin_status": "pinned",
+          "pinned": true,
+          "pinned_at": "2026-06-12T08:17:02Z",
+          "pinned_by": "docushell-admin <hello@docushell.com>",
+          "platform_artifacts": {
+            "linux-x64": {
+              "artifact_filename": "liteparse-2.0.8-cp312-cp312-manylinux_2_28_x86_64.whl",
+              "artifact_kind": "PyPI manylinux x86_64 cp312 wheel selected from PyPI JSON metadata",
+              "artifact_sha256": "e3a94b83bc0d22b9b6c2a6b1669447114949b19d8fc3d2877aa2e60cf3e1bd6b",
+              "artifact_url": "https://files.pythonhosted.org/packages/70/a6/95b5ca961598e77879e9f3954b6274290ae77d29fb97e0abc6eee0fd5a35/liteparse-2.0.8-cp312-cp312-manylinux_2_28_x86_64.whl"
+            },
+            "macos-arm64": {
+              "artifact_filename": "liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl",
+              "artifact_kind": "PyPI macOS arm64 cp312 wheel downloaded and SHA256-verified on the benchmark owner host",
+              "artifact_sha256": "1486987ef620cec06b8dfc365505f15cd5cd4bb05dac3775d260633df7060779",
+              "artifact_url": "https://files.pythonhosted.org/packages/8c/c9/d33d5baaedf0a753c6729ec5e2bc62f6bcf453986c071ef3ceba485bd922/liteparse-2.0.8-cp312-cp312-macosx_11_0_arm64.whl"
+            }
+          },
+          "publisher": "run-llama",
+          "role": "context (non-gating); closest Release-1 overlap, watch per risk R5",
+          "source": "https://github.com/run-llama/liteparse",
+          "version": "2.0.8"
+        },
+        "mode": "execute",
+        "notes": [],
+        "status": "ready"
+      },
+      {
+        "artifact": {
+          "expected_sha256": "bd724b79fa3f06a5b28d7a65f7acfa8de56e04bdb603ac2d6dff315e0d151aaa",
+          "path": "<pymupdf4llm-artifact>",
+          "sha256": "bd724b79fa3f06a5b28d7a65f7acfa8de56e04bdb603ac2d6dff315e0d151aaa"
+        },
+        "blockers": [],
+        "command": "<pymupdf4llm-python>",
+        "command_template": [
+          "<pymupdf4llm-python>",
+          "-c",
+          "<pymupdf4llm-script>",
+          "<input-pdf>"
+        ],
+        "id": "pymupdf4llm",
+        "install_size_bytes": 335034752,
+        "lock": {
+          "artifact_filename": "pymupdf4llm-1.27.2.3-py3-none-any.whl",
+          "artifact_kind": "PyPI universal wheel downloaded and SHA256-verified on the benchmark owner host",
+          "artifact_sha256": "bd724b79fa3f06a5b28d7a65f7acfa8de56e04bdb603ac2d6dff315e0d151aaa",
+          "artifact_url": "https://files.pythonhosted.org/packages/e6/38/84bf29f4dd72e6c450546df6ca8f53021f764fd945ba67dcc235d39bc20e/pymupdf4llm-1.27.2.3-py3-none-any.whl",
+          "dependency_artifacts": [
+            {
+              "artifact_filename": "pymupdf-1.27.2.3-cp310-abi3-macosx_11_0_arm64.whl",
+              "artifact_sha256": "660d93cb6da5bbddf11d3982ae27745dd3a9902d9f24cdb69adab83962294b5a",
+              "package": "PyMuPDF",
+              "version": "1.27.2.3"
+            },
+            {
+              "artifact_filename": "pymupdf_layout-1.27.2.3-cp310-abi3-macosx_11_0_arm64.whl",
+              "artifact_sha256": "5656b09669dcd7c51f539afb6fdaf853602bab4cbc20479ee5ee1a85a4e32b60",
+              "package": "pymupdf-layout",
+              "version": "1.27.2.3"
+            },
+            {
+              "artifact_filename": "pyyaml-6.0.3-cp312-cp312-macosx_11_0_arm64.whl",
+              "artifact_sha256": "fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0",
+              "package": "PyYAML",
+              "version": "6.0.3"
+            },
+            {
+              "artifact_filename": "numpy-2.4.6-cp312-cp312-macosx_14_0_arm64.whl",
+              "artifact_sha256": "3213d622a0283a39a93d188f3cf72b26862df52fbb4ca3697f51705016523d41",
+              "package": "numpy",
+              "version": "2.4.6"
+            },
+            {
+              "artifact_filename": "onnxruntime-1.26.0-cp312-cp312-macosx_14_0_arm64.whl",
+              "artifact_sha256": "05b028781b322ad74b57ce5b50aa5280bb1fe96ceec334628ade681e0b24c1ac",
+              "package": "onnxruntime",
+              "version": "1.26.0"
+            },
+            {
+              "artifact_filename": "networkx-3.6.1-py3-none-any.whl",
+              "artifact_sha256": "d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762",
+              "package": "networkx",
+              "version": "3.6.1"
+            },
+            {
+              "artifact_filename": "tabulate-0.10.0-py3-none-any.whl",
+              "artifact_sha256": "f0b0622e567335c8fabaaa659f1b33bcb6ddfe2e496071b743aa113f8774f2d3",
+              "package": "tabulate",
+              "version": "0.10.0"
+            },
+            {
+              "artifact_filename": "flatbuffers-25.12.19-py2.py3-none-any.whl",
+              "artifact_sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4",
+              "package": "flatbuffers",
+              "version": "25.12.19"
+            },
+            {
+              "artifact_filename": "packaging-26.2-py3-none-any.whl",
+              "artifact_sha256": "5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e",
+              "package": "packaging",
+              "version": "26.2"
+            },
+            {
+              "artifact_filename": "protobuf-7.35.1-cp310-abi3-macosx_10_9_universal2.whl",
+              "artifact_sha256": "24f857477359a85c0c235261b8ba905fd51b2562f4a64ca1df5473f29850cbf6",
+              "package": "protobuf",
+              "version": "7.35.1"
+            }
+          ],
+          "dependency_artifacts_platform": "macos-arm64",
+          "id": "pymupdf4llm",
+          "license_note": "AGPL - run-only comparison, never a dependency (ADR-0004)",
+          "package": "pymupdf4llm",
+          "pin_status": "pinned",
+          "pinned": true,
+          "pinned_at": "2026-06-12T08:17:02Z",
+          "pinned_by": "docushell-admin <hello@docushell.com>",
+          "platform_dependency_artifacts": {
+            "linux-x64": [
+              {
+                "artifact_filename": "pymupdf-1.27.2.3-cp310-abi3-manylinux_2_28_x86_64.whl",
+                "artifact_sha256": "857842b4888827bd6155a1131341b2822a7ebe9a8c15a975fd7d490d7a64a30c",
+                "artifact_url": "https://files.pythonhosted.org/packages/e4/a0/aa1ee2240f29481a04a827c313333b4ecd8a14d6ac3e15d3f41a30574781/pymupdf-1.27.2.3-cp310-abi3-manylinux_2_28_x86_64.whl",
+                "package": "PyMuPDF",
+                "version": "1.27.2.3"
+              },
+              {
+                "artifact_filename": "pymupdf_layout-1.27.2.3-cp310-abi3-manylinux_2_28_x86_64.whl",
+                "artifact_sha256": "303b9414216dfaf711ec7d807b6f1e4c3e0a92bbb4569340fcedd9d5593d16ca",
+                "artifact_url": "https://files.pythonhosted.org/packages/32/e9/7ce6eaf97cebd46c3808593282e9eb99a60cddd6183e25a636980d5c7986/pymupdf_layout-1.27.2.3-cp310-abi3-manylinux_2_28_x86_64.whl",
+                "package": "pymupdf-layout",
+                "version": "1.27.2.3"
+              },
+              {
+                "artifact_filename": "pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+                "artifact_sha256": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+                "artifact_url": "https://files.pythonhosted.org/packages/8b/9d/b3589d3877982d4f2329302ef98a8026e7f4443c765c46cfecc8858c6b4b/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+                "package": "PyYAML",
+                "version": "6.0.3"
+              },
+              {
+                "artifact_filename": "numpy-2.4.6-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+                "artifact_sha256": "90f9849678c75fe7afa2d348ac842c168b0a4d3d61919687216dfc547976d853",
+                "artifact_url": "https://files.pythonhosted.org/packages/99/60/14115e6364fa676c5397c2ad3004e527e9aa487abf5d0706ec81bbd08529/numpy-2.4.6-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+                "package": "numpy",
+                "version": "2.4.6"
+              },
+              {
+                "artifact_filename": "onnxruntime-1.26.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+                "artifact_sha256": "9b6dd70599005bd1bf29779f04a91978b92b5e719c11a20068a8f8e535f725b6",
+                "artifact_url": "https://files.pythonhosted.org/packages/7c/43/2a4e04f8dbeffad19bbcced4bcd4289bf478921518437404d6b92bdf213b/onnxruntime-1.26.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+                "package": "onnxruntime",
+                "version": "1.26.0"
+              },
+              {
+                "artifact_filename": "networkx-3.6.1-py3-none-any.whl",
+                "artifact_sha256": "d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762",
+                "artifact_url": "https://files.pythonhosted.org/packages/9e/c9/b2622292ea83fbb4ec318f5b9ab867d0a28ab43c5717bb85b0a5f6b3b0a4/networkx-3.6.1-py3-none-any.whl",
+                "package": "networkx",
+                "version": "3.6.1"
+              },
+              {
+                "artifact_filename": "tabulate-0.10.0-py3-none-any.whl",
+                "artifact_sha256": "f0b0622e567335c8fabaaa659f1b33bcb6ddfe2e496071b743aa113f8774f2d3",
+                "artifact_url": "https://files.pythonhosted.org/packages/99/55/db07de81b5c630da5cbf5c7df646580ca26dfaefa593667fc6f2fe016d2e/tabulate-0.10.0-py3-none-any.whl",
+                "package": "tabulate",
+                "version": "0.10.0"
+              },
+              {
+                "artifact_filename": "flatbuffers-25.12.19-py2.py3-none-any.whl",
+                "artifact_sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4",
+                "artifact_url": "https://files.pythonhosted.org/packages/e8/2d/d2a548598be01649e2d46231d151a6c56d10b964d94043a335ae56ea2d92/flatbuffers-25.12.19-py2.py3-none-any.whl",
+                "package": "flatbuffers",
+                "version": "25.12.19"
+              },
+              {
+                "artifact_filename": "packaging-26.2-py3-none-any.whl",
+                "artifact_sha256": "5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e",
+                "artifact_url": "https://files.pythonhosted.org/packages/df/b2/87e62e8c3e2f4b32e5fe99e0b86d576da1312593b39f47d8ceef365e95ed/packaging-26.2-py3-none-any.whl",
+                "package": "packaging",
+                "version": "26.2"
+              },
+              {
+                "artifact_filename": "protobuf-7.35.1-cp310-abi3-manylinux2014_x86_64.whl",
+                "artifact_sha256": "74758715c53d7158fb76caf4f0cfdacc5329a4b1bb994f865d6cf302d413a1c4",
+                "artifact_url": "https://files.pythonhosted.org/packages/e4/be/5b3cfe508bfab6761414ff944e3366eb13be4fd71efcd69450f89ba39f43/protobuf-7.35.1-cp310-abi3-manylinux2014_x86_64.whl",
+                "package": "protobuf",
+                "version": "7.35.1"
+              }
+            ]
+          },
+          "python_version": "Python 3.12.13",
+          "role": "harness self-test target + comparison row",
+          "runtime": "Python",
+          "version": "1.27.2.3"
+        },
+        "mode": "execute",
+        "notes": [],
+        "status": "ready"
+      }
+    ],
+    "runs": {
+      "edgeparse": [
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/simple-text.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "file": "benchmarks/gate-zero/corpus/simple-text.pdf",
+            "id": "simple-text",
+            "pages": 1,
+            "sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 235.23637047037482,
+          "duration_ms_p95": 302.92594409547746,
+          "duration_ms_p99": 310.2789736818522,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "b06cf309dcae9127e60e1b359ac1c57c95b5ab40cffefe820e09dc7dd87af8c1",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 15941632,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/two-lines.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "file": "benchmarks/gate-zero/corpus/two-lines.pdf",
+            "id": "two-lines",
+            "pages": 1,
+            "sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 225.01165186986327,
+          "duration_ms_p95": 277.653224626556,
+          "duration_ms_p99": 295.54995817132294,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "aa896664e27843721dd5ed2cd9755c172cda7504ee007d86c0f039cbc1248f80",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 14987264,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/two-columns.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "file": "benchmarks/gate-zero/corpus/two-columns.pdf",
+            "id": "two-columns",
+            "pages": 1,
+            "sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "subsets": [
+              "born_digital",
+              "multi_column"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 221.05622990056872,
+          "duration_ms_p95": 260.26229071430856,
+          "duration_ms_p99": 280.49469790421426,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "c900fe693dc399ce44487d81c573b5c97d64ea6346a607f299a7e49b97c8b3a5",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 15814656,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/rotation-90.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "file": "benchmarks/gate-zero/corpus/rotation-90.pdf",
+            "id": "rotation-90",
+            "pages": 1,
+            "sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "subsets": [
+              "born_digital",
+              "rotation"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 226.76683170720935,
+          "duration_ms_p95": 252.24915840663013,
+          "duration_ms_p99": 263.03238932974637,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "8f22f6130772325416859620c8cfdac2bd6bea3583bddcc8655f5a9cacd3f027",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 15155200,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "file": "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf",
+            "id": "hyphenated-line-break",
+            "pages": 1,
+            "sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "subsets": [
+              "born_digital",
+              "hyphenation",
+              "fonts"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 220.85397178307176,
+          "duration_ms_p95": 232.584070507437,
+          "duration_ms_p99": 235.70502253249288,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "aebe97bd00a31b238581abd60433de6753e382ea6a000d218d5cfee58ab367ea",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 13877248,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "file": "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf",
+            "id": "ligature-fi-embedded-font",
+            "pages": 1,
+            "sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "subsets": [
+              "born_digital",
+              "fonts",
+              "ligatures"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 234.3008234165609,
+          "duration_ms_p95": 275.91382428072393,
+          "duration_ms_p99": 278.7836970668286,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "305d484e2e862586875a06e9b05ce33c33b0825283a78e96e67aa22ff21d9e8f",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 15089664,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "file": "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+            "id": "irs-form-1040-2025",
+            "pages": 2,
+            "sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "subsets": [
+              "born_digital",
+              "forms",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 298.6125834286213,
+          "duration_ms_p95": 352.08397284150124,
+          "duration_ms_p99": 357.23000675439835,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "548cbf5259a3d0f10f5f64bf95c87cbccd7ec0ffae12acb81155929abd14232f",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 34791424,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "file": "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+            "id": "cfpb-home-loan-toolkit",
+            "pages": 28,
+            "sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "subsets": [
+              "born_digital",
+              "guide",
+              "worksheets",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 540.6525228172541,
+          "duration_ms_p95": 595.3283785376698,
+          "duration_ms_p99": 596.0848322231323,
+          "exit_code": 0,
+          "failures": [
+            "output_sha256 changed across iterations"
+          ],
+          "output_sha256": "061b7aeb873f0c614c31a32d3d21d11913a3d813897fdb73aa378c0ded69b053",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 68947968,
+          "status": "fail",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+            "id": "nist-sp-800-53r5",
+            "pages": 492,
+            "sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "long_document",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 21577.314410358667,
+          "duration_ms_p95": 31262.58335444144,
+          "duration_ms_p99": 34779.33617941104,
+          "exit_code": 0,
+          "failures": [
+            "output_sha256 changed across iterations"
+          ],
+          "output_sha256": "84c3d097a83933e25be12fa70b484903e29aa0af75252fbf1286d4208aceabad",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 1462497280,
+          "status": "fail",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<edgeparse-command>",
+            "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+            "--format",
+            "json",
+            "--output-dir",
+            "<output-dir>"
+          ],
+          "corpus_file": {
+            "actual_sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+            "id": "nist-sp-800-63b",
+            "pages": 80,
+            "sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 1533.5064507089555,
+          "duration_ms_p95": 1803.3534580376,
+          "duration_ms_p99": 1811.0362960677594,
+          "exit_code": 0,
+          "failures": [
+            "output_sha256 changed across iterations"
+          ],
+          "output_sha256": "5a933406b45301dd978d4395f5a48d85b4255394a5d153a5f619a4d14ee9e32b",
+          "parser_target": "edgeparse",
+          "peak_rss_bytes": 172785664,
+          "status": "fail",
+          "warning_ids": []
+        }
+      ],
+      "liteparse": [
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/simple-text.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "file": "benchmarks/gate-zero/corpus/simple-text.pdf",
+            "id": "simple-text",
+            "pages": 1,
+            "sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 236.28898989409208,
+          "duration_ms_p95": 361.92083577625453,
+          "duration_ms_p99": 362.18931718729436,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "56c0293996accb4ed60bedf0c3fc79a60c8995a6014ebea64ad1eeb80a906b1b",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 25202688,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/two-lines.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "file": "benchmarks/gate-zero/corpus/two-lines.pdf",
+            "id": "two-lines",
+            "pages": 1,
+            "sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 238.93327871337533,
+          "duration_ms_p95": 284.8036796785891,
+          "duration_ms_p99": 295.0442631728947,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "cde3e6ffe598dace22a2bb08f6940e62db68334cd747fb96a1e6b4502f5ff572",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 18395136,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/two-columns.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "file": "benchmarks/gate-zero/corpus/two-columns.pdf",
+            "id": "two-columns",
+            "pages": 1,
+            "sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "subsets": [
+              "born_digital",
+              "multi_column"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 230.27886543422937,
+          "duration_ms_p95": 241.30975953303277,
+          "duration_ms_p99": 242.67771194688976,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "fc907606a79a1dbebeb1a0943c44d09905587132f63c00ca9e3f1367af4f506d",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 13643776,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/rotation-90.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "file": "benchmarks/gate-zero/corpus/rotation-90.pdf",
+            "id": "rotation-90",
+            "pages": 1,
+            "sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "subsets": [
+              "born_digital",
+              "rotation"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 245.6940752454102,
+          "duration_ms_p95": 330.96595308743406,
+          "duration_ms_p99": 370.51964218728244,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "d9c730d3c1ba9b14c1d5a8f6e726a7ddecd1b1dd03229c8019445deae5824dc0",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 25378816,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "file": "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf",
+            "id": "hyphenated-line-break",
+            "pages": 1,
+            "sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "subsets": [
+              "born_digital",
+              "hyphenation",
+              "fonts"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 237.4227219261229,
+          "duration_ms_p95": 307.8341263812034,
+          "duration_ms_p99": 339.13006640039384,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "55a9269a3b7e25a7d474cd206b0e492e944f26766c214bbbcba435a8d4494f1d",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 25337856,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "file": "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf",
+            "id": "ligature-fi-embedded-font",
+            "pages": 1,
+            "sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "subsets": [
+              "born_digital",
+              "fonts",
+              "ligatures"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 226.75406327471137,
+          "duration_ms_p95": 272.3428661935031,
+          "duration_ms_p99": 284.93688290938735,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "d6eefbdb8619a94b1b7bb4a26b301ca3dcdd8c7d5ff527384ab6b17c75d82f7b",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 19734528,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "file": "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+            "id": "irs-form-1040-2025",
+            "pages": 2,
+            "sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "subsets": [
+              "born_digital",
+              "forms",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 340.1886452920735,
+          "duration_ms_p95": 379.8358454369008,
+          "duration_ms_p99": 393.7713193707168,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "1ee99bc06a80c0c53aa27806494fdeb48eaaf765e457889215f666c7939a6909",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 28839936,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "file": "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+            "id": "cfpb-home-loan-toolkit",
+            "pages": 28,
+            "sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "subsets": [
+              "born_digital",
+              "guide",
+              "worksheets",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 421.1554955691099,
+          "duration_ms_p95": 673.6141937319189,
+          "duration_ms_p99": 683.4075259137899,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "8bc47645e6bed7da3f17ebd4910834760ea08cada92dc032e998272c86fd7e79",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 32931840,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+            "id": "nist-sp-800-53r5",
+            "pages": 492,
+            "sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "long_document",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 4736.112303566188,
+          "duration_ms_p95": 5602.319513866678,
+          "duration_ms_p99": 5769.064475120977,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "1613473c4faece5f2b66032a2bdac0355ee2643c7f460292175331cdbe6b8dec",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 130449408,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<liteparse-command>",
+            "parse",
+            "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+            "--format",
+            "json",
+            "--output",
+            "<output-file>",
+            "--no-ocr",
+            "--num-workers",
+            "1",
+            "--quiet"
+          ],
+          "corpus_file": {
+            "actual_sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+            "id": "nist-sp-800-63b",
+            "pages": 80,
+            "sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 782.8444293700159,
+          "duration_ms_p95": 1067.9307228419927,
+          "duration_ms_p99": 1156.1448473948985,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "8e2595a5e97dc21329e56a8c7247543f2999d532d48fa1606daa2b2899c5d34f",
+          "parser_target": "liteparse",
+          "peak_rss_bytes": 44232704,
+          "status": "pass",
+          "warning_ids": []
+        }
+      ],
+      "opendataloader-pdf": [
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/simple-text.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "file": "benchmarks/gate-zero/corpus/simple-text.pdf",
+            "id": "simple-text",
+            "pages": 1,
+            "sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 1822.1531584858894,
+          "duration_ms_p95": 2515.1478942017993,
+          "duration_ms_p99": 2735.450655883178,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "fff0143be4c241d4fc047d4afebed5810476e7a3c0eddd4fd8a028677a6bee1e",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 117018624,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/two-lines.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "file": "benchmarks/gate-zero/corpus/two-lines.pdf",
+            "id": "two-lines",
+            "pages": 1,
+            "sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 1749.7640023939312,
+          "duration_ms_p95": 2008.1544329877938,
+          "duration_ms_p99": 2106.3905007671565,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "32fffa8fdda60b935deb411229d140a1701ec31a9c10b08d8996ab6080719b7f",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 114302976,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/two-columns.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "file": "benchmarks/gate-zero/corpus/two-columns.pdf",
+            "id": "two-columns",
+            "pages": 1,
+            "sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "subsets": [
+              "born_digital",
+              "multi_column"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 1747.2216067835689,
+          "duration_ms_p95": 1949.2655458394438,
+          "duration_ms_p99": 1999.6418108511716,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "a12268e3d49729eddf827e7fdcb3c6229388339d3a0a2e8abd4f86a0f4da4471",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 117784576,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/rotation-90.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "file": "benchmarks/gate-zero/corpus/rotation-90.pdf",
+            "id": "rotation-90",
+            "pages": 1,
+            "sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "subsets": [
+              "born_digital",
+              "rotation"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 1820.8722481504083,
+          "duration_ms_p95": 2203.169440384954,
+          "duration_ms_p99": 2214.9590532295406,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "415bdd8e8e6092bca324d2a3afa3ef4bc802ca47dd3450b4efac39c77951ee45",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 118083584,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "file": "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf",
+            "id": "hyphenated-line-break",
+            "pages": 1,
+            "sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "subsets": [
+              "born_digital",
+              "hyphenation",
+              "fonts"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 1800.9175290353596,
+          "duration_ms_p95": 2468.1022605393073,
+          "duration_ms_p99": 2775.041080834344,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "1600fbec10989cc879a0ae589815eb80a022742dc692dd03d8c9a6ff3bee3360",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 118370304,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "file": "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf",
+            "id": "ligature-fi-embedded-font",
+            "pages": 1,
+            "sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "subsets": [
+              "born_digital",
+              "fonts",
+              "ligatures"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 1513.6918439529836,
+          "duration_ms_p95": 1638.7709965463728,
+          "duration_ms_p99": 1657.3653129767627,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "5f63d71bde5b915e1ac24e0d62a6aaec49910b5d0b2a1087e240278b200b067d",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 103960576,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "file": "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+            "id": "irs-form-1040-2025",
+            "pages": 2,
+            "sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "subsets": [
+              "born_digital",
+              "forms",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 3614.3501992337406,
+          "duration_ms_p95": 4178.312609158456,
+          "duration_ms_p99": 4417.364683412015,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "a5a8153f1d7a401ea8a7c2fbb794bcb4f360936ba763c539743b83f135e316ce",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 170700800,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "file": "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+            "id": "cfpb-home-loan-toolkit",
+            "pages": 28,
+            "sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "subsets": [
+              "born_digital",
+              "guide",
+              "worksheets",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 6522.7824109606445,
+          "duration_ms_p95": 6886.617583129555,
+          "duration_ms_p99": 6895.310849864036,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "aff36a031b3960d18d097c9bbdc2f7f87281f2c28a0d955007b473fc2ef6a842",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 625897472,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+            "id": "nist-sp-800-53r5",
+            "pages": 492,
+            "sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "long_document",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 67629.13632625714,
+          "duration_ms_p95": 74316.5995884221,
+          "duration_ms_p99": 76546.69956258498,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "7542eae5a0f69451e13dadc08db3543f38a61c5a399069e9a337a32eebf92171",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 6345912320,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<opendataloader-command>",
+            "--quiet",
+            "--format",
+            "json",
+            "--image-output",
+            "external",
+            "--reading-order",
+            "xycut",
+            "--table-method",
+            "default",
+            "--threads",
+            "1",
+            "--output-dir",
+            "<output-dir>",
+            "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+            "id": "nist-sp-800-63b",
+            "pages": 80,
+            "sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 13429.729543626308,
+          "duration_ms_p95": 14519.311596360058,
+          "duration_ms_p99": 14648.626087736338,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "71ff570d8c8c819310108825ec60d6e75235b66b48cb96ecae4038f0334aa677",
+          "parser_target": "opendataloader-pdf",
+          "peak_rss_bytes": 714170368,
+          "status": "pass",
+          "warning_ids": []
+        }
+      ],
+      "pymupdf4llm": [
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/simple-text.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "file": "benchmarks/gate-zero/corpus/simple-text.pdf",
+            "id": "simple-text",
+            "pages": 1,
+            "sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 2494.3899931386113,
+          "duration_ms_p95": 4887.359960144382,
+          "duration_ms_p99": 6117.151691420004,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "617002e6aacb8d55142e031d419d3db5517be883650e104c2c3aa36740fe3897",
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 270254080,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/two-lines.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "file": "benchmarks/gate-zero/corpus/two-lines.pdf",
+            "id": "two-lines",
+            "pages": 1,
+            "sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+            "subsets": [
+              "born_digital"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 2346.683443058282,
+          "duration_ms_p95": 2934.2828660272057,
+          "duration_ms_p99": 3092.0343787781894,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "fb90164802a710aeec0b327a7560a7e710319ab0ba2f1cdda73c246168c54220",
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 269971456,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/two-columns.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "file": "benchmarks/gate-zero/corpus/two-columns.pdf",
+            "id": "two-columns",
+            "pages": 1,
+            "sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+            "subsets": [
+              "born_digital",
+              "multi_column"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 2450.317170470953,
+          "duration_ms_p95": 2868.898442015052,
+          "duration_ms_p99": 2966.8836880475283,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "6f0f19eec28455b8b876b1ed86c55d5d0d4f8f49eadcafa420e4f7cc12cae719",
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 270475264,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/rotation-90.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "file": "benchmarks/gate-zero/corpus/rotation-90.pdf",
+            "id": "rotation-90",
+            "pages": 1,
+            "sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+            "subsets": [
+              "born_digital",
+              "rotation"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 2329.7679740935564,
+          "duration_ms_p95": 2400.5727150011808,
+          "duration_ms_p99": 2407.4846613500267,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "f31578de4c2ee91e90e1288079491dd6ac8ac5ba09d168196206b4f8f32ee7d1",
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 269983744,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "file": "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf",
+            "id": "hyphenated-line-break",
+            "pages": 1,
+            "sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+            "subsets": [
+              "born_digital",
+              "hyphenation",
+              "fonts"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 2489.346859510988,
+          "duration_ms_p95": 3062.9481323994696,
+          "duration_ms_p99": 3145.313121844083,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "e2bbe9e3277acc214653c010b449940754c2f4538f31b2a7f0f80bd92e23e687",
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 270249984,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "file": "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf",
+            "id": "ligature-fi-embedded-font",
+            "pages": 1,
+            "sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+            "subsets": [
+              "born_digital",
+              "fonts",
+              "ligatures"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 2365.1351211592555,
+          "duration_ms_p95": 2759.015769464895,
+          "duration_ms_p99": 2848.3207517769188,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "36c785e8a959f2943d27407ad14d3a39723c6eb6ff3614ee70bca43214e82b3d",
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 269774848,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "file": "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+            "id": "irs-form-1040-2025",
+            "pages": 2,
+            "sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+            "subsets": [
+              "born_digital",
+              "forms",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 10817.182942759246,
+          "duration_ms_p95": 12563.862605718892,
+          "duration_ms_p99": 13377.729426091537,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "aec5daf45a1fa45a299b4876642a79b75c9f98e0ac14aeae37b07561841e98e2",
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 538722304,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "file": "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+            "id": "cfpb-home-loan-toolkit",
+            "pages": 28,
+            "sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+            "subsets": [
+              "born_digital",
+              "guide",
+              "worksheets",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 14893.162270076573,
+          "duration_ms_p95": 20904.989586258296,
+          "duration_ms_p99": 24013.585938708857,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "22f05ff76fd671db207e5ebd33869fb59d1c12551d7b6c487579b88e16525dae",
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 451014656,
+          "status": "pass",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+            "id": "nist-sp-800-53r5",
+            "pages": 492,
+            "sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "long_document",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 120127.90542375296,
+          "duration_ms_p95": 120230.1015350502,
+          "duration_ms_p99": 120271.63209802471,
+          "exit_code": 124,
+          "failures": [
+            "command timed out after 120s",
+            "command timed out after 120s",
+            "command timed out after 120s",
+            "command timed out after 120s",
+            "command timed out after 120s",
+            "command timed out after 120s",
+            "command timed out after 120s",
+            "command timed out after 120s",
+            "command timed out after 120s",
+            "command timed out after 120s"
+          ],
+          "output_sha256": null,
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 500457472,
+          "status": "fail",
+          "warning_ids": []
+        },
+        {
+          "command": [
+            "<pymupdf4llm-python>",
+            "-c",
+            "<pymupdf4llm-script>",
+            "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf"
+          ],
+          "corpus_file": {
+            "actual_sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "file": "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+            "id": "nist-sp-800-63b",
+            "pages": 80,
+            "sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+            "subsets": [
+              "born_digital",
+              "technical_report",
+              "tables",
+              "real_world"
+            ]
+          },
+          "document_fingerprint": null,
+          "duration_ms_p50": 33723.246187437326,
+          "duration_ms_p95": 34959.61618474685,
+          "duration_ms_p99": 35269.19333647005,
+          "exit_code": 0,
+          "failures": [],
+          "output_sha256": "aa33f327bf45494d6538d1cdc48d30390cb591b0f8091958dc8d945c3fcbc0bc",
+          "parser_target": "pymupdf4llm",
+          "peak_rss_bytes": 411729920,
+          "status": "pass",
+          "warning_ids": []
+        }
+      ]
+    },
+    "summaries": {
+      "edgeparse": {
+        "duration_ms_p50": 234.76859694346786,
+        "duration_ms_p95": 31262.58335444144,
+        "duration_ms_p99": 34779.33617941104,
+        "install_size_bytes": 115020757,
+        "iterations": 10,
+        "output_sha256": null,
+        "peak_rss_bytes": 1462497280,
+        "runs_failed": 3,
+        "runs_total": 10,
+        "status": "fail"
+      },
+      "liteparse": {
+        "duration_ms_p50": 242.31367697939277,
+        "duration_ms_p95": 5602.319513866678,
+        "duration_ms_p99": 5769.064475120977,
+        "install_size_bytes": 125616211,
+        "iterations": 10,
+        "output_sha256": "88d2a46aebaa3eafc67053d3bc8e63b6588469bfec8cdcb4b1dc30fead9c03de",
+        "peak_rss_bytes": 130449408,
+        "runs_failed": 0,
+        "runs_total": 10,
+        "status": "pass"
+      },
+      "opendataloader-pdf": {
+        "duration_ms_p50": 1821.5127033181489,
+        "duration_ms_p95": 74316.5995884221,
+        "duration_ms_p99": 76546.69956258498,
+        "install_size_bytes": 128392275,
+        "iterations": 10,
+        "output_sha256": "9e6c611e5c3ce975f19cf6b5c80f700e9f8e986957cc80a98c3e89b216015585",
+        "peak_rss_bytes": 6345912320,
+        "runs_failed": 0,
+        "runs_total": 10,
+        "status": "pass"
+      },
+      "pymupdf4llm": {
+        "duration_ms_p50": 2491.8684263247997,
+        "duration_ms_p95": 120230.1015350502,
+        "duration_ms_p99": 120271.63209802471,
+        "install_size_bytes": 335034752,
+        "iterations": 10,
+        "output_sha256": null,
+        "peak_rss_bytes": 538722304,
+        "runs_failed": 1,
+        "runs_total": 10,
+        "status": "fail"
+      }
+    }
+  },
+  "corpus": {
+    "id": "gate-zero-v1",
+    "manifest": "benchmarks/gate-zero/manifest.json",
+    "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
+  },
+  "deterministic_profile_sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070",
+  "duration_ms_p50": 154.4731694739312,
+  "duration_ms_p95": 14614.561266964301,
+  "duration_ms_p99": 14621.815872890875,
+  "exit_code": 0,
+  "host": {
+    "observed": {
+      "machine": "x86_64",
+      "platform": "Linux-5.15.0-316.196.4.1.el8uek.x86_64-x86_64-with-glibc2.28",
+      "platform_key": "linux-x64",
+      "python": "3.13.13"
+    },
+    "selected": {
+      "cores_used_for_g1": 1,
+      "cpu": "AMD EPYC 7742 64-Core Processor, 2 vCPU, 1 core/socket, 2 threads/core",
+      "id": "linux-x64-1",
+      "kernel": "Linux 5.15.0-316.196.4.1.el8uek.x86_64",
+      "model": "KVM virtualized EL-compatible 8.8 x86_64 host",
+      "os": "EL-compatible Server 8.8",
+      "platform": "linux-x64",
+      "ram": "32565968 kB MemTotal",
+      "role": "performance",
+      "runner": "manual runner; runner id=linux-x64-1"
+    }
+  },
+  "inputs": {
+    "competitors_lock": "benchmarks/competitors.lock.json",
+    "competitors_lock_sha256": "35becebfbf2b4b10b14213ae4a986efc9805ed6b0cf7f5dc5878f7ba79b13afa",
+    "deterministic_profile": "profiles/ethos-deterministic-v1.json",
+    "deterministic_profile_file_sha256": "537ec4b4352a8c873929fc61df15a79da3038994267f3655314262e293334e1f",
+    "ethos_bin": "target/release/ethos",
+    "ethos_bin_sha256": "684a45479b3e0e24f9eaed373cb5d244b71f49616bf760ee5fb4de8d34d8f62e",
+    "install_path": "target/release/ethos"
+  },
+  "install_size_bytes": 1588024,
+  "output_sha256": "726db15df5649f1ed49b3f0048140c690420ed240006355cde1c493c405e55af",
+  "parser_target": "ethos",
+  "peak_rss_bytes": 447074304,
+  "readiness": {
+    "blockers": {
+      "competitors": [],
+      "manifest": []
+    },
+    "status": "ready",
+    "summary": {
+      "blockers_total": 0,
+      "competitor_blockers": 0,
+      "manifest_blockers": 0
+    }
+  },
+  "runs": [
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/simple-text.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+        "file": "benchmarks/gate-zero/corpus/simple-text.pdf",
+        "id": "simple-text",
+        "pages": 1,
+        "sha256": "f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3",
+        "subsets": [
+          "born_digital"
+        ]
+      },
+      "document_fingerprint": "sha256:989df4af162aed02068b1b42cf122b38ecbf320e994bebc492e1d7b6ac1c5a15",
+      "duration_ms_p50": 140.82890329882503,
+      "duration_ms_p95": 208.29753833822897,
+      "duration_ms_p99": 236.2522733863443,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "6ec133ea177acbbb790b3d0b6a9c268e86bc9a1a2da393423908cce7384de28b",
+      "parser_target": "ethos",
+      "peak_rss_bytes": null,
+      "status": "pass",
+      "warning_ids": []
+    },
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/two-lines.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+        "file": "benchmarks/gate-zero/corpus/two-lines.pdf",
+        "id": "two-lines",
+        "pages": 1,
+        "sha256": "28d9c089bced8c913e6e0440a937f36581ed0b951384787930ba5c52f47a5359",
+        "subsets": [
+          "born_digital"
+        ]
+      },
+      "document_fingerprint": "sha256:c0c7dd6935d9c67393a372ed0df22576f9b989bcee397e45bdccae28c77516a6",
+      "duration_ms_p50": 144.42214043810964,
+      "duration_ms_p95": 162.3738915193826,
+      "duration_ms_p99": 167.3792150709778,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "c39073d672081713ec68739f486450bf978591950f4df462c365adf8f883e1ef",
+      "parser_target": "ethos",
+      "peak_rss_bytes": null,
+      "status": "pass",
+      "warning_ids": []
+    },
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/two-columns.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+        "file": "benchmarks/gate-zero/corpus/two-columns.pdf",
+        "id": "two-columns",
+        "pages": 1,
+        "sha256": "de50aafb08219aa7fefdcb13ef8975ebf362f52f4d558c2d274ca711ce9d9d79",
+        "subsets": [
+          "born_digital",
+          "multi_column"
+        ]
+      },
+      "document_fingerprint": "sha256:53a9b2ae2e7c32f82131b806169dcc4dd3058a473bc29133008464653f07231d",
+      "duration_ms_p50": 146.7964481562376,
+      "duration_ms_p95": 322.88510659709567,
+      "duration_ms_p99": 349.56011982634664,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "d9eb9f99f1a223eed0099da0a8162f961ba5384a616f73d18871de42eefa53fa",
+      "parser_target": "ethos",
+      "peak_rss_bytes": null,
+      "status": "pass",
+      "warning_ids": []
+    },
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/rotation-90.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+        "file": "benchmarks/gate-zero/corpus/rotation-90.pdf",
+        "id": "rotation-90",
+        "pages": 1,
+        "sha256": "1400858e1c0fa0255a037463b4e44df6f9d740ac33583cc590c4ac5cfd2fcc9d",
+        "subsets": [
+          "born_digital",
+          "rotation"
+        ]
+      },
+      "document_fingerprint": "sha256:10ff90da318970b96a67c95c02afacd8e6d064126fc6019a947f69a2eed3172d",
+      "duration_ms_p50": 158.8392099365592,
+      "duration_ms_p95": 230.7678795419633,
+      "duration_ms_p99": 238.20841385051608,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "675231e1bdefba822893afcc630cbafb751b56caff165214edaf7837671cd3f0",
+      "parser_target": "ethos",
+      "peak_rss_bytes": null,
+      "status": "pass",
+      "warning_ids": []
+    },
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+        "file": "benchmarks/gate-zero/corpus/hyphenated-line-break.pdf",
+        "id": "hyphenated-line-break",
+        "pages": 1,
+        "sha256": "7f079977e8438cea4f4b876b3f67380f047218133b3193d7bae8130ac327eeeb",
+        "subsets": [
+          "born_digital",
+          "hyphenation",
+          "fonts"
+        ]
+      },
+      "document_fingerprint": "sha256:fa0b4bb7a119f84f17cc0131d688bb77e0a7299bdfc4380368054ff9dd90a2f5",
+      "duration_ms_p50": 150.1071290113032,
+      "duration_ms_p95": 198.23956321924922,
+      "duration_ms_p99": 206.48089315742254,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "77a9c01614a4405266b3d7b58e17b4e1249ba11f800c30e56bfb82a1e393ef2a",
+      "parser_target": "ethos",
+      "peak_rss_bytes": null,
+      "status": "pass",
+      "warning_ids": []
+    },
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+        "file": "benchmarks/gate-zero/corpus/ligature-fi-embedded-font.pdf",
+        "id": "ligature-fi-embedded-font",
+        "pages": 1,
+        "sha256": "7f99a763d765ea0d880fcd871171ac4811e23b9fc7c3912a391276fcbdf6431e",
+        "subsets": [
+          "born_digital",
+          "fonts",
+          "ligatures"
+        ]
+      },
+      "document_fingerprint": "sha256:225d2eb6e3c5868a00d9bc877ec1cff47395472acbf7d015f2d1a426ded3fd27",
+      "duration_ms_p50": 143.8971604220569,
+      "duration_ms_p95": 197.30748576112086,
+      "duration_ms_p99": 220.91342725791037,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "cf828ab5b1b53a80c1c90077d02bf77a50ca0d6bbb692890209e4ad0dcc74e45",
+      "parser_target": "ethos",
+      "peak_rss_bytes": 3002368,
+      "status": "pass",
+      "warning_ids": []
+    },
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+        "file": "benchmarks/gate-zero/corpus/irs-form-1040-2025.pdf",
+        "id": "irs-form-1040-2025",
+        "pages": 2,
+        "sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982",
+        "subsets": [
+          "born_digital",
+          "forms",
+          "tables",
+          "real_world"
+        ]
+      },
+      "document_fingerprint": "sha256:3d5e4041488d40305d662623dd155ac9fff28010f57b20baf02dd7b87cb79b9b",
+      "duration_ms_p50": 270.4213988035917,
+      "duration_ms_p95": 403.03865075111383,
+      "duration_ms_p99": 429.6167805790901,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "8d6f1e9f4b4db1d3f51c7319c41f7e44d449ed229b04e17478625e452eea5ff5",
+      "parser_target": "ethos",
+      "peak_rss_bytes": 8646656,
+      "status": "pass",
+      "warning_ids": []
+    },
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+        "file": "benchmarks/gate-zero/corpus/cfpb-home-loan-toolkit.pdf",
+        "id": "cfpb-home-loan-toolkit",
+        "pages": 28,
+        "sha256": "eae4ec62ec46a96d1ac9157912f3fbaffa8f0c723da1407038257b2234c122e9",
+        "subsets": [
+          "born_digital",
+          "guide",
+          "worksheets",
+          "tables",
+          "real_world"
+        ]
+      },
+      "document_fingerprint": "sha256:a28c428b2745bf6e630ac8cb14acc9d1a2942bdaef95c1b74e8618a7d5baf531",
+      "duration_ms_p50": 527.5342059321702,
+      "duration_ms_p95": 617.9327001795173,
+      "duration_ms_p99": 618.1475089117885,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "68ec926b0a30cb853750bb7dea4e4e1eb79e1de046c221082f4dcf6be345dcd9",
+      "parser_target": "ethos",
+      "peak_rss_bytes": 24231936,
+      "status": "pass",
+      "warning_ids": [
+        "w0001"
+      ]
+    },
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+        "file": "benchmarks/gate-zero/corpus/nist-sp-800-53r5.pdf",
+        "id": "nist-sp-800-53r5",
+        "pages": 492,
+        "sha256": "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6",
+        "subsets": [
+          "born_digital",
+          "technical_report",
+          "long_document",
+          "tables",
+          "real_world"
+        ]
+      },
+      "document_fingerprint": "sha256:63dfc7841a2d35d2b5097ae25039fe63cef22df5bfa2798923de8fe874b5097f",
+      "duration_ms_p50": 14194.998905062675,
+      "duration_ms_p95": 14614.561266964301,
+      "duration_ms_p99": 14621.815872890875,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "09d612fdcf7c4f78adba1cef875ce8312788bd157a6220991dbf75340c44ba15",
+      "parser_target": "ethos",
+      "peak_rss_bytes": 447074304,
+      "status": "pass",
+      "warning_ids": []
+    },
+    {
+      "command": [
+        "target/release/ethos",
+        "doc",
+        "parse",
+        "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+        "--format",
+        "json"
+      ],
+      "corpus_file": {
+        "actual_sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+        "file": "benchmarks/gate-zero/corpus/nist-sp-800-63b.pdf",
+        "id": "nist-sp-800-63b",
+        "pages": 80,
+        "sha256": "ccfce7510a1267933f912d023306c6e7d485f21be63d271108b61aad6139127e",
+        "subsets": [
+          "born_digital",
+          "technical_report",
+          "tables",
+          "real_world"
+        ]
+      },
+      "document_fingerprint": "sha256:2a818c45d3d028b607092edddf1adfd816a424e793f62c71bef3426787e3cf34",
+      "duration_ms_p50": 1368.9068364910781,
+      "duration_ms_p95": 1494.1305440850556,
+      "duration_ms_p99": 1500.9660176374018,
+      "exit_code": 0,
+      "failures": [],
+      "output_sha256": "79cd0469e6a6d55f425e4ef25244fc2e4805a0cc38b4402a1134c2dcbefdae27",
+      "parser_target": "ethos",
+      "peak_rss_bytes": 62562304,
+      "status": "pass",
+      "warning_ids": []
+    }
+  ],
+  "schema_version": "ethos-gate-zero-result-v1",
+  "status": "fail",
+  "summary": {
+    "duration_ms_p50": 154.4731694739312,
+    "duration_ms_p95": 14614.561266964301,
+    "duration_ms_p99": 14621.815872890875,
+    "install_size_bytes": 1588024,
+    "iterations": 10,
+    "output_sha256": "726db15df5649f1ed49b3f0048140c690420ed240006355cde1c493c405e55af",
+    "peak_rss_bytes": 447074304,
+    "runs_failed": 0,
+    "runs_total": 10,
+    "status": "pass"
+  }
+}

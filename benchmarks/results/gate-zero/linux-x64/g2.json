@@ -1,0 +1,193 @@
+{
+  "blockers": [],
+  "corpus": {
+    "id": "gate-zero-v1",
+    "manifest": "benchmarks/gate-zero/manifest.json",
+    "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
+  },
+  "definition": {
+    "claim_thresholds": {
+      "claim": "Ethos may claim a footprint no more than one tenth of measured OpenDataLoader only when ethos_install_size_bytes <= opendataloader_install_size_bytes * 0.1.",
+      "logic": "claim threshold: record one_tenth_opendataloader_footprint_supported=true only when the measured Ethos/OpenDataLoader ratio is <= 0.1.",
+      "opendataloader_ratio_max": 0.1
+    },
+    "definition_sha256": "602f82e3141e9826a893de509f3a1137430539a0166fd045d8c5f458d26efbb6",
+    "gate_status": "defined-not-run",
+    "gates": "benchmarks/gate-zero/gates.json",
+    "measurement_scope": {
+      "auto_fail": [
+        "PDFium build has V8 enabled",
+        "PDFium build has XFA enabled"
+      ],
+      "excludes": [
+        "network downloads during parse or verification",
+        "optional OCR or VLM assets outside the base parser surface",
+        "non-base parser adapters not required for the Ethos base distributable"
+      ],
+      "includes": [
+        "ethos CLI executable",
+        "native dynamic libraries required by the base parser",
+        "PDFium sidecar or static payload required by the base parser",
+        "default schemas required by the base parser",
+        "bundled deterministic font assets",
+        "all assets required to run the base parser without network access"
+      ],
+      "subject": "Ethos base distributable installed footprint, measured as bytes on disk with no network dependency."
+    },
+    "thresholds": {
+      "comparison_reference": "opendataloader-pdf",
+      "logic": "PASS only when ethos_install_size_bytes <= 30000000, with all auto-fail checks false. The OpenDataLoader ratio is measured for claim support, not pass/fail.",
+      "max_install_size_bytes": 30000000,
+      "max_install_size_label": "30 MB decimal"
+    }
+  },
+  "evaluation": {
+    "blockers": [],
+    "claims": {
+      "one_tenth_opendataloader_footprint_supported": true
+    },
+    "failures": [],
+    "status": "pass",
+    "thresholds": {
+      "max_install_size_bytes": 30000000,
+      "opendataloader_ratio_max": 0.1,
+      "opendataloader_ratio_max_bytes": 12839227.5
+    }
+  },
+  "failures": [],
+  "gate": "g2",
+  "host": {
+    "observed": {
+      "machine": "x86_64",
+      "platform": "Linux-5.15.0-316.196.4.1.el8uek.x86_64-x86_64-with-glibc2.28",
+      "platform_key": "linux-x64",
+      "python": "3.13.13"
+    },
+    "selected": {
+      "cores_used_for_g1": 1,
+      "cpu": "AMD EPYC 7742 64-Core Processor, 2 vCPU, 1 core/socket, 2 threads/core",
+      "id": "linux-x64-1",
+      "kernel": "Linux 5.15.0-316.196.4.1.el8uek.x86_64",
+      "model": "KVM virtualized EL-compatible 8.8 x86_64 host",
+      "os": "EL-compatible Server 8.8",
+      "platform": "linux-x64",
+      "ram": "32565968 kB MemTotal",
+      "role": "performance",
+      "runner": "manual runner; runner id=linux-x64-1"
+    }
+  },
+  "inputs": {
+    "competitors_lock": "benchmarks/competitors.lock.json",
+    "competitors_lock_sha256": "35becebfbf2b4b10b14213ae4a986efc9805ed6b0cf7f5dc5878f7ba79b13afa",
+    "deterministic_profile": "profiles/ethos-deterministic-v1.json",
+    "deterministic_profile_sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070",
+    "gates": "benchmarks/gate-zero/gates.json",
+    "gates_sha256": "602f82e3141e9826a893de509f3a1137430539a0166fd045d8c5f458d26efbb6",
+    "manifest": "benchmarks/gate-zero/manifest.json",
+    "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
+  },
+  "measurements": {
+    "ethos": {
+      "install_size_bytes": 9233208,
+      "items": [
+        {
+          "exists": true,
+          "path": "target/release/ethos",
+          "path_kind": "file",
+          "role": "ethos-cli",
+          "sha256": "684a45479b3e0e24f9eaed373cb5d244b71f49616bf760ee5fb4de8d34d8f62e",
+          "size_bytes": 1588024,
+          "tree_sha256": null
+        },
+        {
+          "exists": true,
+          "path": "/home/<private-user-pattern>/ethos-bench/pdfium/lib/libpdfium.so",
+          "path_kind": "file",
+          "role": "pdfium-library",
+          "sha256": "f728930966f503652b92acc89b9374a2eeca00ce42e26dccd3e4b5c5161b2d64",
+          "size_bytes": 7645184,
+          "tree_sha256": null
+        }
+      ]
+    },
+    "opendataloader-pdf": {
+      "artifact": {
+        "exists": true,
+        "expected_sha256": "1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628",
+        "hash_matches_expected": true,
+        "path": "/home/<private-user-pattern>/ethos-bench/artifacts/opendataloader_pdf-2.4.7-py3-none-any.whl",
+        "path_kind": "file",
+        "role": "opendataloader-artifact",
+        "sha256": "1c359183650f4c012875010c156f13b6d3477b00762b8e3fbd8479fa03feb628",
+        "size_bytes": 22568934,
+        "tree_sha256": null
+      },
+      "install_path": {
+        "exists": true,
+        "path": "/home/<private-user-pattern>/ethos-bench/venvs/odl",
+        "path_kind": "directory",
+        "role": "opendataloader-install",
+        "sha256": null,
+        "size_bytes": 128392275,
+        "tree_sha256": "7007b38ef479bbf2ae6fee989c898e2521cc647506a52a2ba09203f99a33d17e"
+      },
+      "install_size_bytes": 128392275
+    },
+    "pdfium": {
+      "artifact": {
+        "exists": true,
+        "expected_sha256": "1470e21b8b4a3b4ad7f85684e2da11d94f3b69a86d81dee11b9b6709d927ac1d",
+        "hash_matches_expected": true,
+        "path": "/home/<private-user-pattern>/ethos-bench/artifacts/pdfium-linux-x64.tgz",
+        "path_kind": "file",
+        "role": "pdfium-artifact",
+        "sha256": "1470e21b8b4a3b4ad7f85684e2da11d94f3b69a86d81dee11b9b6709d927ac1d",
+        "size_bytes": 3644759,
+        "tree_sha256": null
+      },
+      "library": {
+        "exists": true,
+        "expected_sha256": "f728930966f503652b92acc89b9374a2eeca00ce42e26dccd3e4b5c5161b2d64",
+        "hash_matches_expected": true,
+        "path": "/home/<private-user-pattern>/ethos-bench/pdfium/lib/libpdfium.so",
+        "path_kind": "file",
+        "role": "pdfium-library",
+        "sha256": "f728930966f503652b92acc89b9374a2eeca00ce42e26dccd3e4b5c5161b2d64",
+        "size_bytes": 7645184,
+        "tree_sha256": null
+      },
+      "platform_artifact": {
+        "name": "pdfium-linux-x64.tgz",
+        "runtime_library_path": "lib/libpdfium.so",
+        "runtime_library_sha256": "f728930966f503652b92acc89b9374a2eeca00ce42e26dccd3e4b5c5161b2d64",
+        "target_cpu": "x64",
+        "target_os": "linux"
+      },
+      "policy": {
+        "backend_id": "pdfium",
+        "backend_version": "chromium/7881",
+        "pdf_enable_v8": false,
+        "pdf_enable_xfa": false,
+        "upstream_version": "PDFium 151.0.7881.0",
+        "v8": "disabled",
+        "v8_enabled": false,
+        "xfa": "disabled",
+        "xfa_enabled": false
+      }
+    }
+  },
+  "platform": "linux-x64",
+  "schema_version": "ethos-gate-zero-g2-result-v1",
+  "status": "pass",
+  "summary": {
+    "ethos_install_size_bytes": 9233208,
+    "ethos_to_opendataloader_ratio": 0.07191404623058513,
+    "max_install_size_bytes": 30000000,
+    "opendataloader_install_size_bytes": 128392275,
+    "opendataloader_ratio_claim_supported": true,
+    "opendataloader_ratio_max": 0.1,
+    "pdfium_v8_enabled": false,
+    "pdfium_xfa_enabled": false,
+    "status": "pass"
+  }
+}
