@@ -115,9 +115,11 @@ smoke:
 	python3 run_gate_zero.py --help >/dev/null
 	python3 run_gate_zero_g2.py --help >/dev/null
 	python3 run_gate_zero_g3.py --help >/dev/null
+	python3 diff_gate_zero_docs.py --help >/dev/null
 	python3 build_gate_zero_evidence.py --help >/dev/null
 
 test:
+	python3 test_diff_gate_zero_docs.py
 	python3 test_run_gate_zero.py
 	python3 test_run_gate_zero_g2.py
 	python3 test_run_gate_zero_g3.py
