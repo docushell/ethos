@@ -100,7 +100,7 @@ def platform_result_record(
 def failure_counts(failures: list[str]) -> dict[str, int]:
     return {
         "canonical_payload_divergences": sum(
-            " canonical payload differs " in failure for failure in failures
+            " stable payload differs " in failure for failure in failures
         ),
         "document_fingerprint_divergences": sum(
             " document fingerprint differs " in failure for failure in failures

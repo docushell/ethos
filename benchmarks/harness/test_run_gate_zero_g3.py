@@ -81,6 +81,7 @@ def fake_g1_result(
     platform: str,
     *,
     output_sha256: str = "b" * 64,
+    payload_sha256: str = "1" * 64,
     document_fingerprint: str = "sha256:" + "c" * 64,
     warning_ids: list[str] | None = None,
 ) -> Path:
@@ -112,6 +113,7 @@ def fake_g1_result(
                     },
                     "document_fingerprint": document_fingerprint,
                     "output_sha256": output_sha256,
+                    "payload_sha256": payload_sha256,
                     "warning_ids": warning_ids or [],
                 }
             ],
@@ -166,7 +168,7 @@ class GateZeroG3ResultTests(unittest.TestCase):
             fake_g1_result(
                 root,
                 "linux-x64",
-                output_sha256="d" * 64,
+                payload_sha256="d" * 64,
                 document_fingerprint="sha256:" + "e" * 64,
                 warning_ids=["W001"],
             )
@@ -177,7 +179,7 @@ class GateZeroG3ResultTests(unittest.TestCase):
         self.assertEqual(result["summary"]["canonical_payload_divergences"], 1)
         self.assertEqual(result["summary"]["document_fingerprint_divergences"], 1)
         self.assertEqual(result["summary"]["warning_id_divergences"], 1)
-        self.assertIn("sample canonical payload differs on linux-x64", result["failures"])
+        self.assertIn("sample stable payload differs on linux-x64", result["failures"])
         self.assertIn("sample document fingerprint differs on linux-x64", result["failures"])
         self.assertIn("sample warning ids differ on linux-x64", result["failures"])
 

@@ -370,6 +370,7 @@ mod tests {
             id: id.to_string(),
             page: page.to_string(),
             bbox,
+            origin_locator: None,
             text: text.to_string(),
             font_id: None,
             font_size_q: Some(1200),

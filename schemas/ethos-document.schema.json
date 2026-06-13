@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:document:1",
   "title": "Ethos canonical document graph",
-  "description": "The primary artifact (ethos.json). Canonical equality is defined over c14n(payload) ONLY; 'diagnostics' is runtime-only and excluded (docs/determinism-contract.md). Every derived artifact (md/txt/chunks/reports/overlays) is reproducible from this document plus versioned config. All geometry is quantized integers (quantum defined by the deterministic profile); element array order IS reading order.",
+  "description": "The primary artifact (ethos.json). Fingerprint equality is defined over the stable payload projection; precise bbox fields remain emitted geometry but are excluded from payload_sha256 (docs/determinism-contract.md). 'diagnostics' is runtime-only and excluded. Every derived artifact (md/txt/chunks/reports/overlays) is reproducible from this document plus versioned config. All geometry is quantized integers (quantum defined by the deterministic profile); element array order IS reading order.",
   "type": "object",
   "required": [
     "schema_version",
@@ -51,7 +51,7 @@
     },
     "payload_sha256": {
       "$ref": "#/$defs/hex256",
-      "description": "sha256 over c14n bytes of the 'payload' value."
+      "description": "sha256 over c14n bytes of the stable payload projection. The projection preserves semantic text/order/locators/warnings and excludes precise bbox/bboxes fields that are retained in the emitted payload for citation inspection."
     },
     "fingerprint": {
       "$ref": "#/$defs/fingerprint",
@@ -59,7 +59,7 @@
     },
     "payload": {
       "type": "object",
-      "description": "The canonical payload. Byte-identical across supported platforms under the same profile+config (G3). No runtime/diagnostic field may appear here.",
+      "description": "The emitted payload. Its stable fingerprint projection must match across supported platforms under the same profile+config (G3). Precise bbox fields are retained for inspection and may differ by platform; no runtime/diagnostic field may appear here.",
       "required": ["coordinate_system", "pages", "elements", "spans", "tables", "chunks", "regions", "security_warnings", "parser_warnings"],
       "additionalProperties": false,
       "properties": {
@@ -108,6 +108,13 @@
       "minItems": 4,
       "maxItems": 4
     },
+    "point": {
+      "type": "array",
+      "description": "[x, y] in quanta, top-left origin.",
+      "items": { "type": "integer" },
+      "minItems": 2,
+      "maxItems": 2
+    },
     "permille": { "type": "integer", "minimum": 0, "maximum": 1000 },
     "page": {
       "type": "object",
@@ -147,12 +154,26 @@
         "id": { "$ref": "#/$defs/span_id" },
         "page": { "$ref": "#/$defs/page_id" },
         "bbox": { "$ref": "#/$defs/bbox" },
+        "origin_locator": { "$ref": "#/$defs/origin_locator" },
         "text": { "type": "string" },
         "font_id": { "type": "string", "description": "Resolved font identity under the deterministic font profile (ADR-0003): embedded name or substitution-table key." },
         "font_size_q": { "type": "integer", "minimum": 0, "description": "Font size in quanta." },
         "char_start": { "type": "integer", "minimum": 0, "description": "Char offset range within the owning element's text, when span->element ownership exists." },
         "char_end": { "type": "integer", "minimum": 0 },
         "warning_refs": { "type": "array", "items": { "$ref": "#/$defs/warning_id" } }
+      }
+    },
+    "origin_locator": {
+      "type": "object",
+      "required": ["policy", "first_origin", "last_origin"],
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "const": "origin-run-locator-v1",
+          "description": "Stable locator policy used by payload_sha256 when bbox dimensions are platform-sensitive."
+        },
+        "first_origin": { "$ref": "#/$defs/point" },
+        "last_origin": { "$ref": "#/$defs/point" }
       }
     },
     "table": {

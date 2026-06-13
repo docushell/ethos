@@ -13,8 +13,8 @@ benchmarks/gate-zero/gates.json
 ```
 
 G3 is a cross-platform gate. Platform-local G3 evidence is not sufficient for a pass decision
-until the required `macos-arm64` and `linux-x64` comparisons show zero canonical-payload and
-fingerprint divergences.
+until the required `macos-arm64` and `linux-x64` comparisons show zero stable-payload-projection
+and fingerprint divergences.
 
 Publishable evidence sidecars are generated from saved result JSON and land under:
 
@@ -29,3 +29,12 @@ checksum-manifest digest. The digest is not a public-key signature.
 `reproduction-env.json` records the resolved benchmark environment variables when available.
 If local artifact paths are unavailable, the sidecar must say so explicitly with `status:
 incomplete` and blocker messages.
+
+Diagnostic investigations that are not Gate Zero pass/fail results land under:
+
+```text
+diagnostics/<topic>/
+```
+
+These files may explain a failure mode or candidate policy, but they are not publishable benchmark
+claims and do not change G1/G2/G3 status by themselves.

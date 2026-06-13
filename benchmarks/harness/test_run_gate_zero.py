@@ -110,6 +110,7 @@ def fake_ethos(root: Path, unstable: bool = False, missing_fingerprint: bool = F
     script = root / "ethos"
     payload = {
         "fingerprint": "sha256:" + HEX,
+        "payload_sha256": HEX,
         "payload": {
             "security_warnings": [],
             "parser_warnings": [],
@@ -120,7 +121,7 @@ def fake_ethos(root: Path, unstable: bool = False, missing_fingerprint: bool = F
     if unstable:
         text = """#!/usr/bin/env python3
 import json, time
-print(json.dumps({"fingerprint": "sha256:" + ("b" * 64), "payload": {"security_warnings": [], "parser_warnings": []}, "nonce": time.time()}))
+print(json.dumps({"fingerprint": "sha256:" + ("b" * 64), "payload_sha256": "b" * 64, "payload": {"security_warnings": [], "parser_warnings": []}, "nonce": time.time()}))
 """
     else:
         text = f"""#!/usr/bin/env python3
@@ -438,6 +439,7 @@ class GateZeroReadinessTests(unittest.TestCase):
         self.assertEqual(report["parser_target"], "ethos")
         self.assertEqual(report["summary"]["runs_total"], 1)
         self.assertEqual(report["runs"][0]["status"], "pass")
+        self.assertEqual(report["runs"][0]["payload_sha256"], HEX)
         self.assertEqual(report["runs"][0]["document_fingerprint"], "sha256:" + HEX)
         self.assertIsNotNone(report["output_sha256"])
         self.assertEqual(

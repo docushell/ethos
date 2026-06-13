@@ -128,12 +128,14 @@ smoke:
 	python3 diff_gate_zero_docs.py --help >/dev/null
 	python3 compare_gate_zero_geometry_probes.py --help >/dev/null
 	python3 experiment_gate_zero_geometry_stability.py --help >/dev/null
+	python3 experiment_gate_zero_origin_locators.py --help >/dev/null
 	python3 build_gate_zero_evidence.py --help >/dev/null
 
 test:
 	python3 test_compare_gate_zero_geometry_probes.py
 	python3 test_diff_gate_zero_docs.py
 	python3 test_experiment_gate_zero_geometry_stability.py
+	python3 test_experiment_gate_zero_origin_locators.py
 	python3 test_run_gate_zero.py
 	python3 test_run_gate_zero_g2.py
 	python3 test_run_gate_zero_g3.py

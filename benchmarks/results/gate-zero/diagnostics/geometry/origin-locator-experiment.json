@@ -1,0 +1,90 @@
+{
+  "comparisons": [
+    {
+      "diff_count": 0,
+      "doc_id": "simple-text",
+      "left": "/tmp/ethos-g3-geometry-probe/macos-arm64/simple-text.json",
+      "left_locator_count": 2,
+      "left_locator_sha256": "d2002d30d51b566714146e6f4c694d9ec9ae88c0a1f7883de15c55cc92260ccd",
+      "right": "/tmp/ethos-g3-geometry-probe/linux-x64/simple-text.json",
+      "right_locator_count": 2,
+      "right_locator_sha256": "d2002d30d51b566714146e6f4c694d9ec9ae88c0a1f7883de15c55cc92260ccd",
+      "sample_diffs": [],
+      "status": "matched"
+    },
+    {
+      "diff_count": 0,
+      "doc_id": "two-lines",
+      "left": "/tmp/ethos-g3-geometry-probe/macos-arm64/two-lines.json",
+      "left_locator_count": 4,
+      "left_locator_sha256": "049a4d786f652442395015405c5d487f7a16f6c0ec0b0391f10a3ca172b8fe4c",
+      "right": "/tmp/ethos-g3-geometry-probe/linux-x64/two-lines.json",
+      "right_locator_count": 4,
+      "right_locator_sha256": "049a4d786f652442395015405c5d487f7a16f6c0ec0b0391f10a3ca172b8fe4c",
+      "sample_diffs": [],
+      "status": "matched"
+    },
+    {
+      "diff_count": 0,
+      "doc_id": "two-columns",
+      "left": "/tmp/ethos-g3-geometry-probe/macos-arm64/two-columns.json",
+      "left_locator_count": 8,
+      "left_locator_sha256": "209cb1b82be85d0bde854dd514eee39c1067eb63ed42003523096f1d50c9406a",
+      "right": "/tmp/ethos-g3-geometry-probe/linux-x64/two-columns.json",
+      "right_locator_count": 8,
+      "right_locator_sha256": "209cb1b82be85d0bde854dd514eee39c1067eb63ed42003523096f1d50c9406a",
+      "sample_diffs": [],
+      "status": "matched"
+    },
+    {
+      "diff_count": 0,
+      "doc_id": "rotation-90",
+      "left": "/tmp/ethos-g3-geometry-probe/macos-arm64/rotation-90.json",
+      "left_locator_count": 2,
+      "left_locator_sha256": "4da67aafd48aa5885d7e8c160683edcb7923db9a12e2e4fd69483e1b5a434aa2",
+      "right": "/tmp/ethos-g3-geometry-probe/linux-x64/rotation-90.json",
+      "right_locator_count": 2,
+      "right_locator_sha256": "4da67aafd48aa5885d7e8c160683edcb7923db9a12e2e4fd69483e1b5a434aa2",
+      "sample_diffs": [],
+      "status": "matched"
+    },
+    {
+      "diff_count": 0,
+      "doc_id": "hyphenated-line-break",
+      "left": "/tmp/ethos-g3-geometry-probe/macos-arm64/hyphenated-line-break.json",
+      "left_locator_count": 2,
+      "left_locator_sha256": "a11261f1c528bd8952414952374f11c9023ee1a84bb02fb9a40b585fc46b2788",
+      "right": "/tmp/ethos-g3-geometry-probe/linux-x64/hyphenated-line-break.json",
+      "right_locator_count": 2,
+      "right_locator_sha256": "a11261f1c528bd8952414952374f11c9023ee1a84bb02fb9a40b585fc46b2788",
+      "sample_diffs": [],
+      "status": "matched"
+    }
+  ],
+  "left_dir": "/tmp/ethos-g3-geometry-probe/macos-arm64",
+  "left_label": "macos-arm64",
+  "locator_policy": {
+    "description": "Diagnostic run locator derived from page id, parser-like run text/range, first/last FPDFText_GetCharOrigin points, and deterministic font identity.",
+    "fields": [
+      "page",
+      "run_index",
+      "text",
+      "char_start",
+      "char_end",
+      "first_origin",
+      "last_origin",
+      "font_id",
+      "font_size_q"
+    ],
+    "id": "origin-run-locator-v1"
+  },
+  "right_dir": "/tmp/ethos-g3-geometry-probe/linux-x64",
+  "right_label": "linux-x64",
+  "schema_version": "ethos-gate-zero-origin-locator-experiment-v1",
+  "summary": {
+    "diverged_documents": [],
+    "documents_total": 5,
+    "matched_documents": 5,
+    "status": "resolved"
+  }
+}

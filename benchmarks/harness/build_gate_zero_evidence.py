@@ -510,7 +510,7 @@ def build_g3_summary_markdown(
         "",
         "| Check | Divergences |",
         "| --- | ---: |",
-        f"| Canonical payload hash | {summary['canonical_payload_divergences']} |",
+        f"| Stable payload projection hash | {summary['canonical_payload_divergences']} |",
         f"| Document fingerprint | {summary['document_fingerprint_divergences']} |",
         f"| Warning IDs | {summary['warning_id_divergences']} |",
         f"| Corpus binding | {summary['corpus_binding_divergences']} |",
@@ -545,9 +545,9 @@ def build_g3_summary_markdown(
             "",
             "## Interpretation Guardrail",
             "",
-            "G3 compares existing G1 Ethos canonical payload hashes, document fingerprints, "
-            "warning IDs, and corpus bindings across required platforms. It does not run "
-            "parsers or measure extraction quality.",
+            "G3 compares existing G1 Ethos stable payload projection hashes, document "
+            "fingerprints, warning IDs, and corpus bindings across required platforms. It does "
+            "not run parsers or measure extraction quality.",
             "",
         ]
     )
@@ -647,9 +647,9 @@ def build_summary_markdown(
             "",
             "## Interpretation Guardrail",
             "",
-            "This summary supports claims about recorded determinism, footprint, and measured "
-            "latency/RSS for this pinned corpus and host. It does not claim Ethos is the "
-            "fastest parser overall.",
+            "This summary supports claims about recorded determinism, footprint, measured "
+            "latency, and RSS when available for this pinned corpus and host. It does not "
+            "claim Ethos is the fastest parser overall.",
             "",
         ]
     )

@@ -161,7 +161,7 @@ class GateZeroGateDefinitionTests(unittest.TestCase):
         )
 
         self.assertEqual(report["status"], gate_zero_gates.FAIL)
-        self.assertIn("sample canonical payload differs on linux-x64", report["failures"])
+        self.assertIn("sample stable payload differs on linux-x64", report["failures"])
         self.assertIn("sample document fingerprint differs on linux-x64", report["failures"])
         self.assertIn("sample warning ids differ on linux-x64", report["failures"])
 
@@ -202,7 +202,7 @@ class GateZeroGateDefinitionTests(unittest.TestCase):
     def _g3_result(
         self,
         platform: str,
-        output_sha256: str,
+        payload_sha256: str,
         document_fingerprint: str,
         warning_ids: list[str],
     ) -> dict:
@@ -219,7 +219,8 @@ class GateZeroGateDefinitionTests(unittest.TestCase):
                         "sha256": "sample-sha",
                     },
                     "document_fingerprint": document_fingerprint,
-                    "output_sha256": output_sha256,
+                    "output_sha256": "raw-output-" + platform,
+                    "payload_sha256": payload_sha256,
                     "warning_ids": warning_ids,
                 }
             ],

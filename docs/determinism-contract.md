@@ -4,9 +4,10 @@ Status: v1 draft for Milestone A — changes only via `contract-change` PR with 
 (PRD §5.1, §8; plan §6.2). This document is normative; `ethos-core` implements it; CI proves it.
 
 **The guarantee (G3, PRD §1.3):** same input bytes + same effective config + same deterministic
-profile ⇒ byte-identical canonical payload and equal fingerprints on every supported platform.
-A canonical-payload difference across supported platforms under the deterministic profile is a
-release-blocking bug (PRD §14). Determinism failures are never retried into green.
+profile ⇒ byte-identical stable payload projection and equal fingerprints on every supported
+platform. A stable-payload projection difference across supported platforms under the
+deterministic profile is a release-blocking bug (PRD §14). Determinism failures are never retried
+into green.
 
 ## 1. Canonical values
 
@@ -14,7 +15,7 @@ A *canonical value* is any JSON value covered by canonical equality:
 
 | Value | Where |
 | --- | --- |
-| `payload` of the document graph | `ethos.json` (`urn:ethos:schema:document:1`) |
+| stable payload projection of the document graph | `ethos.json` (`urn:ethos:schema:document:1`) |
 | fingerprint manifest | computed, §6 |
 | effective-config hash subset | computed, §7 |
 | verification config | `urn:ethos:schema:verification-config:1` |
@@ -60,6 +61,7 @@ A reference implementation in Python (used to generate the §10 vectors):
 | Field | Reason |
 | --- | --- |
 | `$.diagnostics` (whole object) | timings, memory, host info, source paths — varies per run/host |
+| `$.payload..bbox` and `$.payload..bboxes` | precise PDFium rectangle dimensions are preserved for display/citation inspection but are not fingerprint-critical; text runs are anchored by stable origin locators |
 
 Rules: nothing inside `payload` may be runtime-dependent (property-tested: no
 `diagnostics`-class field names appear in payload); by default the CLI writes **no volatile
@@ -79,6 +81,11 @@ just their payloads.
   `f64` tuples cannot cross the backend boundary.
 - bbox = `[x0, y0, x1, y1]`, top-left origin, `x0 ≤ x1`, `y0 ≤ y1`, after page-rotation
   normalization. Page width/height are quantized the same way.
+- `origin_locator` on spans uses `origin-run-locator-v1`: first and last included character
+  origins from `FPDFText_GetCharOrigin`, quantized into the same top-left coordinate system.
+  This locator is fingerprint-critical. Precise bbox dimensions remain emitted geometry for
+  citation display and crop hints, but they are excluded from `payload_sha256` because PDFium
+  reports platform-sensitive rectangle dimensions for otherwise identical text.
 - Quantization is idempotent by construction (integers in ⇒ same integers out), and
   re-serialization is stable: `parse(serialize(doc)) == doc` exactly.
 
@@ -108,7 +115,7 @@ All hashes are SHA-256; hex is lowercase; prefixed forms read `sha256:<64 hex>`.
 | Name | Formula |
 | --- | --- |
 | `source.fingerprint` | `sha256:` + sha256(source PDF bytes) |
-| `payload_sha256` | sha256(c14n(payload)) |
+| `payload_sha256` | sha256(c14n(stable payload projection)) |
 | `profile.sha256` | sha256(c14n(profile artifact JSON)) |
 | `config_sha256` | sha256(c14n(effective-config subset)) — §7 |
 | `fingerprint` (document) | `sha256:` + sha256(c14n(fingerprint manifest)) |
@@ -125,6 +132,11 @@ document fingerprint. `ethos fingerprint` recomputes and checks these. Two parse
 comparable iff their fingerprints are equal; verification treats a fingerprint mismatch as
 stale evidence.
 
+The stable payload projection is computed from `payload` after recursively excluding object keys
+named `bbox` and `bboxes`. The emitted document still retains those fields. All text, ordering,
+page geometry, font identity, span character ranges, warnings, table/chunk structure, and
+`origin_locator` values remain in the projection.
+
 ## 7. Effective-config hash
 
 `config_sha256` hashes the c14n of the *config-hash subset* of the effective configuration —
@@ -134,7 +146,7 @@ exactly the fields listed in the profile's `config_hash_inputs` (v1: `pages`).
   (`1-5,9`), validated (1-based, ascending bounds, in-document), merged and sorted:
   `"1-5,9"` ⇒ `[[1,5],[9,9]]`; absent selection ⇒ `"all"`. A different page range is a
   legitimately different canonical output (different `config_sha256` ⇒ different fingerprint).
-- Fields that do not change the canonical payload (output format selection, verbosity) never
+- Fields that do not change the stable payload projection (output format selection, verbosity) never
   enter the hash. Chunker/exporter config joins `config_hash_inputs` via `contract-change` PR
   when those lanes land (Milestone C).
 
@@ -168,7 +180,7 @@ as JSON with explicit codepoints; expected output is the exact c14n byte string 
 | V2 | `{"b":2,"a":1,"_":0,"Z":-3}` | `{"Z":-3,"_":0,"a":1,"b":2}` | `9e8c5fa78b63297991b5b7b45bd334ccc61bd1058c5cd8ca6ee0451f78cd6cc1` |
 | V3 | obj with `arr:[3,1,2]`, `flag:true`, `n_neg:-42`, `n_zero:0`, `nothing:null`, `text:"líne1\nl\"ine2\tend — 💡"` (— = U+2014, 💡 = U+1F4A1) | `{"arr":[3,1,2],"flag":true,"n_neg":-42,"n_zero":0,"nothing":null,"text":"líne1\nl\"ine2\tend — 💡"}` (with real `\n`/`\t` escapes) | `86b355efaa571cac1ddb71d422a9971e6042c55ec5369305cce095f2c181426e` |
 | V3b | `{"bel":"<U+0007>","backslash":"a\\b"}` | `{"backslash":"a\\b","bel":"\u0007"}` | `a1cc2b96cfaf4e1d27ca13e7c2e56faadf76bd027d233fce5a57124e36ea6dfd` |
-| V4 | fingerprint manifest of `schemas/examples/document.example.json` (its embedded hashes are real — regenerated by the reference implementation) | (see §6 manifest with the example's hashes) | `adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2` |
+| V4 | fingerprint manifest of `schemas/examples/document.example.json` (its embedded hashes are real — regenerated by the reference implementation) | (see §6 manifest with the example's hashes) | `b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3` |
 
 Profile artifact pin: sha256(c14n(`profiles/ethos-deterministic-v1.json`)) =
 `d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070` (asserted in
@@ -181,7 +193,7 @@ first public release, profile artifact changes require a profile version bump.
 
 - Per-PR: c14n idempotence + no-float + key-order property tests; vector tests; deterministic
   profile validation; same-platform double-parse byte-diff (once the backend lands).
-- Nightly + `contract-change` PRs: cross-platform fingerprint + canonical-payload equality on
+- Nightly + `contract-change` PRs: cross-platform fingerprint + stable-payload equality on
   Gate Zero platforms (macOS arm64, Linux x64); Windows x64 joins by Milestone B exit (week 8).
 - Verification reports are themselves determinism-tested (same inputs ⇒ same report bytes).
 

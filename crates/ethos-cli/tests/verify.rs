@@ -202,7 +202,7 @@ fn malformed_citation_fingerprint_is_usage_error() {
     let cases = [
         (
             "fingerprint-missing-prefix",
-            "adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+            "b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
         ),
         (
             "fingerprint-uppercase",
@@ -721,7 +721,7 @@ fn value_claim_verifies_against_native_ethos_text() {
     let citations = temp_json(
         "value-citations",
         r#"{
-          "document_fingerprint": "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+          "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
           "claims": [
             {
               "kind": "value",
@@ -752,7 +752,7 @@ fn value_substrings_do_not_ground_against_native_ethos_text() {
     let citations = temp_json(
         "value-substring-citations",
         r#"{
-          "document_fingerprint": "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+          "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
           "claims": [
             {
               "kind": "value",
@@ -782,7 +782,7 @@ fn table_cell_claim_verifies_against_native_ethos_table() {
     let citations = temp_json(
         "table-cell-citations",
         r#"{
-          "document_fingerprint": "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+          "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
           "claims": [
             {
               "kind": "table_cell",
@@ -817,7 +817,7 @@ fn table_cell_mismatch_and_missing_cell_fail_gate() {
     let citations = temp_json(
         "table-cell-negative-citations",
         r#"{
-          "document_fingerprint": "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+          "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
           "claims": [
             {
               "kind": "table_cell",
@@ -1053,7 +1053,7 @@ fn foreign_source_without_fingerprint_blocks_fingerprint_pinned_citations() {
     let citations = temp_json(
         "odl-fingerprint-pinned-citations",
         r#"{
-          "document_fingerprint": "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+          "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
           "claims": [
             {
               "kind": "presence",
@@ -1120,7 +1120,7 @@ fn config_excluded_value_claim_is_unsupported() {
     let citations = temp_json(
         "excluded-value",
         r#"{
-          "document_fingerprint": "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+          "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
           "claims": [
             {
               "kind": "value",
@@ -1155,7 +1155,7 @@ fn page_only_presence_works() {
     let citations = temp_json(
         "page-only-presence",
         r#"{
-          "document_fingerprint": "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+          "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
           "claims": [
             {
               "kind": "presence",
@@ -1187,7 +1187,7 @@ fn bbox_presence_works_when_coordinate_origin_is_known() {
     let citations = temp_json(
         "bbox-known-origin",
         r#"{
-          "document_fingerprint": "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+          "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
           "claims": [
             {
               "kind": "presence",
@@ -1285,7 +1285,7 @@ fn case_insensitive_config_allows_literal_case_difference() {
     let citations = temp_json(
         "case-insensitive-citations",
         r#"{
-          "document_fingerprint": "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2",
+          "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
           "claims": [
             {
               "kind": "quote",

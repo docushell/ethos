@@ -23,7 +23,7 @@ use ethos_core::config::{PageSelection, ParseConfig};
 use ethos_core::error::{ErrorCode, EthosError};
 use ethos_core::geom::{quantize, QRect};
 use ethos_core::ids::{page_id, span_id, warning_id};
-use ethos_core::model::{Page, Span, Warning};
+use ethos_core::model::{Page, Span, SpanOriginLocator, Warning};
 use ethos_core::traits::{BackendManifest, EthosPdfBackend, Extraction};
 use serde::{Deserialize, Serialize};
 
@@ -38,6 +38,7 @@ pub const PDFIUM_ARTIFACT_PATH_ENV: &str = "ETHOS_PDFIUM_ARTIFACT_PATH";
 
 /// Profile quantization: 100 quanta per PDF point.
 const QUANTUM_PER_POINT: u32 = 100;
+const ORIGIN_LOCATOR_POLICY: &str = "origin-run-locator-v1";
 
 const DETERMINISTIC_PROFILE_JSON: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -1140,7 +1141,8 @@ impl PdfTextPage<'_> {
             if run.has_style_change(&font_id, font_size_q) {
                 run.flush(page, next_span, spans)?;
             }
-            run.push(ch, bbox, font_id, font_size_q);
+            let origin = self.char_origin(index, page_height_pts)?;
+            run.push(ch, bbox, origin, font_id, font_size_q);
         }
         run.flush(page, next_span, spans)
     }
@@ -1332,6 +1334,8 @@ fn should_break_text_run(ch: char) -> bool {
 struct SpanRun {
     text: String,
     bbox: Option<QRect>,
+    first_origin: Option<[i64; 2]>,
+    last_origin: Option<[i64; 2]>,
     font_id: Option<String>,
     font_size_q: Option<i64>,
 }
@@ -1368,12 +1372,23 @@ impl SpanRun {
         !self.text.is_empty() && (self.font_id != *font_id || self.font_size_q != font_size_q)
     }
 
-    fn push(&mut self, ch: char, bbox: QRect, font_id: Option<String>, font_size_q: Option<i64>) {
+    fn push(
+        &mut self,
+        ch: char,
+        bbox: QRect,
+        origin: Option<[i64; 2]>,
+        font_id: Option<String>,
+        font_size_q: Option<i64>,
+    ) {
         self.text.push(ch);
         self.bbox = Some(match self.bbox {
             Some(existing) => union_rect(existing, bbox),
             None => bbox,
         });
+        if self.first_origin.is_none() {
+            self.first_origin = origin;
+        }
+        self.last_origin = origin;
         if self.font_id.is_none() {
             self.font_id = font_id;
         }
@@ -1394,10 +1409,19 @@ impl SpanRun {
         let bbox = self
             .bbox
             .ok_or_else(|| EthosError::internal("span run has text without bbox"))?;
+        let origin_locator = match (self.first_origin.take(), self.last_origin.take()) {
+            (Some(first_origin), Some(last_origin)) => Some(SpanOriginLocator {
+                policy: ORIGIN_LOCATOR_POLICY.to_string(),
+                first_origin,
+                last_origin,
+            }),
+            _ => None,
+        };
         spans.push(Span {
             id: span_id(*next_span)?,
             page: page.id.clone(),
             bbox,
+            origin_locator,
             text: std::mem::take(&mut self.text),
             font_id: self.font_id.take(),
             font_size_q: self.font_size_q,
@@ -1407,6 +1431,8 @@ impl SpanRun {
         });
         *next_span += 1;
         self.bbox = None;
+        self.first_origin = None;
+        self.last_origin = None;
         self.font_id = None;
         self.font_size_q = None;
         Ok(())

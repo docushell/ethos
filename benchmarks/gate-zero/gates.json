@@ -84,7 +84,7 @@
       }
     },
     "g3": {
-      "completion_policy": "G3 cannot pass from a single platform result. It requires at least macOS arm64 and Linux x64 evidence for the full frozen manifest, then a cross-platform comparison showing zero canonical payload and fingerprint divergences.",
+      "completion_policy": "G3 cannot pass from a single platform result. It requires at least macOS arm64 and Linux x64 evidence for the full frozen manifest, then a cross-platform comparison showing zero stable payload projection and fingerprint divergences.",
       "corpus_scope": "full frozen Gate Zero manifest",
       "deterministic_profile": "profiles/ethos-deterministic-v1.json",
       "id": "g3",
@@ -96,7 +96,7 @@
       "required_evidence": [
         "schema-valid Ethos result evidence for every required determinism platform",
         "matching corpus id, file path, corpus sha256, and actual sha256 for every compared corpus entry",
-        "equal canonical payload hash for every compared corpus entry across required platforms",
+        "equal stable payload projection hash (payload_sha256) for every compared corpus entry across required platforms",
         "equal document fingerprint for every compared corpus entry across required platforms",
         "equal warning_ids for every compared corpus entry across required platforms",
         "matching deterministic_profile_sha256 or an explicitly reviewed profile-difference blocker",
@@ -111,6 +111,10 @@
         {
           "path": "docs/IMPLEMENTATION_PLAN.md",
           "summary": "G3 determinism: byte-identical canonical payload and equal fingerprints across supported platforms on the full frozen manifest; font mapper override and quantize-at-extraction must be implemented."
+        },
+        {
+          "path": "docs/decisions/ADR-0009-g3-geometry-fingerprint-policy.md",
+          "summary": "G3 compares stable payload projection hashes and document fingerprints; precise bbox geometry remains emitted for inspection but is not fingerprint-critical."
         },
         {
           "path": "benchmarks/gate-zero/manifest.json",

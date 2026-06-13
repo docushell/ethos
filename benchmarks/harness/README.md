@@ -78,9 +78,9 @@ benchmarks/gate-zero/gates.schema.json
 - G2 is the base-parser installed footprint gate: `<= 30 MB decimal`, with V8/XFA-enabled
   PDFium builds auto-failing. The `<= 1/10` in-harness measured OpenDataLoader comparison is
   reported as a claim threshold, not a hard pass/fail threshold (ADR-0008).
-- G3 is the cross-platform determinism gate: byte-identical canonical payload and equal
-  document fingerprints across at least `macos-arm64` and `linux-x64` on the full frozen
-  manifest. A macOS-only result cannot pass G3 by itself.
+- G3 is the cross-platform determinism gate: byte-identical stable payload projection hashes
+  (`payload_sha256`) and equal document fingerprints across at least `macos-arm64` and
+  `linux-x64` on the full frozen manifest. A macOS-only result cannot pass G3 by itself.
 
 Do not emit `g2.json` or `g3.json` until the runner cites the definition file hash, manifest hash,
 competitor-lock hash, and required evidence listed in `gates.json`.
@@ -125,8 +125,9 @@ make -C benchmarks/harness gate-zero-g3
 
 Use `GATE_ZERO_G3_PLATFORM_RESULTS='macos-arm64=/path/to/g1.json linux-x64=/path/to/g1.json'`
 only when comparing explicitly staged G1 files. The G3 result fails if any required corpus entry
-has a different canonical payload hash, document fingerprint, warning ID list, or corpus binding
-across required platforms. It blocks rather than infers if a required platform result is missing.
+has a different stable payload projection hash, document fingerprint, warning ID list, or corpus
+binding across required platforms. It blocks rather than infers if a required platform result is
+missing.
 
 ## Gate Zero Geometry Stability Experiments
 
@@ -167,6 +168,9 @@ python3 benchmarks/harness/compare_gate_zero_geometry_probes.py \
   --left-label macos-arm64 \
   --right-label linux-x64
 ```
+
+Use `experiment_gate_zero_origin_locators.py` on the same probe directories to test whether
+origin-derived run locators remain stable after bbox-like signals diverge.
 
 The probe command is intentionally hidden and environment-gated. It loads PDFium in-process and is
 for synthetic/debug investigations only.

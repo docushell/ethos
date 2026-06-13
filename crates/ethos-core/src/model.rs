@@ -22,11 +22,11 @@ pub struct Document {
     pub source: SourceInfo,
     /// sha256 of c14n(effective-config subset).
     pub config_sha256: String,
-    /// sha256 of c14n(payload).
+    /// sha256 of c14n(stable payload projection).
     pub payload_sha256: String,
     /// Composite document fingerprint (`sha256:…`).
     pub fingerprint: String,
-    /// The canonical payload — the unit of canonical equality.
+    /// The emitted payload; `payload_sha256` binds its stable projection.
     pub payload: Payload,
     /// Runtime-only diagnostics; excluded from canonical equality and all fingerprints.
     /// Omitted by default (`--diagnostics` opts in) so default outputs are byte-identical.
@@ -61,7 +61,7 @@ pub struct SourceInfo {
     pub bytes: u64,
 }
 
-/// The canonical payload.
+/// The emitted document payload.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Payload {
     /// Uniform coordinate system for every bbox.
@@ -180,6 +180,9 @@ pub struct Span {
     pub page: String,
     /// Bounding box.
     pub bbox: QRect,
+    /// Stable origin-derived locator used by the fingerprint projection.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub origin_locator: Option<SpanOriginLocator>,
     /// Span text, exactly as extracted.
     pub text: String,
     /// Deterministic font identity (ADR-0003): `embedded:…` or `subst:…`.
@@ -197,6 +200,17 @@ pub struct Span {
     /// Attached warnings.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub warning_refs: Vec<String>,
+}
+
+/// Origin-derived text locator that remains stable when PDFium bbox dimensions drift.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SpanOriginLocator {
+    /// Locator policy id.
+    pub policy: String,
+    /// First included character origin in top-left quanta.
+    pub first_origin: [i64; 2],
+    /// Last included character origin in top-left quanta.
+    pub last_origin: [i64; 2],
 }
 
 /// A table.
@@ -472,7 +486,7 @@ impl crate::grounding::GroundingSource for Document {
 }
 
 impl Document {
-    /// c14n bytes of the payload — the unit of canonical equality (G3).
+    /// c14n bytes of the emitted payload.
     pub fn payload_c14n(&self) -> Result<Vec<u8>, EthosError> {
         let value = serde_json::to_value(&self.payload)
             .map_err(|e| EthosError::new(ErrorCode::InternalError, e.to_string()))?;
@@ -480,8 +494,34 @@ impl Document {
             .map_err(|e| EthosError::new(ErrorCode::InternalError, e.message))
     }
 
-    /// Recompute `payload_sha256` from the payload.
+    /// Stable c14n bytes of the payload projection used by fingerprints and G3.
+    pub fn payload_fingerprint_c14n(&self) -> Result<Vec<u8>, EthosError> {
+        let value = stable_payload_projection(&self.payload)?;
+        crate::c14n::c14n_bytes(&value)
+            .map_err(|e| EthosError::new(ErrorCode::InternalError, e.message))
+    }
+
+    /// Recompute `payload_sha256` from the stable payload projection.
     pub fn compute_payload_sha256(&self) -> Result<String, EthosError> {
+        let value = stable_payload_projection(&self.payload)?;
+        crate::c14n::sha256_hex(&value)
+            .map_err(|e| EthosError::new(ErrorCode::InternalError, e.message))
+    }
+
+    /// Compute `payload_sha256` for an assembled payload before the envelope exists.
+    pub fn compute_payload_sha256_for_payload(payload: &Payload) -> Result<String, EthosError> {
+        let value = stable_payload_projection(payload)?;
+        crate::c14n::sha256_hex(&value)
+            .map_err(|e| EthosError::new(ErrorCode::InternalError, e.message))
+    }
+
+    /// Build the stable payload projection used by `payload_sha256`.
+    pub fn payload_fingerprint_value(&self) -> Result<Value, EthosError> {
+        stable_payload_projection(&self.payload)
+    }
+
+    /// Recompute the raw payload hash for diagnostics only.
+    pub fn compute_raw_payload_sha256(&self) -> Result<String, EthosError> {
         let value = serde_json::to_value(&self.payload)
             .map_err(|e| EthosError::new(ErrorCode::InternalError, e.to_string()))?;
         crate::c14n::sha256_hex(&value)
@@ -521,6 +561,31 @@ impl Document {
             ));
         }
         Ok(())
+    }
+}
+
+fn stable_payload_projection(payload: &Payload) -> Result<Value, EthosError> {
+    let mut value = serde_json::to_value(payload)
+        .map_err(|e| EthosError::new(ErrorCode::InternalError, e.to_string()))?;
+    remove_unstable_geometry(&mut value);
+    Ok(value)
+}
+
+fn remove_unstable_geometry(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            map.remove("bbox");
+            map.remove("bboxes");
+            for child in map.values_mut() {
+                remove_unstable_geometry(child);
+            }
+        }
+        Value::Array(items) => {
+            for child in items {
+                remove_unstable_geometry(child);
+            }
+        }
+        _ => {}
     }
 }
 
@@ -567,5 +632,38 @@ mod tests {
         let v = serde_json::to_value(&doc).unwrap();
         let doc2: Document = serde_json::from_value(v).unwrap();
         assert_eq!(doc, doc2);
+    }
+
+    #[test]
+    fn payload_hash_ignores_precise_bbox_geometry() {
+        let (_, doc) = example();
+        let mut shifted = doc.clone();
+        shifted.payload.elements[0].bbox = QRect::new(1, 2, 3, 4).unwrap();
+        shifted.payload.spans[0].bbox = QRect::new(5, 6, 7, 8).unwrap();
+        shifted.payload.tables[0].bbox = QRect::new(9, 10, 11, 12).unwrap();
+        shifted.payload.tables[0].cells[0].bbox = QRect::new(13, 14, 15, 16).unwrap();
+        shifted.payload.chunks[0].bboxes[0].bbox = QRect::new(17, 18, 19, 20).unwrap();
+        shifted.payload.regions[0].bbox = QRect::new(21, 22, 23, 24).unwrap();
+
+        assert_eq!(
+            doc.compute_payload_sha256().unwrap(),
+            shifted.compute_payload_sha256().unwrap()
+        );
+    }
+
+    #[test]
+    fn payload_hash_binds_origin_locator() {
+        let (_, doc) = example();
+        let mut changed = doc.clone();
+        changed.payload.spans[0].origin_locator = Some(SpanOriginLocator {
+            policy: "origin-run-locator-v1".to_string(),
+            first_origin: [7200, 7200],
+            last_origin: [30480, 7200],
+        });
+
+        assert_ne!(
+            doc.compute_payload_sha256().unwrap(),
+            changed.compute_payload_sha256().unwrap()
+        );
     }
 }

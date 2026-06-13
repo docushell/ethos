@@ -505,6 +505,7 @@ def run_entry_result(
         "duration_ms_p99": None,
         "peak_rss_bytes": None,
         "output_sha256": None,
+        "payload_sha256": None,
         "document_fingerprint": None,
         "warning_ids": [],
         "status": "fail",
@@ -548,6 +549,7 @@ def run_ethos_entry(
     durations: list[float] = []
     rss_values: list[int] = []
     output_hashes: list[str] = []
+    payload_hashes: list[str] = []
     fingerprints: list[str] = []
     warning_id_sets: list[list[str]] = []
     exit_codes: list[int] = []
@@ -573,6 +575,11 @@ def run_ethos_entry(
         except json.JSONDecodeError as exc:
             failures.append(f"stdout is not JSON: {exc}")
             continue
+        payload_sha256 = doc.get("payload_sha256")
+        if not isinstance(payload_sha256, str) or HEX64.fullmatch(payload_sha256) is None:
+            failures.append("payload_sha256 is missing or malformed")
+        else:
+            payload_hashes.append(payload_sha256)
         fingerprint = doc.get("fingerprint")
         if not is_fingerprint_form(fingerprint):
             failures.append("document fingerprint is missing or malformed")
@@ -582,6 +589,8 @@ def run_ethos_entry(
 
     if len(set(output_hashes)) > 1:
         failures.append("output_sha256 changed across iterations")
+    if len(set(payload_hashes)) > 1:
+        failures.append("payload_sha256 changed across iterations")
     if len(set(fingerprints)) > 1:
         failures.append("document fingerprint changed across iterations")
     if len({tuple(ids) for ids in warning_id_sets}) > 1:
@@ -604,6 +613,7 @@ def run_ethos_entry(
         "duration_ms_p99": percentile(durations, 0.99),
         "peak_rss_bytes": max(rss_values) if rss_values else None,
         "output_sha256": output_hashes[0] if output_hashes else None,
+        "payload_sha256": payload_hashes[0] if payload_hashes else None,
         "document_fingerprint": fingerprints[0] if fingerprints else None,
         "warning_ids": warning_id_sets[0] if warning_id_sets else [],
         "status": "pass" if not failures else "fail",
@@ -970,6 +980,7 @@ def run_competitor_entry(
         "duration_ms_p99": percentile(durations, 0.99),
         "peak_rss_bytes": max(rss_values) if rss_values else None,
         "output_sha256": output_hashes[0] if output_hashes else None,
+        "payload_sha256": None,
         "document_fingerprint": None,
         "warning_ids": [],
         "status": "pass" if not failures else "fail",
@@ -1006,6 +1017,7 @@ def aggregate_output_hash(runs: list[dict[str, Any]]) -> str | None:
             },
             "document_fingerprint": run["document_fingerprint"],
             "output_sha256": run["output_sha256"],
+            "payload_sha256": run.get("payload_sha256"),
             "warning_ids": run["warning_ids"],
         }
         for run in runs

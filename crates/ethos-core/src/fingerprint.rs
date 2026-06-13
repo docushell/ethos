@@ -1,5 +1,5 @@
 //! Fingerprints (determinism contract §6). The composite document fingerprint binds
-//! payload, source, config, and profile identity into one comparable value.
+//! stable payload projection, source, config, and profile identity into one comparable value.
 
 use serde_json::Value;
 
@@ -32,7 +32,7 @@ pub fn source_fingerprint(bytes: &[u8]) -> String {
 pub struct FingerprintManifest {
     /// sha256 of c14n(effective-config subset).
     pub config_sha256: String,
-    /// sha256 of c14n(payload).
+    /// sha256 of c14n(stable payload projection).
     pub payload_sha256: String,
     /// Deterministic profile id.
     pub profile_id: String,
@@ -88,7 +88,7 @@ mod tests {
         let m = FingerprintManifest {
             config_sha256: "68cc61753d299917cc7773f069c18aca31c8ac68f43736a94cb57eee05144084"
                 .into(),
-            payload_sha256: "9a392e2e555770423214eb134d44b18b19cb496ee8145598cea9089afc78a074"
+            payload_sha256: "dad47d0ac4ab90f60691eb884c4c7e58d38ef7b87ef3df4bf602cd6087c9c757"
                 .into(),
             profile_id: "ethos-deterministic-v1".into(),
             profile_sha256: "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070"
@@ -99,7 +99,7 @@ mod tests {
         };
         assert_eq!(
             m.document_fingerprint().unwrap(),
-            "sha256:adf86dcf40c0b4f14aca15108a78fc01051fb171b8638722b627904d4ecd6bf2"
+            "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3"
         );
     }
 

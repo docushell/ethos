@@ -12,5 +12,7 @@ Every closing PRD §15 open question gets an ADR here. Output-changing merges re
 | 0005 | Gate Zero decision | Template (filled week 4) |
 | 0006 | Package identifiers | **Proposed — due by Milestone A exit** |
 | 0007 | Trust layer first | Accepted |
+| 0008 | Gate Zero G2 footprint policy | Accepted |
+| 0009 | G3 geometry fingerprint policy | Accepted |
 
 Format: Status / Date / Governs, Context, Decision, Consequences. Statuses: Proposed → Accepted | Rejected | Superseded-by-NNNN.

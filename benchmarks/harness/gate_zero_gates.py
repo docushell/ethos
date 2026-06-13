@@ -107,6 +107,8 @@ def evaluate_g3_determinism(
         for corpus_id in corpus_ids:
             if corpus_id not in indexed_by_platform[platform]:
                 blockers.append(f"{platform} missing corpus entry: {corpus_id}")
+            elif not isinstance(indexed_by_platform[platform][corpus_id].get("payload_sha256"), str):
+                blockers.append(f"{platform} missing payload_sha256 for corpus entry: {corpus_id}")
     if blockers:
         return {"status": BLOCKED, "blockers": blockers, "failures": failures}
 
@@ -116,8 +118,8 @@ def evaluate_g3_determinism(
         baseline = baseline_runs[corpus_id]
         for platform in required_platforms[1:]:
             candidate = indexed_by_platform[platform][corpus_id]
-            if candidate.get("output_sha256") != baseline.get("output_sha256"):
-                failures.append(f"{corpus_id} canonical payload differs on {platform}")
+            if candidate.get("payload_sha256") != baseline.get("payload_sha256"):
+                failures.append(f"{corpus_id} stable payload differs on {platform}")
             if candidate.get("document_fingerprint") != baseline.get("document_fingerprint"):
                 failures.append(f"{corpus_id} document fingerprint differs on {platform}")
             if candidate.get("warning_ids") != baseline.get("warning_ids"):

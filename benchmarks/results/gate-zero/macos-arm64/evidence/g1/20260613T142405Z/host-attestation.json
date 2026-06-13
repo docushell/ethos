@@ -1,0 +1,86 @@
+{
+  "benchmark_commit": "c97932dece2612e2c92686f6d9e5ce4eeb8e6fd6-dirty",
+  "bundle_git": {
+    "available": true,
+    "commit": "c97932dece2612e2c92686f6d9e5ce4eeb8e6fd6",
+    "dirty": true,
+    "status_short": [
+      " M benchmarks/gate-zero/gates.json",
+      " M benchmarks/gate-zero/result.schema.json",
+      " M benchmarks/harness/Makefile",
+      " M benchmarks/harness/README.md",
+      " M benchmarks/harness/build_gate_zero_evidence.py",
+      " M benchmarks/harness/gate_zero_gates.py",
+      " M benchmarks/harness/run_gate_zero.py",
+      " M benchmarks/harness/run_gate_zero_g3.py",
+      " M benchmarks/harness/test_gate_zero_gates.py",
+      " M benchmarks/harness/test_run_gate_zero.py",
+      " M benchmarks/harness/test_run_gate_zero_g3.py",
+      " M benchmarks/results/gate-zero/README.md",
+      " M benchmarks/results/gate-zero/macos-arm64/g1.json",
+      " M crates/ethos-cli/src/main.rs",
+      " M crates/ethos-cli/tests/verify.rs",
+      " M crates/ethos-core/src/c14n.rs",
+      " M crates/ethos-core/src/fingerprint.rs",
+      " M crates/ethos-core/src/model.rs",
+      " M crates/ethos-layout/src/lib.rs",
+      " M crates/ethos-pdf/src/lib.rs",
+      " M crates/ethos-verify/src/lib.rs",
+      " M docs/decisions/README.md",
+      " M docs/determinism-contract.md",
+      " M examples/verify/native_citations.json",
+      " M schemas/ethos-document.schema.json",
+      " M schemas/examples/chunks.example.jsonl",
+      " M schemas/examples/citations.example.json",
+      " M schemas/examples/document.example.json",
+      " M schemas/examples/security-report.example.json",
+      " M schemas/examples/verification-report.example.json",
+      "?? benchmarks/harness/experiment_gate_zero_origin_locators.py",
+      "?? benchmarks/harness/test_experiment_gate_zero_origin_locators.py",
+      "?? benchmarks/results/gate-zero/diagnostics/",
+      "?? docs/decisions/ADR-0009-g3-geometry-fingerprint-policy.md"
+    ]
+  },
+  "bundle_host_observed": {
+    "machine": "arm64",
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "platform_key": "macos-arm64",
+    "python": "3.9.6"
+  },
+  "gate": "g1",
+  "generated_at": "2026-06-13T14:24:05Z",
+  "platform": "macos-arm64",
+  "result_host": {
+    "observed": {
+      "machine": "arm64",
+      "platform": "macOS-26.5.1-arm64-arm-64bit",
+      "platform_key": "macos-arm64",
+      "python": "3.9.6"
+    },
+    "selected": {
+      "cores_used_for_g1": 1,
+      "cpu": "Apple M4 Pro, 12 cores (8 performance, 4 efficiency)",
+      "id": "mac-m4pro-arm64",
+      "kernel": "Darwin 25.5.0",
+      "model": "MacBook Pro, Mac16,8",
+      "os": "macOS 26.5 (25F71)",
+      "platform": "macos-arm64",
+      "ram": "48 GB",
+      "role": "performance",
+      "runner": "local manual runner; runner id=mac-m4pro-arm64"
+    }
+  },
+  "result_inputs": {
+    "competitors_lock": "benchmarks/competitors.lock.json",
+    "competitors_lock_sha256": "35becebfbf2b4b10b14213ae4a986efc9805ed6b0cf7f5dc5878f7ba79b13afa",
+    "deterministic_profile": "profiles/ethos-deterministic-v1.json",
+    "deterministic_profile_file_sha256": "537ec4b4352a8c873929fc61df15a79da3038994267f3655314262e293334e1f",
+    "ethos_bin": "target/release/ethos",
+    "ethos_bin_sha256": "91ad34295285139d206941fc2f3f2656055cf38b67351c6c754d8a7a03004deb",
+    "install_path": "target/release/ethos"
+  },
+  "schema_version": "ethos-gate-zero-host-attestation-v1",
+  "source_result": "benchmarks/results/gate-zero/macos-arm64/g1.json",
+  "source_result_canonical_sha256": "08c3fa02e92a18d52559dbc97d51e1bbad955317e43482333f960648b1049186",
+  "source_result_sha256": "e495801af9f07825292f70c6fe5e00aa8230dfd08ea09aaa3a316412a2d60524"
+}

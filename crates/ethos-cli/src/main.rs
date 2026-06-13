@@ -873,10 +873,7 @@ fn assemble_document(
         parser_warnings,
     };
 
-    let payload_value =
-        serde_json::to_value(&payload).map_err(|e| EthosError::internal(e.to_string()))?;
-    let payload_sha256 = ethos_core::c14n::sha256_hex(&payload_value)
-        .map_err(|e| EthosError::internal(e.message))?;
+    let payload_sha256 = Document::compute_payload_sha256_for_payload(&payload)?;
     let profile_sha256 = profile_sha256()?;
     let source_fingerprint = source_fingerprint(source_bytes);
     let config_sha256 = config.config_sha256()?;
@@ -1143,6 +1140,7 @@ mod tests {
             id: id.to_string(),
             page: "p0001".to_string(),
             bbox: QRect::new(0, 0, 100, 100).unwrap(),
+            origin_locator: None,
             text: "text".to_string(),
             font_id: None,
             font_size_q: Some(1200),
@@ -1213,6 +1211,7 @@ mod tests {
                     id: "s000001".to_string(),
                     page: "p0001".to_string(),
                     bbox: QRect::new(0, 0, 100, 100).unwrap(),
+                    origin_locator: None,
                     text: "Hello".to_string(),
                     font_id: None,
                     font_size_q: Some(1200),
@@ -1224,6 +1223,7 @@ mod tests {
                     id: "s000002".to_string(),
                     page: "p0001".to_string(),
                     bbox: QRect::new(120, 0, 220, 100).unwrap(),
+                    origin_locator: None,
                     text: "Ethos".to_string(),
                     font_id: None,
                     font_size_q: Some(1200),
@@ -1235,6 +1235,7 @@ mod tests {
                     id: "s000003".to_string(),
                     page: "p0001".to_string(),
                     bbox: QRect::new(0, 300, 100, 400).unwrap(),
+                    origin_locator: None,
                     text: "Again".to_string(),
                     font_id: None,
                     font_size_q: Some(1200),
