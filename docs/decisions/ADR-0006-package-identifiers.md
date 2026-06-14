@@ -1,6 +1,6 @@
 # ADR-0006: Package Identifiers (Registry / Trademark Validation)
 
-- Status: **Proposed — partial GitHub validation recorded; registry and trademark validation still block public artifacts**
+- Status: **Proposed — crates.io conflict found; rename and trademark validation still block public artifacts**
 - Date: 2026-06-11
 - Governs: IMPLEMENTATION_PLAN §2 row 0.11; PRD §3.1; risk R8
 
@@ -13,22 +13,22 @@ The project name is **Ethos**; `ethos` is a loaded name with collision/trademark
 | Surface | Identifier | Registry | Availability checked | Reserved |
 | --- | --- | --- | --- | --- |
 | CLI binary | `ethos` | — (binary name) | n/a | n/a |
-| Public module | `ethos-doc` | crates.io | unresolved | ☐ (reserve even if facade) |
-| Public module | `ethos-rag` | crates.io | unresolved | ☐ (reserve even if facade) |
-| Public module | `ethos-verify` | crates.io | unresolved | ☐ |
-| Crates | `ethos-*` (core, pdf, layout, tables, security, render, cli, mcp) | crates.io | unresolved | ☐ |
-| Python | `ethos-pdf` (import `ethos_pdf`) | PyPI | unresolved | ☐ |
-| Node | `@ethos-pdf/core` | npm | unresolved | ☐ (scope: `@ethos-pdf`) |
+| Public module | `ethos-doc` | crates.io | 2026-06-14: not found | ☐ (reserve even if facade) |
+| Public module | `ethos-rag` | crates.io | 2026-06-14: not found | ☐ (reserve even if facade) |
+| Public module | `ethos-verify` | crates.io | 2026-06-14: not found | ☐ |
+| Crates | `ethos-*` (core, pdf, layout, tables, security, render, cli, mcp) | crates.io | 2026-06-14: `ethos-core` exists; others checked not found | ☐ (rename required for `ethos-core`) |
+| Python | `ethos-pdf` (import `ethos_pdf`) | PyPI | 2026-06-14: not found | ☐ |
+| Node | `@ethos-pdf/core` | npm | 2026-06-14: package not found | ☐ (scope: `@ethos-pdf`) |
 | Schema namespace | `urn:ethos:schema:*` | — (URN, no registry claim) | n/a | n/a |
 
 ## Validation checklist (devrel owner)
 
-- [ ] crates.io name search for every `ethos-*` identifier above
-- [ ] PyPI search `ethos-pdf` (+ pep503 normalized forms)
-- [ ] npm scope `@ethos-pdf` availability
+- [x] crates.io name search for every `ethos-*` identifier above (conflict: `ethos-core`)
+- [x] PyPI search `ethos-pdf` (+ pep503 normalized forms)
+- [x] npm package lookup `@ethos-pdf/core` (scope/package reservation still pending)
 - [x] GitHub org/repo collision scan (preliminary; 2026-06-14)
 - [ ] Trademark scan (software classes) for "Ethos" in primary jurisdictions
-- [ ] Record outcomes here; if any conflict → rename via this ADR before any public artifact (risk R8 trigger)
+- [x] Record outcomes here; if any conflict → rename via this ADR before any public artifact (risk R8 trigger)
 
 ## Evidence required before acceptance
 
@@ -61,6 +61,42 @@ GitHub collision scan produced preliminary evidence:
 
 Outcome: this ADR is not accepted. Public package publishing, public benchmark release, and launch announcements remain blocked until registry availability/reservation and trademark/legal checks are completed from an environment with reliable registry access.
 
+### 2026-06-14 — registry check after VPN removal
+
+Registry checks were rerun with direct network access and an explicit user agent.
+
+crates.io API results:
+
+| Name | Result |
+| --- | --- |
+| `ethos-doc` | 404 not found |
+| `ethos-rag` | 404 not found |
+| `ethos-verify` | 404 not found |
+| `ethos-core` | 200 exists |
+| `ethos-pdf` | 404 not found |
+| `ethos-layout` | 404 not found |
+| `ethos-tables` | 404 not found |
+| `ethos-security` | 404 not found |
+| `ethos-render` | 404 not found |
+| `ethos-cli` | 404 not found |
+| `ethos-mcp` | 404 not found |
+
+`cargo search ethos-core --limit 5` confirmed:
+
+```text
+ethos-core = "0.0.0"    # Ethos Core components
+```
+
+The existing `ethos-core` crate metadata reported version `0.0.0`, description `Ethos Core components`, repository `https://github.com/NickelAngeStudio/nswindow`, 18 downloads, and `created_at` / `updated_at` `2026-01-19T14:06:03.017094Z`.
+
+Other registry results:
+
+- PyPI `https://pypi.org/pypi/ethos-pdf/json` returned 404 not found.
+- npm `https://registry.npmjs.org/%40ethos-pdf%2Fcore` returned 404 not found; `npm view @ethos-pdf/core name version --json` also returned `E404`.
+- GitHub organization `https://api.github.com/orgs/ethos-pdf` returned 404 not found.
+
+Outcome: `ethos-core` cannot be treated as an available public crates.io identifier. Before this ADR can be accepted, the public Rust crate naming plan must either rename the core crate or explicitly choose not to publish a crate under that name. Trademark/legal validation remains required.
+
 ## Decision
 
-Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
+Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-core` is already unavailable on crates.io and requires a rename decision before any public Rust artifact. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
