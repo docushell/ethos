@@ -51,7 +51,12 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     let mut bytes =
         ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
     bytes.push(b'\n');
-    write_output(args.out, &bytes)
+    let all_evidence_grounded = report.all_evidence_grounded;
+    write_output(args.out, &bytes)?;
+    if args.fail_on_ungrounded && !all_evidence_grounded {
+        return Err(Failure::Ungrounded);
+    }
+    Ok(())
 }
 
 fn validate_citation_input(

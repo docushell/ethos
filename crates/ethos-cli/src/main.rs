@@ -23,6 +23,8 @@ use ethos_core::model::Document;
 
 /// Usage-error exit code (also what clap uses).
 pub(crate) const EXIT_USAGE: u8 = 2;
+/// Verification completed, but the requested grounding gate did not pass.
+pub(crate) const EXIT_UNGROUNDED: u8 = 1;
 pub(crate) const INTERNAL_GEOMETRY_PROBE_ENV: &str = "ETHOS_INTERNAL_GEOMETRY_PROBE";
 pub(crate) const INTERNAL_TABLE_CANDIDATE_PROBE_ENV: &str = "ETHOS_INTERNAL_TABLE_CANDIDATE_PROBE";
 
@@ -174,6 +176,9 @@ pub(crate) struct VerifyArgs {
     /// Output path for verification_report.json (default: stdout)
     #[arg(long)]
     pub(crate) out: Option<PathBuf>,
+    /// Exit 1 after writing the report when any requested evidence is not grounded.
+    #[arg(long)]
+    pub(crate) fail_on_ungrounded: bool,
 }
 
 /// CLI failure: stable error code or usage error, rendered deterministically.
@@ -183,6 +188,7 @@ pub(crate) enum Failure {
         error: EthosError,
         diagnostics: serde_json::Value,
     },
+    Ungrounded,
     Usage(String),
 }
 
@@ -196,6 +202,7 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
     match run(cli) {
         Ok(()) => ExitCode::SUCCESS,
+        Err(Failure::Ungrounded) => ExitCode::from(EXIT_UNGROUNDED),
         Err(Failure::Usage(message)) => {
             eprintln!("error (usage): {message}");
             ExitCode::from(EXIT_USAGE)

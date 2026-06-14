@@ -92,6 +92,25 @@ Golden report:
 examples/verify/goldens/opendataloader_capability_limited_report.json
 ```
 
+## CI And Agent Gate
+
+Use `--fail-on-ungrounded` when an automated workflow should fail if verification completes
+but any cited evidence is stale, missing, mismatched, unsupported, or capability-blocked.
+
+```bash
+ethos verify examples/verify/opendataloader.json \
+  --grounding opendataloader-json \
+  --citations examples/verify/opendataloader_grounded_citations.json \
+  --fail-on-ungrounded \
+  --out /tmp/ethos-verification-report.json
+```
+
+Exit behavior:
+
+- `0`: verification completed and all requested evidence is grounded
+- `1`: verification completed, but not all requested evidence is grounded
+- `2`: invalid input, malformed citations, adapter failure, or another usage error
+
 ## Verification Contract
 
 The demo is covered by `crates/ethos-cli/tests/verify.rs`. The test runs the public CLI for

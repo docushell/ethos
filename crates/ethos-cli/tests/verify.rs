@@ -42,6 +42,14 @@ fn temp_json(name: &str, json: &str) -> PathBuf {
     path
 }
 
+fn temp_output(name: &str) -> PathBuf {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock after unix epoch")
+        .as_nanos();
+    std::env::temp_dir().join(format!("ethos-{name}-{nanos}.json"))
+}
+
 fn json_file(path: impl AsRef<Path>) -> Value {
     let bytes = std::fs::read(path).expect("JSON fixture is readable");
     serde_json::from_slice(&bytes).expect("JSON fixture parses")
@@ -145,6 +153,103 @@ fn verify_alpha_demo_reports_match_goldens() {
         let expected = json_file(expected_path);
         assert_eq!(actual, expected, "golden drift for {name}");
     }
+}
+
+#[test]
+fn fail_on_ungrounded_exits_zero_when_all_evidence_is_grounded() {
+    let root = repo_root();
+    let output = run_ethos(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+        "--fail-on-ungrounded",
+    ]);
+
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(output.stderr, b"");
+    let report: Value = serde_json::from_slice(&output.stdout).expect("stdout is JSON");
+    assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn fail_on_ungrounded_exits_one_after_writing_stale_report() {
+    let root = repo_root();
+    let out = temp_output("stale-fail-on-ungrounded");
+    let output = run_ethos(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_stale_citations.json")
+            .to_str()
+            .unwrap(),
+        "--out",
+        out.to_str().unwrap(),
+        "--fail-on-ungrounded",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(output.stdout, b"");
+    assert_eq!(output.stderr, b"");
+    let report = json_file(out);
+    assert_eq!(report["fingerprint_stale"], true);
+    assert_eq!(report["all_evidence_grounded"], false);
+    assert_eq!(report["checks"][0]["status"], "stale");
+}
+
+#[test]
+fn fail_on_ungrounded_exits_one_with_stdout_report_for_capability_blocked_source() {
+    let root = repo_root();
+    let output = run_ethos(&[
+        "verify",
+        root.join("examples/verify/opendataloader_no_tables.json")
+            .to_str()
+            .unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        root.join("examples/verify/opendataloader_table_cell_citations.json")
+            .to_str()
+            .unwrap(),
+        "--fail-on-ungrounded",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(output.stderr, b"");
+    let report: Value = serde_json::from_slice(&output.stdout).expect("stdout is JSON");
+    assert_eq!(report["all_evidence_grounded"], false);
+    assert_eq!(report["checks"][0]["status"], "capability_blocked");
+    assert!(report["capability_limits"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|limit| limit == "missing_tables"));
+}
+
+#[test]
+fn fail_on_ungrounded_keeps_invalid_input_on_usage_exit_code() {
+    let root = repo_root();
+    let citations = temp_json("empty-citations", "[]");
+    let output = run_ethos(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+        "--fail-on-ungrounded",
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("citations file must contain at least one claim"));
 }
 
 #[test]
