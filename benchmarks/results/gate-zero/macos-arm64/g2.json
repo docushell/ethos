@@ -11,7 +11,7 @@
       "logic": "claim threshold: record one_tenth_opendataloader_footprint_supported=true only when the measured Ethos/OpenDataLoader ratio is <= 0.1.",
       "opendataloader_ratio_max": 0.1
     },
-    "definition_sha256": "602f82e3141e9826a893de509f3a1137430539a0166fd045d8c5f458d26efbb6",
+    "definition_sha256": "7c85a0c60a0e0c71de3860a75c6f545cabaa5c6a23fa88bd3aff602e11d18e65",
     "gate_status": "defined-not-run",
     "gates": "benchmarks/gate-zero/gates.json",
     "measurement_scope": {
@@ -82,21 +82,21 @@
     "deterministic_profile": "profiles/ethos-deterministic-v1.json",
     "deterministic_profile_sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070",
     "gates": "benchmarks/gate-zero/gates.json",
-    "gates_sha256": "602f82e3141e9826a893de509f3a1137430539a0166fd045d8c5f458d26efbb6",
+    "gates_sha256": "7c85a0c60a0e0c71de3860a75c6f545cabaa5c6a23fa88bd3aff602e11d18e65",
     "manifest": "benchmarks/gate-zero/manifest.json",
     "manifest_sha256": "33f30da39cea31a92a80c25de48a88ff3861a625843e9dccca1ee3c87889f729"
   },
   "measurements": {
     "ethos": {
-      "install_size_bytes": 9009728,
+      "install_size_bytes": 9194976,
       "items": [
         {
           "exists": true,
           "path": "target/release/ethos",
           "path_kind": "file",
           "role": "ethos-cli",
-          "sha256": "0de71fc5439e38215544bce53f1eb6bac9eccac848eee3922113cdc99c58600e",
-          "size_bytes": 1277392,
+          "sha256": "79d4b1ab5e8e32067c2550ba0ffea0941e06286bfe7d477c87633a641e8e239b",
+          "size_bytes": 1462640,
           "tree_sha256": null
         },
         {
@@ -180,8 +180,8 @@
   "schema_version": "ethos-gate-zero-g2-result-v1",
   "status": "pass",
   "summary": {
-    "ethos_install_size_bytes": 9009728,
-    "ethos_to_opendataloader_ratio": 0.25199620724469296,
+    "ethos_install_size_bytes": 9194976,
+    "ethos_to_opendataloader_ratio": 0.25717747280561387,
     "max_install_size_bytes": 30000000,
     "opendataloader_install_size_bytes": 35753427,
     "opendataloader_ratio_claim_supported": false,
