@@ -176,6 +176,10 @@ pub(crate) struct VerifyArgs {
     /// Output path for verification_report.json (default: stdout)
     #[arg(long)]
     pub(crate) out: Option<PathBuf>,
+    /// Directory for deterministic crop descriptor artifacts. Alpha scope writes JSON
+    /// descriptors only; rendered image crops arrive with ethos-render.
+    #[arg(long)]
+    pub(crate) crop_dir: Option<PathBuf>,
     /// Exit 1 after writing the report when any requested evidence is not grounded.
     #[arg(long)]
     pub(crate) fail_on_ungrounded: bool,

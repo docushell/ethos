@@ -12,6 +12,7 @@ repeatable `make verify-alpha` path:
 - OpenDataLoader-style JSON can enter the same verification loop through a grounding adapter
 - real pinned OpenDataLoader 2.4.7 output has both grounded and ungrounded citation cases
 - `--fail-on-ungrounded` turns the report into a CI/agent gate with exit code `1` when evidence is not fully grounded
+- native Ethos verification can emit deterministic crop descriptor artifacts with `--crop-dir`
 - every demo report is compared against a golden and regenerated twice to prove byte-identical output
 
 Ethos verifies document evidence for AI systems. The deterministic parser is one grounding
@@ -169,6 +170,25 @@ Exit behavior:
 - `0`: verification completed and all requested evidence is grounded
 - `1`: verification completed, but not all requested evidence is grounded
 - `2`: invalid input, malformed citations, adapter failure, or another usage error
+
+## Crop Descriptors
+
+Native Ethos document grounding can emit deterministic crop descriptor JSON files for each
+verified evidence region:
+
+```bash
+ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/native_grounded_citations.json \
+  --crop-dir /tmp/ethos-crops \
+  --out /tmp/ethos-native-verification-report.json
+```
+
+Expected outcome:
+
+- `evidence.crop_ref` points to files under the requested crop directory
+- crop descriptor files bind `document_fingerprint`, `page`, `bbox`, and `check_ids`
+- descriptors are JSON audit artifacts only; rendered PNG crops arrive later behind `ethos-render`
+- `--crop-dir` is native-Ethos-only in this alpha slice
 
 ## Verification Contract
 

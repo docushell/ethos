@@ -301,6 +301,88 @@ fn fail_on_ungrounded_exits_one_with_stdout_report_for_capability_blocked_source
 }
 
 #[test]
+fn native_verify_crop_dir_writes_deterministic_crop_descriptors() {
+    let root = repo_root();
+    let out = temp_output("native-crop-report");
+    let crop_dir = tempfile::tempdir().expect("temp crop dir");
+    let output = run_ethos(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+        "--crop-dir",
+        crop_dir.path().to_str().unwrap(),
+        "--out",
+        out.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(output.stdout, b"");
+    assert_eq!(output.stderr, b"");
+
+    let report = json_file(&out);
+    assert_eq!(report["grounding"]["capabilities"]["crop_support"], true);
+    assert_eq!(report["capability_limits"], serde_json::json!([]));
+
+    let first_evidence = &report["checks"][0]["evidence"];
+    let crop_ref = first_evidence["crop_ref"].as_str().unwrap();
+    assert!(crop_ref.starts_with("crop-"));
+    assert!(crop_ref.ends_with(".json"));
+
+    let descriptor_path = crop_dir.path().join(crop_ref);
+    let descriptor = json_file(&descriptor_path);
+    assert_eq!(descriptor["artifact_type"], "ethos.crop_descriptor.v1");
+    assert_eq!(descriptor["schema_version"], "1.0.0");
+    assert_eq!(descriptor["rendering_status"], "descriptor_only");
+    assert_eq!(descriptor["crop_ref"], crop_ref);
+    assert_eq!(
+        descriptor["document_fingerprint"],
+        report["document_fingerprint"]
+    );
+    assert_eq!(descriptor["page"], first_evidence["page"]);
+    assert_eq!(descriptor["bbox"], first_evidence["bbox"]);
+    assert_eq!(descriptor["check_ids"], serde_json::json!(["v0001"]));
+    assert_eq!(descriptor["text_sha256"].as_str().unwrap().len(), 64);
+
+    let crop_files = std::fs::read_dir(crop_dir.path())
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("json"))
+        .count();
+    assert_eq!(crop_files, 3);
+    assert!(std::fs::read(&descriptor_path).unwrap().ends_with(b"\n"));
+}
+
+#[test]
+fn crop_dir_is_native_ethos_only_for_alpha() {
+    let root = repo_root();
+    let crop_dir = tempfile::tempdir().expect("temp crop dir");
+    let output = run_ethos(&[
+        "verify",
+        root.join("fixtures/foreign/opendataloader/real/opendataloader-output.json")
+            .to_str()
+            .unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        root.join("fixtures/foreign/opendataloader/real/citations.json")
+            .to_str()
+            .unwrap(),
+        "--crop-dir",
+        crop_dir.path().to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("--crop-dir is currently supported only for native Ethos document grounding"));
+}
+
+#[test]
 fn fail_on_ungrounded_keeps_invalid_input_on_usage_exit_code() {
     let root = repo_root();
     let citations = temp_json("empty-citations", "[]");

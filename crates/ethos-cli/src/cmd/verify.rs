@@ -1,8 +1,17 @@
+use std::collections::BTreeMap;
 use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
 use ethos_core::error::EthosError;
 use ethos_core::fingerprint::is_fingerprint_form;
-use ethos_core::verify_types::{ClaimKind, VerificationConfig};
+use ethos_core::grounding::{
+    Capabilities, GroundingElement, GroundingSource, GroundingSpan, GroundingTable, PageGeometry,
+    ParserIdentity,
+};
+use ethos_core::model::Document;
+use ethos_core::verify_types::{
+    ClaimKind, EvidenceOptions, VerificationConfig, VerificationReport,
+};
 use ethos_grounding_opendataloader_json::OdlJsonSource;
 use ethos_verify::CitationInput;
 
@@ -14,12 +23,25 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
         Failure::Usage("citations file does not match the alpha citation input shape".to_string())
     })?;
 
-    let config: VerificationConfig = match &args.config {
+    if args.crop_dir.is_some() && args.grounding.is_some() {
+        return Err(Failure::Usage(
+            "--crop-dir is currently supported only for native Ethos document grounding"
+                .to_string(),
+        ));
+    }
+
+    let mut config: VerificationConfig = match &args.config {
         Some(path) => serde_json::from_slice(&read_file(path)?).map_err(|_| {
             Failure::Usage("verification config does not match the schema".to_string())
         })?,
         None => VerificationConfig::default_v1(),
     };
+    if args.crop_dir.is_some() {
+        config
+            .evidence
+            .get_or_insert_with(EvidenceOptions::default)
+            .include_crops = true;
+    }
     validate_verification_config(&config)?;
     validate_citation_input(&citations, &config)?;
     let config_value =
@@ -30,7 +52,13 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     let report = match args.grounding.as_deref() {
         None => {
             let doc = read_document(&args.input)?;
-            ethos_verify::verify_claims(&doc, citations, &config, config_sha256)
+            match args.crop_dir.as_ref() {
+                Some(_) => {
+                    let source = NativeCropSource { document: &doc };
+                    ethos_verify::verify_claims(&source, citations, &config, config_sha256)
+                }
+                None => ethos_verify::verify_claims(&doc, citations, &config, config_sha256),
+            }
         }
         Some("opendataloader-json") => {
             let bytes = read_file(&args.input)?;
@@ -52,11 +80,189 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
         ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
     bytes.push(b'\n');
     let all_evidence_grounded = report.all_evidence_grounded;
+    if let Some(crop_dir) = args.crop_dir.as_deref() {
+        write_crop_descriptors(crop_dir, &report)?;
+    }
     write_output(args.out, &bytes)?;
     if args.fail_on_ungrounded && !all_evidence_grounded {
         return Err(Failure::Ungrounded);
     }
     Ok(())
+}
+
+struct NativeCropSource<'a> {
+    document: &'a Document,
+}
+
+impl GroundingSource for NativeCropSource<'_> {
+    fn parser(&self) -> ParserIdentity {
+        self.document.parser()
+    }
+
+    fn capabilities(&self) -> Capabilities {
+        let mut capabilities = self.document.capabilities();
+        capabilities.crop_support = true;
+        capabilities
+    }
+
+    fn fingerprint(&self) -> Option<String> {
+        self.document.fingerprint()
+    }
+
+    fn pages(&self) -> Vec<PageGeometry> {
+        self.document.pages()
+    }
+
+    fn elements(&self) -> Vec<GroundingElement> {
+        self.document.elements()
+    }
+
+    fn spans(&self) -> Vec<GroundingSpan> {
+        self.document.spans()
+    }
+
+    fn tables(&self) -> Vec<GroundingTable> {
+        self.document.tables()
+    }
+
+    fn crop_ref(&self, page: &str, bbox: [i64; 4]) -> Option<String> {
+        Some(crop_ref_for(page, bbox)?)
+    }
+
+    fn element_by_id(&self, id: &str) -> Option<GroundingElement> {
+        self.document.element_by_id(id)
+    }
+}
+
+fn crop_ref_for(page: &str, bbox: [i64; 4]) -> Option<String> {
+    let value = serde_json::json!({
+        "bbox": bbox,
+        "page": page,
+    });
+    let hash = ethos_core::c14n::sha256_hex(&value).ok()?;
+    Some(format!("crop-{hash}.json"))
+}
+
+#[derive(Debug)]
+struct CropDescriptor {
+    page: String,
+    bbox: [i64; 4],
+    check_ids: Vec<String>,
+    text_sha256: Option<String>,
+}
+
+fn write_crop_descriptors(crop_dir: &Path, report: &VerificationReport) -> Result<(), Failure> {
+    std::fs::create_dir_all(crop_dir).map_err(|_| {
+        Failure::Usage(format!(
+            "cannot create crop artifact directory: {}",
+            crop_dir.display()
+        ))
+    })?;
+
+    let mut descriptors: BTreeMap<String, CropDescriptor> = BTreeMap::new();
+    for check in &report.checks {
+        let Some(evidence) = check.evidence.as_ref() else {
+            continue;
+        };
+        let (Some(crop_ref), Some(page), Some(bbox)) = (
+            evidence.crop_ref.as_deref(),
+            evidence.page.as_deref(),
+            evidence.bbox,
+        ) else {
+            continue;
+        };
+        let text_sha256 = evidence
+            .text
+            .as_deref()
+            .map(|text| ethos_core::c14n::sha256_hex_bytes(text.as_bytes()));
+
+        match descriptors.get_mut(crop_ref) {
+            Some(existing) => {
+                if existing.page != page
+                    || existing.bbox != bbox
+                    || existing.text_sha256 != text_sha256
+                {
+                    return Err(Failure::Ethos(EthosError::internal(
+                        "crop_ref collision while writing crop descriptors",
+                    )));
+                }
+                existing.check_ids.push(check.id.clone());
+            }
+            None => {
+                descriptors.insert(
+                    crop_ref.to_string(),
+                    CropDescriptor {
+                        page: page.to_string(),
+                        bbox,
+                        check_ids: vec![check.id.clone()],
+                        text_sha256,
+                    },
+                );
+            }
+        }
+    }
+
+    for (crop_ref, descriptor) in descriptors {
+        let path = crop_descriptor_path(crop_dir, &crop_ref)?;
+        let mut object = serde_json::Map::new();
+        object.insert(
+            "artifact_type".to_string(),
+            serde_json::Value::String("ethos.crop_descriptor.v1".to_string()),
+        );
+        object.insert("bbox".to_string(), serde_json::json!(descriptor.bbox));
+        object.insert(
+            "check_ids".to_string(),
+            serde_json::json!(descriptor.check_ids),
+        );
+        object.insert("crop_ref".to_string(), serde_json::Value::String(crop_ref));
+        if let Some(document_fingerprint) = &report.document_fingerprint {
+            object.insert(
+                "document_fingerprint".to_string(),
+                serde_json::Value::String(document_fingerprint.clone()),
+            );
+        }
+        object.insert(
+            "page".to_string(),
+            serde_json::Value::String(descriptor.page),
+        );
+        object.insert(
+            "rendering_status".to_string(),
+            serde_json::Value::String("descriptor_only".to_string()),
+        );
+        object.insert(
+            "schema_version".to_string(),
+            serde_json::Value::String(ethos_core::SCHEMA_VERSION.to_string()),
+        );
+        if let Some(text_sha256) = descriptor.text_sha256 {
+            object.insert(
+                "text_sha256".to_string(),
+                serde_json::Value::String(text_sha256),
+            );
+        }
+        let mut bytes = ethos_core::c14n::c14n_bytes(&serde_json::Value::Object(object))
+            .map_err(|e| EthosError::internal(e.message))?;
+        bytes.push(b'\n');
+        std::fs::write(&path, bytes).map_err(|_| {
+            Failure::Usage(format!(
+                "cannot write crop descriptor artifact: {}",
+                path.display()
+            ))
+        })?;
+    }
+
+    Ok(())
+}
+
+fn crop_descriptor_path(crop_dir: &Path, crop_ref: &str) -> Result<PathBuf, Failure> {
+    let path = Path::new(crop_ref);
+    if path.components().count() != 1
+        || path.file_name().and_then(|name| name.to_str()) != Some(crop_ref)
+    {
+        return Err(Failure::Ethos(EthosError::internal(
+            "crop_ref is not a safe descriptor filename",
+        )));
+    }
+    Ok(crop_dir.join(path))
 }
 
 fn validate_citation_input(
