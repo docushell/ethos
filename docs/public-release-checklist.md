@@ -16,7 +16,7 @@ rendered-crop byte-identity claims remain blocked.
 - No generated evidence file in the public tree exposes private usernames, local machine names,
   private hostnames, or one-off absolute paths.
 - Historical benchmark evidence is either regenerated through `ethos-bench` with public-safe
-  reproduction metadata or moved out of the public source tree.
+  reproduction metadata or kept out of public release artifacts.
 - `ethos-bench` has its own public repository hygiene files: `SECURITY.md`, `CONTRIBUTING.md`,
   and `CODE_OF_CONDUCT.md`.
 - Gate Zero public result files are signed or otherwise integrity-bound by the accepted release

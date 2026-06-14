@@ -1,7 +1,0 @@
-{
-  "digest_type": "sha256",
-  "note": "This is a checksum digest for the checksum manifest, not a public-key signature.",
-  "payload": "SHA256SUMS",
-  "payload_sha256": "07e6afa4dbf7f19cb8c90da3956946d9670ec8281b7422f96fc6dc59d3a1622b",
-  "schema_version": "ethos-gate-zero-checksum-digest-v1"
-}

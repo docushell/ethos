@@ -11,14 +11,14 @@ This repository owns implementation-adjacent benchmark inputs and historical evi
 - internal diagnostics and generated evidence needed to debug parser behavior
 - validation records that affect product claims or determinism boundaries
 
-Generated benchmark results checked into `ethos` are evidence snapshots, not public marketing
-claims. Public wording must continue to point readers at `docs/execution-status.md` for the
-current pre-alpha status and blockers.
+Generated Gate Zero benchmark results are not checked into `ethos`; they belong in
+`ethos-bench`. Public wording must continue to point readers at `docs/execution-status.md` for
+the current pre-alpha status and blockers.
 
 Before any public repository push, run the public-release checklist in
 `docs/public-release-checklist.md`. Historical generated evidence may contain local reproduction
 paths; do not edit those files by hand. Regenerate public-safe evidence through the accepted
-benchmark flow or keep the snapshots internal.
+benchmark flow in `ethos-bench` or keep the snapshots internal.
 
 ## `ethos-bench`
 
@@ -28,7 +28,7 @@ The sibling repository at `../ethos-bench` owns public benchmark orchestration:
 - G1/G2/G3 runner commands
 - gate evaluator tests
 - competitor execution wiring and pinned artifact checks
-- public-result layout under `benchmarks/results/gate-zero/`
+- generated result and evidence layout under `benchmarks/results/gate-zero/`
 
 `ethos-bench` runs against an Ethos checkout through `--ethos-repo`; it should not duplicate
 the Ethos source tree or rewrite Ethos parser behavior.

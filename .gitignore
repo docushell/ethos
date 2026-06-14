@@ -4,4 +4,6 @@ __pycache__/
 *.pyc
 .DS_Store
 benchmarks/results/fixtures/*.json
+benchmarks/results/gate-zero/*
+!benchmarks/results/gate-zero/README.md
 # Cargo.lock IS committed (determinism: pinned dependency graph). Do not add it here.
