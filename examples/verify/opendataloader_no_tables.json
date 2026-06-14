@@ -1,0 +1,28 @@
+{
+  "_comment": "Synthetic OpenDataLoader-style fixture with no table model. It demonstrates explicit capability downgrades for table-cell claims.",
+  "tool": {
+    "name": "opendataloader-pdf",
+    "version": "0.0.0-synthetic"
+  },
+  "pages": [
+    {
+      "number": 1,
+      "width": 612.0,
+      "height": 792.0
+    }
+  ],
+  "elements": [
+    {
+      "id": "odl-e2",
+      "page": 1,
+      "bbox": [
+        72.0,
+        101.0,
+        540.0,
+        115.0
+      ],
+      "type": "Paragraph",
+      "text": "Revenue grew to $12.4M in Q3 2025."
+    }
+  ]
+}

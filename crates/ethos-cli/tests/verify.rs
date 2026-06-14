@@ -42,12 +42,109 @@ fn temp_json(name: &str, json: &str) -> PathBuf {
     path
 }
 
+fn json_file(path: impl AsRef<Path>) -> Value {
+    let bytes = std::fs::read(path).expect("JSON fixture is readable");
+    serde_json::from_slice(&bytes).expect("JSON fixture parses")
+}
+
 fn document_example() -> PathBuf {
     repo_root().join("schemas/examples/document.example.json")
 }
 
 fn odl_example() -> PathBuf {
     repo_root().join("examples/verify/opendataloader.json")
+}
+
+#[test]
+fn verify_alpha_schema_report_example_matches_cli_output() {
+    let root = repo_root();
+    let report = parse_success(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("schemas/examples/citations.example.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    let expected = json_file(root.join("schemas/examples/verification-report.example.json"));
+
+    assert_eq!(report, expected);
+}
+
+#[test]
+fn verify_alpha_demo_reports_match_goldens() {
+    let root = repo_root();
+    let cases: [(&str, Vec<String>, PathBuf); 4] = [
+        (
+            "native-grounded",
+            vec![
+                "verify".to_string(),
+                root.join("schemas/examples/document.example.json")
+                    .display()
+                    .to_string(),
+                "--citations".to_string(),
+                root.join("examples/verify/native_grounded_citations.json")
+                    .display()
+                    .to_string(),
+            ],
+            root.join("examples/verify/goldens/native_grounded_report.json"),
+        ),
+        (
+            "opendataloader-grounded",
+            vec![
+                "verify".to_string(),
+                root.join("examples/verify/opendataloader.json")
+                    .display()
+                    .to_string(),
+                "--grounding".to_string(),
+                "opendataloader-json".to_string(),
+                "--citations".to_string(),
+                root.join("examples/verify/opendataloader_grounded_citations.json")
+                    .display()
+                    .to_string(),
+            ],
+            root.join("examples/verify/goldens/opendataloader_grounded_report.json"),
+        ),
+        (
+            "native-stale",
+            vec![
+                "verify".to_string(),
+                root.join("schemas/examples/document.example.json")
+                    .display()
+                    .to_string(),
+                "--citations".to_string(),
+                root.join("examples/verify/native_stale_citations.json")
+                    .display()
+                    .to_string(),
+            ],
+            root.join("examples/verify/goldens/native_stale_report.json"),
+        ),
+        (
+            "opendataloader-capability-limited",
+            vec![
+                "verify".to_string(),
+                root.join("examples/verify/opendataloader_no_tables.json")
+                    .display()
+                    .to_string(),
+                "--grounding".to_string(),
+                "opendataloader-json".to_string(),
+                "--citations".to_string(),
+                root.join("examples/verify/opendataloader_table_cell_citations.json")
+                    .display()
+                    .to_string(),
+            ],
+            root.join("examples/verify/goldens/opendataloader_capability_limited_report.json"),
+        ),
+    ];
+
+    for (name, args, expected_path) in cases {
+        let args = args.iter().map(String::as_str).collect::<Vec<_>>();
+        let actual = parse_success(&args);
+        let expected = json_file(expected_path);
+        assert_eq!(actual, expected, "golden drift for {name}");
+    }
 }
 
 #[test]

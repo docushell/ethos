@@ -1,0 +1,11 @@
+{
+  "document_fingerprint": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "claims": [
+    {
+      "kind": "presence",
+      "citation": {
+        "element_id": "e000002"
+      }
+    }
+  ]
+}

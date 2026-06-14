@@ -1,0 +1,39 @@
+{
+  "all_evidence_grounded": false,
+  "capability_limits": [],
+  "checks": [
+    {
+      "claim": {
+        "citation": {
+          "element_id": "e000002"
+        },
+        "kind": "presence"
+      },
+      "id": "v0001",
+      "match_method": "none",
+      "semantic_unverified": false,
+      "status": "stale",
+      "warnings": []
+    }
+  ],
+  "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "fingerprint_stale": true,
+  "grounding": {
+    "capabilities": {
+      "char_offsets": true,
+      "coordinate_origin": "top-left",
+      "crop_support": false,
+      "fingerprint": true,
+      "spans": true,
+      "tables": true
+    },
+    "parser": {
+      "name": "ethos",
+      "version": "0.1.0"
+    }
+  },
+  "schema_version": "1.0.0",
+  "unsupported_claim_kinds": [],
+  "verification_config_sha256": "4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0",
+  "warnings": []
+}

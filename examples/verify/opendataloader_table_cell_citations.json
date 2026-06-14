@@ -1,0 +1,15 @@
+{
+  "claims": [
+    {
+      "kind": "table_cell",
+      "text": "$12.4M",
+      "citation": {
+        "table_id": "odl-t1",
+        "cell": {
+          "row": 1,
+          "col": 1
+        }
+      }
+    }
+  ]
+}

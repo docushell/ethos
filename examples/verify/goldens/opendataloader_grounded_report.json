@@ -1,0 +1,110 @@
+{
+  "all_evidence_grounded": true,
+  "capability_limits": [
+    "missing_fingerprint",
+    "missing_spans",
+    "missing_char_offsets",
+    "unknown_coordinate_origin"
+  ],
+  "checks": [
+    {
+      "claim": {
+        "citation": {
+          "element_id": "odl-e2",
+          "page": "page-1"
+        },
+        "kind": "quote",
+        "text": "Revenue grew to $12.4M in Q3 2025"
+      },
+      "evidence": {
+        "bbox": [
+          7200,
+          10100,
+          54000,
+          11500
+        ],
+        "page": "page-1",
+        "text": "Revenue grew to $12.4M in Q3 2025."
+      },
+      "id": "v0001",
+      "match_method": "normalized_text_contains",
+      "semantic_unverified": false,
+      "status": "grounded",
+      "warnings": []
+    },
+    {
+      "claim": {
+        "citation": {
+          "cell": {
+            "col": 1,
+            "row": 1
+          },
+          "table_id": "odl-t1"
+        },
+        "kind": "table_cell",
+        "text": "$12.4M"
+      },
+      "evidence": {
+        "bbox": [
+          30600,
+          16500,
+          54000,
+          20000
+        ],
+        "page": "page-1",
+        "text": "$12.4M"
+      },
+      "id": "v0002",
+      "match_method": "table_cell_lookup",
+      "semantic_unverified": false,
+      "status": "grounded",
+      "warnings": []
+    },
+    {
+      "claim": {
+        "citation": {
+          "element_id": "odl-e2"
+        },
+        "kind": "presence"
+      },
+      "evidence": {
+        "bbox": [
+          7200,
+          10100,
+          54000,
+          11500
+        ],
+        "page": "page-1",
+        "text": "Revenue grew to $12.4M in Q3 2025."
+      },
+      "id": "v0003",
+      "match_method": "presence_only",
+      "semantic_unverified": false,
+      "status": "grounded",
+      "warnings": []
+    }
+  ],
+  "fingerprint_stale": false,
+  "grounding": {
+    "capabilities": {
+      "char_offsets": false,
+      "coordinate_origin": "unknown",
+      "crop_support": false,
+      "fingerprint": false,
+      "spans": false,
+      "tables": true
+    },
+    "parser": {
+      "adapter": "opendataloader-json",
+      "adapter_version": "0.1.0",
+      "name": "opendataloader-pdf",
+      "version": "0.0.0-synthetic"
+    }
+  },
+  "schema_version": "1.0.0",
+  "unsupported_claim_kinds": [],
+  "verification_config_sha256": "4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0",
+  "warnings": [
+    "capability_limited"
+  ]
+}
