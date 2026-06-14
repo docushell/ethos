@@ -73,6 +73,29 @@ Fixture package:
 fixtures/foreign/opendataloader/real/
 ```
 
+## Real OpenDataLoader Ungrounded Citation
+
+```bash
+ethos verify fixtures/foreign/opendataloader/real/opendataloader-output.json \
+  --grounding opendataloader-json \
+  --citations fixtures/foreign/opendataloader/real/ungrounded_citations.json \
+  --out /tmp/ethos-real-odl-ungrounded-report.json
+```
+
+Expected outcome:
+
+- `grounding.parser.name` is `opendataloader-pdf`
+- the value claim status is `mismatch`
+- `all_evidence_grounded` is `false`
+- a value substring does not ground against a longer cited paragraph
+- adding `--fail-on-ungrounded` exits `1`
+
+Golden report:
+
+```text
+fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json
+```
+
 ## Stale Fingerprint
 
 ```bash

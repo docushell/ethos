@@ -186,6 +186,44 @@ fn real_opendataloader_fixture_verifies_against_golden() {
 }
 
 #[test]
+fn real_opendataloader_ungrounded_fixture_verifies_against_golden() {
+    let root = repo_root();
+    let grounding = root.join("fixtures/foreign/opendataloader/real/opendataloader-output.json");
+    let citations = root.join("fixtures/foreign/opendataloader/real/ungrounded_citations.json");
+    let report = parse_success(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+    let expected =
+        json_file(root.join(
+            "fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json",
+        ));
+
+    assert_eq!(report, expected);
+    assert_eq!(report["all_evidence_grounded"], false);
+    assert_eq!(report["checks"][0]["status"], "mismatch");
+    assert_eq!(report["checks"][0]["match_method"], "normalized_text");
+
+    let gated = run_ethos(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        citations.to_str().unwrap(),
+        "--fail-on-ungrounded",
+    ]);
+    assert_eq!(gated.status.code(), Some(1));
+    assert_eq!(gated.stderr, b"");
+    let gated_report: Value = serde_json::from_slice(&gated.stdout).expect("stdout is JSON");
+    assert_eq!(gated_report, expected);
+}
+
+#[test]
 fn fail_on_ungrounded_exits_zero_when_all_evidence_is_grounded() {
     let root = repo_root();
     let output = run_ethos(&[

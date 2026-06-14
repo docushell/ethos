@@ -1,0 +1,11 @@
+{
+  "claims": [
+    {
+      "kind": "value",
+      "text": "Lorem ipsum dolor sit amet",
+      "citation": {
+        "element_id": "odl-2"
+      }
+    }
+  ]
+}

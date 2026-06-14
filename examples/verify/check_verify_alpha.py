@@ -43,6 +43,13 @@ CASES = [
         "citations": "fixtures/foreign/opendataloader/real/citations.json",
         "golden": "fixtures/foreign/opendataloader/real/expected.verification_report.json",
     },
+    {
+        "name": "real-opendataloader-ungrounded",
+        "input": "fixtures/foreign/opendataloader/real/opendataloader-output.json",
+        "grounding": "opendataloader-json",
+        "citations": "fixtures/foreign/opendataloader/real/ungrounded_citations.json",
+        "golden": "fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json",
+    },
 ]
 
 

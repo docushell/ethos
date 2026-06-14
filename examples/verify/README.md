@@ -53,3 +53,7 @@ Expected result: check status `capability_blocked`, warning `capability_limited`
 The OpenDataLoader fixtures are synthetic and limited to the adapter's documented alpha
 subset. They are not real pinned OpenDataLoader artifacts. Golden reports live in
 `examples/verify/goldens/` and are covered by the CLI verification test.
+
+Real pinned OpenDataLoader output lives under `fixtures/foreign/opendataloader/real/`. That
+package includes both a grounded citation set and an ungrounded citation set so
+`make verify-alpha` proves the accept and reject paths against a real foreign parser output.
