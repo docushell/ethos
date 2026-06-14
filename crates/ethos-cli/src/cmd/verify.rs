@@ -67,8 +67,9 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
             match args.crop_dir.as_ref() {
                 Some(_) => {
                     let source = NativeCropSource { document: &doc };
-                    let report =
+                    let mut report =
                         ethos_verify::verify_claims(&source, citations, &config, config_sha256);
+                    assign_logical_crop_refs(&mut report);
                     if let Some(crop_dir) = args.crop_dir.as_deref() {
                         write_crop_artifacts(crop_dir, &report, crop_source_pdf.as_ref())?;
                     }
@@ -191,6 +192,42 @@ fn crop_ref_for(page: &str, bbox: [i64; 4]) -> Option<String> {
     });
     let hash = ethos_core::c14n::sha256_hex(&value).ok()?;
     Some(format!("crop-{hash}.json"))
+}
+
+fn logical_crop_ref_for(
+    document_fingerprint: &str,
+    check_id: &str,
+    page: &str,
+) -> Result<String, Failure> {
+    let value = serde_json::json!({
+        "check_id": check_id,
+        "document_fingerprint": document_fingerprint,
+        "page": page,
+        "version": "ethos.logical_crop_ref.v1",
+    });
+    let hash = ethos_core::c14n::sha256_hex(&value)
+        .map_err(|e| Failure::Ethos(EthosError::internal(e.message)))?;
+    Ok(format!("crop-{hash}.json"))
+}
+
+fn assign_logical_crop_refs(report: &mut VerificationReport) {
+    let Some(document_fingerprint) = report.document_fingerprint.as_deref() else {
+        return;
+    };
+    for check in &mut report.checks {
+        let Some(evidence) = check.evidence.as_mut() else {
+            continue;
+        };
+        if evidence.crop_ref.is_none() {
+            continue;
+        }
+        let Some(page) = evidence.page.as_deref() else {
+            continue;
+        };
+        if let Ok(crop_ref) = logical_crop_ref_for(document_fingerprint, &check.id, page) {
+            evidence.crop_ref = Some(crop_ref);
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -631,6 +668,7 @@ fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failu
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ethos_core::verify_types::{Check, CheckStatus, Evidence, GroundingMeta, MatchMethod};
 
     #[test]
     fn png_from_bgra_writes_png_signature_and_dimensions() {
@@ -659,5 +697,140 @@ mod tests {
             }
             _ => panic!("expected ethos failure"),
         }
+    }
+
+    #[test]
+    fn logical_crop_ref_uses_check_identity_not_bbox() {
+        let first = logical_crop_ref_for(
+            "sha256:7164f43f104dc248193f12ea828e0ab857eae194210114c6f6c0160fd643c87b",
+            "v0001",
+            "p0001",
+        )
+        .unwrap_or_else(|_| panic!("logical crop ref should be generated"));
+        let second = logical_crop_ref_for(
+            "sha256:7164f43f104dc248193f12ea828e0ab857eae194210114c6f6c0160fd643c87b",
+            "v0001",
+            "p0001",
+        )
+        .unwrap_or_else(|_| panic!("logical crop ref should be generated"));
+        let different_check = logical_crop_ref_for(
+            "sha256:7164f43f104dc248193f12ea828e0ab857eae194210114c6f6c0160fd643c87b",
+            "v0002",
+            "p0001",
+        )
+        .unwrap_or_else(|_| panic!("logical crop ref should be generated"));
+
+        assert_eq!(first, second);
+        assert_ne!(first, different_check);
+        assert!(first.starts_with("crop-"));
+        assert!(first.ends_with(".json"));
+    }
+
+    #[test]
+    fn assign_logical_crop_refs_rewrites_existing_native_refs_only() {
+        let mut report = VerificationReport {
+            schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+            document_fingerprint: Some(
+                "sha256:7164f43f104dc248193f12ea828e0ab857eae194210114c6f6c0160fd643c87b"
+                    .to_string(),
+            ),
+            verification_config_sha256: "0".repeat(64),
+            grounding: GroundingMeta {
+                parser: ParserIdentity {
+                    name: "ethos".to_string(),
+                    version: "0.1.0".to_string(),
+                    adapter: None,
+                    adapter_version: None,
+                },
+                capabilities: Capabilities {
+                    spans: true,
+                    char_offsets: true,
+                    tables: true,
+                    fingerprint: true,
+                    coordinate_origin: ethos_core::grounding::CoordinateOrigin::TopLeft,
+                    crop_support: true,
+                },
+            },
+            capability_limits: Vec::new(),
+            fingerprint_stale: false,
+            all_evidence_grounded: true,
+            checks: vec![
+                Check {
+                    id: "v0001".to_string(),
+                    claim: ethos_core::verify_types::Claim {
+                        kind: ClaimKind::Quote,
+                        text: Some("Hello".to_string()),
+                        citation: ethos_core::verify_types::Citation {
+                            page: None,
+                            element_id: Some("e000001".to_string()),
+                            span_id: None,
+                            table_id: None,
+                            cell: None,
+                            bbox: None,
+                        },
+                    },
+                    status: CheckStatus::Grounded,
+                    match_method: MatchMethod::ExactTextContains,
+                    semantic_unverified: false,
+                    evidence: Some(Evidence {
+                        text: Some("Hello world".to_string()),
+                        page: Some("p0001".to_string()),
+                        bbox: Some([7392, 5482, 19378, 7226]),
+                        crop_ref: Some("crop-old.json".to_string()),
+                    }),
+                    warnings: Vec::new(),
+                },
+                Check {
+                    id: "v0002".to_string(),
+                    claim: ethos_core::verify_types::Claim {
+                        kind: ClaimKind::Presence,
+                        text: None,
+                        citation: ethos_core::verify_types::Citation {
+                            page: Some("p0001".to_string()),
+                            element_id: None,
+                            span_id: None,
+                            table_id: None,
+                            cell: None,
+                            bbox: None,
+                        },
+                    },
+                    status: CheckStatus::Grounded,
+                    match_method: MatchMethod::PresenceOnly,
+                    semantic_unverified: false,
+                    evidence: Some(Evidence {
+                        text: None,
+                        page: Some("p0001".to_string()),
+                        bbox: Some([0, 0, 100, 100]),
+                        crop_ref: None,
+                    }),
+                    warnings: Vec::new(),
+                },
+            ],
+            unsupported_claim_kinds: Vec::new(),
+            warnings: Vec::new(),
+        };
+
+        assign_logical_crop_refs(&mut report);
+
+        let expected = logical_crop_ref_for(
+            report.document_fingerprint.as_deref().unwrap(),
+            "v0001",
+            "p0001",
+        )
+        .unwrap_or_else(|_| panic!("logical crop ref should be generated"));
+        assert_eq!(
+            report.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|evidence| evidence.crop_ref.as_deref()),
+            Some(expected.as_str())
+        );
+        assert_eq!(
+            report.checks[1]
+                .evidence
+                .as_ref()
+                .and_then(|evidence| evidence.crop_ref.as_deref()),
+            None
+        );
     }
 }

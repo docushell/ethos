@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:crop-descriptor:1",
   "title": "Ethos crop descriptor",
-  "description": "Deterministic JSON descriptor for an evidence crop region emitted by `ethos verify --crop-dir`. The descriptor binds a verification report check to the document fingerprint, page, bbox, evidence text hash, and optional rendered image artifact that produced a crop_ref.",
+  "description": "Deterministic JSON descriptor for an evidence crop region emitted by `ethos verify --crop-dir`. The descriptor binds a verification report check to the document fingerprint, page, bbox, evidence text hash, and optional rendered image artifact referenced by crop_ref.",
   "type": "object",
   "required": [
     "artifact_type",
@@ -21,7 +21,7 @@
     "crop_ref": {
       "type": "string",
       "pattern": "^crop-[0-9a-f]{64}\\.json$",
-      "description": "Stable descriptor filename referenced from verification_report checks[].evidence.crop_ref."
+      "description": "Stable descriptor filename referenced from verification_report checks[].evidence.crop_ref. Native Ethos CLI crop refs are logical evidence references derived from document fingerprint, check id, and page, not from raw bbox."
     },
     "document_fingerprint": { "$ref": "#/$defs/fingerprint" },
     "page": { "type": "string" },

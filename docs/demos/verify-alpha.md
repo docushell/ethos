@@ -189,6 +189,8 @@ Expected outcome:
 - `evidence.crop_ref` points to files under the requested crop directory
 - crop descriptor files validate against `schemas/ethos-crop-descriptor.schema.json`
 - crop descriptor files bind `document_fingerprint`, `page`, `bbox`, and `check_ids`
+- native Ethos `crop_ref` filenames are stable logical evidence references derived from
+  document fingerprint, check id, and page; the descriptor still records the exact observed bbox
 - descriptors are JSON audit artifacts; when `--crop-source-pdf` is supplied, they also bind rendered PNG crop filenames, PNG byte hashes, dimensions, and source-PDF fingerprint
 - `--crop-dir` is native-Ethos-only in this alpha slice
 

@@ -1,7 +1,7 @@
 {
   "artifact_type": "ethos.crop_descriptor.v1",
   "schema_version": "1.0.0",
-  "crop_ref": "crop-6f0cd5a369f222f9726dedb859fbe45f2d46fafb6abd20a4081f40946c09fb9e.json",
+  "crop_ref": "crop-17e98204468b3c83e92fabe1ce7749ff4c1c1eaf919c327e6234ab29b50b2677.json",
   "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
   "page": "p0001",
   "bbox": [

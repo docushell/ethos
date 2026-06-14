@@ -205,7 +205,7 @@ Do not claim cross-platform bit-identical rendered crops from this evidence.
 
 - Keep rendered crops as source-bound audit artifacts, not part of the core cross-platform
   deterministic payload claim.
-- Decide whether crop artifact filenames should be derived from logical evidence identity
-  instead of raw bbox-derived identity. That could make references more stable across hosts,
-  while descriptors still record exact platform-specific bbox and PNG hashes.
+- Follow-up accepted after this validation: derive native crop artifact filenames from logical
+  evidence identity instead of raw bbox-derived identity. This makes references less brittle
+  across hosts, while descriptors still record exact platform-specific bbox and PNG hashes.
 - Do not chase cross-platform PNG equality unless a product requirement depends on it.
