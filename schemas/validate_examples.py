@@ -17,11 +17,19 @@ try:
     from jsonschema import Draft202012Validator as Validator
     DIALECT = "2020-12"
 except ImportError:  # pragma: no cover
-    # Older jsonschema (<4): the contract schemas deliberately use only keywords shared by
-    # draft-7 and 2020-12 ($defs refs are plain JSON pointers), so draft-7 validation is a
-    # faithful local approximation. CI pins jsonschema>=4.18 and validates the real dialect.
-    from jsonschema import Draft7Validator as Validator
-    DIALECT = "draft-7 fallback (CI runs 2020-12)"
+    try:
+        # Older jsonschema (<4): the contract schemas deliberately use only keywords shared by
+        # draft-7 and 2020-12 ($defs refs are plain JSON pointers), so draft-7 validation is a
+        # faithful local approximation. CI pins jsonschema>=4.18 and validates the real dialect.
+        from jsonschema import Draft7Validator as Validator
+        DIALECT = "draft-7 fallback (CI runs 2020-12)"
+    except ImportError:
+        print(
+            "FAIL  Python package 'jsonschema' is required for schema/example validation. "
+            "Install jsonschema>=4.18 or run with a Python environment that provides it.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 print(f"dialect: {DIALECT}")
 
 ROOT = Path(__file__).resolve().parent.parent
