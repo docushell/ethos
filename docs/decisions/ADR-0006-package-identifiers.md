@@ -19,7 +19,7 @@ The project name is **Ethos**; `ethos` is a loaded name with collision/trademark
 | Core crate | `ethos-doc-core` (public package; internal crate may remain `ethos-core` pre-publish) | crates.io | 2026-06-15: reserved as `0.0.0-reserved.0` | ☑ |
 | Retired candidate | `ethos-core` | crates.io | 2026-06-14: exists | n/a |
 | PDF crate | `ethos-pdf` | crates.io | 2026-06-15: reserved as `0.0.0-reserved.0` | ☑ |
-| Future crates | `ethos-*` (layout, tables, security, render, cli, mcp) | crates.io | 2026-06-14: checked not found | ☐ |
+| Future crates | `ethos-*` (layout, tables, security, render, cli, mcp) | crates.io | 2026-06-14: checked not found; 2026-06-15: reservation deferred by policy | Deferred |
 | Python | `ethos-pdf` (import `ethos_pdf`) | PyPI | 2026-06-15: reserved as `0.0.0.post0` | ☑ |
 | Node | `@docushell/ethos-pdf` | npm | 2026-06-15: reserved as `0.0.0-reserved.0` | ☑ (`docushell`) |
 | GitHub source | `docushell/ethos`, `docushell/ethos-bench` | GitHub | 2026-06-15: owner exists | n/a |
@@ -33,6 +33,7 @@ The project name is **Ethos**; `ethos` is a loaded name with collision/trademark
 - [x] PyPI defensive placeholder reservation for `ethos-pdf`
 - [x] npm package lookup and defensive placeholder reservation for `@docushell/ethos-pdf`
 - [x] GitHub owner/repo validation (`docushell` selected; no separate `ethos-pdf` GitHub org)
+- [x] Future internal crate reservation policy recorded
 - [ ] Trademark scan (software classes) for "Ethos" in primary jurisdictions
 - [x] Record outcomes here; if any conflict → rename via this ADR before any public artifact (risk R8 trigger)
 
@@ -176,6 +177,36 @@ This placeholder intentionally provides no public API. It exists only to reserve
 
 Outcome: PyPI reservation is complete. This ADR still cannot be accepted until trademark/legal validation is complete and any decision about future unreserved internal crate names is explicitly recorded.
 
+### 2026-06-15 — future internal crate reservation deferred
+
+Future internal crate names such as `ethos-layout`, `ethos-tables`, `ethos-security`, `ethos-render`, `ethos-cli`, and `ethos-mcp` are intentionally not reserved now.
+
+Reserve or publish additional placeholder packages only when all of the following are true:
+
+- the package has an approved public release scope or release-scope ADR;
+- the API owner and maintenance owner are assigned;
+- README, package metadata, and support expectations are ready for public users;
+- trademark/legal validation is complete, or counsel explicitly approves defensive reservation before validation;
+- the reservation is needed for the release train and the outcome is recorded in this ADR.
+
+Rationale: speculative placeholder packages create public maintenance surface area without advancing the product. Ethos should reserve names that are tied to near-term public surfaces, not every internal workstream.
+
+Outcome: no more internal crate names should be reserved just because they are available. This ADR still cannot be accepted until trademark/legal validation is complete.
+
+### 2026-06-15 — preliminary official trademark-source check
+
+Official-source trademark validation remains incomplete and must not be treated as legal clearance.
+
+Checks attempted:
+
+- USPTO trademark search entry point: `https://www.uspto.gov/trademarks/search` links to the official Trademark Search system at `https://tmsearch.uspto.gov/` and notes that signing in can improve search reliability during heavy traffic.
+- USPTO search application configuration was reachable at `https://tmsearch.uspto.gov/configuration.json`; it exposes `serviceUrlSearchElastic` as `https://tmsearch.uspto.gov/prod-v1-0-0/`.
+- A direct unauthenticated probe to `https://tmsearch.uspto.gov/prod-v1-0-0/_search?q=ethos` returned HTTP 403, so no USPTO result set was recorded.
+- WIPO Global Brand Database quick-search URL for `ETHOS` returned a captcha/verification page, so no WIPO result set was recorded.
+- EUIPO search-availability URL for `ETHOS` returned HTTP 403, so no EUIPO result set was recorded.
+
+Outcome: this engineering check found the right official sources but did not produce auditable result sets. A manual logged-in search or legal/trademark review is still required for "Ethos" in software-relevant classes before this ADR can be accepted or public launch claims can be made.
+
 ## Decision
 
-Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. GitHub source ownership and npm scope should use Docushell (`docushell/ethos`, `docushell/ethos-bench`, `@docushell/ethos-pdf`). npm reservation is complete via `@docushell/ethos-pdf@0.0.0-reserved.0`. Priority crates.io reservation is complete via `ethos-doc-core`, `ethos-doc`, `ethos-verify`, `ethos-rag`, and `ethos-pdf` at `0.0.0-reserved.0`. PyPI reservation is complete via `ethos-pdf==0.0.0.post0`. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
+Pending trademark/legal validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. GitHub source ownership and npm scope should use Docushell (`docushell/ethos`, `docushell/ethos-bench`, `@docushell/ethos-pdf`). npm reservation is complete via `@docushell/ethos-pdf@0.0.0-reserved.0`. Priority crates.io reservation is complete via `ethos-doc-core`, `ethos-doc`, `ethos-verify`, `ethos-rag`, and `ethos-pdf` at `0.0.0-reserved.0`. PyPI reservation is complete via `ethos-pdf==0.0.0.post0`. Future internal crate reservations are deferred until a package has approved public release scope. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
