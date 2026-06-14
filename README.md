@@ -65,7 +65,7 @@ a bug, never a retry. See `docs/determinism-contract.md`.
 | `crates/` | Rust workspace (`ethos-core`, `ethos-pdf`, `ethos-verify`, `ethos-cli`, …) |
 | `adapters/grounding/` | Foreign-parser adapters into `GroundingSource` |
 | `fixtures/` | Public/synthetic test corpus — see the contribution guide |
-| `benchmarks/` | Gate Zero manifest, competitor pins, harness |
+| `benchmarks/` | Internal Gate Zero corpus, evidence, schemas, and parser harness; public run orchestration lives in `ethos-bench` |
 | `docs/` | PRD, implementation plan, architecture, determinism contract, ADRs |
 
 ## License

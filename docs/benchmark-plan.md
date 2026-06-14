@@ -1,5 +1,10 @@
 # Benchmark Plan
 
+Public benchmark orchestration and future public result generation now live in the sibling
+`ethos-bench` repository. This repository keeps implementation-facing corpus, fixture, diagnostic,
+schema, and historical evidence assets. See `docs/benchmark-ownership.md` for the split and cleanup
+policy.
+
 Benchmark credibility is part of the product (PRD §11). Numbers leave the harness only as
 JSON with reproduction commands; published tables are one-command reproducible. WS-HARNESS
 owns the implementation (`benchmarks/harness/`).
