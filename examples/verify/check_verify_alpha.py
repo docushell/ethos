@@ -4,6 +4,7 @@
 import argparse
 import difflib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -115,6 +116,129 @@ def compare_json(actual_path, expected_path, repo_root, name):
     raise SystemExit(f"{name} golden mismatch\n{diff}")
 
 
+def list_crop_descriptors(crop_dir):
+    return sorted(
+        path for path in crop_dir.iterdir() if path.name.startswith("crop-") and path.suffix == ".json"
+    )
+
+
+def compare_crop_dirs(left_dir, right_dir, name):
+    left = list_crop_descriptors(left_dir)
+    right = list_crop_descriptors(right_dir)
+    left_names = [path.name for path in left]
+    right_names = [path.name for path in right]
+    if left_names != right_names:
+        raise SystemExit(f"{name} crop descriptor filenames differ across repeated runs")
+    if not left:
+        raise SystemExit(f"{name} wrote no crop descriptors")
+    for left_path, right_path in zip(left, right):
+        if left_path.read_bytes() != right_path.read_bytes():
+            raise SystemExit(
+                f"{name} crop descriptor {left_path.name} differs across repeated runs"
+            )
+    print(f"ok    {name} crop descriptors are byte-identical across runs ({len(left)} files)")
+    return left
+
+
+def validate_crop_descriptors(descriptor_paths, schema_path, repo_root, name):
+    from jsonschema import Draft202012Validator
+
+    schema = load_json(schema_path)
+    validator = Draft202012Validator(schema)
+    for path in descriptor_paths:
+        errors = sorted(
+            validator.iter_errors(load_json(path)),
+            key=lambda error: list(error.absolute_path),
+        )
+        if errors:
+            details = "\n".join(
+                f"/{'/'.join(str(part) for part in error.absolute_path)}: {error.message}"
+                for error in errors[:8]
+            )
+            raise SystemExit(
+                f"{name} crop descriptor {relative(path, repo_root)} failed schema validation\n{details}"
+            )
+    print(f"ok    {name} crop descriptors validate against {relative(schema_path, repo_root)}")
+
+
+def validate_report_crop_links(report_path, descriptor_paths, name):
+    report = load_json(report_path)
+    expected = {}
+    for check in report.get("checks", []):
+        evidence = check.get("evidence") or {}
+        crop_ref = evidence.get("crop_ref")
+        if crop_ref:
+            expected.setdefault(crop_ref, []).append(check["id"])
+
+    actual = {}
+    for path in descriptor_paths:
+        descriptor = load_json(path)
+        actual[path.name] = descriptor["check_ids"]
+
+    if expected != actual:
+        raise SystemExit(
+            f"{name} crop descriptors do not match verification report crop_ref bindings"
+        )
+    print(f"ok    {name} crop descriptors match report crop_ref bindings")
+
+
+def descriptor_for_check(descriptor_paths, check_id, name):
+    matches = [
+        path for path in descriptor_paths if load_json(path).get("check_ids") == [check_id]
+    ]
+    if len(matches) != 1:
+        raise SystemExit(
+            f"{name} expected exactly one crop descriptor for {check_id}, got {len(matches)}"
+        )
+    return matches[0]
+
+
+def verify_crop_descriptor_case(args):
+    name = "native-grounded-crops"
+    first = args.out_dir / f"{name}.run1.json"
+    second = args.out_dir / f"{name}.run2.json"
+    first_crop_dir = args.out_dir / f"{name}.run1.crops"
+    second_crop_dir = args.out_dir / f"{name}.run2.crops"
+    for crop_dir in [first_crop_dir, second_crop_dir]:
+        if crop_dir.exists():
+            shutil.rmtree(crop_dir)
+        crop_dir.mkdir(parents=True)
+
+    command = [
+        str(args.ethos_bin),
+        "verify",
+        str(args.repo_root / "schemas/examples/document.example.json"),
+        "--citations",
+        str(args.repo_root / "examples/verify/native_grounded_citations.json"),
+    ]
+
+    run_verify(
+        [*command, "--crop-dir", str(first_crop_dir), "--out", str(first)],
+        args.repo_root,
+        name,
+    )
+    run_verify(
+        [*command, "--crop-dir", str(second_crop_dir), "--out", str(second)],
+        args.repo_root,
+        name,
+    )
+    compare_bytes(first, second, name)
+    descriptor_paths = compare_crop_dirs(first_crop_dir, second_crop_dir, name)
+    validate_report_crop_links(first, descriptor_paths, name)
+    validate_crop_descriptors(
+        descriptor_paths,
+        args.repo_root / "schemas/ethos-crop-descriptor.schema.json",
+        args.repo_root,
+        name,
+    )
+    compare_json(
+        descriptor_for_check(descriptor_paths, "v0001", name),
+        args.repo_root / "schemas/examples/crop-descriptor.example.json",
+        args.repo_root,
+        f"{name} first descriptor",
+    )
+
+
 def verify_case(case, args):
     first = args.out_dir / f"{case['name']}.run1.json"
     second = args.out_dir / f"{case['name']}.run2.json"
@@ -146,6 +270,7 @@ def main():
 
     for case in CASES:
         verify_case(case, args)
+    verify_crop_descriptor_case(args)
 
     print("\nverify-alpha demo checks passed")
 

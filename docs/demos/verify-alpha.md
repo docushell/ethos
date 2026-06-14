@@ -14,6 +14,7 @@ repeatable `make verify-alpha` path:
 - `--fail-on-ungrounded` turns the report into a CI/agent gate with exit code `1` when evidence is not fully grounded
 - native Ethos verification can emit deterministic crop descriptor artifacts with `--crop-dir`
 - every demo report is compared against a golden and regenerated twice to prove byte-identical output
+- crop descriptor files are regenerated twice, compared byte-for-byte, validated against schema, and checked against the committed descriptor example
 
 Ethos verifies document evidence for AI systems. The deterministic parser is one grounding
 source; foreign parser output can be another grounding source through an adapter.
@@ -193,5 +194,7 @@ Expected outcome:
 
 ## Verification Contract
 
-The demo is covered by `crates/ethos-cli/tests/verify.rs`. The test runs the public CLI for
-each command above and compares the full JSON reports against the checked-in goldens.
+The demo is covered by `crates/ethos-cli/tests/verify.rs` and
+`examples/verify/check_verify_alpha.py`. The tests run the public CLI for each command above,
+compare the full JSON reports against checked-in goldens, and validate native crop
+descriptor artifacts against `schemas/ethos-crop-descriptor.schema.json`.
