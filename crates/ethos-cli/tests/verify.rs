@@ -156,6 +156,36 @@ fn verify_alpha_demo_reports_match_goldens() {
 }
 
 #[test]
+fn real_opendataloader_fixture_verifies_against_golden() {
+    let root = repo_root();
+    let report = parse_success(&[
+        "verify",
+        root.join("fixtures/foreign/opendataloader/real/opendataloader-output.json")
+            .to_str()
+            .unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        root.join("fixtures/foreign/opendataloader/real/citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    let expected = json_file(
+        root.join("fixtures/foreign/opendataloader/real/expected.verification_report.json"),
+    );
+
+    assert_eq!(report, expected);
+    assert_eq!(report["all_evidence_grounded"], true);
+    assert_eq!(report["grounding"]["parser"]["name"], "opendataloader-pdf");
+    assert_eq!(report["grounding"]["parser"]["version"], "unknown");
+    assert_eq!(
+        report["grounding"]["parser"]["adapter"],
+        "opendataloader-json"
+    );
+    assert_eq!(report["checks"].as_array().unwrap().len(), 3);
+}
+
+#[test]
 fn fail_on_ungrounded_exits_zero_when_all_evidence_is_grounded() {
     let root = repo_root();
     let output = run_ethos(&[

@@ -11,6 +11,7 @@ fixtures/
   synthetic/   # generated PDFs we own outright (preferred for targeted cases)
   security/    # hidden/off-page/low-contrast text, annotations, actions, scripts, links
   failure/     # corrupt, encrypted, password, image-only, oversized, rotated
+  foreign/     # pinned third-party parser outputs plus their source files and manifests
 ```
 
 Each fixture is a directory: the PDF, a `fixture.json` (provenance, license, what it
@@ -26,6 +27,10 @@ python3 fixtures/validate_fixtures.py
 
 The validator rejects missing/unindexed fixtures and any drift between `manifest.json`,
 `fixture.json`, and `document.pdf` bytes or metadata.
+
+`fixtures/foreign/` packages are adapter fixtures rather than Ethos parser corpus entries.
+They carry their own package-level `manifest.json` because the primary artifact may be a
+third-party parser output instead of an Ethos `document.pdf` fixture.
 
 Successful parse fixtures also carry c14n stage goldens:
 

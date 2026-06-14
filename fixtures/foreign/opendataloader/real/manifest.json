@@ -1,0 +1,14 @@
+{
+  "parser": "opendataloader-pdf",
+  "version": "2.4.7",
+  "source_pdf": "source.pdf",
+  "source_pdf_sha256": "082f9f8c800fda43b13d097ccf3a603e1f8048987fb497fd2be4cba6817001ee",
+  "output_json": "opendataloader-output.json",
+  "output_json_sha256": "045420ac5cc4426593bb844d7575a2d5b6e1bc31c5d3d9c48eecfa55e27de658",
+  "generator_artifact": "opendataloader_pdf-2.4.7 Python package with bundled opendataloader-pdf-cli.jar",
+  "generator_artifact_sha256": "6a8a1744910b967d89fc3d9601e62f7844cf932d7ca92e5858b589e9d51616bc",
+  "generated_by_command": "opendataloader-pdf --quiet --format json --image-output off --threads 1 --output-dir <out-dir> source.pdf",
+  "generated_at_policy": "committed fixture, deterministic adapter test",
+  "source_provenance": "Copied from the OpenDataLoader PDF 2.4.7 sample corpus: samples/pdf/lorem.pdf",
+  "license": "Apache-2.0"
+}

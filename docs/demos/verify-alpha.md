@@ -51,6 +51,28 @@ Golden report:
 examples/verify/goldens/opendataloader_grounded_report.json
 ```
 
+## Real OpenDataLoader JSON
+
+```bash
+ethos verify fixtures/foreign/opendataloader/real/opendataloader-output.json \
+  --grounding opendataloader-json \
+  --citations fixtures/foreign/opendataloader/real/citations.json \
+  --out /tmp/ethos-real-odl-verification-report.json
+```
+
+Expected outcome:
+
+- `grounding.parser.name` is `opendataloader-pdf`
+- `grounding.parser.version` is `unknown` because OpenDataLoader JSON does not carry it
+- `all_evidence_grounded` is `true`
+- quote, value, and presence claims are grounded against real OpenDataLoader 2.4.7 output
+
+Fixture package:
+
+```text
+fixtures/foreign/opendataloader/real/
+```
+
 ## Stale Fingerprint
 
 ```bash

@@ -1,24 +1,31 @@
-//! # OpenDataLoader JSON grounding adapter (Milestone A stub)
+//! # OpenDataLoader JSON grounding adapter (B alpha)
 //!
 //! Proves that foreign parser output can enter the [`GroundingSource`] interface
-//! (PRD §16 acceptance): maps parser identity, pages, elements, optional tables,
-//! bbox, text, and capabilities. This is **not** an ODL fork — ODL output is
-//! consumed as data from a pinned upstream version (plan §6.5).
+//! (PRD §16 acceptance): maps parser identity, pages, elements, optional synthetic
+//! tables, bbox, text, and capabilities. This is **not** an ODL fork — ODL output
+//! is consumed as data from a pinned upstream version (plan §6.5).
 //!
 //! ## Stub mapping assumptions (hardened against pinned real output in Milestone B)
 //!
-//! The stub reads a conservative subset:
+//! The adapter reads a conservative subset:
 //! `{"tool": {"name", "version"}, "pages": [{"number", "width", "height"}],
 //!   "elements": [{"id"?, "page", "bbox": [x0,y0,x1,y1], "type"?, "text"?}],
 //!   "tables"?: [{"id", "page", "bbox", "cells": [{"row", "col", "row_span"?,
 //!     "col_span"?, "bbox", "text"}]}]}`
+//!
+//! It also accepts the pinned OpenDataLoader 2.4.x JSON shape:
+//! `{"file name", "number of pages", "kids": [{"type", "id"?, "page number",
+//! "bounding box", "content"?, ...}]}`. That shape does not expose parser version
+//! or page dimensions, so version is reported as `"unknown"` and page extents are
+//! derived from observed bounding boxes. Coordinate origin remains unknown.
 //!
 //! - Geometry: source floats (points) are scaled to **centipoints** (×100,
 //!   half-away-from-zero) so units align with Ethos quanta. Origin is declared
 //!   [`CoordinateOrigin::Unknown`] until the B-alpha pin verifies ODL's convention —
 //!   capability-driven downgrade, never silent assumption.
 //! - No spans, no char offsets, no fingerprint, no crops: declared `false`.
-//!   Table capability is declared only when a `tables` array is present.
+//!   Table capability is declared only when a `tables` array is present in the
+//!   documented subset; real ODL table-cell mapping is intentionally not declared yet.
 //!   Verification surfaces missing capabilities as `capability_limited` (PRD §5.5).
 
 #![forbid(unsafe_code)]
@@ -307,6 +314,166 @@ fn parse_tables(
     Ok((true, tables))
 }
 
+fn parse_real_odl(root: &Value) -> Result<OdlJsonSource, AdapterError> {
+    let page_count = u32_field(
+        root,
+        "number of pages",
+        "missing number of pages",
+        "number of pages must fit u32",
+    )?;
+    if page_count == 0 {
+        return Err(err("number of pages must be positive"));
+    }
+    let kids = root
+        .get("kids")
+        .and_then(Value::as_array)
+        .ok_or_else(|| err("missing kids array"))?;
+
+    let mut page_extents = vec![[1i64, 1i64]; page_count as usize];
+    let mut elements = Vec::new();
+    let mut element_ids = HashSet::new();
+    let mut next_synthetic_id = 1u32;
+    for kid in kids {
+        parse_real_content_element(
+            kid,
+            page_count,
+            &mut page_extents,
+            &mut elements,
+            &mut element_ids,
+            &mut next_synthetic_id,
+        )?;
+    }
+
+    let pages = page_extents
+        .into_iter()
+        .enumerate()
+        .map(|(index, [width, height])| PageGeometry {
+            id: format!("page-{}", index + 1),
+            index: (index + 1) as u32,
+            width,
+            height,
+            rotation: 0,
+        })
+        .collect();
+
+    Ok(OdlJsonSource {
+        parser_name: "opendataloader-pdf".to_string(),
+        parser_version: "unknown".to_string(),
+        pages,
+        elements,
+        tables_capable: false,
+        tables: Vec::new(),
+    })
+}
+
+fn parse_real_content_element(
+    node: &Value,
+    page_count: u32,
+    page_extents: &mut [[i64; 2]],
+    elements: &mut Vec<GroundingElement>,
+    element_ids: &mut HashSet<String>,
+    next_synthetic_id: &mut u32,
+) -> Result<(), AdapterError> {
+    let kind = string_field(node, "type", "missing content type")?.to_ascii_lowercase();
+    let page_number = u32_field(
+        node,
+        "page number",
+        "missing page number",
+        "page number must fit u32",
+    )?;
+    if page_number == 0 || page_number > page_count {
+        return Err(err("page number references unknown page"));
+    }
+    let bbox = bbox_from(
+        node.get("bounding box")
+            .ok_or_else(|| err("missing bounding box"))?,
+    )?;
+    update_page_extent(page_extents, page_number, bbox);
+
+    let id = real_element_id(node, next_synthetic_id)?;
+    if !element_ids.insert(id.clone()) {
+        return Err(err("duplicate content id"));
+    }
+    elements.push(GroundingElement {
+        id,
+        page: format!("page-{page_number}"),
+        bbox,
+        kind: kind.clone(),
+        text: real_content_text(node),
+    });
+
+    for child in real_child_elements(node) {
+        parse_real_content_element(
+            child,
+            page_count,
+            page_extents,
+            elements,
+            element_ids,
+            next_synthetic_id,
+        )?;
+    }
+
+    Ok(())
+}
+
+fn update_page_extent(page_extents: &mut [[i64; 2]], page_number: u32, bbox: [i64; 4]) {
+    let extent = &mut page_extents[(page_number - 1) as usize];
+    extent[0] = extent[0].max(bbox[2]);
+    extent[1] = extent[1].max(bbox[3]);
+}
+
+fn real_element_id(node: &Value, next_synthetic_id: &mut u32) -> Result<String, AdapterError> {
+    if let Some(raw) = node.get("id") {
+        let id = raw
+            .as_u64()
+            .ok_or_else(|| err("content id must be integer"))?;
+        let id = u32::try_from(id).map_err(|_| err("content id must fit u32"))?;
+        return Ok(format!("odl-{id}"));
+    }
+    let id = *next_synthetic_id;
+    *next_synthetic_id = next_synthetic_id.saturating_add(1);
+    Ok(format!("odl-el-{id}"))
+}
+
+fn real_content_text(node: &Value) -> Option<String> {
+    let mut parts = Vec::new();
+    collect_real_text(node, &mut parts);
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join("\n"))
+    }
+}
+
+fn collect_real_text<'a>(node: &'a Value, parts: &mut Vec<&'a str>) {
+    if let Some(content) = node.get("content").and_then(Value::as_str) {
+        if !content.is_empty() {
+            parts.push(content);
+        }
+    }
+    for child in real_child_elements(node) {
+        collect_real_text(child, parts);
+    }
+}
+
+fn real_child_elements(node: &Value) -> Vec<&Value> {
+    let mut children = Vec::new();
+    if let Some(kids) = node.get("kids").and_then(Value::as_array) {
+        children.extend(kids);
+    }
+    if let Some(items) = node.get("list items").and_then(Value::as_array) {
+        children.extend(items);
+    }
+    if let Some(rows) = node.get("rows").and_then(Value::as_array) {
+        for row in rows {
+            if let Some(cells) = row.get("cells").and_then(Value::as_array) {
+                children.extend(cells);
+            }
+        }
+    }
+    children
+}
+
 fn parse_table_cells(table: &Value) -> Result<Vec<GroundingCell>, AdapterError> {
     let mut cells = Vec::new();
     for cell in table
@@ -361,6 +528,14 @@ impl OdlJsonSource {
 
     /// Build from a parsed JSON value.
     pub fn from_value(root: &Value) -> Result<Self, AdapterError> {
+        if root.get("tool").is_none()
+            && root.get("file name").is_some()
+            && root.get("number of pages").is_some()
+            && root.get("kids").is_some()
+        {
+            return parse_real_odl(root);
+        }
+
         let (parser_name, parser_version) = parse_tool(root)?;
         let (pages, page_numbers) = parse_pages(root)?;
         let elements = parse_elements(root, &page_numbers)?;
@@ -447,6 +622,40 @@ mod tests {
     use super::*;
 
     const SAMPLE: &str = include_str!("../tests/fixtures/odl-sample.json");
+    const REAL_ODL_SAMPLE: &str = r#"{
+      "file name": "lorem.pdf",
+      "number of pages": 1,
+      "author": "leebd-public",
+      "title": null,
+      "creation date": "D:20251010112501+09'00'",
+      "modification date": "D:20251010112501+09'00'",
+      "kids": [
+        {
+          "type": "heading",
+          "pdfua_tag": "H1",
+          "id": 1,
+          "level": "Doctitle",
+          "page number": 1,
+          "bounding box": [200.891, 706.938, 394.152, 745.132],
+          "heading level": 1,
+          "font": "Pretendard-Regular",
+          "font size": 32.005,
+          "text color": "[0.0]",
+          "content": "Lorem Ipsum"
+        },
+        {
+          "type": "paragraph",
+          "pdfua_tag": "P",
+          "id": 2,
+          "page number": 1,
+          "bounding box": [85.034, 567.936, 502.306, 659.761],
+          "font": "Pretendard-Regular",
+          "font size": 9.949,
+          "text color": "[0.0]",
+          "content": "Lorem ipsum dolor sit amet."
+        }
+      ]
+    }"#;
 
     #[test]
     fn maps_the_documented_subset() {
@@ -479,6 +688,36 @@ mod tests {
         assert!(!caps.spans && !caps.fingerprint && !caps.crop_support);
         assert_eq!(caps.coordinate_origin, CoordinateOrigin::Unknown);
         assert!(src.fingerprint().is_none());
+    }
+
+    #[test]
+    fn maps_real_opendataloader_json_shape() {
+        let src = OdlJsonSource::from_json_str(REAL_ODL_SAMPLE).unwrap();
+        let id = src.parser();
+        assert_eq!(id.name, "opendataloader-pdf");
+        assert_eq!(id.version, "unknown");
+        assert_eq!(id.adapter.as_deref(), Some("opendataloader-json"));
+
+        let pages = src.pages();
+        assert_eq!(pages.len(), 1);
+        assert_eq!(pages[0].id, "page-1");
+        assert_eq!(pages[0].width, 50231);
+        assert_eq!(pages[0].height, 74513);
+
+        let els = src.elements();
+        assert_eq!(els.len(), 2);
+        assert_eq!(els[0].id, "odl-1");
+        assert_eq!(els[0].kind, "heading");
+        assert_eq!(els[0].text.as_deref(), Some("Lorem Ipsum"));
+        assert_eq!(els[0].bbox, [20089, 70694, 39415, 74513]);
+        assert_eq!(els[1].id, "odl-2");
+        assert_eq!(els[1].kind, "paragraph");
+        assert_eq!(els[1].text.as_deref(), Some("Lorem ipsum dolor sit amet."));
+
+        let caps = src.capabilities();
+        assert!(!caps.tables);
+        assert!(!caps.spans && !caps.fingerprint && !caps.crop_support);
+        assert_eq!(caps.coordinate_origin, CoordinateOrigin::Unknown);
     }
 
     #[test]
