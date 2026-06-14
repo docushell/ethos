@@ -129,6 +129,8 @@ pub struct GeometryProbeChar {
     pub char_origin: Option<[i64; 2]>,
     /// Deterministic font id used by the parser.
     pub font_id: Option<String>,
+    /// PDFium font descriptor flags used by the parser.
+    pub font_flags: Option<u32>,
     /// Quantized font size used by the parser.
     pub font_size_q: Option<i64>,
 }
@@ -160,6 +162,8 @@ pub struct GeometryProbeRun {
     pub last_origin: Option<[i64; 2]>,
     /// Deterministic font id used by the parser.
     pub font_id: Option<String>,
+    /// PDFium font descriptor flags used by the parser.
+    pub font_flags: Option<u32>,
     /// Quantized font size used by the parser.
     pub font_size_q: Option<i64>,
 }
@@ -1063,7 +1067,8 @@ impl PdfTextPage<'_> {
             let record = self.geometry_probe_char(index, page_height_pts)?;
             match record.parser_action.as_str() {
                 "include" => {
-                    if run.has_style_change(&record.font_id, record.font_size_q) {
+                    if run.has_style_change(&record.font_id, record.font_size_q, record.font_flags)
+                    {
                         run.flush(self, page_height_pts, &mut next_run, &mut runs)?;
                     }
                     run.push(&record);
@@ -1103,6 +1108,7 @@ impl PdfTextPage<'_> {
             Some(_) => "include",
         };
 
+        let font_info = self.font_info(index);
         Ok(GeometryProbeChar {
             index,
             unicode,
@@ -1111,7 +1117,8 @@ impl PdfTextPage<'_> {
             char_box: self.char_bbox(index, page_height_pts)?,
             loose_char_box: self.loose_char_bbox(index, page_height_pts)?,
             char_origin: self.char_origin(index, page_height_pts)?,
-            font_id: self.font_id(index),
+            font_id: font_info.font_id,
+            font_flags: font_info.font_flags,
             font_size_q: self.font_size_q(index),
         })
     }
@@ -1158,12 +1165,12 @@ impl PdfTextPage<'_> {
                 continue;
             };
             let font_size_q = self.font_size_q(index);
-            let font_id = self.font_id(index);
-            if run.has_style_change(&font_id, font_size_q) {
+            let font_info = self.font_info(index);
+            if run.has_style_change(&font_info.font_id, font_size_q) {
                 run.flush(page, next_span, spans)?;
             }
             let origin = self.char_origin(index, page_height_pts)?;
-            run.push(ch, bbox, origin, font_id, font_size_q);
+            run.push(ch, bbox, origin, font_info.font_id, font_size_q);
         }
         run.flush(page, next_span, spans)
     }
@@ -1298,16 +1305,21 @@ impl PdfTextPage<'_> {
         quantize(size, QUANTUM_PER_POINT).ok()
     }
 
-    fn font_id(&self, index: c_int) -> Option<String> {
-        let get_font_info = self.funcs.text_get_font_info?;
+    fn font_info(&self, index: c_int) -> PdfFontInfo {
+        let Some(get_font_info) = self.funcs.text_get_font_info else {
+            return PdfFontInfo::default();
+        };
         // SAFETY: index is in range; null buffer asks PDFium for the UTF-8 byte length.
         let len =
             unsafe { (get_font_info)(self.handle, index, ptr::null_mut(), 0, ptr::null_mut()) };
         if len == 0 || len > 4096 {
-            return None;
+            return PdfFontInfo::default();
         }
 
-        let mut buffer = vec![0u8; usize::try_from(len).ok()?];
+        let Ok(len_usize) = usize::try_from(len) else {
+            return PdfFontInfo::default();
+        };
+        let mut buffer = vec![0u8; len_usize];
         let mut flags = 0;
         // SAFETY: buffer is writable for len bytes; flags points to initialized storage.
         let written = unsafe {
@@ -1320,11 +1332,14 @@ impl PdfTextPage<'_> {
             )
         };
         if written == 0 || written > len {
-            return None;
+            return PdfFontInfo::default();
         }
         let nul = buffer.iter().position(|b| *b == 0).unwrap_or(buffer.len());
-        let raw = std::str::from_utf8(&buffer[..nul]).ok()?;
-        deterministic_font_id(raw)
+        let raw = std::str::from_utf8(&buffer[..nul]).ok();
+        PdfFontInfo {
+            font_id: raw.and_then(deterministic_font_id),
+            font_flags: u32::try_from(flags).ok(),
+        }
     }
 
     fn is_generated_hyphen(&self, index: c_int) -> bool {
@@ -1371,6 +1386,13 @@ struct GeometryRunBuilder {
     last_origin: Option<[i64; 2]>,
     font_id: Option<String>,
     font_size_q: Option<i64>,
+    font_flags: Option<u32>,
+}
+
+#[derive(Default)]
+struct PdfFontInfo {
+    font_id: Option<String>,
+    font_flags: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1461,8 +1483,16 @@ impl SpanRun {
 }
 
 impl GeometryRunBuilder {
-    fn has_style_change(&self, font_id: &Option<String>, font_size_q: Option<i64>) -> bool {
-        !self.text.is_empty() && (self.font_id != *font_id || self.font_size_q != font_size_q)
+    fn has_style_change(
+        &self,
+        font_id: &Option<String>,
+        font_size_q: Option<i64>,
+        font_flags: Option<u32>,
+    ) -> bool {
+        !self.text.is_empty()
+            && (self.font_id != *font_id
+                || self.font_size_q != font_size_q
+                || self.font_flags != font_flags)
     }
 
     fn push(&mut self, ch: &GeometryProbeChar) {
@@ -1481,6 +1511,9 @@ impl GeometryRunBuilder {
         }
         if self.font_size_q.is_none() {
             self.font_size_q = ch.font_size_q;
+        }
+        if self.font_flags.is_none() {
+            self.font_flags = ch.font_flags;
         }
     }
 
@@ -1516,10 +1549,12 @@ impl GeometryRunBuilder {
             first_origin: self.first_origin.take(),
             last_origin: self.last_origin.take(),
             font_id: self.font_id.take(),
+            font_flags: self.font_flags.take(),
             font_size_q: self.font_size_q.take(),
         });
         *next_run += 1;
         self.font_size_q = None;
+        self.font_flags = None;
         Ok(())
     }
 }

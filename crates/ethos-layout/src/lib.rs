@@ -1,9 +1,9 @@
 //! Basic deterministic layout over quantized extraction spans.
 //!
-//! This WS-LAYOUT slice intentionally makes only two claims:
-//! nearby lines in the same detected column become one `text_block` paragraph, and
-//! multi-column text is ordered by column before vertical position. Higher-level heading,
-//! list, and table semantics belong to later layout lanes.
+//! This WS-LAYOUT slice intentionally stays deterministic: nearby lines in the same
+//! detected column become text-block paragraphs, visually larger/bold short lines are
+//! emitted as grounded headings, and multi-column text is ordered by column before
+//! vertical position.
 
 use ethos_core::error::EthosError;
 use ethos_core::geom::QRect;
@@ -14,6 +14,14 @@ use ethos_core::traits::{Extraction, LayoutEngine, LayoutOutput};
 /// Deterministic paragraph-level layout engine.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BasicLayoutEngine;
+
+const HEADING_MIN_SIZE_RATIO_PERCENT: i64 = 115;
+const HEADING_MAX_CHARS: usize = 120;
+const HEADING_MAX_WORDS: usize = 12;
+const HEADING_CONFIDENCE_LARGER_AND_BOLD: u16 = 900;
+const HEADING_CONFIDENCE_LARGER: u16 = 850;
+const HEADING_CONFIDENCE_BOLD_SAME_SIZE: u16 = 720;
+const MAX_HEADING_LEVEL: u8 = 3;
 
 impl LayoutEngine for BasicLayoutEngine {
     fn layout(&self, extraction: &Extraction) -> Result<LayoutOutput, EthosError> {
@@ -34,16 +42,20 @@ impl LayoutEngine for BasicLayoutEngine {
                 })
                 .collect();
 
+            let body_font_size_q = body_font_size_q(&page_spans);
             let mut columns = group_columns(group_lines(page_spans));
             columns.sort_by(column_order);
+            let heading_sizes = heading_size_levels(&columns, body_font_size_q);
 
             for column in columns {
-                for paragraph in group_paragraphs(column.lines) {
-                    let paragraph_spans = paragraph_spans(&paragraph);
-                    let element = build_text_block(next_element, &page.id, &paragraph_spans)?;
-                    elements.push(element);
-                    next_element += 1;
-                }
+                layout_column_lines(
+                    column.lines,
+                    body_font_size_q,
+                    &heading_sizes,
+                    &page.id,
+                    &mut next_element,
+                    &mut elements,
+                )?;
             }
         }
 
@@ -76,6 +88,12 @@ struct Column<'a> {
 struct Paragraph<'a> {
     lines: Vec<Line<'a>>,
     bbox: QRect,
+}
+
+#[derive(Clone, Copy)]
+struct HeadingSignal {
+    size_q: i64,
+    confidence: u16,
 }
 
 fn group_lines(mut spans: Vec<SpanRef<'_>>) -> Vec<Line<'_>> {
@@ -204,6 +222,200 @@ fn paragraph_gap_threshold(lines: &[Line<'_>]) -> i64 {
     ((median * 5) / 4).max(250)
 }
 
+fn body_font_size_q(spans: &[SpanRef<'_>]) -> Option<i64> {
+    let mut counts = std::collections::BTreeMap::<i64, usize>::new();
+    for span_ref in spans {
+        if let Some(size) = span_ref.span.font_size_q {
+            *counts.entry(size).or_default() += 1;
+        }
+    }
+
+    counts
+        .into_iter()
+        .max_by(|(size_a, count_a), (size_b, count_b)| {
+            count_a.cmp(count_b).then_with(|| size_b.cmp(size_a))
+        })
+        .map(|(size, _)| size)
+}
+
+fn heading_size_levels(columns: &[Column<'_>], body_font_size_q: Option<i64>) -> Vec<i64> {
+    let mut sizes: Vec<i64> = columns
+        .iter()
+        .flat_map(|column| &column.lines)
+        .filter_map(|line| heading_signal(line, body_font_size_q).map(|signal| signal.size_q))
+        .collect();
+    sizes.sort_unstable_by(|a, b| b.cmp(a));
+    sizes.dedup();
+    sizes
+}
+
+fn layout_column_lines<'a>(
+    mut lines: Vec<Line<'a>>,
+    body_font_size_q: Option<i64>,
+    heading_sizes: &[i64],
+    page_id: &str,
+    next_element: &mut u32,
+    elements: &mut Vec<Element>,
+) -> Result<(), EthosError> {
+    lines.sort_by(line_order);
+    let mut text_lines = Vec::new();
+    let mut line_iter = lines.into_iter().peekable();
+
+    while let Some(line) = line_iter.next() {
+        if let Some(signal) = heading_signal(&line, body_font_size_q) {
+            flush_text_lines(&mut text_lines, page_id, next_element, elements)?;
+            let level = heading_level(signal.size_q, heading_sizes);
+            let mut confidence = signal.confidence;
+            let mut heading_lines = vec![line];
+            while let Some(next_line) = line_iter.peek() {
+                let Some(next_signal) = heading_signal(next_line, body_font_size_q) else {
+                    break;
+                };
+                if heading_level(next_signal.size_q, heading_sizes) != level
+                    || !same_wrapped_heading_line(
+                        heading_lines
+                            .last()
+                            .expect("heading_lines is initialized with one line"),
+                        next_line,
+                    )
+                {
+                    break;
+                }
+                let next_line = line_iter
+                    .next()
+                    .expect("peeked heading line must still be available");
+                confidence = confidence.min(next_signal.confidence);
+                heading_lines.push(next_line);
+            }
+            let heading_spans = lines_spans(&heading_lines);
+            elements.push(build_element(
+                *next_element,
+                page_id,
+                &heading_spans,
+                ElementType::Heading,
+                Some(level),
+                Some(confidence),
+            )?);
+            *next_element += 1;
+        } else {
+            text_lines.push(line);
+        }
+    }
+
+    flush_text_lines(&mut text_lines, page_id, next_element, elements)
+}
+
+fn flush_text_lines<'a>(
+    text_lines: &mut Vec<Line<'a>>,
+    page_id: &str,
+    next_element: &mut u32,
+    elements: &mut Vec<Element>,
+) -> Result<(), EthosError> {
+    if text_lines.is_empty() {
+        return Ok(());
+    }
+    for paragraph in group_paragraphs(std::mem::take(text_lines)) {
+        let paragraph_spans = paragraph_spans(&paragraph);
+        elements.push(build_element(
+            *next_element,
+            page_id,
+            &paragraph_spans,
+            ElementType::TextBlock,
+            None,
+            None,
+        )?);
+        *next_element += 1;
+    }
+    Ok(())
+}
+
+fn heading_signal(line: &Line<'_>, body_font_size_q: Option<i64>) -> Option<HeadingSignal> {
+    let body_size = body_font_size_q?;
+    let line_size = line_font_size_q(line)?;
+    let text = line_text(line);
+    let trimmed = text.trim();
+    if trimmed.is_empty()
+        || trimmed.chars().count() > HEADING_MAX_CHARS
+        || word_count(trimmed) > HEADING_MAX_WORDS
+    {
+        return None;
+    }
+    if trimmed.ends_with('.') || trimmed.ends_with(',') || trimmed.ends_with(';') {
+        return None;
+    }
+
+    let larger =
+        line_size > body_size && line_size * 100 >= body_size * HEADING_MIN_SIZE_RATIO_PERCENT;
+    let bold_same_size = line_size >= body_size && line_is_boldish(line);
+    if !larger && !bold_same_size {
+        return None;
+    }
+
+    let confidence = if larger && bold_same_size {
+        HEADING_CONFIDENCE_LARGER_AND_BOLD
+    } else if larger {
+        HEADING_CONFIDENCE_LARGER
+    } else if bold_same_size {
+        HEADING_CONFIDENCE_BOLD_SAME_SIZE
+    } else {
+        return None;
+    };
+    Some(HeadingSignal {
+        size_q: line_size,
+        confidence,
+    })
+}
+
+fn heading_level(size_q: i64, heading_sizes: &[i64]) -> u8 {
+    heading_sizes
+        .iter()
+        .position(|size| *size == size_q)
+        .map(|index| (index as u8 + 1).min(MAX_HEADING_LEVEL))
+        .unwrap_or(MAX_HEADING_LEVEL)
+}
+
+fn line_font_size_q(line: &Line<'_>) -> Option<i64> {
+    line.spans
+        .iter()
+        .filter_map(|span_ref| span_ref.span.font_size_q)
+        .max()
+}
+
+fn line_text(line: &Line<'_>) -> String {
+    line_spans(line)
+        .iter()
+        .map(|span_ref| span_ref.span.text.as_str())
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn word_count(text: &str) -> usize {
+    text.split_whitespace().count()
+}
+
+fn line_is_boldish(line: &Line<'_>) -> bool {
+    !line.spans.is_empty()
+        && line
+            .spans
+            .iter()
+            .all(|span_ref| span_is_boldish(span_ref.span))
+}
+
+fn span_is_boldish(span: &Span) -> bool {
+    span.font_id.as_deref().is_some_and(|font_id| {
+        let font_id = font_id.to_ascii_lowercase();
+        font_id.contains("bold") || font_id.contains("semibold") || font_id.contains("black")
+    })
+}
+
+fn same_wrapped_heading_line(previous: &Line<'_>, current: &Line<'_>) -> bool {
+    let gap = current.bbox.y0 - previous.bbox.y1;
+    let height = line_height(previous.bbox)
+        .max(line_height(current.bbox))
+        .max(1);
+    gap >= -height && gap <= height * 2 && horizontal_overlap(previous.bbox, current.bbox) > 0
+}
+
 fn same_line(
     line: &Line<'_>,
     span_ref: SpanRef<'_>,
@@ -251,17 +463,28 @@ fn column_distance(column: &Column<'_>, line: &Line<'_>) -> i64 {
 fn paragraph_spans<'a>(paragraph: &Paragraph<'a>) -> Vec<SpanRef<'a>> {
     let mut spans = Vec::new();
     for line in &paragraph.lines {
-        let mut line_spans = line.spans.clone();
-        line_spans.sort_by(span_reading_order);
-        spans.extend(line_spans);
+        spans.extend(line_spans(line));
     }
     spans
 }
 
-fn build_text_block(
+fn lines_spans<'a>(lines: &[Line<'a>]) -> Vec<SpanRef<'a>> {
+    lines.iter().flat_map(line_spans).collect()
+}
+
+fn line_spans<'a>(line: &Line<'a>) -> Vec<SpanRef<'a>> {
+    let mut line_spans = line.spans.clone();
+    line_spans.sort_by(span_reading_order);
+    line_spans
+}
+
+fn build_element(
     ordinal: u32,
     page_id: &str,
     spans: &[SpanRef<'_>],
+    element_type: ElementType,
+    heading_level: Option<u8>,
+    confidence: Option<u16>,
 ) -> Result<Element, EthosError> {
     let mut text = String::new();
     let mut bbox: Option<QRect> = None;
@@ -281,14 +504,14 @@ fn build_text_block(
 
     Ok(Element {
         id: element_id(ordinal)?,
-        element_type: ElementType::TextBlock,
+        element_type,
         page: page_id.to_string(),
         bbox: bbox.ok_or_else(|| EthosError::internal("text block has no bbox"))?,
         text: Some(text),
-        heading_level: None,
+        heading_level,
         table_ref: None,
         region_ref: None,
-        confidence: None,
+        confidence,
         span_refs,
         warning_refs: Vec::new(),
     })
@@ -366,14 +589,25 @@ mod tests {
     use ethos_core::model::{Page, Region, Warning};
 
     fn span(id: &str, page: &str, bbox: QRect, text: &str) -> Span {
+        styled_span(id, page, bbox, text, None, Some(1200))
+    }
+
+    fn styled_span(
+        id: &str,
+        page: &str,
+        bbox: QRect,
+        text: &str,
+        font_id: Option<&str>,
+        font_size_q: Option<i64>,
+    ) -> Span {
         Span {
             id: id.to_string(),
             page: page.to_string(),
             bbox,
             origin_locator: None,
             text: text.to_string(),
-            font_id: None,
-            font_size_q: Some(1200),
+            font_id: font_id.map(str::to_string),
+            font_size_q,
             char_start: None,
             char_end: None,
             warning_refs: vec![],
@@ -441,6 +675,278 @@ mod tests {
                 "s000004".to_string(),
             ]
         );
+    }
+
+    #[test]
+    fn classifies_large_line_as_heading_before_paragraph_merge() {
+        let extraction = extraction(vec![
+            styled_span(
+                "s000001",
+                "p0001",
+                QRect::new(0, 0, 900, 700).unwrap(),
+                "Overview",
+                None,
+                Some(1800),
+            ),
+            span(
+                "s000002",
+                "p0001",
+                QRect::new(0, 850, 700, 1_350).unwrap(),
+                "Body",
+            ),
+            span(
+                "s000003",
+                "p0001",
+                QRect::new(850, 850, 1_300, 1_350).unwrap(),
+                "text",
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+
+        assert_eq!(output.elements.len(), 2);
+        assert_eq!(output.elements[0].element_type, ElementType::Heading);
+        assert_eq!(output.elements[0].heading_level, Some(1));
+        assert_eq!(output.elements[0].confidence, Some(850));
+        assert_eq!(output.elements[0].text.as_deref(), Some("Overview"));
+        assert_eq!(output.elements[0].span_refs, vec!["s000001".to_string()]);
+        assert_eq!(output.elements[1].element_type, ElementType::TextBlock);
+        assert_eq!(output.elements[1].text.as_deref(), Some("Body text"));
+    }
+
+    #[test]
+    fn classifies_same_size_bold_line_as_heading() {
+        let extraction = extraction(vec![
+            styled_span(
+                "s000001",
+                "p0001",
+                QRect::new(0, 0, 900, 500).unwrap(),
+                "Background",
+                Some("embedded:Fixture-Bold"),
+                Some(1200),
+            ),
+            span(
+                "s000002",
+                "p0001",
+                QRect::new(0, 800, 600, 1_300).unwrap(),
+                "Plain",
+            ),
+            span(
+                "s000003",
+                "p0001",
+                QRect::new(750, 800, 1_100, 1_300).unwrap(),
+                "body",
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+
+        assert_eq!(output.elements.len(), 2);
+        assert_eq!(output.elements[0].element_type, ElementType::Heading);
+        assert_eq!(output.elements[0].heading_level, Some(1));
+        assert_eq!(output.elements[0].confidence, Some(720));
+        assert_eq!(output.elements[0].text.as_deref(), Some("Background"));
+        assert_eq!(output.elements[1].text.as_deref(), Some("Plain body"));
+    }
+
+    #[test]
+    fn does_not_classify_sentence_like_large_line_as_heading() {
+        let extraction = extraction(vec![
+            styled_span(
+                "s000001",
+                "p0001",
+                QRect::new(0, 0, 1_200, 700).unwrap(),
+                "Overview.",
+                None,
+                Some(1800),
+            ),
+            span(
+                "s000002",
+                "p0001",
+                QRect::new(0, 1_100, 700, 1_600).unwrap(),
+                "Body",
+            ),
+            span(
+                "s000003",
+                "p0001",
+                QRect::new(850, 1_100, 1_300, 1_600).unwrap(),
+                "text",
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+
+        assert!(output
+            .elements
+            .iter()
+            .all(|element| element.element_type == ElementType::TextBlock));
+    }
+
+    #[test]
+    fn does_not_classify_long_large_line_as_heading() {
+        let extraction = extraction(vec![
+            styled_span(
+                "s000001",
+                "p0001",
+                QRect::new(0, 0, 6_000, 700).unwrap(),
+                "One two three four five six seven eight nine ten eleven twelve thirteen",
+                None,
+                Some(1800),
+            ),
+            span(
+                "s000002",
+                "p0001",
+                QRect::new(0, 1_100, 700, 1_600).unwrap(),
+                "Body",
+            ),
+            span(
+                "s000003",
+                "p0001",
+                QRect::new(850, 1_100, 1_300, 1_600).unwrap(),
+                "text",
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+
+        assert!(output
+            .elements
+            .iter()
+            .all(|element| element.element_type == ElementType::TextBlock));
+    }
+
+    #[test]
+    fn does_not_classify_slightly_larger_line_as_heading() {
+        let extraction = extraction(vec![
+            styled_span(
+                "s000001",
+                "p0001",
+                QRect::new(0, 0, 900, 600).unwrap(),
+                "Overview",
+                None,
+                Some(1300),
+            ),
+            span(
+                "s000002",
+                "p0001",
+                QRect::new(0, 900, 700, 1_400).unwrap(),
+                "Body",
+            ),
+            span(
+                "s000003",
+                "p0001",
+                QRect::new(850, 900, 1_300, 1_400).unwrap(),
+                "text",
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+
+        assert!(output
+            .elements
+            .iter()
+            .all(|element| element.element_type == ElementType::TextBlock));
+    }
+
+    #[test]
+    fn caps_heading_levels_at_three() {
+        let extraction = extraction(vec![
+            styled_span(
+                "s000001",
+                "p0001",
+                QRect::new(0, 0, 900, 500).unwrap(),
+                "Title",
+                None,
+                Some(2400),
+            ),
+            styled_span(
+                "s000002",
+                "p0001",
+                QRect::new(0, 2_000, 900, 2_500).unwrap(),
+                "Section",
+                None,
+                Some(2100),
+            ),
+            styled_span(
+                "s000003",
+                "p0001",
+                QRect::new(0, 4_000, 900, 4_500).unwrap(),
+                "Subsection",
+                None,
+                Some(1800),
+            ),
+            styled_span(
+                "s000004",
+                "p0001",
+                QRect::new(0, 6_000, 900, 6_500).unwrap(),
+                "Detail",
+                None,
+                Some(1600),
+            ),
+            span(
+                "s000005",
+                "p0001",
+                QRect::new(0, 8_000, 600, 8_500).unwrap(),
+                "Body",
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+        let levels = output
+            .elements
+            .iter()
+            .filter_map(|element| element.heading_level)
+            .collect::<Vec<_>>();
+
+        assert_eq!(levels, vec![1, 2, 3, MAX_HEADING_LEVEL]);
+    }
+
+    #[test]
+    fn merges_adjacent_wrapped_heading_lines() {
+        let extraction = extraction(vec![
+            styled_span(
+                "s000001",
+                "p0001",
+                QRect::new(0, 0, 2_600, 700).unwrap(),
+                "Very Long Title",
+                None,
+                Some(1800),
+            ),
+            styled_span(
+                "s000002",
+                "p0001",
+                QRect::new(0, 850, 2_100, 1_550).unwrap(),
+                "Continued",
+                None,
+                Some(1800),
+            ),
+            span(
+                "s000003",
+                "p0001",
+                QRect::new(0, 2_200, 700, 2_700).unwrap(),
+                "Body",
+            ),
+            span(
+                "s000004",
+                "p0001",
+                QRect::new(850, 2_200, 1_300, 2_700).unwrap(),
+                "text",
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+
+        assert_eq!(output.elements.len(), 2);
+        assert_eq!(output.elements[0].element_type, ElementType::Heading);
+        assert_eq!(
+            output.elements[0].text.as_deref(),
+            Some("Very Long Title Continued")
+        );
+        assert_eq!(
+            output.elements[0].span_refs,
+            vec!["s000001".to_string(), "s000002".to_string()]
+        );
+        assert_eq!(output.elements[1].text.as_deref(), Some("Body text"));
     }
 
     #[test]

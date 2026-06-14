@@ -112,6 +112,9 @@ pub(crate) struct PdfiumWorkerArgs {
     /// Include volatile runtime diagnostics.
     #[arg(long)]
     pub(crate) diagnostics: bool,
+    /// Internal/test path where the worker writes canonical JSON instead of stdout.
+    #[arg(long, hide = true)]
+    pub(crate) json_out: Option<PathBuf>,
 }
 
 #[derive(Args)]

@@ -202,7 +202,10 @@ dependencies = [
  "ethos-pdf",
  "ethos-tables",
  "ethos-verify",
+ "serde",
  "serde_json",
+ "sha2",
+ "tempfile",
 ]
 
 [[package]]

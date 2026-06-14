@@ -20,4 +20,7 @@ ethos-pdf = { path = "../ethos-pdf", version = "0.1.0" }
 ethos-verify = { path = "../ethos-verify", version = "0.1.0" }
 ethos-grounding-opendataloader-json = { path = "../../adapters/grounding/opendataloader-json", version = "0.1.0" }
 clap = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
+sha2 = { workspace = true }
+tempfile = { workspace = true }

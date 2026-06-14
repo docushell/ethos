@@ -2,13 +2,14 @@ use std::path::PathBuf;
 
 use ethos_core::config::{PageSelection, ParseConfig};
 use ethos_core::error::{ErrorCode, EthosError};
-use ethos_core::model::Document;
+use ethos_core::model::{Document, ElementType};
 use ethos_core::traits::EthosPdfBackend as _;
 
 use crate::assembly::assemble_document;
 use crate::worker::{
     maybe_exit_for_worker_failure_diagnostics_test, maybe_fail_for_worker_memory_limit_test,
-    maybe_sleep_for_worker_timeout_test, parse_pdf_with_worker,
+    maybe_sleep_for_worker_timeout_test, parse_pdf_json_artifact_with_worker,
+    parse_pdf_with_worker, sha256_hex, worker_json_artifact_header_bytes, WorkerJsonArtifact,
 };
 use crate::{
     ensure_file_within_limit, read_document, read_file_limited, write_output, DocParseArgs,
@@ -19,6 +20,15 @@ use crate::{
 pub(crate) fn doc_parse(args: DocParseArgs) -> Result<(), Failure> {
     let config = parse_config(args.pages.as_deref(), args.max_parse_ms)?;
     ensure_file_within_limit(&args.input, config.limits.max_file_bytes)?;
+    if matches!(args.format, Format::Json) {
+        let artifact = parse_pdf_json_artifact_with_worker(
+            &args.input,
+            args.pages.as_deref(),
+            &config,
+            args.diagnostics,
+        )?;
+        return write_json_artifact_output(args.out, &artifact);
+    }
     let doc = parse_pdf_with_worker(
         &args.input,
         args.pages.as_deref(),
@@ -67,6 +77,9 @@ pub(crate) fn pdfium_worker(args: PdfiumWorkerArgs) -> Result<(), Failure> {
         backend.manifest(),
         args.diagnostics,
     )?;
+    if let Some(json_out) = args.json_out {
+        return write_json_artifact(&json_out, &doc);
+    }
     write_document(Format::Json, None, &doc)
 }
 
@@ -118,8 +131,8 @@ pub(crate) fn fingerprint(args: FingerprintArgs) -> Result<(), Failure> {
     {
         let config = parse_config(None, args.max_parse_ms)?;
         ensure_file_within_limit(&input, config.limits.max_file_bytes)?;
-        let doc = parse_pdf_with_worker(&input, None, &config, false)?;
-        println!("{}", doc.fingerprint);
+        let artifact = parse_pdf_json_artifact_with_worker(&input, None, &config, false)?;
+        println!("{}", artifact.document_fingerprint());
         return Ok(());
     }
     let doc = read_document(&input)?;
@@ -128,17 +141,68 @@ pub(crate) fn fingerprint(args: FingerprintArgs) -> Result<(), Failure> {
 }
 
 fn write_document(format: Format, out: Option<PathBuf>, doc: &Document) -> Result<(), Failure> {
-    let mut bytes = match format {
-        Format::Json => {
-            let value =
-                serde_json::to_value(doc).map_err(|e| EthosError::internal(e.to_string()))?;
-            ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?
-        }
-        Format::Markdown => render_markdown(doc).into_bytes(),
-        Format::Text => render_text(doc).into_bytes(),
-    };
-    bytes.push(b'\n');
+    let bytes = document_output_bytes(format, doc)?;
     write_output(out, &bytes)
+}
+
+fn write_json_artifact(path: &PathBuf, doc: &Document) -> Result<(), Failure> {
+    doc.verify_integrity()?;
+    let bytes = document_json_output_bytes(doc)?;
+    let output_sha256 = sha256_hex(&bytes);
+    std::fs::write(path, &bytes)
+        .map_err(|_| EthosError::internal("pdfium worker failed to write JSON artifact"))?;
+    let header = worker_json_artifact_header_bytes(
+        &doc.fingerprint,
+        &doc.payload_sha256,
+        &output_sha256,
+        bytes.len() as u64,
+    )?;
+    write_output(None, &header)
+}
+
+fn write_json_artifact_output(
+    out: Option<PathBuf>,
+    artifact: &WorkerJsonArtifact,
+) -> Result<(), Failure> {
+    match out {
+        Some(path) => {
+            std::fs::copy(artifact.path(), &path)
+                .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
+            Ok(())
+        }
+        None => {
+            let mut file = std::fs::File::open(artifact.path())
+                .map_err(|_| EthosError::internal("pdfium worker JSON artifact missing"))?;
+            let mut stdout = std::io::stdout();
+            std::io::copy(&mut file, &mut stdout)
+                .map_err(|_| EthosError::internal("stdout write failed"))?;
+            Ok(())
+        }
+    }
+}
+
+fn document_output_bytes(format: Format, doc: &Document) -> Result<Vec<u8>, EthosError> {
+    match format {
+        Format::Json => document_json_output_bytes(doc),
+        Format::Markdown => {
+            let mut bytes = render_markdown(doc).into_bytes();
+            bytes.push(b'\n');
+            Ok(bytes)
+        }
+        Format::Text => {
+            let mut bytes = render_text(doc).into_bytes();
+            bytes.push(b'\n');
+            Ok(bytes)
+        }
+    }
+}
+
+fn document_json_output_bytes(doc: &Document) -> Result<Vec<u8>, EthosError> {
+    let value = serde_json::to_value(doc).map_err(|e| EthosError::internal(e.to_string()))?;
+    let mut bytes =
+        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
+    bytes.push(b'\n');
+    Ok(bytes)
 }
 
 fn render_text(doc: &Document) -> String {
@@ -151,7 +215,20 @@ fn render_text(doc: &Document) -> String {
 }
 
 fn render_markdown(doc: &Document) -> String {
-    render_text(doc)
+    doc.payload
+        .elements
+        .iter()
+        .filter_map(|element| {
+            let text = element.text.as_deref()?;
+            if element.element_type == ElementType::Heading {
+                let level = element.heading_level.unwrap_or(1).clamp(1, 6);
+                Some(format!("{} {text}", "#".repeat(level as usize)))
+            } else {
+                Some(text.to_string())
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n\n")
 }
 
 pub(crate) fn table_candidate_probe_report_bytes(doc: &Document) -> Result<Vec<u8>, EthosError> {
@@ -180,4 +257,77 @@ pub(crate) fn table_candidate_probe_report_bytes(doc: &Document) -> Result<Vec<u
         ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
     bytes.push(b'\n');
     Ok(bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ethos_core::geom::QRect;
+    use ethos_core::model::{
+        CoordinateSystem, Element, ParserInfo, Payload, ProfileRef, SourceInfo,
+    };
+
+    fn doc_with_elements(elements: Vec<Element>) -> Document {
+        Document {
+            schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+            parser: ParserInfo {
+                name: "ethos".to_string(),
+                version: "test".to_string(),
+            },
+            profile: ProfileRef {
+                id: "ethos-deterministic-v1".to_string(),
+                sha256: "0".repeat(64),
+            },
+            source: SourceInfo {
+                fingerprint: format!("sha256:{}", "0".repeat(64)),
+                bytes: 0,
+            },
+            config_sha256: "0".repeat(64),
+            payload_sha256: "0".repeat(64),
+            fingerprint: format!("sha256:{}", "1".repeat(64)),
+            payload: Payload {
+                coordinate_system: CoordinateSystem {
+                    origin: "top-left".to_string(),
+                    unit: "quantum".to_string(),
+                    quantum_per_point: 100,
+                },
+                pages: Vec::new(),
+                elements,
+                spans: Vec::new(),
+                tables: Vec::new(),
+                chunks: Vec::new(),
+                regions: Vec::new(),
+                security_warnings: Vec::new(),
+                parser_warnings: Vec::new(),
+            },
+            diagnostics: None,
+        }
+    }
+
+    fn text_element(id: &str, element_type: ElementType, text: &str) -> Element {
+        Element {
+            id: id.to_string(),
+            element_type,
+            page: "p0001".to_string(),
+            bbox: QRect::new(0, 0, 100, 100).unwrap(),
+            text: Some(text.to_string()),
+            heading_level: (element_type == ElementType::Heading).then_some(1),
+            table_ref: None,
+            region_ref: None,
+            confidence: None,
+            span_refs: Vec::new(),
+            warning_refs: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn markdown_renders_heading_elements_with_hash_prefixes() {
+        let doc = doc_with_elements(vec![
+            text_element("e000001", ElementType::Heading, "Overview"),
+            text_element("e000002", ElementType::TextBlock, "Body text"),
+        ]);
+
+        assert_eq!(render_text(&doc), "Overview\n\nBody text");
+        assert_eq!(render_markdown(&doc), "# Overview\n\nBody text");
+    }
 }
