@@ -59,3 +59,5 @@ package includes both a grounded citation set and an ungrounded citation set so
 `make verify-alpha` proves the accept and reject paths against a real foreign parser output.
 The same target also runs native Ethos verification with `--crop-dir`, proving that emitted
 crop descriptor JSON is deterministic and conforms to `schemas/ethos-crop-descriptor.schema.json`.
+When a native Ethos document is bound to its original PDF, `--crop-source-pdf` additionally
+emits PNG crop artifacts referenced and hashed from those descriptors.

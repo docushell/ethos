@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:crop-descriptor:1",
   "title": "Ethos crop descriptor",
-  "description": "Deterministic JSON descriptor for an evidence crop region emitted by `ethos verify --crop-dir`. This is an audit artifact, not a rendered image crop. The descriptor binds a verification report check to the document fingerprint, page, bbox, and evidence text hash that produced a crop_ref.",
+  "description": "Deterministic JSON descriptor for an evidence crop region emitted by `ethos verify --crop-dir`. The descriptor binds a verification report check to the document fingerprint, page, bbox, evidence text hash, and optional rendered image artifact that produced a crop_ref.",
   "type": "object",
   "required": [
     "artifact_type",
@@ -33,15 +33,68 @@
       "items": { "type": "string", "pattern": "^v[0-9]{4}$" }
     },
     "rendering_status": {
-      "const": "descriptor_only",
-      "description": "Rendered bitmap crops are intentionally out of scope for this artifact version."
+      "enum": ["descriptor_only", "rendered"],
+      "description": "descriptor_only means no source PDF was supplied; rendered means rendered_ref/rendered_sha256 bind an emitted PNG artifact."
     },
+    "source_pdf_fingerprint": {
+      "$ref": "#/$defs/fingerprint",
+      "description": "Fingerprint of the source PDF used to render the crop artifact."
+    },
+    "rendered_ref": {
+      "type": "string",
+      "pattern": "^crop-[0-9a-f]{64}\\.png$",
+      "description": "Stable PNG filename emitted next to the descriptor when rendering_status is rendered."
+    },
+    "rendered_format": { "const": "png" },
+    "rendered_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the rendered PNG bytes."
+    },
+    "rendered_width_px": { "type": "integer", "minimum": 1 },
+    "rendered_height_px": { "type": "integer", "minimum": 1 },
     "text_sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$",
       "description": "SHA-256 of the evidence text when the verification check found textual evidence."
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "rendering_status": { "const": "rendered" } },
+        "required": ["rendering_status"]
+      },
+      "then": {
+        "required": [
+          "source_pdf_fingerprint",
+          "rendered_ref",
+          "rendered_format",
+          "rendered_sha256",
+          "rendered_width_px",
+          "rendered_height_px"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": { "rendering_status": { "const": "descriptor_only" } },
+        "required": ["rendering_status"]
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["source_pdf_fingerprint"] },
+            { "required": ["rendered_ref"] },
+            { "required": ["rendered_format"] },
+            { "required": ["rendered_sha256"] },
+            { "required": ["rendered_width_px"] },
+            { "required": ["rendered_height_px"] }
+          ]
+        }
+      }
+    }
+  ],
   "$defs": {
     "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "bbox": { "type": "array", "items": { "type": "integer" }, "minItems": 4, "maxItems": 4 }

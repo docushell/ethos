@@ -189,13 +189,12 @@ Expected outcome:
 - `evidence.crop_ref` points to files under the requested crop directory
 - crop descriptor files validate against `schemas/ethos-crop-descriptor.schema.json`
 - crop descriptor files bind `document_fingerprint`, `page`, `bbox`, and `check_ids`
-- descriptors are JSON audit artifacts only; rendered PNG crops arrive later behind `ethos-render`
+- descriptors are JSON audit artifacts; when `--crop-source-pdf` is supplied, they also bind rendered PNG crop filenames, PNG byte hashes, dimensions, and source-PDF fingerprint
 - `--crop-dir` is native-Ethos-only in this alpha slice
 
-Rendered crop production is intentionally fail-closed in this alpha slice. `--crop-source-pdf`
-exists only to validate that an explicit source PDF matches the native Ethos document's
-`source.fingerprint`; after that binding check, the command exits with a renderer-unavailable
-usage error until deterministic bitmap rendering lands.
+Rendered crop production is optional and source-bound in this alpha slice. `--crop-source-pdf`
+must match the native Ethos document's `source.fingerprint`; otherwise the command fails before
+writing crop artifacts.
 
 ## Verification Contract
 
@@ -203,3 +202,4 @@ The demo is covered by `crates/ethos-cli/tests/verify.rs` and
 `examples/verify/check_verify_alpha.py`. The tests run the public CLI for each command above,
 compare the full JSON reports against checked-in goldens, and validate native crop
 descriptor artifacts against `schemas/ethos-crop-descriptor.schema.json`.
+Rendered PNG crop production is covered by the CLI test suite when PDFium is configured.

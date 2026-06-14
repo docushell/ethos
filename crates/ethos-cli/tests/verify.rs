@@ -3,7 +3,6 @@ use std::process::{Command, Output};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ethos_core::fingerprint::source_fingerprint;
-use ethos_core::model::Document;
 use serde_json::Value;
 
 fn ethos_bin() -> &'static str {
@@ -55,6 +54,12 @@ fn temp_output(name: &str) -> PathBuf {
 fn json_file(path: impl AsRef<Path>) -> Value {
     let bytes = std::fs::read(path).expect("JSON fixture is readable");
     serde_json::from_slice(&bytes).expect("JSON fixture parses")
+}
+
+fn pdfium_configured() -> bool {
+    std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
+        .map(PathBuf::from)
+        .is_some_and(|path| path.is_file())
 }
 
 fn document_example() -> PathBuf {
@@ -440,37 +445,80 @@ fn crop_source_pdf_rejects_source_fingerprint_mismatch() {
 }
 
 #[test]
-fn crop_source_pdf_is_fail_closed_until_renderer_exists() {
+fn crop_source_pdf_writes_rendered_crop_artifacts_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        return;
+    }
+
     let root = repo_root();
     let source_pdf = root.join("fixtures/synthetic/simple-text/document.pdf");
-    let source_bytes = std::fs::read(&source_pdf).expect("source PDF fixture is readable");
-    let mut doc: Document = serde_json::from_value(json_file(document_example())).unwrap();
-    doc.source.fingerprint = source_fingerprint(&source_bytes);
-    doc.fingerprint = doc.compute_fingerprint().unwrap();
-    let doc_path = temp_json(
-        "crop-source-bound-doc",
-        &serde_json::to_string(&doc).expect("document serializes"),
+    let doc_path = temp_output("simple-text-doc");
+    let parse = run_ethos(&[
+        "doc",
+        "parse",
+        source_pdf.to_str().unwrap(),
+        "--out",
+        doc_path.to_str().unwrap(),
+    ]);
+    assert_eq!(parse.status.code(), Some(0));
+    assert_eq!(parse.stdout, b"");
+    assert_eq!(parse.stderr, b"");
+
+    let citations = temp_json(
+        "simple-text-citation",
+        r#"[{"kind":"quote","text":"Hello","citation":{"element_id":"e000001"}}]"#,
     );
+    let out = temp_output("simple-text-rendered-crop-report");
     let crop_dir = tempfile::tempdir().expect("temp crop dir");
 
     let output = run_ethos(&[
         "verify",
         doc_path.to_str().unwrap(),
         "--citations",
-        root.join("examples/verify/native_grounded_citations.json")
-            .to_str()
-            .unwrap(),
+        citations.to_str().unwrap(),
         "--crop-dir",
         crop_dir.path().to_str().unwrap(),
         "--crop-source-pdf",
         source_pdf.to_str().unwrap(),
+        "--out",
+        out.to_str().unwrap(),
     ]);
 
-    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.status.code(), Some(0));
     assert_eq!(output.stdout, b"");
-    assert!(String::from_utf8_lossy(&output.stderr)
-        .contains("rendered crop production is not implemented yet"));
-    assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 0);
+    assert_eq!(output.stderr, b"");
+
+    let report = json_file(&out);
+    assert_eq!(report["all_evidence_grounded"], true);
+    let crop_ref = report["checks"][0]["evidence"]["crop_ref"]
+        .as_str()
+        .unwrap();
+    let descriptor = json_file(crop_dir.path().join(crop_ref));
+    assert_eq!(descriptor["rendering_status"], "rendered");
+    assert_eq!(descriptor["rendered_format"], "png");
+    let source_bytes = std::fs::read(&source_pdf).expect("source PDF fixture is readable");
+    assert_eq!(
+        descriptor["source_pdf_fingerprint"],
+        source_fingerprint(&source_bytes)
+    );
+    assert_eq!(
+        descriptor["document_fingerprint"],
+        report["document_fingerprint"]
+    );
+    assert_eq!(descriptor["check_ids"], serde_json::json!(["v0001"]));
+    assert!(descriptor["rendered_width_px"].as_u64().unwrap() > 0);
+    assert!(descriptor["rendered_height_px"].as_u64().unwrap() > 0);
+
+    let rendered_ref = descriptor["rendered_ref"].as_str().unwrap();
+    assert!(rendered_ref.starts_with("crop-"));
+    assert!(rendered_ref.ends_with(".png"));
+    let png = std::fs::read(crop_dir.path().join(rendered_ref)).unwrap();
+    assert!(png.starts_with(b"\x89PNG\r\n\x1a\n"));
+    assert_eq!(
+        descriptor["rendered_sha256"],
+        ethos_core::c14n::sha256_hex_bytes(&png)
+    );
+    assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 2);
 }
 
 #[test]
