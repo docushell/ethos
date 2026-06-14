@@ -1,5 +1,19 @@
 # Verify Alpha Demo
 
+## Product Proof
+
+Ethos verifies whether AI citations are grounded in document evidence.
+
+This is a citation grounding check, not a truth checker: Ethos does not claim semantic
+entailment, factual truth, arithmetic correctness, or answer quality. The alpha proof is the
+repeatable `make verify-alpha` path:
+
+- native Ethos JSON citation checks can pass against checked-in document evidence
+- OpenDataLoader-style JSON can enter the same verification loop through a grounding adapter
+- real pinned OpenDataLoader 2.4.7 output has both grounded and ungrounded citation cases
+- `--fail-on-ungrounded` turns the report into a CI/agent gate with exit code `1` when evidence is not fully grounded
+- every demo report is compared against a golden and regenerated twice to prove byte-identical output
+
 Ethos verifies document evidence for AI systems. The deterministic parser is one grounding
 source; foreign parser output can be another grounding source through an adapter.
 
