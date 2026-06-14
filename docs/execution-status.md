@@ -1,8 +1,8 @@
 # Ethos Execution Status
 
-Date: 2026-06-12
+Date: 2026-06-14
 Owner: product / decider
-Status: Pre-alpha / Milestone A implementation. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks, WS-HARNESS has fail-closed readiness scaffolding, and ADR-0007 locks the product direction: Ethos is a verification and grounding layer that includes a deterministic parser. External freeze/pin/name checks still block Gate Zero and all public claims.
+Status: Pre-alpha / Milestone A implementation. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, and ADR-0007 locks the product direction: Ethos is a verification and grounding layer that includes a deterministic parser. External freeze/pin/name checks still block Gate Zero and all public claims.
 
 ## Current Reality
 
@@ -16,8 +16,9 @@ The committed implementation now includes:
 - `ethos doc parse` / `ethos fingerprint` PDF execution through a worker process with `max_parse_ms` timeout enforcement, stable error-envelope relay, diagnostics-gated worker stderr, and page-range validation/filtering.
 - Quantized page/span extraction at the backend boundary, plus a basic deterministic layout pass that assembles paragraph `text_block` elements and simple column reading order for the current born-digital fixtures.
 - Schema/example/profile validation is green through `schemas/validate_examples.py` using `jsonschema` draft 2020-12 validation, including referential-integrity and bbox sanity checks outside JSON Schema.
-- `ethos verify` now produces non-empty quote, value, presence, and table-cell verification checks over native Ethos document JSON and synthetic OpenDataLoader-style JSON through `--grounding opendataloader-json`; citation/config inputs are rejected when they drift outside the closed schemas.
+- `ethos verify` now produces non-empty quote, value, presence, and table-cell verification checks over native Ethos document JSON and synthetic OpenDataLoader-style JSON through `--grounding opendataloader-json`; it also verifies quote/value/presence citations over pinned real OpenDataLoader 2.4.7 JSON, including grounded and ungrounded cases. Citation/config inputs are rejected when they drift outside the closed schemas.
 - Verification semantics are now trust-honest at alpha scope: quote containment is explicitly labeled, value/table-cell checks require normalized equality, fingerprint-pinned citations fail closed when source fingerprints are unavailable, and structured capability limits explain why a run is downgraded.
+- `make verify-alpha` is now the product-proof command for the alpha trust loop: it checks native examples, synthetic OpenDataLoader-style examples, pinned real OpenDataLoader grounded/ungrounded examples, schema validation, byte-identical repeated verification reports, and foreign fixture manifest hash binding.
 
 Still absent or not claimable: frozen Gate Zero corpus/hardware records, reproducible benchmark result JSON, competitor pins/comparisons, public speed/quality/footprint claims, OCR/image-only support, real table extraction, mature list/heading/layout semantics, semantic/arithmetic verification beyond deterministic evidence lookup, Phase 2 project-maintained PDFium builds, release packaging, and multi-platform determinism evidence.
 
@@ -45,7 +46,7 @@ Milestone A is partially implemented, not complete. The product can demonstrate 
 | Layout groundwork | Landed: basic paragraph text blocks and simple column reading order over quantized spans | Tables, headings, lists, rotation/quirk handling, and confidence policy remain future work |
 | Font policy groundwork | Partially landed: substitution table and profile policy are present; fixture output uses deterministic substitution IDs | Bundled fallback asset hashing and broader font/CID validation remain open |
 | Schema/example validation | Landed: schemas, examples, deterministic profile, referential integrity, and bbox sanity pass the `jsonschema` validation gate | Contract changes still require explicit versioning and compatibility review |
-| Trust-layer implementation | Landed: `ethos verify` quote/value/presence/table-cell checks, explicit quote-containment labeling, normalized equality for value/table-cell checks, stale and unverifiable fingerprint handling, unsupported claim reporting, structured capability limits, native Ethos JSON path, ODL-style adapter path with synthetic table/cell mapping, crop-ref evidence plumbing, strict citation/config input validation, citation input schema, and demo fixtures | Still needed: pinned real ODL output fixture, crop artifact production, evidence matching against richer source structures, semantic/arithmetic claim handling by explicit non-v1 design, and broader adapter hardening against real output |
+| Trust-layer implementation | Landed: `ethos verify` quote/value/presence/table-cell checks, explicit quote-containment labeling, normalized equality for value/table-cell checks, stale and unverifiable fingerprint handling, unsupported claim reporting, structured capability limits, native Ethos JSON path, ODL-style adapter path with synthetic table/cell mapping, pinned real OpenDataLoader 2.4.7 grounded/ungrounded fixtures, foreign fixture manifest hash validation, crop-ref evidence plumbing, strict citation/config input validation, citation input schema, and demo fixtures | Still needed: crop artifact production, evidence matching against richer source structures, semantic/arithmetic claim handling by explicit non-v1 design, real OpenDataLoader table-cell grounding, and broader adapter hardening against real output |
 | WS-HARNESS readiness | Partially landed: readiness path fails closed when corpus/hardware/pins are incomplete | Actual benchmark runner outputs, install-size/RSS/timing collection, competitor execution, and cross-host determinism evidence are still missing |
 
 ## PM Rule
