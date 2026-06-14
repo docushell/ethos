@@ -220,7 +220,8 @@ The compare helper separates logical evidence identity from rendered artifact by
 It is expected to pass both layers for same-host repeated runs with pinned PDFium. A
 2026-06-14 macOS arm64 vs Linux x64 check on commit `64541dd` preserved document
 fingerprint and `payload_sha256`, but rendered artifact byte equality failed because the
-evidence bbox differed slightly across platforms. The honest claim is therefore:
+evidence bbox differed slightly across platforms. The full evidence record is
+`docs/validation/rendered-crops-2026-06-14.md`. The honest claim is therefore:
 
 ```text
 Ethos rendered crop artifacts are same-host repeatable with pinned PDFium.
