@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:crop-descriptor:1",
+  "title": "Ethos crop descriptor",
+  "description": "Deterministic JSON descriptor for an evidence crop region emitted by `ethos verify --crop-dir`. This is an audit artifact, not a rendered image crop. The descriptor binds a verification report check to the document fingerprint, page, bbox, and evidence text hash that produced a crop_ref.",
+  "type": "object",
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "crop_ref",
+    "document_fingerprint",
+    "page",
+    "bbox",
+    "check_ids",
+    "rendering_status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": { "const": "ethos.crop_descriptor.v1" },
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "crop_ref": {
+      "type": "string",
+      "pattern": "^crop-[0-9a-f]{64}\\.json$",
+      "description": "Stable descriptor filename referenced from verification_report checks[].evidence.crop_ref."
+    },
+    "document_fingerprint": { "$ref": "#/$defs/fingerprint" },
+    "page": { "type": "string" },
+    "bbox": { "$ref": "#/$defs/bbox" },
+    "check_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^v[0-9]{4}$" }
+    },
+    "rendering_status": {
+      "const": "descriptor_only",
+      "description": "Rendered bitmap crops are intentionally out of scope for this artifact version."
+    },
+    "text_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the evidence text when the verification check found textual evidence."
+    }
+  },
+  "$defs": {
+    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "bbox": { "type": "array", "items": { "type": "integer" }, "minItems": 4, "maxItems": 4 }
+  }
+}

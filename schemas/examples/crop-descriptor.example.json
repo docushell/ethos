@@ -1,0 +1,18 @@
+{
+  "artifact_type": "ethos.crop_descriptor.v1",
+  "schema_version": "1.0.0",
+  "crop_ref": "crop-6f0cd5a369f222f9726dedb859fbe45f2d46fafb6abd20a4081f40946c09fb9e.json",
+  "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "page": "p0001",
+  "bbox": [
+    7200,
+    10100,
+    54000,
+    11500
+  ],
+  "check_ids": [
+    "v0001"
+  ],
+  "rendering_status": "descriptor_only",
+  "text_sha256": "49f675142f930e31d75679b14e23f7c639cb9903029eacb3235c709c14fe4be5"
+}

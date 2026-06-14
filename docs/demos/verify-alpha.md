@@ -186,6 +186,7 @@ ethos verify schemas/examples/document.example.json \
 Expected outcome:
 
 - `evidence.crop_ref` points to files under the requested crop directory
+- crop descriptor files validate against `schemas/ethos-crop-descriptor.schema.json`
 - crop descriptor files bind `document_fingerprint`, `page`, `bbox`, and `check_ids`
 - descriptors are JSON audit artifacts only; rendered PNG crops arrive later behind `ethos-render`
 - `--crop-dir` is native-Ethos-only in this alpha slice

@@ -12,6 +12,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-citations.schema.json` | citation input consumed by `ethos verify --citations` |
 | `ethos-verification-report.schema.json` | `verification_report.json` |
 | `ethos-verification-config.schema.json` | verification config (its c14n hash stamps reports) |
+| `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos verify --crop-dir` |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
 
 Conventions: snake_case keys; `additionalProperties: false` everywhere except the

@@ -335,6 +335,8 @@ fn native_verify_crop_dir_writes_deterministic_crop_descriptors() {
 
     let descriptor_path = crop_dir.path().join(crop_ref);
     let descriptor = json_file(&descriptor_path);
+    let expected_descriptor = json_file(root.join("schemas/examples/crop-descriptor.example.json"));
+    assert_eq!(descriptor, expected_descriptor);
     assert_eq!(descriptor["artifact_type"], "ethos.crop_descriptor.v1");
     assert_eq!(descriptor["schema_version"], "1.0.0");
     assert_eq!(descriptor["rendering_status"], "descriptor_only");

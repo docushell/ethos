@@ -46,6 +46,7 @@ PAIRS = [
     ("ethos-security-report.schema.json", [EXAMPLES / "security-report.example.json"]),
     ("ethos-verification-report.schema.json", [EXAMPLES / "verification-report.example.json"]),
     ("ethos-verification-config.schema.json", [EXAMPLES / "verification-config.example.json"]),
+    ("ethos-crop-descriptor.schema.json", [EXAMPLES / "crop-descriptor.example.json"]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 
@@ -186,10 +187,12 @@ else:
 # fingerprint coherence across example artifacts
 sec = json.loads((EXAMPLES / "security-report.example.json").read_text(encoding="utf-8"))
 ver = json.loads((EXAMPLES / "verification-report.example.json").read_text(encoding="utf-8"))
+crop = json.loads((EXAMPLES / "crop-descriptor.example.json").read_text(encoding="utf-8"))
 for label, got in [
     ("security-report.document_fingerprint", sec["document_fingerprint"]),
     ("security-report.source_fingerprint", sec["source_fingerprint"]),
     ("verification-report.document_fingerprint", ver["document_fingerprint"]),
+    ("crop-descriptor.document_fingerprint", crop["document_fingerprint"]),
 ]:
     want = doc["source"]["fingerprint"] if label.endswith("source_fingerprint") else doc["fingerprint"]
     if got != want:
@@ -197,21 +200,22 @@ for label, got in [
 print("ok    example fingerprints coherent across artifacts")
 
 # bbox sanity (schema cannot express x0<=x1, y0<=y1)
-def walk_bboxes(node, ctx):
+def walk_bboxes(label, node, ctx):
     if isinstance(node, dict):
         for k, v in node.items():
             if k == "bbox" and isinstance(v, list) and len(v) == 4:
                 x0, y0, x1, y1 = v
                 if x0 > x1 or y0 > y1:
-                    fail(f"document.example.json: malformed bbox {v} at {ctx}.{k}")
+                    fail(f"{label}: malformed bbox {v} at {ctx}.{k}")
             else:
-                walk_bboxes(v, f"{ctx}.{k}")
+                walk_bboxes(label, v, f"{ctx}.{k}")
     elif isinstance(node, list):
         for i, v in enumerate(node):
-            walk_bboxes(v, f"{ctx}[{i}]")
+            walk_bboxes(label, v, f"{ctx}[{i}]")
 
 
-walk_bboxes(p, "payload")
+walk_bboxes("document.example.json", p, "payload")
+walk_bboxes("crop-descriptor.example.json", crop, "root")
 
 if failures:
     print(f"\n{failures} failure(s)")
