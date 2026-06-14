@@ -788,8 +788,8 @@ Suite policy:
 
 ### 11.3 Rules
 
-- No "#1" claims.
-- No "best-in-class" claims.
+- No ranking claims.
+- No superlative claims.
 - Publish commands, environment, hardware, versions, and failures.
 - Separate born-digital deterministic results from OCR/VLM results.
 - Label model tier vs deterministic tier in every table.
@@ -1030,7 +1030,7 @@ Exit:
 - If a PDF cannot be parsed safely, fail with a stable code.
 - Track OpenDataLoader, EdgeParse, LiteParse, Kreuzberg, Docling, MinerU, Marker, MarkItDown, Unstructured, PyMuPDF, and PyMuPDF4LLM releases.
 - Keep exact community/license landscape figures in `docs/landscape-log.md`; refresh before major milestones and at least every 90 days.
-- Never publish "#1" or "best-in-class" claims.
+- Never publish ranking or superlative claims.
 - Keep `ethos-verify` free of Ethos-internal type dependencies.
 - Never describe verification as pixel-level proof, semantic proof, or arithmetic proof.
 - Treat canonical-payload output differences across supported platforms as release-blocking bugs under the deterministic profile.

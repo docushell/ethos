@@ -29,7 +29,7 @@ Accepted ADR-0001 staffing (not in PRD v3.5): 1 senior Rust engineer + 0.25 benc
 ### 1.3 Branch and isolation discipline
 
 - One git worktree/branch per active lane (`ws/<lane>-<milestone>`), merged via PR only.
-- Every PR passes: schema validation, fixture suite, same-platform double-parse byte-diff (3-platform from CI availability), clippy/fmt/deny, and the PRD 14 agent rules (no "#1"/"best-in-class" claims, no OCR/VLM deps in base, fixtures before heuristics).
+- Every PR passes: schema validation, fixture suite, same-platform double-parse byte-diff (3-platform from CI availability), clippy/fmt/deny, and the PRD 14 agent rules (no ranking/superlative claims, no OCR/VLM deps in base, fixtures before heuristics).
 - Contracts (schemas, c14n spec, error/warning codes - PRD 8, 10) change only via PR labeled `contract-change` with a version bump (PRD 5.1: output-changing heuristics are semver events).
 
 ---
@@ -316,7 +316,7 @@ On G2/G3 failure, G1 retry failure, or decider-selected G1 fallback, Ethos pivot
 
 | Lane | Deliverables | Acceptance (PRD 13-E exit) | PRD |
 | --- | --- | --- | --- |
-| WS-PUBLISH | **Public benchmark report** vs ODL, EdgeParse, **LiteParse**, PyMuPDF4LLM + feasible others (Kreuzberg, Docling, MinerU, Marker, MarkItDown, Unstructured); OmniDocBench labeled neutral/community; ParseBench + competitor-owned suites labeled publisher-owned; tiers labeled; known Gate Zero host numbers paired with third-party reproducible cloud-runner numbers; honest-scope README per 12; proof-of-trust demos (RAG citations, agent verify+crop, foreign-parser verification) | Reproducible methodology; no "#1"/"best-in-class" anywhere; no laptop-only/local-host-only marketing numbers; launch demos run on pinned fixtures | 11.2, 11.3, 11.4, 12 |
+| WS-PUBLISH | **Public benchmark report** vs ODL, EdgeParse, **LiteParse**, PyMuPDF4LLM + feasible others (Kreuzberg, Docling, MinerU, Marker, MarkItDown, Unstructured); OmniDocBench labeled neutral/community; ParseBench + competitor-owned suites labeled publisher-owned; tiers labeled; known Gate Zero host numbers paired with third-party reproducible cloud-runner numbers; honest-scope README per 12; proof-of-trust demos (RAG citations, agent verify+crop, foreign-parser verification) | Reproducible methodology; no ranking/superlative claims anywhere; no laptop-only/local-host-only marketing numbers; launch demos run on pinned fixtures | 11.2, 11.3, 11.4, 12 |
 | WS-SURFACES + WS-CONTRACTS | Stable CLI/Python docs; Node beta docs and MCP experimental docs only if staffed or accepted by release-scope ADR; lightweight LangChain/LlamaIndex examples over Python API; schema compatibility tests; determinism CI hardened; Windows x64 determinism green or release re-scoped; release artifacts for target platforms (footprint check as release gate); project-maintained PDFium Phase 2 builds from `pdfium.googlesource.com` with pinned revision, flags, toolchain, patches, and hashes | Users install stable CLI/Python, parse, inspect, chunk, verify born-digital PDFs; any Node/MCP status is explicit; Public Beta does not ship on Phase 1 PDFium binaries; unresolved Windows determinism divergence blocks or re-scopes Public Beta | 6.1, 13-E |
 | Gate | **Release 1 claim audit**: every included 4.1 stable capability demonstrably present (Rust core, stable CLI, stable Python, canonical JSON, deterministic md, txt, chunks, page selection, rotation/coords, failure detection, spans, headings/lists/reading order, simple tables, non-text region coordinates, security report, verification report, parser-agnostic verification, debug overlay, crop API (`crop_element`, per 13-D), LiteParse-inclusive harness, launch examples); Node beta and MCP experimental either have smoke tests with explicit labels or are removed from public claims by ADR - checklist in the release PR | Public "Release 1" only after audit passes; optional surfaces are labeled or explicitly out of scope | 4.1, 11.4, 13-D |
 
@@ -365,7 +365,7 @@ Release engineering: lockstep workspace versions; output-changing merges bump ve
 - **ADRs** in `docs/decisions/` for every closing 15 open question; Gate Zero ADR-0005 per 6.4 template; output-changing merges reference CHANGELOG entries (PRD 5.1).
 - **Cadence:** twice-weekly orchestrator check-in (lane status vs handoff dates); weekly tracker vs week-8/22/40 anchors; landscape refresh before each milestone and at least every 90 days (PRD 2) - watchlist per 14 including LiteParse and Kreuzberg.
 - **Governance metrics after public launch:** median first issue response under 48 hours, OpenSSF Scorecard tracked monthly, good-first-issue funnel reviewed monthly, and trust-loop activation tracked from documented examples/download telemetry where privacy-safe.
-- **Claims discipline in-repo** (PRD 11.3, 14, 1.4): CI grep-gate blocks "#1", "best-in-class", "pixel-level proof", "semantic proof", and unearned failure-corpus advantage claims in README/docs/announcements.
+- **Claims discipline in-repo** (PRD 11.3, 14, 1.4): CI grep-gate blocks ranking claims, superlatives, "pixel-level proof", "semantic proof", and unearned failure-corpus advantage claims in README/docs/announcements.
 - **Plan changes:** amended by PR; gates, the reduced-staff schedule, or Release 1 scope require decider sign-off.
 
 ## 13. Pre-Kickoff Decision Audit (PRD 15 - blocking subset)

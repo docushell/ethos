@@ -52,4 +52,4 @@ Milestone A is partially implemented, not complete. The product can demonstrate 
 
 ## PM Rule
 
-Public language stays at "pre-alpha / Milestone A implementation" until all three external blockers are closed and Gate Zero has reproducible result JSON. Do not describe Ethos as benchmark-proven, production-ready, or broadly parser-complete. Internal parser work should proceed only when it supports Gate Zero evidence or the trust layer; the product-differentiating path remains verification and grounding first, with parser expansion serving that path.
+Public language stays at "pre-alpha / Milestone A implementation" until all three external blockers are closed and Gate Zero has reproducible result JSON. Do not describe Ethos as benchmark-validated, release-ready, or broadly parser-complete. Internal parser work should proceed only when it supports Gate Zero evidence or the trust layer; the product-differentiating path remains verification and grounding first, with parser expansion serving that path.

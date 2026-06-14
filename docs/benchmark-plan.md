@@ -38,7 +38,7 @@ hardware attestation → decider → ADR-0005.
 
 ## Rules (PRD §11.3 — enforced by CI grep-gate and review)
 
-No "#1" or superlative claims. Publish commands, environment, hardware, versions, failures.
+No ranking or superlative claims. Publish commands, environment, hardware, versions, failures.
 Separate born-digital deterministic results from OCR/VLM results; label model tier vs
 deterministic tier in every table; label publisher-owned suites (ParseBench is
 LlamaIndex/run-llama-owned; OmniDocBench is neutral/community; Ethos fixtures are never

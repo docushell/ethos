@@ -4,7 +4,7 @@
 
 Ethos verifies whether AI citations are grounded in document evidence.
 
-This is a citation grounding check, not a truth checker: Ethos does not claim semantic
+This is a citation grounding check, not a semantic-truth system: Ethos does not claim semantic
 entailment, factual truth, arithmetic correctness, or answer quality. The alpha proof is the
 repeatable `make verify-alpha` path:
 
