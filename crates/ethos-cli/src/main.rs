@@ -180,6 +180,10 @@ pub(crate) struct VerifyArgs {
     /// descriptors only; rendered image crops arrive with ethos-render.
     #[arg(long)]
     pub(crate) crop_dir: Option<PathBuf>,
+    /// Original PDF bytes for rendered crop production. Alpha validates source binding
+    /// and fails closed until the deterministic renderer lands.
+    #[arg(long)]
+    pub(crate) crop_source_pdf: Option<PathBuf>,
     /// Exit 1 after writing the report when any requested evidence is not grounded.
     #[arg(long)]
     pub(crate) fail_on_ungrounded: bool,

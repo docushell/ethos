@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use ethos_core::error::EthosError;
-use ethos_core::fingerprint::is_fingerprint_form;
+use ethos_core::fingerprint::{is_fingerprint_form, source_fingerprint};
 use ethos_core::grounding::{
     Capabilities, GroundingElement, GroundingSource, GroundingSpan, GroundingTable, PageGeometry,
     ParserIdentity,
@@ -29,6 +29,11 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
                 .to_string(),
         ));
     }
+    if args.crop_source_pdf.is_some() && args.crop_dir.is_none() {
+        return Err(Failure::Usage(
+            "--crop-source-pdf requires --crop-dir".to_string(),
+        ));
+    }
 
     let mut config: VerificationConfig = match &args.config {
         Some(path) => serde_json::from_slice(&read_file(path)?).map_err(|_| {
@@ -52,6 +57,13 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     let report = match args.grounding.as_deref() {
         None => {
             let doc = read_document(&args.input)?;
+            if let Some(source_pdf) = args.crop_source_pdf.as_deref() {
+                validate_crop_source_pdf_binding(&doc, source_pdf)?;
+                return Err(Failure::Usage(
+                    "rendered crop production is not implemented yet; rerun without --crop-source-pdf to write descriptor-only crop artifacts"
+                        .to_string(),
+                ));
+            }
             match args.crop_dir.as_ref() {
                 Some(_) => {
                     let source = NativeCropSource { document: &doc };
@@ -86,6 +98,26 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     write_output(args.out, &bytes)?;
     if args.fail_on_ungrounded && !all_evidence_grounded {
         return Err(Failure::Ungrounded);
+    }
+    Ok(())
+}
+
+fn validate_crop_source_pdf_binding(doc: &Document, source_pdf: &Path) -> Result<(), Failure> {
+    let bytes = std::fs::read(source_pdf)
+        .map_err(|_| Failure::Usage(format!("cannot read input: {}", source_pdf.display())))?;
+    if !bytes[..bytes.len().min(1024)]
+        .windows(5)
+        .any(|window| window == b"%PDF-")
+    {
+        return Err(Failure::Usage(
+            "crop source PDF does not contain a PDF header".to_string(),
+        ));
+    }
+    let actual = source_fingerprint(&bytes);
+    if actual != doc.source.fingerprint {
+        return Err(Failure::Usage(
+            "crop source PDF fingerprint does not match document source fingerprint".to_string(),
+        ));
     }
     Ok(())
 }

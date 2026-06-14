@@ -192,6 +192,11 @@ Expected outcome:
 - descriptors are JSON audit artifacts only; rendered PNG crops arrive later behind `ethos-render`
 - `--crop-dir` is native-Ethos-only in this alpha slice
 
+Rendered crop production is intentionally fail-closed in this alpha slice. `--crop-source-pdf`
+exists only to validate that an explicit source PDF matches the native Ethos document's
+`source.fingerprint`; after that binding check, the command exits with a renderer-unavailable
+usage error until deterministic bitmap rendering lands.
+
 ## Verification Contract
 
 The demo is covered by `crates/ethos-cli/tests/verify.rs` and

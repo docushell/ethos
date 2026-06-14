@@ -2,6 +2,8 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use ethos_core::fingerprint::source_fingerprint;
+use ethos_core::model::Document;
 use serde_json::Value;
 
 fn ethos_bin() -> &'static str {
@@ -382,6 +384,93 @@ fn crop_dir_is_native_ethos_only_for_alpha() {
     assert_eq!(output.stdout, b"");
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("--crop-dir is currently supported only for native Ethos document grounding"));
+}
+
+#[test]
+fn crop_source_pdf_requires_crop_dir() {
+    let root = repo_root();
+    let output = run_ethos(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+        "--crop-source-pdf",
+        root.join("fixtures/synthetic/simple-text/document.pdf")
+            .to_str()
+            .unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("--crop-source-pdf requires --crop-dir")
+    );
+}
+
+#[test]
+fn crop_source_pdf_rejects_source_fingerprint_mismatch() {
+    let root = repo_root();
+    let crop_dir = tempfile::tempdir().expect("temp crop dir");
+    let output = run_ethos(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+        "--crop-dir",
+        crop_dir.path().to_str().unwrap(),
+        "--crop-source-pdf",
+        root.join("fixtures/synthetic/simple-text/document.pdf")
+            .to_str()
+            .unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("crop source PDF fingerprint does not match document source fingerprint"));
+    assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 0);
+}
+
+#[test]
+fn crop_source_pdf_is_fail_closed_until_renderer_exists() {
+    let root = repo_root();
+    let source_pdf = root.join("fixtures/synthetic/simple-text/document.pdf");
+    let source_bytes = std::fs::read(&source_pdf).expect("source PDF fixture is readable");
+    let mut doc: Document = serde_json::from_value(json_file(document_example())).unwrap();
+    doc.source.fingerprint = source_fingerprint(&source_bytes);
+    doc.fingerprint = doc.compute_fingerprint().unwrap();
+    let doc_path = temp_json(
+        "crop-source-bound-doc",
+        &serde_json::to_string(&doc).expect("document serializes"),
+    );
+    let crop_dir = tempfile::tempdir().expect("temp crop dir");
+
+    let output = run_ethos(&[
+        "verify",
+        doc_path.to_str().unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+        "--crop-dir",
+        crop_dir.path().to_str().unwrap(),
+        "--crop-source-pdf",
+        source_pdf.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("rendered crop production is not implemented yet"));
+    assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 0);
 }
 
 #[test]
