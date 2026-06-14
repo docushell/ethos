@@ -63,7 +63,7 @@ a bug, never a retry. See `docs/determinism-contract.md`.
 | --- | --- |
 | `schemas/` | The product contract: document, chunks, security-report, verification-report, verification-config |
 | `profiles/` | Deterministic profile artifacts |
-| `crates/` | Rust workspace (`ethos-core`, `ethos-pdf`, `ethos-verify`, `ethos-cli`, …) |
+| `crates/` | Rust workspace (internal `ethos-core`, public core package planned as `ethos-doc-core`, plus `ethos-pdf`, `ethos-verify`, `ethos-cli`, …) |
 | `adapters/grounding/` | Foreign-parser adapters into `GroundingSource` |
 | `fixtures/` | Public/synthetic test corpus — see the contribution guide |
 | `benchmarks/` | Internal Gate Zero corpus, evidence, schemas, and parser harness; public run orchestration lives in `ethos-bench` |

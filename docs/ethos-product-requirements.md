@@ -162,8 +162,8 @@ Package identifiers to validate before public publishing:
 - CLI binary: `ethos`
 - Public architecture modules: `ethos-doc`, `ethos-rag`, `ethos-verify`
 - Reserved public package/module names: `ethos-doc`, `ethos-rag`, `ethos-verify`, even if `ethos-doc` and `ethos-rag` remain facade modules rather than published crates.
-- Rust crates: `ethos-core`, `ethos-pdf`, `ethos-layout`, `ethos-rag`, `ethos-verify`
-- Rust namespace: `ethos_core` and sibling crates
+- Public Rust package identifiers: `ethos-doc-core`, `ethos-pdf`, `ethos-layout`, `ethos-rag`, `ethos-verify`
+- Internal Rust namespace: `ethos_core` and sibling crates
 - Python package: `ethos-pdf`
 - Python import: `ethos_pdf`
 - Node package: `@ethos-pdf/core`
@@ -343,7 +343,7 @@ Public module responsibilities:
 
 `ethos-doc` may be described as the long-term document-understanding layer, but Release 1 public wording must prefer "document parsing and structure" or "canonical document graph" to avoid implying OCR/VLM-quality understanding.
 
-The public architecture is a product/API boundary. Internally, Ethos may keep finer-grained crates such as `ethos-core`, `ethos-pdf`, `ethos-layout`, `ethos-tables`, `ethos-security`, and `ethos-render`.
+The public architecture is a product/API boundary. Internally, Ethos may keep finer-grained crates such as `ethos-core`, `ethos-pdf`, `ethos-layout`, `ethos-tables`, `ethos-security`, and `ethos-render`. Per ADR-0006, the public crates.io package name for the internal core crate is planned as `ethos-doc-core`, not `ethos-core`.
 
 ### 5.3 Repository Layout
 
@@ -1086,7 +1086,7 @@ Approved contract package scope for the first implementation task:
 - Five schemas: document, chunks, security report, verification report, and verification config.
 - `docs/determinism-contract.md` with c14n v1, canonical exclusion table, and deterministic profile manifest.
 - Versioned deterministic profile artifact: `profiles/ethos-deterministic-v1.json`.
-- `ethos-core` trait skeleton: `GroundingSource`, backend trait, and layout trait.
+- Internal `ethos-core` trait skeleton: `GroundingSource`, backend trait, and layout trait. If published, this contract package uses the public crates.io package name `ethos-doc-core` per ADR-0006.
 - Tiny OpenDataLoader grounding adapter stub: `adapters/grounding/opendataloader-json`, enough to prove foreign parser output can enter the `GroundingSource` interface.
 - CI proof that `ethos-verify` compiles against the trait module alone.
 

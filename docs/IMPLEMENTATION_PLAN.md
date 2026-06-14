@@ -190,7 +190,7 @@ Architectural invariants enforced from commit one:
 
 ### 5.2 Handoff contracts (every edge, explicit and bounded)
 
-1. **WS-CONTRACTS -> all lanes:** versioned `schemas/*.json` + published `ethos-core` types; consumers pin schema versions; changes via `contract-change` PR + downstream sign-off. Payload: file paths + changelog entry, never prose.
+1. **WS-CONTRACTS -> all lanes:** versioned `schemas/*.json` + contract types from the internal `ethos-core` crate, published as the `ethos-doc-core` package if/when this surface is released; consumers pin schema versions; changes via `contract-change` PR + downstream sign-off. Payload: file paths + changelog entry, never prose.
 2. **WS-ENGINE -> WS-LAYOUT:** `QuantizedGeom` extraction API + 20 extraction golden fixtures. Acceptance: identical fingerprints on 3 platforms.
 3. **WS-ENGINE -> WS-HARNESS:** CLI parse entrypoint with stable 10 exit codes + `ethos fingerprint`. Acceptance: harness runs Ethos unattended.
 4. **WS-HARNESS -> decider:** `benchmarks/results/gate-zero/{g1,g2,g3}.json` + reproduction command + hardware attestation - the decider's only input (PRD 1.3).

@@ -77,6 +77,10 @@ canonical graph + versioned config; Markdown is secondary.
 
 ## Crate map (Release 1)
 
+Public crates.io package identity is governed by ADR-0006. The internal `ethos-core`
+crate maps to the planned public package name `ethos-doc-core`; code may keep the
+internal crate name until the publishing migration.
+
 | Crate | Milestone | Role |
 | --- | --- | --- |
 | `ethos-core` | A | canonical model, IDs, errors/warnings, schema types, traits, c14n + fingerprint, page-range config |
