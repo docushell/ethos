@@ -1,6 +1,6 @@
 # ADR-0006: Package Identifiers (Registry / Trademark Validation)
 
-- Status: **Proposed — crates.io conflict found; rename and trademark validation still block public artifacts**
+- Status: **Proposed — public core crate renamed; reservation and trademark validation still block public artifacts**
 - Date: 2026-06-11
 - Governs: IMPLEMENTATION_PLAN §2 row 0.11; PRD §3.1; risk R8
 
@@ -16,14 +16,16 @@ The project name is **Ethos**; `ethos` is a loaded name with collision/trademark
 | Public module | `ethos-doc` | crates.io | 2026-06-14: not found | ☐ (reserve even if facade) |
 | Public module | `ethos-rag` | crates.io | 2026-06-14: not found | ☐ (reserve even if facade) |
 | Public module | `ethos-verify` | crates.io | 2026-06-14: not found | ☐ |
-| Crates | `ethos-*` (core, pdf, layout, tables, security, render, cli, mcp) | crates.io | 2026-06-14: `ethos-core` exists; others checked not found | ☐ (rename required for `ethos-core`) |
+| Core crate | `ethos-doc-core` (public package; internal crate may remain `ethos-core` pre-publish) | crates.io | 2026-06-14: not found | ☐ |
+| Retired candidate | `ethos-core` | crates.io | 2026-06-14: exists | n/a |
+| Crates | `ethos-*` (pdf, layout, tables, security, render, cli, mcp) | crates.io | 2026-06-14: checked not found | ☐ |
 | Python | `ethos-pdf` (import `ethos_pdf`) | PyPI | 2026-06-14: not found | ☐ |
 | Node | `@ethos-pdf/core` | npm | 2026-06-14: package not found | ☐ (scope: `@ethos-pdf`) |
 | Schema namespace | `urn:ethos:schema:*` | — (URN, no registry claim) | n/a | n/a |
 
 ## Validation checklist (devrel owner)
 
-- [x] crates.io name search for every `ethos-*` identifier above (conflict: `ethos-core`)
+- [x] crates.io name search for every `ethos-*` identifier above (conflict: `ethos-core`; replacement `ethos-doc-core` selected and checked)
 - [x] PyPI search `ethos-pdf` (+ pep503 normalized forms)
 - [x] npm package lookup `@ethos-pdf/core` (scope/package reservation still pending)
 - [x] GitHub org/repo collision scan (preliminary; 2026-06-14)
@@ -97,6 +99,14 @@ Other registry results:
 
 Outcome: `ethos-core` cannot be treated as an available public crates.io identifier. Before this ADR can be accepted, the public Rust crate naming plan must either rename the core crate or explicitly choose not to publish a crate under that name. Trademark/legal validation remains required.
 
+### 2026-06-14 — core crate replacement selected
+
+`ethos-doc-core` is the selected public crates.io replacement for the blocked `ethos-core` package identifier. `https://crates.io/api/v1/crates/ethos-doc-core` returned 404 not found with direct network access and an explicit user agent.
+
+This is a public package identifier decision only. The internal Rust crate directory, dependency key, and import path may remain `ethos-core` / `ethos_core` until the publishing migration is implemented. That keeps this ADR update decoupled from code churn and lets the publish packaging change happen as a separate reviewed step.
+
+Outcome: `ethos-doc-core` should replace `ethos-core` in public-package planning. This ADR still cannot be accepted until reservation ownership and trademark/legal validation are complete.
+
 ## Decision
 
-Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-core` is already unavailable on crates.io and requires a rename decision before any public Rust artifact. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
+Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
