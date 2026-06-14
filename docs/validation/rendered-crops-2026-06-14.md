@@ -209,3 +209,89 @@ Do not claim cross-platform bit-identical rendered crops from this evidence.
   evidence identity instead of raw bbox-derived identity. This makes references less brittle
   across hosts, while descriptors still record exact platform-specific bbox and PNG hashes.
 - Do not chase cross-platform PNG equality unless a product requirement depends on it.
+
+## Follow-Up Validation - Logical Crop Refs
+
+Validation subject commit: `3cdc1a8c75ed7a1ffbdb9001d090c5b1daa2404d`
+
+Bundle:
+
+```text
+/tmp/ethos-3cdc1a8.bundle
+SHA-256 5a482c2895793c6c851542cbfe28ed317c1dc7870d14278e6f18673da91058fe
+```
+
+Linux x64 debug binary:
+
+```text
+target/debug/ethos
+SHA-256 ec1ef5f42866da6ab6505ae8e9a3f81ca11dc47cce931cb552ce9d90b6a9fd70
+```
+
+Linux artifact:
+
+```text
+/tmp/ethos-rendered-crops-linux-x64-3cdc1a8.tgz
+SHA-256 9485cfd3982a147536862d0fbfd42122bb699f2fc37eec70d8056b4f465cb6ee
+```
+
+Linux same-host repeatability passed with logical crop refs:
+
+```text
+ok    parsed document JSON is byte-identical across runs
+ok    verification report JSON is byte-identical across runs
+ok    crop descriptors crop-06e24c2fcd2fdf8db5344e64e7dd9f58ccf4c2d9d8b79766aa601a30a25e371d.json is byte-identical across runs
+ok    rendered PNG crops crop-06e24c2fcd2fdf8db5344e64e7dd9f58ccf4c2d9d8b79766aa601a30a25e371d.png is byte-identical across runs
+ok    rendered descriptors bind report, source PDF fingerprint, and PNG hashes
+
+rendered crop determinism checks passed
+```
+
+Linux run details:
+
+```text
+document_fingerprint sha256:7164f43f104dc248193f12ea828e0ab857eae194210114c6f6c0160fd643c87b
+source_fingerprint   sha256:f2f6ab91c696a4dffd96512456184451634fda22e19face9f636f3b69c6286f3
+payload_sha256       db600b33362c6897c2755e74c0236d97f98eee9898c527baad1c6938dbaa191e
+document_json_sha256 4815053f08a8b40fb5e25eabce09f23a8a8eb46387f546e74fab11f2d138ff26
+report_json_sha256   d3328543ee713456af31be37b21a1083c11df11ce0416847e999be12a8ff1d15
+evidence_bbox        [7385, 5477, 19385, 7234]
+crop_ref             crop-06e24c2fcd2fdf8db5344e64e7dd9f58ccf4c2d9d8b79766aa601a30a25e371d.json
+descriptor_sha256    bdb9470172ca1a731ab396b661c70e571dbf18b906e29e981ef321de9b0686e6
+rendered_ref         crop-06e24c2fcd2fdf8db5344e64e7dd9f58ccf4c2d9d8b79766aa601a30a25e371d.png
+rendered_sha256      88de1db03898ecfffeada4c4cc93e5ce7e79c8d05aacece492f0f43a04ecc7e5
+rendered_size_px     121 x 19
+png_file_size        9283
+```
+
+macOS arm64 vs Linux x64 comparison at `3cdc1a8`:
+
+```text
+ok    document_fingerprint
+ok    source_fingerprint
+ok    payload_sha256
+ok    report_document_fingerprint
+ok    all_evidence_grounded
+ok    check_identity_status_page
+diff  evidence_bbox
+ok    evidence_crop_ref
+diff  document_json_sha256
+diff  verification_report_sha256
+ok    descriptor_count
+ok    descriptor_names
+diff  descriptor_sha256
+diff  descriptor_bbox
+ok    rendered_size
+ok    png_count
+ok    png_names
+diff  png_sha256
+ok    png_file_size
+```
+
+Conclusion after the logical crop-ref follow-up:
+
+```text
+Native crop artifact references are now stable across macOS arm64 and Linux x64 for this fixture.
+Rendered crop bytes, descriptor bytes, report bytes, and exact bboxes still differ across platforms.
+Cross-platform rendered crop bit-identical output is still not claimed.
+```
