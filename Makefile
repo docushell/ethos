@@ -3,8 +3,10 @@ PYTHON ?= python3
 ETHOS_BIN ?= $(ROOT)/target/debug/ethos
 VERIFY_ALPHA_OUT ?= $(ROOT)/target/verify-alpha
 VERIFY_RENDERED_CROPS_OUT ?= $(ROOT)/target/verify-rendered-crops
+COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
+COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 
-.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops
+.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -29,3 +31,6 @@ verify-alpha: $(ETHOS_BIN)
 verify-rendered-crops: $(ETHOS_BIN)
 	$(PYTHON) examples/verify/check_rendered_crops.py --repo-root $(ROOT) --ethos-bin $(ETHOS_BIN) --out-dir $(VERIFY_RENDERED_CROPS_OUT)
 	git diff --check
+
+compare-rendered-crops:
+	$(PYTHON) examples/verify/compare_rendered_crop_runs.py --left-run $(COMPARE_RENDERED_CROPS_LEFT) --right-run $(COMPARE_RENDERED_CROPS_RIGHT)

@@ -208,6 +208,25 @@ citation twice with `--crop-source-pdf`, then compares the parsed document JSON,
 verification report JSON, crop descriptor JSON, and rendered PNG bytes across both runs. This
 is not a cross-platform rendered-image determinism claim.
 
+To classify two rendered-crop runs explicitly:
+
+```bash
+make compare-rendered-crops \
+  COMPARE_RENDERED_CROPS_LEFT=target/verify-rendered-crops/run1 \
+  COMPARE_RENDERED_CROPS_RIGHT=target/verify-rendered-crops/run2
+```
+
+The compare helper separates logical evidence identity from rendered artifact byte equality.
+It is expected to pass both layers for same-host repeated runs with pinned PDFium. A
+2026-06-14 macOS arm64 vs Linux x64 check on commit `64541dd` preserved document
+fingerprint and `payload_sha256`, but rendered artifact byte equality failed because the
+evidence bbox differed slightly across platforms. The honest claim is therefore:
+
+```text
+Ethos rendered crop artifacts are same-host repeatable with pinned PDFium.
+Cross-platform rendered crop bit-identical output is not currently proven.
+```
+
 ## Verification Contract
 
 The demo is covered by `crates/ethos-cli/tests/verify.rs` and
