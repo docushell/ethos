@@ -16,6 +16,7 @@ use std::env;
 use std::ffi::{c_char, c_int, c_ulong, c_void, CString};
 use std::path::{Path, PathBuf};
 use std::ptr;
+use std::slice;
 use std::sync::{Mutex, OnceLock};
 
 use ethos_core::codes::WarningCode;
@@ -168,6 +169,31 @@ pub struct GeometryProbeRun {
     pub font_size_q: Option<i64>,
 }
 
+/// Raw crop rendered from a PDF page.
+///
+/// This is the pre-encoding renderer boundary used by `ethos-render` work. It
+/// deliberately exposes raw BGRA bytes and a byte hash before PNG/JPEG encoding
+/// is added, so callers can test the renderer itself before artifact encoding.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RawCrop {
+    /// 1-based source page index.
+    pub page_index: u32,
+    /// Source bbox in Ethos quantized top-left coordinates.
+    pub bbox: QRect,
+    /// Crop width in pixels.
+    pub width_px: u32,
+    /// Crop height in pixels.
+    pub height_px: u32,
+    /// Bytes per crop row.
+    pub stride: u32,
+    /// Pixel format for `bytes`.
+    pub pixel_format: &'static str,
+    /// SHA-256 hex digest of `bytes`.
+    pub sha256: String,
+    /// Tightly packed crop bytes.
+    pub bytes: Vec<u8>,
+}
+
 impl PdfiumBackend {
     /// Construct a backend using an explicit PDFium dynamic library path.
     pub fn from_library_path(path: impl Into<PathBuf>) -> Self {
@@ -252,6 +278,38 @@ impl PdfiumBackend {
             backend: self.manifest(),
             pages,
         })
+    }
+
+    /// Render a raw BGRA crop for a 1-based page and quantized top-left bbox.
+    ///
+    /// The current boundary renders the page at 1 pixel per PDF point, then
+    /// crops the requested bbox. It is intentionally simple; direct crop-window
+    /// rendering can replace it later without changing the output contract.
+    pub fn render_crop_raw(
+        &self,
+        pdf_bytes: &[u8],
+        page_index: u32,
+        bbox: QRect,
+    ) -> Result<RawCrop, EthosError> {
+        validate_pdf_header(pdf_bytes)?;
+        if page_index == 0 {
+            return Err(EthosError::new(
+                ErrorCode::PageLimitExceeded,
+                "page selection out of document range",
+            ));
+        }
+        let _guard = PDFIUM_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let runtime = PdfiumRuntime::load(self)?;
+        let doc = runtime.load_document(pdf_bytes)?;
+        let page_count = doc.page_count()?;
+        if page_index > page_count {
+            return Err(EthosError::new(
+                ErrorCode::PageLimitExceeded,
+                "page selection out of document range",
+            ));
+        }
+        let page = doc.load_page(page_index - 1)?;
+        page.render_crop_raw(page_index, bbox)
     }
 }
 
@@ -363,6 +421,52 @@ fn validate_pdf_header(pdf_bytes: &[u8]) -> Result<(), EthosError> {
 fn quantize_coord(value: f64) -> Result<i64, EthosError> {
     quantize(value, QUANTUM_PER_POINT)
         .map_err(|_| EthosError::new(ErrorCode::InternalError, "coordinate quantization failed"))
+}
+
+fn pixel_extent(points: f64) -> Result<u32, EthosError> {
+    if !points.is_finite() || points <= 0.0 {
+        return Err(EthosError::new(
+            ErrorCode::CorruptPdf,
+            "PDF page has invalid dimensions",
+        ));
+    }
+    if points.ceil() > f64::from(c_int::MAX) {
+        return Err(EthosError::internal("render bitmap dimension overflow"));
+    }
+    Ok(points.ceil() as u32)
+}
+
+fn floor_quantized_pixel(value: i64) -> i64 {
+    value.div_euclid(i64::from(QUANTUM_PER_POINT))
+}
+
+fn ceil_quantized_pixel(value: i64) -> i64 {
+    let quantum = i64::from(QUANTUM_PER_POINT);
+    value
+        .checked_add(quantum - 1)
+        .unwrap_or(i64::MAX)
+        .div_euclid(quantum)
+}
+
+fn clamp_pixel(value: i64, max: u32) -> u32 {
+    value.clamp(0, i64::from(max)) as u32
+}
+
+fn crop_window(
+    bbox: QRect,
+    page_width_px: u32,
+    page_height_px: u32,
+) -> Result<(u32, u32, u32, u32), EthosError> {
+    let x0 = clamp_pixel(floor_quantized_pixel(bbox.x0), page_width_px);
+    let y0 = clamp_pixel(floor_quantized_pixel(bbox.y0), page_height_px);
+    let x1 = clamp_pixel(ceil_quantized_pixel(bbox.x1), page_width_px);
+    let y1 = clamp_pixel(ceil_quantized_pixel(bbox.y1), page_height_px);
+    if x0 >= x1 || y0 >= y1 {
+        return Err(EthosError::internal(
+            "crop bbox has no positive pixel extent",
+        ));
+    }
+    Ok((x0, y0, x1 - x0, y1 - y0))
 }
 
 fn qrect_from_pdfium_char_box(
@@ -655,6 +759,7 @@ fn sha256_file(path: &Path) -> Result<String, EthosError> {
 type FpdfDocument = *mut c_void;
 type FpdfPage = *mut c_void;
 type FpdfTextPage = *mut c_void;
+type FpdfBitmap = *mut c_void;
 
 #[cfg(not(windows))]
 type FpdfInitLibrary = unsafe extern "C" fn();
@@ -762,6 +867,33 @@ type FpdfTextIsGenerated = unsafe extern "system" fn(FpdfTextPage, c_int) -> c_i
 type FpdfTextIsHyphen = unsafe extern "C" fn(FpdfTextPage, c_int) -> c_int;
 #[cfg(windows)]
 type FpdfTextIsHyphen = unsafe extern "system" fn(FpdfTextPage, c_int) -> c_int;
+#[cfg(not(windows))]
+type FpdfBitmapCreate = unsafe extern "C" fn(c_int, c_int, c_int) -> FpdfBitmap;
+#[cfg(windows)]
+type FpdfBitmapCreate = unsafe extern "system" fn(c_int, c_int, c_int) -> FpdfBitmap;
+#[cfg(not(windows))]
+type FpdfBitmapDestroy = unsafe extern "C" fn(FpdfBitmap);
+#[cfg(windows)]
+type FpdfBitmapDestroy = unsafe extern "system" fn(FpdfBitmap);
+#[cfg(not(windows))]
+type FpdfBitmapFillRect = unsafe extern "C" fn(FpdfBitmap, c_int, c_int, c_int, c_int, c_ulong);
+#[cfg(windows)]
+type FpdfBitmapFillRect =
+    unsafe extern "system" fn(FpdfBitmap, c_int, c_int, c_int, c_int, c_ulong);
+#[cfg(not(windows))]
+type FpdfBitmapGetBuffer = unsafe extern "C" fn(FpdfBitmap) -> *mut c_void;
+#[cfg(windows)]
+type FpdfBitmapGetBuffer = unsafe extern "system" fn(FpdfBitmap) -> *mut c_void;
+#[cfg(not(windows))]
+type FpdfBitmapGetStride = unsafe extern "C" fn(FpdfBitmap) -> c_int;
+#[cfg(windows)]
+type FpdfBitmapGetStride = unsafe extern "system" fn(FpdfBitmap) -> c_int;
+#[cfg(not(windows))]
+type FpdfRenderPageBitmap =
+    unsafe extern "C" fn(FpdfBitmap, FpdfPage, c_int, c_int, c_int, c_int, c_int, c_int);
+#[cfg(windows)]
+type FpdfRenderPageBitmap =
+    unsafe extern "system" fn(FpdfBitmap, FpdfPage, c_int, c_int, c_int, c_int, c_int, c_int);
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default)]
@@ -798,6 +930,12 @@ struct PdfiumFunctions {
     text_get_font_info: Option<FpdfTextGetFontInfo>,
     text_is_generated: Option<FpdfTextIsGenerated>,
     text_is_hyphen: Option<FpdfTextIsHyphen>,
+    bitmap_create: Option<FpdfBitmapCreate>,
+    bitmap_destroy: Option<FpdfBitmapDestroy>,
+    bitmap_fill_rect: Option<FpdfBitmapFillRect>,
+    bitmap_get_buffer: Option<FpdfBitmapGetBuffer>,
+    bitmap_get_stride: Option<FpdfBitmapGetStride>,
+    render_page_bitmap: Option<FpdfRenderPageBitmap>,
 }
 
 impl PdfiumFunctions {
@@ -830,6 +968,12 @@ impl PdfiumFunctions {
                 text_get_font_info: library.optional_symbol(b"FPDFText_GetFontInfo\0"),
                 text_is_generated: library.optional_symbol(b"FPDFText_IsGenerated\0"),
                 text_is_hyphen: library.optional_symbol(b"FPDFText_IsHyphen\0"),
+                bitmap_create: library.optional_symbol(b"FPDFBitmap_Create\0"),
+                bitmap_destroy: library.optional_symbol(b"FPDFBitmap_Destroy\0"),
+                bitmap_fill_rect: library.optional_symbol(b"FPDFBitmap_FillRect\0"),
+                bitmap_get_buffer: library.optional_symbol(b"FPDFBitmap_GetBuffer\0"),
+                bitmap_get_stride: library.optional_symbol(b"FPDFBitmap_GetStride\0"),
+                render_page_bitmap: library.optional_symbol(b"FPDF_RenderPageBitmap\0"),
             })
         }
     }
@@ -1030,6 +1174,29 @@ impl PdfPage<'_> {
         };
         text_page.extract_runs(page, self.height_pts(), next_span, spans)
     }
+
+    fn render_crop_raw(&self, page_index: u32, bbox: QRect) -> Result<RawCrop, EthosError> {
+        let bitmap = RenderBitmap::render_page(
+            self.funcs,
+            self.handle,
+            pixel_extent(self.width_pts())?,
+            pixel_extent(self.height_pts())?,
+        )?;
+        let (x0, y0, width_px, height_px) = crop_window(bbox, bitmap.width_px, bitmap.height_px)?;
+        let bytes = bitmap.crop_bytes(x0, y0, width_px, height_px)?;
+        Ok(RawCrop {
+            page_index,
+            bbox,
+            width_px,
+            height_px,
+            stride: width_px
+                .checked_mul(4)
+                .ok_or_else(|| EthosError::internal("crop stride overflow"))?,
+            pixel_format: "bgra_8u",
+            sha256: ethos_core::c14n::sha256_hex_bytes(&bytes),
+            bytes,
+        })
+    }
 }
 
 impl Drop for PdfPage<'_> {
@@ -1042,6 +1209,149 @@ impl Drop for PdfPage<'_> {
 struct PdfTextPage<'a> {
     funcs: &'a PdfiumFunctions,
     handle: FpdfTextPage,
+}
+
+struct RenderBitmap<'a> {
+    funcs: &'a PdfiumFunctions,
+    handle: FpdfBitmap,
+    width_px: u32,
+    height_px: u32,
+    stride: usize,
+}
+
+impl RenderBitmap<'_> {
+    fn render_page(
+        funcs: &PdfiumFunctions,
+        page: FpdfPage,
+        width_px: u32,
+        height_px: u32,
+    ) -> Result<RenderBitmap<'_>, EthosError> {
+        let Some(bitmap_create) = funcs.bitmap_create else {
+            return Err(EthosError::internal(
+                "pdfium library is missing bitmap render symbols",
+            ));
+        };
+        let Some(bitmap_fill_rect) = funcs.bitmap_fill_rect else {
+            return Err(EthosError::internal(
+                "pdfium library is missing bitmap render symbols",
+            ));
+        };
+        let Some(render_page_bitmap) = funcs.render_page_bitmap else {
+            return Err(EthosError::internal(
+                "pdfium library is missing bitmap render symbols",
+            ));
+        };
+        let width = c_int::try_from(width_px)
+            .map_err(|_| EthosError::internal("render bitmap width overflow"))?;
+        let height = c_int::try_from(height_px)
+            .map_err(|_| EthosError::internal("render bitmap height overflow"))?;
+
+        // SAFETY: width/height are positive bounded c_int values. Bitmap is destroyed by Drop.
+        let handle = unsafe { bitmap_create(width, height, 1) };
+        if handle.is_null() {
+            return Err(EthosError::internal(
+                "pdfium failed to allocate render bitmap",
+            ));
+        }
+        let mut bitmap = RenderBitmap {
+            funcs,
+            handle,
+            width_px,
+            height_px,
+            stride: 0,
+        };
+        // SAFETY: handle is a live bitmap. Fill with opaque white for deterministic background.
+        unsafe { bitmap_fill_rect(bitmap.handle, 0, 0, width, height, 0xFFFF_FFFF) };
+        // SAFETY: handle and page are live. Render uses no callbacks and writes into the bitmap.
+        unsafe { render_page_bitmap(bitmap.handle, page, 0, 0, width, height, 0, 0) };
+        bitmap.stride = bitmap.read_stride()?;
+        Ok(bitmap)
+    }
+
+    fn read_stride(&self) -> Result<usize, EthosError> {
+        let Some(bitmap_get_stride) = self.funcs.bitmap_get_stride else {
+            return Err(EthosError::internal(
+                "pdfium library is missing bitmap render symbols",
+            ));
+        };
+        // SAFETY: handle is a live bitmap.
+        let stride = unsafe { bitmap_get_stride(self.handle) };
+        if stride <= 0 {
+            return Err(EthosError::internal(
+                "pdfium render bitmap has invalid stride",
+            ));
+        }
+        usize::try_from(stride).map_err(|_| EthosError::internal("render bitmap stride overflow"))
+    }
+
+    fn crop_bytes(
+        &self,
+        x0: u32,
+        y0: u32,
+        width_px: u32,
+        height_px: u32,
+    ) -> Result<Vec<u8>, EthosError> {
+        let Some(bitmap_get_buffer) = self.funcs.bitmap_get_buffer else {
+            return Err(EthosError::internal(
+                "pdfium library is missing bitmap render symbols",
+            ));
+        };
+        // SAFETY: handle is a live bitmap.
+        let ptr = unsafe { bitmap_get_buffer(self.handle) };
+        if ptr.is_null() {
+            return Err(EthosError::internal("pdfium render bitmap has null buffer"));
+        }
+        let full_len = self
+            .stride
+            .checked_mul(
+                usize::try_from(self.height_px)
+                    .map_err(|_| EthosError::internal("render bitmap height overflow"))?,
+            )
+            .ok_or_else(|| EthosError::internal("render bitmap buffer length overflow"))?;
+        // SAFETY: PDFium owns a live bitmap buffer of stride * height bytes for this bitmap.
+        let full = unsafe { slice::from_raw_parts(ptr.cast::<u8>(), full_len) };
+
+        let x0 = usize::try_from(x0).map_err(|_| EthosError::internal("crop x overflow"))?;
+        let y0 = usize::try_from(y0).map_err(|_| EthosError::internal("crop y overflow"))?;
+        let width =
+            usize::try_from(width_px).map_err(|_| EthosError::internal("crop width overflow"))?;
+        let height =
+            usize::try_from(height_px).map_err(|_| EthosError::internal("crop height overflow"))?;
+        let row_bytes = width
+            .checked_mul(4)
+            .ok_or_else(|| EthosError::internal("crop row width overflow"))?;
+        let mut out = Vec::with_capacity(
+            row_bytes
+                .checked_mul(height)
+                .ok_or_else(|| EthosError::internal("crop buffer length overflow"))?,
+        );
+        for row in 0..height {
+            let src_start = y0
+                .checked_add(row)
+                .and_then(|y| y.checked_mul(self.stride))
+                .and_then(|base| base.checked_add(x0.checked_mul(4)?))
+                .ok_or_else(|| EthosError::internal("crop source offset overflow"))?;
+            let src_end = src_start
+                .checked_add(row_bytes)
+                .ok_or_else(|| EthosError::internal("crop source row overflow"))?;
+            if src_end > full.len() {
+                return Err(EthosError::internal(
+                    "crop source row exceeds render bitmap",
+                ));
+            }
+            out.extend_from_slice(&full[src_start..src_end]);
+        }
+        Ok(out)
+    }
+}
+
+impl Drop for RenderBitmap<'_> {
+    fn drop(&mut self) {
+        if let Some(bitmap_destroy) = self.funcs.bitmap_destroy {
+            // SAFETY: handle is a live FPDF_BITMAP and is destroyed exactly once here.
+            unsafe { bitmap_destroy(self.handle) };
+        }
+    }
 }
 
 impl PdfTextPage<'_> {
@@ -1856,6 +2166,70 @@ mod tests {
         let err = backend.page_count(b"%PDF-1.7\n").unwrap_err();
         assert_eq!(err.code, ErrorCode::InternalError);
         assert!(err.message.contains(PDFIUM_LIBRARY_PATH_ENV));
+    }
+
+    #[test]
+    fn render_crop_raw_rejects_zero_page_before_library_load() {
+        let err = PdfiumBackend::default()
+            .render_crop_raw(b"%PDF-1.7\n", 0, QRect::new(0, 0, 100, 100).unwrap())
+            .unwrap_err();
+        assert_eq!(err.code, ErrorCode::PageLimitExceeded);
+        assert_eq!(err.message, "page selection out of document range");
+    }
+
+    #[test]
+    fn crop_window_uses_outward_quantized_pixel_bounds() {
+        assert_eq!(
+            crop_window(QRect::new(7392, 5482, 19378, 7226).unwrap(), 300, 144).unwrap(),
+            (73, 54, 121, 19)
+        );
+        assert_eq!(
+            crop_window(QRect::new(-50, -50, 30100, 14500).unwrap(), 300, 144).unwrap(),
+            (0, 0, 300, 144)
+        );
+
+        let err = crop_window(QRect::new(100, 100, 101, 101).unwrap(), 1, 1).unwrap_err();
+        assert_eq!(err.code, ErrorCode::InternalError);
+        assert_eq!(err.message, "crop bbox has no positive pixel extent");
+    }
+
+    #[test]
+    fn render_crop_raw_is_deterministic_when_pdfium_is_configured() {
+        let Some(path) = env::var_os(PDFIUM_LIBRARY_PATH_ENV).map(PathBuf::from) else {
+            return;
+        };
+        if !path.is_file() {
+            return;
+        }
+
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/synthetic/simple-text/document.pdf");
+        let pdf_bytes = std::fs::read(fixture).unwrap();
+        let bbox = QRect::new(7392, 5482, 19378, 7226).unwrap();
+        let backend = PdfiumBackend::default();
+
+        let first = backend.render_crop_raw(&pdf_bytes, 1, bbox).unwrap();
+        let second = backend.render_crop_raw(&pdf_bytes, 1, bbox).unwrap();
+
+        assert_eq!(first, second);
+        assert_eq!(first.page_index, 1);
+        assert_eq!(first.bbox, bbox);
+        assert_eq!(first.width_px, 121);
+        assert_eq!(first.height_px, 19);
+        assert_eq!(first.stride, first.width_px * 4);
+        assert_eq!(first.pixel_format, "bgra_8u");
+        assert_eq!(
+            first.bytes.len(),
+            usize::try_from(first.stride * first.height_px).unwrap()
+        );
+        assert_eq!(
+            first.sha256,
+            ethos_core::c14n::sha256_hex_bytes(&first.bytes)
+        );
+        assert!(first
+            .bytes
+            .chunks_exact(4)
+            .any(|pixel| pixel != [255, 255, 255, 255]));
     }
 
     #[test]
