@@ -158,7 +158,7 @@ Project rename decision: the project name is Ethos.
 
 Package identifiers to validate before public publishing:
 
-- Repository: `ethos`
+- GitHub source repositories: `docushell/ethos`, `docushell/ethos-bench`
 - CLI binary: `ethos`
 - Public architecture modules: `ethos-doc`, `ethos-rag`, `ethos-verify`
 - Reserved public package/module names: `ethos-doc`, `ethos-rag`, `ethos-verify`, even if `ethos-doc` and `ethos-rag` remain facade modules rather than published crates.
@@ -166,7 +166,7 @@ Package identifiers to validate before public publishing:
 - Internal Rust namespace: `ethos_core` and sibling crates
 - Python package: `ethos-pdf`
 - Python import: `ethos_pdf`
-- Node package: `@ethos-pdf/core`
+- Node package: `@docushell/ethos-pdf`
 - MCP package: `ethos-mcp`
 
 The name decision is closed, but registry availability, trademark risk, and discoverability must still be validated before public package publication. If a specific package identifier is unavailable, rename that package identifier by ADR before any public package, benchmark artifact, or launch announcement.
@@ -642,7 +642,7 @@ assert report.all_evidence_grounded
 Node is a functional beta surface in Release 1. It must be usable for local parse and verification workflows, but it is not a GA blocker for the stable CLI/Python Release 1 surface.
 
 ```ts
-import { parsePdf, verifyCitations } from "@ethos-pdf/core";
+import { parsePdf, verifyCitations } from "@docushell/ethos-pdf";
 
 const result = await parsePdf("report.pdf", { formats: ["json", "markdown", "chunks"] });
 const verification = await verifyCitations(result.document, citations);

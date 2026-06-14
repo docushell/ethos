@@ -1,6 +1,6 @@
 # ADR-0006: Package Identifiers (Registry / Trademark Validation)
 
-- Status: **Proposed — public core crate renamed; reservation and trademark validation still block public artifacts**
+- Status: **Proposed — Docushell ownership selected; reservation and trademark validation still block public artifacts**
 - Date: 2026-06-11
 - Governs: IMPLEMENTATION_PLAN §2 row 0.11; PRD §3.1; risk R8
 
@@ -20,15 +20,16 @@ The project name is **Ethos**; `ethos` is a loaded name with collision/trademark
 | Retired candidate | `ethos-core` | crates.io | 2026-06-14: exists | n/a |
 | Crates | `ethos-*` (pdf, layout, tables, security, render, cli, mcp) | crates.io | 2026-06-14: checked not found | ☐ |
 | Python | `ethos-pdf` (import `ethos_pdf`) | PyPI | 2026-06-14: not found | ☐ |
-| Node | `@ethos-pdf/core` | npm | 2026-06-14: package not found | ☐ (scope: `@ethos-pdf`) |
+| Node | `@docushell/ethos-pdf` | npm | 2026-06-15: package not found | ☐ (scope: `@docushell`) |
+| GitHub source | `docushell/ethos`, `docushell/ethos-bench` | GitHub | 2026-06-15: owner exists | n/a |
 | Schema namespace | `urn:ethos:schema:*` | — (URN, no registry claim) | n/a | n/a |
 
 ## Validation checklist (devrel owner)
 
 - [x] crates.io name search for every `ethos-*` identifier above (conflict: `ethos-core`; replacement `ethos-doc-core` selected and checked)
 - [x] PyPI search `ethos-pdf` (+ pep503 normalized forms)
-- [x] npm package lookup `@ethos-pdf/core` (scope/package reservation still pending)
-- [x] GitHub org/repo collision scan (preliminary; 2026-06-14)
+- [x] npm package lookup `@docushell/ethos-pdf` (scope/package reservation still pending)
+- [x] GitHub owner/repo validation (`docushell` selected; no separate `ethos-pdf` GitHub org)
 - [ ] Trademark scan (software classes) for "Ethos" in primary jurisdictions
 - [x] Record outcomes here; if any conflict → rename via this ADR before any public artifact (risk R8 trigger)
 
@@ -107,6 +108,18 @@ This is a public package identifier decision only. The internal Rust crate direc
 
 Outcome: `ethos-doc-core` should replace `ethos-core` in public-package planning. This ADR still cannot be accepted until reservation ownership and trademark/legal validation are complete.
 
+### 2026-06-15 — Docushell ownership selected
+
+GitHub source ownership is standardized under the existing `docushell` owner. The canonical source repositories are `docushell/ethos` and `docushell/ethos-bench`; no separate `ethos-pdf` GitHub organization should be created for this project.
+
+Validation:
+
+- `https://api.github.com/users/docushell` returned 200.
+- `https://api.github.com/orgs/docushell` returned 404, so `docushell` appears as a GitHub user owner rather than an organization endpoint.
+- `https://registry.npmjs.org/%40docushell%2Fethos-pdf` returned 404 not found.
+
+Outcome: npm planning moves from `@ethos-pdf/core` to `@docushell/ethos-pdf` so package ownership aligns with the existing Docushell GitHub owner. The historical `@ethos-pdf/core` checks remain recorded above but are no longer the selected npm package plan.
+
 ## Decision
 
-Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
+Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. GitHub source ownership and npm scope should use Docushell (`docushell/ethos`, `docushell/ethos-bench`, `@docushell/ethos-pdf`). Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.

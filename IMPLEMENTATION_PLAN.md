@@ -48,7 +48,7 @@ Accepted ADR-0001 staffing (not in PRD v3.5): 1 senior Rust engineer + 0.25 benc
 | 0.8 | Pin Gate Zero competitor versions: **OpenDataLoader, EdgeParse, LiteParse, PyMuPDF4LLM** (exact versions + hashes) | Benchmark owner | `benchmarks/competitors.lock.json` | 1.3, 11.2, 16 |
 | 0.9 | Seed `docs/landscape-log.md` (June 2026 validation + 14 watchlist incl. LiteParse, Kreuzberg) | Devrel | landscape-log.md | 2 |
 | 0.10 | Repo governance and hygiene: SECURITY.md, CONTRIBUTING.md (DCO), CODE_OF_CONDUCT.md, GOVERNANCE.md, maintainer ladder, honest-scope README draft (12 text), fixture contribution guide, public roadmap/discussion-channel plan, issue templates, triage SLO | Devrel | files in repo root + `docs/roadmap.md` | 12 |
-| 0.11 | **Ethos package-name registry/trademark validation due by Milestone A exit**: `ethos` CLI, `ethos-doc`, `ethos-rag`, `ethos-verify`, `ethos-pdf` (PyPI), `@ethos-pdf/core` (npm), `ethos-*` (crates.io). Reserve `ethos-doc` and `ethos-rag` even if they remain facade modules. Project name is Ethos; package identifiers may change by ADR if unavailable. | Devrel | ADR-0006 (package identifiers) before A exit | 3.1, 15 |
+| 0.11 | **Ethos package-name registry/trademark validation due by Milestone A exit**: `ethos` CLI, `ethos-doc`, `ethos-rag`, `ethos-verify`, `ethos-pdf` (PyPI), `@docushell/ethos-pdf` (npm), `ethos-*` (crates.io). Reserve `ethos-doc` and `ethos-rag` even if they remain facade modules. Project name is Ethos; package identifiers may change by ADR if unavailable. | Devrel | ADR-0006 (package identifiers) before A exit | 3.1, 15 |
 
 Week 0 exit: all eleven rows done. 0.1-0.3 are hard blockers for Gate Zero validity (PRD 1.3: corpus changes after kickoff void the measurement). 0.10-0.11 are launch-trust blockers: do not publish packages, public benchmarks, or launch announcements before governance and naming decisions exist.
 
@@ -108,7 +108,7 @@ ethos/
     ethos-layout-ml/           # [F / Release 2] optional, never base
   bindings/
     python/                   # [B scaffold, E stable] PyO3/maturin -> package `ethos-pdf`, import `ethos_pdf`
-    node/                     # [D/E conditional] napi-rs -> `@ethos-pdf/core` if staffed or accepted by release-scope ADR
+    node/                     # [D/E conditional] napi-rs -> `@docushell/ethos-pdf` if staffed or accepted by release-scope ADR
     wasm/                     # [Release 2-or-later spike, 15]
   adapters/
     grounding/                # [A stub, B alpha, D v1] opendataloader-json first; liteparse/docling-json later if useful
@@ -184,7 +184,7 @@ Architectural invariants enforced from commit one:
 | **WS-SECURITY** | hidden/off-page/low-contrast, annotations/actions/attachments/scripts/links; security report; default-chunk exclusion | PRD 4.1, 8, 10 | `ethos-security`, `security_report.json`, security fixtures | C |
 | **WS-VERIFY-ALPHA** | early trust layer: A-stage ODL adapter stub, then `ethos verify` alpha, verification report/config schema, capability downgrades, foreign-parser demo | PRD 1.5, 5.4, 8 | `adapters/grounding/opendataloader-json` stub in A; `ethos-verify` alpha and demo fixture in B | A stub, B alpha |
 | **WS-VERIFY** | harden verify engine to v1, add crop-aware L2 evidence plumbing, expand adapter tests | PRD 5.4, 8 | `ethos-verify` v1, adapter test fixtures, `ethos verify` docs | D |
-| **WS-SURFACES** | Python binding scaffold (B) and stable CLI/Python packaging (E); **functional Node binding (beta)** + **MCP server (experimental) with 9.4 security rules** only if staffed or accepted by release-scope ADR | PRD 9 | `ethos-pdf` wheels; conditional `@ethos-pdf/core`, `ethos-mcp` | B, D/E |
+| **WS-SURFACES** | Python binding scaffold (B) and stable CLI/Python packaging (E); **functional Node binding (beta)** + **MCP server (experimental) with 9.4 security rules** only if staffed or accepted by release-scope ADR | PRD 9 | `ethos-pdf` wheels; conditional `@docushell/ethos-pdf`, `ethos-mcp` | B, D/E |
 | **WS-PUBLISH** | internal benchmark snapshots (A-D), **public benchmark report + proof-of-trust demos + stable CLI/Python docs at E only**, README, landscape log | PRD 11.3, 11.4, 12, 13-E | publications, README, demos, ecosystem examples | A->E |
 | **WS-FALLBACK** (dormant) | fallback packaging posture: standalone `ethos-verify` + chunk/citation tooling over foreign parser output if parser-core stops | PRD 1.3, 1.5; Gate Zero ADR | activates on G2/G3 failure, G1 retry failure, or decider fallback | - |
 
@@ -309,7 +309,7 @@ On G2/G3 failure, G1 retry failure, or decider-selected G1 fallback, Ethos pivot
 | Lane | Deliverables | Acceptance (PRD 13-D exit) | PRD |
 | --- | --- | --- | --- |
 | WS-VERIFY | Harden Milestone B alpha to `verify_citations` v1: claim kinds, modes, per-check `semantic_unverified`, `all_evidence_grounded` per 8 definition, verification-config hash; ODL adapter hardening; capability downgrade warnings | Verification works over at least one foreign parser output with stable report schema | 5.4, 8 |
-| WS-SURFACES | **Crop API** - `crop_element` exposed as a first-class deliverable across CLI/Python and any staffed beta/experimental surfaces, backed by the `ethos-render` crop primitive from Milestone C. **Functional Node binding labeled beta** (`@ethos-pdf/core`) and **MCP server labeled experimental** require either a staffed bindings/infra owner or an explicit release-scope ADR before public claims. | Stable CLI/Python can parse, chunk, cite, verify, and crop; Node/MCP either smoke-test with labels or are re-scoped before E | 9.3, 9.4, 13-D |
+| WS-SURFACES | **Crop API** - `crop_element` exposed as a first-class deliverable across CLI/Python and any staffed beta/experimental surfaces, backed by the `ethos-render` crop primitive from Milestone C. **Functional Node binding labeled beta** (`@docushell/ethos-pdf`) and **MCP server labeled experimental** require either a staffed bindings/infra owner or an explicit release-scope ADR before public claims. | Stable CLI/Python can parse, chunk, cite, verify, and crop; Node/MCP either smoke-test with labels or are re-scoped before E | 9.3, 9.4, 13-D |
 | WS-ENGINE | Sandbox/subprocess backend build-out for service deployments (rlimits + narrow IPC per 6.3) | Sandbox mode passes threat-model review | 6.3 |
 
 ### Milestone E (weeks 31-40): Public Beta (PRD 13-E) - first public claim
@@ -331,7 +331,7 @@ On G2/G3 failure, G1 retry failure, or decider-selected G1 fallback, Ethos pivot
 | `ci.yml` | every PR | fmt, clippy (incl. disallowed network APIs), cargo-deny (license/advisory/dep-allowlist, deny copyleft/custom-condition deps in base), unit+fixture tests, schema validation, deterministic-profile validation, c14n idempotence property tests, same-platform double-parse byte-diff, no-network base check |
 | `determinism.yml` | nightly + `contract-change` PRs | Gate Zero platforms first (macOS arm64 + Linux x64) -> parse fixtures -> fingerprint + canonical-payload comparison -> fail on any divergence; Windows x64 added no later than Milestone B exit, week 14; unresolved Windows divergence blocks or re-scopes Public Beta (PRD 14) |
 | `bench.yml` | weekly + tags | harness vs pinned ODL/EdgeParse/LiteParse/PyMuPDF4LLM; uploads results JSON + repro attestation; never prose claims |
-| `release.yml` | tags | reproducible builds, pinned toolchain; `ethos` CLI, `ethos-pdf` wheels, `@ethos-pdf/core` beta npm only if staffed or accepted by release-scope ADR; project-maintained PDFium Phase 2 builds required for Public Beta; fonts bundled; <= 30 MB footprint release gate for the stable base surface; profile manifest (flags, hashes, provenance) and third-party license/NOTICE manifest published with artifacts |
+| `release.yml` | tags | reproducible builds, pinned toolchain; `ethos` CLI, `ethos-pdf` wheels, `@docushell/ethos-pdf` beta npm only if staffed or accepted by release-scope ADR; project-maintained PDFium Phase 2 builds required for Public Beta; fonts bundled; <= 30 MB footprint release gate for the stable base surface; profile manifest (flags, hashes, provenance) and third-party license/NOTICE manifest published with artifacts |
 
 Release engineering: lockstep workspace versions; output-changing merges bump versions with CHANGELOG (PRD 5.1); artifacts content-addressed in the profile manifest (PRD 6.1); network-egress runtime test runs in `ci.yml` (4 invariant 5c).
 
