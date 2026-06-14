@@ -14,7 +14,7 @@ This record answers two separate questions:
 
 - Validation subject commit: `64541dd799cb0fbf1e66fb34be956e64ed6b8429`
 - Short commit: `64541dd`
-- Bundle used for Linux transfer: `/tmp/ethos-64541dd.bundle`
+- Bundle used for Linux transfer: local temporary bundle for commit `64541dd`
 - Bundle SHA-256: `0d32451b1f0ca5932ad50d10e8e409aaf7779ee2bdf13b6bb2a5529ba04e2737`
 
 The comparison helper was added later in commit `c76dbc9` and was used to classify the
@@ -23,14 +23,14 @@ same archived macOS/Linux outputs. It does not change the rendered-crop output p
 
 ## macOS arm64 Environment
 
-- Repo path: `/Users/<private-user-pattern>/Desktop/Stuff/project/repo/ethos`
+- Repo path: local macOS checkout
 - Validated commit: `64541dd`
 - Local unrelated dirty files at validation time: `README.md`,
   `docs/benchmark-plan.md`
-- PDFium library: `/private/tmp/ethos-pdfium/lib/libpdfium.dylib`
+- PDFium library: local pinned macOS arm64 PDFium dylib
 - PDFium library SHA-256:
   `1bc45b15466b34cef96641ce25c77a876e70010c6b114f909dda2f5325fc5bd7`
-- PDFium artifact: `/private/tmp/ethos-pdfium-mac-arm64.tgz`
+- PDFium artifact: local pinned macOS arm64 PDFium archive
 - PDFium artifact SHA-256:
   `52e94ca5aa8847934330daf3f8150c190682c5ca93831468794f8b90d4392e40`
 - `ETHOS_PDFIUM_VERSION`: `chromium/7881`
@@ -38,9 +38,9 @@ same archived macOS/Linux outputs. It does not change the rendered-crop output p
 Command:
 
 ```bash
-export ETHOS_PDFIUM_LIBRARY_PATH=/private/tmp/ethos-pdfium/lib/libpdfium.dylib
+export ETHOS_PDFIUM_LIBRARY_PATH=/path/to/libpdfium.dylib
 export ETHOS_PDFIUM_VERSION=chromium/7881
-export ETHOS_PDFIUM_ARTIFACT_PATH=/private/tmp/ethos-pdfium-mac-arm64.tgz
+export ETHOS_PDFIUM_ARTIFACT_PATH=/path/to/ethos-pdfium-mac-arm64.tgz
 
 make verify-rendered-crops
 ```
@@ -76,7 +76,7 @@ png_file_size        9283
 
 ## Linux x64 Environment
 
-- Repo path: `/scratch/<private-user-pattern>/ethos-rendered-crop-64541dd`
+- Repo path: local Linux x64 checkout restored from the commit bundle
 - Validated commit: `64541dd`
 - Working tree at validation time: clean
 - Host architecture: `x86_64`
@@ -84,10 +84,10 @@ png_file_size        9283
 - `cargo`: `1.87.0 (99624be96 2025-05-06)`
 - `python3`: `3.13.13`
 - GNU Make: `4.2.1`
-- PDFium library: `/home/<private-user-pattern>/ethos-bench/pdfium/lib/libpdfium.so`
+- PDFium library: local pinned Linux x64 PDFium shared library
 - PDFium library SHA-256:
   `f728930966f503652b92acc89b9374a2eeca00ce42e26dccd3e4b5c5161b2d64`
-- PDFium artifact: `/home/<private-user-pattern>/ethos-bench/artifacts/pdfium-linux-x64.tgz`
+- PDFium artifact: local pinned Linux x64 PDFium archive
 - PDFium artifact SHA-256:
   `1470e21b8b4a3b4ad7f85684e2da11d94f3b69a86d81dee11b9b6709d927ac1d`
 - Debug binary: `target/debug/ethos`
@@ -98,9 +98,9 @@ png_file_size        9283
 Command:
 
 ```bash
-export ETHOS_PDFIUM_LIBRARY_PATH=/home/<private-user-pattern>/ethos-bench/pdfium/lib/libpdfium.so
+export ETHOS_PDFIUM_LIBRARY_PATH=/path/to/libpdfium.so
 export ETHOS_PDFIUM_VERSION=chromium/7881
-export ETHOS_PDFIUM_ARTIFACT_PATH=/home/<private-user-pattern>/ethos-bench/artifacts/pdfium-linux-x64.tgz
+export ETHOS_PDFIUM_ARTIFACT_PATH=/path/to/pdfium-linux-x64.tgz
 
 make verify-rendered-crops
 ```
@@ -137,7 +137,7 @@ png_file_size        9283
 Transferred Linux artifact:
 
 ```text
-/tmp/ethos-rendered-crops-linux-x64-64541dd.tgz
+local Linux rendered-crop artifact archive
 SHA-256 514ced8bc9f45315a1fdc11ebea2d8982aafa148e79fee914012f5f7099ecc26
 ```
 
@@ -149,7 +149,7 @@ Comparison command shape:
 python3 examples/verify/compare_rendered_crop_runs.py \
   --left-run target/verify-rendered-crops/run1 \
   --left-label macos-arm64 \
-  --right-run /tmp/ethos-rendered-crops-linux-x64-64541dd-extract/verify-rendered-crops/run1 \
+  --right-run /path/to/extracted-linux-artifact/verify-rendered-crops/run1 \
   --right-label linux-x64
 ```
 
@@ -217,7 +217,7 @@ Validation subject commit: `3cdc1a8c75ed7a1ffbdb9001d090c5b1daa2404d`
 Bundle:
 
 ```text
-/tmp/ethos-3cdc1a8.bundle
+local temporary bundle for commit `3cdc1a8`
 SHA-256 5a482c2895793c6c851542cbfe28ed317c1dc7870d14278e6f18673da91058fe
 ```
 
@@ -231,7 +231,7 @@ SHA-256 ec1ef5f42866da6ab6505ae8e9a3f81ca11dc47cce931cb552ce9d90b6a9fd70
 Linux artifact:
 
 ```text
-/tmp/ethos-rendered-crops-linux-x64-3cdc1a8.tgz
+local Linux rendered-crop artifact archive for commit `3cdc1a8`
 SHA-256 9485cfd3982a147536862d0fbfd42122bb699f2fc37eec70d8056b4f465cb6ee
 ```
 

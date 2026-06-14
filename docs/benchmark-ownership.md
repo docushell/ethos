@@ -15,6 +15,11 @@ Generated benchmark results checked into `ethos` are evidence snapshots, not pub
 claims. Public wording must continue to point readers at `docs/execution-status.md` for the
 current pre-alpha status and blockers.
 
+Before any public repository push, run the public-release checklist in
+`docs/public-release-checklist.md`. Historical generated evidence may contain local reproduction
+paths; do not edit those files by hand. Regenerate public-safe evidence through the accepted
+benchmark flow or keep the snapshots internal.
+
 ## `ethos-bench`
 
 The sibling repository at `../ethos-bench` owns public benchmark orchestration:

@@ -4,7 +4,8 @@
 > use. Gate Zero (the go/no-go measurement for the parser core) has not run. No performance,
 > footprint, or quality claims are made until the published, reproducible benchmark report
 > exists (Milestone E).
-> Current execution status and blockers live in `docs/execution-status.md`.
+> Current execution status and blockers live in `docs/execution-status.md`; public-release
+> hygiene gates live in `docs/public-release-checklist.md`.
 
 Ethos is a verification and grounding system for document evidence. It includes a fast,
 deterministic, runtime-light PDF parser that turns born-digital PDFs into auditable grounding
@@ -66,7 +67,7 @@ a bug, never a retry. See `docs/determinism-contract.md`.
 | `adapters/grounding/` | Foreign-parser adapters into `GroundingSource` |
 | `fixtures/` | Public/synthetic test corpus — see the contribution guide |
 | `benchmarks/` | Internal Gate Zero corpus, evidence, schemas, and parser harness; public run orchestration lives in `ethos-bench` |
-| `docs/` | PRD, implementation plan, architecture, determinism contract, ADRs |
+| `docs/` | PRD, implementation plan, architecture, determinism contract, ADRs, public-release checklist |
 
 ## License
 
