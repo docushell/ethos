@@ -1,6 +1,6 @@
 # ADR-0006: Package Identifiers (Registry / Trademark Validation)
 
-- Status: **Proposed — npm and priority crates reserved; PyPI and trademark validation still block release**
+- Status: **Proposed — package reservations complete; trademark validation still blocks release**
 - Date: 2026-06-11
 - Governs: IMPLEMENTATION_PLAN §2 row 0.11; PRD §3.1; risk R8
 
@@ -20,7 +20,7 @@ The project name is **Ethos**; `ethos` is a loaded name with collision/trademark
 | Retired candidate | `ethos-core` | crates.io | 2026-06-14: exists | n/a |
 | PDF crate | `ethos-pdf` | crates.io | 2026-06-15: reserved as `0.0.0-reserved.0` | ☑ |
 | Future crates | `ethos-*` (layout, tables, security, render, cli, mcp) | crates.io | 2026-06-14: checked not found | ☐ |
-| Python | `ethos-pdf` (import `ethos_pdf`) | PyPI | 2026-06-14: not found | ☐ |
+| Python | `ethos-pdf` (import `ethos_pdf`) | PyPI | 2026-06-15: reserved as `0.0.0.post0` | ☑ |
 | Node | `@docushell/ethos-pdf` | npm | 2026-06-15: reserved as `0.0.0-reserved.0` | ☑ (`docushell`) |
 | GitHub source | `docushell/ethos`, `docushell/ethos-bench` | GitHub | 2026-06-15: owner exists | n/a |
 | Schema namespace | `urn:ethos:schema:*` | — (URN, no registry claim) | n/a | n/a |
@@ -30,6 +30,7 @@ The project name is **Ethos**; `ethos` is a loaded name with collision/trademark
 - [x] crates.io name search for every `ethos-*` identifier above (conflict: `ethos-core`; replacement `ethos-doc-core` selected and checked)
 - [x] crates.io defensive placeholder reservation for priority packages (`ethos-doc-core`, `ethos-doc`, `ethos-verify`, `ethos-rag`, `ethos-pdf`)
 - [x] PyPI search `ethos-pdf` (+ pep503 normalized forms)
+- [x] PyPI defensive placeholder reservation for `ethos-pdf`
 - [x] npm package lookup and defensive placeholder reservation for `@docushell/ethos-pdf`
 - [x] GitHub owner/repo validation (`docushell` selected; no separate `ethos-pdf` GitHub org)
 - [ ] Trademark scan (software classes) for "Ethos" in primary jurisdictions
@@ -155,6 +156,26 @@ These placeholders intentionally provide no public API. They exist only to reser
 
 Outcome: priority crates.io reservation is complete. Future internal crate names such as `ethos-layout`, `ethos-tables`, `ethos-security`, `ethos-render`, `ethos-cli`, and `ethos-mcp` remain unreserved. This ADR still cannot be accepted until the PyPI decision/reservation and trademark/legal validation are complete.
 
+### 2026-06-15 — PyPI placeholder reserved
+
+The `ethos-pdf` PyPI package name was defensively reserved by uploading placeholder distributions at version `0.0.0.post0`.
+
+PyPI verification returned:
+
+```text
+name: ethos-pdf
+version: 0.0.0.post0
+summary: Reserved package name for Ethos PDF, a Docushell project for deterministic document evidence verification.
+project_urls:
+  Homepage: https://github.com/docushell/ethos
+  Repository: https://github.com/docushell/ethos
+  Issues: https://github.com/docushell/ethos/issues
+```
+
+This placeholder intentionally provides no public API. It exists only to reserve the Python package identity under the Docushell-controlled PyPI account while real Python packaging is prepared through normal release work.
+
+Outcome: PyPI reservation is complete. This ADR still cannot be accepted until trademark/legal validation is complete and any decision about future unreserved internal crate names is explicitly recorded.
+
 ## Decision
 
-Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. GitHub source ownership and npm scope should use Docushell (`docushell/ethos`, `docushell/ethos-bench`, `@docushell/ethos-pdf`). npm reservation is complete via `@docushell/ethos-pdf@0.0.0-reserved.0`. Priority crates.io reservation is complete via `ethos-doc-core`, `ethos-doc`, `ethos-verify`, `ethos-rag`, and `ethos-pdf` at `0.0.0-reserved.0`. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
+Pending validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. GitHub source ownership and npm scope should use Docushell (`docushell/ethos`, `docushell/ethos-bench`, `@docushell/ethos-pdf`). npm reservation is complete via `@docushell/ethos-pdf@0.0.0-reserved.0`. Priority crates.io reservation is complete via `ethos-doc-core`, `ethos-doc`, `ethos-verify`, `ethos-rag`, and `ethos-pdf` at `0.0.0-reserved.0`. PyPI reservation is complete via `ethos-pdf==0.0.0.post0`. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
