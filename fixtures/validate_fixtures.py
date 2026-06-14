@@ -7,7 +7,8 @@ Checks, in order:
 3. every fixture document is indexed exactly once;
 4. manifest corpus metadata matches fixture.json;
 5. manifest sha256 == fixture.json sha256 == sha256(document.pdf);
-6. successful parse fixtures carry stage goldens with the expected v1 shape.
+6. successful parse fixtures carry stage goldens with the expected v1 shape;
+7. foreign parser fixture packages bind their manifest hashes to committed files.
 
 Exit 0 = green. Any failure prints the offending file/context and exits 1.
 """
@@ -25,6 +26,20 @@ MANIFEST_KEYS = {"manifest_version", "root", "subsets_declared", "fixtures"}
 ENTRY_KEYS = {"id", "file", "sha256", "pages", "subsets", "provenance", "license"}
 EXTRACTION_GOLDEN_KEYS = {"pages", "spans", "regions", "warnings"}
 LAYOUT_GOLDEN_KEYS = {"elements", "warnings"}
+FOREIGN_MANIFEST_KEYS = {
+    "parser",
+    "version",
+    "source_pdf",
+    "source_pdf_sha256",
+    "output_json",
+    "output_json_sha256",
+    "generator_artifact",
+    "generator_artifact_sha256",
+    "generated_by_command",
+    "generated_at_policy",
+    "source_provenance",
+    "license",
+}
 HEX256 = re.compile(r"^[0-9a-f]{64}$")
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 SUBSET = re.compile(r"^[a-z0-9][a-z0-9_]*$")
@@ -142,6 +157,79 @@ def validate_projection_items(ctx: str, key: str, value, required: bool) -> None
             continue
         if not isinstance(item.get("id"), str) or not item["id"]:
             fail(f"{ctx} {key}[{index}].id must be a non-empty string")
+
+
+def validate_hex_sha(value, ctx: str) -> bool:
+    if not isinstance(value, str) or not HEX256.fullmatch(value):
+        fail(f"{ctx} must be lowercase hex sha256")
+        return False
+    return True
+
+
+def validate_foreign_file_hash(package_dir: Path, rel_value, sha_value, ctx: str) -> None:
+    if not isinstance(rel_value, str) or not is_safe_relative_path(rel_value):
+        fail(f"{ctx} path must be a safe relative path")
+        return
+    if not validate_hex_sha(sha_value, f"{ctx} sha256"):
+        return
+
+    path = package_dir / rel_value
+    if not path.is_file():
+        fail(f"{path.relative_to(ROOT)} missing for foreign fixture manifest")
+        return
+
+    actual_sha = sha256_file(path)
+    if actual_sha != sha_value:
+        fail(
+            f"{path.relative_to(ROOT)} sha256 {actual_sha} "
+            f"does not match foreign manifest {sha_value}"
+        )
+
+
+def validate_foreign_fixture_packages() -> int:
+    count = 0
+    for manifest_path in sorted(ROOT.glob("foreign/*/*/manifest.json")):
+        count += 1
+        package_dir = manifest_path.parent
+        ctx = str(manifest_path.relative_to(ROOT))
+        manifest = load_json(manifest_path)
+        if manifest is None:
+            continue
+        if not isinstance(manifest, dict):
+            fail(f"{ctx} must be an object")
+            continue
+        if set(manifest) != FOREIGN_MANIFEST_KEYS:
+            fail(f"{ctx} must contain exactly {sorted(FOREIGN_MANIFEST_KEYS)}")
+            continue
+
+        for key in (
+            "parser",
+            "version",
+            "generator_artifact",
+            "generated_by_command",
+            "generated_at_policy",
+            "source_provenance",
+            "license",
+        ):
+            non_placeholder_text(manifest.get(key), f"{ctx} {key}")
+
+        validate_hex_sha(
+            manifest.get("generator_artifact_sha256"),
+            f"{ctx} generator_artifact_sha256",
+        )
+        validate_foreign_file_hash(
+            package_dir,
+            manifest.get("source_pdf"),
+            manifest.get("source_pdf_sha256"),
+            f"{ctx} source_pdf",
+        )
+        validate_foreign_file_hash(
+            package_dir,
+            manifest.get("output_json"),
+            manifest.get("output_json_sha256"),
+            f"{ctx} output_json",
+        )
+    return count
 
 
 manifest = load_json(MANIFEST)
@@ -302,12 +390,15 @@ for path in missing_manifest:
 for path in extra_manifest:
     fail(f"{path} appears in manifest but has no document.pdf")
 
+foreign_package_count = validate_foreign_fixture_packages()
+
 if not failures:
     ok(f"fixture manifest indexes {len(entries)} fixtures")
     ok("fixture metadata matches manifest corpus identity")
     ok("fixture.json sha256 values match document.pdf bytes")
     ok("fixture manifest has no missing or extra fixture documents")
     ok("successful fixture goldens have valid stage metadata")
+    ok(f"foreign fixture manifests bind {foreign_package_count} package(s) to committed hashes")
 
 if failures:
     print(f"\n{failures} failure(s)")
