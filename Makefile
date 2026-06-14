@@ -2,8 +2,9 @@ ROOT := $(CURDIR)
 PYTHON ?= python3
 ETHOS_BIN ?= $(ROOT)/target/debug/ethos
 VERIFY_ALPHA_OUT ?= $(ROOT)/target/verify-alpha
+VERIFY_RENDERED_CROPS_OUT ?= $(ROOT)/target/verify-rendered-crops
 
-.PHONY: verify-alpha verify-alpha-tree
+.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -23,4 +24,8 @@ verify-alpha: $(ETHOS_BIN)
 	$(PYTHON) -c 'from jsonschema import Draft202012Validator'
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) examples/verify/check_verify_alpha.py --repo-root $(ROOT) --ethos-bin $(ETHOS_BIN) --out-dir $(VERIFY_ALPHA_OUT)
+	git diff --check
+
+verify-rendered-crops: $(ETHOS_BIN)
+	$(PYTHON) examples/verify/check_rendered_crops.py --repo-root $(ROOT) --ethos-bin $(ETHOS_BIN) --out-dir $(VERIFY_RENDERED_CROPS_OUT)
 	git diff --check

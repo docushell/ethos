@@ -196,10 +196,23 @@ Rendered crop production is optional and source-bound in this alpha slice. `--cr
 must match the native Ethos document's `source.fingerprint`; otherwise the command fails before
 writing crop artifacts.
 
+Same-host rendered crop repeatability is checked separately from `verify-alpha` because it
+requires a configured PDFium runtime:
+
+```bash
+make verify-rendered-crops
+```
+
+That target parses `fixtures/synthetic/simple-text/document.pdf` twice, verifies the same
+citation twice with `--crop-source-pdf`, then compares the parsed document JSON,
+verification report JSON, crop descriptor JSON, and rendered PNG bytes across both runs. This
+is not a cross-platform rendered-image determinism claim.
+
 ## Verification Contract
 
 The demo is covered by `crates/ethos-cli/tests/verify.rs` and
 `examples/verify/check_verify_alpha.py`. The tests run the public CLI for each command above,
 compare the full JSON reports against checked-in goldens, and validate native crop
 descriptor artifacts against `schemas/ethos-crop-descriptor.schema.json`.
-Rendered PNG crop production is covered by the CLI test suite when PDFium is configured.
+Rendered PNG crop production is covered by the CLI test suite when PDFium is configured and
+by `examples/verify/check_rendered_crops.py` for same-host repeated-run evidence.
