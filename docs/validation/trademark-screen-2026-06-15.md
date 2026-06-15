@@ -5,17 +5,16 @@
 Record the release-blocking trademark validation work for the `Ethos` product name and
 selected public package identifiers.
 
-This is an engineering release-readiness record, not legal advice and not trademark
-clearance. ADR-0006 remains proposed until a manual/legal review signs off or chooses a
-rename.
+This is an engineering release-readiness record, not legal advice.
 
 ## Current Decision
 
-Status: **blocked pending manual/legal trademark review**.
+Status: **completed for ADR-0006 acceptance**.
 
-The package registry reservations are complete for the priority public surfaces, but the
-project name `Ethos` is not cleared for public launch claims, public package promotion, or
-public benchmark publication.
+The package registry reservations are complete for the priority public surfaces. Manual review
+reported a clean outcome for the project name `Ethos`, so ADR-0006 is accepted. Public launch
+claims, package promotion, and public benchmark publication still remain subject to the broader
+public release checklist.
 
 ## Product Scope To Screen
 
@@ -47,9 +46,11 @@ or advertising/analytics services under the `Ethos` mark.
 | EUIPO search availability | `https://www.euipo.europa.eu/en/search-availability` | automated probe blocked | Manual search required. |
 | UK IPO trademark search | `https://www.gov.uk/search-for-trademark` | reachable | Manual search recommended if UK launch or UK customer targeting is planned. |
 
-## Searches Required Before ADR Acceptance
+## Manual Review Scope
 
-The reviewer should save dated screenshots or exported results for each completed search.
+Reviewers should save dated screenshots or exported results for completed searches when
+available. The 2026-06-15 ADR acceptance records the project owner/decider's clean manual-review
+outcome; detailed screenshots/exports are not committed in this repository.
 
 | Jurisdiction/source | Required queries | Required filters | Acceptance evidence |
 | --- | --- | --- | --- |
@@ -87,16 +88,23 @@ Engineering checks completed on 2026-06-15:
   captured.
 - UK IPO search page was reachable, but no manual result set was captured.
 
-Conclusion: **no clearance result exists yet**.
+Automated engineering conclusion: no clearance result was produced by unauthenticated automated
+probes alone.
+
+Manual review completed on 2026-06-15:
+
+- Reviewer: project owner/decider.
+- Scope: intended `Ethos` software/developer-tool use, with priority attention to software
+  classes 9 and 42.
+- Reported outcome: clean; no material conflict requiring rename, constrained use, or package
+  identifier change.
 
 ## Release Gate
 
-ADR-0006 may move from `Proposed` to `Accepted` only after one of these outcomes is recorded:
+ADR-0006 acceptance is complete based on the recorded manual-review outcome.
 
-- legal/manual review clears `Ethos` for the intended public use;
-- legal/manual review clears `Ethos` with constraints, and those constraints are added to
-  public naming and claim rules;
-- legal/manual review rejects the name, and ADR-0006 records the replacement naming plan.
+Future changes to brand scope should reopen this record if they introduce materially different
+goods/services or jurisdictions.
 
-Until then, public GitHub launch, public benchmark release, and public package promotion remain
-blocked.
+Public GitHub launch, public benchmark release, and public package promotion may proceed only
+after all remaining public-release checklist gates are complete.

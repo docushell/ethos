@@ -1,8 +1,8 @@
 # Ethos Execution Status
 
-Date: 2026-06-14
+Date: 2026-06-15
 Owner: product / decider
-Status: Pre-alpha / Milestone A implementation. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, and ADR-0007 locks the product direction: Ethos is a verification and grounding layer that includes a deterministic parser. External freeze/pin/name checks still block Gate Zero and all public claims.
+Status: Pre-alpha / Milestone A implementation. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, ADR-0006 closes package identifier/trademark validation, and ADR-0007 locks the product direction: Ethos is a verification and grounding layer that includes a deterministic parser. External freeze/pin checks still block Gate Zero and all public claims.
 
 ## Current Reality
 
@@ -31,7 +31,7 @@ PM execution packet: `benchmarks/gate-zero/FREEZE_PACKET.md`.
 | --- | --- | --- | --- | --- |
 | H1 | Freeze Gate Zero corpus and hardware | `benchmarks/gate-zero/manifest.json` has corpus entries with exact sha256 values, complete hardware CPU/RAM/OS/kernel/runner fields, `frozen=true`, and signed freeze record | Interim corpus owner / decider | Valid Gate Zero run, public benchmark trust |
 | H2 | Pin competitors | `benchmarks/competitors.lock.json` has exact versions, artifact sha256 values, runtime versions, and `pinned=true` for OpenDataLoader, EdgeParse, LiteParse, and PyMuPDF4LLM | Benchmark owner | Harness gating, competitor comparison |
-| H3 | Accept package identifier ADR | `docs/decisions/ADR-0006-package-identifiers.md` records registry/trademark checks and moves to Accepted, or records approved renames | Devrel / decider | Any public package, public docs claim, launch announcement |
+| H3 | Accept package identifier ADR | Closed by ADR-0006 acceptance on 2026-06-15 | Devrel / decider | Unblocked package identifier/trademark gate; broader public-release checklist still applies |
 
 These are not engineering placeholders. Do not mark them done until the exact external facts are recorded.
 
@@ -52,4 +52,4 @@ Milestone A is partially implemented, not complete. The product can demonstrate 
 
 ## PM Rule
 
-Public language stays at "pre-alpha / Milestone A implementation" until all three external blockers are closed and Gate Zero has reproducible result JSON. Do not describe Ethos as benchmark-validated, release-ready, or broadly parser-complete. Internal parser work should proceed only when it supports Gate Zero evidence or the trust layer; the product-differentiating path remains verification and grounding first, with parser expansion serving that path.
+Public language stays at "pre-alpha / Milestone A implementation" until the remaining external blockers are closed and Gate Zero has reproducible result JSON. Do not describe Ethos as benchmark-validated, release-ready, or broadly parser-complete. Internal parser work should proceed only when it supports Gate Zero evidence or the trust layer; the product-differentiating path remains verification and grounding first, with parser expansion serving that path.

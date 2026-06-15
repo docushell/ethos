@@ -169,7 +169,7 @@ Package identifiers to validate before public publishing:
 - Node package: `@docushell/ethos-pdf`
 - MCP package: `ethos-mcp`
 
-The name decision is closed, but registry availability, trademark risk, and discoverability must still be validated before public package publication. If a specific package identifier is unavailable, rename that package identifier by ADR before any public package, benchmark artifact, or launch announcement.
+The name decision and priority registry/trademark validation are closed by ADR-0006. If a future package identifier is unavailable or a future public surface changes the trademark scope, amend ADR-0006 before publishing that package, benchmark artifact, or launch announcement.
 
 ### 3.2 Primary Users
 

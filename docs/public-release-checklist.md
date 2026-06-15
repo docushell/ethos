@@ -6,14 +6,14 @@ or launch announcement. It is intentionally stricter than the day-to-day enginee
 ## Current Status
 
 Ethos is not public-release ready. It is pre-alpha and may be shared privately with the current
-claim language, but public benchmark, parser-quality, table, heading, speed, footprint, and
-rendered-crop byte-identity claims remain blocked.
+claim language. The package-name/trademark gate is closed by ADR-0006, but public benchmark,
+parser-quality, table, heading, speed, footprint, and rendered-crop byte-identity claims remain
+blocked.
 
 ## Required Before Public Push
 
-- Package-name and trademark decision is closed in `docs/decisions/ADR-0006-package-identifiers.md`.
-- Trademark screen in `docs/validation/trademark-screen-2026-06-15.md` is completed by
-  manual/legal review, with either clearance, constrained use, or rename decision recorded.
+- Package-name and trademark decision is closed by accepted ADR-0006 in
+  `docs/decisions/ADR-0006-package-identifiers.md`.
 - README, docs, examples, and benchmark summaries pass a claim-language scan.
 - No generated evidence file in the public tree exposes private usernames, local machine names,
   private hostnames, or one-off absolute paths.

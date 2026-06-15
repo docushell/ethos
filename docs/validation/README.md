@@ -14,4 +14,4 @@ Records:
   arm64 and Linux x64; cross-platform rendered crop byte identity failed because evidence
   bbox differed slightly across platforms.
 - `trademark-screen-2026-06-15.md` - package registry reservations are complete for priority
-  public surfaces, but `Ethos` trademark clearance remains blocked pending manual/legal review.
+  public surfaces, and manual review reported a clean `Ethos` trademark outcome for ADR-0006.

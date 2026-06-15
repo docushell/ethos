@@ -1,14 +1,14 @@
 # ADR-0006: Package Identifiers (Registry / Trademark Validation)
 
-- Status: **Proposed — package reservations complete; trademark validation still blocks release**
+- Status: **Accepted**
 - Date: 2026-06-11
 - Governs: IMPLEMENTATION_PLAN §2 row 0.11; PRD §3.1; risk R8
 
 ## Context
 
-The project name is **Ethos**; `ethos` is a loaded name with collision/trademark risk. Package identifiers are provisional until registries and trademark are checked. Except for defensive placeholder reservations explicitly recorded in this ADR, no package publish, public benchmark, or launch announcement may happen before this ADR is Accepted.
+The project name is **Ethos**; `ethos` is a loaded name with collision/trademark risk. Package identifiers were provisional until registries and trademark were checked. Defensive placeholder reservations explicitly recorded in this ADR are allowed; future public package publication still follows the release checklist and package-specific readiness work.
 
-## Candidate identifiers (provisional)
+## Selected identifiers
 
 | Surface | Identifier | Registry | Availability checked | Reserved |
 | --- | --- | --- | --- | --- |
@@ -34,10 +34,10 @@ The project name is **Ethos**; `ethos` is a loaded name with collision/trademark
 - [x] npm package lookup and defensive placeholder reservation for `@docushell/ethos-pdf`
 - [x] GitHub owner/repo validation (`docushell` selected; no separate `ethos-pdf` GitHub org)
 - [x] Future internal crate reservation policy recorded
-- [ ] Trademark scan (software classes) for "Ethos" in primary jurisdictions
+- [x] Trademark scan (software classes) for "Ethos" in primary jurisdictions
 - [x] Record outcomes here; if any conflict → rename via this ADR before any public artifact (risk R8 trigger)
 
-## Evidence required before acceptance
+## Evidence recorded for acceptance
 
 | Check | Evidence to record |
 | --- | --- |
@@ -209,6 +209,12 @@ Outcome: this engineering check found the right official sources but did not pro
 
 Detailed release-readiness tracking is recorded in `docs/validation/trademark-screen-2026-06-15.md`.
 
+### 2026-06-15 — manual trademark review completed
+
+Manual trademark review was completed by the project owner/decider for the intended `Ethos` software use. The reported outcome was clean: no material conflict requiring rename, constrained use, or package identifier change was identified.
+
+This ADR accepts the `Ethos` product name and the package identifiers recorded above. Future public package publication is still governed by package readiness, claim-language, license/NOTICE, and benchmark-evidence gates in `docs/public-release-checklist.md`.
+
 ## Decision
 
-Pending trademark/legal validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. GitHub source ownership and npm scope should use Docushell (`docushell/ethos`, `docushell/ethos-bench`, `@docushell/ethos-pdf`). npm reservation is complete via `@docushell/ethos-pdf@0.0.0-reserved.0`. Priority crates.io reservation is complete via `ethos-doc-core`, `ethos-doc`, `ethos-verify`, `ethos-rag`, and `ethos-pdf` at `0.0.0-reserved.0`. PyPI reservation is complete via `ethos-pdf==0.0.0.post0`. Future internal crate reservations are deferred until a package has approved public release scope. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
+Accepted. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. GitHub source ownership and npm scope use Docushell (`docushell/ethos`, `docushell/ethos-bench`, `@docushell/ethos-pdf`). npm reservation is complete via `@docushell/ethos-pdf@0.0.0-reserved.0`. Priority crates.io reservation is complete via `ethos-doc-core`, `ethos-doc`, `ethos-verify`, `ethos-rag`, and `ethos-pdf` at `0.0.0-reserved.0`. PyPI reservation is complete via `ethos-pdf==0.0.0.post0`. Future internal crate reservations are deferred until a package has approved public release scope. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
