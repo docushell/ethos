@@ -30,9 +30,11 @@ rendered-crop byte-identity claims remain blocked.
 - Gate Zero public result files are signed or otherwise integrity-bound by the accepted release
   process; unsigned local snapshots stay internal.
 - Source license metadata, NOTICE boundaries, and non-advisory `cargo-deny` policy checks pass
-  the current check: `docs/validation/license-notice-check-2026-06-15.md`. Release artifacts
-  still need generated third-party license/NOTICE manifests and an advisory scan with a
-  compatible `cargo-deny`/Rust toolchain before public release.
+  the current check: `docs/validation/license-notice-check-2026-06-15.md`. The full advisory
+  scan passes for the current source tree in `docs/validation/advisory-scan-2026-06-16.md`.
+  Cargo third-party manifest generation is recorded in
+  `docs/validation/third-party-manifest-2026-06-16.md`. Release artifacts still need
+  artifact-specific license/NOTICE bundles before public release.
 - Current public-source preflight:
   `docs/validation/public-source-push-preflight-2026-06-15.md`.
 

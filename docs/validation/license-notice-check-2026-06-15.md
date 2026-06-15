@@ -10,13 +10,13 @@ readiness check for the current pre-alpha tree.
 
 ## Status
 
-Status: **completed for current source tree with release-artifact and advisory follow-up required**.
+Status: **completed for current source tree with release-artifact follow-up required**.
 
 The source tree has coherent Apache-2.0 project licensing, records the known PDFium and
 Liberation notice boundaries, and passes the non-advisory `cargo-deny` policy checks that enforce
-licenses, banned crates, and source registries. Final public release artifacts still need a
-generated third-party license manifest and an advisory scan with a compatible `cargo-deny`/Rust
-toolchain.
+licenses, banned crates, and source registries. Final public release artifacts still need
+artifact-specific license/NOTICE bundles. The advisory-scan follow-up for this source state is
+recorded in `docs/validation/advisory-scan-2026-06-16.md`.
 
 ## Scope
 
@@ -90,13 +90,18 @@ git diff --check
 pass
 ```
 
+## Follow-Up
+
+The advisory portion of `cargo-deny` was re-run successfully on 2026-06-16 with a sidecar Rust
+1.94 toolchain and `cargo-deny 0.19.9`; see
+`docs/validation/advisory-scan-2026-06-16.md`.
+
+Cargo third-party dependency manifest generation was added and verified on 2026-06-16; see
+`docs/validation/third-party-manifest-2026-06-16.md`.
+
 ## Remaining Release Work
 
-- Run the advisory portion of `cargo-deny` before any public release artifact is cut. On the
-  current Rust 1.87 toolchain, `cargo-deny 0.18.3` is the newest compatible version, but it
-  cannot parse current RustSec CVSS 4.0 advisory metadata. Use Rust 1.88+ with a newer
-  `cargo-deny`, or a CI runner that provides that pairing.
-- Generate and publish a third-party license/NOTICE manifest with release artifacts.
+- Generate and publish artifact-specific license/NOTICE bundles with release artifacts.
 - If PDFium binaries or Liberation fonts are bundled in an artifact, include the upstream license
   and notice material in that artifact.
 - Keep AGPL/GPL comparison tools out of the base dependency tree; benchmark-only execution remains
@@ -105,5 +110,7 @@ pass
 ## Result
 
 The current source tree passes the license/NOTICE source-readiness check and non-advisory
-`cargo-deny` policy checks for pre-alpha publication. Public release artifacts remain blocked on
-generated third-party license manifests and a successful advisory scan.
+`cargo-deny` policy checks for pre-alpha publication. The follow-up advisory scan now passes for
+the current source tree, and Cargo third-party manifest generation is repeatable. Public release
+artifacts remain blocked on artifact-specific license/NOTICE bundles and artifact-specific
+readiness work.

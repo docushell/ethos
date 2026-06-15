@@ -10,15 +10,18 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+- `advisory-scan-2026-06-16.md` - full `cargo-deny` advisory, ban, license, and source scan
+  passed with a sidecar Rust 1.94 toolchain and `cargo-deny 0.19.9`; release artifacts still
+  need artifact-specific license/NOTICE bundles and package-specific readiness work.
 - `claim-language-scan-2026-06-15.md` - current README/docs/examples/benchmark wording was
   scanned for unsupported public claims; README wording was narrowed to avoid speed,
   footprint, table, and heading overclaims.
 - `ethos-bench-hygiene-2026-06-15.md` - sibling `ethos-bench` repo hygiene files were verified
   and its local unit/smoke checks passed.
 - `license-notice-check-2026-06-15.md` - source license metadata, NOTICE boundaries, and
-  non-advisory `cargo-deny` policy checks pass; release artifacts still need generated
-  third-party license manifests and an advisory scan with a compatible `cargo-deny`/Rust
-  toolchain.
+  non-advisory `cargo-deny` policy checks pass; the follow-up advisory scan is recorded in
+  `advisory-scan-2026-06-16.md`, and release artifacts still need artifact-specific
+  license/NOTICE bundles.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
@@ -30,3 +33,6 @@ Records:
   bbox differed slightly across platforms.
 - `trademark-screen-2026-06-15.md` - package registry reservations are complete for priority
   public surfaces, and manual review reported a clean `Ethos` trademark outcome for ADR-0006.
+- `third-party-manifest-2026-06-16.md` - Cargo third-party dependency license manifest
+  generation is repeatable and public-path safe for the current source graph; final release
+  artifacts still need artifact-specific license and NOTICE bundles.
