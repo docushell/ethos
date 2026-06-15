@@ -14,10 +14,11 @@ mod cmd;
 mod worker;
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use ethos_core::config::ParseConfig;
 use ethos_core::error::{ErrorCode, EthosError};
 use ethos_core::model::Document;
 
@@ -286,11 +287,15 @@ fn run(cli: Cli) -> Result<(), Failure> {
     }
 }
 
-pub(crate) fn read_file(path: &PathBuf) -> Result<Vec<u8>, Failure> {
+pub(crate) fn default_max_input_bytes() -> u64 {
+    ParseConfig::default().limits.max_file_bytes
+}
+
+pub(crate) fn read_file(path: &Path) -> Result<Vec<u8>, Failure> {
     fs::read(path).map_err(|_| Failure::Usage(format!("cannot read input: {}", path.display())))
 }
 
-pub(crate) fn ensure_file_within_limit(path: &PathBuf, max_bytes: u64) -> Result<(), Failure> {
+pub(crate) fn ensure_file_within_limit(path: &Path, max_bytes: u64) -> Result<(), Failure> {
     let metadata = fs::metadata(path)
         .map_err(|_| Failure::Usage(format!("cannot read input: {}", path.display())))?;
     if metadata.len() > max_bytes {
@@ -301,7 +306,7 @@ pub(crate) fn ensure_file_within_limit(path: &PathBuf, max_bytes: u64) -> Result
     Ok(())
 }
 
-pub(crate) fn read_file_limited(path: &PathBuf, max_bytes: u64) -> Result<Vec<u8>, Failure> {
+pub(crate) fn read_file_limited(path: &Path, max_bytes: u64) -> Result<Vec<u8>, Failure> {
     ensure_file_within_limit(path, max_bytes)?;
     let bytes = read_file(path)?;
     if bytes.len() as u64 > max_bytes {
@@ -313,14 +318,19 @@ pub(crate) fn read_file_limited(path: &PathBuf, max_bytes: u64) -> Result<Vec<u8
 }
 
 pub(crate) fn read_document(path: &PathBuf) -> Result<Document, Failure> {
-    let bytes = read_file(path)?;
+    let bytes = read_file_limited(path, default_max_input_bytes())?;
     let doc: Document = serde_json::from_slice(&bytes).map_err(|_| {
-        Failure::Ethos(EthosError::new(
-            ErrorCode::InternalError,
-            "input is not a canonical ethos document (schema urn:ethos:schema:document:1)",
+        Failure::Usage(
+            "input is not a canonical ethos document (schema urn:ethos:schema:document:1)"
+                .to_string(),
+        )
+    })?;
+    doc.verify_integrity().map_err(|error| {
+        Failure::Usage(format!(
+            "input document failed integrity check: {}",
+            error.message
         ))
     })?;
-    doc.verify_integrity()?;
     Ok(doc)
 }
 
@@ -432,6 +442,27 @@ mod tests {
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(value["error"]["code"], "internal_error");
         assert_eq!(value["error"]["message"], err.message);
+    }
+
+    #[test]
+    fn read_file_limited_rejects_oversized_file_before_read() {
+        let file = tempfile::NamedTempFile::new().expect("temp file can be created");
+        file.as_file()
+            .set_len(4)
+            .expect("temp file length can be set");
+
+        let error = match read_file_limited(file.path(), 3) {
+            Ok(_) => panic!("oversized file was accepted"),
+            Err(error) => error,
+        };
+
+        match error {
+            Failure::Ethos(error) => {
+                assert_eq!(error.code, ErrorCode::FileTooLarge);
+                assert_eq!(error.message, "input exceeds max_file_bytes");
+            }
+            _ => panic!("expected stable file_too_large failure"),
+        }
     }
 
     #[test]

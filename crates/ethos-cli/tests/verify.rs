@@ -542,6 +542,43 @@ fn fail_on_ungrounded_keeps_invalid_input_on_usage_exit_code() {
 }
 
 #[test]
+fn malformed_native_document_is_usage_error() {
+    let root = repo_root();
+    let doc = temp_json("malformed-native-document", "{}");
+    let output = run_ethos(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        root.join("examples/verify/native_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("input is not a canonical ethos document")
+    );
+}
+
+#[test]
+fn wrong_hash_native_document_keeps_integrity_signal() {
+    let mut doc = json_file(document_example());
+    doc["fingerprint"] = Value::String(format!("sha256:{}", "0".repeat(64)));
+    let doc = temp_json(
+        "wrong-hash-native-document",
+        &serde_json::to_string(&doc).unwrap(),
+    );
+    let output = run_ethos(&["fingerprint", doc.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("input document failed integrity check"));
+    assert!(stderr.contains("fingerprint mismatch"));
+}
+
+#[test]
 fn native_ethos_verify_produces_non_empty_checks() {
     let doc = document_example();
     let root = repo_root();

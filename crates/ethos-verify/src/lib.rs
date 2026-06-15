@@ -16,10 +16,12 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+use std::collections::BTreeMap;
+
 use ethos_core::codes::WarningCode;
 use ethos_core::grounding::{
     CoordinateOrigin, GroundingCell, GroundingElement, GroundingSource, GroundingSpan,
-    GroundingTable,
+    GroundingTable, PageGeometry,
 };
 use ethos_core::verify_types::{
     compute_all_evidence_grounded, CapabilityLimit, Check, CheckStatus, Claim, ClaimKind, Evidence,
@@ -98,7 +100,13 @@ pub fn capability_limits(
     source: &dyn GroundingSource,
     config: &VerificationConfig,
 ) -> Vec<CapabilityLimit> {
-    let caps = source.capabilities();
+    capability_limits_for(source.capabilities(), config)
+}
+
+fn capability_limits_for(
+    caps: ethos_core::grounding::Capabilities,
+    config: &VerificationConfig,
+) -> Vec<CapabilityLimit> {
     let mut limits = Vec::new();
     if !caps.fingerprint && config.staleness.require_fingerprint_match {
         limits.push(CapabilityLimit::MissingFingerprint);
@@ -135,8 +143,9 @@ pub fn verify_claims(
     config_sha256: String,
 ) -> VerificationReport {
     let (citation_fingerprint, claims) = citations.into_parts();
+    let index = SourceIndex::new(source);
     let source_fingerprint = source.fingerprint();
-    let capability_limits = capability_limits(source, config);
+    let capability_limits = capability_limits_for(index.capabilities, config);
     let warnings = if capability_limits.is_empty() {
         Vec::new()
     } else {
@@ -160,6 +169,7 @@ pub fn verify_claims(
             check_claim(
                 idx + 1,
                 source,
+                &index,
                 claim,
                 config,
                 CheckContext {
@@ -179,7 +189,7 @@ pub fn verify_claims(
         verification_config_sha256: config_sha256,
         grounding: GroundingMeta {
             parser: source.parser(),
-            capabilities: source.capabilities(),
+            capabilities: index.capabilities,
         },
         capability_limits,
         fingerprint_stale,
@@ -205,6 +215,7 @@ struct CheckContext {
 fn check_claim(
     id: usize,
     source: &dyn GroundingSource,
+    index: &SourceIndex,
     claim: Claim,
     config: &VerificationConfig,
     context: CheckContext,
@@ -280,7 +291,7 @@ fn check_claim(
         };
     }
 
-    let target = match resolve_target(source, &claim, config) {
+    let target = match resolve_target(index, &claim, config) {
         TargetResolution::Found(target) => target,
         TargetResolution::NotFound => {
             return Check {
@@ -400,6 +411,96 @@ struct FoundTarget {
     from_table_cell: bool,
 }
 
+/// Per-run grounding snapshot used to avoid cloning full entity collections per claim.
+///
+/// The lookup maps intentionally preserve first-match-by-id behavior, matching the trait default
+/// and current native/ODL adapters. If an adapter gives `element_by_id` different semantics, update
+/// this index at the same time so verifier resolution does not silently diverge.
+struct SourceIndex {
+    capabilities: ethos_core::grounding::Capabilities,
+    pages: Vec<PageGeometry>,
+    elements: Vec<GroundingElement>,
+    spans: Vec<GroundingSpan>,
+    tables: Vec<GroundingTable>,
+    element_by_id: BTreeMap<String, usize>,
+    span_by_id: BTreeMap<String, usize>,
+    table_by_id: BTreeMap<String, usize>,
+}
+
+impl SourceIndex {
+    fn new(source: &dyn GroundingSource) -> Self {
+        let capabilities = source.capabilities();
+        let pages = source.pages();
+        let elements = source.elements();
+        let spans = if capabilities.spans {
+            source.spans()
+        } else {
+            Vec::new()
+        };
+        let tables = if capabilities.tables {
+            source.tables()
+        } else {
+            Vec::new()
+        };
+        let element_by_id = index_elements(&elements);
+        let span_by_id = index_spans(&spans);
+        let table_by_id = index_tables(&tables);
+
+        SourceIndex {
+            capabilities,
+            pages,
+            elements,
+            spans,
+            tables,
+            element_by_id,
+            span_by_id,
+            table_by_id,
+        }
+    }
+
+    fn element(&self, id: &str) -> Option<&GroundingElement> {
+        self.element_by_id
+            .get(id)
+            .and_then(|index| self.elements.get(*index))
+    }
+
+    fn span(&self, id: &str) -> Option<&GroundingSpan> {
+        self.span_by_id
+            .get(id)
+            .and_then(|index| self.spans.get(*index))
+    }
+
+    fn table(&self, id: &str) -> Option<&GroundingTable> {
+        self.table_by_id
+            .get(id)
+            .and_then(|index| self.tables.get(*index))
+    }
+}
+
+fn index_elements(elements: &[GroundingElement]) -> BTreeMap<String, usize> {
+    let mut index = BTreeMap::new();
+    for (position, element) in elements.iter().enumerate() {
+        index.entry(element.id.clone()).or_insert(position);
+    }
+    index
+}
+
+fn index_spans(spans: &[GroundingSpan]) -> BTreeMap<String, usize> {
+    let mut index = BTreeMap::new();
+    for (position, span) in spans.iter().enumerate() {
+        index.entry(span.id.clone()).or_insert(position);
+    }
+    index
+}
+
+fn index_tables(tables: &[GroundingTable]) -> BTreeMap<String, usize> {
+    let mut index = BTreeMap::new();
+    for (position, table) in tables.iter().enumerate() {
+        index.entry(table.id.clone()).or_insert(position);
+    }
+    index
+}
+
 enum TargetResolution {
     Found(FoundTarget),
     NotFound,
@@ -407,43 +508,41 @@ enum TargetResolution {
 }
 
 fn resolve_target(
-    source: &dyn GroundingSource,
+    index: &SourceIndex,
     claim: &Claim,
     config: &VerificationConfig,
 ) -> TargetResolution {
     if claim.kind == ClaimKind::TableCell || claim.citation.table_id.is_some() {
-        return resolve_table_cell(source, claim);
+        return resolve_table_cell(index, claim);
     }
 
     if let Some(span_id) = claim.citation.span_id.as_deref() {
-        if !source.capabilities().spans {
+        if !index.capabilities.spans {
             return TargetResolution::CapabilityBlocked;
         }
-        return source
-            .spans()
-            .into_iter()
-            .find(|span| span.id == span_id)
+        return index
+            .span(span_id)
             .map(target_from_span)
             .map(TargetResolution::Found)
             .unwrap_or(TargetResolution::NotFound);
     }
 
     if let Some(element_id) = claim.citation.element_id.as_deref() {
-        return source
-            .element_by_id(element_id)
+        return index
+            .element(element_id)
             .map(target_from_element)
             .map(TargetResolution::Found)
             .unwrap_or(TargetResolution::NotFound);
     }
 
     if let (Some(page), Some(bbox)) = (claim.citation.page.as_deref(), claim.citation.bbox) {
-        if source.capabilities().coordinate_origin == CoordinateOrigin::Unknown {
+        if index.capabilities.coordinate_origin == CoordinateOrigin::Unknown {
             return TargetResolution::CapabilityBlocked;
         }
         let tolerance = config.matching.bbox_containment_tolerance_q.unwrap_or(0);
-        return source
-            .elements()
-            .into_iter()
+        return index
+            .elements
+            .iter()
             .find(|element| element.page == page && contains_bbox(element.bbox, bbox, tolerance))
             .map(target_from_element)
             .map(TargetResolution::Found)
@@ -451,13 +550,13 @@ fn resolve_target(
     }
 
     if let Some(page) = claim.citation.page.as_deref() {
-        return source
-            .pages()
-            .into_iter()
+        return index
+            .pages
+            .iter()
             .find(|candidate| candidate.id == page)
             .map(|found| {
                 TargetResolution::Found(FoundTarget {
-                    page: Some(found.id),
+                    page: Some(found.id.clone()),
                     bbox: Some([0, 0, found.width, found.height]),
                     text: None,
                     from_table_cell: false,
@@ -469,49 +568,47 @@ fn resolve_target(
     TargetResolution::NotFound
 }
 
-fn target_from_element(element: GroundingElement) -> FoundTarget {
+fn target_from_element(element: &GroundingElement) -> FoundTarget {
     FoundTarget {
-        page: Some(element.page),
+        page: Some(element.page.clone()),
         bbox: Some(element.bbox),
-        text: element.text,
+        text: element.text.clone(),
         from_table_cell: false,
     }
 }
 
-fn target_from_span(span: GroundingSpan) -> FoundTarget {
+fn target_from_span(span: &GroundingSpan) -> FoundTarget {
     FoundTarget {
-        page: Some(span.page),
+        page: Some(span.page.clone()),
         bbox: Some(span.bbox),
-        text: Some(span.text),
+        text: Some(span.text.clone()),
         from_table_cell: false,
     }
 }
 
-fn resolve_table_cell(source: &dyn GroundingSource, claim: &Claim) -> TargetResolution {
+fn resolve_table_cell(index: &SourceIndex, claim: &Claim) -> TargetResolution {
     let Some(table_id) = claim.citation.table_id.as_deref() else {
         return TargetResolution::NotFound;
     };
     let Some(cell_ref) = claim.citation.cell else {
         return TargetResolution::NotFound;
     };
-    if !source.capabilities().tables {
+    if !index.capabilities.tables {
         return TargetResolution::CapabilityBlocked;
     }
-    let tables = source.tables();
-    tables
-        .into_iter()
-        .find(|table| table.id == table_id)
+    index
+        .table(table_id)
         .and_then(|table| target_from_table_cell(table, cell_ref.row, cell_ref.col))
         .map(TargetResolution::Found)
         .unwrap_or(TargetResolution::NotFound)
 }
 
-fn target_from_table_cell(table: GroundingTable, row: u32, col: u32) -> Option<FoundTarget> {
+fn target_from_table_cell(table: &GroundingTable, row: u32, col: u32) -> Option<FoundTarget> {
     table
         .cells
-        .into_iter()
+        .iter()
         .find(|cell| table_cell_covers(cell, row, col))
-        .map(|cell| target_from_cell(table.page, cell))
+        .map(|cell| target_from_cell(&table.page, cell))
 }
 
 fn table_cell_covers(cell: &GroundingCell, row: u32, col: u32) -> bool {
@@ -520,11 +617,11 @@ fn table_cell_covers(cell: &GroundingCell, row: u32, col: u32) -> bool {
     row >= cell.row && row < row_end && col >= cell.col && col < col_end
 }
 
-fn target_from_cell(page: String, cell: GroundingCell) -> FoundTarget {
+fn target_from_cell(page: &str, cell: &GroundingCell) -> FoundTarget {
     FoundTarget {
-        page: Some(page),
+        page: Some(page.to_string()),
         bbox: Some(cell.bbox),
-        text: Some(cell.text),
+        text: Some(cell.text.clone()),
         from_table_cell: true,
     }
 }

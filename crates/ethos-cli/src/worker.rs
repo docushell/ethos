@@ -1,6 +1,6 @@
 use std::fmt;
 use std::fs::File;
-use std::io::{self, BufReader, Read};
+use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::process::{Command as ProcessCommand, ExitStatus, Output, Stdio};
 use std::thread::{self, JoinHandle};
@@ -16,6 +16,9 @@ use tempfile::TempDir;
 use crate::{Failure, EXIT_USAGE};
 
 pub(crate) const WORKER_JSON_ARTIFACT_SCHEMA: &str = "ethos-worker-json-artifact-v1";
+// Applied independently to stdout and stderr; if a child keeps writing after a reader rejects,
+// the existing worker timeout remains the hard stop.
+const WORKER_PIPE_MAX_BYTES: usize = 512 * 1024 * 1024;
 
 pub(crate) struct WorkerJsonArtifact {
     _temp_dir: TempDir,
@@ -346,16 +349,35 @@ fn run_worker_with_timeout(
     }
 }
 
-fn read_pipe<R: Read>(mut pipe: R) -> io::Result<Vec<u8>> {
+fn read_pipe<R: Read>(pipe: R) -> Result<Vec<u8>, EthosError> {
+    read_pipe_limited(pipe, WORKER_PIPE_MAX_BYTES)
+}
+
+fn read_pipe_limited<R: Read>(mut pipe: R, max_bytes: usize) -> Result<Vec<u8>, EthosError> {
     let mut bytes = Vec::new();
-    pipe.read_to_end(&mut bytes)?;
+    let mut chunk = [0_u8; 64 * 1024];
+    loop {
+        let n = pipe
+            .read(&mut chunk)
+            .map_err(|_| EthosError::internal("pdfium worker pipe read failed"))?;
+        if n == 0 {
+            break;
+        }
+        if n > max_bytes.saturating_sub(bytes.len()) {
+            return Err(EthosError::new(
+                ErrorCode::MemoryLimitExceeded,
+                "parse exceeded memory limit",
+            ));
+        }
+        bytes.extend_from_slice(&chunk[..n]);
+    }
     Ok(bytes)
 }
 
 fn collect_worker_output(
     status: ExitStatus,
-    stdout_handle: JoinHandle<io::Result<Vec<u8>>>,
-    stderr_handle: JoinHandle<io::Result<Vec<u8>>>,
+    stdout_handle: JoinHandle<Result<Vec<u8>, EthosError>>,
+    stderr_handle: JoinHandle<Result<Vec<u8>, EthosError>>,
 ) -> Result<Output, Failure> {
     Ok(Output {
         status,
@@ -364,11 +386,11 @@ fn collect_worker_output(
     })
 }
 
-fn join_reader(handle: JoinHandle<io::Result<Vec<u8>>>) -> Result<Vec<u8>, Failure> {
+fn join_reader(handle: JoinHandle<Result<Vec<u8>, EthosError>>) -> Result<Vec<u8>, Failure> {
     handle
         .join()
         .map_err(|_| EthosError::internal("pdfium worker pipe reader failed"))?
-        .map_err(|_| EthosError::internal("pdfium worker pipe read failed").into())
+        .map_err(Failure::Ethos)
 }
 
 fn worker_usage_message(stderr: &[u8]) -> String {
@@ -570,5 +592,16 @@ mod tests {
             _ => panic!("expected Ethos failure"),
         }
         assert!(!path.exists(), "temp dir is cleaned up on rejection");
+    }
+
+    #[test]
+    fn read_pipe_limited_rejects_oversized_output() {
+        let error = match read_pipe_limited(std::io::Cursor::new([1_u8, 2, 3, 4]), 3) {
+            Ok(_) => panic!("oversized worker output was accepted"),
+            Err(error) => error,
+        };
+
+        assert_eq!(error.code, ErrorCode::MemoryLimitExceeded);
+        assert_eq!(error.message, "parse exceeded memory limit");
     }
 }

@@ -2,7 +2,7 @@
 
 Date: 2026-06-15
 Owner: product / decider
-Status: Pre-alpha / Milestone A implementation. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, ADR-0006 closes package identifier/trademark validation, ADR-0007 locks the product direction, and the public-source preflight is green for a source-only pre-alpha GitHub push. External freeze/pin checks still block Gate Zero, public benchmark reports, releases, packages, and all performance/quality claims.
+Status: Pre-alpha / Milestone A implementation. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, the Gate Zero corpus/hardware manifest and direct competitor lock are frozen/signed, ADR-0006 closes package identifier/trademark validation, ADR-0007 locks the product direction, and the public-source preflight is green for a source-only pre-alpha GitHub push. Signed host result generation still blocks Gate Zero, public benchmark reports, releases, packages, and all performance/quality claims.
 
 ## Current Reality
 
@@ -21,7 +21,7 @@ The committed implementation now includes:
 - `make verify-alpha` is now the product-proof command for the alpha trust loop: it checks native examples, synthetic OpenDataLoader-style examples, pinned real OpenDataLoader grounded/ungrounded examples, schema validation, byte-identical repeated verification reports, byte-identical native crop descriptors, and foreign fixture manifest hash binding.
 - Native Ethos verification can emit deterministic, schema-backed crop descriptor JSON artifacts through `--crop-dir`; these bind `document_fingerprint`, page, bbox, and check ids. Native `crop_ref` filenames are logical evidence references derived from document fingerprint, check id, and page, while descriptors still record the exact observed bbox. When `--crop-source-pdf` is supplied, the CLI validates source-PDF fingerprint binding and emits PNG crop artifacts whose filenames, byte hashes, dimensions, and source fingerprint are bound from the descriptor. `make verify-rendered-crops` checks same-host repeated-run stability for the rendered artifact path, and `make compare-rendered-crops` classifies two rendered-crop runs by separating logical evidence identity from rendered artifact byte equality. Cross-platform rendered image determinism is not claimed; the 2026-06-14 macOS arm64 vs Linux x64 validation record in `docs/validation/rendered-crops-2026-06-14.md` preserved document fingerprint and `payload_sha256` but failed rendered artifact byte equality because the evidence bbox differed slightly across platforms.
 
-Still absent or not claimable: frozen Gate Zero corpus/hardware records, reproducible benchmark result JSON, competitor pins/comparisons, public speed/quality/footprint claims, OCR/image-only support, real table extraction, mature list/heading/layout semantics, semantic/arithmetic verification beyond deterministic evidence lookup, Phase 2 project-maintained PDFium builds, release packaging, and multi-platform determinism evidence.
+Still absent or not claimable: reproducible benchmark result JSON, executed competitor comparisons, public speed/quality/footprint claims, OCR/image-only support, real table extraction, mature list/heading/layout semantics, semantic/arithmetic verification beyond deterministic evidence lookup, Phase 2 project-maintained PDFium builds, release packaging, and full frozen-corpus multi-platform determinism evidence.
 
 ## Human / External Blockers
 
@@ -29,11 +29,11 @@ PM execution packet: `benchmarks/gate-zero/FREEZE_PACKET.md`.
 
 | ID | Blocker | Required output | Owner | Blocks |
 | --- | --- | --- | --- | --- |
-| H1 | Freeze Gate Zero corpus and hardware | `benchmarks/gate-zero/manifest.json` has corpus entries with exact sha256 values, complete hardware CPU/RAM/OS/kernel/runner fields, `frozen=true`, and signed freeze record | Interim corpus owner / decider | Valid Gate Zero run, public benchmark trust |
-| H2 | Pin competitors | `benchmarks/competitors.lock.json` has exact versions, artifact sha256 values, runtime versions, and `pinned=true` for OpenDataLoader, EdgeParse, LiteParse, and PyMuPDF4LLM | Benchmark owner | Harness gating, competitor comparison |
+| H1 | Generate signed Gate Zero host results | `benchmarks/results/gate-zero/{macos-arm64,linux-x64}/g1.json` plus G2/G3 result files are produced from the frozen manifest and pinned lock | Benchmark owner / decider | Valid Gate Zero run, public benchmark trust |
+| H2 | Execute pinned competitor comparisons | Harness executes the pinned OpenDataLoader, EdgeParse, LiteParse, and PyMuPDF4LLM artifacts and records signed comparison rows where applicable | Benchmark owner | Public competitor comparison |
 | H3 | Accept package identifier ADR | Closed by ADR-0006 acceptance on 2026-06-15 | Devrel / decider | Unblocked package identifier/trademark gate; broader public-release checklist still applies |
 
-These are not engineering placeholders. Do not mark them done until the exact external facts are recorded.
+The corpus/hardware freeze and direct competitor pins are recorded in `benchmarks/gate-zero/manifest.json` and `benchmarks/competitors.lock.json`. The remaining blockers are result production and signed evidence, not manifest/pin placeholders.
 
 ## Current Milestone Posture
 
@@ -48,7 +48,7 @@ Milestone A is partially implemented, not complete. The product can demonstrate 
 | Font policy groundwork | Partially landed: substitution table and profile policy are present; fixture output uses deterministic substitution IDs | Bundled fallback asset hashing and broader font/CID validation remain open |
 | Schema/example validation | Landed: schemas, examples, deterministic profile, referential integrity, and bbox sanity pass the `jsonschema` validation gate | Contract changes still require explicit versioning and compatibility review |
 | Trust-layer implementation | Landed: `ethos verify` quote/value/presence/table-cell checks, explicit quote-containment labeling, normalized equality for value/table-cell checks, stale and unverifiable fingerprint handling, unsupported claim reporting, structured capability limits, native Ethos JSON path, ODL-style adapter path with synthetic table/cell mapping, pinned real OpenDataLoader 2.4.7 grounded/ungrounded fixtures, foreign fixture manifest hash validation, crop-ref evidence plumbing, stable logical native crop refs, native crop descriptor artifacts, raw BGRA crop rendering in `ethos-pdf`, CLI PNG crop artifact production for bound native source PDFs, same-host rendered crop repeatability check, rendered-crop run comparison helper, strict citation/config input validation, citation input schema, and demo fixtures | Still needed: evidence matching against richer source structures, semantic/arithmetic claim handling by explicit non-v1 design, real OpenDataLoader table-cell grounding, broader adapter hardening against real output, and a decision on whether cross-platform rendered crop artifact equality is worth pursuing after the current macOS/Linux bbox drift finding |
-| WS-HARNESS readiness | Partially landed: readiness path fails closed when corpus/hardware/pins are incomplete | Actual benchmark runner outputs, install-size/RSS/timing collection, competitor execution, and cross-host determinism evidence are still missing |
+| WS-HARNESS readiness | Partially landed: readiness path is green for frozen corpus/hardware and pinned competitors, and fails closed if those records regress | Actual benchmark runner outputs, install-size/RSS/timing collection, competitor execution, and cross-host determinism evidence are still missing |
 
 ## PM Rule
 

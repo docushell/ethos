@@ -17,10 +17,13 @@ use ethos_grounding_opendataloader_json::OdlJsonSource;
 use ethos_pdf::PdfiumBackend;
 use ethos_verify::CitationInput;
 
-use crate::{read_document, read_file, write_output, Failure, VerifyArgs};
+use crate::{
+    default_max_input_bytes, read_document, read_file_limited, write_output, Failure, VerifyArgs,
+};
 
 pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
-    let citations_bytes = read_file(&args.citations)?;
+    let max_input_bytes = default_max_input_bytes();
+    let citations_bytes = read_file_limited(&args.citations, max_input_bytes)?;
     let citations: CitationInput = serde_json::from_slice(&citations_bytes).map_err(|_| {
         Failure::Usage("citations file does not match the alpha citation input shape".to_string())
     })?;
@@ -38,9 +41,11 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     }
 
     let mut config: VerificationConfig = match &args.config {
-        Some(path) => serde_json::from_slice(&read_file(path)?).map_err(|_| {
-            Failure::Usage("verification config does not match the schema".to_string())
-        })?,
+        Some(path) => {
+            serde_json::from_slice(&read_file_limited(path, max_input_bytes)?).map_err(|_| {
+                Failure::Usage("verification config does not match the schema".to_string())
+            })?
+        }
         None => VerificationConfig::default_v1(),
     };
     if args.crop_dir.is_some() {
@@ -79,7 +84,7 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
             }
         }
         Some("opendataloader-json") => {
-            let bytes = read_file(&args.input)?;
+            let bytes = read_file_limited(&args.input, max_input_bytes)?;
             let text = String::from_utf8(bytes)
                 .map_err(|_| Failure::Usage("grounding input is not UTF-8".to_string()))?;
             let source = OdlJsonSource::from_json_str(&text)
@@ -119,8 +124,7 @@ struct CropSourcePdf {
 }
 
 fn load_bound_crop_source_pdf(doc: &Document, source_pdf: &Path) -> Result<CropSourcePdf, Failure> {
-    let bytes = std::fs::read(source_pdf)
-        .map_err(|_| Failure::Usage(format!("cannot read input: {}", source_pdf.display())))?;
+    let bytes = read_file_limited(source_pdf, default_max_input_bytes())?;
     if !bytes[..bytes.len().min(1024)]
         .windows(5)
         .any(|window| window == b"%PDF-")

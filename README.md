@@ -15,7 +15,7 @@ Ethos can verify citation evidence against the parsed source and return the sour
 inspection.
 
 One native parser. No JVM. No Python ML stack. No GPU. No OCR model in the base install.
-Same input, same pinned profile, same canonical output.
+Same input, same pinned profile, same stable payload projection and fingerprint.
 
 ## What Ethos is not (honest scope)
 
@@ -49,11 +49,14 @@ CLI follows the same shape: `ethos doc …`, `ethos rag …`, `ethos verify …`
 ## Determinism, in one paragraph
 
 Under a pinned deterministic profile (`profiles/ethos-deterministic-v1.json`), the same input
-bytes and the same configuration produce a byte-identical canonical payload and equal
-fingerprints on every supported platform. Geometry is quantized at extraction, fonts resolve
-through a bundled deterministic profile (never system fonts), canonical JSON has one
-serialization, and runtime diagnostics live outside canonical equality. A flaky fingerprint is
-a bug, never a retry. See `docs/determinism-contract.md`.
+bytes and the same configuration are intended to produce a byte-identical stable payload
+projection and equal fingerprints across supported Gate Zero platforms. Precise emitted geometry
+such as `bbox` values can remain platform-sensitive and is excluded from the fingerprint basis;
+full emitted document JSON and rendered crops are not claimed to be cross-platform byte-identical.
+Geometry is quantized at extraction, fonts resolve through a bundled deterministic profile
+(never system fonts), canonical JSON has one serialization, and runtime diagnostics live outside
+canonical equality. A flaky fingerprint is a bug, never a retry. See
+`docs/determinism-contract.md`.
 
 ## Repository map
 
