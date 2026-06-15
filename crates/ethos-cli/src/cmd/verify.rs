@@ -181,7 +181,7 @@ impl GroundingSource for NativeCropSource<'_> {
     }
 
     fn crop_ref(&self, page: &str, bbox: [i64; 4]) -> Option<String> {
-        Some(crop_ref_for(page, bbox)?)
+        crop_ref_for(page, bbox)
     }
 
     fn element_by_id(&self, id: &str) -> Option<GroundingElement> {

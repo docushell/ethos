@@ -106,8 +106,8 @@ jobs:
       - run: cargo build --locked -p ethos-cli
       - name: run CLI under network-denied namespace
         run: |
-          unshare -rn -- ./target/debug/ethos fingerprint schemas/examples/document.example.json
-          unshare -rn -- ./target/debug/ethos rag chunk schemas/examples/document.example.json > /tmp/chunks.jsonl
+          sudo unshare -n -- ./target/debug/ethos fingerprint schemas/examples/document.example.json
+          sudo unshare -n -- ./target/debug/ethos rag chunk schemas/examples/document.example.json > /tmp/chunks.jsonl
           test -s /tmp/chunks.jsonl
 
   claims-gate:
@@ -117,10 +117,15 @@ jobs:
       - run: python3 .github/scripts/claims_gate.py
 
   dco:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - run: python3 .github/scripts/check_dco.py "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+      - name: check DCO sign-offs
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            python3 .github/scripts/check_dco.py "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+          else
+            python3 .github/scripts/check_dco.py "${{ github.event.before }}" "${{ github.sha }}"
+          fi

@@ -317,7 +317,7 @@ pub(crate) fn read_file_limited(path: &Path, max_bytes: u64) -> Result<Vec<u8>, 
     Ok(bytes)
 }
 
-pub(crate) fn read_document(path: &PathBuf) -> Result<Document, Failure> {
+pub(crate) fn read_document(path: &Path) -> Result<Document, Failure> {
     let bytes = read_file_limited(path, default_max_input_bytes())?;
     let doc: Document = serde_json::from_slice(&bytes).map_err(|_| {
         Failure::Usage(

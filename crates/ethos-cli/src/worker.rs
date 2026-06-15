@@ -68,10 +68,7 @@ pub(crate) fn parse_pdf_json_artifact_with_worker(
     command.arg("--json-out").arg(&artifact_path);
 
     let output =
-        match run_worker_with_timeout(command, Duration::from_millis(config.limits.max_parse_ms)) {
-            Ok(output) => output,
-            Err(error) => return Err(error),
-        };
+        run_worker_with_timeout(command, Duration::from_millis(config.limits.max_parse_ms))?;
 
     if output.status.success() {
         return worker_json_artifact_from_header(&output.stdout, temp_dir, artifact_path);

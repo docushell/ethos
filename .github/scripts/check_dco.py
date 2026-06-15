@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DCO enforcement (ADR-0004): every commit in the PR range carries a Signed-off-by line.
+"""DCO enforcement (ADR-0004): every commit in the checked range carries a Signed-off-by line.
 
 Usage: check_dco.py <base_sha> <head_sha>
 """
