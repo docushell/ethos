@@ -24,6 +24,72 @@ inspection.
 One native parser. No JVM. No Python ML stack. No GPU. No OCR model in the base install.
 Same input, same pinned profile, same stable payload projection and fingerprint.
 
+## Install / Build from source
+
+Ethos is source-only pre-alpha. There are no published crates, wheels, npm packages, binaries,
+or GitHub release artifacts yet.
+
+Prerequisites:
+
+- Rust via `rustup`; this checkout pins Rust `1.87.0` in `rust-toolchain.toml`
+- `make`
+- Python 3 for demo and schema-validation targets
+- `jsonschema>=4.18` in the Python environment used for `make verify-alpha`
+
+From a source checkout:
+
+```bash
+git clone https://github.com/docushell/ethos.git
+cd ethos
+rustup show
+cargo build --locked -p ethos-cli
+./target/debug/ethos --help
+```
+
+To install the pre-alpha CLI from the checkout into your local Cargo bin:
+
+```bash
+cargo install --locked --path crates/ethos-cli
+ethos --help
+```
+
+## Minimal end-to-end example
+
+This verifies three citation claims against checked-in native Ethos document JSON: a quote, a
+table cell, and page-level presence evidence.
+
+```bash
+cargo build --locked -p ethos-cli
+
+./target/debug/ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/native_grounded_citations.json \
+  --fail-on-ungrounded \
+  --out /tmp/ethos-native-verification-report.json
+```
+
+The command exits `0` and writes a verification report shaped like this:
+
+```json
+{
+  "all_evidence_grounded": true,
+  "fingerprint_stale": false,
+  "grounding": {
+    "parser": {
+      "name": "ethos",
+      "version": "0.1.0"
+    }
+  },
+  "checks": [
+    {
+      "id": "v0001",
+      "status": "grounded",
+      "match_method": "normalized_text_contains"
+    }
+  ],
+  "warnings": []
+}
+```
+
 ## Try the alpha verification loop
 
 Ethos is source-only pre-alpha. There are no release artifacts or package installs yet. From a
@@ -42,7 +108,7 @@ That command builds the CLI and checks the alpha grounding loop across:
 - byte-identical repeated verification reports for the checked-in fixtures
 - deterministic native crop descriptor JSON artifacts
 
-A single verification command looks like this:
+A foreign-parser verification command looks like this:
 
 ```bash
 ethos verify examples/verify/opendataloader.json \
@@ -60,6 +126,29 @@ Exit behavior:
 - `2`: invalid input, malformed citations, adapter failure, or another usage error
 
 See `docs/demos/verify-alpha.md` for the full demo matrix.
+
+## Expected output snippet
+
+A healthy `make verify-alpha` run includes ordinary Cargo test output plus the demo checks:
+
+```text
+running 17 tests
+...
+test result: ok. 17 passed; 0 failed
+
+running 40 tests
+...
+test result: ok. 40 passed; 0 failed
+
+ok    native-grounded matches examples/verify/goldens/native_grounded_report.json
+ok    opendataloader-grounded matches examples/verify/goldens/opendataloader_grounded_report.json
+ok    real-opendataloader-grounded matches fixtures/foreign/opendataloader/real/expected.verification_report.json
+ok    native-grounded-crops crop descriptors validate against schemas/ethos-crop-descriptor.schema.json
+
+verify-alpha demo checks passed
+```
+
+Generated reports and crop descriptors are written under `target/verify-alpha/`.
 
 ## What Ethos is not (honest scope)
 
@@ -164,6 +253,18 @@ hosted or service deployments must use sandbox/subprocess isolation with CPU, me
 file-descriptor, output, and network limits.
 
 Report vulnerabilities through GitHub private vulnerability reporting. See `SECURITY.md`.
+
+## Troubleshooting
+
+| Symptom | What to check |
+| --- | --- |
+| `ModuleNotFoundError: No module named 'jsonschema'` during `make verify-alpha` | Install `jsonschema>=4.18` in the Python environment used by `python3`, then rerun the target. |
+| `cargo build --locked` fails before compiling Ethos | Run from the repository root and keep the committed `Cargo.lock`; dependency or lockfile changes should happen in their own PR. |
+| Rust version errors or unexpected compiler behavior | Run `rustup show`; this repo pins Rust `1.87.0` through `rust-toolchain.toml`. |
+| `ethos verify --fail-on-ungrounded` exits `1` | The command wrote a report, but at least one requested evidence check was stale, missing, mismatched, unsupported, or capability-blocked. Inspect `all_evidence_grounded`, `checks[].status`, `warnings`, and `capability_limits`. |
+| Scanned or image-only PDFs do not parse | Base Ethos does not include OCR. These inputs should fail with `ocr_required` until OCR support is explicitly added. |
+| Rendered crop PNGs are missing or skipped | Logical crop descriptor JSON works in the alpha path; rendered PNG crop artifacts require the source PDF path and a configured PDFium runtime. |
+| Release/tag workflow fails | This is intentional during pre-alpha. Public releases, binaries, wheels, npm packages, and crates are blocked until `docs/public-release-checklist.md` is complete. |
 
 ## FAQ
 
