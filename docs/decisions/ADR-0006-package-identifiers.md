@@ -207,6 +207,8 @@ Checks attempted:
 
 Outcome: this engineering check found the right official sources but did not produce auditable result sets. A manual logged-in search or legal/trademark review is still required for "Ethos" in software-relevant classes before this ADR can be accepted or public launch claims can be made.
 
+Detailed release-readiness tracking is recorded in `docs/validation/trademark-screen-2026-06-15.md`.
+
 ## Decision
 
 Pending trademark/legal validation. Identifiers above are used internally in the meantime; they may change by amendment to this ADR if unavailable. `ethos-doc-core` is the selected public crates.io replacement for the unavailable `ethos-core` package identifier. GitHub source ownership and npm scope should use Docushell (`docushell/ethos`, `docushell/ethos-bench`, `@docushell/ethos-pdf`). npm reservation is complete via `@docushell/ethos-pdf@0.0.0-reserved.0`. Priority crates.io reservation is complete via `ethos-doc-core`, `ethos-doc`, `ethos-verify`, `ethos-rag`, and `ethos-pdf` at `0.0.0-reserved.0`. PyPI reservation is complete via `ethos-pdf==0.0.0.post0`. Future internal crate reservations are deferred until a package has approved public release scope. Schema `$id`s use the `urn:ethos:schema:*` form precisely so schemas need no rename if package names change.
