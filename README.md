@@ -1,5 +1,12 @@
 # Ethos
 
+[![ci](https://github.com/docushell/ethos/actions/workflows/ci.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/ci.yml)
+[![determinism](https://github.com/docushell/ethos/actions/workflows/determinism.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/determinism.yml)
+[![bench](https://github.com/docushell/ethos/actions/workflows/bench.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/bench.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+![Rust: 1.87+](https://img.shields.io/badge/rust-1.87%2B-orange)
+![status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-red)
+
 > **Status: pre-alpha — contracts phase.** Nothing here is released, benchmarked, or ready for
 > use. Gate Zero (the go/no-go measurement for the parser core) has not run. No performance,
 > footprint, or quality claims are made until the published, reproducible benchmark report
