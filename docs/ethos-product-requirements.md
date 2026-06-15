@@ -14,7 +14,7 @@ Ethos is an open-source, PDF-first document parser for RAG and AI-agent systems.
 
 The first public promise is intentionally narrow:
 
-> Citation evidence you can prove. A deterministic, runtime-light PDF parser for RAG and agents.
+> Citation evidence you can prove. A deterministic PDF parser for RAG and agents.
 
 Ethos must not launch as a universal document AI system. It must launch as a reliable parsing primitive with stable artifacts, source coordinates, verifiable citation evidence, and reproducible benchmarks.
 
@@ -862,21 +862,21 @@ Dependency and license boundary:
 README positioning:
 
 ```text
-Ethos is a fast, deterministic, runtime-light PDF parser for RAG and AI
-agents. It turns born-digital PDFs into an auditable document graph:
-JSON, Markdown, text, chunks, tables, citations, coordinates, crops,
-and security warnings.
+Ethos is a deterministic PDF parser and evidence-verification layer for
+RAG and AI agents. It turns born-digital PDFs into an auditable document
+graph: JSON, Markdown, text, chunks, citations, coordinates, crops, and
+security warnings.
 
 Ethos can verify citation evidence against the parsed source and return
 the source crop for inspection.
 
-One small native parser. No JVM. No Python ML stack. No GPU. No OCR model
+One native parser. No JVM. No Python ML stack. No GPU. No OCR model
 in the base install. Same input, same pinned profile, same canonical
 output.
 
 Ethos is not an OCR engine yet, and it does not claim to beat VLM parsers
-on complex scanned layouts. It is built for teams that need trustworthy,
-fast, local PDF parsing with verifiable source grounding.
+on complex scanned layouts. It is built for teams that need trustworthy
+document parsing with verifiable source grounding.
 ```
 
 ---

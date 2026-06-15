@@ -14,7 +14,9 @@ blocked.
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in
   `docs/decisions/ADR-0006-package-identifiers.md`.
-- README, docs, examples, and benchmark summaries pass a claim-language scan.
+- README, docs, examples, and benchmark summaries pass a claim-language scan. Current scan:
+  `docs/validation/claim-language-scan-2026-06-15.md`; rerun before public push if public-facing
+  text or generated evidence changes.
 - No generated evidence file in the public tree exposes private usernames, local machine names,
   private hostnames, or one-off absolute paths.
 - Historical benchmark evidence is either regenerated through `ethos-bench` with public-safe

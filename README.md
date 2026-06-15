@@ -7,25 +7,23 @@
 > Current execution status and blockers live in `docs/execution-status.md`; public-release
 > hygiene gates live in `docs/public-release-checklist.md`.
 
-Ethos is a verification and grounding system for document evidence. It includes a fast,
-deterministic, runtime-light PDF parser that turns born-digital PDFs into auditable grounding
-artifacts: JSON, Markdown, text, chunks, tables, citations, coordinates, crops, and security
-warnings.
+Ethos is a verification and grounding system for document evidence. It includes a deterministic
+PDF parser that turns born-digital PDFs into auditable grounding artifacts: JSON, Markdown, text,
+chunks, citations, coordinates, crops, and security warnings.
 
 Ethos can verify citation evidence against the parsed source and return the source crop for
 inspection.
 
-One small native parser. No JVM. No Python ML stack. No GPU. No OCR model in the base install.
+One native parser. No JVM. No Python ML stack. No GPU. No OCR model in the base install.
 Same input, same pinned profile, same canonical output.
 
 ## What Ethos is not (honest scope)
 
 - Ethos is **not an OCR engine** yet, and it does not claim to beat VLM parsers on complex
   scanned layouts. Scanned/image-only pages fail with a stable `ocr_required` error.
-- Release 1 targets **born-digital PDFs**: text spans, reading order, headings, lists, simple
-  and bordered tables, non-text region coordinates, security report, chunks, citations,
-  verification. Complex table semantics, formula/LaTeX, and chart classification are Release 2
-  enrichment.
+- Release 1 targets **born-digital PDFs**: text spans, reading order, conservative structure,
+  non-text region coordinates, security report, chunks, citations, and verification. Complex
+  table semantics, formula/LaTeX, and chart classification are Release 2 enrichment.
 - Verification checks **evidence grounding** (the cited region exists, the text matches, the
   fingerprint is fresh). It is not a semantic correctness judgment of an answer.
 - Non-embedded CJK font fallback is out of Release 1 and warns explicitly.

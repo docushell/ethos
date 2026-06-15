@@ -10,6 +10,9 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+- `claim-language-scan-2026-06-15.md` - current README/docs/examples/benchmark wording was
+  scanned for unsupported public claims; README wording was narrowed to avoid speed,
+  footprint, table, and heading overclaims.
 - `rendered-crops-2026-06-14.md` - same-host rendered crop repeatability passed on macOS
   arm64 and Linux x64; cross-platform rendered crop byte identity failed because evidence
   bbox differed slightly across platforms.
