@@ -17,6 +17,43 @@ inspection.
 One native parser. No JVM. No Python ML stack. No GPU. No OCR model in the base install.
 Same input, same pinned profile, same stable payload projection and fingerprint.
 
+## Try the alpha verification loop
+
+Ethos is source-only pre-alpha. There are no release artifacts or package installs yet. From a
+source checkout, the current product-proof command is:
+
+```bash
+make verify-alpha
+```
+
+That command builds the CLI and checks the alpha grounding loop across:
+
+- native Ethos document JSON
+- synthetic OpenDataLoader-style JSON
+- pinned real OpenDataLoader 2.4.7 JSON fixtures
+- grounded, ungrounded, stale-fingerprint, and capability-limited citation cases
+- byte-identical repeated verification reports for the checked-in fixtures
+- deterministic native crop descriptor JSON artifacts
+
+A single verification command looks like this:
+
+```bash
+ethos verify examples/verify/opendataloader.json \
+  --grounding opendataloader-json \
+  --citations examples/verify/opendataloader_grounded_citations.json \
+  --fail-on-ungrounded \
+  --out /tmp/ethos-verification-report.json
+```
+
+Exit behavior:
+
+- `0`: verification completed and all requested evidence is grounded
+- `1`: verification completed, but at least one requested evidence check is stale, missing,
+  mismatched, unsupported, or capability-blocked
+- `2`: invalid input, malformed citations, adapter failure, or another usage error
+
+See `docs/demos/verify-alpha.md` for the full demo matrix.
+
 ## What Ethos is not (honest scope)
 
 - Ethos is **not an OCR engine** yet, and it does not claim to beat VLM parsers on complex
@@ -27,9 +64,63 @@ Same input, same pinned profile, same stable payload projection and fingerprint.
 - Verification checks **evidence grounding** (the cited region exists, the text matches, the
   fingerprint is fresh). It is not a semantic correctness judgment of an answer.
 - Non-embedded CJK font fallback is out of Release 1 and warns explicitly.
+- Public benchmark reports, package publication, GitHub releases, binaries, wheels, npm updates,
+  and launch announcements are blocked until the release checklist is complete.
 
 It is built for teams that need trustworthy local document grounding, deterministic native parsing
 when they want it, and citation evidence that can be inspected instead of trusted blindly.
+
+## Verification flow
+
+```text
+AI answer citations
+        +
+document evidence source
+        |
+        v
+GroundingSource adapter
+        |
+        v
+ethos verify
+        |
+        +--> verification_report.json
+        +--> optional crop descriptor JSON
+        +--> optional source-bound rendered crop artifact
+```
+
+The deterministic Ethos parser is one grounding source. Foreign parser output can be another
+grounding source when an adapter can expose text, pages, regions, fingerprints, and capabilities
+through the `GroundingSource` trait. When a source lacks required evidence metadata, Ethos reports
+that limitation instead of silently upgrading the claim.
+
+## Current capability status
+
+| Capability | Current status | Claim boundary |
+| --- | --- | --- |
+| Native Ethos JSON citation verification | Alpha path exists | Grounding checks over checked-in fixtures |
+| OpenDataLoader JSON grounding adapter | Alpha path exists | Quote, value, and presence checks over pinned fixtures |
+| Stale fingerprint handling | Alpha path exists | Fails closed when citation fingerprints drift |
+| Capability-limited reports | Alpha path exists | Reports missing source capabilities explicitly |
+| Crop descriptor JSON | Alpha path exists for native Ethos JSON | Descriptor identity is logical evidence identity |
+| Rendered crop PNG artifacts | Same-host repeatability path exists | Cross-platform PNG byte identity is not claimed |
+| Born-digital PDF parsing | Narrow parser path exists | Not benchmark-validated; parser quality claims are blocked |
+| OCR / scanned PDFs | Not supported in base install | Stable `ocr_required` failure |
+| Complex table semantics | Alpha-only | Release 2 enrichment work |
+| Heading/list/layout quality | Alpha-only | Still fixture- and Gate-Zero-dependent |
+| Public benchmarks | Not ready | Public evidence belongs in `ethos-bench` |
+
+## Supported grounding sources
+
+Ethos verification is parser-agnostic by design. The current source adapters are:
+
+| Source | How to use it | Notes |
+| --- | --- | --- |
+| Native Ethos document JSON | `ethos verify document.ethos.json --citations citations.json` | Fullest alpha evidence path |
+| OpenDataLoader-style JSON | `--grounding opendataloader-json` | Capability warnings describe missing metadata |
+| Real pinned OpenDataLoader 2.4.7 JSON fixtures | `fixtures/foreign/opendataloader/real/` | Used by `make verify-alpha` |
+
+Additional adapters should preserve the same contract: expose what the source can prove, report
+what it cannot, and never pretend parser output is stronger than its evidence.
 
 ## Public architecture
 
@@ -57,6 +148,48 @@ Geometry is quantized at extraction, fonts resolve through a bundled determinist
 (never system fonts), canonical JSON has one serialization, and runtime diagnostics live outside
 canonical equality. A flaky fingerprint is a bug, never a retry. See
 `docs/determinism-contract.md`.
+
+## Security and local execution
+
+Ethos treats PDFs as hostile input. The base build is designed for local/offline execution with no
+network APIs in base crates. PDFium is loaded only from an explicit operator-provided path, and
+hosted or service deployments must use sandbox/subprocess isolation with CPU, memory, wall-time,
+file-descriptor, output, and network limits.
+
+Report vulnerabilities through GitHub private vulnerability reporting. See `SECURITY.md`.
+
+## FAQ
+
+### Is Ethos a PDF parser?
+
+Partly. Ethos includes a deterministic born-digital PDF parser, but the product goal is citation
+grounding: checking whether cited AI claims are supported by document evidence. Parser work serves
+that verification loop.
+
+### Is Ethos a semantic truth system?
+
+No. Ethos checks evidence grounding, freshness, and source capabilities. It does not claim semantic
+entailment, computed-number correctness, factual correctness, or answer quality.
+
+### Can Ethos verify output from other parsers?
+
+Yes, when that parser's output can be adapted into `GroundingSource`. OpenDataLoader JSON is the
+first adapter path.
+
+### Does Ethos support scanned PDFs?
+
+Not in the base install. Scanned or image-only pages fail with `ocr_required`.
+
+### Can I use Ethos in CI?
+
+The alpha CLI supports `--fail-on-ungrounded`, which exits `1` when verification completes but
+evidence is not fully grounded. Treat the current repo as source-only pre-alpha, not a stable
+package or release artifact.
+
+### Where are benchmark results?
+
+Public benchmark reports are not ready. Generated public-safe Gate Zero evidence belongs in the
+separate `docushell/ethos-bench` repository, not in this main source repo.
 
 ## Repository map
 

@@ -1,5 +1,6 @@
 [package]
 name = "ethos-cli"
+publish = false
 description = "The `ethos` CLI — public command groups doc / rag / verify + fingerprint"
 version.workspace = true
 edition.workspace = true

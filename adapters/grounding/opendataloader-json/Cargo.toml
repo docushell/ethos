@@ -1,5 +1,6 @@
 [package]
 name = "ethos-grounding-opendataloader-json"
+publish = false
 description = "GroundingSource adapter stub over OpenDataLoader PDF JSON output (A stub, B alpha, D v1)"
 version.workspace = true
 edition.workspace = true

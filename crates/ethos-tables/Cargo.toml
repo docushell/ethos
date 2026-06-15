@@ -1,5 +1,6 @@
 [package]
 name = "ethos-tables"
+publish = false
 description = "Deterministic table candidate extraction for Ethos spans"
 version.workspace = true
 edition.workspace = true

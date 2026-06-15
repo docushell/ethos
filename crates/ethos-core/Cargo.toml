@@ -1,5 +1,6 @@
 [package]
 name = "ethos-core"
+publish = false
 description = "Ethos canonical document model, IDs, errors, schema types, traits, c14n and fingerprints"
 version.workspace = true
 edition.workspace = true

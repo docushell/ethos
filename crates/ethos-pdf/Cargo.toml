@@ -1,5 +1,6 @@
 [package]
 name = "ethos-pdf"
+publish = false
 description = "PDFium backend behind EthosPdfBackend — quantize-at-extraction lives here (WS-ENGINE, Milestone A)"
 version.workspace = true
 edition.workspace = true

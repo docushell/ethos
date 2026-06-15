@@ -1,5 +1,6 @@
 [package]
 name = "ethos-verify"
+publish = false
 description = "Parser-agnostic citation evidence verification over GroundingSource (alpha lands Milestone B)"
 version.workspace = true
 edition.workspace = true

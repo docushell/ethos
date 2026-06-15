@@ -1,16 +1,26 @@
-# bench.yml — weekly + tags (plan §9). Harness output is JSON + repro attestation;
-# never prose claims. Competitor crashes are data, not patch targets (PRD §11.3).
+# bench.yml — main-repo benchmark harness smoke only.
+#
+# Generated Gate Zero evidence and public-safe benchmark artifacts are owned by
+# docushell/ethos-bench. This repository must not publish benchmark JSON from
+# GitHub Actions while Ethos is source-only pre-alpha.
 name: bench
 
 on:
-  schedule:
-    - cron: "41 4 * * 1" # weekly, Monday
+  pull_request:
+    paths:
+      - ".github/workflows/bench.yml"
+      - ".github/scripts/readiness_gate.py"
+      - "benchmarks/**"
   push:
-    tags: ["v*"]
+    branches: [main]
+    paths:
+      - ".github/workflows/bench.yml"
+      - ".github/scripts/readiness_gate.py"
+      - "benchmarks/**"
   workflow_dispatch:
 
 jobs:
-  bench:
+  harness-smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,16 +28,7 @@ jobs:
         run: python3 .github/scripts/readiness_gate.py gate-zero --report-only
       - name: harness smoke
         run: make -C benchmarks/harness smoke
-      - name: run gate zero harness
+      - name: no benchmark artifact publication from main repo
         run: |
-          if python3 .github/scripts/readiness_gate.py gate-zero; then
-            make -C benchmarks/harness bench
-          else
-            echo "skipped: Gate Zero corpus/hardware/competitor pins are not ready"
-          fi
-      - name: upload results
-        if: hashFiles('benchmarks/results/**/*.json') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: bench-results-${{ github.run_id }}
-          path: benchmarks/results/
+          echo "Gate Zero evidence publication is intentionally disabled here."
+          echo "Use docushell/ethos-bench for public-safe benchmark evidence."

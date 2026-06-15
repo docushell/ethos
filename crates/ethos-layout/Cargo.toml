@@ -1,5 +1,6 @@
 [package]
 name = "ethos-layout"
+publish = false
 description = "Deterministic basic layout engine for Ethos extraction spans"
 version.workspace = true
 edition.workspace = true
