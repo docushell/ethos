@@ -22,6 +22,9 @@ Records:
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
+- `public-source-push-preflight-2026-06-15.md` - final public GitHub source-push preflight
+  passed for a pre-alpha source repository, with package releases, binary artifacts, public
+  benchmark reports, and launch claims still blocked.
 - `rendered-crops-2026-06-14.md` - same-host rendered crop repeatability passed on macOS
   arm64 and Linux x64; cross-platform rendered crop byte identity failed because evidence
   bbox differed slightly across platforms.

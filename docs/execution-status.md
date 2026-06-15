@@ -2,7 +2,7 @@
 
 Date: 2026-06-15
 Owner: product / decider
-Status: Pre-alpha / Milestone A implementation. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, ADR-0006 closes package identifier/trademark validation, and ADR-0007 locks the product direction: Ethos is a verification and grounding layer that includes a deterministic parser. External freeze/pin checks still block Gate Zero and all public claims.
+Status: Pre-alpha / Milestone A implementation. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, ADR-0006 closes package identifier/trademark validation, ADR-0007 locks the product direction, and the public-source preflight is green for a source-only pre-alpha GitHub push. External freeze/pin checks still block Gate Zero, public benchmark reports, releases, packages, and all performance/quality claims.
 
 ## Current Reality
 

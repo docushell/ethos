@@ -5,10 +5,11 @@ or launch announcement. It is intentionally stricter than the day-to-day enginee
 
 ## Current Status
 
-Ethos is not public-release ready. It is pre-alpha and may be shared privately with the current
-claim language. The package-name/trademark gate is closed by ADR-0006, but public benchmark,
-parser-quality, table, heading, speed, footprint, and rendered-crop byte-identity claims remain
-blocked.
+Ethos is not package-release, artifact-release, benchmark-report, or launch-announcement ready.
+It may be pushed as a public pre-alpha source repository only if the latest public-source
+preflight passes and the current claim language is used. The package-name/trademark gate is
+closed by ADR-0006, but public benchmark, parser-quality, table, heading, speed, footprint, and
+rendered-crop byte-identity claims remain blocked.
 
 ## Required Before Public Push
 
@@ -32,6 +33,8 @@ blocked.
   the current check: `docs/validation/license-notice-check-2026-06-15.md`. Release artifacts
   still need generated third-party license/NOTICE manifests and an advisory scan with a
   compatible `cargo-deny`/Rust toolchain before public release.
+- Current public-source preflight:
+  `docs/validation/public-source-push-preflight-2026-06-15.md`.
 
 ## Claim Rules
 

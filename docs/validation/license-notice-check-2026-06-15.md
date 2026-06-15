@@ -52,11 +52,11 @@ Checked paths:
 ```sh
 cargo metadata --locked --offline --format-version 1 --no-deps
 cargo deny --version
-cargo install cargo-deny --locked --root /private/tmp/ethos-cargo-tools
-cargo install cargo-deny --version 0.18.3 --locked --root /private/tmp/ethos-cargo-tools
-/private/tmp/ethos-cargo-tools/bin/cargo-deny check
-/private/tmp/ethos-cargo-tools/bin/cargo-deny check licenses bans sources
-make release-hygiene CARGO_DENY=/private/tmp/ethos-cargo-tools/bin/cargo-deny
+cargo install cargo-deny --locked --root <tmp-tools>
+cargo install cargo-deny --version 0.18.3 --locked --root <tmp-tools>
+<tmp-tools>/bin/cargo-deny check
+<tmp-tools>/bin/cargo-deny check licenses bans sources
+make release-hygiene CARGO_DENY=<tmp-tools>/bin/cargo-deny
 git diff --check
 ```
 
@@ -69,21 +69,21 @@ success; workspace package metadata was readable offline and reported Apache-2.0
 cargo deny --version
 error: no such command: `deny`
 
-cargo install cargo-deny --locked --root /private/tmp/ethos-cargo-tools
+cargo install cargo-deny --locked --root <tmp-tools>
 error: cargo-deny 0.19.8 requires rustc 1.88.0 or newer; active rustc is 1.87.0
 
-cargo install cargo-deny --version 0.18.3 --locked --root /private/tmp/ethos-cargo-tools
+cargo install cargo-deny --version 0.18.3 --locked --root <tmp-tools>
 success
 
-/private/tmp/ethos-cargo-tools/bin/cargo-deny check
+<tmp-tools>/bin/cargo-deny check
 error: cargo-deny 0.18.3 could not parse a current RustSec CVSS 4.0 advisory
 
-/private/tmp/ethos-cargo-tools/bin/cargo-deny check licenses bans sources
+<tmp-tools>/bin/cargo-deny check licenses bans sources
 bans ok, licenses ok, sources ok
 warnings only: unused allowed-license entries in `deny.toml`, plus duplicate transitive
 `wit-bindgen` versions through dev dependencies
 
-make release-hygiene CARGO_DENY=/private/tmp/ethos-cargo-tools/bin/cargo-deny
+make release-hygiene CARGO_DENY=<tmp-tools>/bin/cargo-deny
 pass
 
 git diff --check
