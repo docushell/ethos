@@ -15,6 +15,9 @@ Records:
   footprint, table, and heading overclaims.
 - `ethos-bench-hygiene-2026-06-15.md` - sibling `ethos-bench` repo hygiene files were verified
   and its local unit/smoke checks passed.
+- `license-notice-check-2026-06-15.md` - source license metadata, NOTICE boundaries, and
+  ADR-0004 policy wiring were checked; release artifacts still need generated third-party
+  license manifests and an executed `cargo-deny` policy check.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.

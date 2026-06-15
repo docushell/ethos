@@ -5,8 +5,14 @@ Licensed under the Apache License, Version 2.0.
 
 Third-party notices (maintained per ADR-0004; entries land with the assets):
 
-- PDFium (BSD-3-Clause) — added when the Phase 1 pinned binaries land (WS-ENGINE, Milestone A).
-- Liberation Fonts (SIL OFL 1.1) — added when the deterministic font bundle lands
-  (WS-ENGINE, Milestone A, ADR-0003).
+- PDFium (BSD-3-Clause) — Ethos can load a pinned PDFium runtime supplied by the
+  operator or benchmark host. The source tree does not vendor PDFium binaries. Any
+  release artifact that bundles PDFium must carry the upstream PDFium license and
+  notice material alongside the artifact manifest.
+- Liberation Fonts (SIL Open Font License 1.1) — ADR-0003 selects the Liberation
+  family as the deterministic fallback font bundle. The source tree currently
+  records the policy but does not vendor the font files. Any release artifact that
+  bundles Liberation fonts must carry the upstream OFL notice material alongside
+  the artifact manifest.
 
 Generated third-party license manifests are published with release artifacts (plan §9).

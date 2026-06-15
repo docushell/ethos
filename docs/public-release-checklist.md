@@ -28,7 +28,9 @@ blocked.
   `docs/validation/ethos-bench-hygiene-2026-06-15.md`.
 - Gate Zero public result files are signed or otherwise integrity-bound by the accepted release
   process; unsigned local snapshots stay internal.
-- Release artifacts include third-party license and NOTICE material.
+- Source license metadata and NOTICE boundaries pass the current check:
+  `docs/validation/license-notice-check-2026-06-15.md`. Release artifacts still need generated
+  third-party license/NOTICE manifests before public release.
 
 ## Claim Rules
 
