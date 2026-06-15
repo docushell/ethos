@@ -10,11 +10,13 @@ readiness check for the current pre-alpha tree.
 
 ## Status
 
-Status: **completed for current source tree with release-artifact follow-up required**.
+Status: **completed for current source tree with release-artifact and advisory follow-up required**.
 
-The source tree has coherent Apache-2.0 project licensing and records the known PDFium and
-Liberation notice boundaries. Final public release artifacts still need a generated third-party
-license manifest and a `cargo-deny` run in CI or a local environment with `cargo-deny` installed.
+The source tree has coherent Apache-2.0 project licensing, records the known PDFium and
+Liberation notice boundaries, and passes the non-advisory `cargo-deny` policy checks that enforce
+licenses, banned crates, and source registries. Final public release artifacts still need a
+generated third-party license manifest and an advisory scan with a compatible `cargo-deny`/Rust
+toolchain.
 
 ## Scope
 
@@ -50,6 +52,11 @@ Checked paths:
 ```sh
 cargo metadata --locked --offline --format-version 1 --no-deps
 cargo deny --version
+cargo install cargo-deny --locked --root /private/tmp/ethos-cargo-tools
+cargo install cargo-deny --version 0.18.3 --locked --root /private/tmp/ethos-cargo-tools
+/private/tmp/ethos-cargo-tools/bin/cargo-deny check
+/private/tmp/ethos-cargo-tools/bin/cargo-deny check licenses bans sources
+make release-hygiene CARGO_DENY=/private/tmp/ethos-cargo-tools/bin/cargo-deny
 git diff --check
 ```
 
@@ -62,13 +69,33 @@ success; workspace package metadata was readable offline and reported Apache-2.0
 cargo deny --version
 error: no such command: `deny`
 
+cargo install cargo-deny --locked --root /private/tmp/ethos-cargo-tools
+error: cargo-deny 0.19.8 requires rustc 1.88.0 or newer; active rustc is 1.87.0
+
+cargo install cargo-deny --version 0.18.3 --locked --root /private/tmp/ethos-cargo-tools
+success
+
+/private/tmp/ethos-cargo-tools/bin/cargo-deny check
+error: cargo-deny 0.18.3 could not parse a current RustSec CVSS 4.0 advisory
+
+/private/tmp/ethos-cargo-tools/bin/cargo-deny check licenses bans sources
+bans ok, licenses ok, sources ok
+warnings only: unused allowed-license entries in `deny.toml`, plus duplicate transitive
+`wit-bindgen` versions through dev dependencies
+
+make release-hygiene CARGO_DENY=/private/tmp/ethos-cargo-tools/bin/cargo-deny
+pass
+
 git diff --check
 pass
 ```
 
 ## Remaining Release Work
 
-- Install and run `cargo-deny` before any public release artifact is cut.
+- Run the advisory portion of `cargo-deny` before any public release artifact is cut. On the
+  current Rust 1.87 toolchain, `cargo-deny 0.18.3` is the newest compatible version, but it
+  cannot parse current RustSec CVSS 4.0 advisory metadata. Use Rust 1.88+ with a newer
+  `cargo-deny`, or a CI runner that provides that pairing.
 - Generate and publish a third-party license/NOTICE manifest with release artifacts.
 - If PDFium binaries or Liberation fonts are bundled in an artifact, include the upstream license
   and notice material in that artifact.
@@ -77,6 +104,6 @@ pass
 
 ## Result
 
-The current source tree passes the license/NOTICE source-readiness check for pre-alpha publication.
-Public release artifacts remain blocked on generated third-party license manifests and an executed
-`cargo-deny` policy check.
+The current source tree passes the license/NOTICE source-readiness check and non-advisory
+`cargo-deny` policy checks for pre-alpha publication. Public release artifacts remain blocked on
+generated third-party license manifests and a successful advisory scan.
