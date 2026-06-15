@@ -9,7 +9,7 @@
 
 ```
 # ADR-0005: Gate Zero Decision
-Date / Decider: <date> / Gate Zero decider (per ADR-0000)
+Date / Decider: <date> / project lead role (per ADR-0000)
 Inputs: benchmarks/results/gate-zero/{g1,g2,g3}.json @ commit <sha>, manifest <sha>
 
 G1 - Throughput: <measured pps> vs max(120 pps p50, 2x <ODL-remeasured pps>)

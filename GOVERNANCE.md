@@ -10,7 +10,7 @@
 | Release owner | Appointed per release by maintainers | Owns release checklist, claim audit, footprint gate, NOTICE/license manifests |
 
 Current maintainers are listed in this file's history until a `MAINTAINERS.md` split is
-warranted. Project lead and Gate Zero decider: **Gate Zero decider** (ADR-0000).
+warranted. The project lead role owns the Gate Zero decider responsibility (ADR-0000).
 
 ## Decision making
 

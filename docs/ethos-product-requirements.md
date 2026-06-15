@@ -55,8 +55,8 @@ The single Gate Zero corpus and hardware profile are frozen before kickoff in `b
 
 Gate Zero ownership and hardware profile are no longer open questions:
 
-- Decider: Gate Zero decider, project lead. Gate Zero is a build-vs-pivot business decision, not a committee vote.
-- Corpus owner: Gate Zero decider on an interim basis, transferring to the benchmark/devrel owner when staffed.
+- Decider: project lead role. Gate Zero is a build-vs-pivot business decision, not a committee vote.
+- Corpus owner: interim project lead role, transferring to the benchmark/devrel owner when staffed.
 - Known Gate Zero benchmark hardware: local Mac M4 Pro arm64 and Linux x64 machines recorded in the manifest with exact CPU, RAM, OS, kernel, and runner details. Literal host strings belong in `benchmarks/gate-zero/manifest.json`, not in this PRD.
 - Windows x64 joins the nightly determinism matrix no later than Milestone B exit, week 8. Windows failures before Public Beta are tracked as release-blockers-in-waiting; unresolved Windows determinism failure blocks or re-scopes Public Beta.
 
@@ -1042,8 +1042,8 @@ Exit:
 Closed decisions now recorded in this PRD:
 
 - Project name: Ethos.
-- Gate Zero decider: Gate Zero decider.
-- Interim corpus owner: Gate Zero decider until the benchmark/devrel role is staffed.
+- Gate Zero decider: project lead role.
+- Interim corpus owner: project lead role until the benchmark/devrel role is staffed.
 - Gate Zero benchmark hardware: local Mac M4 Pro arm64 and Linux x64 machines recorded in `benchmarks/gate-zero/manifest.json` with exact CPU, RAM, OS, kernel, and runner details.
 - PDFium distribution: Phase 1 pinned `bblanchon/pdfium-binaries`; Phase 2 project-maintained `pdfium.googlesource.com` builds before Public Beta.
 - Font policy: embedded fonts first, versioned substitution table, bundled Liberation fallback, deterministic `.notdef` on glyph miss, non-embedded CJK warned and out of Release 1.

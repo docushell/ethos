@@ -37,7 +37,7 @@ make release-hygiene CARGO_DENY=<tmp-tools>/bin/cargo-deny
 git ls-files benchmarks/results
 git check-ignore -v benchmarks/results/fixtures/baseline.json
 git ls-files | rg '(^|/)(g1|g2|g3)\.json$|gate-zero.*\.json$|benchmark.*result.*\.json$|diagnostics/.*\.json$'
-git ls-files -z | xargs -0 rg -n '<private-user-pattern>|<private-user-pattern>|<private-host-pattern>|<private-host-pattern>|<private-host-pattern>|/Users/|/scratch/|/private/tmp|/private/var'
+git ls-files -z | xargs -0 rg -n '<private-user-or-host-pattern>|/Users/|/scratch/|/private/tmp|/private/var'
 git ls-files -z | xargs -0 rg -n 'fastest|production[- ]grade|truth checker|truth-checker|10x|public benchmark winner|cross-platform bit-identical rendered crops'
 git diff --check
 ```

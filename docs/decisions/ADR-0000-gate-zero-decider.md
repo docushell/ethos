@@ -10,7 +10,7 @@ Gate Zero (week 4) is a single, named-decider evaluation of G1 throughput, G2 fo
 
 ## Decision
 
-The Gate Zero decider is **Gate Zero decider, project lead**.
+The Gate Zero decider is the **project lead role**.
 
 - Sole inputs to the decision: `benchmarks/results/gate-zero/{g1,g2,g3}.json` plus reproduction commands and hardware attestation (handoff contract §5.2.4).
 - The decision is recorded as ADR-0005 using the template in `ADR-0005-gate-zero-decision.md`.
