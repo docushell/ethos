@@ -96,11 +96,11 @@ Example macOS arm64 command:
 ```sh
 make -C benchmarks/harness gate-zero-g2 \
   GATE_ZERO_PLATFORM=macos-arm64 \
-  'GATE_ZERO_ETHOS_FOOTPRINT=ethos-cli=target/release/ethos pdfium-library=/private/tmp/ethos-pdfium/lib/libpdfium.dylib' \
-  OPENDATALOADER_INSTALL_PATH=/private/tmp/ethos-odl-wheel-venv312 \
-  OPENDATALOADER_ARTIFACT=/private/tmp/opendataloader_pdf-2.4.7-py3-none-any.whl \
-  GATE_ZERO_PDFIUM_LIBRARY_PATH=/private/tmp/ethos-pdfium/lib/libpdfium.dylib \
-  GATE_ZERO_PDFIUM_ARTIFACT=/private/tmp/ethos-pdfium-mac-arm64.tgz
+  'GATE_ZERO_ETHOS_FOOTPRINT=ethos-cli=target/release/ethos pdfium-library=/tmp/ethos-pdfium/lib/libpdfium.dylib' \
+  OPENDATALOADER_INSTALL_PATH=/tmp/ethos-odl-wheel-venv312 \
+  OPENDATALOADER_ARTIFACT=/tmp/opendataloader_pdf-2.4.7-py3-none-any.whl \
+  GATE_ZERO_PDFIUM_LIBRARY_PATH=/tmp/ethos-pdfium/lib/libpdfium.dylib \
+  GATE_ZERO_PDFIUM_ARTIFACT=/tmp/ethos-pdfium-mac-arm64.tgz
 ```
 
 The macOS result records whether the measured full base parser footprint supports the

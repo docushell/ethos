@@ -18,7 +18,9 @@ blocked.
   `docs/validation/claim-language-scan-2026-06-15.md`; rerun before public push if public-facing
   text or generated evidence changes.
 - No generated evidence file in the public tree exposes private usernames, local machine names,
-  private hostnames, or one-off absolute paths.
+  private hostnames, or one-off absolute paths. Current scan:
+  `docs/validation/public-evidence-scan-2026-06-15.md`; rerun before public push if benchmark
+  outputs, validation records, fixture baselines, or reproduction sidecars change.
 - Historical benchmark evidence is either regenerated through `ethos-bench` with public-safe
   reproduction metadata or kept out of public release artifacts.
 - `ethos-bench` has its own public repository hygiene files: `SECURITY.md`, `CONTRIBUTING.md`,

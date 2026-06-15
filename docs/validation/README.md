@@ -13,6 +13,9 @@ Records:
 - `claim-language-scan-2026-06-15.md` - current README/docs/examples/benchmark wording was
   scanned for unsupported public claims; README wording was narrowed to avoid speed,
   footprint, table, and heading overclaims.
+- `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
+  scanned for private paths, hostnames, and generated Gate Zero output that belongs in
+  `ethos-bench`.
 - `rendered-crops-2026-06-14.md` - same-host rendered crop repeatability passed on macOS
   arm64 and Linux x64; cross-platform rendered crop byte identity failed because evidence
   bbox differed slightly across platforms.
