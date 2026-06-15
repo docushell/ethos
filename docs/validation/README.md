@@ -13,6 +13,8 @@ Records:
 - `claim-language-scan-2026-06-15.md` - current README/docs/examples/benchmark wording was
   scanned for unsupported public claims; README wording was narrowed to avoid speed,
   footprint, table, and heading overclaims.
+- `ethos-bench-hygiene-2026-06-15.md` - sibling `ethos-bench` repo hygiene files were verified
+  and its local unit/smoke checks passed.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.

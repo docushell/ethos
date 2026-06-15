@@ -24,7 +24,8 @@ blocked.
 - Historical benchmark evidence is either regenerated through `ethos-bench` with public-safe
   reproduction metadata or kept out of public release artifacts.
 - `ethos-bench` has its own public repository hygiene files: `SECURITY.md`, `CONTRIBUTING.md`,
-  and `CODE_OF_CONDUCT.md`.
+  and `CODE_OF_CONDUCT.md`. Current check:
+  `docs/validation/ethos-bench-hygiene-2026-06-15.md`.
 - Gate Zero public result files are signed or otherwise integrity-bound by the accepted release
   process; unsigned local snapshots stay internal.
 - Release artifacts include third-party license and NOTICE material.
