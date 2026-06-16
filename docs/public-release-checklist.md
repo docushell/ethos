@@ -34,7 +34,8 @@ rendered-crop byte-identity claims remain blocked.
   scan passes for the current source tree in `docs/validation/advisory-scan-2026-06-16.md`.
   Cargo third-party manifest generation is recorded in
   `docs/validation/third-party-manifest-2026-06-16.md`. Release artifacts still need
-  artifact-specific license/NOTICE bundles before public release.
+  artifact-specific license/NOTICE bundles under `docs/release-artifact-notices.md` before
+  public release.
 - Current public-source preflight:
   `docs/validation/public-source-push-preflight-2026-06-15.md`.
 

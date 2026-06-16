@@ -99,6 +99,9 @@ The advisory portion of `cargo-deny` was re-run successfully on 2026-06-16 with 
 Cargo third-party dependency manifest generation was added and verified on 2026-06-16; see
 `docs/validation/third-party-manifest-2026-06-16.md`.
 
+Artifact-specific release NOTICE draft scaffolding was added and verified on 2026-06-16; see
+`docs/validation/release-notice-draft-2026-06-16.md`.
+
 ## Remaining Release Work
 
 - Generate and publish artifact-specific license/NOTICE bundles with release artifacts.
@@ -111,6 +114,7 @@ Cargo third-party dependency manifest generation was added and verified on 2026-
 
 The current source tree passes the license/NOTICE source-readiness check and non-advisory
 `cargo-deny` policy checks for pre-alpha publication. The follow-up advisory scan now passes for
-the current source tree, and Cargo third-party manifest generation is repeatable. Public release
-artifacts remain blocked on artifact-specific license/NOTICE bundles and artifact-specific
-readiness work.
+the current source tree, Cargo third-party manifest generation is repeatable, and release NOTICE
+draft generation records artifact-specific obligations. Public release artifacts remain blocked
+on concrete artifact payload review, final license/NOTICE bundles, and artifact-specific readiness
+work.

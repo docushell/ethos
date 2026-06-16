@@ -4,13 +4,15 @@ CARGO_DENY ?= cargo deny
 CARGO_DENY_ADVISORY ?= $(CARGO_DENY)
 ADVISORY_RUSTUP_TOOLCHAIN ?= stable
 THIRD_PARTY_MANIFEST_OUT ?= $(ROOT)/target/release-third-party/cargo-third-party-licenses.json
+RELEASE_NOTICE_OUT ?= $(ROOT)/target/release-notice-draft
+RELEASE_ARTIFACT_NAME ?= ethos-cli-draft
 ETHOS_BIN ?= $(ROOT)/target/debug/ethos
 VERIFY_ALPHA_OUT ?= $(ROOT)/target/verify-alpha
 VERIFY_RENDERED_CROPS_OUT ?= $(ROOT)/target/verify-rendered-crops
 COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 
-.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops release-hygiene release-advisory third-party-license-manifest
+.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops release-hygiene release-advisory third-party-license-manifest release-notice-draft
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -53,3 +55,7 @@ release-advisory:
 
 third-party-license-manifest:
 	$(PYTHON) .github/scripts/generate_third_party_manifest.py --out $(THIRD_PARTY_MANIFEST_OUT)
+
+release-notice-draft:
+	$(MAKE) third-party-license-manifest THIRD_PARTY_MANIFEST_OUT=$(THIRD_PARTY_MANIFEST_OUT)
+	$(PYTHON) .github/scripts/generate_release_notice_bundle.py --cargo-manifest $(THIRD_PARTY_MANIFEST_OUT) --out-dir $(RELEASE_NOTICE_OUT) --artifact-name $(RELEASE_ARTIFACT_NAME)
