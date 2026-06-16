@@ -94,6 +94,10 @@ fn two_line_fixture_pdf() -> PathBuf {
     fixture_pdf_by_id("synthetic-two-lines")
 }
 
+fn heading_export_fixture_pdf() -> PathBuf {
+    fixture_pdf_by_id("synthetic-heading-export")
+}
+
 fn two_column_fixture_pdf() -> PathBuf {
     fixture_pdf_by_id("synthetic-two-columns")
 }
@@ -340,6 +344,51 @@ fn doc_parse_text_and_markdown_exports_match_fixture_goldens_when_pdfium_is_conf
             );
         }
     }
+}
+
+#[test]
+fn parses_heading_fixture_and_exports_markdown_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!(
+            "skipping heading export fixture test: ETHOS_PDFIUM_LIBRARY_PATH is not configured"
+        );
+        return;
+    }
+
+    let fixture = heading_export_fixture_pdf();
+    let doc = parse_json(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+    let elements = doc["payload"]["elements"].as_array().unwrap();
+    assert_eq!(elements.len(), 2);
+    assert_eq!(elements[0]["type"], "heading");
+    assert_eq!(elements[0]["heading_level"], 1);
+    assert_eq!(elements[0]["text"], "Alpha Overview");
+    assert_eq!(elements[1]["type"], "text_block");
+    assert_eq!(elements[1]["text"], "Trust loop evidence stays explicit");
+
+    let output = run_ethos(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "markdown",
+    ]);
+    assert!(
+        output.status.success(),
+        "ethos doc parse --format markdown failed for heading fixture\nstatus: {:?}\nstderr:\n{}\nstdout:\n{}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        String::from_utf8(output.stdout).expect("markdown stdout is UTF-8"),
+        "# Alpha Overview\n\nTrust loop evidence stays explicit\n"
+    );
 }
 
 #[cfg(debug_assertions)]

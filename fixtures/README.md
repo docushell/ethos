@@ -37,9 +37,8 @@ Successful parse fixtures also carry c14n stage goldens:
 - `extraction.json`: `ethos_core::traits::Extraction` after the PDF backend boundary.
 - `layout.json`: `ethos_core::traits::LayoutOutput` after deterministic layout grouping.
 - `text.txt`: current alpha plain-text export rendered from `layout.json` element text order.
-- `markdown.md`: current alpha Markdown export rendered from `layout.json`. The current
-  committed synthetic fixture set contains text blocks, so these files mirror the same block
-  order as `text.txt`.
+- `markdown.md`: current alpha Markdown export rendered from `layout.json`, including heading
+  prefixes for committed heading elements.
 
 For successful fixtures, `validate_fixtures.py` also binds selected `fixture.json`
 expectations to those committed goldens:
