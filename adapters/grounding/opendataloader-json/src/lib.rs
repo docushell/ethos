@@ -610,6 +610,7 @@ fn real_node_has_element_fields(node: &Value) -> bool {
         || node.get("page number").is_some()
         || node.get("bounding box").is_some()
         || node.get("content").is_some()
+        || node.get("text").is_some()
 }
 
 fn real_content_kind(node: &Value) -> Result<String, AdapterError> {
@@ -660,12 +661,9 @@ fn real_content_text(node: &Value) -> Result<Option<String>, AdapterError> {
 }
 
 fn collect_real_text<'a>(node: &'a Value, parts: &mut Vec<&'a str>) -> Result<(), AdapterError> {
-    if let Some(content) = node.get("content") {
-        let content = content
-            .as_str()
-            .ok_or_else(|| err("content must be a string"))?;
-        if !content.is_empty() {
-            parts.push(content);
+    if let Some(text) = real_own_text(node)? {
+        if !text.is_empty() {
+            parts.push(text);
         }
     }
     for child in real_child_elements(node)? {
@@ -674,20 +672,58 @@ fn collect_real_text<'a>(node: &'a Value, parts: &mut Vec<&'a str>) -> Result<()
     Ok(())
 }
 
+fn real_own_text(node: &Value) -> Result<Option<&str>, AdapterError> {
+    let content = real_string_alias(node, "content", "content must be a string")?;
+    let text = real_string_alias(node, "text", "text must be a string")?;
+    match (content, text) {
+        (None, None) => Ok(None),
+        (Some(content), None) => Ok(Some(content)),
+        (None, Some(text)) => Ok(Some(text)),
+        (Some(content), Some(text)) => {
+            let content_empty = content.is_empty();
+            let text_empty = text.is_empty();
+            if content_empty && text_empty {
+                Ok(None)
+            } else if content_empty {
+                Ok(Some(text))
+            } else if text_empty || content == text {
+                Ok(Some(content))
+            } else {
+                Err(err("content and text fields disagree"))
+            }
+        }
+    }
+}
+
+fn real_string_alias<'a>(
+    node: &'a Value,
+    field: &str,
+    message: &str,
+) -> Result<Option<&'a str>, AdapterError> {
+    let Some(value) = node.get(field) else {
+        return Ok(None);
+    };
+    value.as_str().map(Some).ok_or_else(|| err(message))
+}
+
 fn real_child_elements(node: &Value) -> Result<Vec<&Value>, AdapterError> {
     let mut children = Vec::new();
-    if let Some(kids_value) = node.get("kids") {
-        let kids = kids_value
-            .as_array()
-            .ok_or_else(|| err("kids must be an array"))?;
-        children.extend(kids);
-    }
-    if let Some(items_value) = node.get("list items") {
-        let items = items_value
-            .as_array()
-            .ok_or_else(|| err("list items must be an array"))?;
-        children.extend(items);
-    }
+    children.extend(real_child_alias_array(
+        node,
+        &[
+            ("kids", "kids must be an array"),
+            ("children", "children must be an array"),
+        ],
+        "ambiguous kids/children containers",
+    )?);
+    children.extend(real_child_alias_array(
+        node,
+        &[
+            ("list items", "list items must be an array"),
+            ("list_items", "list_items must be an array"),
+        ],
+        "ambiguous list item containers",
+    )?);
     if let Some(rows_value) = node.get("rows") {
         let rows = rows_value
             .as_array()
@@ -705,6 +741,26 @@ fn real_child_elements(node: &Value) -> Result<Vec<&Value>, AdapterError> {
         }
     }
     Ok(children)
+}
+
+fn real_child_alias_array<'a>(
+    node: &'a Value,
+    fields: &[(&str, &str)],
+    ambiguous_message: &str,
+) -> Result<Vec<&'a Value>, AdapterError> {
+    let mut found = None;
+    for (field, type_message) in fields {
+        let Some(value) = node.get(*field) else {
+            continue;
+        };
+        if found.is_some() {
+            return Err(err(ambiguous_message));
+        }
+        found = Some(value.as_array().ok_or_else(|| err(type_message))?);
+    }
+    Ok(found
+        .map(|items| items.iter().collect())
+        .unwrap_or_default())
 }
 
 fn parse_table_cells(table: &Value) -> Result<Vec<GroundingCell>, AdapterError> {
@@ -1066,6 +1122,100 @@ mod tests {
     }
 
     #[test]
+    fn maps_real_text_and_child_aliases_in_preorder() {
+        let src = OdlJsonSource::from_json_str(
+            r#"{
+              "file name": "aliases.pdf",
+              "number of pages": 1,
+              "kids": [
+                {
+                  "type": "section",
+                  "id": "section-a",
+                  "page number": 1,
+                  "bounding box": [10, 10, 220, 90],
+                  "text": "Alias section",
+                  "children": [
+                    {
+                      "type": "paragraph",
+                      "id": "child-a",
+                      "page number": 1,
+                      "bounding box": [20, 30, 210, 55],
+                      "text": "Child text"
+                    }
+                  ]
+                },
+                {
+                  "type": "list",
+                  "id": "list-a",
+                  "page number": 1,
+                  "bounding box": [10, 100, 220, 160],
+                  "list_items": [
+                    {
+                      "type": "list_item",
+                      "id": "item-a",
+                      "page number": 1,
+                      "bounding box": [20, 115, 210, 140],
+                      "text": "Alias item"
+                    }
+                  ]
+                },
+                {
+                  "type": "table",
+                  "id": "table-a",
+                  "page number": 1,
+                  "bounding box": [10, 170, 220, 230],
+                  "rows": [
+                    {
+                      "cells": [
+                        {
+                          "type": "table_cell",
+                          "page number": 1,
+                          "bounding box": [20, 185, 210, 215],
+                          "text": "Alias cell"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }"#,
+        )
+        .unwrap();
+
+        let elements = src.elements();
+        let ids = elements
+            .iter()
+            .map(|element| element.id.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            ids,
+            vec![
+                "odl-section-a",
+                "odl-child-a",
+                "odl-list-a",
+                "odl-item-a",
+                "odl-table-a",
+                "odl-el-1",
+            ]
+        );
+        assert_eq!(
+            elements[0].text.as_deref(),
+            Some("Alias section\nChild text")
+        );
+        assert_eq!(elements[1].text.as_deref(), Some("Child text"));
+        assert_eq!(elements[2].text.as_deref(), Some("Alias item"));
+        assert_eq!(elements[3].text.as_deref(), Some("Alias item"));
+        assert_eq!(elements[5].text.as_deref(), Some("Alias cell"));
+
+        let tables = src.tables();
+        assert_eq!(tables.len(), 1);
+        assert_eq!(tables[0].id, "odl-table-a");
+        assert_eq!(tables[0].cells.len(), 1);
+        assert_eq!(tables[0].cells[0].text, "Alias cell");
+        assert_eq!(tables[0].cells[0].bbox, [2000, 18500, 21000, 21500]);
+    }
+
+    #[test]
     fn maps_real_structural_containers_without_table_capability() {
         let src = OdlJsonSource::from_json_str(
             r#"{
@@ -1341,6 +1491,26 @@ mod tests {
         assert_error_contains(
             r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"paragraph","page number":1,"bounding box":[1,1,2,2],"content":7}]}"#,
             "content must be a string",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"paragraph","page number":1,"bounding box":[1,1,2,2],"text":7}]}"#,
+            "text must be a string",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"paragraph","page number":1,"bounding box":[1,1,2,2],"content":"A","text":"B"}]}"#,
+            "content and text fields disagree",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"children":{}}]}"#,
+            "children must be an array",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"kids":[],"children":[]}]}"#,
+            "ambiguous kids/children containers",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"list","page number":1,"bounding box":[1,1,2,2],"list items":[],"list_items":[]}]}"#,
+            "ambiguous list item containers",
         );
         assert_error_contains(
             r#"{"file name":"bad.pdf","number of pages":1,"kids":[{}]}"#,
