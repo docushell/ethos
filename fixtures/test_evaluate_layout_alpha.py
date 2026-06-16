@@ -56,6 +56,11 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
             check for check in report["checks"] if check["fixture_id"] == "heading-case"
         )
         self.assertEqual(heading_check["confidence_policy"], "pass")
+        self.assertEqual(heading_check["warning_shape"], "pass")
+        self.assertEqual(
+            heading_check["export_goldens"],
+            {"markdown": "pass", "text": "pass"},
+        )
         self.assertEqual(report["diagnostics"], [])
 
     def test_missing_expected_text_fails_closed(self) -> None:
@@ -155,6 +160,41 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 "warning_refs": [],
             },
         )
+
+    def test_export_golden_drift_reports_expected_and_actual(self) -> None:
+        self.write_required_alpha_fixture_set()
+        export_path = self.root / "synthetic/heading-case/markdown.md"
+        export_path.write_text("Alpha Heading\n\nBody text\n", encoding="utf-8")
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        diagnostic = self.onlyDiagnostic(
+            report,
+            "export_golden_mismatch",
+            "heading-case",
+        )
+        self.assertEqual(diagnostic["path"], "synthetic/heading-case/markdown.md")
+        self.assertEqual(diagnostic["expected"], "# Alpha Heading\n\nBody text\n")
+        self.assertEqual(diagnostic["actual"], "Alpha Heading\n\nBody text\n")
+
+    def test_dangling_warning_ref_fails_closed(self) -> None:
+        self.write_required_alpha_fixture_set()
+        layout_path = self.root / "synthetic/list-case/layout.json"
+        layout = json.loads(layout_path.read_text(encoding="utf-8"))
+        layout["elements"][0]["warning_refs"] = ["w9999"]
+        self.write_json(layout_path, layout)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        diagnostic = self.onlyDiagnostic(
+            report,
+            "warning_ref_mismatch",
+            "list-case",
+        )
+        self.assertEqual(diagnostic["expected"], [])
+        self.assertEqual(diagnostic["actual"], "w9999")
 
     def test_missing_layout_file_reports_missing_file(self) -> None:
         self.write_required_alpha_fixture_set()
@@ -295,6 +335,14 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
             fixture_dir / "layout.json",
             {"elements": elements, "warnings": warnings or []},
         )
+        (fixture_dir / "text.txt").write_text(
+            self.render_text_export(elements),
+            encoding="utf-8",
+        )
+        (fixture_dir / "markdown.md").write_text(
+            self.render_markdown_export(elements),
+            encoding="utf-8",
+        )
         return {
             "id": fixture_id,
             "file": fixture_path,
@@ -307,6 +355,20 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
 
     def write_json(self, path: Path, value) -> None:
         path.write_bytes(canonical_json_bytes(value))
+
+    def render_text_export(self, elements: list[dict]) -> str:
+        return "\n\n".join(element["text"] for element in elements) + "\n"
+
+    def render_markdown_export(self, elements: list[dict]) -> str:
+        blocks = []
+        for element in elements:
+            text = element["text"]
+            if element.get("type") == "heading":
+                level = element.get("heading_level", 1)
+                blocks.append(f"{'#' * level} {text}")
+            else:
+                blocks.append(text)
+        return "\n\n".join(blocks) + "\n"
 
 
 if __name__ == "__main__":

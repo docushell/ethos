@@ -20,7 +20,8 @@
 This script does not parse PDFs and does not compare Ethos to other tools. It
 summarizes the committed alpha layout fixture expectations and fails closed when
 layout.json drifts away from fixture.json expectations, when required expectation
-fields are missing, or when heading/list/reading-order fixture coverage is absent.
+fields are missing, when committed export goldens drift, or when
+heading/list/reading-order fixture coverage is absent.
 """
 
 from __future__ import annotations
@@ -36,6 +37,8 @@ ROOT = Path(__file__).resolve().parent
 REQUIRED_EXPECTATION_FIELDS = ("expected_text", "expected_element_types")
 ALPHA_LAYOUT_CONFIDENCE_WARNING_THRESHOLD = 800
 LOW_CONFIDENCE_READING_ORDER_CODE = "low_confidence_reading_order"
+TEXT_EXPORT = "text.txt"
+MARKDOWN_EXPORT = "markdown.md"
 COVERAGE_GATES = {
     "heading_fixture": {
         "subset": "headings",
@@ -86,6 +89,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             f"{json.dumps(report['element_type_counts'], sort_keys=True)}"
         )
         print("ok    layout evaluator heading/list/reading-order coverage present")
+        print("ok    layout evaluator export and warning diagnostics present")
         if args.out is not None:
             print(f"ok    layout evaluator report wrote {args.out}")
         return 0
@@ -294,11 +298,25 @@ def evaluate_fixture(
         len(elements),
         diagnostics,
     )
+    warning_shape_status = compare_warning_shape(
+        fixture_id,
+        fixture_rel,
+        elements,
+        warnings,
+        diagnostics,
+    )
     confidence_policy_status = compare_confidence_policy(
         fixture_id,
         fixture_rel,
         elements,
         warnings,
+        diagnostics,
+    )
+    export_goldens_status = compare_export_goldens(
+        fixture_id,
+        fixture_dir,
+        fixture_rel,
+        elements,
         diagnostics,
     )
     subset_status = compare_subset_expectations(
@@ -319,7 +337,9 @@ def evaluate_fixture(
         "expected_text": expected_text_status,
         "expected_element_types": expected_element_types_status,
         "expected_elements": expected_elements_status,
+        "warning_shape": warning_shape_status,
         "confidence_policy": confidence_policy_status,
+        "export_goldens": export_goldens_status,
         "subset_expectations": subset_status,
     }
 
@@ -438,6 +458,136 @@ def compare_expected_elements(
     return "pass"
 
 
+def compare_warning_shape(
+    fixture_id: str,
+    fixture_rel: str,
+    elements: List[Any],
+    warnings: List[Any],
+    diagnostics: List[Dict[str, Any]],
+) -> str:
+    invalid = False
+    mismatch = False
+    checked = False
+    element_ids = {
+        element.get("id")
+        for element in elements
+        if isinstance(element, dict) and isinstance(element.get("id"), str)
+    }
+    warning_ids = set()
+
+    for warning_index, warning in enumerate(warnings):
+        checked = True
+        if not isinstance(warning, dict):
+            diagnostics.append(
+                diagnostic(
+                    "invalid_layout",
+                    fixture_id,
+                    f"layout warning {warning_index} must be an object",
+                    f"{fixture_rel}/layout.json",
+                )
+            )
+            invalid = True
+            continue
+        warning_id = warning.get("id")
+        if not isinstance(warning_id, str) or not warning_id:
+            diagnostics.append(
+                diagnostic(
+                    "invalid_layout",
+                    fixture_id,
+                    f"layout warning {warning_index} id must be a non-empty string",
+                    f"{fixture_rel}/layout.json",
+                )
+            )
+            invalid = True
+        elif warning_id in warning_ids:
+            diagnostics.append(
+                diagnostic(
+                    "invalid_layout",
+                    fixture_id,
+                    f"layout warning {warning_index} id must be unique",
+                    f"{fixture_rel}/layout.json",
+                )
+            )
+            invalid = True
+        else:
+            warning_ids.add(warning_id)
+        for field in ("code", "message"):
+            if not isinstance(warning.get(field), str) or not warning[field]:
+                diagnostics.append(
+                    diagnostic(
+                        "invalid_layout",
+                        fixture_id,
+                        f"layout warning {warning_index} {field} must be a non-empty string",
+                        f"{fixture_rel}/layout.json",
+                    )
+                )
+                invalid = True
+        for field in ("page", "element_ref", "span_ref", "region_ref"):
+            value = warning.get(field)
+            if value is not None and not isinstance(value, str):
+                diagnostics.append(
+                    diagnostic(
+                        "invalid_layout",
+                        fixture_id,
+                        f"layout warning {warning_index} {field} must be a string when present",
+                        f"{fixture_rel}/layout.json",
+                    )
+                )
+                invalid = True
+        element_ref = warning.get("element_ref")
+        if isinstance(element_ref, str) and element_ref not in element_ids:
+            diagnostics.append(
+                diagnostic(
+                    "warning_ref_mismatch",
+                    fixture_id,
+                    "layout warning element_ref must reference a committed layout element",
+                    f"{fixture_rel}/layout.json",
+                    expected=sorted(element_ids),
+                    actual=element_ref,
+                )
+            )
+            mismatch = True
+
+    for element_index, element in enumerate(elements):
+        if not isinstance(element, dict):
+            continue
+        warning_refs = element.get("warning_refs", [])
+        if warning_refs:
+            checked = True
+        if not isinstance(warning_refs, list) or not all(
+            isinstance(item, str) for item in warning_refs
+        ):
+            diagnostics.append(
+                diagnostic(
+                    "invalid_layout",
+                    fixture_id,
+                    f"layout element {element_index} warning_refs must be a string array",
+                    f"{fixture_rel}/layout.json",
+                )
+            )
+            invalid = True
+            continue
+        for warning_ref in warning_refs:
+            if warning_ref not in warning_ids:
+                diagnostics.append(
+                    diagnostic(
+                        "warning_ref_mismatch",
+                        fixture_id,
+                        "layout element warning_refs must reference committed layout warnings",
+                        f"{fixture_rel}/layout.json",
+                        expected=sorted(warning_ids),
+                        actual=warning_ref,
+                    )
+                )
+                mismatch = True
+
+    if invalid:
+        return "invalid"
+    if mismatch:
+        return "mismatch"
+    return "pass" if checked else "not_applicable"
+
+
 def compare_confidence_policy(
     fixture_id: str,
     fixture_rel: str,
@@ -535,6 +685,130 @@ def compare_confidence_policy(
     if invalid:
         return "invalid"
     return "pass" if checked else "not_applicable"
+
+
+def compare_export_goldens(
+    fixture_id: str,
+    fixture_dir: Path,
+    fixture_rel: str,
+    elements: List[Any],
+    diagnostics: List[Dict[str, Any]],
+) -> Dict[str, str]:
+    return {
+        "text": compare_export_file(
+            fixture_id,
+            fixture_dir / TEXT_EXPORT,
+            f"{fixture_rel}/{TEXT_EXPORT}",
+            render_text_export(elements),
+            "text export",
+            diagnostics,
+        ),
+        "markdown": compare_export_file(
+            fixture_id,
+            fixture_dir / MARKDOWN_EXPORT,
+            f"{fixture_rel}/{MARKDOWN_EXPORT}",
+            render_markdown_export(fixture_id, fixture_rel, elements, diagnostics),
+            "Markdown export",
+            diagnostics,
+        ),
+    }
+
+
+def compare_export_file(
+    fixture_id: str,
+    path: Path,
+    display_path: str,
+    expected: Optional[str],
+    label: str,
+    diagnostics: List[Dict[str, Any]],
+) -> str:
+    if expected is None:
+        return "invalid"
+    try:
+        actual = path.read_bytes()
+    except FileNotFoundError:
+        diagnostics.append(
+            diagnostic(
+                "missing_file",
+                fixture_id,
+                f"{path.name} is missing",
+                display_path,
+            )
+        )
+        return "missing"
+    try:
+        actual_text = actual.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        diagnostics.append(
+            diagnostic(
+                "invalid_export",
+                fixture_id,
+                f"{path.name} must be UTF-8 text: {exc.reason}",
+                display_path,
+            )
+        )
+        return "invalid"
+    if actual_text != expected:
+        diagnostics.append(
+            diagnostic(
+                "export_golden_mismatch",
+                fixture_id,
+                f"{path.name} does not match {label} rendered from layout.json",
+                display_path,
+                expected=expected,
+                actual=actual_text,
+            )
+        )
+        return "mismatch"
+    return "pass"
+
+
+def render_text_export(elements: List[Any]) -> Optional[str]:
+    text_blocks = []
+    for element in elements:
+        if not isinstance(element, dict):
+            return None
+        text = element.get("text")
+        if not isinstance(text, str):
+            return None
+        text_blocks.append(text)
+    return "\n\n".join(text_blocks) + "\n"
+
+
+def render_markdown_export(
+    fixture_id: str,
+    fixture_rel: str,
+    elements: List[Any],
+    diagnostics: List[Dict[str, Any]],
+) -> Optional[str]:
+    blocks = []
+    invalid = False
+    for element_index, element in enumerate(elements):
+        if not isinstance(element, dict):
+            return None
+        text = element.get("text")
+        if not isinstance(text, str):
+            return None
+        if element.get("type") == "heading":
+            level = element.get("heading_level", 1)
+            if not isinstance(level, int):
+                diagnostics.append(
+                    diagnostic(
+                        "invalid_layout",
+                        fixture_id,
+                        f"layout heading element {element_index} heading_level must be an integer",
+                        f"{fixture_rel}/layout.json",
+                    )
+                )
+                invalid = True
+                level = 1
+            level = min(max(level, 1), 6)
+            blocks.append(f"{'#' * level} {text}")
+        else:
+            blocks.append(text)
+    if invalid:
+        return None
+    return "\n\n".join(blocks) + "\n"
 
 
 def compare_subset_expectations(
