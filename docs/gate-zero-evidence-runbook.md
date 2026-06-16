@@ -136,7 +136,8 @@ For the cross-host G3 bundle, use `GATE_ZERO_PLATFORM=cross-platform` and
 
 ## Decision Step
 
-Fill `docs/decisions/ADR-0005-gate-zero-decision.md` only after:
+ADR-0005 is accepted for the current internal Gate Zero decision. For a future amendment or
+successor decision, update the decision record only after:
 
 - required G1 files exist for both recorded hosts;
 - required G2 files exist for both recorded hosts;
@@ -144,7 +145,7 @@ Fill `docs/decisions/ADR-0005-gate-zero-decision.md` only after:
 - evidence bundles exist for the source result files;
 - the decider has reviewed the result JSON and reproduction sidecars.
 
-Before filling the ADR, run:
+Before amending the decision record, run:
 
 ```bash
 python3 .github/scripts/gate_zero_evidence_preflight.py decision --ethos-bench ../ethos-bench
@@ -154,9 +155,12 @@ This checks the expected `ethos-bench` result paths, timestamped evidence bundle
 complete reproduction environments, and bundle checksum manifests. It does not decide whether
 Gate Zero passes.
 
-Until that ADR is filled, public language remains:
+Even after ADR-0005 acceptance, public language remains:
 
 ```text
 Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across
 native Ethos JSON and supported foreign parser outputs.
 ```
+
+ADR-0005 authorizes internal Milestone B continuation only. It does not authorize public benchmark
+reports, releases, packages, production positioning, or unsupported result wording.
