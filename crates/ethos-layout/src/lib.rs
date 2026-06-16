@@ -278,7 +278,19 @@ fn layout_column_lines<'a>(
     let mut line_iter = lines.into_iter().peekable();
 
     while let Some(line) = line_iter.next() {
-        if let Some(signal) = heading_signal(&line, body_font_size_q) {
+        if is_list_item_line(&line) {
+            flush_text_lines(&mut text_lines, page_id, next_element, elements)?;
+            let list_item_spans = line_spans(&line);
+            elements.push(build_element(
+                *next_element,
+                page_id,
+                &list_item_spans,
+                ElementType::ListItem,
+                None,
+                None,
+            )?);
+            *next_element += 1;
+        } else if let Some(signal) = heading_signal(&line, body_font_size_q) {
             flush_text_lines(&mut text_lines, page_id, next_element, elements)?;
             let level = heading_level(signal.size_q, heading_sizes);
             let mut confidence = signal.confidence;
@@ -343,6 +355,30 @@ fn flush_text_lines<'a>(
         *next_element += 1;
     }
     Ok(())
+}
+
+fn is_list_item_line(line: &Line<'_>) -> bool {
+    let text = line_text(line);
+    let trimmed = text.trim_start();
+    has_unordered_list_marker(trimmed) || has_ordered_list_marker(trimmed)
+}
+
+fn has_unordered_list_marker(text: &str) -> bool {
+    text.strip_prefix("- ")
+        .or_else(|| text.strip_prefix("* "))
+        .is_some_and(|rest| !rest.trim().is_empty())
+}
+
+fn has_ordered_list_marker(text: &str) -> bool {
+    let Some((marker, rest)) = text.split_once(' ') else {
+        return false;
+    };
+    if rest.trim().is_empty() || marker.len() < 2 || !marker.ends_with('.') {
+        return false;
+    }
+    marker[..marker.len() - 1]
+        .chars()
+        .all(|ch| ch.is_ascii_digit())
 }
 
 fn heading_signal(line: &Line<'_>, body_font_size_q: Option<i64>) -> Option<HeadingSignal> {
@@ -691,6 +727,111 @@ mod tests {
                 "s000004".to_string(),
             ]
         );
+    }
+
+    #[test]
+    fn classifies_flat_marker_lines_as_list_items() {
+        let extraction = extraction(vec![
+            span("s000001", "p0001", QRect::new(0, 0, 300, 500).unwrap(), "-"),
+            span(
+                "s000002",
+                "p0001",
+                QRect::new(450, 0, 1_200, 500).unwrap(),
+                "Verify",
+            ),
+            span(
+                "s000003",
+                "p0001",
+                QRect::new(1_350, 0, 2_000, 500).unwrap(),
+                "inputs",
+            ),
+            span(
+                "s000004",
+                "p0001",
+                QRect::new(0, 900, 350, 1_400).unwrap(),
+                "2.",
+            ),
+            span(
+                "s000005",
+                "p0001",
+                QRect::new(500, 900, 1_300, 1_400).unwrap(),
+                "Record",
+            ),
+            span(
+                "s000006",
+                "p0001",
+                QRect::new(1_450, 900, 2_200, 1_400).unwrap(),
+                "result",
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+
+        assert_eq!(output.elements.len(), 2);
+        assert!(output
+            .elements
+            .iter()
+            .all(|element| element.element_type == ElementType::ListItem));
+        assert_eq!(output.elements[0].text.as_deref(), Some("- Verify inputs"));
+        assert_eq!(output.elements[1].text.as_deref(), Some("2. Record result"));
+    }
+
+    #[test]
+    fn list_items_split_surrounding_paragraph_text() {
+        let extraction = extraction(vec![
+            span(
+                "s000001",
+                "p0001",
+                QRect::new(0, 0, 700, 500).unwrap(),
+                "Intro",
+            ),
+            span(
+                "s000002",
+                "p0001",
+                QRect::new(850, 0, 1_200, 500).unwrap(),
+                "text",
+            ),
+            span(
+                "s000003",
+                "p0001",
+                QRect::new(0, 900, 300, 1_400).unwrap(),
+                "-",
+            ),
+            span(
+                "s000004",
+                "p0001",
+                QRect::new(450, 900, 1_200, 1_400).unwrap(),
+                "Check",
+            ),
+            span(
+                "s000005",
+                "p0001",
+                QRect::new(1_350, 900, 2_000, 1_400).unwrap(),
+                "claim",
+            ),
+            span(
+                "s000006",
+                "p0001",
+                QRect::new(0, 1_800, 700, 2_300).unwrap(),
+                "Outro",
+            ),
+            span(
+                "s000007",
+                "p0001",
+                QRect::new(850, 1_800, 1_200, 2_300).unwrap(),
+                "text",
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+
+        assert_eq!(output.elements.len(), 3);
+        assert_eq!(output.elements[0].element_type, ElementType::TextBlock);
+        assert_eq!(output.elements[0].text.as_deref(), Some("Intro text"));
+        assert_eq!(output.elements[1].element_type, ElementType::ListItem);
+        assert_eq!(output.elements[1].text.as_deref(), Some("- Check claim"));
+        assert_eq!(output.elements[2].element_type, ElementType::TextBlock);
+        assert_eq!(output.elements[2].text.as_deref(), Some("Outro text"));
     }
 
     #[test]

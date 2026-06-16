@@ -98,6 +98,10 @@ fn heading_export_fixture_pdf() -> PathBuf {
     fixture_pdf_by_id("synthetic-heading-export")
 }
 
+fn list_items_fixture_pdf() -> PathBuf {
+    fixture_pdf_by_id("synthetic-list-items")
+}
+
 fn two_column_fixture_pdf() -> PathBuf {
     fixture_pdf_by_id("synthetic-two-columns")
 }
@@ -388,6 +392,50 @@ fn parses_heading_fixture_and_exports_markdown_when_pdfium_is_configured() {
     assert_eq!(
         String::from_utf8(output.stdout).expect("markdown stdout is UTF-8"),
         "# Alpha Overview\n\nTrust loop evidence stays explicit\n"
+    );
+}
+
+#[test]
+fn parses_flat_list_items_and_exports_markdown_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!(
+            "skipping list item export fixture test: ETHOS_PDFIUM_LIBRARY_PATH is not configured"
+        );
+        return;
+    }
+
+    let fixture = list_items_fixture_pdf();
+    let doc = parse_json(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+    let elements = doc["payload"]["elements"].as_array().unwrap();
+    assert_eq!(elements.len(), 2);
+    assert_eq!(elements[0]["type"], "list_item");
+    assert_eq!(elements[0]["text"], "- Verify cited evidence");
+    assert_eq!(elements[1]["type"], "list_item");
+    assert_eq!(elements[1]["text"], "2. Keep explicit");
+
+    let output = run_ethos(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "markdown",
+    ]);
+    assert!(
+        output.status.success(),
+        "ethos doc parse --format markdown failed for list item fixture\nstatus: {:?}\nstderr:\n{}\nstdout:\n{}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        String::from_utf8(output.stdout).expect("markdown stdout is UTF-8"),
+        "- Verify cited evidence\n\n2. Keep explicit\n"
     );
 }
 
