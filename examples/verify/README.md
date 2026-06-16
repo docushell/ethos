@@ -28,6 +28,17 @@ report warnings, non-grounded check reasons, and deterministic diagnostic lines.
 `make verify-alpha` also checks summary output for a native ungrounded citation set, including
 the non-grounded reason and diagnostic lines.
 
+## Native Split Quote Grounding
+
+```bash
+ethos verify examples/verify/native_split_quote_document.json \
+  --citations examples/verify/native_split_quote_citations.json \
+  --out verification_report.json
+```
+
+Expected result: `all_evidence_grounded: true`. The quote locator points at the second adjacent
+text element, and the verifier grounds the claim only through the explicit adjacent-element rule.
+
 ## Native Ethos Ungrounded Citations
 
 ```bash

@@ -1,0 +1,12 @@
+{
+  "document_fingerprint": "sha256:abe9f7f8984c31ea2dc26f2e4a231330c7cd7caaa773210eb4ee0a4cc41e707d",
+  "claims": [
+    {
+      "kind": "quote",
+      "text": "The alpha trust loop verifies grounded evidence",
+      "citation": {
+        "element_id": "e000011"
+      }
+    }
+  ]
+}
