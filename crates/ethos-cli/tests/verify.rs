@@ -1927,6 +1927,89 @@ fn empty_tables_are_not_found_when_table_capability_is_declared() {
 }
 
 #[test]
+fn real_opendataloader_style_table_cell_claim_grounds() {
+    let grounding = temp_json(
+        "real-odl-style-table",
+        r#"{
+          "file name": "table.pdf",
+          "number of pages": 1,
+          "kids": [
+            {
+              "type": "table",
+              "id": 13,
+              "page number": 1,
+              "bounding box": [10, 10, 240, 80],
+              "rows": [
+                {
+                  "cells": [
+                    {
+                      "type": "table_cell",
+                      "page number": 1,
+                      "bounding box": [20, 20, 110, 50],
+                      "content": "Metric"
+                    },
+                    {
+                      "type": "table_cell",
+                      "page number": 1,
+                      "bounding box": [120, 20, 230, 50],
+                      "content": "$12.4M"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }"#,
+    );
+    let citations = temp_json(
+        "real-odl-style-table-cell-citations",
+        r#"{
+          "claims": [
+            {
+              "kind": "table_cell",
+              "text": "$12.4M",
+              "citation": {
+                "table_id": "odl-13",
+                "cell": {
+                  "row": 1,
+                  "col": 2
+                }
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["grounding"]["capabilities"]["tables"], true);
+    assert_eq!(
+        report["capability_limits"],
+        serde_json::json!([
+            "missing_fingerprint",
+            "missing_spans",
+            "missing_char_offsets",
+            "unknown_coordinate_origin"
+        ])
+    );
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(report["checks"][0]["match_method"], "table_cell_lookup");
+    assert_eq!(report["checks"][0]["evidence"]["page"], "page-1");
+    assert_eq!(report["checks"][0]["evidence"]["text"], "$12.4M");
+    assert_eq!(
+        report["checks"][0]["evidence"]["bbox"],
+        serde_json::json!([12000, 2000, 23000, 5000])
+    );
+    assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
 fn foreign_source_without_fingerprint_blocks_fingerprint_pinned_citations() {
     let grounding = odl_example();
     let citations = temp_json(
