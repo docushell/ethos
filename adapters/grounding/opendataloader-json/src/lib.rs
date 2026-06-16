@@ -40,8 +40,9 @@
 //!   [`CoordinateOrigin::Unknown`] until the B-alpha pin verifies ODL's convention —
 //!   capability-driven downgrade, never silent assumption.
 //! - No spans, no char offsets, no fingerprint, no crops: declared `false`.
-//!   Table capability is declared only when a `tables` array is present in the
-//!   documented subset; real ODL table-cell mapping is intentionally not declared yet.
+//!   Table capability is declared when a `tables` array is present in the
+//!   documented subset or when real ODL-style `rows[].cells` table structures carry
+//!   enough explicit page/bbox/text data to map deterministic cells.
 //!   Verification surfaces missing capabilities as `capability_limited` (PRD §5.5).
 
 #![forbid(unsafe_code)]
@@ -353,8 +354,18 @@ fn parse_real_odl(root: &Value) -> Result<OdlJsonSource, AdapterError> {
     let mut page_extents = vec![[1i64, 1i64]; page_count as usize];
     let mut elements = Vec::new();
     let mut element_ids = HashSet::new();
+    let mut tables = Vec::new();
+    let mut table_ids = HashSet::new();
     let mut next_synthetic_id = 1u32;
+    let mut next_synthetic_table_id = 1u32;
     for kid in kids {
+        collect_real_tables(
+            kid,
+            page_count,
+            &mut tables,
+            &mut table_ids,
+            &mut next_synthetic_table_id,
+        )?;
         parse_real_content_element(
             kid,
             page_count,
@@ -382,8 +393,144 @@ fn parse_real_odl(root: &Value) -> Result<OdlJsonSource, AdapterError> {
         parser_version: "unknown".to_string(),
         pages,
         elements,
-        tables_capable: false,
-        tables: Vec::new(),
+        tables_capable: !tables.is_empty(),
+        tables,
+    })
+}
+
+fn collect_real_tables(
+    node: &Value,
+    page_count: u32,
+    tables: &mut Vec<GroundingTable>,
+    table_ids: &mut HashSet<String>,
+    next_synthetic_table_id: &mut u32,
+) -> Result<(), AdapterError> {
+    if real_node_has_table_fields(node) {
+        let table = parse_real_table(node, page_count, next_synthetic_table_id)?;
+        if !table_ids.insert(table.id.clone()) {
+            return Err(err("duplicate real table id"));
+        }
+        tables.push(table);
+    }
+    for child in real_child_elements(node)? {
+        collect_real_tables(
+            child,
+            page_count,
+            tables,
+            table_ids,
+            next_synthetic_table_id,
+        )?;
+    }
+    Ok(())
+}
+
+fn real_node_has_table_fields(node: &Value) -> bool {
+    node.get("rows").is_some()
+        && (node.get("type").is_some()
+            || node.get("id").is_some()
+            || node.get("page number").is_some()
+            || node.get("bounding box").is_some())
+}
+
+fn parse_real_table(
+    node: &Value,
+    page_count: u32,
+    next_synthetic_table_id: &mut u32,
+) -> Result<GroundingTable, AdapterError> {
+    let page_number = u32_field(
+        node,
+        "page number",
+        "missing table page number",
+        "table page number must fit u32",
+    )?;
+    if page_number == 0 || page_number > page_count {
+        return Err(err("table page number references unknown page"));
+    }
+    let bbox = bbox_from(
+        node.get("bounding box")
+            .ok_or_else(|| err("missing table bounding box"))?,
+    )?;
+    let id = real_table_id(node, next_synthetic_table_id)?;
+    let rows = node
+        .get("rows")
+        .and_then(Value::as_array)
+        .ok_or_else(|| err("rows must be an array"))?;
+    let mut cells = Vec::new();
+    for (row_index, row) in rows.iter().enumerate() {
+        let row = row
+            .as_object()
+            .ok_or_else(|| err("row must be an object"))?;
+        let cells_value = row
+            .get("cells")
+            .and_then(Value::as_array)
+            .ok_or_else(|| err("row cells must be an array"))?;
+        for (col_index, cell) in cells_value.iter().enumerate() {
+            cells.push(parse_real_table_cell(
+                cell,
+                page_count,
+                page_number,
+                (row_index + 1) as u32,
+                (col_index + 1) as u32,
+            )?);
+        }
+    }
+    Ok(GroundingTable {
+        id,
+        page: format!("page-{page_number}"),
+        bbox,
+        cells,
+    })
+}
+
+fn real_table_id(node: &Value, next_synthetic_table_id: &mut u32) -> Result<String, AdapterError> {
+    if let Some(raw) = node.get("id") {
+        if let Some(id) = raw.as_u64() {
+            let id = u32::try_from(id).map_err(|_| err("table id must fit u32"))?;
+            return Ok(format!("odl-{id}"));
+        }
+        if let Some(id) = raw.as_str().map(str::trim).filter(|id| !id.is_empty()) {
+            return Ok(format!("odl-{id}"));
+        }
+        return Err(err("table id must be integer or non-empty string"));
+    }
+    let id = *next_synthetic_table_id;
+    *next_synthetic_table_id = next_synthetic_table_id.saturating_add(1);
+    Ok(format!("odl-table-{id}"))
+}
+
+fn parse_real_table_cell(
+    cell: &Value,
+    page_count: u32,
+    table_page_number: u32,
+    row: u32,
+    col: u32,
+) -> Result<GroundingCell, AdapterError> {
+    let page_number = u32_field(
+        cell,
+        "page number",
+        "missing cell page number",
+        "cell page number must fit u32",
+    )?;
+    if page_number == 0 || page_number > page_count {
+        return Err(err("cell page number references unknown page"));
+    }
+    if page_number != table_page_number {
+        return Err(err("cell page number must match table page number"));
+    }
+    let bbox = bbox_from(
+        cell.get("bounding box")
+            .ok_or_else(|| err("missing cell bounding box"))?,
+    )?;
+    let text = real_content_text(cell)?
+        .filter(|text| !text.trim().is_empty())
+        .ok_or_else(|| err("missing cell content"))?;
+    Ok(GroundingCell {
+        row,
+        col,
+        row_span: 1,
+        col_span: 1,
+        bbox,
+        text,
     })
 }
 
@@ -901,7 +1048,21 @@ mod tests {
         assert_eq!(pages[0].height, 20000);
         assert_eq!(pages[1].width, 25000);
         assert_eq!(pages[1].height, 12000);
-        assert!(!src.capabilities().tables);
+        assert!(src.capabilities().tables);
+
+        let tables = src.tables();
+        assert_eq!(tables.len(), 1);
+        assert_eq!(tables[0].id, "odl-13");
+        assert_eq!(tables[0].page, "page-2");
+        assert_eq!(tables[0].bbox, [1500, 2000, 25000, 12000]);
+        assert_eq!(tables[0].cells.len(), 2);
+        assert_eq!(tables[0].cells[0].row, 1);
+        assert_eq!(tables[0].cells[0].col, 1);
+        assert_eq!(tables[0].cells[0].text, "Cell A");
+        assert_eq!(tables[0].cells[0].bbox, [2000, 3000, 12000, 6000]);
+        assert_eq!(tables[0].cells[1].row, 1);
+        assert_eq!(tables[0].cells[1].col, 2);
+        assert_eq!(tables[0].cells[1].text, "Cell B");
     }
 
     #[test]
@@ -966,6 +1127,63 @@ mod tests {
         assert_eq!(pages[0].height, 8000);
         assert!(!src.capabilities().tables);
         assert!(src.tables().is_empty());
+    }
+
+    #[test]
+    fn rejects_malformed_real_table_cells() {
+        assert_error_contains(
+            r#"{
+              "file name": "table.pdf",
+              "number of pages": 1,
+              "kids": [
+                {
+                  "type": "table",
+                  "id": 1,
+                  "page number": 1,
+                  "bounding box": [10, 10, 200, 100],
+                  "rows": [
+                    {
+                      "cells": [
+                        {
+                          "type": "table_cell",
+                          "page number": 2,
+                          "bounding box": [20, 20, 100, 40],
+                          "content": "Out of range"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }"#,
+            "cell page number references unknown page",
+        );
+        assert_error_contains(
+            r#"{
+              "file name": "table.pdf",
+              "number of pages": 1,
+              "kids": [
+                {
+                  "type": "table",
+                  "id": 1,
+                  "page number": 1,
+                  "bounding box": [10, 10, 200, 100],
+                  "rows": [
+                    {
+                      "cells": [
+                        {
+                          "type": "table_cell",
+                          "page number": 1,
+                          "bounding box": [20, 20, 100, 40]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }"#,
+            "missing cell content",
+        );
     }
 
     #[test]
