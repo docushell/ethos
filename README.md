@@ -105,7 +105,8 @@ That command builds the CLI and checks the alpha grounding loop across:
 - synthetic OpenDataLoader-style JSON
 - pinned real OpenDataLoader 2.4.7 JSON fixtures
 - grounded, ungrounded, not-found, stale-fingerprint, and capability-limited citation cases
-- malformed citation inputs that must fail with usage diagnostics
+- malformed citation inputs and malformed OpenDataLoader-style inputs that must fail with usage
+  diagnostics
 - byte-identical repeated verification reports for the checked-in fixtures
 - deterministic native crop descriptor JSON artifacts
 
@@ -151,6 +152,8 @@ ok    real-opendataloader-grounded matches fixtures/foreign/opendataloader/real/
 ok    real-opendataloader-ungrounded matches fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json
 ok    invalid-table-cell-citation exits 2 with expected usage diagnostic
 ok    invalid-bbox-citation exits 2 with expected usage diagnostic
+ok    opendataloader-malformed-bbox-input exits 2 with expected usage diagnostic
+ok    opendataloader-unknown-page-input exits 2 with expected usage diagnostic
 ok    native-ungrounded-summary summary includes expected diagnostics
 ok    native-grounded-crops crop descriptors validate against schemas/ethos-crop-descriptor.schema.json
 

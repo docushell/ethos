@@ -111,6 +111,11 @@ Malformed citations are covered as usage errors. `invalid_table_cell_citations.j
 `2` because a table-cell claim is missing `table_id` and `cell`. `invalid_bbox_citations.json`
 must exit `2` because a bbox locator is missing a page or another target locator.
 
+Malformed OpenDataLoader-style grounding inputs are also covered as usage errors.
+`opendataloader_malformed_bbox.json` must exit `2` because its bbox is inverted.
+`opendataloader_unknown_page.json` must exit `2` because an element references a page that
+the input does not declare.
+
 The OpenDataLoader fixtures are synthetic and limited to the adapter's documented alpha
 subset. They are not real pinned OpenDataLoader artifacts. Golden reports live in
 `examples/verify/goldens/` and are covered by the CLI verification test.
