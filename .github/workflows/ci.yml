@@ -46,6 +46,8 @@ jobs:
         run: python3 fixtures/validate_fixtures.py
       - name: readiness gate tests
         run: python3 .github/scripts/test_readiness_gate.py
+      - name: Gate Zero evidence preflight tests
+        run: python3 .github/scripts/test_gate_zero_evidence_preflight.py
       - name: Gate Zero harness tests
         run: python3 benchmarks/harness/test_run_gate_zero.py
       - name: same-platform double-parse byte-diff
