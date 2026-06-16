@@ -29,6 +29,8 @@ import json
 import sys
 from pathlib import Path
 
+from font_policy_validation import diagnose_font_policy
+
 try:
     from jsonschema import Draft202012Validator as Validator
     DIALECT = "2020-12"
@@ -217,6 +219,17 @@ for label, got in [
     if got != want:
         fail(f"{label} diverges from document example")
 print("ok    example fingerprints coherent across artifacts")
+
+# deterministic profile font-policy artifact checks
+profile = json.loads(
+    (ROOT / "profiles" / "ethos-deterministic-v1.json").read_text(encoding="utf-8")
+)
+font_policy_diagnostics = diagnose_font_policy(ROOT, profile)
+if font_policy_diagnostics:
+    for diagnostic in font_policy_diagnostics:
+        fail(diagnostic)
+else:
+    print("ok    deterministic profile font policy artifact pins coherent")
 
 # bbox sanity (schema cannot express x0<=x1, y0<=y1)
 def walk_bboxes(label, node, ctx):
