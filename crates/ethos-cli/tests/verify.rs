@@ -1220,8 +1220,44 @@ fn bare_array_citation_input_works() {
     ]);
 
     assert_eq!(report["checks"].as_array().unwrap().len(), 1);
-    assert_eq!(report["checks"][0]["status"], "grounded");
-    assert_eq!(report["all_evidence_grounded"], true);
+    assert_eq!(report["checks"][0]["status"], "stale");
+    assert_eq!(
+        report["checks"][0]["reason"],
+        "missing_citation_fingerprint"
+    );
+    assert_eq!(report["all_evidence_grounded"], false);
+}
+
+#[test]
+fn envelope_without_fingerprint_blocks_when_source_has_fingerprint() {
+    let doc = document_example();
+    let citations = temp_json(
+        "no-fingerprint-envelope-citations",
+        r#"{
+          "claims": [
+            {
+              "kind": "presence",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"].as_array().unwrap().len(), 1);
+    assert_eq!(report["checks"][0]["status"], "stale");
+    assert_eq!(
+        report["checks"][0]["reason"],
+        "missing_citation_fingerprint"
+    );
+    assert_eq!(report["all_evidence_grounded"], false);
 }
 
 #[test]

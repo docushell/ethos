@@ -176,6 +176,9 @@ pub fn verify_claims(
     let fingerprint_unverifiable = config.staleness.require_fingerprint_match
         && citation_fingerprint.is_some()
         && source_fingerprint.is_none();
+    let citation_fingerprint_missing = config.staleness.require_fingerprint_match
+        && citation_fingerprint.is_none()
+        && source_fingerprint.is_some();
     let include_text = config.evidence.is_some_and(|e| e.include_text);
     let include_crops = config.evidence.is_some_and(|e| e.include_crops);
     let mut unsupported = Vec::new();
@@ -192,6 +195,7 @@ pub fn verify_claims(
                 CheckContext {
                     fingerprint_stale,
                     fingerprint_unverifiable,
+                    citation_fingerprint_missing,
                     include_text,
                     include_crops,
                 },
@@ -225,6 +229,7 @@ pub fn verify_claims(
 struct CheckContext {
     fingerprint_stale: bool,
     fingerprint_unverifiable: bool,
+    citation_fingerprint_missing: bool,
     include_text: bool,
     include_crops: bool,
 }
@@ -306,6 +311,19 @@ fn check_claim(
             claim,
             status: CheckStatus::CapabilityBlocked,
             reason: Some(CheckReason::MissingSourceFingerprint),
+            match_method: MatchMethod::None,
+            semantic_unverified: false,
+            evidence: None,
+            warnings,
+        };
+    }
+
+    if context.citation_fingerprint_missing {
+        return Check {
+            id: check_id,
+            claim,
+            status: CheckStatus::Stale,
+            reason: Some(CheckReason::MissingCitationFingerprint),
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
@@ -591,9 +609,10 @@ fn resolve_target(
             .elements
             .iter()
             .enumerate()
-            .find(|(_, element)| {
+            .filter(|(_, element)| {
                 element.page == page && contains_bbox(element.bbox, bbox, tolerance)
             })
+            .min_by_key(|(position, element)| (bbox_area(element.bbox), *position))
             .map(|(position, element)| target_from_element(element, Some(position)))
             .map(TargetResolution::Found)
             .unwrap_or(TargetResolution::NotFound(CheckReason::BboxNotFound));
@@ -713,15 +732,6 @@ fn adjacent_quote_target(
         }
     }
 
-    if claim.citation.element_id.is_none()
-        && claim.citation.span_id.is_none()
-        && claim.citation.bbox.is_none()
-    {
-        if let Some(page) = claim.citation.page.as_deref() {
-            return adjacent_text_pair_on_page(index, page, expected, config);
-        }
-    }
-
     None
 }
 
@@ -746,19 +756,6 @@ fn adjacent_text_pair_for_element(
         .and_then(|first| adjacent_text_pair_target(first, current, expected, config))
 }
 
-fn adjacent_text_pair_on_page(
-    index: &SourceIndex,
-    page: &str,
-    expected: &str,
-    config: &VerificationConfig,
-) -> Option<FoundTarget> {
-    index
-        .elements
-        .windows(2)
-        .filter(|pair| pair[0].page == page && pair[1].page == page)
-        .find_map(|pair| adjacent_text_pair_target(&pair[0], &pair[1], expected, config))
-}
-
 fn adjacent_text_pair_target(
     first: &GroundingElement,
     second: &GroundingElement,
@@ -768,9 +765,12 @@ fn adjacent_text_pair_target(
     if first.page != second.page {
         return None;
     }
+    if !element_bboxes_are_adjacent(first.bbox, second.bbox) {
+        return None;
+    }
     let first_text = first.text.as_deref()?;
     let second_text = second.text.as_deref()?;
-    let joined = format!("{first_text}{second_text}");
+    let joined = join_adjacent_text(first_text, second_text, config);
     if text_matches(ClaimKind::Quote, expected, first_text, config)
         || text_matches(ClaimKind::Quote, expected, second_text, config)
         || !text_matches(ClaimKind::Quote, expected, &joined, config)
@@ -785,6 +785,32 @@ fn adjacent_text_pair_target(
         from_table_cell: false,
         element_index: None,
     })
+}
+
+fn join_adjacent_text(first: &str, second: &str, config: &VerificationConfig) -> String {
+    let joined = format!("{first} {second}");
+    match config.matching.text_normalization {
+        TextNormalization::None => joined,
+        TextNormalization::CollapseWhitespace => normalize_quote(&joined),
+    }
+}
+
+fn bbox_area(bbox: [i64; 4]) -> u128 {
+    let width = bbox[2].saturating_sub(bbox[0]).max(0) as u128;
+    let height = bbox[3].saturating_sub(bbox[1]).max(0) as u128;
+    width.saturating_mul(height)
+}
+
+fn element_bboxes_are_adjacent(first: [i64; 4], second: [i64; 4]) -> bool {
+    let same_line =
+        ranges_overlap_i64(first[1], first[3], second[1], second[3]) && first[2] == second[0];
+    let stacked =
+        ranges_overlap_i64(first[0], first[2], second[0], second[2]) && first[3] == second[1];
+    same_line || stacked
+}
+
+fn ranges_overlap_i64(a_start: i64, a_end: i64, b_start: i64, b_end: i64) -> bool {
+    a_start < b_end && b_start < a_end
 }
 
 fn union_bbox(left: [i64; 4], right: [i64; 4]) -> [i64; 4] {
@@ -1154,7 +1180,53 @@ mod tests {
     }
 
     #[test]
-    fn quote_claim_grounds_across_adjacent_page_text_fragments() {
+    fn quote_claim_grounds_across_adjacent_element_text_fragments() {
+        let report = verify_elements(
+            vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "split-b",
+                    "p0001",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    element_id: Some("split-a".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            report.checks[0].match_method,
+            MatchMethod::NormalizedTextContains
+        );
+        assert_eq!(
+            report.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.text.as_deref()),
+            Some("The alpha trust loop verifies grounded evidence")
+        );
+        assert_eq!(
+            report.checks[0].evidence.as_ref().and_then(|e| e.bbox),
+            Some([100, 100, 700, 200])
+        );
+    }
+
+    #[test]
+    fn quote_claim_page_only_locator_does_not_search_adjacent_fragments() {
         let report = verify_elements(
             vec![
                 element(
@@ -1180,23 +1252,9 @@ mod tests {
             )],
         );
 
-        assert!(report.all_evidence_grounded);
-        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
-        assert_eq!(
-            report.checks[0].match_method,
-            MatchMethod::NormalizedTextContains
-        );
-        assert_eq!(
-            report.checks[0]
-                .evidence
-                .as_ref()
-                .and_then(|e| e.text.as_deref()),
-            Some("The alpha trust loop verifies grounded evidence")
-        );
-        assert_eq!(
-            report.checks[0].evidence.as_ref().and_then(|e| e.bbox),
-            Some([100, 100, 700, 200])
-        );
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
     }
 
     #[test]
@@ -1239,6 +1297,38 @@ mod tests {
             report.checks[0].evidence.as_ref().and_then(|e| e.bbox),
             Some([100, 100, 700, 200])
         );
+    }
+
+    #[test]
+    fn quote_claim_does_not_stitch_non_touching_element_bboxes() {
+        let report = verify_elements(
+            vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 390, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "split-b",
+                    "p0001",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    element_id: Some("split-a".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
     }
 
     #[test]
@@ -1286,6 +1376,49 @@ mod tests {
     }
 
     #[test]
+    fn bbox_locator_prefers_smallest_containing_element() {
+        let report = verify_elements(
+            vec![
+                element(
+                    "container",
+                    "p0001",
+                    [0, 0, 1000, 1000],
+                    Some("outer wrapper text"),
+                ),
+                element(
+                    "inner",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The exact cited quote"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The exact cited quote"),
+                Citation {
+                    page: Some("p0001".into()),
+                    bbox: Some([120, 120, 380, 180]),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            report.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.text.as_deref()),
+            Some("The exact cited quote")
+        );
+        assert_eq!(
+            report.checks[0].evidence.as_ref().and_then(|e| e.bbox),
+            Some([100, 100, 400, 200])
+        );
+    }
+
+    #[test]
     fn quote_claim_does_not_ground_across_non_adjacent_or_wrong_page_fragments() {
         let non_adjacent = verify_elements(
             vec![
@@ -1312,7 +1445,7 @@ mod tests {
                 ClaimKind::Quote,
                 Some("The alpha trust loop verifies grounded evidence"),
                 Citation {
-                    page: Some("p0001".into()),
+                    element_id: Some("split-a".into()),
                     ..Default::default()
                 },
             )],
@@ -1692,6 +1825,36 @@ mod tests {
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::Stale);
         assert_eq!(report.checks[0].reason, Some(CheckReason::StaleFingerprint));
+    }
+
+    #[test]
+    fn missing_citation_fingerprint_blocks_when_required() {
+        let source = TestSource::default();
+        let cfg = VerificationConfig::default_v1();
+        let report = verify_claims(
+            &source,
+            CitationInput::Envelope(CitationEnvelope {
+                document_fingerprint: None,
+                claims: vec![claim(
+                    ClaimKind::Presence,
+                    None,
+                    Citation {
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                )],
+            }),
+            &cfg,
+            "0".repeat(64),
+        );
+
+        assert!(!report.fingerprint_stale);
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Stale);
+        assert_eq!(
+            report.checks[0].reason,
+            Some(CheckReason::MissingCitationFingerprint)
+        );
     }
 
     #[test]
