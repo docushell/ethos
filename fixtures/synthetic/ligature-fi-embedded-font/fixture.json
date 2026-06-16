@@ -16,5 +16,6 @@
   "expected_spans": [
     { "text": "office", "char_start": 0, "char_end": 6 },
     { "text": "file", "char_start": 7, "char_end": 11 }
-  ]
+  ],
+  "expected_element_types": ["text_block"]
 }
