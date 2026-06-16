@@ -21,10 +21,11 @@
 //! emitted as grounded headings, and multi-column text is ordered by column before
 //! vertical position.
 
+use ethos_core::codes::WarningCode;
 use ethos_core::error::EthosError;
 use ethos_core::geom::QRect;
-use ethos_core::ids::element_id;
-use ethos_core::model::{Element, ElementType, Span};
+use ethos_core::ids::{element_id, warning_id};
+use ethos_core::model::{Element, ElementType, Span, Warning};
 use ethos_core::traits::{Extraction, LayoutEngine, LayoutOutput};
 
 /// Deterministic paragraph-level layout engine.
@@ -37,12 +38,16 @@ const HEADING_MAX_WORDS: usize = 12;
 const HEADING_CONFIDENCE_LARGER_AND_BOLD: u16 = 900;
 const HEADING_CONFIDENCE_LARGER: u16 = 850;
 const HEADING_CONFIDENCE_BOLD_SAME_SIZE: u16 = 720;
+const LAYOUT_CONFIDENCE_WARNING_THRESHOLD: u16 = 800;
+const LOW_CONFIDENCE_READING_ORDER_MESSAGE: &str = "layout confidence below alpha threshold";
 const MAX_HEADING_LEVEL: u8 = 3;
 
 impl LayoutEngine for BasicLayoutEngine {
     fn layout(&self, extraction: &Extraction) -> Result<LayoutOutput, EthosError> {
         let mut elements = Vec::new();
+        let mut warnings = Vec::new();
         let mut next_element = 1u32;
+        let mut next_warning = 1u32;
 
         for page in &extraction.pages {
             let page_spans: Vec<SpanRef<'_>> = extraction
@@ -64,21 +69,18 @@ impl LayoutEngine for BasicLayoutEngine {
             let heading_sizes = heading_size_levels(&columns, body_font_size_q);
 
             for column in columns {
-                layout_column_lines(
-                    column.lines,
-                    body_font_size_q,
-                    &heading_sizes,
-                    &page.id,
-                    &mut next_element,
-                    &mut elements,
-                )?;
+                let mut sink = LayoutColumnSink {
+                    page_id: &page.id,
+                    next_element: &mut next_element,
+                    next_warning: &mut next_warning,
+                    elements: &mut elements,
+                    warnings: &mut warnings,
+                };
+                layout_column_lines(column.lines, body_font_size_q, &heading_sizes, &mut sink)?;
             }
         }
 
-        Ok(LayoutOutput {
-            elements,
-            warnings: Vec::new(),
-        })
+        Ok(LayoutOutput { elements, warnings })
     }
 }
 
@@ -104,6 +106,14 @@ struct Column<'a> {
 struct Paragraph<'a> {
     lines: Vec<Line<'a>>,
     bbox: QRect,
+}
+
+struct LayoutColumnSink<'a> {
+    page_id: &'a str,
+    next_element: &'a mut u32,
+    next_warning: &'a mut u32,
+    elements: &'a mut Vec<Element>,
+    warnings: &'a mut Vec<Warning>,
 }
 
 #[derive(Clone, Copy)]
@@ -269,9 +279,7 @@ fn layout_column_lines<'a>(
     mut lines: Vec<Line<'a>>,
     body_font_size_q: Option<i64>,
     heading_sizes: &[i64],
-    page_id: &str,
-    next_element: &mut u32,
-    elements: &mut Vec<Element>,
+    sink: &mut LayoutColumnSink<'_>,
 ) -> Result<(), EthosError> {
     lines.sort_by(line_order);
     let mut text_lines = Vec::new();
@@ -279,19 +287,19 @@ fn layout_column_lines<'a>(
 
     while let Some(line) = line_iter.next() {
         if is_list_item_line(&line) {
-            flush_text_lines(&mut text_lines, page_id, next_element, elements)?;
+            flush_text_lines(&mut text_lines, sink)?;
             let list_item_spans = line_spans(&line);
-            elements.push(build_element(
-                *next_element,
-                page_id,
+            sink.elements.push(build_element(
+                *sink.next_element,
+                sink.page_id,
                 &list_item_spans,
                 ElementType::ListItem,
                 None,
                 None,
             )?);
-            *next_element += 1;
+            *sink.next_element += 1;
         } else if let Some(signal) = heading_signal(&line, body_font_size_q) {
-            flush_text_lines(&mut text_lines, page_id, next_element, elements)?;
+            flush_text_lines(&mut text_lines, sink)?;
             let level = heading_level(signal.size_q, heading_sizes);
             let mut confidence = signal.confidence;
             let mut heading_lines = vec![line];
@@ -316,43 +324,68 @@ fn layout_column_lines<'a>(
                 heading_lines.push(next_line);
             }
             let heading_spans = lines_spans(&heading_lines);
-            elements.push(build_element(
-                *next_element,
-                page_id,
+            let mut element = build_element(
+                *sink.next_element,
+                sink.page_id,
                 &heading_spans,
                 ElementType::Heading,
                 Some(level),
                 Some(confidence),
-            )?);
-            *next_element += 1;
+            )?;
+            apply_confidence_policy(&mut element, sink.next_warning, sink.warnings)?;
+            sink.elements.push(element);
+            *sink.next_element += 1;
         } else {
             text_lines.push(line);
         }
     }
 
-    flush_text_lines(&mut text_lines, page_id, next_element, elements)
+    flush_text_lines(&mut text_lines, sink)
 }
 
 fn flush_text_lines<'a>(
     text_lines: &mut Vec<Line<'a>>,
-    page_id: &str,
-    next_element: &mut u32,
-    elements: &mut Vec<Element>,
+    sink: &mut LayoutColumnSink<'_>,
 ) -> Result<(), EthosError> {
     if text_lines.is_empty() {
         return Ok(());
     }
     for paragraph in group_paragraphs(std::mem::take(text_lines)) {
         let paragraph_spans = paragraph_spans(&paragraph);
-        elements.push(build_element(
-            *next_element,
-            page_id,
+        sink.elements.push(build_element(
+            *sink.next_element,
+            sink.page_id,
             &paragraph_spans,
             ElementType::TextBlock,
             None,
             None,
         )?);
-        *next_element += 1;
+        *sink.next_element += 1;
+    }
+    Ok(())
+}
+
+fn apply_confidence_policy(
+    element: &mut Element,
+    next_warning: &mut u32,
+    warnings: &mut Vec<Warning>,
+) -> Result<(), EthosError> {
+    if element
+        .confidence
+        .is_some_and(|confidence| confidence < LAYOUT_CONFIDENCE_WARNING_THRESHOLD)
+    {
+        let id = warning_id(*next_warning)?;
+        *next_warning += 1;
+        element.warning_refs.push(id.clone());
+        warnings.push(Warning {
+            id,
+            code: WarningCode::LowConfidenceReadingOrder,
+            message: LOW_CONFIDENCE_READING_ORDER_MESSAGE.to_string(),
+            page: Some(element.page.clone()),
+            element_ref: Some(element.id.clone()),
+            span_ref: None,
+            region_ref: None,
+        });
     }
     Ok(())
 }
@@ -865,10 +898,12 @@ mod tests {
         assert_eq!(output.elements[0].element_type, ElementType::Heading);
         assert_eq!(output.elements[0].heading_level, Some(1));
         assert_eq!(output.elements[0].confidence, Some(850));
+        assert!(output.elements[0].warning_refs.is_empty());
         assert_eq!(output.elements[0].text.as_deref(), Some("Overview"));
         assert_eq!(output.elements[0].span_refs, vec!["s000001".to_string()]);
         assert_eq!(output.elements[1].element_type, ElementType::TextBlock);
         assert_eq!(output.elements[1].text.as_deref(), Some("Body text"));
+        assert!(output.warnings.is_empty());
     }
 
     #[test]
@@ -902,8 +937,23 @@ mod tests {
         assert_eq!(output.elements[0].element_type, ElementType::Heading);
         assert_eq!(output.elements[0].heading_level, Some(1));
         assert_eq!(output.elements[0].confidence, Some(720));
+        assert_eq!(output.elements[0].warning_refs, vec!["w0001".to_string()]);
         assert_eq!(output.elements[0].text.as_deref(), Some("Background"));
         assert_eq!(output.elements[1].text.as_deref(), Some("Plain body"));
+        assert_eq!(output.warnings.len(), 1);
+        assert_eq!(output.warnings[0].id, "w0001");
+        assert_eq!(
+            output.warnings[0].code,
+            WarningCode::LowConfidenceReadingOrder
+        );
+        assert_eq!(
+            output.warnings[0].message,
+            LOW_CONFIDENCE_READING_ORDER_MESSAGE
+        );
+        assert_eq!(output.warnings[0].page.as_deref(), Some("p0001"));
+        assert_eq!(output.warnings[0].element_ref.as_deref(), Some("e000001"));
+        assert_eq!(output.warnings[0].span_ref, None);
+        assert_eq!(output.warnings[0].region_ref, None);
     }
 
     #[test]
