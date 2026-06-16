@@ -19,9 +19,9 @@
 
 This script does not parse PDFs and does not compare Ethos to other tools. It
 summarizes the committed alpha layout fixture expectations and fails closed when
-layout.json drifts away from fixture.json expectations, when required expectation
-fields are missing, when committed export goldens drift, or when
-heading/list/reading-order fixture coverage is absent.
+extraction.json or layout.json drift away from fixture.json expectations, when
+required expectation fields are missing, when committed export goldens drift, or
+when heading/list/reading-order/rotation fixture coverage is absent.
 """
 
 from __future__ import annotations
@@ -51,6 +51,10 @@ COVERAGE_GATES = {
     "multi_column_reading_order_fixture": {
         "subset": "multi_column",
         "requires_multi_element_expected_text": True,
+    },
+    "rotation_fixture": {
+        "subset": "rotation",
+        "expected_rotation": True,
     },
 }
 
@@ -88,7 +92,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             "ok    layout evaluator element types "
             f"{json.dumps(report['element_type_counts'], sort_keys=True)}"
         )
-        print("ok    layout evaluator heading/list/reading-order coverage present")
+        print("ok    layout evaluator heading/list/reading-order/rotation coverage present")
         print("ok    layout evaluator export and warning diagnostics present")
         if args.out is not None:
             print(f"ok    layout evaluator report wrote {args.out}")
@@ -218,7 +222,15 @@ def evaluate_fixture(
         fixture_id,
         f"{fixture_rel}/layout.json",
     )
+    extraction = load_json(
+        fixture_dir / "extraction.json",
+        diagnostics,
+        fixture_id,
+        f"{fixture_rel}/extraction.json",
+    )
     if not isinstance(metadata, dict) or not isinstance(layout, dict):
+        return None
+    if not isinstance(extraction, dict):
         return None
 
     elements = layout.get("elements")
@@ -276,6 +288,7 @@ def evaluate_fixture(
     expected_text = normalize_expected_text(metadata.get("expected_text"))
     expected_element_types = metadata.get("expected_element_types")
     expected_elements = metadata.get("expected_elements")
+    expected_rotation = metadata.get("expected_rotation")
 
     expected_text_status = compare_expected_text(
         fixture_id,
@@ -296,6 +309,14 @@ def evaluate_fixture(
         fixture_rel,
         expected_elements,
         len(elements),
+        diagnostics,
+    )
+    expected_rotation_status = compare_expected_rotation(
+        fixture_id,
+        fixture_rel,
+        subsets,
+        expected_rotation,
+        extraction,
         diagnostics,
     )
     warning_shape_status = compare_warning_shape(
@@ -337,6 +358,7 @@ def evaluate_fixture(
         "expected_text": expected_text_status,
         "expected_element_types": expected_element_types_status,
         "expected_elements": expected_elements_status,
+        "expected_rotation": expected_rotation_status,
         "warning_shape": warning_shape_status,
         "confidence_policy": confidence_policy_status,
         "export_goldens": export_goldens_status,
@@ -452,6 +474,86 @@ def compare_expected_elements(
                 f"{fixture_rel}/fixture.json",
                 expected=expected_elements,
                 actual=actual_count,
+            )
+        )
+        return "mismatch"
+    return "pass"
+
+
+def compare_expected_rotation(
+    fixture_id: str,
+    fixture_rel: str,
+    subsets: List[str],
+    expected_rotation: Any,
+    extraction: Dict[str, Any],
+    diagnostics: List[Dict[str, Any]],
+) -> str:
+    if "rotation" not in subsets:
+        return "not_applicable"
+    if expected_rotation is None:
+        diagnostics.append(
+            diagnostic(
+                "missing_expectation",
+                fixture_id,
+                "rotation subset must declare expected_rotation",
+                f"{fixture_rel}/fixture.json",
+            )
+        )
+        return "missing"
+    if (
+        not isinstance(expected_rotation, int)
+        or isinstance(expected_rotation, bool)
+        or expected_rotation not in (0, 90, 180, 270)
+    ):
+        diagnostics.append(
+            diagnostic(
+                "invalid_expectation",
+                fixture_id,
+                "expected_rotation must be one of 0, 90, 180, or 270",
+                f"{fixture_rel}/fixture.json",
+            )
+        )
+        return "invalid"
+
+    pages = extraction.get("pages")
+    if not isinstance(pages, list) or not pages:
+        diagnostics.append(
+            diagnostic(
+                "invalid_extraction",
+                fixture_id,
+                "extraction.json pages must be a non-empty array for rotation fixtures",
+                f"{fixture_rel}/extraction.json",
+            )
+        )
+        return "invalid"
+    rotations = []
+    for page_index, page in enumerate(pages):
+        rotation = page.get("rotation") if isinstance(page, dict) else None
+        if (
+            not isinstance(rotation, int)
+            or isinstance(rotation, bool)
+            or rotation not in (0, 90, 180, 270)
+        ):
+            diagnostics.append(
+                diagnostic(
+                    "invalid_extraction",
+                    fixture_id,
+                    f"extraction page {page_index} rotation must be one of 0, 90, 180, or 270",
+                    f"{fixture_rel}/extraction.json",
+                )
+            )
+            return "invalid"
+        rotations.append(rotation)
+
+    if rotations != [expected_rotation] * len(rotations):
+        diagnostics.append(
+            diagnostic(
+                "expected_rotation_mismatch",
+                fixture_id,
+                "expected_rotation does not match extraction page rotation values",
+                f"{fixture_rel}/fixture.json",
+                expected=[expected_rotation] * len(rotations),
+                actual=rotations,
             )
         )
         return "mismatch"
@@ -853,6 +955,8 @@ def compare_subset_expectations(
                     f"{fixture_rel}/fixture.json",
                 )
             )
+    if "rotation" in subsets:
+        statuses.append("rotation")
     return "pass" if statuses else "not_applicable"
 
 
@@ -876,6 +980,8 @@ def update_coverage(
         ):
             continue
         if requirement.get("requires_multi_element_expected_text") and check["elements"] < 2:
+            continue
+        if requirement.get("expected_rotation") and check["expected_rotation"] != "pass":
             continue
         coverage[gate].append(check["fixture_id"])
 
