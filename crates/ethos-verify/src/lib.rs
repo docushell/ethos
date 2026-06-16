@@ -313,7 +313,7 @@ fn check_claim(
         };
     }
 
-    let target = match resolve_target(index, &claim, config) {
+    let mut target = match resolve_target(index, &claim, config) {
         TargetResolution::Found(target) => target,
         TargetResolution::NotFound(reason) => {
             return Check {
@@ -353,6 +353,10 @@ fn check_claim(
             };
         }
     };
+
+    if let Some(adjacent_target) = adjacent_quote_target(index, &claim, &target, config) {
+        target = adjacent_target;
+    }
 
     let evidence = make_evidence(source, &target, context.include_text, context.include_crops);
     let (status, match_method, reason) =
@@ -446,6 +450,7 @@ struct FoundTarget {
     bbox: Option<[i64; 4]>,
     text: Option<String>,
     from_table_cell: bool,
+    element_index: Option<usize>,
 }
 
 /// Per-run grounding snapshot used to avoid cloning full entity collections per claim.
@@ -493,12 +498,6 @@ impl SourceIndex {
             span_by_id,
             table_by_id,
         }
-    }
-
-    fn element(&self, id: &str) -> Option<&GroundingElement> {
-        self.element_by_id
-            .get(id)
-            .and_then(|index| self.elements.get(*index))
     }
 
     fn span(&self, id: &str) -> Option<&GroundingSpan> {
@@ -570,8 +569,15 @@ fn resolve_target(
 
     if let Some(element_id) = claim.citation.element_id.as_deref() {
         return index
-            .element(element_id)
-            .map(target_from_element)
+            .element_by_id
+            .get(element_id)
+            .and_then(|position| {
+                index
+                    .elements
+                    .get(*position)
+                    .map(|element| (*position, element))
+            })
+            .map(|(position, element)| target_from_element(element, Some(position)))
             .map(TargetResolution::Found)
             .unwrap_or(TargetResolution::NotFound(CheckReason::ElementNotFound));
     }
@@ -584,8 +590,11 @@ fn resolve_target(
         return index
             .elements
             .iter()
-            .find(|element| element.page == page && contains_bbox(element.bbox, bbox, tolerance))
-            .map(target_from_element)
+            .enumerate()
+            .find(|(_, element)| {
+                element.page == page && contains_bbox(element.bbox, bbox, tolerance)
+            })
+            .map(|(position, element)| target_from_element(element, Some(position)))
             .map(TargetResolution::Found)
             .unwrap_or(TargetResolution::NotFound(CheckReason::BboxNotFound));
     }
@@ -605,6 +614,7 @@ fn resolve_target(
                     bbox: Some([0, 0, found.width, found.height]),
                     text: None,
                     from_table_cell: false,
+                    element_index: None,
                 })
             })
             .unwrap_or(TargetResolution::NotFound(CheckReason::PageNotFound));
@@ -613,12 +623,13 @@ fn resolve_target(
     TargetResolution::NotFound(CheckReason::MissingLocator)
 }
 
-fn target_from_element(element: &GroundingElement) -> FoundTarget {
+fn target_from_element(element: &GroundingElement, element_index: Option<usize>) -> FoundTarget {
     FoundTarget {
         page: Some(element.page.clone()),
         bbox: Some(element.bbox),
         text: element.text.clone(),
         from_table_cell: false,
+        element_index,
     }
 }
 
@@ -628,6 +639,7 @@ fn target_from_span(span: &GroundingSpan) -> FoundTarget {
         bbox: Some(span.bbox),
         text: Some(span.text.clone()),
         from_table_cell: false,
+        element_index: None,
     }
 }
 
@@ -669,7 +681,103 @@ fn target_from_cell(page: &str, cell: &GroundingCell) -> FoundTarget {
         bbox: Some(cell.bbox),
         text: Some(cell.text.clone()),
         from_table_cell: true,
+        element_index: None,
     }
+}
+
+fn adjacent_quote_target(
+    index: &SourceIndex,
+    claim: &Claim,
+    target: &FoundTarget,
+    config: &VerificationConfig,
+) -> Option<FoundTarget> {
+    if claim.kind != ClaimKind::Quote {
+        return None;
+    }
+    let expected = claim.text.as_deref()?;
+    if target
+        .text
+        .as_deref()
+        .is_some_and(|actual| text_matches(ClaimKind::Quote, expected, actual, config))
+    {
+        return None;
+    }
+
+    if let Some(position) = target.element_index {
+        return adjacent_text_pair_from(index, position, expected, config);
+    }
+
+    if claim.citation.element_id.is_none()
+        && claim.citation.span_id.is_none()
+        && claim.citation.bbox.is_none()
+    {
+        if let Some(page) = claim.citation.page.as_deref() {
+            return adjacent_text_pair_on_page(index, page, expected, config);
+        }
+    }
+
+    None
+}
+
+fn adjacent_text_pair_from(
+    index: &SourceIndex,
+    position: usize,
+    expected: &str,
+    config: &VerificationConfig,
+) -> Option<FoundTarget> {
+    let first = index.elements.get(position)?;
+    let second = index.elements.get(position.checked_add(1)?)?;
+    adjacent_text_pair_target(first, second, expected, config)
+}
+
+fn adjacent_text_pair_on_page(
+    index: &SourceIndex,
+    page: &str,
+    expected: &str,
+    config: &VerificationConfig,
+) -> Option<FoundTarget> {
+    index
+        .elements
+        .windows(2)
+        .filter(|pair| pair[0].page == page && pair[1].page == page)
+        .find_map(|pair| adjacent_text_pair_target(&pair[0], &pair[1], expected, config))
+}
+
+fn adjacent_text_pair_target(
+    first: &GroundingElement,
+    second: &GroundingElement,
+    expected: &str,
+    config: &VerificationConfig,
+) -> Option<FoundTarget> {
+    if first.page != second.page {
+        return None;
+    }
+    let first_text = first.text.as_deref()?;
+    let second_text = second.text.as_deref()?;
+    let joined = format!("{first_text}{second_text}");
+    if text_matches(ClaimKind::Quote, expected, first_text, config)
+        || text_matches(ClaimKind::Quote, expected, second_text, config)
+        || !text_matches(ClaimKind::Quote, expected, &joined, config)
+    {
+        return None;
+    }
+
+    Some(FoundTarget {
+        page: Some(first.page.clone()),
+        bbox: Some(union_bbox(first.bbox, second.bbox)),
+        text: Some(joined),
+        from_table_cell: false,
+        element_index: None,
+    })
+}
+
+fn union_bbox(left: [i64; 4], right: [i64; 4]) -> [i64; 4] {
+    [
+        left[0].min(right[0]),
+        left[1].min(right[1]),
+        left[2].max(right[2]),
+        left[3].max(right[3]),
+    ]
 }
 
 fn make_evidence(
@@ -881,6 +989,61 @@ mod tests {
         }
     }
 
+    struct ElementSource {
+        elements: Vec<GroundingElement>,
+    }
+
+    impl GroundingSource for ElementSource {
+        fn parser(&self) -> ParserIdentity {
+            ParserIdentity {
+                name: "element-test-parser".into(),
+                version: "0.1.0".into(),
+                adapter: None,
+                adapter_version: None,
+            }
+        }
+        fn capabilities(&self) -> Capabilities {
+            Capabilities {
+                spans: true,
+                char_offsets: true,
+                tables: true,
+                fingerprint: true,
+                coordinate_origin: CoordinateOrigin::TopLeft,
+                crop_support: false,
+            }
+        }
+        fn fingerprint(&self) -> Option<String> {
+            Some("sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3".into())
+        }
+        fn pages(&self) -> Vec<PageGeometry> {
+            vec![
+                PageGeometry {
+                    id: "p0001".into(),
+                    index: 1,
+                    width: 61200,
+                    height: 79200,
+                    rotation: 0,
+                },
+                PageGeometry {
+                    id: "p0002".into(),
+                    index: 2,
+                    width: 61200,
+                    height: 79200,
+                    rotation: 0,
+                },
+            ]
+        }
+        fn elements(&self) -> Vec<GroundingElement> {
+            self.elements.clone()
+        }
+        fn spans(&self) -> Vec<GroundingSpan> {
+            Vec::new()
+        }
+        fn tables(&self) -> Vec<GroundingTable> {
+            Vec::new()
+        }
+    }
+
     fn claim(kind: ClaimKind, text: Option<&str>, citation: Citation) -> Claim {
         Claim {
             kind,
@@ -907,6 +1070,26 @@ mod tests {
         cfg: &VerificationConfig,
     ) -> VerificationReport {
         verify_claims(source, input(source, claims), cfg, "0".repeat(64))
+    }
+
+    fn element(id: &str, page: &str, bbox: [i64; 4], text: Option<&str>) -> GroundingElement {
+        GroundingElement {
+            id: id.into(),
+            page: page.into(),
+            bbox,
+            kind: "text_block".into(),
+            text: text.map(str::to_string),
+        }
+    }
+
+    fn verify_elements(elements: Vec<GroundingElement>, claims: Vec<Claim>) -> VerificationReport {
+        let source = ElementSource { elements };
+        let cfg = VerificationConfig::default_v1();
+        let citations = CitationInput::Envelope(CitationEnvelope {
+            document_fingerprint: source.fingerprint(),
+            claims,
+        });
+        verify_claims(&source, citations, &cfg, "0".repeat(64))
     }
 
     #[test]
@@ -952,6 +1135,120 @@ mod tests {
             Some("Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.")
         );
         assert_eq!(report.warnings, Vec::<WarningCode>::new());
+    }
+
+    #[test]
+    fn quote_claim_grounds_across_adjacent_page_text_fragments() {
+        let report = verify_elements(
+            vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "split-b",
+                    "p0001",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            report.checks[0].match_method,
+            MatchMethod::NormalizedTextContains
+        );
+        assert_eq!(
+            report.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.text.as_deref()),
+            Some("The alpha trust loop verifies grounded evidence")
+        );
+        assert_eq!(
+            report.checks[0].evidence.as_ref().and_then(|e| e.bbox),
+            Some([100, 100, 700, 200])
+        );
+    }
+
+    #[test]
+    fn quote_claim_does_not_ground_across_non_adjacent_or_wrong_page_fragments() {
+        let non_adjacent = verify_elements(
+            vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "between",
+                    "p0001",
+                    [100, 220, 700, 320],
+                    Some("separate evidence"),
+                ),
+                element(
+                    "split-b",
+                    "p0001",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+        assert!(!non_adjacent.all_evidence_grounded);
+        assert_eq!(non_adjacent.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(
+            non_adjacent.checks[0].reason,
+            Some(CheckReason::TextMismatch)
+        );
+
+        let wrong_page = verify_elements(
+            vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "split-b",
+                    "p0002",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+        assert!(!wrong_page.all_evidence_grounded);
+        assert_eq!(wrong_page.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(wrong_page.checks[0].reason, Some(CheckReason::TextMismatch));
     }
 
     #[test]
