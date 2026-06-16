@@ -47,6 +47,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         self.assertEqual(
             report["coverage"],
             {
+                "font_identity_fixture": ["ligature-case"],
                 "heading_fixture": ["heading-case"],
                 "hyphenation_fixture": ["hyphen-case"],
                 "ligature_fixture": ["ligature-case"],
@@ -58,6 +59,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         heading_check = next(
             check for check in report["checks"] if check["fixture_id"] == "heading-case"
         )
+        self.assertEqual(heading_check["expected_font_id"], "not_declared")
         self.assertEqual(heading_check["expected_pages"], "not_declared")
         self.assertEqual(heading_check["expected_span_text"], "not_declared")
         self.assertEqual(heading_check["confidence_policy"], "pass")
@@ -76,6 +78,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         )
         self.assertEqual(ligature_check["expected_pages"], "pass")
         self.assertEqual(ligature_check["expected_span_text"], "pass")
+        self.assertEqual(ligature_check["expected_font_id"], "pass")
         rotation_check = next(
             check for check in report["checks"] if check["fixture_id"] == "rotation-case"
         )
@@ -177,6 +180,57 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         extraction_path = self.root / "synthetic/ligature-case/extraction.json"
         extraction = json.loads(extraction_path.read_text(encoding="utf-8"))
         extraction["spans"][0]["text"] = 17
+        self.write_json(extraction_path, extraction)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        self.assertDiagnostic(report, "invalid_extraction", "ligature-case")
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_font_id_drift_reports_expected_and_actual(self) -> None:
+        self.write_required_alpha_fixture_set()
+        extraction_path = self.root / "synthetic/ligature-case/extraction.json"
+        extraction = json.loads(extraction_path.read_text(encoding="utf-8"))
+        extraction["spans"][1]["font_id"] = "embedded:Other"
+        self.write_json(extraction_path, extraction)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        diagnostic = self.onlyDiagnostic(
+            report,
+            "expected_font_id_mismatch",
+            "ligature-case",
+        )
+        self.assertEqual(
+            diagnostic["expected"],
+            "embedded:EthosLigatureFixture-Regular",
+        )
+        self.assertEqual(
+            diagnostic["actual"],
+            ["embedded:EthosLigatureFixture-Regular", "embedded:Other"],
+        )
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_font_id_rejects_invalid_expectation(self) -> None:
+        self.write_required_alpha_fixture_set()
+        metadata_path = self.root / "synthetic/ligature-case/fixture.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["expected_font_id"] = ""
+        self.write_json(metadata_path, metadata)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        self.assertDiagnostic(report, "invalid_expectation", "ligature-case")
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_font_id_rejects_invalid_extraction_font_id(self) -> None:
+        self.write_required_alpha_fixture_set()
+        extraction_path = self.root / "synthetic/ligature-case/extraction.json"
+        extraction = json.loads(extraction_path.read_text(encoding="utf-8"))
+        extraction["spans"][0]["font_id"] = 17
         self.write_json(extraction_path, extraction)
 
         report = evaluate_layout_alpha(self.root)
@@ -472,9 +526,18 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 ],
                 expected_pages=1,
                 expected_span_text=["office", "file"],
+                expected_font_id="embedded:EthosLigatureFixture-Regular",
                 spans=[
-                    {"id": "s000001", "text": "office"},
-                    {"id": "s000002", "text": "file"},
+                    {
+                        "id": "s000001",
+                        "text": "office",
+                        "font_id": "embedded:EthosLigatureFixture-Regular",
+                    },
+                    {
+                        "id": "s000002",
+                        "text": "file",
+                        "font_id": "embedded:EthosLigatureFixture-Regular",
+                    },
                 ],
             ),
         ]
@@ -510,6 +573,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         spans: list[dict] | None = None,
         expected_pages: int | None = None,
         expected_span_text: list[str] | None = None,
+        expected_font_id: str | None = None,
         expected_rotation: int | None = None,
         page_rotation: int = 0,
     ):
@@ -526,6 +590,8 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
             metadata["expected_pages"] = expected_pages
         if expected_span_text is not None:
             metadata["expected_span_text"] = expected_span_text
+        if expected_font_id is not None:
+            metadata["expected_font_id"] = expected_font_id
         if expected_rotation is not None:
             metadata["expected_rotation"] = expected_rotation
         self.write_json(fixture_dir / "fixture.json", metadata)
