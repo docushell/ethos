@@ -31,6 +31,9 @@ Records:
 - `rendered-crops-2026-06-14.md` - same-host rendered crop repeatability passed on macOS
   arm64 and Linux x64; cross-platform rendered crop byte identity failed because evidence
   bbox differed slightly across platforms.
+- `release-notice-draft-2026-06-16.md` - artifact-specific license/NOTICE bundle scaffolding
+  now generates an explicit `draft_not_release_ready` bundle with Cargo dependency counts,
+  conditional PDFium/font obligations, and release blockers.
 - `trademark-screen-2026-06-15.md` - package registry reservations are complete for priority
   public surfaces, and manual review reported a clean `Ethos` trademark outcome for ADR-0006.
 - `third-party-manifest-2026-06-16.md` - Cargo third-party dependency license manifest
