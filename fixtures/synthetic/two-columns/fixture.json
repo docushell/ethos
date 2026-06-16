@@ -12,6 +12,16 @@
     "Left top Left bottom",
     "Right top Right bottom"
   ],
+  "expected_span_text": [
+    "Right",
+    "top",
+    "Right",
+    "bottom",
+    "Left",
+    "top",
+    "Left",
+    "bottom"
+  ],
   "expected_pages": 1,
   "expected_elements": 2,
   "exercises": [

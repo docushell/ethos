@@ -132,18 +132,18 @@ def validate_c14n_scalar_contract(value, ctx: str) -> None:
     fail(f"{ctx} is not a valid JSON scalar/container")
 
 
-def validate_golden_file(path: Path, stage: str, keys: set[str]) -> None:
+def validate_golden_file(path: Path, stage: str, keys: set[str]):
     if not path.is_file():
         fail(f"{path.relative_to(ROOT)} missing for successful fixture")
-        return
+        return None
 
     golden = load_json(path)
     if golden is None:
-        return
+        return None
     ctx = str(path.relative_to(ROOT))
     if not isinstance(golden, dict):
         fail(f"{ctx} must be an object")
-        return
+        return None
     validate_c14n_scalar_contract(golden, ctx)
     if path.read_bytes() != canonical_json_bytes(golden):
         fail(f"{ctx} must be canonical JSON with one trailing newline")
@@ -160,6 +160,7 @@ def validate_golden_file(path: Path, stage: str, keys: set[str]) -> None:
         if not isinstance(golden.get("elements"), list):
             fail(f"{ctx} elements must be an array")
         validate_projection_items(ctx, "elements", golden.get("elements"), required=True)
+    return golden
 
 
 def validate_projection_items(ctx: str, key: str, value, required: bool) -> None:
@@ -246,6 +247,68 @@ def validate_foreign_fixture_packages() -> int:
             f"{ctx} output_json",
         )
     return count
+
+
+def validate_expected_count(value, expected, ctx: str) -> None:
+    if expected is None:
+        return
+    if not isinstance(expected, int) or expected < 0:
+        fail(f"{ctx} must be an integer >= 0")
+        return
+    if len(value) != expected:
+        fail(f"{ctx} expected {expected}, found {len(value)}")
+
+
+def validate_expected_text(metadata, layout, ctx: str) -> None:
+    if "expected_text" not in metadata:
+        return
+    expected = metadata["expected_text"]
+    elements = layout.get("elements") if isinstance(layout, dict) else None
+    if not isinstance(elements, list):
+        return
+    actual = [element.get("text") for element in elements]
+
+    if isinstance(expected, str):
+        if actual != [expected]:
+            fail(f"{ctx} expected_text must match layout element text order")
+    elif isinstance(expected, list) and all(isinstance(item, str) for item in expected):
+        if actual != expected:
+            fail(f"{ctx} expected_text list must match layout reading order")
+    else:
+        fail(f"{ctx} expected_text must be a string or string array")
+
+
+def validate_expected_span_text(metadata, extraction, ctx: str) -> None:
+    if "expected_span_text" not in metadata:
+        return
+    expected = metadata["expected_span_text"]
+    if not isinstance(expected, list) or not all(isinstance(item, str) for item in expected):
+        fail(f"{ctx} expected_span_text must be a string array")
+        return
+    spans = extraction.get("spans") if isinstance(extraction, dict) else None
+    if not isinstance(spans, list):
+        return
+    actual = [span.get("text") for span in spans]
+    if actual != expected:
+        fail(f"{ctx} expected_span_text must match extraction span order")
+
+
+def validate_stage_expectations(metadata_path: Path, metadata, extraction, layout) -> None:
+    ctx = str(metadata_path.relative_to(ROOT))
+    if isinstance(extraction, dict):
+        validate_expected_count(
+            extraction.get("pages", []),
+            metadata.get("expected_pages"),
+            f"{ctx} expected_pages",
+        )
+        validate_expected_span_text(metadata, extraction, ctx)
+    if isinstance(layout, dict):
+        validate_expected_count(
+            layout.get("elements", []),
+            metadata.get("expected_elements"),
+            f"{ctx} expected_elements",
+        )
+        validate_expected_text(metadata, layout, ctx)
 
 
 manifest = load_json(MANIFEST)
@@ -378,16 +441,23 @@ for index, entry in enumerate(entries):
 
     if "failure" not in manifest_subsets:
         fixture_dir = metadata_path.parent
-        validate_golden_file(
+        extraction_golden = validate_golden_file(
             fixture_dir / "extraction.json",
             "extraction",
             EXTRACTION_GOLDEN_KEYS,
         )
-        validate_golden_file(
+        layout_golden = validate_golden_file(
             fixture_dir / "layout.json",
             "layout",
             LAYOUT_GOLDEN_KEYS,
         )
+        if extraction_golden is not None and layout_golden is not None:
+            validate_stage_expectations(
+                metadata_path,
+                metadata,
+                extraction_golden,
+                layout_golden,
+            )
 
 if indexed_files != sorted(indexed_files):
     fail("manifest fixture entries must be sorted by file")
@@ -414,6 +484,7 @@ if not failures:
     ok("fixture.json sha256 values match document.pdf bytes")
     ok("fixture manifest has no missing or extra fixture documents")
     ok("successful fixture goldens have valid stage metadata")
+    ok("successful fixture metadata expectations match committed stage goldens")
     ok(f"foreign fixture manifests bind {foreign_package_count} package(s) to committed hashes")
 
 if failures:
