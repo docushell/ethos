@@ -404,6 +404,8 @@ fn summary_format_reports_reason_before_fail_on_ungrounded_exit() {
     assert!(summary.contains("checks_capability_blocked: 1\n"));
     assert!(summary.contains("capability_limits: missing_fingerprint,missing_spans,missing_char_offsets,missing_tables,unknown_coordinate_origin\n"));
     assert!(summary.contains("- v0001 status=capability_blocked reason=missing_table_capability kind=table_cell locator=table_id:odl-t1;cell:1,1 match_method=none\n"));
+    assert!(summary
+        .contains("  diagnostic: table_cell lookup requires a source with table capability\n"));
 }
 
 #[test]
@@ -436,6 +438,7 @@ fn summary_format_reports_no_non_grounded_checks_for_grounded_input() {
     assert!(summary.contains("capability_limits: none\n"));
     assert!(summary.contains("warnings: none\n"));
     assert!(summary.contains("non_grounded_checks:\n- none\n"));
+    assert!(!summary.contains("  diagnostic:"));
 }
 
 #[test]

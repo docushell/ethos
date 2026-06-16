@@ -27,7 +27,7 @@ use ethos_core::grounding::{
 };
 use ethos_core::model::Document;
 use ethos_core::verify_types::{
-    CapabilityLimit, CheckReason, CheckStatus, ClaimKind, EvidenceOptions, MatchMethod,
+    CapabilityLimit, Check, CheckReason, CheckStatus, ClaimKind, EvidenceOptions, MatchMethod,
     VerificationConfig, VerificationReport,
 };
 use ethos_grounding_opendataloader_json::OdlJsonSource;
@@ -233,6 +233,7 @@ fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<
                 citation_locator_label(&check.claim.citation),
                 match_method_label(check.match_method)
             ));
+            out.push_str(&format!("  diagnostic: {}\n", check_diagnostic(check)));
         }
     }
     Ok(out.into_bytes())
@@ -270,6 +271,69 @@ fn check_reason_label(reason: CheckReason) -> &'static str {
         CheckReason::TableNotFound => "table_not_found",
         CheckReason::TableCellNotFound => "table_cell_not_found",
         CheckReason::TextMismatch => "text_mismatch",
+    }
+}
+
+fn check_diagnostic(check: &Check) -> String {
+    match check.reason {
+        Some(CheckReason::MissingLocator) => {
+            "citation has no locator; provide page, element_id, span_id, table_id/cell, or bbox"
+                .to_string()
+        }
+        Some(CheckReason::MissingRequiredText) => {
+            "textual claim is missing required text".to_string()
+        }
+        Some(CheckReason::UnsupportedClaimKind) => {
+            "claim kind is outside the active verifier scope".to_string()
+        }
+        Some(CheckReason::StaleFingerprint) => {
+            "citation fingerprint does not match grounding source fingerprint".to_string()
+        }
+        Some(CheckReason::MissingSourceFingerprint) => {
+            "citations are fingerprint-pinned, but the grounding source did not declare a fingerprint"
+                .to_string()
+        }
+        Some(CheckReason::MissingCitationFingerprint) => {
+            "active staleness policy requires a citation fingerprint".to_string()
+        }
+        Some(CheckReason::MissingSpanCapability) => {
+            "span locator requires a source with span capability".to_string()
+        }
+        Some(CheckReason::MissingTableCapability) => {
+            "table_cell lookup requires a source with table capability".to_string()
+        }
+        Some(CheckReason::UnknownCoordinateOrigin) => {
+            "bbox locator requires a known coordinate origin".to_string()
+        }
+        Some(CheckReason::ElementNotFound) => {
+            "element_id locator did not resolve in the grounding source".to_string()
+        }
+        Some(CheckReason::SpanNotFound) => {
+            "span_id locator did not resolve in the grounding source".to_string()
+        }
+        Some(CheckReason::PageNotFound) => {
+            "page locator did not resolve in the grounding source".to_string()
+        }
+        Some(CheckReason::BboxNotFound) => {
+            "bbox locator did not resolve to a containing grounding element".to_string()
+        }
+        Some(CheckReason::MissingPageForBbox) => {
+            "bbox locator requires page unless another target locator is present".to_string()
+        }
+        Some(CheckReason::MissingTableCellLocator) => {
+            "table_cell claim requires both table_id and cell locator".to_string()
+        }
+        Some(CheckReason::TableNotFound) => {
+            "table_id locator did not resolve in the grounding source".to_string()
+        }
+        Some(CheckReason::TableCellNotFound) => {
+            "table resolved, but the cited cell address was not found".to_string()
+        }
+        Some(CheckReason::TextMismatch) => format!(
+            "target resolved, but target text did not match claimed text under {}; no semantic inference was attempted",
+            match_method_label(check.match_method)
+        ),
+        None => "check did not ground and no stable reason was reported".to_string(),
     }
 }
 
