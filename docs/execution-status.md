@@ -2,11 +2,11 @@
 
 Date: 2026-06-16
 Owner: product / decider
-Status: Pre-alpha / Milestone A implementation. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, the Gate Zero corpus/hardware manifest and direct competitor lock are frozen/signed, ADR-0006 closes package identifier/trademark validation, ADR-0007 locks the product direction, and the public-source preflight is green for a source-only pre-alpha GitHub push. Signed host result generation still blocks Gate Zero, public benchmark reports, releases, packages, and all performance/quality claims. The next controlled-run handoff is `docs/gate-zero-evidence-runbook.md`.
+Status: Pre-alpha / Milestone B entry. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, the Gate Zero corpus/hardware manifest and direct competitor lock are frozen/signed, ADR-0005 records an accepted `PROCEED` decision for internal Milestone B continuation, ADR-0006 closes package identifier/trademark validation, ADR-0007 locks the product direction, and the public-source preflight is green for a source-only pre-alpha GitHub push. Public benchmark reports, releases, packages, production positioning, and all performance/quality/footprint claims remain blocked. The controlled-run handoff remains `docs/gate-zero-evidence-runbook.md`; the accepted decision record is `docs/decisions/ADR-0005-gate-zero-decision.md`.
 
 ## Current Reality
 
-The repository is still pre-alpha, but it is no longer only contract/scaffold code. Real parsing and real alpha verification exist. They are narrow, fixture-backed, and not yet Gate Zero-proven.
+The repository is still pre-alpha, but it is no longer only contract/scaffold code. Real parsing and real alpha verification exist. They are narrow, fixture-backed, and now have an accepted internal Gate Zero decision for roadmap control. That decision is not a public benchmark report, release approval, package approval, production approval, or claim approval.
 
 The committed implementation now includes:
 
@@ -21,23 +21,28 @@ The committed implementation now includes:
 - `make verify-alpha` is the current alpha trust-loop command: it checks native examples, synthetic OpenDataLoader-style examples, pinned real OpenDataLoader grounded/ungrounded examples, schema validation, usage diagnostics for malformed citations and malformed OpenDataLoader-style inputs, byte-identical repeated verification reports, byte-identical native crop descriptors, summary diagnostics for an ungrounded native case, and foreign fixture manifest hash binding.
 - Native Ethos verification can emit deterministic, schema-backed crop descriptor JSON artifacts through `--crop-dir`; these bind `document_fingerprint`, page, bbox, and check ids. Native `crop_ref` filenames are logical evidence references derived from document fingerprint, check id, and page, while descriptors still record the exact observed bbox. When `--crop-source-pdf` is supplied, the CLI validates source-PDF fingerprint binding and emits PNG crop artifacts whose filenames, byte hashes, dimensions, and source fingerprint are bound from the descriptor. `make verify-rendered-crops` checks same-host repeated-run stability for the rendered artifact path, and `make compare-rendered-crops` classifies two rendered-crop runs by separating logical evidence identity from rendered artifact byte equality. Cross-platform rendered image determinism is not claimed; the 2026-06-14 macOS arm64 vs Linux x64 validation record in `docs/validation/rendered-crops-2026-06-14.md` preserved document fingerprint and `payload_sha256` but failed rendered artifact byte equality because the evidence bbox differed slightly across platforms.
 
-Still absent or not claimable: reproducible benchmark result JSON, executed competitor comparisons, public speed/quality/footprint claims, OCR/image-only support, real table extraction, mature list/heading/layout semantics, semantic/arithmetic verification beyond deterministic evidence lookup, Phase 2 project-maintained PDFium builds, release packaging, and full frozen-corpus multi-platform determinism evidence.
+Still absent or not claimable: public benchmark reports, public competitor-comparison claims, public speed/quality/footprint claims, OCR/image-only support, real table extraction, mature list/heading/layout semantics, semantic/arithmetic verification beyond deterministic evidence lookup, Phase 2 project-maintained PDFium builds, release packaging, and claim-audit approval for any public result wording.
 
 ## Human / External Blockers
 
 PM execution packet: `benchmarks/gate-zero/FREEZE_PACKET.md`.
 
+Resolved control point: ADR-0005 is accepted with `PROCEED` for internal Milestone B
+continuation. Its indexed result files and evidence bundles live in the sibling `ethos-bench`
+repository. This does not unblock public benchmark reports, releases, packages, production
+positioning, or claim wording.
+
 | ID | Blocker | Required output | Owner | Blocks |
 | --- | --- | --- | --- | --- |
-| H1 | Generate signed Gate Zero host results | `../ethos-bench/benchmarks/results/gate-zero/{macos-arm64,linux-x64}/g1.json` plus G2/G3 result files are produced from the frozen manifest and pinned lock | Benchmark owner / decider | Valid Gate Zero run, public benchmark trust |
-| H2 | Execute pinned competitor comparisons | Harness executes the pinned OpenDataLoader, EdgeParse, LiteParse, and PyMuPDF4LLM artifacts and records signed comparison rows where applicable in `ethos-bench` | Benchmark owner | Public competitor comparison |
-| H3 | Accept package identifier ADR | Closed by ADR-0006 acceptance on 2026-06-15 | Devrel / decider | Unblocked package identifier/trademark gate; broader public-release checklist still applies |
+| H1 | Execute and review public-safe competitor comparison flow | Harness executes the pinned OpenDataLoader, EdgeParse, LiteParse, and PyMuPDF4LLM artifacts where applicable, then records reviewable comparison rows in `ethos-bench` without unsupported wording | Benchmark owner | Public competitor-comparison report |
+| H2 | Complete public release/package checklist | `docs/public-release-checklist.md` is complete, release/package artifacts are explicitly approved, and claim-language gates still pass | Devrel / decider | Public releases, packages, and production positioning |
+| H3 | Approve public result wording | Claim audit maps any proposed public result sentence to accepted evidence and rejects unsupported wording | Benchmark owner / decider | Public benchmark/result language |
 
-The corpus/hardware freeze and direct competitor pins are recorded in `benchmarks/gate-zero/manifest.json` and `benchmarks/competitors.lock.json`. The remaining blockers are result production and signed evidence, not manifest/pin placeholders.
+The corpus/hardware freeze and direct competitor pins are recorded in `benchmarks/gate-zero/manifest.json` and `benchmarks/competitors.lock.json`. The remaining blockers are public-report, public-release, and claim-wording blockers, not manifest/pin placeholders.
 
 ## Current Milestone Posture
 
-Milestone A is partially implemented, not complete. The product can demonstrate a narrow parser-backed grounding loop today, but cannot yet claim Gate Zero readiness or public benchmark credibility.
+Milestone A has an accepted internal Gate Zero decision for roadmap control, so Milestone B work may proceed internally. The product can demonstrate a narrow parser-backed grounding loop today, but the decision cannot be used as public benchmark credibility.
 
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
@@ -48,8 +53,8 @@ Milestone A is partially implemented, not complete. The product can demonstrate 
 | Font policy groundwork | Partially landed: substitution table and profile policy are present; fixture output uses deterministic substitution IDs | Bundled fallback asset hashing and broader font/CID validation remain open |
 | Schema/example validation | Landed: schemas, examples, deterministic profile, referential integrity, and bbox sanity pass the `jsonschema` validation gate | Contract changes still require explicit versioning and compatibility review |
 | Trust-layer implementation | Landed: `ethos verify` quote/value/presence/table-cell checks, explicit quote-containment labeling, normalized equality for value/table-cell checks, stale and unverifiable fingerprint handling, unsupported claim reporting, structured capability limits, native Ethos JSON path, ODL-style adapter path with synthetic table/cell mapping, pinned real OpenDataLoader 2.4.7 grounded/ungrounded fixtures, foreign fixture manifest hash validation, crop-ref evidence plumbing, stable logical native crop refs, native crop descriptor artifacts, raw BGRA crop rendering in `ethos-pdf`, CLI PNG crop artifact production for bound native source PDFs, same-host rendered crop repeatability check, rendered-crop run comparison helper, strict citation/config input validation, citation input schema, and demo fixtures | Still needed: evidence matching against richer source structures, semantic/arithmetic claim handling by explicit non-v1 design, real OpenDataLoader table-cell grounding, broader adapter hardening against real output, and a decision on whether cross-platform rendered crop artifact equality is worth pursuing after the current macOS/Linux bbox drift finding |
-| WS-HARNESS readiness | Partially landed: readiness path is green for frozen corpus/hardware and pinned competitors, and fails closed if those records regress | Actual benchmark runner outputs, install-size/RSS/timing collection, competitor execution, and cross-host determinism evidence are still missing |
+| WS-HARNESS readiness | Partially landed: readiness path is green for frozen corpus/hardware and pinned competitors, Gate Zero evidence preflight validates the current `ethos-bench` handoff, and gates fail closed if those records regress | Public-safe comparison report flow, release/package approval, claim-wording approval, and future evidence-refresh workflow still need hardening |
 
 ## PM Rule
 
-Public language stays at "pre-alpha / Milestone A implementation" until the remaining external blockers are closed and Gate Zero has reproducible result JSON. Do not describe Ethos as benchmark-validated, release-ready, or broadly parser-complete. Internal parser work should proceed only when it supports Gate Zero evidence or the trust layer; the product-differentiating path remains verification and grounding first, with parser expansion serving that path.
+Public language stays at "pre-alpha / Milestone B internal continuation" until the remaining external blockers are closed and the claim audit approves specific wording. Do not describe Ethos as benchmark-validated, release-ready, production-ready, or broadly parser-complete. Internal parser work should proceed only when it supports accepted evidence paths or the trust layer; the product-differentiating path remains verification and grounding first, with parser expansion serving that path.

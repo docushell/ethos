@@ -37,8 +37,8 @@ the Ethos source tree or rewrite Ethos parser behavior.
 ## Claim Rule
 
 No public performance, footprint, quality, table, heading, or parser-speed superlative claim is
-allowed from either repository until signed G1/G2/G3 result files exist for the required hosts
-and the claim audit says the wording is supported.
+allowed from either repository unless a claim audit maps the exact wording to accepted evidence
+and an explicit public-report or release decision allows that surface.
 
 Allowed current wording:
 
@@ -63,4 +63,5 @@ cross-platform rendered-crop byte-identity claims
 4. Record cross-host or claim-affecting evidence in `ethos/docs/validation/` or in signed
    `ethos-bench/benchmarks/results/gate-zero/` files, depending on whether the evidence is a
    product-boundary validation or a benchmark result.
-5. Fill ADR-0005 only after the required G1/G2/G3 result files and evidence bundles exist.
+5. Amend ADR-0005 or add a successor decision only after the required result files and evidence
+   bundles exist for that decision.
