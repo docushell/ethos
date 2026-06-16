@@ -29,7 +29,6 @@ verify-alpha: $(ETHOS_BIN)
 	cargo test --locked -p ethos-grounding-opendataloader-json
 	cargo test --locked -p ethos-cli --test verify
 	$(MAKE) verify-alpha-tree
-	$(PYTHON) -c 'from jsonschema import Draft202012Validator'
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) examples/verify/check_verify_alpha.py --repo-root $(ROOT) --ethos-bin $(ETHOS_BIN) --out-dir $(VERIFY_ALPHA_OUT)
 	git diff --check

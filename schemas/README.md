@@ -25,5 +25,9 @@ and bbox sanity that JSON Schema cannot express). The examples are documentation
 them small, valid, and mutually consistent (same fingerprints across document / chunks /
 security-report / verification-report examples).
 
+`verification-report.example.json` shows a grounded report.
+`verification-report-negative.example.json` shows a non-grounded report with a per-check
+`reason` label.
+
 Derived artifacts not schema'd here: `document.md` / `document.txt` (deterministic exports
 specified by the exporter config, Milestone B) and `debug.html` (Milestone C).

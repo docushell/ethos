@@ -44,7 +44,10 @@ PAIRS = [
         EXAMPLES / "citations-array.example.json",
     ]),
     ("ethos-security-report.schema.json", [EXAMPLES / "security-report.example.json"]),
-    ("ethos-verification-report.schema.json", [EXAMPLES / "verification-report.example.json"]),
+    ("ethos-verification-report.schema.json", [
+        EXAMPLES / "verification-report.example.json",
+        EXAMPLES / "verification-report-negative.example.json",
+    ]),
     ("ethos-verification-config.schema.json", [EXAMPLES / "verification-config.example.json"]),
     ("ethos-crop-descriptor.schema.json", [EXAMPLES / "crop-descriptor.example.json"]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
