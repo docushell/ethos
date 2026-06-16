@@ -52,6 +52,10 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 "multi_column_reading_order_fixture": ["column-case"],
             },
         )
+        heading_check = next(
+            check for check in report["checks"] if check["fixture_id"] == "heading-case"
+        )
+        self.assertEqual(heading_check["confidence_policy"], "pass")
         self.assertEqual(report["diagnostics"], [])
 
     def test_missing_expected_text_fails_closed(self) -> None:
@@ -121,6 +125,37 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         self.assertDiagnostic(report, "subset_expectation_mismatch", "column-case")
         self.assertDiagnostic(report, "missing_coverage", None)
 
+    def test_low_confidence_element_requires_matching_warning(self) -> None:
+        self.write_required_alpha_fixture_set()
+        layout_path = self.root / "synthetic/heading-case/layout.json"
+        layout = json.loads(layout_path.read_text(encoding="utf-8"))
+        layout["elements"][0].pop("warning_refs")
+        layout["warnings"] = []
+        self.write_json(layout_path, layout)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        diagnostic = self.onlyDiagnostic(
+            report,
+            "confidence_policy_mismatch",
+            "heading-case",
+        )
+        self.assertEqual(
+            diagnostic["expected"],
+            {
+                "code": "low_confidence_reading_order",
+                "element_ref": "e000001",
+            },
+        )
+        self.assertEqual(
+            diagnostic["actual"],
+            {
+                "confidence": 720,
+                "warning_refs": [],
+            },
+        )
+
     def test_missing_layout_file_reports_missing_file(self) -> None:
         self.write_required_alpha_fixture_set()
         (self.root / "synthetic/list-case/layout.json").unlink()
@@ -176,8 +211,23 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 expected_text=["Alpha Heading", "Body text"],
                 expected_element_types=["heading", "text_block"],
                 elements=[
-                    {"id": "e000001", "type": "heading", "text": "Alpha Heading"},
+                    {
+                        "id": "e000001",
+                        "type": "heading",
+                        "text": "Alpha Heading",
+                        "confidence": 720,
+                        "warning_refs": ["w0001"],
+                    },
                     {"id": "e000002", "type": "text_block", "text": "Body text"},
+                ],
+                warnings=[
+                    {
+                        "id": "w0001",
+                        "code": "low_confidence_reading_order",
+                        "message": "layout confidence below alpha threshold",
+                        "page": "p0001",
+                        "element_ref": "e000001",
+                    }
                 ],
             ),
             self.write_fixture(
@@ -227,6 +277,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         expected_text,
         expected_element_types: list[str],
         elements: list[dict],
+        warnings: list[dict] | None = None,
     ):
         fixture_dir = (self.root / fixture_path).parent
         fixture_dir.mkdir(parents=True, exist_ok=True)
@@ -240,7 +291,10 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 "expected_elements": len(elements),
             },
         )
-        self.write_json(fixture_dir / "layout.json", {"elements": elements, "warnings": []})
+        self.write_json(
+            fixture_dir / "layout.json",
+            {"elements": elements, "warnings": warnings or []},
+        )
         return {
             "id": fixture_id,
             "file": fixture_path,
