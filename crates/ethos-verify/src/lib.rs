@@ -703,8 +703,14 @@ fn adjacent_quote_target(
         return None;
     }
 
-    if let Some(position) = target.element_index {
-        return adjacent_text_pair_from(index, position, expected, config);
+    if claim.citation.bbox.is_some() {
+        return None;
+    }
+
+    if claim.citation.element_id.is_some() {
+        if let Some(position) = target.element_index {
+            return adjacent_text_pair_for_element(index, position, expected, config);
+        }
     }
 
     if claim.citation.element_id.is_none()
@@ -719,15 +725,25 @@ fn adjacent_quote_target(
     None
 }
 
-fn adjacent_text_pair_from(
+fn adjacent_text_pair_for_element(
     index: &SourceIndex,
     position: usize,
     expected: &str,
     config: &VerificationConfig,
 ) -> Option<FoundTarget> {
-    let first = index.elements.get(position)?;
-    let second = index.elements.get(position.checked_add(1)?)?;
-    adjacent_text_pair_target(first, second, expected, config)
+    let current = index.elements.get(position)?;
+    if let Some(second) = position
+        .checked_add(1)
+        .and_then(|next| index.elements.get(next))
+    {
+        if let Some(target) = adjacent_text_pair_target(current, second, expected, config) {
+            return Some(target);
+        }
+    }
+    position
+        .checked_sub(1)
+        .and_then(|previous| index.elements.get(previous))
+        .and_then(|first| adjacent_text_pair_target(first, current, expected, config))
 }
 
 fn adjacent_text_pair_on_page(
@@ -1180,6 +1196,92 @@ mod tests {
         assert_eq!(
             report.checks[0].evidence.as_ref().and_then(|e| e.bbox),
             Some([100, 100, 700, 200])
+        );
+    }
+
+    #[test]
+    fn quote_claim_grounds_when_element_id_points_to_second_adjacent_fragment() {
+        let report = verify_elements(
+            vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "split-b",
+                    "p0001",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    element_id: Some("split-b".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            report.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.text.as_deref()),
+            Some("The alpha trust loop verifies grounded evidence")
+        );
+        assert_eq!(
+            report.checks[0].evidence.as_ref().and_then(|e| e.bbox),
+            Some([100, 100, 700, 200])
+        );
+    }
+
+    #[test]
+    fn quote_claim_bbox_locator_does_not_expand_outside_cited_region() {
+        let report = verify_elements(
+            vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "split-b",
+                    "p0001",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    page: Some("p0001".into()),
+                    bbox: Some([120, 120, 380, 180]),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
+        assert_eq!(
+            report.checks[0]
+                .evidence
+                .as_ref()
+                .and_then(|e| e.text.as_deref()),
+            Some("The alpha trust loop verifies ")
+        );
+        assert_eq!(
+            report.checks[0].evidence.as_ref().and_then(|e| e.bbox),
+            Some([100, 100, 400, 200])
         );
     }
 
