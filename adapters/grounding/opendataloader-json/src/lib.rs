@@ -395,7 +395,27 @@ fn parse_real_content_element(
     element_ids: &mut HashSet<String>,
     next_synthetic_id: &mut u32,
 ) -> Result<(), AdapterError> {
-    let kind = string_field(node, "type", "missing content type")?.to_ascii_lowercase();
+    let children = real_child_elements(node)?;
+    if !real_node_has_element_fields(node) {
+        if children.is_empty() {
+            return Err(err(
+                "content node has no element fields or child containers",
+            ));
+        }
+        for child in children {
+            parse_real_content_element(
+                child,
+                page_count,
+                page_extents,
+                elements,
+                element_ids,
+                next_synthetic_id,
+            )?;
+        }
+        return Ok(());
+    }
+
+    let kind = real_content_kind(node)?;
     let page_number = u32_field(
         node,
         "page number",
@@ -420,10 +440,10 @@ fn parse_real_content_element(
         page: format!("page-{page_number}"),
         bbox,
         kind: kind.clone(),
-        text: real_content_text(node),
+        text: real_content_text(node)?,
     });
 
-    for child in real_child_elements(node) {
+    for child in children {
         parse_real_content_element(
             child,
             page_count,
@@ -437,6 +457,29 @@ fn parse_real_content_element(
     Ok(())
 }
 
+fn real_node_has_element_fields(node: &Value) -> bool {
+    node.get("type").is_some()
+        || node.get("id").is_some()
+        || node.get("page number").is_some()
+        || node.get("bounding box").is_some()
+        || node.get("content").is_some()
+}
+
+fn real_content_kind(node: &Value) -> Result<String, AdapterError> {
+    let Some(kind) = node.get("type") else {
+        return Ok("unknown".to_string());
+    };
+    let kind = kind
+        .as_str()
+        .ok_or_else(|| err("content type must be a string"))?
+        .trim();
+    if kind.is_empty() {
+        Ok("unknown".to_string())
+    } else {
+        Ok(kind.to_ascii_lowercase())
+    }
+}
+
 fn update_page_extent(page_extents: &mut [[i64; 2]], page_number: u32, bbox: [i64; 4]) {
     let extent = &mut page_extents[(page_number - 1) as usize];
     extent[0] = extent[0].max(bbox[2]);
@@ -445,54 +488,76 @@ fn update_page_extent(page_extents: &mut [[i64; 2]], page_number: u32, bbox: [i6
 
 fn real_element_id(node: &Value, next_synthetic_id: &mut u32) -> Result<String, AdapterError> {
     if let Some(raw) = node.get("id") {
-        let id = raw
-            .as_u64()
-            .ok_or_else(|| err("content id must be integer"))?;
-        let id = u32::try_from(id).map_err(|_| err("content id must fit u32"))?;
-        return Ok(format!("odl-{id}"));
+        if let Some(id) = raw.as_u64() {
+            let id = u32::try_from(id).map_err(|_| err("content id must fit u32"))?;
+            return Ok(format!("odl-{id}"));
+        }
+        if let Some(id) = raw.as_str().map(str::trim).filter(|id| !id.is_empty()) {
+            return Ok(format!("odl-{id}"));
+        }
+        return Err(err("content id must be integer or non-empty string"));
     }
     let id = *next_synthetic_id;
     *next_synthetic_id = next_synthetic_id.saturating_add(1);
     Ok(format!("odl-el-{id}"))
 }
 
-fn real_content_text(node: &Value) -> Option<String> {
+fn real_content_text(node: &Value) -> Result<Option<String>, AdapterError> {
     let mut parts = Vec::new();
-    collect_real_text(node, &mut parts);
-    if parts.is_empty() {
+    collect_real_text(node, &mut parts)?;
+    Ok(if parts.is_empty() {
         None
     } else {
         Some(parts.join("\n"))
-    }
+    })
 }
 
-fn collect_real_text<'a>(node: &'a Value, parts: &mut Vec<&'a str>) {
-    if let Some(content) = node.get("content").and_then(Value::as_str) {
+fn collect_real_text<'a>(node: &'a Value, parts: &mut Vec<&'a str>) -> Result<(), AdapterError> {
+    if let Some(content) = node.get("content") {
+        let content = content
+            .as_str()
+            .ok_or_else(|| err("content must be a string"))?;
         if !content.is_empty() {
             parts.push(content);
         }
     }
-    for child in real_child_elements(node) {
-        collect_real_text(child, parts);
+    for child in real_child_elements(node)? {
+        collect_real_text(child, parts)?;
     }
+    Ok(())
 }
 
-fn real_child_elements(node: &Value) -> Vec<&Value> {
+fn real_child_elements(node: &Value) -> Result<Vec<&Value>, AdapterError> {
     let mut children = Vec::new();
-    if let Some(kids) = node.get("kids").and_then(Value::as_array) {
+    if let Some(kids_value) = node.get("kids") {
+        let kids = kids_value
+            .as_array()
+            .ok_or_else(|| err("kids must be an array"))?;
         children.extend(kids);
     }
-    if let Some(items) = node.get("list items").and_then(Value::as_array) {
+    if let Some(items_value) = node.get("list items") {
+        let items = items_value
+            .as_array()
+            .ok_or_else(|| err("list items must be an array"))?;
         children.extend(items);
     }
-    if let Some(rows) = node.get("rows").and_then(Value::as_array) {
+    if let Some(rows_value) = node.get("rows") {
+        let rows = rows_value
+            .as_array()
+            .ok_or_else(|| err("rows must be an array"))?;
         for row in rows {
-            if let Some(cells) = row.get("cells").and_then(Value::as_array) {
+            let row = row
+                .as_object()
+                .ok_or_else(|| err("row must be an object"))?;
+            if let Some(cells_value) = row.get("cells") {
+                let cells = cells_value
+                    .as_array()
+                    .ok_or_else(|| err("row cells must be an array"))?;
                 children.extend(cells);
             }
         }
     }
-    children
+    Ok(children)
 }
 
 fn parse_table_cells(table: &Value) -> Result<Vec<GroundingCell>, AdapterError> {
@@ -742,6 +807,168 @@ mod tests {
     }
 
     #[test]
+    fn maps_real_nested_child_structures_in_preorder() {
+        let src = OdlJsonSource::from_json_str(
+            r#"{
+              "file name": "nested.pdf",
+              "number of pages": 2,
+              "kids": [
+                {
+                  "type": "section",
+                  "id": 10,
+                  "page number": 1,
+                  "bounding box": [10, 10, 200, 100],
+                  "content": "Section",
+                  "kids": [
+                    {
+                      "type": "paragraph",
+                      "id": 11,
+                      "page number": 1,
+                      "bounding box": [20, 30, 180, 60],
+                      "content": "Nested child"
+                    }
+                  ]
+                },
+                {
+                  "type": "list",
+                  "page number": 1,
+                  "bounding box": [10, 120, 200, 200],
+                  "list items": [
+                    {
+                      "type": "list_item",
+                      "page number": 1,
+                      "bounding box": [20, 130, 180, 150],
+                      "content": "First item"
+                    },
+                    {
+                      "type": "list_item",
+                      "id": 12,
+                      "page number": 1,
+                      "bounding box": [20, 155, 180, 175],
+                      "content": "Second item"
+                    }
+                  ]
+                },
+                {
+                  "type": "table",
+                  "id": 13,
+                  "page number": 2,
+                  "bounding box": [15, 20, 250, 120],
+                  "rows": [
+                    {
+                      "cells": [
+                        {
+                          "type": "table_cell",
+                          "page number": 2,
+                          "bounding box": [20, 30, 120, 60],
+                          "content": "Cell A"
+                        },
+                        {
+                          "type": "table_cell",
+                          "page number": 2,
+                          "bounding box": [130, 30, 240, 60],
+                          "content": "Cell B"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }"#,
+        )
+        .unwrap();
+
+        let elements = src.elements();
+        let ids = elements
+            .iter()
+            .map(|element| element.id.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            ids,
+            vec![
+                "odl-10", "odl-11", "odl-el-1", "odl-el-2", "odl-12", "odl-13", "odl-el-3",
+                "odl-el-4",
+            ]
+        );
+        assert_eq!(elements[0].text.as_deref(), Some("Section\nNested child"));
+        assert_eq!(elements[2].text.as_deref(), Some("First item\nSecond item"));
+        assert_eq!(elements[6].kind, "table_cell");
+        assert_eq!(elements[6].page, "page-2");
+        assert_eq!(elements[6].text.as_deref(), Some("Cell A"));
+
+        let pages = src.pages();
+        assert_eq!(pages[0].width, 20000);
+        assert_eq!(pages[0].height, 20000);
+        assert_eq!(pages[1].width, 25000);
+        assert_eq!(pages[1].height, 12000);
+        assert!(!src.capabilities().tables);
+    }
+
+    #[test]
+    fn maps_real_structural_containers_without_table_capability() {
+        let src = OdlJsonSource::from_json_str(
+            r#"{
+              "file name": "structural.pdf",
+              "number of pages": 1,
+              "kids": [
+                {
+                  "kids": [
+                    {
+                      "id": "intro",
+                      "page number": 1,
+                      "bounding box": [10, 10, 40, 20],
+                      "content": "Intro without type"
+                    }
+                  ]
+                },
+                {
+                  "list items": [
+                    {
+                      "type": "list_item",
+                      "id": "item-a",
+                      "page number": 1,
+                      "bounding box": [10, 30, 50, 40],
+                      "content": "Item A"
+                    }
+                  ]
+                },
+                {
+                  "rows": [
+                    {
+                      "cells": [
+                        {
+                          "type": "cell",
+                          "id": 13,
+                          "page number": 1,
+                          "bounding box": [20, 50, 70, 80],
+                          "content": "Cell value"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }"#,
+        )
+        .unwrap();
+
+        let elements = src.elements();
+        assert_eq!(elements.len(), 3);
+        assert_eq!(elements[0].id, "odl-intro");
+        assert_eq!(elements[0].kind, "unknown");
+        assert_eq!(elements[0].text.as_deref(), Some("Intro without type"));
+        assert_eq!(elements[1].id, "odl-item-a");
+        assert_eq!(elements[2].id, "odl-13");
+        assert_eq!(elements[2].kind, "cell");
+
+        let pages = src.pages();
+        assert_eq!(pages[0].width, 7000);
+        assert_eq!(pages[0].height, 8000);
+        assert!(!src.capabilities().tables);
+        assert!(src.tables().is_empty());
+    }
+
+    #[test]
     fn centipoint_quantization_matches_core_semantics() {
         let samples = [
             f64::NAN,
@@ -825,6 +1052,14 @@ mod tests {
             r#"{"file name":"huge.pdf","number of pages":4294967295,"kids":[]}"#,
             "number of pages exceeds adapter limit",
         );
+        assert_error_contains(
+            r#"{"file name":"dup.pdf","number of pages":1,"kids":[{"type":"paragraph","id":1,"page number":1,"bounding box":[1,1,2,2],"content":"A","kids":[{"type":"paragraph","id":1,"page number":1,"bounding box":[2,2,3,3],"content":"B"}]}]}"#,
+            "duplicate content id",
+        );
+        assert_error_contains(
+            r#"{"file name":"dup.pdf","number of pages":1,"kids":[{"type":"paragraph","id":"same","page number":1,"bounding box":[1,1,2,2],"content":"A"},{"type":"paragraph","id":"same","page number":1,"bounding box":[2,2,3,3],"content":"B"}]}"#,
+            "duplicate content id",
+        );
     }
 
     #[test]
@@ -860,6 +1095,38 @@ mod tests {
         assert_error_contains(
             r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[],"tables":[{"id":"t1","page":1,"bbox":[1,1,2,2],"cells":[{"row":1,"col":1,"row_span":0,"bbox":[1,1,2,2],"text":"x"}]}]}"#,
             "cell.row_span must be positive",
+        );
+    }
+
+    #[test]
+    fn rejects_malformed_real_child_containers() {
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"paragraph","page number":1,"bounding box":[1,1,2,2],"kids":{}}]}"#,
+            "kids must be an array",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"list","page number":1,"bounding box":[1,1,2,2],"list items":{}}]}"#,
+            "list items must be an array",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"table","page number":1,"bounding box":[1,1,2,2],"rows":{}}]}"#,
+            "rows must be an array",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"table","page number":1,"bounding box":[1,1,2,2],"rows":[1]}]}"#,
+            "row must be an object",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"table","page number":1,"bounding box":[1,1,2,2],"rows":[{"cells":{}}]}]}"#,
+            "row cells must be an array",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{"type":"paragraph","page number":1,"bounding box":[1,1,2,2],"content":7}]}"#,
+            "content must be a string",
+        );
+        assert_error_contains(
+            r#"{"file name":"bad.pdf","number of pages":1,"kids":[{}]}"#,
+            "content node has no element fields or child containers",
         );
     }
 }
