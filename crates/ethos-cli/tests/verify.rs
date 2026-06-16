@@ -2010,6 +2010,83 @@ fn real_opendataloader_style_table_cell_claim_grounds() {
 }
 
 #[test]
+fn real_opendataloader_text_and_child_alias_claim_grounds() {
+    let grounding = temp_json(
+        "real-odl-style-aliases",
+        r#"{
+          "file name": "aliases.pdf",
+          "number of pages": 1,
+          "kids": [
+            {
+              "type": "section",
+              "id": "parent",
+              "page number": 1,
+              "bounding box": [10, 10, 240, 80],
+              "text": "Parent text",
+              "children": [
+                {
+                  "type": "paragraph",
+                  "id": "alias-child",
+                  "page number": 1,
+                  "bounding box": [20, 20, 230, 50],
+                  "text": "Child alias grounds"
+                }
+              ]
+            }
+          ]
+        }"#,
+    );
+    let citations = temp_json(
+        "real-odl-style-alias-citations",
+        r#"{
+          "claims": [
+            {
+              "kind": "quote",
+              "text": "Child alias grounds",
+              "citation": {
+                "element_id": "odl-alias-child"
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(
+        report["checks"][0]["match_method"],
+        "normalized_text_contains"
+    );
+    assert_eq!(report["checks"][0]["evidence"]["page"], "page-1");
+    assert_eq!(
+        report["checks"][0]["evidence"]["text"],
+        "Child alias grounds"
+    );
+    assert_eq!(
+        report["checks"][0]["evidence"]["bbox"],
+        serde_json::json!([2000, 2000, 23000, 5000])
+    );
+    assert_eq!(
+        report["capability_limits"],
+        serde_json::json!([
+            "missing_fingerprint",
+            "missing_spans",
+            "missing_char_offsets",
+            "missing_tables",
+            "unknown_coordinate_origin"
+        ])
+    );
+    assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
 fn foreign_source_without_fingerprint_blocks_fingerprint_pinned_citations() {
     let grounding = odl_example();
     let citations = temp_json(

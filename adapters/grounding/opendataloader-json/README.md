@@ -16,16 +16,17 @@ type, text), and optional tables/cells (id, page, bbox, row/col, spans, bbox, te
 
 For real OpenDataLoader 2.4.x JSON, it maps the top-level `kids` tree into grounding
 elements (`id` → `odl-{id}` for numeric and non-empty string ids, missing ids →
-`odl-el-N`, `page number` → `page-N`, `bounding box` → centipoints, `content` → text).
-Nested `kids`, `list items`, and `rows[].cells` containers are traversed in document order.
-Pure structural wrappers that only carry child containers are traversed without becoming
-grounding elements. Child containers must use array shapes, and malformed child containers
-or non-string `content` values are rejected instead of being silently skipped. Real ODL JSON
-does not include parser version or page dimensions, so the adapter reports parser version as
-`unknown` and derives page extents from observed bounding boxes. Coordinate origin remains
-unknown. Real ODL-style table nodes with explicit `page number`, `bounding box`, and
-`rows[].cells[]` cell page/bbox/content fields are mapped to deterministic grounding tables;
-row and column addresses are derived from row/cell order.
+`odl-el-N`, `page number` → `page-N`, `bounding box` → centipoints, `content` or
+unambiguous `text` → text). Nested `kids`/`children`, `list items`/`list_items`, and
+`rows[].cells` containers are traversed in document order. Pure structural wrappers that
+only carry child containers are traversed without becoming grounding elements. Child
+containers must use array shapes, and malformed child containers, non-string text values,
+or conflicting `content`/`text` values are rejected instead of being silently skipped. Real
+ODL JSON does not include parser version or page dimensions, so the adapter reports parser
+version as `unknown` and derives page extents from observed bounding boxes. Coordinate
+origin remains unknown. Real ODL-style table nodes with explicit `page number`, `bounding
+box`, and `rows[].cells[]` cell page/bbox/text fields are mapped to deterministic grounding
+tables; row and column addresses are derived from row/cell order.
 
 ## Declared capabilities (honest downgrades)
 
