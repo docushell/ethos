@@ -54,6 +54,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 "list_item_fixture": ["list-case"],
                 "multi_column_reading_order_fixture": ["column-case"],
                 "rotation_fixture": ["rotation-case"],
+                "span_expectation_fixture": ["ligature-case"],
             },
         )
         heading_check = next(
@@ -62,6 +63,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         self.assertEqual(heading_check["expected_font_id"], "not_declared")
         self.assertEqual(heading_check["expected_pages"], "not_declared")
         self.assertEqual(heading_check["expected_span_text"], "not_declared")
+        self.assertEqual(heading_check["expected_spans"], "not_declared")
         self.assertEqual(heading_check["confidence_policy"], "pass")
         self.assertEqual(heading_check["warning_shape"], "pass")
         self.assertEqual(
@@ -79,6 +81,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         self.assertEqual(ligature_check["expected_pages"], "pass")
         self.assertEqual(ligature_check["expected_span_text"], "pass")
         self.assertEqual(ligature_check["expected_font_id"], "pass")
+        self.assertEqual(ligature_check["expected_spans"], "pass")
         rotation_check = next(
             check for check in report["checks"] if check["fixture_id"] == "rotation-case"
         )
@@ -186,6 +189,51 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
 
         self.assertEqual(report["status"], "fail")
         self.assertDiagnostic(report, "invalid_extraction", "ligature-case")
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_spans_text_must_match_expected_span_text(self) -> None:
+        self.write_required_alpha_fixture_set()
+        metadata_path = self.root / "synthetic/ligature-case/fixture.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["expected_spans"][1]["text"] = "wrong"
+        self.write_json(metadata_path, metadata)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        diagnostic = self.onlyDiagnostic(
+            report,
+            "expected_spans_mismatch",
+            "ligature-case",
+        )
+        self.assertEqual(diagnostic["expected"], ["office", "file"])
+        self.assertEqual(diagnostic["actual"], ["office", "wrong"])
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_spans_rejects_invalid_range(self) -> None:
+        self.write_required_alpha_fixture_set()
+        metadata_path = self.root / "synthetic/ligature-case/fixture.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["expected_spans"][1]["char_start"] = 3
+        self.write_json(metadata_path, metadata)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        self.assertDiagnostic(report, "invalid_expectation", "ligature-case")
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_spans_rejects_unknown_fields(self) -> None:
+        self.write_required_alpha_fixture_set()
+        metadata_path = self.root / "synthetic/ligature-case/fixture.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["expected_spans"][0]["font_id"] = "embedded:EthosLigatureFixture-Regular"
+        self.write_json(metadata_path, metadata)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        self.assertDiagnostic(report, "invalid_expectation", "ligature-case")
         self.assertDiagnostic(report, "missing_coverage", None)
 
     def test_expected_font_id_drift_reports_expected_and_actual(self) -> None:
@@ -527,6 +575,10 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 expected_pages=1,
                 expected_span_text=["office", "file"],
                 expected_font_id="embedded:EthosLigatureFixture-Regular",
+                expected_spans=[
+                    {"text": "office", "char_start": 0, "char_end": 6},
+                    {"text": "file", "char_start": 7, "char_end": 11},
+                ],
                 spans=[
                     {
                         "id": "s000001",
@@ -574,6 +626,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         expected_pages: int | None = None,
         expected_span_text: list[str] | None = None,
         expected_font_id: str | None = None,
+        expected_spans: list[dict] | None = None,
         expected_rotation: int | None = None,
         page_rotation: int = 0,
     ):
@@ -592,6 +645,8 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
             metadata["expected_span_text"] = expected_span_text
         if expected_font_id is not None:
             metadata["expected_font_id"] = expected_font_id
+        if expected_spans is not None:
+            metadata["expected_spans"] = expected_spans
         if expected_rotation is not None:
             metadata["expected_rotation"] = expected_rotation
         self.write_json(fixture_dir / "fixture.json", metadata)

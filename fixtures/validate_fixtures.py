@@ -397,6 +397,58 @@ def validate_expected_font_id(metadata, extraction, ctx: str) -> None:
         fail(f"{ctx} expected_font_id must match every extraction span font_id")
 
 
+def validate_expected_spans(metadata, ctx: str) -> None:
+    if "expected_spans" not in metadata:
+        return
+    expected_spans = metadata["expected_spans"]
+    if not isinstance(expected_spans, list):
+        fail(f"{ctx} expected_spans must be an object array")
+        return
+
+    span_text = []
+    previous_end = 0
+    for index, span in enumerate(expected_spans):
+        span_ctx = f"{ctx} expected_spans[{index}]"
+        if not isinstance(span, dict):
+            fail(f"{span_ctx} must be an object")
+            return
+        if set(span) != {"text", "char_start", "char_end"}:
+            fail(f"{span_ctx} must contain exactly ['char_end', 'char_start', 'text']")
+            return
+        text = span.get("text")
+        char_start = span.get("char_start")
+        char_end = span.get("char_end")
+        if not isinstance(text, str) or not text:
+            fail(f"{span_ctx}.text must be a non-empty string")
+            return
+        if (
+            not isinstance(char_start, int)
+            or isinstance(char_start, bool)
+            or char_start < 0
+        ):
+            fail(f"{span_ctx}.char_start must be an integer >= 0")
+            return
+        if (
+            not isinstance(char_end, int)
+            or isinstance(char_end, bool)
+            or char_end <= char_start
+        ):
+            fail(f"{span_ctx}.char_end must be an integer greater than char_start")
+            return
+        if index > 0 and char_start < previous_end:
+            fail(f"{span_ctx}.char_start must not precede the previous span end")
+            return
+        previous_end = char_end
+        span_text.append(text)
+
+    expected_span_text = metadata.get("expected_span_text")
+    if isinstance(expected_span_text, list) and all(
+        isinstance(item, str) for item in expected_span_text
+    ):
+        if span_text != expected_span_text:
+            fail(f"{ctx} expected_spans text must match expected_span_text")
+
+
 def validate_stage_expectations(metadata_path: Path, metadata, extraction, layout) -> None:
     ctx = str(metadata_path.relative_to(ROOT))
     if isinstance(extraction, dict):
@@ -407,6 +459,7 @@ def validate_stage_expectations(metadata_path: Path, metadata, extraction, layou
         )
         validate_expected_span_text(metadata, extraction, ctx)
         validate_expected_font_id(metadata, extraction, ctx)
+        validate_expected_spans(metadata, ctx)
     if isinstance(layout, dict):
         validate_expected_count(
             layout.get("elements", []),
