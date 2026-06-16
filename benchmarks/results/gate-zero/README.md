@@ -4,10 +4,17 @@ Generated Gate Zero result files and evidence bundles now belong in the sibling
 `ethos-bench` repository. This `ethos` directory is only a pointer kept for repository-boundary
 clarity.
 
-Platform-scoped Gate Zero results are produced and stored in `ethos-bench` as:
+Platform-scoped G1/G2 Gate Zero results are produced and stored in `ethos-bench` as:
 
 ```text
-<platform>/{g1,g2,g3}.json
+<platform>/g1.json
+<platform>/g2.json
+```
+
+The cross-host G3 comparison is stored once at:
+
+```text
+g3.json
 ```
 
 G2/G3 result files must cite the active gate definition hash from:
@@ -20,10 +27,12 @@ G3 is a cross-platform gate. Platform-local G3 evidence is not sufficient for a 
 until the required `macos-arm64` and `linux-x64` comparisons show zero stable-payload-projection
 and fingerprint divergences.
 
-Publishable evidence sidecars are generated from saved result JSON and land under:
+Evidence sidecars are generated from saved result JSON and land under:
 
 ```text
-<platform>/evidence/<gate>/<timestamp>/
+<platform>/evidence/g1/<timestamp>/
+<platform>/evidence/g2/<timestamp>/
+cross-platform/evidence/g3/<timestamp>/
 ```
 
 Each evidence bundle contains the raw result archive, reproduction command, reproduction
