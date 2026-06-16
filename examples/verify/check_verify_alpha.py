@@ -138,8 +138,15 @@ SUMMARY_CASES = [
                 "match_method=normalized_text_contains\n"
             ),
             (
+                "  diagnostic: target resolved, but target text did not match "
+                "claimed text under normalized_text_contains; no semantic inference was attempted\n"
+            ),
+            (
                 "- v0002 status=not_found reason=element_not_found kind=presence "
                 "locator=element_id:missing-element match_method=none\n"
+            ),
+            (
+                "  diagnostic: element_id locator did not resolve in the grounding source\n"
             ),
         ],
     },

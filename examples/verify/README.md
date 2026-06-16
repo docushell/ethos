@@ -23,10 +23,10 @@ ethos verify schemas/examples/document.example.json \
 ```
 
 The summary includes the verification config hash, declared grounding capabilities, check counts,
-report warnings, and non-grounded check reasons.
+report warnings, non-grounded check reasons, and deterministic diagnostic lines.
 
 `make verify-alpha` also checks summary output for a native ungrounded citation set, including
-the non-grounded reason lines.
+the non-grounded reason and diagnostic lines.
 
 ## Native Ethos Ungrounded Citations
 
