@@ -25,6 +25,19 @@ CASES = [
         "golden": "examples/verify/goldens/opendataloader_grounded_report.json",
     },
     {
+        "name": "native-ungrounded",
+        "input": "schemas/examples/document.example.json",
+        "citations": "examples/verify/native_ungrounded_citations.json",
+        "golden": "examples/verify/goldens/native_ungrounded_report.json",
+    },
+    {
+        "name": "opendataloader-not-found",
+        "input": "examples/verify/opendataloader.json",
+        "grounding": "opendataloader-json",
+        "citations": "examples/verify/opendataloader_not_found_citations.json",
+        "golden": "examples/verify/goldens/opendataloader_not_found_report.json",
+    },
+    {
         "name": "native-stale",
         "input": "schemas/examples/document.example.json",
         "citations": "examples/verify/native_stale_citations.json",
@@ -50,6 +63,21 @@ CASES = [
         "grounding": "opendataloader-json",
         "citations": "fixtures/foreign/opendataloader/real/ungrounded_citations.json",
         "golden": "fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json",
+    },
+]
+
+USAGE_ERROR_CASES = [
+    {
+        "name": "invalid-table-cell-citation",
+        "input": "schemas/examples/document.example.json",
+        "citations": "examples/verify/invalid_table_cell_citations.json",
+        "stderr_contains": "table_cell citation must include table_id and cell",
+    },
+    {
+        "name": "invalid-bbox-citation",
+        "input": "schemas/examples/document.example.json",
+        "citations": "examples/verify/invalid_bbox_citations.json",
+        "stderr_contains": "citation bbox requires page unless another target locator is present",
     },
 ]
 
@@ -257,6 +285,34 @@ def verify_case(case, args):
     compare_json(first, args.repo_root / case["golden"], args.repo_root, case["name"])
 
 
+def verify_usage_error_case(case, args):
+    command = [
+        str(args.ethos_bin),
+        "verify",
+        str(args.repo_root / case["input"]),
+        "--citations",
+        str(args.repo_root / case["citations"]),
+    ]
+    if "grounding" in case:
+        command.extend(["--grounding", case["grounding"]])
+
+    print("$ " + " ".join(str(part) for part in command), flush=True)
+    result = subprocess.run(command, cwd=args.repo_root, capture_output=True, check=False)
+    if result.returncode != 2:
+        sys.stderr.write(f"{case['name']} exited {result.returncode}, expected 2\n")
+        sys.stderr.write(result.stderr.decode("utf-8", errors="replace"))
+        sys.stderr.write(result.stdout.decode("utf-8", errors="replace"))
+        raise SystemExit(1)
+    if result.stdout:
+        raise SystemExit(f"{case['name']} wrote unexpected stdout")
+    stderr = result.stderr.decode("utf-8", errors="replace")
+    if case["stderr_contains"] not in stderr:
+        raise SystemExit(
+            f"{case['name']} stderr did not contain {case['stderr_contains']!r}\n{stderr}"
+        )
+    print(f"ok    {case['name']} exits 2 with expected usage diagnostic")
+
+
 def main():
     args = parse_args()
     args.repo_root = args.repo_root.resolve()
@@ -270,6 +326,8 @@ def main():
 
     for case in CASES:
         verify_case(case, args)
+    for case in USAGE_ERROR_CASES:
+        verify_usage_error_case(case, args)
     verify_crop_descriptor_case(args)
 
     print("\nverify-alpha demo checks passed")

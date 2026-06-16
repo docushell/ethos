@@ -1,6 +1,6 @@
 # WS-VERIFY-ALPHA Demo
 
-This directory contains the first parser-agnostic verification demo.
+This directory contains verify-alpha fixtures, citations, and golden reports.
 
 ## Native Ethos Grounding
 
@@ -22,6 +22,17 @@ ethos verify schemas/examples/document.example.json \
   --format summary
 ```
 
+## Native Ethos Ungrounded Citations
+
+```bash
+ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/native_ungrounded_citations.json \
+  --out verification_report.json
+```
+
+Expected result: `all_evidence_grounded: false`. The quote check reports `text_mismatch`, and
+the missing element check reports `element_not_found`.
+
 ## OpenDataLoader-Style Grounding
 
 ```bash
@@ -35,6 +46,18 @@ Expected result: `all_evidence_grounded: true` with a top-level `capability_limi
 warning. The warning is intentional: the synthetic OpenDataLoader-style fixture has no
 fingerprint, spans, character offsets, or known coordinate origin, but its element and table
 evidence can still ground these claims.
+
+## OpenDataLoader-Style Missing Element
+
+```bash
+ethos verify examples/verify/opendataloader.json \
+  --grounding opendataloader-json \
+  --citations examples/verify/opendataloader_not_found_citations.json \
+  --out verification_report.json
+```
+
+Expected result: `all_evidence_grounded: false`, check status `not_found`, reason
+`element_not_found`, and the same `capability_limited` warning as the grounded synthetic fixture.
 
 ## Stale Fingerprint
 
@@ -71,9 +94,16 @@ Non-grounded checks may include a stable `reason` label:
 | `missing_table_capability` | The claim needs table-cell lookup, but the grounding source does not expose tables. |
 | `missing_source_fingerprint` | Citations were fingerprint-pinned, but the grounding source did not declare one. |
 | `unknown_coordinate_origin` | A bbox locator was used with a source whose coordinate origin is unknown. |
+| `element_not_found` | The cited element id was not found in a source that exposes element ids. |
 | `table_not_found` | The cited table id was not found in a source that exposes tables. |
 | `table_cell_not_found` | The cited table exists, but the cited cell address was not found. |
 | `unsupported_claim_kind` | The claim kind is unsupported by this verifier or the active config. |
+
+## Usage Diagnostics
+
+Malformed citations are covered as usage errors. `invalid_table_cell_citations.json` must exit
+`2` because a table-cell claim is missing `table_id` and `cell`. `invalid_bbox_citations.json`
+must exit `2` because a bbox locator is missing a page or another target locator.
 
 The OpenDataLoader fixtures are synthetic and limited to the adapter's documented alpha
 subset. They are not real pinned OpenDataLoader artifacts. Golden reports live in
