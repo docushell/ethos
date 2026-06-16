@@ -42,6 +42,8 @@ MANIFEST_KEYS = {"manifest_version", "root", "subsets_declared", "fixtures"}
 ENTRY_KEYS = {"id", "file", "sha256", "pages", "subsets", "provenance", "license"}
 EXTRACTION_GOLDEN_KEYS = {"pages", "spans", "regions", "warnings"}
 LAYOUT_GOLDEN_KEYS = {"elements", "warnings"}
+TEXT_EXPORT = "text.txt"
+MARKDOWN_EXPORT = "markdown.md"
 FOREIGN_MANIFEST_KEYS = {
     "parser",
     "version",
@@ -161,6 +163,72 @@ def validate_golden_file(path: Path, stage: str, keys: set[str]):
             fail(f"{ctx} elements must be an array")
         validate_projection_items(ctx, "elements", golden.get("elements"), required=True)
     return golden
+
+
+def render_text_export(layout):
+    elements = layout.get("elements") if isinstance(layout, dict) else None
+    if not isinstance(elements, list):
+        return None
+    text = "\n\n".join(
+        element["text"]
+        for element in elements
+        if isinstance(element, dict) and isinstance(element.get("text"), str)
+    )
+    return f"{text}\n".encode("utf-8")
+
+
+def render_markdown_export(layout, ctx: str):
+    elements = layout.get("elements") if isinstance(layout, dict) else None
+    if not isinstance(elements, list):
+        return None
+
+    blocks = []
+    for index, element in enumerate(elements):
+        if not isinstance(element, dict) or not isinstance(element.get("text"), str):
+            continue
+        text = element["text"]
+        if element.get("type") == "heading":
+            level = element.get("heading_level", 1)
+            if not isinstance(level, int):
+                fail(f"{ctx} elements[{index}].heading_level must be an integer")
+                level = 1
+            level = min(max(level, 1), 6)
+            blocks.append(f"{'#' * level} {text}")
+        else:
+            blocks.append(text)
+    markdown = "\n\n".join(blocks)
+    return f"{markdown}\n".encode("utf-8")
+
+
+def validate_export_file(path: Path, expected, label: str) -> None:
+    if expected is None:
+        return
+    rel = path.relative_to(ROOT)
+    if not path.is_file():
+        fail(f"{rel} missing for successful fixture")
+        return
+    actual = path.read_bytes()
+    try:
+        actual.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        fail(f"{rel} must be UTF-8 text: {exc}")
+        return
+    if actual != expected:
+        fail(f"{rel} must match {label} rendered from committed layout.json")
+
+
+def validate_export_goldens(fixture_dir: Path, layout) -> None:
+    ctx = str((fixture_dir / "layout.json").relative_to(ROOT))
+    validate_export_file(
+        fixture_dir / TEXT_EXPORT,
+        render_text_export(layout),
+        "text export",
+    )
+    validate_export_file(
+        fixture_dir / MARKDOWN_EXPORT,
+        render_markdown_export(layout, ctx),
+        "Markdown export",
+    )
 
 
 def validate_projection_items(ctx: str, key: str, value, required: bool) -> None:
@@ -467,6 +535,8 @@ for index, entry in enumerate(entries):
             "layout",
             LAYOUT_GOLDEN_KEYS,
         )
+        if layout_golden is not None:
+            validate_export_goldens(fixture_dir, layout_golden)
         if extraction_golden is not None and layout_golden is not None:
             validate_stage_expectations(
                 metadata_path,
@@ -501,6 +571,7 @@ if not failures:
     ok("fixture manifest has no missing or extra fixture documents")
     ok("successful fixture goldens have valid stage metadata")
     ok("successful fixture metadata expectations match committed stage goldens")
+    ok("successful fixture text and Markdown exports match committed layout goldens")
     ok(f"foreign fixture manifests bind {foreign_package_count} package(s) to committed hashes")
 
 if failures:

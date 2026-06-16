@@ -246,6 +246,39 @@ fn assert_or_accept_golden(path: PathBuf, value: &Value) {
     );
 }
 
+fn assert_stdout_matches_fixture_file(
+    output: Output,
+    expected_path: PathBuf,
+    fixture_id: &str,
+    format: &str,
+) {
+    assert!(
+        output.status.success(),
+        "ethos doc parse --format {format} failed for {fixture_id}\nstatus: {:?}\nstderr:\n{}\nstdout:\n{}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert!(
+        output.stderr.is_empty(),
+        "ethos doc parse --format {format} wrote stderr for {fixture_id}:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    if std::env::var("ETHOS_ACCEPT_GOLDENS").as_deref() == Ok("1") {
+        std::fs::write(&expected_path, &output.stdout)
+            .unwrap_or_else(|err| panic!("{} can be written: {err}", expected_path.display()));
+        return;
+    }
+    let expected = std::fs::read(&expected_path)
+        .unwrap_or_else(|err| panic!("{} is readable: {err}", expected_path.display()));
+    assert_eq!(
+        output.stdout,
+        expected,
+        "stdout for {fixture_id} --format {format} must match {}",
+        expected_path.display()
+    );
+}
+
 #[test]
 fn successful_fixtures_match_extraction_and_layout_goldens_when_pdfium_is_configured() {
     if !pdfium_configured() {
@@ -278,6 +311,34 @@ fn successful_fixtures_match_extraction_and_layout_goldens_when_pdfium_is_config
             fixture_dir_by_id(&fixture_id).join("layout.json"),
             &layout_value,
         );
+    }
+}
+
+#[test]
+fn doc_parse_text_and_markdown_exports_match_fixture_goldens_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!("skipping text/Markdown export golden test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    for fixture_id in successful_fixture_ids() {
+        let fixture = fixture_pdf_by_id(&fixture_id);
+        let fixture_dir = fixture_dir_by_id(&fixture_id);
+        for (format, golden) in [("text", "text.txt"), ("markdown", "markdown.md")] {
+            let output = run_ethos(&[
+                "doc",
+                "parse",
+                fixture.to_str().unwrap(),
+                "--format",
+                format,
+            ]);
+            assert_stdout_matches_fixture_file(
+                output,
+                fixture_dir.join(golden),
+                &fixture_id,
+                format,
+            );
+        }
     }
 }
 

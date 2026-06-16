@@ -36,6 +36,10 @@ Successful parse fixtures also carry c14n stage goldens:
 
 - `extraction.json`: `ethos_core::traits::Extraction` after the PDF backend boundary.
 - `layout.json`: `ethos_core::traits::LayoutOutput` after deterministic layout grouping.
+- `text.txt`: current alpha plain-text export rendered from `layout.json` element text order.
+- `markdown.md`: current alpha Markdown export rendered from `layout.json`. The current
+  committed synthetic fixture set contains text blocks, so these files mirror the same block
+  order as `text.txt`.
 
 For successful fixtures, `validate_fixtures.py` also binds selected `fixture.json`
 expectations to those committed goldens:
@@ -47,6 +51,10 @@ expectations to those committed goldens:
 - `expected_text`: exact `layout.json` element text order. Use a string for a single
   layout element and a string array when reading order spans multiple elements.
 
+The text and Markdown export goldens are validated as exact UTF-8 bytes against the
+committed `layout.json` output. They are an internal Milestone B alpha guard for the current
+trust-loop export path, not a broader document-conversion claim.
+
 Regenerate them only after reviewing parser/layout drift. First configure the pinned profile
 artifact for your platform; for macOS arm64 this is:
 
@@ -56,6 +64,9 @@ export ETHOS_PDFIUM_VERSION=chromium/7881
 export ETHOS_PDFIUM_ARTIFACT_PATH=/tmp/ethos-pdfium-mac-arm64.tgz
 ETHOS_ACCEPT_GOLDENS=1 cargo test --locked --test pdf_parse \
   successful_fixtures_match_extraction_and_layout_goldens_when_pdfium_is_configured -- --exact
+ETHOS_ACCEPT_GOLDENS=1 cargo test --locked --test pdf_parse \
+  doc_parse_text_and_markdown_exports_match_fixture_goldens_when_pdfium_is_configured -- --exact
+python3 fixtures/validate_fixtures.py
 ```
 
 Use the matching artifact name and runtime library path from
