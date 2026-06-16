@@ -63,6 +63,25 @@
       "description": "Where the claim says the evidence lives. At least one locator is required; id formats follow the grounding source.",
       "additionalProperties": false,
       "minProperties": 1,
+      "dependentRequired": {
+        "table_id": ["cell"],
+        "cell": ["table_id"]
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["bbox"]
+          },
+          "then": {
+            "anyOf": [
+              { "required": ["page"] },
+              { "required": ["element_id"] },
+              { "required": ["span_id"] },
+              { "required": ["table_id"] }
+            ]
+          }
+        }
+      ],
       "properties": {
         "page": { "type": "string" },
         "element_id": { "type": "string" },

@@ -36,7 +36,8 @@ ethos verify schemas/examples/document.example.json \
 ```
 
 Expected result: `fingerprint_stale: true`, check status `stale`, and
-`all_evidence_grounded: false`.
+`all_evidence_grounded: false`. Non-grounded checks include a `reason` label such as
+`stale_fingerprint`, `text_mismatch`, or `missing_table_capability`.
 
 ## Capability-Limited Table Claim
 
@@ -56,8 +57,8 @@ subset. They are not real pinned OpenDataLoader artifacts. Golden reports live i
 
 Real pinned OpenDataLoader output lives under `fixtures/foreign/opendataloader/real/`. That
 package includes both a grounded citation set and an ungrounded citation set so
-`make verify-alpha` proves the accept and reject paths against a real foreign parser output.
-The same target also runs native Ethos verification with `--crop-dir`, proving that emitted
-crop descriptor JSON is deterministic and conforms to `schemas/ethos-crop-descriptor.schema.json`.
+`make verify-alpha` exercises the accept and reject paths against a real foreign parser output.
+The same target also runs native Ethos verification with `--crop-dir`, checking that emitted
+crop descriptor JSON conforms to `schemas/ethos-crop-descriptor.schema.json`.
 When a native Ethos document is bound to its original PDF, `--crop-source-pdf` additionally
 emits PNG crop artifacts referenced and hashed from those descriptors.
