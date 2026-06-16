@@ -14,6 +14,10 @@ ROOT = Path(__file__).resolve().parents[2]
 REAL_MACOS_G1 = ROOT / "benchmarks" / "results" / "gate-zero" / "macos-arm64" / "g1.json"
 TIMESTAMP = "20260612T081702Z"
 BENCHMARK_COMMIT = "c68389c28535bbab74a1efbe5bd923c8ff4ec341"
+requires_real_macos_g1 = unittest.skipUnless(
+    REAL_MACOS_G1.is_file(),
+    "requires generated macos-arm64 Gate Zero g1.json",
+)
 REPRODUCTION_COMMAND = (
     "python3 benchmarks/harness/run_gate_zero.py --mode ethos --repo-root . "
     "--manifest benchmarks/gate-zero/manifest.json "
@@ -46,6 +50,7 @@ def build_real_bundle(out_root: Path) -> Path:
 
 
 class GateZeroEvidenceBundleTests(unittest.TestCase):
+    @requires_real_macos_g1
     def test_evidence_bundle_from_existing_macos_g1_json(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             bundle_dir = build_real_bundle(Path(tmp))
@@ -79,6 +84,7 @@ class GateZeroEvidenceBundleTests(unittest.TestCase):
             self.assertEqual(digest["payload_sha256"], run_gate_zero.sha256_file(checksums_path))
             self.assertIn("not a public-key signature", digest["note"])
 
+    @requires_real_macos_g1
     def test_reproduction_env_records_resolved_paths_and_hashes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -114,6 +120,7 @@ class GateZeroEvidenceBundleTests(unittest.TestCase):
         self.assertIsNotNone(install_entry["tree_sha256"])
         self.assertIn("ETHOS_LITEPARSE_BIN is not set", reproduction_env["blockers"])
 
+    @requires_real_macos_g1
     def test_host_attestation_matches_result(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             bundle_dir = build_real_bundle(Path(tmp))
@@ -134,6 +141,7 @@ class GateZeroEvidenceBundleTests(unittest.TestCase):
             )
             self.assertEqual(attestation["result_host"]["selected"]["id"], "mac-m4pro-arm64")
 
+    @requires_real_macos_g1
     def test_human_summary_preserves_edgeparse_failure_truth(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             bundle_dir = build_real_bundle(Path(tmp))
@@ -151,6 +159,7 @@ class GateZeroEvidenceBundleTests(unittest.TestCase):
             self.assertIn("Ethos passed all top-level G1 determinism checks", summary)
             self.assertIn("does not claim Ethos is the fastest parser overall", summary)
 
+    @requires_real_macos_g1
     def test_checksum_verifier_detects_tampered_payload(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             bundle_dir = build_real_bundle(Path(tmp))

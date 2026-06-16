@@ -14,6 +14,7 @@ This repository owns implementation-adjacent benchmark inputs and historical evi
 Generated Gate Zero benchmark results are not checked into `ethos`; they belong in
 `ethos-bench`. Public wording must continue to point readers at `docs/execution-status.md` for
 the current pre-alpha status and blockers.
+The controlled-run handoff is `docs/gate-zero-evidence-runbook.md`.
 
 Before any public repository push, run the public-release checklist in
 `docs/public-release-checklist.md`. Historical generated evidence may contain local reproduction
@@ -62,3 +63,4 @@ cross-platform rendered-crop byte-identity claims
 4. Record cross-host or claim-affecting evidence in `ethos/docs/validation/` or in signed
    `ethos-bench/benchmarks/results/gate-zero/` files, depending on whether the evidence is a
    product-boundary validation or a benchmark result.
+5. Fill ADR-0005 only after the required G1/G2/G3 result files and evidence bundles exist.
