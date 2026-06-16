@@ -79,6 +79,20 @@ USAGE_ERROR_CASES = [
         "citations": "examples/verify/invalid_bbox_citations.json",
         "stderr_contains": "citation bbox requires page unless another target locator is present",
     },
+    {
+        "name": "opendataloader-malformed-bbox-input",
+        "input": "examples/verify/opendataloader_malformed_bbox.json",
+        "grounding": "opendataloader-json",
+        "citations": "examples/verify/opendataloader_grounded_citations.json",
+        "stderr_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)",
+    },
+    {
+        "name": "opendataloader-unknown-page-input",
+        "input": "examples/verify/opendataloader_unknown_page.json",
+        "grounding": "opendataloader-json",
+        "citations": "examples/verify/opendataloader_grounded_citations.json",
+        "stderr_contains": "opendataloader-json adapter: element.page references unknown page",
+    },
 ]
 
 SUMMARY_CASES = [

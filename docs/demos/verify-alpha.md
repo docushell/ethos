@@ -12,7 +12,8 @@ repeatable `make verify-alpha` path:
 - OpenDataLoader-style JSON can enter the same verification loop through a grounding adapter
 - real pinned OpenDataLoader 2.4.7 output has both grounded and ungrounded citation cases
 - native and synthetic OpenDataLoader fixtures cover missing cited elements
-- malformed citation inputs return usage diagnostics with exit code `2`
+- malformed citation inputs and malformed OpenDataLoader-style grounding inputs return usage
+  diagnostics with exit code `2`
 - `--fail-on-ungrounded` turns the report into a CI/agent gate with exit code `1` when evidence is not fully grounded
 - native Ethos verification can emit deterministic crop descriptor artifacts with `--crop-dir`
 - every demo report is compared against a golden and regenerated twice to check byte-identical output
@@ -240,6 +241,26 @@ ethos verify schemas/examples/document.example.json \
 
 Expected outcome: exit code `2` with a diagnostic that the bbox citation requires a page unless
 another target locator is present.
+
+## Malformed OpenDataLoader-Style Inputs
+
+The harness also checks adapter input validation failures:
+
+```bash
+ethos verify examples/verify/opendataloader_malformed_bbox.json \
+  --grounding opendataloader-json \
+  --citations examples/verify/opendataloader_grounded_citations.json
+```
+
+Expected outcome: exit code `2` with a diagnostic that the bbox is malformed.
+
+```bash
+ethos verify examples/verify/opendataloader_unknown_page.json \
+  --grounding opendataloader-json \
+  --citations examples/verify/opendataloader_grounded_citations.json
+```
+
+Expected outcome: exit code `2` with a diagnostic that an element references an undeclared page.
 
 ## Crop Descriptors
 
