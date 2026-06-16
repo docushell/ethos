@@ -177,6 +177,9 @@ pub(crate) struct VerifyArgs {
     /// Output path for verification_report.json (default: stdout)
     #[arg(long)]
     pub(crate) out: Option<PathBuf>,
+    /// Output format. JSON is the canonical report; summary is a compact text view.
+    #[arg(long, value_enum, default_value_t = VerifyOutputFormat::Json)]
+    pub(crate) format: VerifyOutputFormat,
     /// Directory for crop descriptor artifacts. With --crop-source-pdf, also writes rendered PNG
     /// crops bound by descriptor hashes.
     #[arg(long)]
@@ -188,6 +191,12 @@ pub(crate) struct VerifyArgs {
     /// Exit 1 after writing the report when any requested evidence is not grounded.
     #[arg(long)]
     pub(crate) fail_on_ungrounded: bool,
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+pub(crate) enum VerifyOutputFormat {
+    Json,
+    Summary,
 }
 
 /// CLI failure: stable error code or usage error, rendered deterministically.
