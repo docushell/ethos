@@ -5,11 +5,11 @@ Every closing PRD §15 open question gets an ADR here. Output-changing merges re
 | ADR | Title | Status |
 | --- | --- | --- |
 | 0000 | Gate Zero decider | Accepted |
-| 0001 | Staffing confirmation vs plan schedule | **Proposed — blocks Week 0 exit** |
+| 0001 | Staffing confirmation vs plan schedule | Accepted |
 | 0002 | PDFium two-phase distribution path | Accepted |
 | 0003 | Deterministic font policy | Accepted |
 | 0004 | Licensing and dependency policy | Accepted |
-| 0005 | Gate Zero decision | Template (filled week 4) |
+| 0005 | Gate Zero decision | Accepted - PROCEED |
 | 0006 | Package identifiers | Accepted |
 | 0007 | Trust layer first | Accepted |
 | 0008 | Gate Zero G2 footprint policy | Accepted |
