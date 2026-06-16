@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0.0",
+  "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "verification_config_sha256": "4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0",
+  "grounding": {
+    "parser": {
+      "name": "ethos",
+      "version": "0.1.0"
+    },
+    "capabilities": {
+      "spans": true,
+      "char_offsets": true,
+      "tables": true,
+      "fingerprint": true,
+      "coordinate_origin": "top-left",
+      "crop_support": false
+    }
+  },
+  "capability_limits": [],
+  "fingerprint_stale": true,
+  "all_evidence_grounded": false,
+  "checks": [
+    {
+      "id": "v0001",
+      "claim": {
+        "kind": "presence",
+        "citation": {
+          "element_id": "e000002"
+        }
+      },
+      "status": "stale",
+      "reason": "stale_fingerprint",
+      "match_method": "none",
+      "semantic_unverified": false,
+      "warnings": []
+    }
+  ],
+  "unsupported_claim_kinds": [],
+  "warnings": []
+}

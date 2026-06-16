@@ -11,7 +11,8 @@ use ethos_core::grounding::{
 };
 use ethos_core::model::Document;
 use ethos_core::verify_types::{
-    ClaimKind, EvidenceOptions, VerificationConfig, VerificationReport,
+    CapabilityLimit, CheckReason, CheckStatus, ClaimKind, EvidenceOptions, MatchMethod,
+    VerificationConfig, VerificationReport,
 };
 use ethos_grounding_opendataloader_json::OdlJsonSource;
 use ethos_pdf::PdfiumBackend;
@@ -19,6 +20,7 @@ use ethos_verify::CitationInput;
 
 use crate::{
     default_max_input_bytes, read_document, read_file_limited, write_output, Failure, VerifyArgs,
+    VerifyOutputFormat,
 };
 
 pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
@@ -78,7 +80,7 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
                     if let Some(crop_dir) = args.crop_dir.as_deref() {
                         write_crop_artifacts(crop_dir, &report, crop_source_pdf.as_ref())?;
                     }
-                    return write_report(args.out, report, args.fail_on_ungrounded);
+                    return write_report(args.out, args.format, report, args.fail_on_ungrounded);
                 }
                 None => ethos_verify::verify_claims(&doc, citations, &config, config_sha256),
             }
@@ -98,24 +100,246 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
         }
     };
 
-    write_report(args.out, report, args.fail_on_ungrounded)
+    write_report(args.out, args.format, report, args.fail_on_ungrounded)
 }
 
 fn write_report(
     out: Option<PathBuf>,
+    format: VerifyOutputFormat,
     report: VerificationReport,
     fail_on_ungrounded: bool,
 ) -> Result<(), Failure> {
-    let value = serde_json::to_value(&report).map_err(|e| EthosError::internal(e.to_string()))?;
-    let mut bytes =
-        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
-    bytes.push(b'\n');
+    let bytes = match format {
+        VerifyOutputFormat::Json => verification_report_json_bytes(&report)?,
+        VerifyOutputFormat::Summary => verification_report_summary_bytes(&report)?,
+    };
     let all_evidence_grounded = report.all_evidence_grounded;
     write_output(out, &bytes)?;
     if fail_on_ungrounded && !all_evidence_grounded {
         return Err(Failure::Ungrounded);
     }
     Ok(())
+}
+
+fn verification_report_json_bytes(report: &VerificationReport) -> Result<Vec<u8>, Failure> {
+    let value = serde_json::to_value(report).map_err(|e| EthosError::internal(e.to_string()))?;
+    let mut bytes =
+        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<u8>, Failure> {
+    let mut out = String::new();
+    out.push_str("ethos verify summary\n");
+    out.push_str(&format!("schema_version: {}\n", report.schema_version));
+    out.push_str(&format!(
+        "all_evidence_grounded: {}\n",
+        report.all_evidence_grounded
+    ));
+    out.push_str(&format!(
+        "fingerprint_stale: {}\n",
+        report.fingerprint_stale
+    ));
+    if let Some(fingerprint) = report.document_fingerprint.as_deref() {
+        out.push_str(&format!("document_fingerprint: {fingerprint}\n"));
+    }
+    out.push_str(&format!(
+        "grounding: {} {}\n",
+        report.grounding.parser.name, report.grounding.parser.version
+    ));
+    if let Some(adapter) = report.grounding.parser.adapter.as_deref() {
+        out.push_str(&format!("grounding_adapter: {adapter}\n"));
+    }
+    if let Some(adapter_version) = report.grounding.parser.adapter_version.as_deref() {
+        out.push_str(&format!("grounding_adapter_version: {adapter_version}\n"));
+    }
+    out.push_str(&format!("checks_total: {}\n", report.checks.len()));
+    for status in [
+        CheckStatus::Grounded,
+        CheckStatus::NotFound,
+        CheckStatus::Mismatch,
+        CheckStatus::Stale,
+        CheckStatus::UnsupportedClaimKind,
+        CheckStatus::CapabilityBlocked,
+        CheckStatus::Error,
+    ] {
+        let count = report
+            .checks
+            .iter()
+            .filter(|check| check.status == status)
+            .count();
+        out.push_str(&format!("checks_{}: {count}\n", status_label(status)));
+    }
+    out.push_str(&format!(
+        "capability_limits: {}\n",
+        list_labels(&report.capability_limits, capability_limit_label)
+    ));
+    out.push_str(&format!(
+        "unsupported_claim_kinds: {}\n",
+        if report.unsupported_claim_kinds.is_empty() {
+            "none".to_string()
+        } else {
+            report.unsupported_claim_kinds.join(",")
+        }
+    ));
+    out.push_str(&format!(
+        "warnings: {}\n",
+        serde_label_list(&report.warnings)?
+    ));
+    out.push_str("non_grounded_checks:\n");
+    let mut non_grounded = report
+        .checks
+        .iter()
+        .filter(|check| check.status != CheckStatus::Grounded)
+        .peekable();
+    if non_grounded.peek().is_none() {
+        out.push_str("- none\n");
+    } else {
+        for check in non_grounded {
+            out.push_str(&format!(
+                "- {} status={} reason={} kind={} locator={} match_method={}\n",
+                check.id,
+                status_label(check.status),
+                check
+                    .reason
+                    .map(check_reason_label)
+                    .unwrap_or("unspecified"),
+                claim_kind_label(check.claim.kind),
+                citation_locator_label(&check.claim.citation),
+                match_method_label(check.match_method)
+            ));
+        }
+    }
+    Ok(out.into_bytes())
+}
+
+fn status_label(status: CheckStatus) -> &'static str {
+    match status {
+        CheckStatus::Grounded => "grounded",
+        CheckStatus::NotFound => "not_found",
+        CheckStatus::Mismatch => "mismatch",
+        CheckStatus::Stale => "stale",
+        CheckStatus::UnsupportedClaimKind => "unsupported_claim_kind",
+        CheckStatus::CapabilityBlocked => "capability_blocked",
+        CheckStatus::Error => "error",
+    }
+}
+
+fn check_reason_label(reason: CheckReason) -> &'static str {
+    match reason {
+        CheckReason::MissingLocator => "missing_locator",
+        CheckReason::MissingRequiredText => "missing_required_text",
+        CheckReason::UnsupportedClaimKind => "unsupported_claim_kind",
+        CheckReason::StaleFingerprint => "stale_fingerprint",
+        CheckReason::MissingSourceFingerprint => "missing_source_fingerprint",
+        CheckReason::MissingSpanCapability => "missing_span_capability",
+        CheckReason::MissingTableCapability => "missing_table_capability",
+        CheckReason::UnknownCoordinateOrigin => "unknown_coordinate_origin",
+        CheckReason::ElementNotFound => "element_not_found",
+        CheckReason::SpanNotFound => "span_not_found",
+        CheckReason::PageNotFound => "page_not_found",
+        CheckReason::BboxNotFound => "bbox_not_found",
+        CheckReason::MissingPageForBbox => "missing_page_for_bbox",
+        CheckReason::MissingTableCellLocator => "missing_table_cell_locator",
+        CheckReason::TableNotFound => "table_not_found",
+        CheckReason::TableCellNotFound => "table_cell_not_found",
+        CheckReason::TextMismatch => "text_mismatch",
+    }
+}
+
+fn capability_limit_label(limit: CapabilityLimit) -> &'static str {
+    match limit {
+        CapabilityLimit::MissingSpans => "missing_spans",
+        CapabilityLimit::MissingCharOffsets => "missing_char_offsets",
+        CapabilityLimit::MissingTables => "missing_tables",
+        CapabilityLimit::MissingFingerprint => "missing_fingerprint",
+        CapabilityLimit::UnknownCoordinateOrigin => "unknown_coordinate_origin",
+        CapabilityLimit::MissingCropSupport => "missing_crop_support",
+    }
+}
+
+fn claim_kind_label(kind: ClaimKind) -> &'static str {
+    match kind {
+        ClaimKind::Quote => "quote",
+        ClaimKind::Value => "value",
+        ClaimKind::Presence => "presence",
+        ClaimKind::TableCell => "table_cell",
+        ClaimKind::Region => "region",
+        ClaimKind::Other => "other",
+    }
+}
+
+fn match_method_label(method: MatchMethod) -> &'static str {
+    match method {
+        MatchMethod::ExactText => "exact_text",
+        MatchMethod::NormalizedText => "normalized_text",
+        MatchMethod::ExactTextContains => "exact_text_contains",
+        MatchMethod::NormalizedTextContains => "normalized_text_contains",
+        MatchMethod::TableCellLookup => "table_cell_lookup",
+        MatchMethod::BboxContainment => "bbox_containment",
+        MatchMethod::PresenceOnly => "presence_only",
+        MatchMethod::None => "none",
+    }
+}
+
+fn citation_locator_label(citation: &ethos_core::verify_types::Citation) -> String {
+    let mut parts = Vec::new();
+    if let Some(page) = citation.page.as_deref() {
+        parts.push(format!("page:{page}"));
+    }
+    if let Some(element_id) = citation.element_id.as_deref() {
+        parts.push(format!("element_id:{element_id}"));
+    }
+    if let Some(span_id) = citation.span_id.as_deref() {
+        parts.push(format!("span_id:{span_id}"));
+    }
+    if let Some(table_id) = citation.table_id.as_deref() {
+        parts.push(format!("table_id:{table_id}"));
+    }
+    if let Some(cell) = citation.cell {
+        parts.push(format!("cell:{},{}", cell.row, cell.col));
+    }
+    if let Some(bbox) = citation.bbox {
+        parts.push(format!(
+            "bbox:[{},{},{},{}]",
+            bbox[0], bbox[1], bbox[2], bbox[3]
+        ));
+    }
+    if parts.is_empty() {
+        "none".to_string()
+    } else {
+        parts.join(";")
+    }
+}
+
+fn list_labels<T: Copy>(values: &[T], label: fn(T) -> &'static str) -> String {
+    if values.is_empty() {
+        "none".to_string()
+    } else {
+        values
+            .iter()
+            .map(|value| label(*value))
+            .collect::<Vec<_>>()
+            .join(",")
+    }
+}
+
+fn serde_label_list<T: serde::Serialize>(values: &[T]) -> Result<String, Failure> {
+    if values.is_empty() {
+        return Ok("none".to_string());
+    }
+    let mut labels = Vec::new();
+    for value in values {
+        let value = serde_json::to_value(value).map_err(|e| EthosError::internal(e.to_string()))?;
+        let Some(label) = value.as_str() else {
+            return Err(Failure::Ethos(EthosError::internal(
+                "summary label serialization did not produce a string",
+            )));
+        };
+        labels.push(label.to_string());
+    }
+    Ok(labels.join(","))
 }
 
 struct CropSourcePdf {

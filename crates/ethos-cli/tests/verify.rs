@@ -311,6 +311,65 @@ fn fail_on_ungrounded_exits_one_with_stdout_report_for_capability_blocked_source
 }
 
 #[test]
+fn summary_format_reports_reason_before_fail_on_ungrounded_exit() {
+    let root = repo_root();
+    let output = run_ethos(&[
+        "verify",
+        root.join("examples/verify/opendataloader_no_tables.json")
+            .to_str()
+            .unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--citations",
+        root.join("examples/verify/opendataloader_table_cell_citations.json")
+            .to_str()
+            .unwrap(),
+        "--format",
+        "summary",
+        "--fail-on-ungrounded",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(output.stderr, b"");
+    assert!(
+        serde_json::from_slice::<Value>(&output.stdout).is_err(),
+        "summary output must not be JSON"
+    );
+    let summary = String::from_utf8(output.stdout).expect("summary output is UTF-8");
+    assert!(summary.contains("ethos verify summary\n"));
+    assert!(summary.contains("all_evidence_grounded: false\n"));
+    assert!(summary.contains("checks_capability_blocked: 1\n"));
+    assert!(summary.contains("capability_limits: missing_fingerprint,missing_spans,missing_char_offsets,missing_tables,unknown_coordinate_origin\n"));
+    assert!(summary.contains("- v0001 status=capability_blocked reason=missing_table_capability kind=table_cell locator=table_id:odl-t1;cell:1,1 match_method=none\n"));
+}
+
+#[test]
+fn summary_format_reports_no_non_grounded_checks_for_grounded_input() {
+    let root = repo_root();
+    let output = run_ethos(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+        "--format",
+        "summary",
+    ]);
+
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(output.stderr, b"");
+    let summary = String::from_utf8(output.stdout).expect("summary output is UTF-8");
+    assert!(summary.contains("all_evidence_grounded: true\n"));
+    assert!(summary.contains("checks_grounded: 3\n"));
+    assert!(summary.contains("capability_limits: none\n"));
+    assert!(summary.contains("warnings: none\n"));
+    assert!(summary.contains("non_grounded_checks:\n- none\n"));
+}
+
+#[test]
 fn native_verify_crop_dir_writes_deterministic_crop_descriptors() {
     let root = repo_root();
     let out = temp_output("native-crop-report");
