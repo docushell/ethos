@@ -38,7 +38,7 @@ Successful parse fixtures also carry c14n stage goldens:
 - `layout.json`: `ethos_core::traits::LayoutOutput` after deterministic layout grouping.
 - `text.txt`: current alpha plain-text export rendered from `layout.json` element text order.
 - `markdown.md`: current alpha Markdown export rendered from `layout.json`, including heading
-  prefixes for committed heading elements.
+  prefixes and explicit list-item marker text for committed matching elements.
 
 For successful fixtures, `validate_fixtures.py` also binds selected `fixture.json`
 expectations to those committed goldens:
