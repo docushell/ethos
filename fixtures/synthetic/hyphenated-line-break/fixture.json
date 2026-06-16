@@ -10,5 +10,6 @@
     "two-line paragraph grouping",
     "Type1 base font text spans"
   ],
-  "expected_text": "hyphen ated"
+  "expected_text": "hyphen ated",
+  "expected_element_types": ["text_block"]
 }
