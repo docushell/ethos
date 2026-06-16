@@ -47,6 +47,12 @@ CASES = [
         "golden": "examples/verify/goldens/native_split_quote_report.json",
     },
     {
+        "name": "native-non-v1-claims",
+        "input": "schemas/examples/document.example.json",
+        "citations": "examples/verify/native_non_v1_claims_citations.json",
+        "golden": "examples/verify/goldens/native_non_v1_claims_report.json",
+    },
+    {
         "name": "native-ungrounded",
         "input": "schemas/examples/document.example.json",
         "citations": "examples/verify/native_ungrounded_citations.json",

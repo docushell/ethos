@@ -12,6 +12,7 @@ repeatable `make verify-alpha` path:
 - OpenDataLoader-style JSON can enter the same verification loop through a grounding adapter
 - real pinned OpenDataLoader 2.4.7 output has both grounded and ungrounded citation cases
 - native and synthetic OpenDataLoader fixtures cover missing cited elements
+- native fixtures cover unsupported non-v1 claim kinds
 - malformed citation inputs and malformed OpenDataLoader-style grounding inputs return usage
   diagnostics with exit code `2`
 - `--fail-on-ungrounded` turns the report into a CI/agent gate with exit code `1` when evidence is not fully grounded
@@ -69,6 +70,27 @@ Golden report:
 
 ```text
 examples/verify/goldens/native_ungrounded_report.json
+```
+
+## Native Non-v1 Claim Policy
+
+```bash
+ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/native_non_v1_claims_citations.json \
+  --out /tmp/ethos-native-non-v1-report.json
+```
+
+Expected outcome:
+
+- the presence check is grounded
+- `region` and `other` checks have status `unsupported_claim_kind`
+- `unsupported_claim_kinds` lists `region` and `other`
+- `all_evidence_grounded` is `false`
+
+Golden report:
+
+```text
+examples/verify/goldens/native_non_v1_claims_report.json
 ```
 
 ## OpenDataLoader-Style JSON

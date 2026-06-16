@@ -1882,6 +1882,79 @@ mod tests {
     }
 
     #[test]
+    fn non_v1_claim_kinds_are_deduped_and_keep_gate_false() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![
+                claim(
+                    ClaimKind::Presence,
+                    None,
+                    Citation {
+                        page: Some("p0001".into()),
+                        ..Default::default()
+                    },
+                ),
+                claim(
+                    ClaimKind::Region,
+                    None,
+                    Citation {
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                ),
+                claim(
+                    ClaimKind::Other,
+                    Some("$12.4M equals 12400000"),
+                    Citation {
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                ),
+                claim(
+                    ClaimKind::Region,
+                    None,
+                    Citation {
+                        page: Some("p0001".into()),
+                        ..Default::default()
+                    },
+                ),
+            ],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(report.checks[1].status, CheckStatus::UnsupportedClaimKind);
+        assert_eq!(report.checks[2].status, CheckStatus::UnsupportedClaimKind);
+        assert_eq!(report.checks[3].status, CheckStatus::UnsupportedClaimKind);
+        assert_eq!(report.checks[1].match_method, MatchMethod::None);
+        assert_eq!(report.checks[2].match_method, MatchMethod::None);
+        assert_eq!(report.checks[3].match_method, MatchMethod::None);
+        assert_eq!(
+            report.checks[1].reason,
+            Some(CheckReason::UnsupportedClaimKind)
+        );
+        assert_eq!(
+            report.checks[2].reason,
+            Some(CheckReason::UnsupportedClaimKind)
+        );
+        assert_eq!(
+            report.checks[3].reason,
+            Some(CheckReason::UnsupportedClaimKind)
+        );
+        assert!(report.checks[1].evidence.is_none());
+        assert!(report.checks[2].evidence.is_none());
+        assert!(report.checks[3].evidence.is_none());
+        assert!(report.checks[1].warnings.is_empty());
+        assert!(report.checks[2].warnings.is_empty());
+        assert!(report.checks[3].warnings.is_empty());
+        assert!(!report.checks[1].semantic_unverified);
+        assert!(!report.checks[2].semantic_unverified);
+        assert!(!report.checks[3].semantic_unverified);
+        assert_eq!(report.unsupported_claim_kinds, vec!["region", "other"]);
+    }
+
+    #[test]
     fn missing_span_capability_blocks_span_locator() {
         let source = TestSource {
             caps: Capabilities {
