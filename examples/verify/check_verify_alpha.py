@@ -19,150 +19,12 @@
 
 import argparse
 import difflib
+import hashlib
 import json
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-
-
-CASES = [
-    {
-        "name": "native-grounded",
-        "input": "schemas/examples/document.example.json",
-        "citations": "examples/verify/native_grounded_citations.json",
-        "golden": "examples/verify/goldens/native_grounded_report.json",
-    },
-    {
-        "name": "opendataloader-grounded",
-        "input": "examples/verify/opendataloader.json",
-        "grounding": "opendataloader-json",
-        "citations": "examples/verify/opendataloader_grounded_citations.json",
-        "golden": "examples/verify/goldens/opendataloader_grounded_report.json",
-    },
-    {
-        "name": "native-split-quote",
-        "input": "examples/verify/native_split_quote_document.json",
-        "citations": "examples/verify/native_split_quote_citations.json",
-        "golden": "examples/verify/goldens/native_split_quote_report.json",
-    },
-    {
-        "name": "native-non-v1-claims",
-        "input": "schemas/examples/document.example.json",
-        "citations": "examples/verify/native_non_v1_claims_citations.json",
-        "golden": "examples/verify/goldens/native_non_v1_claims_report.json",
-    },
-    {
-        "name": "native-ungrounded",
-        "input": "schemas/examples/document.example.json",
-        "citations": "examples/verify/native_ungrounded_citations.json",
-        "golden": "examples/verify/goldens/native_ungrounded_report.json",
-    },
-    {
-        "name": "opendataloader-not-found",
-        "input": "examples/verify/opendataloader.json",
-        "grounding": "opendataloader-json",
-        "citations": "examples/verify/opendataloader_not_found_citations.json",
-        "golden": "examples/verify/goldens/opendataloader_not_found_report.json",
-    },
-    {
-        "name": "native-stale",
-        "input": "schemas/examples/document.example.json",
-        "citations": "examples/verify/native_stale_citations.json",
-        "golden": "examples/verify/goldens/native_stale_report.json",
-    },
-    {
-        "name": "opendataloader-capability-limited",
-        "input": "examples/verify/opendataloader_no_tables.json",
-        "grounding": "opendataloader-json",
-        "citations": "examples/verify/opendataloader_table_cell_citations.json",
-        "golden": "examples/verify/goldens/opendataloader_capability_limited_report.json",
-    },
-    {
-        "name": "real-opendataloader-grounded",
-        "input": "fixtures/foreign/opendataloader/real/opendataloader-output.json",
-        "grounding": "opendataloader-json",
-        "citations": "fixtures/foreign/opendataloader/real/citations.json",
-        "golden": "fixtures/foreign/opendataloader/real/expected.verification_report.json",
-    },
-    {
-        "name": "real-opendataloader-ungrounded",
-        "input": "fixtures/foreign/opendataloader/real/opendataloader-output.json",
-        "grounding": "opendataloader-json",
-        "citations": "fixtures/foreign/opendataloader/real/ungrounded_citations.json",
-        "golden": "fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json",
-    },
-]
-
-USAGE_ERROR_CASES = [
-    {
-        "name": "invalid-table-cell-citation",
-        "input": "schemas/examples/document.example.json",
-        "citations": "examples/verify/invalid_table_cell_citations.json",
-        "stderr_contains": "table_cell citation must include table_id and cell",
-    },
-    {
-        "name": "invalid-bbox-citation",
-        "input": "schemas/examples/document.example.json",
-        "citations": "examples/verify/invalid_bbox_citations.json",
-        "stderr_contains": "citation bbox requires page unless another target locator is present",
-    },
-    {
-        "name": "opendataloader-malformed-bbox-input",
-        "input": "examples/verify/opendataloader_malformed_bbox.json",
-        "grounding": "opendataloader-json",
-        "citations": "examples/verify/opendataloader_grounded_citations.json",
-        "stderr_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)",
-    },
-    {
-        "name": "opendataloader-unknown-page-input",
-        "input": "examples/verify/opendataloader_unknown_page.json",
-        "grounding": "opendataloader-json",
-        "citations": "examples/verify/opendataloader_grounded_citations.json",
-        "stderr_contains": "opendataloader-json adapter: element.page references unknown page",
-    },
-]
-
-SUMMARY_CASES = [
-    {
-        "name": "native-ungrounded-summary",
-        "input": "schemas/examples/document.example.json",
-        "citations": "examples/verify/native_ungrounded_citations.json",
-        "expected_exit": 1,
-        "fail_on_ungrounded": True,
-        "stdout_contains": [
-            "ethos verify summary\n",
-            (
-                "verification_config_sha256: "
-                "4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0\n"
-            ),
-            "all_evidence_grounded: false\n",
-            (
-                "grounding_capabilities: "
-                "spans=true,char_offsets=true,tables=true,fingerprint=true,"
-                "coordinate_origin=top-left,crop_support=false\n"
-            ),
-            "checks_not_found: 1\n",
-            "checks_mismatch: 1\n",
-            (
-                "- v0001 status=mismatch reason=text_mismatch kind=quote "
-                "locator=page:p0001;element_id:e000002 "
-                "match_method=normalized_text_contains\n"
-            ),
-            (
-                "  diagnostic: target resolved, but target text did not match "
-                "claimed text under normalized_text_contains; no semantic inference was attempted\n"
-            ),
-            (
-                "- v0002 status=not_found reason=element_not_found kind=presence "
-                "locator=element_id:missing-element match_method=none\n"
-            ),
-            (
-                "  diagnostic: element_id locator did not resolve in the grounding source\n"
-            ),
-        ],
-    },
-]
 
 
 def parse_args():
@@ -185,8 +47,130 @@ def load_json(path):
         return json.load(handle)
 
 
+def load_case_inventory(repo_root):
+    inventory_path = repo_root / "examples/verify/cases.json"
+    inventory = load_json(inventory_path)
+    if inventory.get("schema_version") != 1:
+        raise SystemExit(f"{relative(inventory_path, repo_root)} has unsupported schema_version")
+    for key in ["report_cases", "usage_error_cases", "summary_cases"]:
+        if not isinstance(inventory.get(key), list):
+            raise SystemExit(f"{relative(inventory_path, repo_root)} missing {key} list")
+    return inventory
+
+
 def pretty_json(value):
     return json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def validate_unique_case_names(groups):
+    seen = {}
+    for group_name, cases in groups.items():
+        for case in cases:
+            name = case.get("name")
+            if not isinstance(name, str) or not name:
+                raise SystemExit(f"{group_name} contains a case without a non-empty name")
+            if name in seen:
+                raise SystemExit(f"{name} appears in both {seen[name]} and {group_name}")
+            seen[name] = group_name
+
+
+def validate_case_paths(cases, repo_root, fields):
+    for case in cases:
+        for field in fields:
+            if field not in case:
+                raise SystemExit(f"{case['name']} missing {field}")
+            path = repo_root / case[field]
+            if not path.is_file():
+                raise SystemExit(f"{case['name']} missing {field}: {relative(path, repo_root)}")
+
+
+def validate_golden_inventory(report_cases, repo_root):
+    expected = sorted(str(Path(case["golden"])) for case in report_cases)
+    actual = sorted(
+        str(path.relative_to(repo_root))
+        for path in [
+            *(repo_root / "examples/verify/goldens").glob("*_report.json"),
+            *(repo_root / "fixtures/foreign/opendataloader/real").glob(
+                "expected*.verification_report.json"
+            ),
+        ]
+    )
+    if expected != actual:
+        diff = "\n".join(
+            difflib.unified_diff(
+                [f"{path}\n" for path in expected],
+                [f"{path}\n" for path in actual],
+                fromfile="examples/verify/cases.json report_cases[*].golden",
+                tofile="tracked verify-alpha report goldens",
+            )
+        )
+        raise SystemExit(f"verify-alpha golden inventory drift\n{diff}")
+    print(f"ok    verify-alpha report inventory covers {len(report_cases)} goldens")
+
+
+def validate_readme_inventory(inventory, repo_root):
+    readme_path = repo_root / "examples/verify/README.md"
+    readme = readme_path.read_text(encoding="utf-8")
+    missing = []
+    for group in ["report_cases", "usage_error_cases", "summary_cases"]:
+        for case in inventory[group]:
+            marker = f"`{case['name']}`"
+            if marker not in readme:
+                missing.append(case["name"])
+    if missing:
+        names = ", ".join(missing)
+        raise SystemExit(
+            f"{relative(readme_path, repo_root)} is missing verify-alpha case names: {names}"
+        )
+    print("ok    verify-alpha README names every inventory case")
+
+
+def validate_real_opendataloader_manifest(repo_root):
+    fixture_dir = repo_root / "fixtures/foreign/opendataloader/real"
+    manifest_path = fixture_dir / "manifest.json"
+    manifest = load_json(manifest_path)
+    checks = [
+        ("source_pdf", "source_pdf_sha256"),
+        ("output_json", "output_json_sha256"),
+    ]
+    for path_key, hash_key in checks:
+        rel = manifest.get(path_key)
+        expected = manifest.get(hash_key)
+        if not isinstance(rel, str) or not isinstance(expected, str):
+            raise SystemExit(f"{relative(manifest_path, repo_root)} missing {path_key}/{hash_key}")
+        path = fixture_dir / rel
+        if not path.is_file():
+            raise SystemExit(f"{relative(manifest_path, repo_root)} references missing {rel}")
+        actual = sha256_file(path)
+        if actual != expected:
+            raise SystemExit(
+                f"{relative(path, repo_root)} sha256 drift: expected {expected}, got {actual}"
+            )
+    print("ok    real OpenDataLoader fixture manifest hashes match pinned files")
+
+
+def validate_case_inventory(inventory, repo_root):
+    validate_unique_case_names(
+        {
+            "report_cases": inventory["report_cases"],
+            "usage_error_cases": inventory["usage_error_cases"],
+            "summary_cases": inventory["summary_cases"],
+        }
+    )
+    validate_case_paths(inventory["report_cases"], repo_root, ["input", "citations", "golden"])
+    validate_case_paths(inventory["usage_error_cases"], repo_root, ["input", "citations"])
+    validate_case_paths(inventory["summary_cases"], repo_root, ["input", "citations"])
+    validate_golden_inventory(inventory["report_cases"], repo_root)
+    validate_readme_inventory(inventory, repo_root)
+    validate_real_opendataloader_manifest(repo_root)
 
 
 def run_verify(command, repo_root, name):
@@ -451,11 +435,14 @@ def main():
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
-    for case in CASES:
+    inventory = load_case_inventory(args.repo_root)
+    validate_case_inventory(inventory, args.repo_root)
+
+    for case in inventory["report_cases"]:
         verify_case(case, args)
-    for case in USAGE_ERROR_CASES:
+    for case in inventory["usage_error_cases"]:
         verify_usage_error_case(case, args)
-    for case in SUMMARY_CASES:
+    for case in inventory["summary_cases"]:
         verify_summary_case(case, args)
     verify_crop_descriptor_case(args)
 
