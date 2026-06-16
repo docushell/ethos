@@ -376,6 +376,27 @@ def validate_expected_span_text(metadata, extraction, ctx: str) -> None:
         fail(f"{ctx} expected_span_text must match extraction span order")
 
 
+def validate_expected_font_id(metadata, extraction, ctx: str) -> None:
+    if "expected_font_id" not in metadata:
+        return
+    expected = metadata["expected_font_id"]
+    if not isinstance(expected, str) or not expected:
+        fail(f"{ctx} expected_font_id must be a non-empty string")
+        return
+    spans = extraction.get("spans") if isinstance(extraction, dict) else None
+    if not isinstance(spans, list):
+        return
+    actual = []
+    for index, span in enumerate(spans):
+        font_id = span.get("font_id") if isinstance(span, dict) else None
+        if not isinstance(font_id, str) or not font_id:
+            fail(f"{ctx} extraction span {index} font_id must be a non-empty string")
+            return
+        actual.append(font_id)
+    if actual != [expected] * len(actual):
+        fail(f"{ctx} expected_font_id must match every extraction span font_id")
+
+
 def validate_stage_expectations(metadata_path: Path, metadata, extraction, layout) -> None:
     ctx = str(metadata_path.relative_to(ROOT))
     if isinstance(extraction, dict):
@@ -385,6 +406,7 @@ def validate_stage_expectations(metadata_path: Path, metadata, extraction, layou
             f"{ctx} expected_pages",
         )
         validate_expected_span_text(metadata, extraction, ctx)
+        validate_expected_font_id(metadata, extraction, ctx)
     if isinstance(layout, dict):
         validate_expected_count(
             layout.get("elements", []),
