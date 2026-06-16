@@ -56,6 +56,16 @@ COVERAGE_GATES = {
         "subset": "rotation",
         "expected_rotation": True,
     },
+    "hyphenation_fixture": {
+        "subset": "hyphenation",
+        "expected_pages": True,
+        "expected_span_text": True,
+    },
+    "ligature_fixture": {
+        "subset": "ligatures",
+        "expected_pages": True,
+        "expected_span_text": True,
+    },
 }
 
 
@@ -92,7 +102,10 @@ def main(argv: Optional[List[str]] = None) -> int:
             "ok    layout evaluator element types "
             f"{json.dumps(report['element_type_counts'], sort_keys=True)}"
         )
-        print("ok    layout evaluator heading/list/reading-order/rotation coverage present")
+        print(
+            "ok    layout evaluator "
+            "heading/list/reading-order/rotation/hyphenation/ligature coverage present"
+        )
         print("ok    layout evaluator export and warning diagnostics present")
         if args.out is not None:
             print(f"ok    layout evaluator report wrote {args.out}")
@@ -288,6 +301,8 @@ def evaluate_fixture(
     expected_text = normalize_expected_text(metadata.get("expected_text"))
     expected_element_types = metadata.get("expected_element_types")
     expected_elements = metadata.get("expected_elements")
+    expected_pages = metadata.get("expected_pages")
+    expected_span_text = metadata.get("expected_span_text")
     expected_rotation = metadata.get("expected_rotation")
 
     expected_text_status = compare_expected_text(
@@ -309,6 +324,20 @@ def evaluate_fixture(
         fixture_rel,
         expected_elements,
         len(elements),
+        diagnostics,
+    )
+    expected_pages_status = compare_expected_pages(
+        fixture_id,
+        fixture_rel,
+        expected_pages,
+        extraction,
+        diagnostics,
+    )
+    expected_span_text_status = compare_expected_span_text(
+        fixture_id,
+        fixture_rel,
+        expected_span_text,
+        extraction,
         diagnostics,
     )
     expected_rotation_status = compare_expected_rotation(
@@ -358,6 +387,8 @@ def evaluate_fixture(
         "expected_text": expected_text_status,
         "expected_element_types": expected_element_types_status,
         "expected_elements": expected_elements_status,
+        "expected_pages": expected_pages_status,
+        "expected_span_text": expected_span_text_status,
         "expected_rotation": expected_rotation_status,
         "warning_shape": warning_shape_status,
         "confidence_policy": confidence_policy_status,
@@ -474,6 +505,119 @@ def compare_expected_elements(
                 f"{fixture_rel}/fixture.json",
                 expected=expected_elements,
                 actual=actual_count,
+            )
+        )
+        return "mismatch"
+    return "pass"
+
+
+def compare_expected_pages(
+    fixture_id: str,
+    fixture_rel: str,
+    expected_pages: Any,
+    extraction: Dict[str, Any],
+    diagnostics: List[Dict[str, Any]],
+) -> str:
+    if expected_pages is None:
+        return "not_declared"
+    if (
+        not isinstance(expected_pages, int)
+        or isinstance(expected_pages, bool)
+        or expected_pages < 0
+    ):
+        diagnostics.append(
+            diagnostic(
+                "invalid_expectation",
+                fixture_id,
+                "expected_pages must be an integer >= 0",
+                f"{fixture_rel}/fixture.json",
+            )
+        )
+        return "invalid"
+    pages = extraction.get("pages")
+    if not isinstance(pages, list):
+        diagnostics.append(
+            diagnostic(
+                "invalid_extraction",
+                fixture_id,
+                "extraction.json pages must be an array",
+                f"{fixture_rel}/extraction.json",
+            )
+        )
+        return "invalid"
+    actual_pages = len(pages)
+    if expected_pages != actual_pages:
+        diagnostics.append(
+            diagnostic(
+                "expected_pages_mismatch",
+                fixture_id,
+                "expected_pages does not match extraction page count",
+                f"{fixture_rel}/fixture.json",
+                expected=expected_pages,
+                actual=actual_pages,
+            )
+        )
+        return "mismatch"
+    return "pass"
+
+
+def compare_expected_span_text(
+    fixture_id: str,
+    fixture_rel: str,
+    expected_span_text: Any,
+    extraction: Dict[str, Any],
+    diagnostics: List[Dict[str, Any]],
+) -> str:
+    if expected_span_text is None:
+        return "not_declared"
+    if not isinstance(expected_span_text, list) or not all(
+        isinstance(item, str) for item in expected_span_text
+    ):
+        diagnostics.append(
+            diagnostic(
+                "invalid_expectation",
+                fixture_id,
+                "expected_span_text must be a string array",
+                f"{fixture_rel}/fixture.json",
+            )
+        )
+        return "invalid"
+    spans = extraction.get("spans")
+    if not isinstance(spans, list):
+        diagnostics.append(
+            diagnostic(
+                "invalid_extraction",
+                fixture_id,
+                "extraction.json spans must be an array",
+                f"{fixture_rel}/extraction.json",
+            )
+        )
+        return "invalid"
+
+    actual_span_text = []
+    for span_index, span in enumerate(spans):
+        text = span.get("text") if isinstance(span, dict) else None
+        if not isinstance(text, str):
+            diagnostics.append(
+                diagnostic(
+                    "invalid_extraction",
+                    fixture_id,
+                    f"extraction span {span_index} text must be a string",
+                    f"{fixture_rel}/extraction.json",
+                )
+            )
+            return "invalid"
+        actual_span_text.append(text)
+
+    if expected_span_text != actual_span_text:
+        diagnostics.append(
+            diagnostic(
+                "expected_span_text_mismatch",
+                fixture_id,
+                "expected_span_text does not match extraction span text order",
+                f"{fixture_rel}/fixture.json",
+                expected=expected_span_text,
+                actual=actual_span_text,
             )
         )
         return "mismatch"
@@ -982,6 +1126,13 @@ def update_coverage(
         if requirement.get("requires_multi_element_expected_text") and check["elements"] < 2:
             continue
         if requirement.get("expected_rotation") and check["expected_rotation"] != "pass":
+            continue
+        if requirement.get("expected_pages") and check["expected_pages"] != "pass":
+            continue
+        if (
+            requirement.get("expected_span_text")
+            and check["expected_span_text"] != "pass"
+        ):
             continue
         coverage[gate].append(check["fixture_id"])
 
