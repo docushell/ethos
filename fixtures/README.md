@@ -45,6 +45,10 @@ expectations to those committed goldens:
 
 - `expected_pages`: exact `extraction.json` page count.
 - `expected_span_text`: exact `extraction.json` span text order.
+- `expected_font_id`: exact `font_id` required on every committed extraction span for a
+  focused single-font fixture.
+- `expected_spans`: fixture-owned span expectation metadata with `text`, `char_start`, and
+  `char_end`; today this is validated for shape and consistency with `expected_span_text`.
 - `expected_elements`: exact `layout.json` element count.
 - `expected_element_types`: exact `layout.json` element type order.
 - `expected_text`: exact `layout.json` element text order. Use a string for a single

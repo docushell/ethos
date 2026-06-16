@@ -70,6 +70,10 @@ COVERAGE_GATES = {
         "subset": "fonts",
         "expected_font_id": True,
     },
+    "span_expectation_fixture": {
+        "subset": "ligatures",
+        "expected_spans": True,
+    },
 }
 
 
@@ -108,7 +112,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         )
         print(
             "ok    layout evaluator "
-            "heading/list/reading-order/rotation/hyphenation/ligature/font-identity coverage present"
+            "heading/list/reading-order/rotation/hyphenation/ligature/"
+            "font-identity/span-expectation coverage present"
         )
         print("ok    layout evaluator export and warning diagnostics present")
         if args.out is not None:
@@ -308,6 +313,7 @@ def evaluate_fixture(
     expected_pages = metadata.get("expected_pages")
     expected_span_text = metadata.get("expected_span_text")
     expected_font_id = metadata.get("expected_font_id")
+    expected_spans = metadata.get("expected_spans")
     expected_rotation = metadata.get("expected_rotation")
 
     expected_text_status = compare_expected_text(
@@ -350,6 +356,13 @@ def evaluate_fixture(
         fixture_rel,
         expected_font_id,
         extraction,
+        diagnostics,
+    )
+    expected_spans_status = compare_expected_spans(
+        fixture_id,
+        fixture_rel,
+        expected_spans,
+        expected_span_text,
         diagnostics,
     )
     expected_rotation_status = compare_expected_rotation(
@@ -402,6 +415,7 @@ def evaluate_fixture(
         "expected_pages": expected_pages_status,
         "expected_span_text": expected_span_text_status,
         "expected_font_id": expected_font_id_status,
+        "expected_spans": expected_spans_status,
         "expected_rotation": expected_rotation_status,
         "warning_shape": warning_shape_status,
         "confidence_policy": confidence_policy_status,
@@ -695,6 +709,123 @@ def compare_expected_font_id(
             )
         )
         return "mismatch"
+    return "pass"
+
+
+def compare_expected_spans(
+    fixture_id: str,
+    fixture_rel: str,
+    expected_spans: Any,
+    expected_span_text: Any,
+    diagnostics: List[Dict[str, Any]],
+) -> str:
+    if expected_spans is None:
+        return "not_declared"
+    if not isinstance(expected_spans, list):
+        diagnostics.append(
+            diagnostic(
+                "invalid_expectation",
+                fixture_id,
+                "expected_spans must be an object array",
+                f"{fixture_rel}/fixture.json",
+            )
+        )
+        return "invalid"
+
+    span_text = []
+    previous_end = 0
+    for span_index, span in enumerate(expected_spans):
+        if not isinstance(span, dict):
+            diagnostics.append(
+                diagnostic(
+                    "invalid_expectation",
+                    fixture_id,
+                    f"expected_spans[{span_index}] must be an object",
+                    f"{fixture_rel}/fixture.json",
+                )
+            )
+            return "invalid"
+        if set(span) != {"text", "char_start", "char_end"}:
+            diagnostics.append(
+                diagnostic(
+                    "invalid_expectation",
+                    fixture_id,
+                    "expected_spans entries must contain exactly "
+                    "text, char_start, and char_end",
+                    f"{fixture_rel}/fixture.json",
+                )
+            )
+            return "invalid"
+        text = span.get("text")
+        char_start = span.get("char_start")
+        char_end = span.get("char_end")
+        if not isinstance(text, str) or not text:
+            diagnostics.append(
+                diagnostic(
+                    "invalid_expectation",
+                    fixture_id,
+                    f"expected_spans[{span_index}].text must be a non-empty string",
+                    f"{fixture_rel}/fixture.json",
+                )
+            )
+            return "invalid"
+        if (
+            not isinstance(char_start, int)
+            or isinstance(char_start, bool)
+            or char_start < 0
+        ):
+            diagnostics.append(
+                diagnostic(
+                    "invalid_expectation",
+                    fixture_id,
+                    f"expected_spans[{span_index}].char_start must be an integer >= 0",
+                    f"{fixture_rel}/fixture.json",
+                )
+            )
+            return "invalid"
+        if (
+            not isinstance(char_end, int)
+            or isinstance(char_end, bool)
+            or char_end <= char_start
+        ):
+            diagnostics.append(
+                diagnostic(
+                    "invalid_expectation",
+                    fixture_id,
+                    f"expected_spans[{span_index}].char_end must be an integer "
+                    "greater than char_start",
+                    f"{fixture_rel}/fixture.json",
+                )
+            )
+            return "invalid"
+        if span_index > 0 and char_start < previous_end:
+            diagnostics.append(
+                diagnostic(
+                    "invalid_expectation",
+                    fixture_id,
+                    "expected_spans char ranges must be ordered and non-overlapping",
+                    f"{fixture_rel}/fixture.json",
+                )
+            )
+            return "invalid"
+        previous_end = char_end
+        span_text.append(text)
+
+    if isinstance(expected_span_text, list) and all(
+        isinstance(item, str) for item in expected_span_text
+    ):
+        if span_text != expected_span_text:
+            diagnostics.append(
+                diagnostic(
+                    "expected_spans_mismatch",
+                    fixture_id,
+                    "expected_spans text does not match expected_span_text",
+                    f"{fixture_rel}/fixture.json",
+                    expected=expected_span_text,
+                    actual=span_text,
+                )
+            )
+            return "mismatch"
     return "pass"
 
 
@@ -1209,6 +1340,8 @@ def update_coverage(
         ):
             continue
         if requirement.get("expected_font_id") and check["expected_font_id"] != "pass":
+            continue
+        if requirement.get("expected_spans") and check["expected_spans"] != "pass":
             continue
         coverage[gate].append(check["fixture_id"])
 
