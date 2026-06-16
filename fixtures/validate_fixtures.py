@@ -24,7 +24,8 @@ Checks, in order:
 4. manifest corpus metadata matches fixture.json;
 5. manifest sha256 == fixture.json sha256 == sha256(document.pdf);
 6. successful parse fixtures carry stage goldens with the expected v1 shape;
-7. foreign parser fixture packages bind their manifest hashes to committed files.
+7. foreign parser fixture packages bind their manifest hashes to committed files;
+8. CLI font-isolation PDFs, including the CID/CJK-like fixture, are manifest-bound.
 
 Exit 0 = green. Any failure prints the offending file/context and exits 1.
 """
@@ -36,6 +37,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+REPO_ROOT = ROOT.parent
 MANIFEST = ROOT / "manifest.json"
 ALLOWED_CATEGORIES = {"failure", "public", "security", "synthetic"}
 MANIFEST_KEYS = {"manifest_version", "root", "subsets_declared", "fixtures"}
@@ -58,6 +60,23 @@ FOREIGN_MANIFEST_KEYS = {
     "source_provenance",
     "license",
 }
+FONT_ISOLATION_ROOT_VALUE = "crates/ethos-cli/tests/fixtures/font-isolation"
+FONT_ISOLATION_MANIFEST = REPO_ROOT / FONT_ISOLATION_ROOT_VALUE / "manifest.json"
+FONT_ISOLATION_MANIFEST_KEYS = {"manifest_version", "root", "fixtures"}
+FONT_ISOLATION_ENTRY_KEYS = {
+    "id",
+    "file",
+    "sha256",
+    "subsets",
+    "expected_behavior",
+    "provenance",
+    "license",
+}
+FONT_ISOLATION_SUBSETS = {"fonts", "cid", "missing_font", "standard14"}
+FONT_ISOLATION_BEHAVIORS = {
+    "deterministic_substitution_id",
+    "deterministic_success_or_stable_error",
+}
 HEX256 = re.compile(r"^[0-9a-f]{64}$")
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 SUBSET = re.compile(r"^[a-z0-9][a-z0-9_]*$")
@@ -77,11 +96,21 @@ def ok(msg: str) -> None:
     print(f"ok    {msg}")
 
 
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def load_json(path: Path):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        fail(f"{display_path(path)} is not readable: {exc}")
+        return None
     except json.JSONDecodeError as exc:
-        fail(f"{path.relative_to(ROOT)} is not valid JSON: {exc}")
+        fail(f"{display_path(path)} is not valid JSON: {exc}")
         return None
 
 
@@ -315,6 +344,100 @@ def validate_foreign_fixture_packages() -> int:
             f"{ctx} output_json",
         )
     return count
+
+
+def validate_font_isolation_manifest() -> int:
+    ctx = display_path(FONT_ISOLATION_MANIFEST)
+    manifest = load_json(FONT_ISOLATION_MANIFEST)
+    if manifest is None:
+        return 0
+    if not isinstance(manifest, dict):
+        fail(f"{ctx} must be an object")
+        return 0
+    if set(manifest) != FONT_ISOLATION_MANIFEST_KEYS:
+        fail(f"{ctx} must contain exactly {sorted(FONT_ISOLATION_MANIFEST_KEYS)}")
+        return 0
+    if manifest.get("manifest_version") != 1:
+        fail(f"{ctx}.manifest_version must be 1")
+    if manifest.get("root") != FONT_ISOLATION_ROOT_VALUE:
+        fail(f"{ctx}.root must be {FONT_ISOLATION_ROOT_VALUE}")
+
+    entries = manifest.get("fixtures")
+    if not isinstance(entries, list) or not entries:
+        fail(f"{ctx}.fixtures must be a non-empty array")
+        return 0
+
+    package_dir = FONT_ISOLATION_MANIFEST.parent
+    pdf_files = sorted(path.name for path in package_dir.glob("*.pdf"))
+    indexed_files = []
+    seen_ids = set()
+    seen_files = set()
+
+    for index, entry in enumerate(entries):
+        entry_ctx = f"{ctx} fixtures[{index}]"
+        if not isinstance(entry, dict):
+            fail(f"{entry_ctx} must be an object")
+            continue
+        if set(entry) != FONT_ISOLATION_ENTRY_KEYS:
+            fail(f"{entry_ctx} must contain exactly {sorted(FONT_ISOLATION_ENTRY_KEYS)}")
+            continue
+
+        fixture_id = entry.get("id")
+        fixture_file = entry.get("file")
+        sha = entry.get("sha256")
+        subsets = entry.get("subsets")
+        expected_behavior = entry.get("expected_behavior")
+
+        if not isinstance(fixture_id, str) or not SLUG.fullmatch(fixture_id):
+            fail(f"{entry_ctx}.id must be a slug")
+        elif fixture_id in seen_ids:
+            fail(f"{entry_ctx}.id duplicates '{fixture_id}'")
+        else:
+            seen_ids.add(fixture_id)
+
+        if not isinstance(fixture_file, str) or not is_safe_relative_path(fixture_file):
+            fail(f"{entry_ctx}.file must be a safe relative path")
+            continue
+        if Path(fixture_file).parts != (fixture_file,) or not fixture_file.endswith(".pdf"):
+            fail(f"{entry_ctx}.file must be a PDF filename in {FONT_ISOLATION_ROOT_VALUE}")
+            continue
+        if fixture_file in seen_files:
+            fail(f"{entry_ctx}.file duplicates '{fixture_file}'")
+        seen_files.add(fixture_file)
+        indexed_files.append(fixture_file)
+
+        if not isinstance(sha, str) or not HEX256.fullmatch(sha):
+            fail(f"{entry_ctx}.sha256 must be lowercase hex sha256")
+        if not isinstance(subsets, list) or not subsets:
+            fail(f"{entry_ctx}.subsets must be a non-empty array")
+        else:
+            for subset in subsets:
+                if not isinstance(subset, str) or subset not in FONT_ISOLATION_SUBSETS:
+                    fail(f"{entry_ctx}.subsets contains invalid subset '{subset}'")
+        if expected_behavior not in FONT_ISOLATION_BEHAVIORS:
+            fail(f"{entry_ctx}.expected_behavior is not recognized")
+        non_placeholder_text(entry.get("provenance"), f"{entry_ctx}.provenance")
+        non_placeholder_text(entry.get("license"), f"{entry_ctx}.license")
+
+        pdf_path = package_dir / fixture_file
+        if not pdf_path.is_file():
+            fail(f"{entry_ctx}.file missing: {fixture_file}")
+            continue
+        actual_sha = sha256_file(pdf_path)
+        if actual_sha != sha:
+            fail(f"{entry_ctx}.sha256 {sha} does not match {fixture_file} {actual_sha}")
+
+    if indexed_files != sorted(indexed_files):
+        fail(f"{ctx}.fixtures must be sorted by file")
+
+    missing_manifest = sorted(set(pdf_files) - set(indexed_files))
+    extra_manifest = sorted(set(indexed_files) - set(pdf_files))
+    for path in missing_manifest:
+        fail(f"{FONT_ISOLATION_ROOT_VALUE}/{path} is missing from font-isolation manifest")
+    for path in extra_manifest:
+        fail(f"{FONT_ISOLATION_ROOT_VALUE}/{path} appears in manifest but has no PDF")
+
+    return len(entries)
 
 
 def validate_expected_count(value, expected, ctx: str) -> None:
@@ -638,6 +761,7 @@ for path in extra_manifest:
     fail(f"{path} appears in manifest but has no document.pdf")
 
 foreign_package_count = validate_foreign_fixture_packages()
+font_isolation_fixture_count = validate_font_isolation_manifest()
 
 if not failures:
     ok(f"fixture manifest indexes {len(entries)} fixtures")
@@ -648,6 +772,7 @@ if not failures:
     ok("successful fixture metadata expectations match committed stage goldens")
     ok("successful fixture text and Markdown exports match committed layout goldens")
     ok(f"foreign fixture manifests bind {foreign_package_count} package(s) to committed hashes")
+    ok(f"font-isolation manifest binds {font_isolation_fixture_count} PDF fixture(s)")
 
 if failures:
     print(f"\n{failures} failure(s)")
