@@ -11,8 +11,9 @@ VERIFY_ALPHA_OUT ?= $(ROOT)/target/verify-alpha
 VERIFY_RENDERED_CROPS_OUT ?= $(ROOT)/target/verify-rendered-crops
 COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
+LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops python-surface-test release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test release-hygiene release-advisory third-party-license-manifest release-notice-draft
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -39,6 +40,10 @@ verify-rendered-crops: $(ETHOS_BIN)
 
 compare-rendered-crops:
 	$(PYTHON) examples/verify/compare_rendered_crop_runs.py --left-run $(COMPARE_RENDERED_CROPS_LEFT) --right-run $(COMPARE_RENDERED_CROPS_RIGHT)
+
+layout-evaluator-alpha:
+	$(PYTHON) fixtures/evaluate_layout_alpha.py --out $(LAYOUT_EVALUATOR_OUT)/report.json
+	$(PYTHON) fixtures/test_evaluate_layout_alpha.py
 
 python-surface-test:
 	PYTHONPATH=$(ROOT)/python $(PYTHON) -m unittest discover -s python/tests

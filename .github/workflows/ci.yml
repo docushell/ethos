@@ -44,6 +44,8 @@ jobs:
       - run: cargo test --locked --workspace --all-features
       - name: fixture manifest validation
         run: python3 fixtures/validate_fixtures.py
+      - name: layout evaluator alpha
+        run: make layout-evaluator-alpha
       - name: Python surface tests
         run: PYTHONPATH=python python3 -m unittest discover -s python/tests
       - name: readiness gate tests
