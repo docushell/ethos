@@ -99,6 +99,7 @@ Non-grounded checks may include a stable `reason` label:
 | `text_mismatch` | Target text did not match the claimed text under the active literal matcher. |
 | `missing_table_capability` | The claim needs table-cell lookup, but the grounding source does not expose tables. |
 | `missing_source_fingerprint` | Citations were fingerprint-pinned, but the grounding source did not declare one. |
+| `missing_citation_fingerprint` | The active staleness policy requires citation fingerprints, but the input omitted one. |
 | `unknown_coordinate_origin` | A bbox locator was used with a source whose coordinate origin is unknown. |
 | `element_not_found` | The cited element id was not found in a source that exposes element ids. |
 | `table_not_found` | The cited table id was not found in a source that exposes tables. |

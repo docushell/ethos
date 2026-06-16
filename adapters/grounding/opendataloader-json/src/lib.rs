@@ -58,6 +58,8 @@ use serde_json::Value;
 /// Adapter version, reported in `ParserIdentity::adapter_version`.
 pub const ADAPTER_VERSION: &str = "0.1.0";
 
+const REAL_ODL_MAX_PAGES: u32 = 10_000;
+
 /// Mapping failure: input is valid JSON but not recognizable ODL output.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AdapterError {
@@ -339,6 +341,9 @@ fn parse_real_odl(root: &Value) -> Result<OdlJsonSource, AdapterError> {
     )?;
     if page_count == 0 {
         return Err(err("number of pages must be positive"));
+    }
+    if page_count > REAL_ODL_MAX_PAGES {
+        return Err(err("number of pages exceeds adapter limit"));
     }
     let kids = root
         .get("kids")
@@ -815,6 +820,10 @@ mod tests {
         assert_error_contains(
             r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[{"page":4294967296,"bbox":[1,1,2,2]}]}"#,
             "element.page must fit u32",
+        );
+        assert_error_contains(
+            r#"{"file name":"huge.pdf","number of pages":4294967295,"kids":[]}"#,
+            "number of pages exceeds adapter limit",
         );
     }
 

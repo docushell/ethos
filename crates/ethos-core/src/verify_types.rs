@@ -98,6 +98,8 @@ pub enum CheckReason {
     StaleFingerprint,
     /// Citation was fingerprint-pinned but the source did not declare one.
     MissingSourceFingerprint,
+    /// Staleness policy requires a citation fingerprint, but input omitted it.
+    MissingCitationFingerprint,
     /// Span locator was used with a source that does not expose spans.
     MissingSpanCapability,
     /// Table-cell locator was used with a source that does not expose tables.
