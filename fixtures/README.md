@@ -37,6 +37,15 @@ Successful parse fixtures also carry c14n stage goldens:
 - `extraction.json`: `ethos_core::traits::Extraction` after the PDF backend boundary.
 - `layout.json`: `ethos_core::traits::LayoutOutput` after deterministic layout grouping.
 
+For successful fixtures, `validate_fixtures.py` also binds selected `fixture.json`
+expectations to those committed goldens:
+
+- `expected_pages`: exact `extraction.json` page count.
+- `expected_span_text`: exact `extraction.json` span text order.
+- `expected_elements`: exact `layout.json` element count.
+- `expected_text`: exact `layout.json` element text order. Use a string for a single
+  layout element and a string array when reading order spans multiple elements.
+
 Regenerate them only after reviewing parser/layout drift. First configure the pinned profile
 artifact for your platform; for macOS arm64 this is:
 
