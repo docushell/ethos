@@ -43,6 +43,7 @@ git switch main
 git pull --ff-only
 make verify-alpha PYTHON=/private/tmp/ethos-jsonschema-venv/bin/python
 python3 .github/scripts/readiness_gate.py gate-zero
+python3 .github/scripts/gate_zero_evidence_preflight.py prepare --ethos-bench ../ethos-bench
 make -C benchmarks/harness smoke
 make -C benchmarks/harness test
 git status --short --branch
@@ -50,6 +51,9 @@ git status --short --branch
 
 The `readiness_gate.py gate-zero` command only checks that frozen inputs and pins are present. It
 does not produce benchmark results.
+The `gate_zero_evidence_preflight.py prepare` command checks that generated Gate Zero outputs are
+not present in this repository and that the sibling `ethos-bench` checkout is ready to receive
+controlled-run output.
 
 ## Per-Host G1 Result
 
@@ -127,6 +131,8 @@ make -C "$ETHOS_REPO/benchmarks/harness" gate-zero-evidence \
 
 Repeat for G2 and G3 with the matching gate/result paths. Reproduction command and environment
 sidecars must describe the actual controlled run; placeholders keep the bundle incomplete.
+For the cross-host G3 bundle, use `GATE_ZERO_PLATFORM=cross-platform` and
+`GATE_ZERO_GATE=g3`.
 
 ## Decision Step
 
@@ -137,6 +143,16 @@ Fill `docs/decisions/ADR-0005-gate-zero-decision.md` only after:
 - G3 has compared the required hosts;
 - evidence bundles exist for the source result files;
 - the decider has reviewed the result JSON and reproduction sidecars.
+
+Before filling the ADR, run:
+
+```bash
+python3 .github/scripts/gate_zero_evidence_preflight.py decision --ethos-bench ../ethos-bench
+```
+
+This checks the expected `ethos-bench` result paths, timestamped evidence bundle sidecars,
+complete reproduction environments, and bundle checksum manifests. It does not decide whether
+Gate Zero passes.
 
 Until that ADR is filled, public language remains:
 
