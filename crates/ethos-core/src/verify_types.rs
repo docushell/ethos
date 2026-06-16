@@ -43,7 +43,8 @@ pub enum CapabilityLimit {
     MissingCropSupport,
 }
 
-/// Claim kinds. `Other` appears only in reports (as an unsupported kind), never in configs.
+/// Claim kinds. `Region` and `Other` appear only in citations/reports as unsupported non-v1
+/// kinds, never in configs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ClaimKind {
@@ -368,7 +369,8 @@ pub struct VerificationConfig {
     pub schema_version: String,
     /// User-facing config label, e.g. `"default-v1"`.
     pub config_version: String,
-    /// Supported claim kinds for this run (never `Other`).
+    /// Supported claim kinds for this run. Configs accept only the four v1 literal kinds:
+    /// quote, value, presence, and table_cell.
     pub claim_kinds: Vec<ClaimKind>,
     /// Matching parameters.
     pub matching: Matching,

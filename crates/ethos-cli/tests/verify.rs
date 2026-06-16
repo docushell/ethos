@@ -148,7 +148,7 @@ fn verify_alpha_schema_report_example_matches_cli_output() {
 #[test]
 fn verify_alpha_demo_reports_match_goldens() {
     let root = repo_root();
-    let cases: [(&str, Vec<String>, PathBuf); 5] = [
+    let cases: [(&str, Vec<String>, PathBuf); 6] = [
         (
             "native-grounded",
             vec![
@@ -192,6 +192,20 @@ fn verify_alpha_demo_reports_match_goldens() {
                     .to_string(),
             ],
             root.join("examples/verify/goldens/native_split_quote_report.json"),
+        ),
+        (
+            "native-non-v1-claims",
+            vec![
+                "verify".to_string(),
+                root.join("schemas/examples/document.example.json")
+                    .display()
+                    .to_string(),
+                "--citations".to_string(),
+                root.join("examples/verify/native_non_v1_claims_citations.json")
+                    .display()
+                    .to_string(),
+            ],
+            root.join("examples/verify/goldens/native_non_v1_claims_report.json"),
         ),
         (
             "native-stale",
@@ -1494,7 +1508,27 @@ fn invalid_config_constraints_are_usage_errors() {
                 "max_checks": 256
               }
             }"#,
-            "verification config claim_kinds must not include other",
+            "verification config claim_kinds must include only quote, value, presence, and table_cell",
+        ),
+        (
+            "region-claim-kind-config",
+            r#"{
+              "schema_version": "1.0.0",
+              "config_version": "region-kind",
+              "claim_kinds": ["region"],
+              "matching": {
+                "text_normalization": "collapse_whitespace",
+                "case_sensitive": true,
+                "bbox_containment_tolerance_q": 50
+              },
+              "staleness": {
+                "require_fingerprint_match": true
+              },
+              "limits": {
+                "max_checks": 256
+              }
+            }"#,
+            "verification config claim_kinds must include only quote, value, presence, and table_cell",
         ),
         (
             "negative-bbox-tolerance-config",
@@ -2033,6 +2067,9 @@ fn config_excluded_value_claim_is_unsupported() {
 
     assert_eq!(report["checks"][0]["status"], "unsupported_claim_kind");
     assert_eq!(report["checks"][0]["reason"], "unsupported_claim_kind");
+    assert_eq!(report["checks"][0]["match_method"], "none");
+    assert_eq!(report["checks"][0]["semantic_unverified"], false);
+    assert!(report["checks"][0].get("evidence").is_none());
     assert_eq!(
         report["unsupported_claim_kinds"],
         serde_json::json!(["value"])

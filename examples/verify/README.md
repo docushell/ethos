@@ -39,6 +39,17 @@ ethos verify examples/verify/native_split_quote_document.json \
 Expected result: `all_evidence_grounded: true`. The quote locator points at the second adjacent
 text element, and the verifier grounds the claim only through the explicit adjacent-element rule.
 
+## Native Non-v1 Claim Policy
+
+```bash
+ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/native_non_v1_claims_citations.json \
+  --out verification_report.json
+```
+
+Expected result: `all_evidence_grounded: false`. The page presence check can ground, but
+`region` and `other` remain unsupported non-v1 claim kinds and are reported explicitly.
+
 ## Native Ethos Ungrounded Citations
 
 ```bash
