@@ -15,11 +15,16 @@ adapter id/version), pages (number, width, height → centipoints), elements (id
 type, text), and optional tables/cells (id, page, bbox, row/col, spans, bbox, text).
 
 For real OpenDataLoader 2.4.x JSON, it maps the top-level `kids` tree into grounding
-elements (`id` → `odl-{id}`, `page number` → `page-N`, `bounding box` → centipoints,
-`content` → text). Real ODL JSON does not include parser version or page dimensions, so the
-adapter reports parser version as `unknown` and derives page extents from observed bounding
-boxes. Coordinate origin remains unknown. Real ODL table-cell grounding is not exposed yet;
-those inputs are declared capability-limited for table-cell claims.
+elements (`id` → `odl-{id}` for numeric and non-empty string ids, missing ids →
+`odl-el-N`, `page number` → `page-N`, `bounding box` → centipoints, `content` → text).
+Nested `kids`, `list items`, and `rows[].cells` containers are traversed in document order.
+Pure structural wrappers that only carry child containers are traversed without becoming
+grounding elements. Child containers must use array shapes, and malformed child containers
+or non-string `content` values are rejected instead of being silently skipped. Real ODL JSON
+does not include parser version or page dimensions, so the adapter reports parser version as
+`unknown` and derives page extents from observed bounding boxes. Coordinate origin remains
+unknown. Real ODL table-cell grounding is not exposed yet; row/cell nodes are exposed only
+as ordinary grounding elements and table-cell claims remain capability-limited.
 
 ## Declared capabilities (honest downgrades)
 
