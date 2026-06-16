@@ -151,6 +151,7 @@ ok    real-opendataloader-grounded matches fixtures/foreign/opendataloader/real/
 ok    real-opendataloader-ungrounded matches fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json
 ok    invalid-table-cell-citation exits 2 with expected usage diagnostic
 ok    invalid-bbox-citation exits 2 with expected usage diagnostic
+ok    native-ungrounded-summary summary includes expected diagnostics
 ok    native-grounded-crops crop descriptors validate against schemas/ethos-crop-descriptor.schema.json
 
 verify-alpha demo checks passed
