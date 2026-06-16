@@ -34,6 +34,8 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 ROOT = Path(__file__).resolve().parent
 REQUIRED_EXPECTATION_FIELDS = ("expected_text", "expected_element_types")
+ALPHA_LAYOUT_CONFIDENCE_WARNING_THRESHOLD = 800
+LOW_CONFIDENCE_READING_ORDER_CODE = "low_confidence_reading_order"
 COVERAGE_GATES = {
     "heading_fixture": {
         "subset": "headings",
@@ -226,6 +228,17 @@ def evaluate_fixture(
             )
         )
         return None
+    warnings = layout.get("warnings", [])
+    if not isinstance(warnings, list):
+        diagnostics.append(
+            diagnostic(
+                "invalid_layout",
+                fixture_id,
+                "layout.json warnings must be an array",
+                f"{fixture_rel}/layout.json",
+            )
+        )
+        warnings = []
 
     element_text = []
     element_types = []
@@ -281,6 +294,13 @@ def evaluate_fixture(
         len(elements),
         diagnostics,
     )
+    confidence_policy_status = compare_confidence_policy(
+        fixture_id,
+        fixture_rel,
+        elements,
+        warnings,
+        diagnostics,
+    )
     subset_status = compare_subset_expectations(
         fixture_id,
         fixture_rel,
@@ -299,6 +319,7 @@ def evaluate_fixture(
         "expected_text": expected_text_status,
         "expected_element_types": expected_element_types_status,
         "expected_elements": expected_elements_status,
+        "confidence_policy": confidence_policy_status,
         "subset_expectations": subset_status,
     }
 
@@ -415,6 +436,105 @@ def compare_expected_elements(
         )
         return "mismatch"
     return "pass"
+
+
+def compare_confidence_policy(
+    fixture_id: str,
+    fixture_rel: str,
+    elements: List[Any],
+    warnings: List[Any],
+    diagnostics: List[Dict[str, Any]],
+) -> str:
+    invalid = False
+    checked = 0
+    warning_by_id: Dict[str, Dict[str, Any]] = {}
+
+    for warning_index, warning in enumerate(warnings):
+        if not isinstance(warning, dict):
+            diagnostics.append(
+                diagnostic(
+                    "invalid_layout",
+                    fixture_id,
+                    f"layout warning {warning_index} must be an object",
+                    f"{fixture_rel}/layout.json",
+                )
+            )
+            invalid = True
+            continue
+        warning_id = warning.get("id")
+        if isinstance(warning_id, str):
+            warning_by_id[warning_id] = warning
+
+    for element_index, element in enumerate(elements):
+        if not isinstance(element, dict):
+            continue
+        confidence = element.get("confidence")
+        if confidence is None:
+            continue
+        checked += 1
+        if not isinstance(confidence, int) or not 0 <= confidence <= 1000:
+            diagnostics.append(
+                diagnostic(
+                    "invalid_layout",
+                    fixture_id,
+                    f"layout element {element_index} confidence must be an integer 0..1000",
+                    f"{fixture_rel}/layout.json",
+                )
+            )
+            invalid = True
+            continue
+        if confidence >= ALPHA_LAYOUT_CONFIDENCE_WARNING_THRESHOLD:
+            continue
+
+        warning_refs = element.get("warning_refs", [])
+        if not isinstance(warning_refs, list) or not all(
+            isinstance(item, str) for item in warning_refs
+        ):
+            diagnostics.append(
+                diagnostic(
+                    "invalid_layout",
+                    fixture_id,
+                    f"layout element {element_index} warning_refs must be a string array",
+                    f"{fixture_rel}/layout.json",
+                )
+            )
+            invalid = True
+            continue
+
+        element_id = element.get("id")
+        matched_warning = None
+        for warning_ref in warning_refs:
+            warning = warning_by_id.get(warning_ref)
+            if not isinstance(warning, dict):
+                continue
+            if (
+                warning.get("code") == LOW_CONFIDENCE_READING_ORDER_CODE
+                and warning.get("element_ref") == element_id
+            ):
+                matched_warning = warning
+                break
+        if matched_warning is None:
+            diagnostics.append(
+                diagnostic(
+                    "confidence_policy_mismatch",
+                    fixture_id,
+                    "layout element below alpha confidence threshold must reference "
+                    "a matching low_confidence_reading_order warning",
+                    f"{fixture_rel}/layout.json",
+                    expected={
+                        "code": LOW_CONFIDENCE_READING_ORDER_CODE,
+                        "element_ref": element_id,
+                    },
+                    actual={
+                        "confidence": confidence,
+                        "warning_refs": warning_refs,
+                    },
+                )
+            )
+
+    if invalid:
+        return "invalid"
+    return "pass" if checked else "not_applicable"
 
 
 def compare_subset_expectations(
