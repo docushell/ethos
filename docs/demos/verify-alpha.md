@@ -1,19 +1,21 @@
 # Verify Alpha Demo
 
-## Product Proof
+## Verification Loop
 
 Ethos verifies whether AI citations are grounded in document evidence.
 
 This is a citation grounding check, not a semantic-truth system: Ethos does not claim semantic
-entailment, factual truth, arithmetic correctness, or answer quality. The alpha proof is the
+entailment, factual truth, arithmetic correctness, or answer quality. The alpha loop is the
 repeatable `make verify-alpha` path:
 
 - native Ethos JSON citation checks can pass against checked-in document evidence
 - OpenDataLoader-style JSON can enter the same verification loop through a grounding adapter
 - real pinned OpenDataLoader 2.4.7 output has both grounded and ungrounded citation cases
+- native and synthetic OpenDataLoader fixtures cover missing cited elements
+- malformed citation inputs return usage diagnostics with exit code `2`
 - `--fail-on-ungrounded` turns the report into a CI/agent gate with exit code `1` when evidence is not fully grounded
 - native Ethos verification can emit deterministic crop descriptor artifacts with `--crop-dir`
-- every demo report is compared against a golden and regenerated twice to prove byte-identical output
+- every demo report is compared against a golden and regenerated twice to check byte-identical output
 - crop descriptor files are regenerated twice, compared byte-for-byte, validated against schema, and checked against the committed descriptor example
 
 Ethos verifies document evidence for AI systems. The deterministic parser is one grounding
@@ -41,6 +43,26 @@ Golden report:
 examples/verify/goldens/native_grounded_report.json
 ```
 
+## Native Ethos Ungrounded Citations
+
+```bash
+ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/native_ungrounded_citations.json \
+  --out /tmp/ethos-native-ungrounded-report.json
+```
+
+Expected outcome:
+
+- `all_evidence_grounded` is `false`
+- one quote check status is `mismatch` with reason `text_mismatch`
+- one presence check status is `not_found` with reason `element_not_found`
+
+Golden report:
+
+```text
+examples/verify/goldens/native_ungrounded_report.json
+```
+
 ## OpenDataLoader-Style JSON
 
 ```bash
@@ -65,6 +87,28 @@ Golden report:
 
 ```text
 examples/verify/goldens/opendataloader_grounded_report.json
+```
+
+## OpenDataLoader-Style Missing Element
+
+```bash
+ethos verify examples/verify/opendataloader.json \
+  --grounding opendataloader-json \
+  --citations examples/verify/opendataloader_not_found_citations.json \
+  --out /tmp/ethos-odl-not-found-report.json
+```
+
+Expected outcome:
+
+- `grounding.parser.adapter` is `opendataloader-json`
+- `all_evidence_grounded` is `false`
+- the presence check status is `not_found` with reason `element_not_found`
+- `warnings` includes `capability_limited`
+
+Golden report:
+
+```text
+examples/verify/goldens/opendataloader_not_found_report.json
 ```
 
 ## Real OpenDataLoader JSON
@@ -171,6 +215,26 @@ Exit behavior:
 - `0`: verification completed and all requested evidence is grounded
 - `1`: verification completed, but not all requested evidence is grounded
 - `2`: invalid input, malformed citations, adapter failure, or another usage error
+
+## Malformed Citation Inputs
+
+The harness also checks citation validation failures:
+
+```bash
+ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/invalid_table_cell_citations.json
+```
+
+Expected outcome: exit code `2` with a diagnostic that the table-cell citation must include
+`table_id` and `cell`.
+
+```bash
+ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/invalid_bbox_citations.json
+```
+
+Expected outcome: exit code `2` with a diagnostic that the bbox citation requires a page unless
+another target locator is present.
 
 ## Crop Descriptors
 
