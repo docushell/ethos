@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "report_cases": [
+    {
+      "name": "native-grounded",
+      "input": "schemas/examples/document.example.json",
+      "citations": "examples/verify/native_grounded_citations.json",
+      "golden": "examples/verify/goldens/native_grounded_report.json"
+    },
+    {
+      "name": "opendataloader-grounded",
+      "input": "examples/verify/opendataloader.json",
+      "grounding": "opendataloader-json",
+      "citations": "examples/verify/opendataloader_grounded_citations.json",
+      "golden": "examples/verify/goldens/opendataloader_grounded_report.json"
+    },
+    {
+      "name": "native-split-quote",
+      "input": "examples/verify/native_split_quote_document.json",
+      "citations": "examples/verify/native_split_quote_citations.json",
+      "golden": "examples/verify/goldens/native_split_quote_report.json"
+    },
+    {
+      "name": "native-non-v1-claims",
+      "input": "schemas/examples/document.example.json",
+      "citations": "examples/verify/native_non_v1_claims_citations.json",
+      "golden": "examples/verify/goldens/native_non_v1_claims_report.json"
+    },
+    {
+      "name": "native-ungrounded",
+      "input": "schemas/examples/document.example.json",
+      "citations": "examples/verify/native_ungrounded_citations.json",
+      "golden": "examples/verify/goldens/native_ungrounded_report.json"
+    },
+    {
+      "name": "opendataloader-not-found",
+      "input": "examples/verify/opendataloader.json",
+      "grounding": "opendataloader-json",
+      "citations": "examples/verify/opendataloader_not_found_citations.json",
+      "golden": "examples/verify/goldens/opendataloader_not_found_report.json"
+    },
+    {
+      "name": "native-stale",
+      "input": "schemas/examples/document.example.json",
+      "citations": "examples/verify/native_stale_citations.json",
+      "golden": "examples/verify/goldens/native_stale_report.json"
+    },
+    {
+      "name": "opendataloader-capability-limited",
+      "input": "examples/verify/opendataloader_no_tables.json",
+      "grounding": "opendataloader-json",
+      "citations": "examples/verify/opendataloader_table_cell_citations.json",
+      "golden": "examples/verify/goldens/opendataloader_capability_limited_report.json"
+    },
+    {
+      "name": "real-opendataloader-grounded",
+      "input": "fixtures/foreign/opendataloader/real/opendataloader-output.json",
+      "grounding": "opendataloader-json",
+      "citations": "fixtures/foreign/opendataloader/real/citations.json",
+      "golden": "fixtures/foreign/opendataloader/real/expected.verification_report.json"
+    },
+    {
+      "name": "real-opendataloader-ungrounded",
+      "input": "fixtures/foreign/opendataloader/real/opendataloader-output.json",
+      "grounding": "opendataloader-json",
+      "citations": "fixtures/foreign/opendataloader/real/ungrounded_citations.json",
+      "golden": "fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json"
+    }
+  ],
+  "usage_error_cases": [
+    {
+      "name": "invalid-table-cell-citation",
+      "input": "schemas/examples/document.example.json",
+      "citations": "examples/verify/invalid_table_cell_citations.json",
+      "stderr_contains": "table_cell citation must include table_id and cell"
+    },
+    {
+      "name": "invalid-bbox-citation",
+      "input": "schemas/examples/document.example.json",
+      "citations": "examples/verify/invalid_bbox_citations.json",
+      "stderr_contains": "citation bbox requires page unless another target locator is present"
+    },
+    {
+      "name": "opendataloader-malformed-bbox-input",
+      "input": "examples/verify/opendataloader_malformed_bbox.json",
+      "grounding": "opendataloader-json",
+      "citations": "examples/verify/opendataloader_grounded_citations.json",
+      "stderr_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)"
+    },
+    {
+      "name": "opendataloader-unknown-page-input",
+      "input": "examples/verify/opendataloader_unknown_page.json",
+      "grounding": "opendataloader-json",
+      "citations": "examples/verify/opendataloader_grounded_citations.json",
+      "stderr_contains": "opendataloader-json adapter: element.page references unknown page"
+    }
+  ],
+  "summary_cases": [
+    {
+      "name": "native-ungrounded-summary",
+      "input": "schemas/examples/document.example.json",
+      "citations": "examples/verify/native_ungrounded_citations.json",
+      "expected_exit": 1,
+      "fail_on_ungrounded": true,
+      "stdout_contains": [
+        "ethos verify summary\n",
+        "verification_config_sha256: 4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0\n",
+        "all_evidence_grounded: false\n",
+        "grounding_capabilities: spans=true,char_offsets=true,tables=true,fingerprint=true,coordinate_origin=top-left,crop_support=false\n",
+        "checks_not_found: 1\n",
+        "checks_mismatch: 1\n",
+        "- v0001 status=mismatch reason=text_mismatch kind=quote locator=page:p0001;element_id:e000002 match_method=normalized_text_contains\n",
+        "  diagnostic: target resolved, but target text did not match claimed text under normalized_text_contains; no semantic inference was attempted\n",
+        "- v0002 status=not_found reason=element_not_found kind=presence locator=element_id:missing-element match_method=none\n",
+        "  diagnostic: element_id locator did not resolve in the grounding source\n"
+      ]
+    }
+  ]
+}

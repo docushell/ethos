@@ -2,6 +2,33 @@
 
 This directory contains verify-alpha fixtures, citations, and golden reports.
 
+`cases.json` is the executable verify-alpha case inventory. `make verify-alpha` fails if a
+listed fixture path is missing, if a report golden is not covered by the inventory, if the
+real OpenDataLoader fixture manifest hashes drift, or if this README stops naming an inventory
+case.
+
+## Verify-Alpha Case Inventory
+
+Report cases:
+
+| Case | Coverage |
+| --- | --- |
+| `native-grounded` | Native quote, table-cell, and presence grounding. |
+| `opendataloader-grounded` | Synthetic OpenDataLoader-style grounding with declared capability limits. |
+| `native-split-quote` | Adjacent native text evidence matching. |
+| `native-non-v1-claims` | Explicit unsupported non-v1 claim reporting. |
+| `native-ungrounded` | Native mismatch and missing element diagnostics. |
+| `opendataloader-not-found` | Synthetic OpenDataLoader-style missing element diagnostics. |
+| `native-stale` | Fingerprint staleness handling. |
+| `opendataloader-capability-limited` | Capability-limited table-cell reporting. |
+| `real-opendataloader-grounded` | Pinned real OpenDataLoader grounded fixture. |
+| `real-opendataloader-ungrounded` | Pinned real OpenDataLoader ungrounded fixture. |
+
+Usage-error cases: `invalid-table-cell-citation`, `invalid-bbox-citation`,
+`opendataloader-malformed-bbox-input`, and `opendataloader-unknown-page-input`.
+
+Summary cases: `native-ungrounded-summary`.
+
 ## Native Ethos Grounding
 
 ```bash

@@ -127,6 +127,54 @@ fn odl_example() -> PathBuf {
     repo_root().join("examples/verify/opendataloader.json")
 }
 
+fn verify_alpha_report_cases() -> Vec<(String, Vec<String>, PathBuf)> {
+    let root = repo_root();
+    let inventory = json_file(root.join("examples/verify/cases.json"));
+    let report_cases = inventory["report_cases"]
+        .as_array()
+        .expect("verify-alpha report_cases is an array");
+
+    report_cases
+        .iter()
+        .map(|case| {
+            let name = case["name"]
+                .as_str()
+                .expect("verify-alpha case name is a string")
+                .to_string();
+            let mut args = vec![
+                "verify".to_string(),
+                root.join(
+                    case["input"]
+                        .as_str()
+                        .expect("verify-alpha case input is a string"),
+                )
+                .display()
+                .to_string(),
+            ];
+            if let Some(grounding) = case.get("grounding").and_then(Value::as_str) {
+                args.push("--grounding".to_string());
+                args.push(grounding.to_string());
+            }
+            args.push("--citations".to_string());
+            args.push(
+                root.join(
+                    case["citations"]
+                        .as_str()
+                        .expect("verify-alpha case citations is a string"),
+                )
+                .display()
+                .to_string(),
+            );
+            let expected = root.join(
+                case["golden"]
+                    .as_str()
+                    .expect("verify-alpha case golden is a string"),
+            );
+            (name, args, expected)
+        })
+        .collect()
+}
+
 #[test]
 fn verify_alpha_schema_report_example_matches_cli_output() {
     let root = repo_root();
@@ -147,99 +195,7 @@ fn verify_alpha_schema_report_example_matches_cli_output() {
 
 #[test]
 fn verify_alpha_demo_reports_match_goldens() {
-    let root = repo_root();
-    let cases: [(&str, Vec<String>, PathBuf); 6] = [
-        (
-            "native-grounded",
-            vec![
-                "verify".to_string(),
-                root.join("schemas/examples/document.example.json")
-                    .display()
-                    .to_string(),
-                "--citations".to_string(),
-                root.join("examples/verify/native_grounded_citations.json")
-                    .display()
-                    .to_string(),
-            ],
-            root.join("examples/verify/goldens/native_grounded_report.json"),
-        ),
-        (
-            "opendataloader-grounded",
-            vec![
-                "verify".to_string(),
-                root.join("examples/verify/opendataloader.json")
-                    .display()
-                    .to_string(),
-                "--grounding".to_string(),
-                "opendataloader-json".to_string(),
-                "--citations".to_string(),
-                root.join("examples/verify/opendataloader_grounded_citations.json")
-                    .display()
-                    .to_string(),
-            ],
-            root.join("examples/verify/goldens/opendataloader_grounded_report.json"),
-        ),
-        (
-            "native-split-quote",
-            vec![
-                "verify".to_string(),
-                root.join("examples/verify/native_split_quote_document.json")
-                    .display()
-                    .to_string(),
-                "--citations".to_string(),
-                root.join("examples/verify/native_split_quote_citations.json")
-                    .display()
-                    .to_string(),
-            ],
-            root.join("examples/verify/goldens/native_split_quote_report.json"),
-        ),
-        (
-            "native-non-v1-claims",
-            vec![
-                "verify".to_string(),
-                root.join("schemas/examples/document.example.json")
-                    .display()
-                    .to_string(),
-                "--citations".to_string(),
-                root.join("examples/verify/native_non_v1_claims_citations.json")
-                    .display()
-                    .to_string(),
-            ],
-            root.join("examples/verify/goldens/native_non_v1_claims_report.json"),
-        ),
-        (
-            "native-stale",
-            vec![
-                "verify".to_string(),
-                root.join("schemas/examples/document.example.json")
-                    .display()
-                    .to_string(),
-                "--citations".to_string(),
-                root.join("examples/verify/native_stale_citations.json")
-                    .display()
-                    .to_string(),
-            ],
-            root.join("examples/verify/goldens/native_stale_report.json"),
-        ),
-        (
-            "opendataloader-capability-limited",
-            vec![
-                "verify".to_string(),
-                root.join("examples/verify/opendataloader_no_tables.json")
-                    .display()
-                    .to_string(),
-                "--grounding".to_string(),
-                "opendataloader-json".to_string(),
-                "--citations".to_string(),
-                root.join("examples/verify/opendataloader_table_cell_citations.json")
-                    .display()
-                    .to_string(),
-            ],
-            root.join("examples/verify/goldens/opendataloader_capability_limited_report.json"),
-        ),
-    ];
-
-    for (name, args, expected_path) in cases {
+    for (name, args, expected_path) in verify_alpha_report_cases() {
         let args = args.iter().map(String::as_str).collect::<Vec<_>>();
         let actual = parse_success(&args);
         let expected = json_file(expected_path);
