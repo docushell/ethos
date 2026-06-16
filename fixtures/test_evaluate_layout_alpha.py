@@ -39,10 +39,10 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         report = evaluate_layout_alpha(self.root)
 
         self.assertEqual(report["status"], "pass")
-        self.assertEqual(report["fixtures_evaluated"], 3)
+        self.assertEqual(report["fixtures_evaluated"], 4)
         self.assertEqual(
             report["element_type_counts"],
-            {"heading": 1, "list_item": 2, "text_block": 3},
+            {"heading": 1, "list_item": 2, "text_block": 4},
         )
         self.assertEqual(
             report["coverage"],
@@ -50,6 +50,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 "heading_fixture": ["heading-case"],
                 "list_item_fixture": ["list-case"],
                 "multi_column_reading_order_fixture": ["column-case"],
+                "rotation_fixture": ["rotation-case"],
             },
         )
         heading_check = next(
@@ -61,6 +62,10 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
             heading_check["export_goldens"],
             {"markdown": "pass", "text": "pass"},
         )
+        rotation_check = next(
+            check for check in report["checks"] if check["fixture_id"] == "rotation-case"
+        )
+        self.assertEqual(rotation_check["expected_rotation"], "pass")
         self.assertEqual(report["diagnostics"], [])
 
     def test_missing_expected_text_fails_closed(self) -> None:
@@ -196,6 +201,51 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         self.assertEqual(diagnostic["expected"], [])
         self.assertEqual(diagnostic["actual"], "w9999")
 
+    def test_rotation_subset_requires_expected_rotation(self) -> None:
+        self.write_required_alpha_fixture_set()
+        metadata_path = self.root / "synthetic/rotation-case/fixture.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata.pop("expected_rotation")
+        self.write_json(metadata_path, metadata)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        self.assertDiagnostic(report, "missing_expectation", "rotation-case")
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_rotation_expectation_rejects_non_integer_values(self) -> None:
+        self.write_required_alpha_fixture_set()
+        metadata_path = self.root / "synthetic/rotation-case/fixture.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["expected_rotation"] = False
+        self.write_json(metadata_path, metadata)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        self.assertDiagnostic(report, "invalid_expectation", "rotation-case")
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_rotation_expectation_matches_extraction_pages(self) -> None:
+        self.write_required_alpha_fixture_set()
+        extraction_path = self.root / "synthetic/rotation-case/extraction.json"
+        extraction = json.loads(extraction_path.read_text(encoding="utf-8"))
+        extraction["pages"][0]["rotation"] = 0
+        self.write_json(extraction_path, extraction)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        diagnostic = self.onlyDiagnostic(
+            report,
+            "expected_rotation_mismatch",
+            "rotation-case",
+        )
+        self.assertEqual(diagnostic["expected"], [90])
+        self.assertEqual(diagnostic["actual"], [0])
+        self.assertDiagnostic(report, "missing_coverage", None)
+
     def test_missing_layout_file_reports_missing_file(self) -> None:
         self.write_required_alpha_fixture_set()
         (self.root / "synthetic/list-case/layout.json").unlink()
@@ -292,6 +342,18 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                     {"id": "e000002", "type": "text_block", "text": "Right column"},
                 ],
             ),
+            self.write_fixture(
+                fixture_id="rotation-case",
+                fixture_path="synthetic/rotation-case/document.pdf",
+                subsets=["born_digital", "rotation"],
+                expected_text=["Rotate Ninety"],
+                expected_element_types=["text_block"],
+                elements=[
+                    {"id": "e000001", "type": "text_block", "text": "Rotate Ninety"},
+                ],
+                expected_rotation=90,
+                page_rotation=90,
+            ),
         ]
         self.write_json(
             self.root / "manifest.json",
@@ -303,6 +365,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                     "headings",
                     "lists",
                     "multi_column",
+                    "rotation",
                 ],
                 "fixtures": entries,
             },
@@ -318,17 +381,36 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         expected_element_types: list[str],
         elements: list[dict],
         warnings: list[dict] | None = None,
+        expected_rotation: int | None = None,
+        page_rotation: int = 0,
     ):
         fixture_dir = (self.root / fixture_path).parent
         fixture_dir.mkdir(parents=True, exist_ok=True)
+        metadata = {
+            "id": fixture_id,
+            "subsets": subsets,
+            "expected_text": expected_text,
+            "expected_element_types": expected_element_types,
+            "expected_elements": len(elements),
+        }
+        if expected_rotation is not None:
+            metadata["expected_rotation"] = expected_rotation
+        self.write_json(fixture_dir / "fixture.json", metadata)
         self.write_json(
-            fixture_dir / "fixture.json",
+            fixture_dir / "extraction.json",
             {
-                "id": fixture_id,
-                "subsets": subsets,
-                "expected_text": expected_text,
-                "expected_element_types": expected_element_types,
-                "expected_elements": len(elements),
+                "pages": [
+                    {
+                        "id": "p0001",
+                        "index": 1,
+                        "width": 30000,
+                        "height": 14400,
+                        "rotation": page_rotation,
+                    }
+                ],
+                "spans": [],
+                "regions": [],
+                "warnings": [],
             },
         )
         self.write_json(
