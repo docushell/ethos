@@ -11,6 +11,7 @@
       },
       "id": "v0001",
       "match_method": "none",
+      "reason": "stale_fingerprint",
       "semantic_unverified": false,
       "status": "stale",
       "warnings": []

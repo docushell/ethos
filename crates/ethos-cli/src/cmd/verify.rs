@@ -610,6 +610,41 @@ fn validate_citation_input(
                 idx + 1
             )));
         }
+        if claim.citation.table_id.is_some() != claim.citation.cell.is_some() {
+            return Err(Failure::Usage(format!(
+                "claim {} citation table_id and cell must be provided together",
+                idx + 1
+            )));
+        }
+        if claim.kind == ClaimKind::TableCell
+            && (claim.citation.table_id.is_none() || claim.citation.cell.is_none())
+        {
+            return Err(Failure::Usage(format!(
+                "claim {} table_cell citation must include table_id and cell",
+                idx + 1
+            )));
+        }
+        if claim.citation.bbox.is_some()
+            && claim.citation.page.is_none()
+            && claim.citation.element_id.is_none()
+            && claim.citation.span_id.is_none()
+            && claim.citation.table_id.is_none()
+        {
+            return Err(Failure::Usage(format!(
+                "claim {} citation bbox requires page unless another target locator is present",
+                idx + 1
+            )));
+        }
+        if claim
+            .citation
+            .bbox
+            .is_some_and(|bbox| bbox[0] >= bbox[2] || bbox[1] >= bbox[3])
+        {
+            return Err(Failure::Usage(format!(
+                "claim {} citation bbox must have positive area",
+                idx + 1
+            )));
+        }
         if matches!(
             claim.kind,
             ClaimKind::Quote | ClaimKind::Value | ClaimKind::TableCell
@@ -774,6 +809,7 @@ mod tests {
                         },
                     },
                     status: CheckStatus::Grounded,
+                    reason: None,
                     match_method: MatchMethod::ExactTextContains,
                     semantic_unverified: false,
                     evidence: Some(Evidence {
@@ -799,6 +835,7 @@ mod tests {
                         },
                     },
                     status: CheckStatus::Grounded,
+                    reason: None,
                     match_method: MatchMethod::PresenceOnly,
                     semantic_unverified: false,
                     evidence: Some(Evidence {

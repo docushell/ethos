@@ -214,6 +214,7 @@ fn real_opendataloader_ungrounded_fixture_verifies_against_golden() {
     assert_eq!(report["all_evidence_grounded"], false);
     assert_eq!(report["checks"][0]["status"], "mismatch");
     assert_eq!(report["checks"][0]["match_method"], "normalized_text");
+    assert_eq!(report["checks"][0]["reason"], "text_mismatch");
 
     let gated = run_ethos(&[
         "verify",
@@ -276,6 +277,7 @@ fn fail_on_ungrounded_exits_one_after_writing_stale_report() {
     assert_eq!(report["fingerprint_stale"], true);
     assert_eq!(report["all_evidence_grounded"], false);
     assert_eq!(report["checks"][0]["status"], "stale");
+    assert_eq!(report["checks"][0]["reason"], "stale_fingerprint");
 }
 
 #[test]
@@ -300,6 +302,7 @@ fn fail_on_ungrounded_exits_one_with_stdout_report_for_capability_blocked_source
     let report: Value = serde_json::from_slice(&output.stdout).expect("stdout is JSON");
     assert_eq!(report["all_evidence_grounded"], false);
     assert_eq!(report["checks"][0]["status"], "capability_blocked");
+    assert_eq!(report["checks"][0]["reason"], "missing_table_capability");
     assert!(report["capability_limits"]
         .as_array()
         .unwrap()
@@ -601,6 +604,7 @@ fn native_ethos_verify_produces_non_empty_checks() {
     assert_eq!(report["checks"][1]["status"], "grounded");
     assert_eq!(report["checks"][1]["match_method"], "table_cell_lookup");
     assert_eq!(report["checks"][2]["status"], "mismatch");
+    assert_eq!(report["checks"][2]["reason"], "text_mismatch");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 
@@ -649,6 +653,7 @@ fn opendataloader_verify_adapter_produces_capability_aware_report() {
     assert_eq!(report["checks"][1]["match_method"], "table_cell_lookup");
     assert_eq!(report["checks"][1]["evidence"]["text"], "$12.4M");
     assert_eq!(report["checks"][2]["status"], "mismatch");
+    assert_eq!(report["checks"][2]["reason"], "text_mismatch");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 
@@ -721,6 +726,7 @@ fn stale_fingerprint_is_report_level_failure() {
 
     assert_eq!(report["fingerprint_stale"], true);
     assert_eq!(report["checks"][0]["status"], "stale");
+    assert_eq!(report["checks"][0]["reason"], "stale_fingerprint");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 
@@ -806,6 +812,133 @@ fn invalid_citation_shape_is_usage_error() {
     assert!(output.stdout.is_empty());
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("claim 1 citation must contain at least one locator"));
+}
+
+#[test]
+fn incomplete_table_cell_locator_is_usage_error() {
+    let doc = document_example();
+    let cases = [
+        (
+            "table-id-without-cell",
+            r#"{
+              "claims": [
+                {
+                  "kind": "table_cell",
+                  "text": "$12.4M",
+                  "citation": {
+                    "table_id": "t0001"
+                  }
+                }
+              ]
+            }"#,
+            "claim 1 citation table_id and cell must be provided together",
+        ),
+        (
+            "cell-without-table-id",
+            r#"{
+              "claims": [
+                {
+                  "kind": "table_cell",
+                  "text": "$12.4M",
+                  "citation": {
+                    "cell": {
+                      "row": 1,
+                      "col": 1
+                    }
+                  }
+                }
+              ]
+            }"#,
+            "claim 1 citation table_id and cell must be provided together",
+        ),
+        (
+            "table-cell-kind-without-table-cell-locator",
+            r#"{
+              "claims": [
+                {
+                  "kind": "table_cell",
+                  "text": "$12.4M",
+                  "citation": {
+                    "element_id": "e000002"
+                  }
+                }
+              ]
+            }"#,
+            "claim 1 table_cell citation must include table_id and cell",
+        ),
+    ];
+
+    for (name, json, expected) in cases {
+        let citations = temp_json(name, json);
+        let output = run_ethos(&[
+            "verify",
+            doc.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+        ]);
+
+        assert_eq!(output.status.code(), Some(2), "case {name}");
+        assert!(output.stdout.is_empty(), "case {name}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(expected),
+            "case {name} stderr:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}
+
+#[test]
+fn unusable_bbox_locator_is_usage_error() {
+    let doc = document_example();
+    let cases = [
+        (
+            "bbox-without-page",
+            r#"{
+              "claims": [
+                {
+                  "kind": "presence",
+                  "citation": {
+                    "bbox": [7300, 10200, 8000, 11000]
+                  }
+                }
+              ]
+            }"#,
+            "claim 1 citation bbox requires page unless another target locator is present",
+        ),
+        (
+            "zero-width-bbox",
+            r#"{
+              "claims": [
+                {
+                  "kind": "presence",
+                  "citation": {
+                    "page": "p0001",
+                    "bbox": [7300, 10200, 7300, 11000]
+                  }
+                }
+              ]
+            }"#,
+            "claim 1 citation bbox must have positive area",
+        ),
+    ];
+
+    for (name, json, expected) in cases {
+        let citations = temp_json(name, json);
+        let output = run_ethos(&[
+            "verify",
+            doc.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+        ]);
+
+        assert_eq!(output.status.code(), Some(2), "case {name}");
+        assert!(output.stdout.is_empty(), "case {name}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(expected),
+            "case {name} stderr:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
 }
 
 #[test]
@@ -1301,6 +1434,7 @@ fn value_substrings_do_not_ground_against_native_ethos_text() {
 
     assert_eq!(report["checks"][0]["status"], "mismatch");
     assert_eq!(report["checks"][0]["match_method"], "normalized_text");
+    assert_eq!(report["checks"][0]["reason"], "text_mismatch");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 
@@ -1381,7 +1515,9 @@ fn table_cell_mismatch_and_missing_cell_fail_gate() {
 
     assert_eq!(report["checks"][0]["status"], "mismatch");
     assert_eq!(report["checks"][0]["match_method"], "table_cell_lookup");
+    assert_eq!(report["checks"][0]["reason"], "text_mismatch");
     assert_eq!(report["checks"][1]["status"], "not_found");
+    assert_eq!(report["checks"][1]["reason"], "table_cell_not_found");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 
@@ -1496,6 +1632,7 @@ fn table_cell_is_capability_blocked_when_tables_are_missing() {
     ]);
 
     assert_eq!(report["checks"][0]["status"], "capability_blocked");
+    assert_eq!(report["checks"][0]["reason"], "missing_table_capability");
     assert_eq!(report["grounding"]["capabilities"]["tables"], false);
     assert_eq!(
         report["capability_limits"],
@@ -1572,6 +1709,7 @@ fn empty_tables_are_not_found_when_table_capability_is_declared() {
         ])
     );
     assert_eq!(report["checks"][0]["status"], "not_found");
+    assert_eq!(report["checks"][0]["reason"], "table_not_found");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 
@@ -1612,6 +1750,7 @@ fn foreign_source_without_fingerprint_blocks_fingerprint_pinned_citations() {
         ])
     );
     assert_eq!(report["checks"][0]["status"], "capability_blocked");
+    assert_eq!(report["checks"][0]["reason"], "missing_source_fingerprint");
     assert_eq!(
         report["checks"][0]["warnings"],
         serde_json::json!(["capability_limited"])
@@ -1670,6 +1809,7 @@ fn config_excluded_value_claim_is_unsupported() {
     ]);
 
     assert_eq!(report["checks"][0]["status"], "unsupported_claim_kind");
+    assert_eq!(report["checks"][0]["reason"], "unsupported_claim_kind");
     assert_eq!(
         report["unsupported_claim_kinds"],
         serde_json::json!(["value"])
@@ -1768,6 +1908,7 @@ fn bbox_presence_is_capability_blocked_when_coordinate_origin_is_unknown() {
     ]);
 
     assert_eq!(report["checks"][0]["status"], "capability_blocked");
+    assert_eq!(report["checks"][0]["reason"], "unknown_coordinate_origin");
     assert_eq!(
         report["capability_limits"],
         serde_json::json!([

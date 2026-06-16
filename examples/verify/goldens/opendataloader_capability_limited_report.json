@@ -22,6 +22,7 @@
       },
       "id": "v0001",
       "match_method": "none",
+      "reason": "missing_table_capability",
       "semantic_unverified": false,
       "status": "capability_blocked",
       "warnings": [

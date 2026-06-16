@@ -24,8 +24,9 @@ use ethos_core::grounding::{
     GroundingTable, PageGeometry,
 };
 use ethos_core::verify_types::{
-    compute_all_evidence_grounded, CapabilityLimit, Check, CheckStatus, Claim, ClaimKind, Evidence,
-    GroundingMeta, MatchMethod, TextNormalization, VerificationConfig, VerificationReport,
+    compute_all_evidence_grounded, CapabilityLimit, Check, CheckReason, CheckStatus, Claim,
+    ClaimKind, Evidence, GroundingMeta, MatchMethod, TextNormalization, VerificationConfig,
+    VerificationReport,
 };
 use serde::{Deserialize, Serialize};
 
@@ -229,6 +230,7 @@ fn check_claim(
             id: check_id,
             claim,
             status: CheckStatus::Error,
+            reason: Some(CheckReason::MissingLocator),
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
@@ -242,6 +244,7 @@ fn check_claim(
             id: check_id,
             claim,
             status: CheckStatus::UnsupportedClaimKind,
+            reason: Some(CheckReason::UnsupportedClaimKind),
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
@@ -259,6 +262,7 @@ fn check_claim(
             id: check_id,
             claim,
             status: CheckStatus::Error,
+            reason: Some(CheckReason::MissingRequiredText),
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
@@ -271,6 +275,7 @@ fn check_claim(
             id: check_id,
             claim,
             status: CheckStatus::Stale,
+            reason: Some(CheckReason::StaleFingerprint),
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
@@ -284,6 +289,7 @@ fn check_claim(
             id: check_id,
             claim,
             status: CheckStatus::CapabilityBlocked,
+            reason: Some(CheckReason::MissingSourceFingerprint),
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
@@ -293,23 +299,37 @@ fn check_claim(
 
     let target = match resolve_target(index, &claim, config) {
         TargetResolution::Found(target) => target,
-        TargetResolution::NotFound => {
+        TargetResolution::NotFound(reason) => {
             return Check {
                 id: check_id,
                 claim,
                 status: CheckStatus::NotFound,
+                reason: Some(reason),
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
                 warnings,
             };
         }
-        TargetResolution::CapabilityBlocked => {
+        TargetResolution::Invalid(reason) => {
+            return Check {
+                id: check_id,
+                claim,
+                status: CheckStatus::Error,
+                reason: Some(reason),
+                match_method: MatchMethod::None,
+                semantic_unverified: false,
+                evidence: None,
+                warnings,
+            };
+        }
+        TargetResolution::CapabilityBlocked(reason) => {
             push_warning(&mut warnings, WarningCode::CapabilityLimited);
             return Check {
                 id: check_id,
                 claim,
                 status: CheckStatus::CapabilityBlocked,
+                reason: Some(reason),
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
@@ -319,12 +339,13 @@ fn check_claim(
     };
 
     let evidence = make_evidence(source, &target, context.include_text, context.include_crops);
-    let (status, match_method) =
+    let (status, match_method, reason) =
         check_resolved_claim(claim.kind, claim.text.as_deref(), &target, config);
     Check {
         id: check_id,
         claim,
         status,
+        reason,
         match_method,
         semantic_unverified: false,
         evidence,
@@ -337,7 +358,7 @@ fn check_resolved_claim(
     expected_text: Option<&str>,
     target: &FoundTarget,
     config: &VerificationConfig,
-) -> (CheckStatus, MatchMethod) {
+) -> (CheckStatus, MatchMethod, Option<CheckReason>) {
     match kind {
         ClaimKind::Presence => check_presence_claim(),
         ClaimKind::Quote | ClaimKind::Value | ClaimKind::TableCell => {
@@ -347,8 +368,8 @@ fn check_resolved_claim(
     }
 }
 
-fn check_presence_claim() -> (CheckStatus, MatchMethod) {
-    (CheckStatus::Grounded, MatchMethod::PresenceOnly)
+fn check_presence_claim() -> (CheckStatus, MatchMethod, Option<CheckReason>) {
+    (CheckStatus::Grounded, MatchMethod::PresenceOnly, None)
 }
 
 fn check_text_claim(
@@ -356,19 +377,19 @@ fn check_text_claim(
     expected_text: Option<&str>,
     target: &FoundTarget,
     config: &VerificationConfig,
-) -> (CheckStatus, MatchMethod) {
+) -> (CheckStatus, MatchMethod, Option<CheckReason>) {
     let match_method = if target.from_table_cell {
         MatchMethod::TableCellLookup
     } else {
         text_match_method(kind, config)
     };
-    let status = match (expected_text, target.text.as_deref()) {
+    let (status, reason) = match (expected_text, target.text.as_deref()) {
         (Some(expected), Some(actual)) if text_matches(kind, expected, actual, config) => {
-            CheckStatus::Grounded
+            (CheckStatus::Grounded, None)
         }
-        _ => CheckStatus::Mismatch,
+        _ => (CheckStatus::Mismatch, Some(CheckReason::TextMismatch)),
     };
-    (status, match_method)
+    (status, match_method, reason)
 }
 
 fn is_supported_kind(kind: ClaimKind) -> bool {
@@ -503,8 +524,9 @@ fn index_tables(tables: &[GroundingTable]) -> BTreeMap<String, usize> {
 
 enum TargetResolution {
     Found(FoundTarget),
-    NotFound,
-    CapabilityBlocked,
+    NotFound(CheckReason),
+    Invalid(CheckReason),
+    CapabilityBlocked(CheckReason),
 }
 
 fn resolve_target(
@@ -512,19 +534,22 @@ fn resolve_target(
     claim: &Claim,
     config: &VerificationConfig,
 ) -> TargetResolution {
-    if claim.kind == ClaimKind::TableCell || claim.citation.table_id.is_some() {
+    if claim.kind == ClaimKind::TableCell
+        || claim.citation.table_id.is_some()
+        || claim.citation.cell.is_some()
+    {
         return resolve_table_cell(index, claim);
     }
 
     if let Some(span_id) = claim.citation.span_id.as_deref() {
         if !index.capabilities.spans {
-            return TargetResolution::CapabilityBlocked;
+            return TargetResolution::CapabilityBlocked(CheckReason::MissingSpanCapability);
         }
         return index
             .span(span_id)
             .map(target_from_span)
             .map(TargetResolution::Found)
-            .unwrap_or(TargetResolution::NotFound);
+            .unwrap_or(TargetResolution::NotFound(CheckReason::SpanNotFound));
     }
 
     if let Some(element_id) = claim.citation.element_id.as_deref() {
@@ -532,12 +557,12 @@ fn resolve_target(
             .element(element_id)
             .map(target_from_element)
             .map(TargetResolution::Found)
-            .unwrap_or(TargetResolution::NotFound);
+            .unwrap_or(TargetResolution::NotFound(CheckReason::ElementNotFound));
     }
 
     if let (Some(page), Some(bbox)) = (claim.citation.page.as_deref(), claim.citation.bbox) {
         if index.capabilities.coordinate_origin == CoordinateOrigin::Unknown {
-            return TargetResolution::CapabilityBlocked;
+            return TargetResolution::CapabilityBlocked(CheckReason::UnknownCoordinateOrigin);
         }
         let tolerance = config.matching.bbox_containment_tolerance_q.unwrap_or(0);
         return index
@@ -546,7 +571,11 @@ fn resolve_target(
             .find(|element| element.page == page && contains_bbox(element.bbox, bbox, tolerance))
             .map(target_from_element)
             .map(TargetResolution::Found)
-            .unwrap_or(TargetResolution::NotFound);
+            .unwrap_or(TargetResolution::NotFound(CheckReason::BboxNotFound));
+    }
+
+    if claim.citation.bbox.is_some() {
+        return TargetResolution::Invalid(CheckReason::MissingPageForBbox);
     }
 
     if let Some(page) = claim.citation.page.as_deref() {
@@ -562,10 +591,10 @@ fn resolve_target(
                     from_table_cell: false,
                 })
             })
-            .unwrap_or(TargetResolution::NotFound);
+            .unwrap_or(TargetResolution::NotFound(CheckReason::PageNotFound));
     }
 
-    TargetResolution::NotFound
+    TargetResolution::NotFound(CheckReason::MissingLocator)
 }
 
 fn target_from_element(element: &GroundingElement) -> FoundTarget {
@@ -588,19 +617,20 @@ fn target_from_span(span: &GroundingSpan) -> FoundTarget {
 
 fn resolve_table_cell(index: &SourceIndex, claim: &Claim) -> TargetResolution {
     let Some(table_id) = claim.citation.table_id.as_deref() else {
-        return TargetResolution::NotFound;
+        return TargetResolution::Invalid(CheckReason::MissingTableCellLocator);
     };
     let Some(cell_ref) = claim.citation.cell else {
-        return TargetResolution::NotFound;
+        return TargetResolution::Invalid(CheckReason::MissingTableCellLocator);
     };
     if !index.capabilities.tables {
-        return TargetResolution::CapabilityBlocked;
+        return TargetResolution::CapabilityBlocked(CheckReason::MissingTableCapability);
     }
-    index
-        .table(table_id)
-        .and_then(|table| target_from_table_cell(table, cell_ref.row, cell_ref.col))
+    let Some(table) = index.table(table_id) else {
+        return TargetResolution::NotFound(CheckReason::TableNotFound);
+    };
+    target_from_table_cell(table, cell_ref.row, cell_ref.col)
         .map(TargetResolution::Found)
-        .unwrap_or(TargetResolution::NotFound)
+        .unwrap_or(TargetResolution::NotFound(CheckReason::TableCellNotFound))
 }
 
 fn target_from_table_cell(table: &GroundingTable, row: u32, col: u32) -> Option<FoundTarget> {
@@ -935,7 +965,9 @@ mod tests {
 
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
         assert_eq!(report.checks[1].status, CheckStatus::NotFound);
+        assert_eq!(report.checks[1].reason, Some(CheckReason::ElementNotFound));
     }
 
     #[test]
@@ -976,6 +1008,7 @@ mod tests {
 
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
         assert_eq!(report.checks[0].match_method, MatchMethod::NormalizedText);
     }
 
@@ -1026,6 +1059,10 @@ mod tests {
 
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::NotFound);
+        assert_eq!(
+            report.checks[0].reason,
+            Some(CheckReason::TableCellNotFound)
+        );
         assert_eq!(report.checks[0].match_method, MatchMethod::None);
     }
 
@@ -1121,6 +1158,10 @@ mod tests {
         );
 
         assert_eq!(report.checks[0].status, CheckStatus::CapabilityBlocked);
+        assert_eq!(
+            report.checks[0].reason,
+            Some(CheckReason::MissingTableCapability)
+        );
         assert_eq!(
             report.capability_limits,
             vec![CapabilityLimit::MissingTables]
@@ -1235,6 +1276,7 @@ mod tests {
         assert!(report.fingerprint_stale);
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::Stale);
+        assert_eq!(report.checks[0].reason, Some(CheckReason::StaleFingerprint));
     }
 
     #[test]
@@ -1254,6 +1296,10 @@ mod tests {
 
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::UnsupportedClaimKind);
+        assert_eq!(
+            report.checks[0].reason,
+            Some(CheckReason::UnsupportedClaimKind)
+        );
         assert_eq!(report.unsupported_claim_kinds, vec!["region"]);
     }
 
@@ -1285,6 +1331,10 @@ mod tests {
 
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::CapabilityBlocked);
+        assert_eq!(
+            report.checks[0].reason,
+            Some(CheckReason::MissingSpanCapability)
+        );
         assert_eq!(
             report.capability_limits,
             vec![
@@ -1336,6 +1386,10 @@ mod tests {
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::CapabilityBlocked);
         assert_eq!(
+            report.checks[0].reason,
+            Some(CheckReason::MissingSourceFingerprint)
+        );
+        assert_eq!(
             report.capability_limits,
             vec![CapabilityLimit::MissingFingerprint]
         );
@@ -1362,6 +1416,10 @@ mod tests {
 
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::Error);
+        assert_eq!(
+            report.checks[0].reason,
+            Some(CheckReason::MissingRequiredText)
+        );
         assert_eq!(report.checks[0].match_method, MatchMethod::None);
     }
 
