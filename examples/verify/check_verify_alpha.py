@@ -41,6 +41,12 @@ CASES = [
         "golden": "examples/verify/goldens/opendataloader_grounded_report.json",
     },
     {
+        "name": "native-split-quote",
+        "input": "examples/verify/native_split_quote_document.json",
+        "citations": "examples/verify/native_split_quote_citations.json",
+        "golden": "examples/verify/goldens/native_split_quote_report.json",
+    },
+    {
         "name": "native-ungrounded",
         "input": "schemas/examples/document.example.json",
         "citations": "examples/verify/native_ungrounded_citations.json",

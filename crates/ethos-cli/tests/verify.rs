@@ -148,7 +148,7 @@ fn verify_alpha_schema_report_example_matches_cli_output() {
 #[test]
 fn verify_alpha_demo_reports_match_goldens() {
     let root = repo_root();
-    let cases: [(&str, Vec<String>, PathBuf); 4] = [
+    let cases: [(&str, Vec<String>, PathBuf); 5] = [
         (
             "native-grounded",
             vec![
@@ -178,6 +178,20 @@ fn verify_alpha_demo_reports_match_goldens() {
                     .to_string(),
             ],
             root.join("examples/verify/goldens/opendataloader_grounded_report.json"),
+        ),
+        (
+            "native-split-quote",
+            vec![
+                "verify".to_string(),
+                root.join("examples/verify/native_split_quote_document.json")
+                    .display()
+                    .to_string(),
+                "--citations".to_string(),
+                root.join("examples/verify/native_split_quote_citations.json")
+                    .display()
+                    .to_string(),
+            ],
+            root.join("examples/verify/goldens/native_split_quote_report.json"),
         ),
         (
             "native-stale",

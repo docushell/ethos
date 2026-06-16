@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0.0",
+  "parser": {
+    "name": "ethos",
+    "version": "0.1.0"
+  },
+  "profile": {
+    "id": "ethos-deterministic-v1",
+    "sha256": "d6145b9210845db39ad592ea549788432b52a649778c9947f5b2d91173e38070"
+  },
+  "source": {
+    "fingerprint": "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+    "bytes": 48213
+  },
+  "config_sha256": "68cc61753d299917cc7773f069c18aca31c8ac68f43736a94cb57eee05144084",
+  "payload_sha256": "5eac07f431356ca1a1697cd971fdc3bc1f1404068c65a70e3e052e8f2abc8846",
+  "fingerprint": "sha256:abe9f7f8984c31ea2dc26f2e4a231330c7cd7caaa773210eb4ee0a4cc41e707d",
+  "payload": {
+    "coordinate_system": {
+      "origin": "top-left",
+      "unit": "quantum",
+      "quantum_per_point": 100
+    },
+    "pages": [
+      {
+        "id": "p0001",
+        "index": 1,
+        "width": 61200,
+        "height": 79200,
+        "rotation": 0
+      }
+    ],
+    "elements": [
+      {
+        "id": "e000010",
+        "type": "text_block",
+        "page": "p0001",
+        "bbox": [
+          7200,
+          10100,
+          30600,
+          11500
+        ],
+        "text": "The alpha trust loop verifies"
+      },
+      {
+        "id": "e000011",
+        "type": "text_block",
+        "page": "p0001",
+        "bbox": [
+          30600,
+          10100,
+          54000,
+          11500
+        ],
+        "text": "grounded evidence"
+      }
+    ],
+    "spans": [],
+    "tables": [],
+    "chunks": [
+      {
+        "id": "c000010",
+        "text": "The alpha trust loop verifies grounded evidence",
+        "element_refs": [
+          "e000010",
+          "e000011"
+        ],
+        "page_refs": [
+          "p0001"
+        ],
+        "bboxes": [
+          {
+            "page": "p0001",
+            "bbox": [
+              7200,
+              10100,
+              30600,
+              11500
+            ]
+          },
+          {
+            "page": "p0001",
+            "bbox": [
+              30600,
+              10100,
+              54000,
+              11500
+            ]
+          }
+        ],
+        "token_estimate": {
+          "count": 7,
+          "estimator": "ethos-ws-heuristic@1",
+          "approximate": true
+        }
+      }
+    ],
+    "regions": [],
+    "security_warnings": [],
+    "parser_warnings": []
+  },
+  "diagnostics": {
+    "parse_ms": 14,
+    "peak_rss_bytes": 28311552,
+    "host": "example \u2014 excluded from canonical equality",
+    "source_path": "/tmp/q3-summary.pdf"
+  }
+}

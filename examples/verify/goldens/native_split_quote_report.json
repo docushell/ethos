@@ -1,0 +1,50 @@
+{
+  "all_evidence_grounded": true,
+  "capability_limits": [],
+  "checks": [
+    {
+      "claim": {
+        "citation": {
+          "element_id": "e000011"
+        },
+        "kind": "quote",
+        "text": "The alpha trust loop verifies grounded evidence"
+      },
+      "evidence": {
+        "bbox": [
+          7200,
+          10100,
+          54000,
+          11500
+        ],
+        "page": "p0001",
+        "text": "The alpha trust loop verifies grounded evidence"
+      },
+      "id": "v0001",
+      "match_method": "normalized_text_contains",
+      "semantic_unverified": false,
+      "status": "grounded",
+      "warnings": []
+    }
+  ],
+  "document_fingerprint": "sha256:abe9f7f8984c31ea2dc26f2e4a231330c7cd7caaa773210eb4ee0a4cc41e707d",
+  "fingerprint_stale": false,
+  "grounding": {
+    "capabilities": {
+      "char_offsets": true,
+      "coordinate_origin": "top-left",
+      "crop_support": false,
+      "fingerprint": true,
+      "spans": true,
+      "tables": true
+    },
+    "parser": {
+      "name": "ethos",
+      "version": "0.1.0"
+    }
+  },
+  "schema_version": "1.0.0",
+  "unsupported_claim_kinds": [],
+  "verification_config_sha256": "4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0",
+  "warnings": []
+}
