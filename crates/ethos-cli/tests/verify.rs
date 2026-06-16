@@ -19,6 +19,7 @@ use std::process::{Command, Output};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ethos_core::fingerprint::source_fingerprint;
+use ethos_core::model::Document;
 use serde_json::Value;
 
 fn ethos_bin() -> &'static str {
@@ -70,6 +71,46 @@ fn temp_output(name: &str) -> PathBuf {
 fn json_file(path: impl AsRef<Path>) -> Value {
     let bytes = std::fs::read(path).expect("JSON fixture is readable");
     serde_json::from_slice(&bytes).expect("JSON fixture parses")
+}
+
+fn temp_split_quote_document() -> (PathBuf, String) {
+    let mut doc = json_file(document_example());
+    doc["payload"]["elements"] = serde_json::json!([
+        {
+            "id": "split-a",
+            "type": "text_block",
+            "page": "p0001",
+            "bbox": [100, 100, 400, 200],
+            "text": "The alpha trust loop verifies "
+        },
+        {
+            "id": "split-b",
+            "type": "text_block",
+            "page": "p0001",
+            "bbox": [400, 100, 700, 200],
+            "text": "grounded evidence"
+        }
+    ]);
+    doc["payload"]["spans"] = serde_json::json!([]);
+    doc["payload"]["tables"] = serde_json::json!([]);
+    doc["payload"]["chunks"] = serde_json::json!([]);
+    doc["payload"]["regions"] = serde_json::json!([]);
+    doc["payload"]["security_warnings"] = serde_json::json!([]);
+    doc["payload"]["parser_warnings"] = serde_json::json!([]);
+
+    let mut doc: Document = serde_json::from_value(doc).expect("split quote document parses");
+    doc.payload_sha256 = doc
+        .compute_payload_sha256()
+        .expect("split quote payload hash computes");
+    doc.fingerprint = doc
+        .compute_fingerprint()
+        .expect("split quote document fingerprint computes");
+    let fingerprint = doc.fingerprint.clone();
+    let path = temp_json(
+        "split-quote-native-document",
+        &serde_json::to_string(&doc).expect("split quote document serializes"),
+    );
+    (path, fingerprint)
 }
 
 fn pdfium_configured() -> bool {
@@ -696,6 +737,48 @@ fn native_ethos_verify_produces_non_empty_checks() {
 }
 
 #[test]
+fn native_verify_grounds_split_quote_across_adjacent_elements() {
+    let (doc, fingerprint) = temp_split_quote_document();
+    let citations = serde_json::json!({
+        "document_fingerprint": fingerprint,
+        "claims": [
+            {
+                "kind": "quote",
+                "text": "The alpha trust loop verifies grounded evidence",
+                "citation": {
+                    "element_id": "split-b"
+                }
+            }
+        ]
+    });
+    let citations = temp_json(
+        "split-quote-citations",
+        &serde_json::to_string(&citations).unwrap(),
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["all_evidence_grounded"], true);
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(
+        report["checks"][0]["match_method"],
+        "normalized_text_contains"
+    );
+    assert_eq!(
+        report["checks"][0]["evidence"]["text"],
+        "The alpha trust loop verifies grounded evidence"
+    );
+    assert_eq!(
+        report["checks"][0]["evidence"]["bbox"],
+        serde_json::json!([100, 100, 700, 200])
+    );
+}
+
+#[test]
 fn opendataloader_verify_adapter_produces_capability_aware_report() {
     let grounding = odl_example();
     let root = repo_root();
@@ -1137,8 +1220,44 @@ fn bare_array_citation_input_works() {
     ]);
 
     assert_eq!(report["checks"].as_array().unwrap().len(), 1);
-    assert_eq!(report["checks"][0]["status"], "grounded");
-    assert_eq!(report["all_evidence_grounded"], true);
+    assert_eq!(report["checks"][0]["status"], "stale");
+    assert_eq!(
+        report["checks"][0]["reason"],
+        "missing_citation_fingerprint"
+    );
+    assert_eq!(report["all_evidence_grounded"], false);
+}
+
+#[test]
+fn envelope_without_fingerprint_blocks_when_source_has_fingerprint() {
+    let doc = document_example();
+    let citations = temp_json(
+        "no-fingerprint-envelope-citations",
+        r#"{
+          "claims": [
+            {
+              "kind": "presence",
+              "citation": {
+                "element_id": "e000002"
+              }
+            }
+          ]
+        }"#,
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["checks"].as_array().unwrap().len(), 1);
+    assert_eq!(report["checks"][0]["status"], "stale");
+    assert_eq!(
+        report["checks"][0]["reason"],
+        "missing_citation_fingerprint"
+    );
+    assert_eq!(report["all_evidence_grounded"], false);
 }
 
 #[test]

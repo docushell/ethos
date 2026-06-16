@@ -164,6 +164,7 @@
         "unsupported_claim_kind",
         "stale_fingerprint",
         "missing_source_fingerprint",
+        "missing_citation_fingerprint",
         "missing_span_capability",
         "missing_table_capability",
         "unknown_coordinate_origin",

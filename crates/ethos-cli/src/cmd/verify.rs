@@ -257,6 +257,7 @@ fn check_reason_label(reason: CheckReason) -> &'static str {
         CheckReason::UnsupportedClaimKind => "unsupported_claim_kind",
         CheckReason::StaleFingerprint => "stale_fingerprint",
         CheckReason::MissingSourceFingerprint => "missing_source_fingerprint",
+        CheckReason::MissingCitationFingerprint => "missing_citation_fingerprint",
         CheckReason::MissingSpanCapability => "missing_span_capability",
         CheckReason::MissingTableCapability => "missing_table_capability",
         CheckReason::UnknownCoordinateOrigin => "unknown_coordinate_origin",

@@ -23,6 +23,8 @@ Ethos verifies document evidence for AI systems. The deterministic parser is one
 source; foreign parser output can be another grounding source through an adapter.
 
 This demo uses small checked-in fixtures so the behavior is deterministic and easy to audit.
+Native table-cell grounding in this demo uses authored table data in the checked-in Ethos JSON;
+fresh native parse output does not yet emit table structures into verification input.
 
 ## Native Ethos JSON
 
