@@ -337,7 +337,13 @@ fn summary_format_reports_reason_before_fail_on_ungrounded_exit() {
     );
     let summary = String::from_utf8(output.stdout).expect("summary output is UTF-8");
     assert!(summary.contains("ethos verify summary\n"));
+    assert!(summary.contains(
+        "verification_config_sha256: 4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0\n"
+    ));
     assert!(summary.contains("all_evidence_grounded: false\n"));
+    assert!(summary.contains(
+        "grounding_capabilities: spans=false,char_offsets=false,tables=false,fingerprint=false,coordinate_origin=unknown,crop_support=false\n"
+    ));
     assert!(summary.contains("checks_capability_blocked: 1\n"));
     assert!(summary.contains("capability_limits: missing_fingerprint,missing_spans,missing_char_offsets,missing_tables,unknown_coordinate_origin\n"));
     assert!(summary.contains("- v0001 status=capability_blocked reason=missing_table_capability kind=table_cell locator=table_id:odl-t1;cell:1,1 match_method=none\n"));
@@ -362,7 +368,13 @@ fn summary_format_reports_no_non_grounded_checks_for_grounded_input() {
     assert_eq!(output.status.code(), Some(0));
     assert_eq!(output.stderr, b"");
     let summary = String::from_utf8(output.stdout).expect("summary output is UTF-8");
+    assert!(summary.contains(
+        "verification_config_sha256: 4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0\n"
+    ));
     assert!(summary.contains("all_evidence_grounded: true\n"));
+    assert!(summary.contains(
+        "grounding_capabilities: spans=true,char_offsets=true,tables=true,fingerprint=true,coordinate_origin=top-left,crop_support=false\n"
+    ));
     assert!(summary.contains("checks_grounded: 3\n"));
     assert!(summary.contains("capability_limits: none\n"));
     assert!(summary.contains("warnings: none\n"));

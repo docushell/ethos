@@ -22,6 +22,9 @@ ethos verify schemas/examples/document.example.json \
   --format summary
 ```
 
+The summary includes the verification config hash, declared grounding capabilities, check counts,
+report warnings, and non-grounded check reasons.
+
 ## Native Ethos Ungrounded Citations
 
 ```bash

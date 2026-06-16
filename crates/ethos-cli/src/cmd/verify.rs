@@ -6,8 +6,8 @@ use ethos_core::error::EthosError;
 use ethos_core::fingerprint::{is_fingerprint_form, source_fingerprint};
 use ethos_core::geom::QRect;
 use ethos_core::grounding::{
-    Capabilities, GroundingElement, GroundingSource, GroundingSpan, GroundingTable, PageGeometry,
-    ParserIdentity,
+    Capabilities, CoordinateOrigin, GroundingElement, GroundingSource, GroundingSpan,
+    GroundingTable, PageGeometry, ParserIdentity,
 };
 use ethos_core::model::Document;
 use ethos_core::verify_types::{
@@ -134,6 +134,10 @@ fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<
     out.push_str("ethos verify summary\n");
     out.push_str(&format!("schema_version: {}\n", report.schema_version));
     out.push_str(&format!(
+        "verification_config_sha256: {}\n",
+        report.verification_config_sha256
+    ));
+    out.push_str(&format!(
         "all_evidence_grounded: {}\n",
         report.all_evidence_grounded
     ));
@@ -154,6 +158,10 @@ fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<
     if let Some(adapter_version) = report.grounding.parser.adapter_version.as_deref() {
         out.push_str(&format!("grounding_adapter_version: {adapter_version}\n"));
     }
+    out.push_str(&format!(
+        "grounding_capabilities: {}\n",
+        grounding_capabilities_label(report.grounding.capabilities)
+    ));
     out.push_str(&format!("checks_total: {}\n", report.checks.len()));
     for status in [
         CheckStatus::Grounded,
@@ -256,6 +264,26 @@ fn capability_limit_label(limit: CapabilityLimit) -> &'static str {
         CapabilityLimit::MissingFingerprint => "missing_fingerprint",
         CapabilityLimit::UnknownCoordinateOrigin => "unknown_coordinate_origin",
         CapabilityLimit::MissingCropSupport => "missing_crop_support",
+    }
+}
+
+fn grounding_capabilities_label(capabilities: Capabilities) -> String {
+    format!(
+        "spans={},char_offsets={},tables={},fingerprint={},coordinate_origin={},crop_support={}",
+        capabilities.spans,
+        capabilities.char_offsets,
+        capabilities.tables,
+        capabilities.fingerprint,
+        coordinate_origin_label(capabilities.coordinate_origin),
+        capabilities.crop_support
+    )
+}
+
+fn coordinate_origin_label(origin: CoordinateOrigin) -> &'static str {
+    match origin {
+        CoordinateOrigin::TopLeft => "top-left",
+        CoordinateOrigin::BottomLeft => "bottom-left",
+        CoordinateOrigin::Unknown => "unknown",
     }
 }
 
