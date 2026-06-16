@@ -11,5 +11,6 @@
     "PDFium char-box quantization",
     "canonical document assembly"
   ],
-  "expected_text": "Hello Ethos"
+  "expected_text": "Hello Ethos",
+  "expected_element_types": ["text_block"]
 }

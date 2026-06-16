@@ -24,6 +24,7 @@
   ],
   "expected_pages": 1,
   "expected_elements": 2,
+  "expected_element_types": ["text_block", "text_block"],
   "exercises": [
     "two-column born-digital text extraction",
     "geometry-based column ordering",

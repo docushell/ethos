@@ -43,6 +43,7 @@ expectations to those committed goldens:
 - `expected_pages`: exact `extraction.json` page count.
 - `expected_span_text`: exact `extraction.json` span text order.
 - `expected_elements`: exact `layout.json` element count.
+- `expected_element_types`: exact `layout.json` element type order.
 - `expected_text`: exact `layout.json` element text order. Use a string for a single
   layout element and a string array when reading order spans multiple elements.
 

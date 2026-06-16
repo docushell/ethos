@@ -11,5 +11,6 @@
     "Type1 base font text spans"
   ],
   "expected_text": "Rotate Ninety",
-  "expected_rotation": 90
+  "expected_rotation": 90,
+  "expected_element_types": ["text_block"]
 }

@@ -10,5 +10,6 @@
   "pages": 1,
   "expected_text": "First line Second line",
   "expected_pages": 1,
-  "expected_elements": 1
+  "expected_elements": 1,
+  "expected_element_types": ["text_block"]
 }

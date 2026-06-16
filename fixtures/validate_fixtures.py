@@ -278,6 +278,21 @@ def validate_expected_text(metadata, layout, ctx: str) -> None:
         fail(f"{ctx} expected_text must be a string or string array")
 
 
+def validate_expected_element_types(metadata, layout, ctx: str) -> None:
+    if "expected_element_types" not in metadata:
+        return
+    expected = metadata["expected_element_types"]
+    if not isinstance(expected, list) or not all(isinstance(item, str) for item in expected):
+        fail(f"{ctx} expected_element_types must be a string array")
+        return
+    elements = layout.get("elements") if isinstance(layout, dict) else None
+    if not isinstance(elements, list):
+        return
+    actual = [element.get("type") for element in elements]
+    if actual != expected:
+        fail(f"{ctx} expected_element_types must match layout element type order")
+
+
 def validate_expected_span_text(metadata, extraction, ctx: str) -> None:
     if "expected_span_text" not in metadata:
         return
@@ -309,6 +324,7 @@ def validate_stage_expectations(metadata_path: Path, metadata, extraction, layou
             f"{ctx} expected_elements",
         )
         validate_expected_text(metadata, layout, ctx)
+        validate_expected_element_types(metadata, layout, ctx)
 
 
 manifest = load_json(MANIFEST)
