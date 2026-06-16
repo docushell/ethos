@@ -1009,9 +1009,10 @@ fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failu
     }
     let mut seen = HashSet::new();
     for kind in &config.claim_kinds {
-        if *kind == ClaimKind::Other {
+        if matches!(kind, ClaimKind::Region | ClaimKind::Other) {
             return Err(Failure::Usage(
-                "verification config claim_kinds must not include other".to_string(),
+                "verification config claim_kinds must include only quote, value, presence, and table_cell"
+                    .to_string(),
             ));
         }
         if !seen.insert(*kind) {

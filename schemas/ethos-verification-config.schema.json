@@ -11,8 +11,8 @@
     "config_version": { "type": "string", "description": "User-facing label for this config (e.g. 'default-v1')." },
     "claim_kinds": {
       "type": "array",
-      "description": "Claim kinds this run supports; kinds in the input but not here are reported under unsupported_claim_kinds.",
-      "items": { "enum": ["quote", "value", "presence", "table_cell", "region"] },
+      "description": "Claim kinds this run supports. Configs accept only the four v1 literal kinds: quote, value, presence, and table_cell. Non-v1 citation kinds are reported under unsupported_claim_kinds rather than enabled here.",
+      "items": { "enum": ["quote", "value", "presence", "table_cell"] },
       "minItems": 1,
       "uniqueItems": true
     },

@@ -1,0 +1,24 @@
+{
+  "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "claims": [
+    {
+      "kind": "presence",
+      "citation": {
+        "page": "p0001"
+      }
+    },
+    {
+      "kind": "region",
+      "citation": {
+        "element_id": "e000002"
+      }
+    },
+    {
+      "kind": "other",
+      "text": "$12.4M equals 12400000",
+      "citation": {
+        "element_id": "e000002"
+      }
+    }
+  ]
+}
