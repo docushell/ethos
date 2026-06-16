@@ -12,7 +12,7 @@ VERIFY_RENDERED_CROPS_OUT ?= $(ROOT)/target/verify-rendered-crops
 COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 
-.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops python-surface-test release-hygiene release-advisory third-party-license-manifest release-notice-draft
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -39,6 +39,9 @@ verify-rendered-crops: $(ETHOS_BIN)
 
 compare-rendered-crops:
 	$(PYTHON) examples/verify/compare_rendered_crop_runs.py --left-run $(COMPARE_RENDERED_CROPS_LEFT) --right-run $(COMPARE_RENDERED_CROPS_RIGHT)
+
+python-surface-test:
+	PYTHONPATH=$(ROOT)/python $(PYTHON) -m unittest discover -s python/tests
 
 release-hygiene:
 	cargo metadata --locked --offline --format-version 1 --no-deps >/dev/null
