@@ -81,6 +81,40 @@ USAGE_ERROR_CASES = [
     },
 ]
 
+SUMMARY_CASES = [
+    {
+        "name": "native-ungrounded-summary",
+        "input": "schemas/examples/document.example.json",
+        "citations": "examples/verify/native_ungrounded_citations.json",
+        "expected_exit": 1,
+        "fail_on_ungrounded": True,
+        "stdout_contains": [
+            "ethos verify summary\n",
+            (
+                "verification_config_sha256: "
+                "4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0\n"
+            ),
+            "all_evidence_grounded: false\n",
+            (
+                "grounding_capabilities: "
+                "spans=true,char_offsets=true,tables=true,fingerprint=true,"
+                "coordinate_origin=top-left,crop_support=false\n"
+            ),
+            "checks_not_found: 1\n",
+            "checks_mismatch: 1\n",
+            (
+                "- v0001 status=mismatch reason=text_mismatch kind=quote "
+                "locator=page:p0001;element_id:e000002 "
+                "match_method=normalized_text_contains\n"
+            ),
+            (
+                "- v0002 status=not_found reason=element_not_found kind=presence "
+                "locator=element_id:missing-element match_method=none\n"
+            ),
+        ],
+    },
+]
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -146,7 +180,9 @@ def compare_json(actual_path, expected_path, repo_root, name):
 
 def list_crop_descriptors(crop_dir):
     return sorted(
-        path for path in crop_dir.iterdir() if path.name.startswith("crop-") and path.suffix == ".json"
+        path
+        for path in crop_dir.iterdir()
+        if path.name.startswith("crop-") and path.suffix == ".json"
     )
 
 
@@ -313,6 +349,48 @@ def verify_usage_error_case(case, args):
     print(f"ok    {case['name']} exits 2 with expected usage diagnostic")
 
 
+def verify_summary_case(case, args):
+    command = [
+        str(args.ethos_bin),
+        "verify",
+        str(args.repo_root / case["input"]),
+        "--citations",
+        str(args.repo_root / case["citations"]),
+        "--format",
+        "summary",
+    ]
+    if "grounding" in case:
+        command.extend(["--grounding", case["grounding"]])
+    if case.get("fail_on_ungrounded", False):
+        command.append("--fail-on-ungrounded")
+
+    print("$ " + " ".join(str(part) for part in command), flush=True)
+    result = subprocess.run(command, cwd=args.repo_root, capture_output=True, check=False)
+    expected_exit = case["expected_exit"]
+    if result.returncode != expected_exit:
+        sys.stderr.write(
+            f"{case['name']} exited {result.returncode}, expected {expected_exit}\n"
+        )
+        sys.stderr.write(result.stderr.decode("utf-8", errors="replace"))
+        sys.stderr.write(result.stdout.decode("utf-8", errors="replace"))
+        raise SystemExit(1)
+    if result.stderr:
+        raise SystemExit(f"{case['name']} wrote unexpected stderr")
+    stdout = result.stdout.decode("utf-8", errors="replace")
+    try:
+        json.loads(stdout)
+    except json.JSONDecodeError:
+        pass
+    else:
+        raise SystemExit(f"{case['name']} summary output unexpectedly parsed as JSON")
+    for expected in case["stdout_contains"]:
+        if expected not in stdout:
+            raise SystemExit(
+                f"{case['name']} stdout did not contain {expected!r}\n{stdout}"
+            )
+    print(f"ok    {case['name']} summary includes expected diagnostics")
+
+
 def main():
     args = parse_args()
     args.repo_root = args.repo_root.resolve()
@@ -328,6 +406,8 @@ def main():
         verify_case(case, args)
     for case in USAGE_ERROR_CASES:
         verify_usage_error_case(case, args)
+    for case in SUMMARY_CASES:
+        verify_summary_case(case, args)
     verify_crop_descriptor_case(args)
 
     print("\nverify-alpha demo checks passed")

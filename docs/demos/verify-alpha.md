@@ -46,6 +46,7 @@ examples/verify/goldens/native_grounded_report.json
 For terminal review, `--format summary` emits a compact text view with the verification config
 hash, declared grounding capabilities, check counts, warnings, and non-grounded check reasons.
 The JSON report remains the canonical artifact.
+`make verify-alpha` checks this summary path for a native ungrounded citation set.
 
 ## Native Ethos Ungrounded Citations
 
