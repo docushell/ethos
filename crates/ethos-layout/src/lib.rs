@@ -69,16 +69,14 @@ impl LayoutEngine for BasicLayoutEngine {
             let heading_sizes = heading_size_levels(&columns, body_font_size_q);
 
             for column in columns {
-                layout_column_lines(
-                    column.lines,
-                    body_font_size_q,
-                    &heading_sizes,
-                    &page.id,
-                    &mut next_element,
-                    &mut next_warning,
-                    &mut elements,
-                    &mut warnings,
-                )?;
+                let mut sink = LayoutColumnSink {
+                    page_id: &page.id,
+                    next_element: &mut next_element,
+                    next_warning: &mut next_warning,
+                    elements: &mut elements,
+                    warnings: &mut warnings,
+                };
+                layout_column_lines(column.lines, body_font_size_q, &heading_sizes, &mut sink)?;
             }
         }
 
@@ -108,6 +106,14 @@ struct Column<'a> {
 struct Paragraph<'a> {
     lines: Vec<Line<'a>>,
     bbox: QRect,
+}
+
+struct LayoutColumnSink<'a> {
+    page_id: &'a str,
+    next_element: &'a mut u32,
+    next_warning: &'a mut u32,
+    elements: &'a mut Vec<Element>,
+    warnings: &'a mut Vec<Warning>,
 }
 
 #[derive(Clone, Copy)]
@@ -273,11 +279,7 @@ fn layout_column_lines<'a>(
     mut lines: Vec<Line<'a>>,
     body_font_size_q: Option<i64>,
     heading_sizes: &[i64],
-    page_id: &str,
-    next_element: &mut u32,
-    next_warning: &mut u32,
-    elements: &mut Vec<Element>,
-    warnings: &mut Vec<Warning>,
+    sink: &mut LayoutColumnSink<'_>,
 ) -> Result<(), EthosError> {
     lines.sort_by(line_order);
     let mut text_lines = Vec::new();
@@ -285,19 +287,19 @@ fn layout_column_lines<'a>(
 
     while let Some(line) = line_iter.next() {
         if is_list_item_line(&line) {
-            flush_text_lines(&mut text_lines, page_id, next_element, elements)?;
+            flush_text_lines(&mut text_lines, sink)?;
             let list_item_spans = line_spans(&line);
-            elements.push(build_element(
-                *next_element,
-                page_id,
+            sink.elements.push(build_element(
+                *sink.next_element,
+                sink.page_id,
                 &list_item_spans,
                 ElementType::ListItem,
                 None,
                 None,
             )?);
-            *next_element += 1;
+            *sink.next_element += 1;
         } else if let Some(signal) = heading_signal(&line, body_font_size_q) {
-            flush_text_lines(&mut text_lines, page_id, next_element, elements)?;
+            flush_text_lines(&mut text_lines, sink)?;
             let level = heading_level(signal.size_q, heading_sizes);
             let mut confidence = signal.confidence;
             let mut heading_lines = vec![line];
@@ -323,44 +325,42 @@ fn layout_column_lines<'a>(
             }
             let heading_spans = lines_spans(&heading_lines);
             let mut element = build_element(
-                *next_element,
-                page_id,
+                *sink.next_element,
+                sink.page_id,
                 &heading_spans,
                 ElementType::Heading,
                 Some(level),
                 Some(confidence),
             )?;
-            apply_confidence_policy(&mut element, next_warning, warnings)?;
-            elements.push(element);
-            *next_element += 1;
+            apply_confidence_policy(&mut element, sink.next_warning, sink.warnings)?;
+            sink.elements.push(element);
+            *sink.next_element += 1;
         } else {
             text_lines.push(line);
         }
     }
 
-    flush_text_lines(&mut text_lines, page_id, next_element, elements)
+    flush_text_lines(&mut text_lines, sink)
 }
 
 fn flush_text_lines<'a>(
     text_lines: &mut Vec<Line<'a>>,
-    page_id: &str,
-    next_element: &mut u32,
-    elements: &mut Vec<Element>,
+    sink: &mut LayoutColumnSink<'_>,
 ) -> Result<(), EthosError> {
     if text_lines.is_empty() {
         return Ok(());
     }
     for paragraph in group_paragraphs(std::mem::take(text_lines)) {
         let paragraph_spans = paragraph_spans(&paragraph);
-        elements.push(build_element(
-            *next_element,
-            page_id,
+        sink.elements.push(build_element(
+            *sink.next_element,
+            sink.page_id,
             &paragraph_spans,
             ElementType::TextBlock,
             None,
             None,
         )?);
-        *next_element += 1;
+        *sink.next_element += 1;
     }
     Ok(())
 }
