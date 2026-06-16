@@ -12,6 +12,8 @@
     "control-character-free element/span text"
   ],
   "expected_text": "office file",
+  "expected_pages": 1,
+  "expected_span_text": ["office", "file"],
   "expected_font_id": "embedded:EthosLigatureFixture-Regular",
   "expected_spans": [
     { "text": "office", "char_start": 0, "char_end": 6 },

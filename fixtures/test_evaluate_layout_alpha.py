@@ -39,15 +39,17 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         report = evaluate_layout_alpha(self.root)
 
         self.assertEqual(report["status"], "pass")
-        self.assertEqual(report["fixtures_evaluated"], 4)
+        self.assertEqual(report["fixtures_evaluated"], 6)
         self.assertEqual(
             report["element_type_counts"],
-            {"heading": 1, "list_item": 2, "text_block": 4},
+            {"heading": 1, "list_item": 2, "text_block": 6},
         )
         self.assertEqual(
             report["coverage"],
             {
                 "heading_fixture": ["heading-case"],
+                "hyphenation_fixture": ["hyphen-case"],
+                "ligature_fixture": ["ligature-case"],
                 "list_item_fixture": ["list-case"],
                 "multi_column_reading_order_fixture": ["column-case"],
                 "rotation_fixture": ["rotation-case"],
@@ -56,12 +58,24 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         heading_check = next(
             check for check in report["checks"] if check["fixture_id"] == "heading-case"
         )
+        self.assertEqual(heading_check["expected_pages"], "not_declared")
+        self.assertEqual(heading_check["expected_span_text"], "not_declared")
         self.assertEqual(heading_check["confidence_policy"], "pass")
         self.assertEqual(heading_check["warning_shape"], "pass")
         self.assertEqual(
             heading_check["export_goldens"],
             {"markdown": "pass", "text": "pass"},
         )
+        hyphen_check = next(
+            check for check in report["checks"] if check["fixture_id"] == "hyphen-case"
+        )
+        self.assertEqual(hyphen_check["expected_pages"], "pass")
+        self.assertEqual(hyphen_check["expected_span_text"], "pass")
+        ligature_check = next(
+            check for check in report["checks"] if check["fixture_id"] == "ligature-case"
+        )
+        self.assertEqual(ligature_check["expected_pages"], "pass")
+        self.assertEqual(ligature_check["expected_span_text"], "pass")
         rotation_check = next(
             check for check in report["checks"] if check["fixture_id"] == "rotation-case"
         )
@@ -93,6 +107,83 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         diagnostic = self.onlyDiagnostic(report, "expected_text_mismatch", "column-case")
         self.assertEqual(diagnostic["expected"], ["Right column", "Left column"])
         self.assertEqual(diagnostic["actual"], ["Left column", "Right column"])
+
+    def test_expected_pages_drift_reports_expected_and_actual(self) -> None:
+        self.write_required_alpha_fixture_set()
+        metadata_path = self.root / "synthetic/hyphen-case/fixture.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["expected_pages"] = 2
+        self.write_json(metadata_path, metadata)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        diagnostic = self.onlyDiagnostic(
+            report,
+            "expected_pages_mismatch",
+            "hyphen-case",
+        )
+        self.assertEqual(diagnostic["expected"], 2)
+        self.assertEqual(diagnostic["actual"], 1)
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_pages_rejects_invalid_expectation(self) -> None:
+        self.write_required_alpha_fixture_set()
+        metadata_path = self.root / "synthetic/hyphen-case/fixture.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["expected_pages"] = -1
+        self.write_json(metadata_path, metadata)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        self.assertDiagnostic(report, "invalid_expectation", "hyphen-case")
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_span_text_drift_reports_expected_and_actual(self) -> None:
+        self.write_required_alpha_fixture_set()
+        extraction_path = self.root / "synthetic/hyphen-case/extraction.json"
+        extraction = json.loads(extraction_path.read_text(encoding="utf-8"))
+        extraction["spans"][1]["text"] = "wrong"
+        self.write_json(extraction_path, extraction)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        diagnostic = self.onlyDiagnostic(
+            report,
+            "expected_span_text_mismatch",
+            "hyphen-case",
+        )
+        self.assertEqual(diagnostic["expected"], ["hyphen", "ated"])
+        self.assertEqual(diagnostic["actual"], ["hyphen", "wrong"])
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_span_text_rejects_invalid_expectation(self) -> None:
+        self.write_required_alpha_fixture_set()
+        metadata_path = self.root / "synthetic/ligature-case/fixture.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["expected_span_text"] = ["office", 17]
+        self.write_json(metadata_path, metadata)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        self.assertDiagnostic(report, "invalid_expectation", "ligature-case")
+        self.assertDiagnostic(report, "missing_coverage", None)
+
+    def test_expected_span_text_rejects_non_string_extraction_text(self) -> None:
+        self.write_required_alpha_fixture_set()
+        extraction_path = self.root / "synthetic/ligature-case/extraction.json"
+        extraction = json.loads(extraction_path.read_text(encoding="utf-8"))
+        extraction["spans"][0]["text"] = 17
+        self.write_json(extraction_path, extraction)
+
+        report = evaluate_layout_alpha(self.root)
+
+        self.assertEqual(report["status"], "fail")
+        self.assertDiagnostic(report, "invalid_extraction", "ligature-case")
+        self.assertDiagnostic(report, "missing_coverage", None)
 
     def test_heading_subset_requires_heading_element(self) -> None:
         self.write_required_alpha_fixture_set()
@@ -354,6 +445,38 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 expected_rotation=90,
                 page_rotation=90,
             ),
+            self.write_fixture(
+                fixture_id="hyphen-case",
+                fixture_path="synthetic/hyphen-case/document.pdf",
+                subsets=["born_digital", "hyphenation", "fonts"],
+                expected_text=["hyphen ated"],
+                expected_element_types=["text_block"],
+                elements=[
+                    {"id": "e000001", "type": "text_block", "text": "hyphen ated"},
+                ],
+                expected_pages=1,
+                expected_span_text=["hyphen", "ated"],
+                spans=[
+                    {"id": "s000001", "text": "hyphen"},
+                    {"id": "s000002", "text": "ated"},
+                ],
+            ),
+            self.write_fixture(
+                fixture_id="ligature-case",
+                fixture_path="synthetic/ligature-case/document.pdf",
+                subsets=["born_digital", "fonts", "ligatures"],
+                expected_text=["office file"],
+                expected_element_types=["text_block"],
+                elements=[
+                    {"id": "e000001", "type": "text_block", "text": "office file"},
+                ],
+                expected_pages=1,
+                expected_span_text=["office", "file"],
+                spans=[
+                    {"id": "s000001", "text": "office"},
+                    {"id": "s000002", "text": "file"},
+                ],
+            ),
         ]
         self.write_json(
             self.root / "manifest.json",
@@ -362,7 +485,10 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                 "root": "fixtures",
                 "subsets_declared": [
                     "born_digital",
+                    "fonts",
                     "headings",
+                    "hyphenation",
+                    "ligatures",
                     "lists",
                     "multi_column",
                     "rotation",
@@ -381,6 +507,9 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
         expected_element_types: list[str],
         elements: list[dict],
         warnings: list[dict] | None = None,
+        spans: list[dict] | None = None,
+        expected_pages: int | None = None,
+        expected_span_text: list[str] | None = None,
         expected_rotation: int | None = None,
         page_rotation: int = 0,
     ):
@@ -393,6 +522,10 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
             "expected_element_types": expected_element_types,
             "expected_elements": len(elements),
         }
+        if expected_pages is not None:
+            metadata["expected_pages"] = expected_pages
+        if expected_span_text is not None:
+            metadata["expected_span_text"] = expected_span_text
         if expected_rotation is not None:
             metadata["expected_rotation"] = expected_rotation
         self.write_json(fixture_dir / "fixture.json", metadata)
@@ -408,7 +541,7 @@ class LayoutEvaluatorAlphaTests(unittest.TestCase):
                         "rotation": page_rotation,
                     }
                 ],
-                "spans": [],
+                "spans": spans or [],
                 "regions": [],
                 "warnings": [],
             },
