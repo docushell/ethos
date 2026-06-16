@@ -65,6 +65,49 @@ pub enum CheckStatus {
     Error,
 }
 
+/// Stable reason for a non-grounded check outcome.
+///
+/// These are diagnostic labels only. They explain why the check did not ground
+/// under the active literal verifier; they do not add semantic judgment.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CheckReason {
+    /// Citation had no usable locator.
+    MissingLocator,
+    /// Textual claim kind was missing required text.
+    MissingRequiredText,
+    /// Claim kind is unsupported by the verifier or active config.
+    UnsupportedClaimKind,
+    /// Citation fingerprint differs from the grounding source fingerprint.
+    StaleFingerprint,
+    /// Citation was fingerprint-pinned but the source did not declare one.
+    MissingSourceFingerprint,
+    /// Span locator was used with a source that does not expose spans.
+    MissingSpanCapability,
+    /// Table-cell locator was used with a source that does not expose tables.
+    MissingTableCapability,
+    /// Bbox locator was used with a source whose coordinate origin is unknown.
+    UnknownCoordinateOrigin,
+    /// Element id was not found.
+    ElementNotFound,
+    /// Span id was not found.
+    SpanNotFound,
+    /// Page id was not found.
+    PageNotFound,
+    /// Bbox locator did not resolve to a grounding element.
+    BboxNotFound,
+    /// Bbox locator did not include a page locator.
+    MissingPageForBbox,
+    /// Table-cell citation did not include both table id and cell address.
+    MissingTableCellLocator,
+    /// Table id was not found.
+    TableNotFound,
+    /// Cell address was not found in the table.
+    TableCellNotFound,
+    /// Target text did not match the claimed text under the active matcher.
+    TextMismatch,
+}
+
 /// How evidence was matched. v1 is deliberately literal — nothing fuzzy, nothing semantic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -173,6 +216,9 @@ pub struct Check {
     pub claim: Claim,
     /// Outcome.
     pub status: CheckStatus,
+    /// Stable reason for a non-grounded outcome.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<CheckReason>,
     /// Method used.
     pub match_method: MatchMethod,
     /// True when grounding would require semantic judgment beyond the declared
@@ -363,6 +409,7 @@ mod tests {
                 },
             },
             status,
+            reason: None,
             match_method: MatchMethod::ExactText,
             semantic_unverified: semantic,
             evidence: None,

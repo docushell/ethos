@@ -116,6 +116,10 @@
           "status": {
             "enum": ["grounded", "not_found", "mismatch", "stale", "unsupported_claim_kind", "capability_blocked", "error"]
           },
+          "reason": {
+            "$ref": "#/$defs/check_reason",
+            "description": "Stable diagnostic reason for a non-grounded check outcome. Omitted for grounded checks."
+          },
           "match_method": {
             "enum": ["exact_text", "normalized_text", "exact_text_contains", "normalized_text_contains", "table_cell_lookup", "bbox_containment", "presence_only", "none"],
             "description": "How evidence was matched. Equality methods require the target text to equal the claim text after the configured normalization. '*_contains' methods are explicit substring containment and are used only for quote evidence inside a larger target. 'normalized_text' uses ONLY the whitespace rule pinned in the verification config; nothing fuzzier exists in v1."
@@ -153,6 +157,27 @@
   "$defs": {
     "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "bbox": { "type": "array", "items": { "type": "integer" }, "minItems": 4, "maxItems": 4 },
+    "check_reason": {
+      "enum": [
+        "missing_locator",
+        "missing_required_text",
+        "unsupported_claim_kind",
+        "stale_fingerprint",
+        "missing_source_fingerprint",
+        "missing_span_capability",
+        "missing_table_capability",
+        "unknown_coordinate_origin",
+        "element_not_found",
+        "span_not_found",
+        "page_not_found",
+        "bbox_not_found",
+        "missing_page_for_bbox",
+        "missing_table_cell_locator",
+        "table_not_found",
+        "table_cell_not_found",
+        "text_mismatch"
+      ]
+    },
     "warning_code": {
       "enum": [
         "low_confidence_reading_order",
