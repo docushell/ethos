@@ -93,7 +93,7 @@ The command exits `0` and writes a verification report shaped like this:
 ## Try the alpha verification loop
 
 Ethos is source-only pre-alpha. There are no release artifacts or package installs yet. From a
-source checkout, the current product-proof command is:
+source checkout, the current verification loop is:
 
 ```bash
 make verify-alpha
@@ -104,7 +104,8 @@ That command builds the CLI and checks the alpha grounding loop across:
 - native Ethos document JSON
 - synthetic OpenDataLoader-style JSON
 - pinned real OpenDataLoader 2.4.7 JSON fixtures
-- grounded, ungrounded, stale-fingerprint, and capability-limited citation cases
+- grounded, ungrounded, not-found, stale-fingerprint, and capability-limited citation cases
+- malformed citation inputs that must fail with usage diagnostics
 - byte-identical repeated verification reports for the checked-in fixtures
 - deterministic native crop descriptor JSON artifacts
 
@@ -142,7 +143,14 @@ test result: ok. 40 passed; 0 failed
 
 ok    native-grounded matches examples/verify/goldens/native_grounded_report.json
 ok    opendataloader-grounded matches examples/verify/goldens/opendataloader_grounded_report.json
+ok    native-ungrounded matches examples/verify/goldens/native_ungrounded_report.json
+ok    opendataloader-not-found matches examples/verify/goldens/opendataloader_not_found_report.json
+ok    native-stale matches examples/verify/goldens/native_stale_report.json
+ok    opendataloader-capability-limited matches examples/verify/goldens/opendataloader_capability_limited_report.json
 ok    real-opendataloader-grounded matches fixtures/foreign/opendataloader/real/expected.verification_report.json
+ok    real-opendataloader-ungrounded matches fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json
+ok    invalid-table-cell-citation exits 2 with expected usage diagnostic
+ok    invalid-bbox-citation exits 2 with expected usage diagnostic
 ok    native-grounded-crops crop descriptors validate against schemas/ethos-crop-descriptor.schema.json
 
 verify-alpha demo checks passed

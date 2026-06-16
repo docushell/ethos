@@ -1,0 +1,19 @@
+{
+  "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "claims": [
+    {
+      "kind": "quote",
+      "text": "Operating margin was 99%",
+      "citation": {
+        "page": "p0001",
+        "element_id": "e000002"
+      }
+    },
+    {
+      "kind": "presence",
+      "citation": {
+        "element_id": "missing-element"
+      }
+    }
+  ]
+}
