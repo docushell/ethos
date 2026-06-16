@@ -1,6 +1,6 @@
 # determinism.yml — nightly + contract-change PRs (plan §9).
-# Gate Zero platforms first (macOS arm64 + Linux x64); Windows x64 joins no later than
-# Milestone B exit (week 8). Unresolved Windows divergence blocks or re-scopes Public Beta.
+# Gate Zero platforms first (macOS arm64 + Linux x64); Windows x64 runs a Milestone B
+# preflight lane. Unresolved Windows divergence blocks or re-scopes Public Beta.
 # Determinism failures are NEVER retried into green — a flaky fingerprint IS the bug.
 name: determinism
 
@@ -19,9 +19,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, ubuntu-latest] # macOS arm64 + Linux x64 (Gate Zero platforms)
-        # TODO(week 8 / Milestone B exit): add windows-latest (risk R9; release-blocking
-        # for Public Beta if divergent)
+        # macOS arm64 + Linux x64 are the Gate Zero platforms. Windows x64 is a
+        # Milestone B preflight lane and only runs PDFium-backed corpus work when
+        # the pinned runtime is explicitly configured on that runner.
+        os: [macos-14, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
