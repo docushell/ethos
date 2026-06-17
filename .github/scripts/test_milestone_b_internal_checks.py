@@ -62,6 +62,7 @@ class MilestoneBInternalCheckTests(unittest.TestCase):
             "$(PYTHON) schemas/test_font_policy_validation.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
+            "$(PYTHON) .github/scripts/test_milestone_b_closeout_record.py",
             "$(MAKE) verify-alpha PYTHON=$(PYTHON)",
             "$(MAKE) layout-evaluator-alpha PYTHON=$(PYTHON)",
             "$(MAKE) python-surface-test PYTHON=$(PYTHON)",
