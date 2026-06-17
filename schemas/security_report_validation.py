@@ -53,6 +53,7 @@ FINDING_MESSAGE_TEMPLATES = {
     "annotations_present": "annotations present on page",
     "external_links_present": "external links present on page",
     "unsupported_annotation": "unsupported annotation ignored",
+    "image_only_page": "image-only page",
 }
 
 

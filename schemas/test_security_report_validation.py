@@ -169,6 +169,36 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_image_only_page_finding_message_must_match_fixed_template(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["security_warnings"].append(
+            {
+                "id": "w0099",
+                "code": "image_only_page",
+                "message": "image-only page changed",
+                "page": "p0001",
+            }
+        )
+        report = copy.deepcopy(self.report)
+        report["findings"].append(
+            {
+                "id": "f0004",
+                "code": "image_only_page",
+                "message": "image-only page changed",
+                "page": "p0001",
+                "excluded_from_default_chunks": False,
+            }
+        )
+        report["summary"]["image_only_page"] = 1
+
+        diagnostics = diagnose_security_report_example(document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0004 message must match "
+            "fixed template for image_only_page",
+            diagnostics,
+        )
+
     def test_warning_derived_summary_must_match_document_warning_count(self) -> None:
         report = copy.deepcopy(self.report)
         report["summary"]["hidden_text_detected"] = 2
