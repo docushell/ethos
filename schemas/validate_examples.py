@@ -30,6 +30,7 @@ import sys
 from pathlib import Path
 
 from font_policy_validation import diagnose_font_policy
+from table_model_validation import diagnose_table_model
 
 try:
     from jsonschema import Draft202012Validator as Validator
@@ -151,9 +152,14 @@ for sp in p["spans"]:
 for t in p["tables"]:
     for r in t["page_refs"]:
         check_ref("page", r, f"table {t['id']}")
+    for r in t.get("warning_refs", []):
+        check_ref("warning", r, f"table {t['id']}")
     for c in t["cells"]:
+        cell_ctx = f"table {t['id']} cell ({c['row']},{c['col']})"
+        for r in c.get("span_refs", []):
+            check_ref("span", r, cell_ctx)
         for r in c.get("element_refs", []):
-            check_ref("element", r, f"table {t['id']} cell ({c['row']},{c['col']})")
+            check_ref("element", r, cell_ctx)
 for ch in p["chunks"]:
     for r in ch["element_refs"]:
         check_ref("element", r, f"chunk {ch['id']}")
@@ -170,6 +176,9 @@ for w in p["security_warnings"] + p["parser_warnings"]:
         check_ref("span", w["span_ref"], f"warning {w['id']}")
     if "region_ref" in w:
         check_ref("region", w["region_ref"], f"warning {w['id']}")
+
+for diagnostic in diagnose_table_model(p):
+    fail(diagnostic)
 
 # --- derivability: chunks.example.jsonl must be EXACTLY what `ethos rag chunk` derives
 # from document.example.json (PRD §7: every derived artifact is reproducible from the

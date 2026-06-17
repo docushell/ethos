@@ -42,6 +42,7 @@ class CiWorkflowTests(unittest.TestCase):
 
         self.assertIn('pip install "jsonschema>=4.18"', text)
         self.assertIn("python3 schemas/validate_examples.py", text)
+        self.assertIn("python3 schemas/test_table_model_validation.py", text)
 
     def test_ci_workflow_guard_is_run_by_ci(self) -> None:
         text = workflow_text()

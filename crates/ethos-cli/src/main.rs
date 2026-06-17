@@ -564,7 +564,7 @@ mod tests {
     }
 
     #[test]
-    fn table_candidate_probe_report_detects_regular_grid_without_mutating_document() {
+    fn assembly_emits_regular_grid_table_candidates() {
         let extraction = Extraction {
             pages: vec![Page {
                 id: "p0001".to_string(),
@@ -593,7 +593,20 @@ mod tests {
         )
         .unwrap();
 
-        assert!(doc.payload.tables.is_empty());
+        doc.verify_integrity().unwrap();
+        assert_eq!(doc.payload.tables.len(), 1);
+        let table = &doc.payload.tables[0];
+        assert_eq!(table.id, "t0001");
+        assert_eq!(table.page_refs, vec!["p0001"]);
+        assert_eq!(table.n_rows, 3);
+        assert_eq!(table.n_cols, 2);
+        assert_eq!(table.header_rows, 1);
+        assert_eq!(table.header_cols, 0);
+        assert_eq!(table.cells.len(), 6);
+        assert_eq!(table.cells[0].text, "Name");
+        assert_eq!(table.cells[0].span_refs, vec!["s000001"]);
+        assert_eq!(table.cells[5].text, "12");
+        assert_eq!(table.cells[5].span_refs, vec!["s000006"]);
 
         let bytes = table_candidate_probe_report_bytes(&doc).unwrap();
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
@@ -612,7 +625,6 @@ mod tests {
             value["tables"][0]["markdown"],
             "| Name | Score |\n| --- | --- |\n| Alpha | 10 |\n| Beta | 12 |\n"
         );
-        assert!(doc.payload.tables.is_empty());
     }
 
     #[test]
