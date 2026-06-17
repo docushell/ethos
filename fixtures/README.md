@@ -39,6 +39,8 @@ Successful parse fixtures also carry c14n stage goldens:
 - `text.txt`: current alpha plain-text export rendered from `layout.json` element text order.
 - `markdown.md`: current alpha Markdown export rendered from `layout.json`, including heading
   prefixes and explicit list-item marker text for committed matching elements.
+- `tables.json`: for fixtures tagged `tables`, the exact `payload.tables` artifact emitted by
+  `ethos doc parse --format json` under the pinned PDFium profile.
 
 For successful fixtures, `validate_fixtures.py` also binds selected `fixture.json`
 expectations to those committed goldens:
@@ -58,6 +60,10 @@ The text and Markdown export goldens are validated as exact UTF-8 bytes against 
 committed `layout.json` output. They are an internal Milestone B alpha guard for the current
 trust-loop export path, not a broader document-conversion claim.
 
+Table fixture goldens are validated as canonical JSON, checked against table/cell invariants,
+and reference-checked against committed extraction/layout ids. They are an internal Milestone C
+guard for current text-layer table candidate artifacts, not a broader table extraction claim.
+
 Regenerate them only after reviewing parser/layout drift. First configure the pinned profile
 artifact for your platform; for macOS arm64 this is:
 
@@ -69,6 +75,8 @@ ETHOS_ACCEPT_GOLDENS=1 cargo test --locked --test pdf_parse \
   successful_fixtures_match_extraction_and_layout_goldens_when_pdfium_is_configured -- --exact
 ETHOS_ACCEPT_GOLDENS=1 cargo test --locked --test pdf_parse \
   doc_parse_text_and_markdown_exports_match_fixture_goldens_when_pdfium_is_configured -- --exact
+ETHOS_ACCEPT_GOLDENS=1 cargo test --locked --test pdf_parse \
+  doc_parse_table_fixtures_match_table_goldens_when_pdfium_is_configured -- --exact
 python3 fixtures/validate_fixtures.py
 ```
 
