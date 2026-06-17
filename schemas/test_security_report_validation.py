@@ -1625,6 +1625,41 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_warning_ids_are_required(self) -> None:
+        cases = (
+            ("security_warnings", "security_warnings[0].id is required"),
+            ("parser_warnings", "parser_warnings[0].id is required"),
+        )
+        for lane, expected_suffix in cases:
+            with self.subTest(lane=lane):
+                document = copy.deepcopy(self.document)
+                document["payload"][lane][0].pop("id")
+
+                diagnostics = diagnose_security_report_example(document, self.report)
+
+                self.assertIn(
+                    f"security-report.example.json: {expected_suffix}",
+                    diagnostics,
+                )
+
+    def test_warning_ids_must_match_schema_pattern(self) -> None:
+        cases = (
+            ("security_warnings", "warning-1"),
+            ("parser_warnings", []),
+        )
+        for lane, value in cases:
+            with self.subTest(lane=lane, value=value):
+                document = copy.deepcopy(self.document)
+                document["payload"][lane][0]["id"] = value
+
+                diagnostics = diagnose_security_report_example(document, self.report)
+
+                self.assertIn(
+                    f"security-report.example.json: {lane}[0].id must match "
+                    "pattern ^w[0-9]{4}$",
+                    diagnostics,
+                )
+
     def test_parser_warning_codes_must_be_strings(self) -> None:
         document = copy.deepcopy(self.document)
         document["payload"]["parser_warnings"].append(

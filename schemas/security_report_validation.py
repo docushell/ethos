@@ -136,6 +136,7 @@ def diagnose_security_report_example(
     diagnose_report_required_fields(report, ctx, diagnostics)
     diagnose_report_identity_scalar_fields(report, ctx, diagnostics)
     diagnose_report_identity(document, report, ctx, diagnostics)
+    diagnose_warning_ids(security_warnings, parser_warnings, ctx, diagnostics)
     diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
     diagnose_security_warning_locator_shapes(security_warnings, ctx, diagnostics)
     diagnose_security_warning_messages(security_warnings, ctx, diagnostics)
@@ -287,6 +288,24 @@ def warning_items(value):
     if isinstance(value, list):
         return value
     return []
+
+
+def diagnose_warning_ids(security_warnings, parser_warnings, ctx, diagnostics):
+    lanes = (
+        ("security_warnings", security_warnings),
+        ("parser_warnings", parser_warnings),
+    )
+    for lane, warnings in lanes:
+        for index, warning in enumerate(warnings):
+            if not isinstance(warning, dict):
+                continue
+            if "id" not in warning:
+                diagnostics.append(f"{ctx}: {lane}[{index}].id is required")
+                continue
+            if not is_warning_id(warning.get("id")):
+                diagnostics.append(
+                    f"{ctx}: {lane}[{index}].id must match pattern ^w[0-9]{{4}}$"
+                )
 
 
 def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics):
@@ -1078,6 +1097,15 @@ def is_finding_id(value):
         isinstance(value, str)
         and len(value) == 5
         and value.startswith("f")
+        and is_ascii_digits(value[1:])
+    )
+
+
+def is_warning_id(value):
+    return (
+        isinstance(value, str)
+        and len(value) == 5
+        and value.startswith("w")
         and is_ascii_digits(value[1:])
     )
 
