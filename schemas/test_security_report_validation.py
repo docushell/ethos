@@ -637,6 +637,19 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_required_inventory_lanes_must_be_present(self) -> None:
+        for name in ("annotations", "actions", "attachments", "scripts", "links"):
+            with self.subTest(name=name):
+                report = copy.deepcopy(self.report)
+                report["inventories"].pop(name)
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    f"security-report.example.json: inventories.{name} is required",
+                    diagnostics,
+                )
+
     def test_action_inventory_shape_is_checked_without_action_semantics(self) -> None:
         report = copy.deepcopy(self.report)
         report["inventories"]["actions"] = {"kind": "uri"}

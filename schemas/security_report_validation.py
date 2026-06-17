@@ -324,7 +324,10 @@ def project_report_finding(finding):
 
 
 def inventory_items(inventories, name, ctx, diagnostics):
-    items = inventories.get(name, [])
+    if name not in inventories:
+        diagnostics.append(f"{ctx}: inventories.{name} is required")
+        return []
+    items = inventories.get(name)
     if not isinstance(items, list):
         diagnostics.append(f"{ctx}: inventories.{name} must be an array")
         return []
