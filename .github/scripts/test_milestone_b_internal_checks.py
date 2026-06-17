@@ -59,6 +59,7 @@ class MilestoneBInternalCheckTests(unittest.TestCase):
 
         required = [
             "$(PYTHON) fixtures/validate_fixtures.py",
+            "$(PYTHON) fixtures/test_validate_fixtures.py",
             "$(PYTHON) schemas/test_font_policy_validation.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
