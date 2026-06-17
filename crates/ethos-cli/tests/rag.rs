@@ -318,3 +318,117 @@ fn rag_chunk_rejects_unknown_chunk_warning_ref() {
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("chunk c000001 references unknown warning_ref w999999"));
 }
+
+#[test]
+fn rag_chunk_rejects_default_excluded_chunk_warning_refs() {
+    for code in [
+        "hidden_text_detected",
+        "off_page_text_detected",
+        "low_contrast_text_detected",
+    ] {
+        let document = document_with_mutated_chunk(
+            &format!("default-excluded-{code}-chunk-document"),
+            |doc| {
+                doc["payload"]["security_warnings"][0]["code"] = serde_json::json!(code);
+                doc["payload"]["chunks"][0]["warning_refs"] = serde_json::json!(["w0001"]);
+            },
+        );
+        let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+        assert_eq!(output.status.code(), Some(2));
+        assert_eq!(output.stdout, b"");
+        assert!(String::from_utf8_lossy(&output.stderr).contains(&format!(
+            "chunk c000001 references default-excluded warning_ref w0001 ({code})"
+        )));
+    }
+}
+
+#[test]
+fn rag_chunk_allows_non_exclusion_security_warning_ref() {
+    let document = document_with_mutated_chunk("non-exclusion-security-warning-document", |doc| {
+        doc["payload"]["security_warnings"][0]["code"] = serde_json::json!("annotations_present");
+        doc["payload"]["chunks"][0]["warning_refs"] = serde_json::json!(["w0001"]);
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert!(
+        output.status.success(),
+        "ethos rag chunk failed\nstatus: {:?}\nstderr:\n{}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.stderr, b"");
+    assert!(
+        String::from_utf8_lossy(&output.stdout).contains(r#""warnings":["annotations_present"]"#)
+    );
+}
+
+#[test]
+fn rag_chunk_rejects_default_excluded_element_warning_ref() {
+    let mut expected_element_id = String::new();
+    let document =
+        document_with_mutated_chunk("default-excluded-element-warning-document", |doc| {
+            expected_element_id = doc["payload"]["chunks"][0]["element_refs"][0]
+                .as_str()
+                .expect("fixture chunk element_ref is a string")
+                .to_string();
+            doc["payload"]["elements"][0]["warning_refs"] = serde_json::json!(["w0001"]);
+        });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(&format!(
+        "chunk c000001 element_ref {expected_element_id} carries default-excluded warning_ref w0001 (hidden_text_detected)"
+    )));
+}
+
+#[test]
+fn rag_chunk_rejects_default_excluded_warning_attached_to_cited_element() {
+    let mut expected_element_id = String::new();
+    let document = document_with_mutated_chunk(
+        "default-excluded-attached-element-warning-document",
+        |doc| {
+            expected_element_id = doc["payload"]["chunks"][0]["element_refs"][0]
+                .as_str()
+                .expect("fixture chunk element_ref is a string")
+                .to_string();
+            doc["payload"]["security_warnings"][0]["element_ref"] =
+                serde_json::json!(expected_element_id.clone());
+        },
+    );
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(&format!(
+        "chunk c000001 element_ref {expected_element_id} carries default-excluded warning_ref w0001 (hidden_text_detected)"
+    )));
+}
+
+#[test]
+fn rag_chunk_rejects_default_excluded_span_warning_reached_by_cited_element() {
+    let mut expected_element_id = String::new();
+    let mut expected_span_id = String::new();
+    let document = document_with_mutated_chunk("default-excluded-span-warning-document", |doc| {
+        expected_element_id = doc["payload"]["chunks"][0]["element_refs"][0]
+            .as_str()
+            .expect("fixture chunk element_ref is a string")
+            .to_string();
+        expected_span_id = doc["payload"]["security_warnings"][0]["span_ref"]
+            .as_str()
+            .expect("fixture security warning span_ref is a string")
+            .to_string();
+        doc["payload"]["elements"][0]["span_refs"]
+            .as_array_mut()
+            .expect("fixture element span_refs are an array")
+            .push(serde_json::json!(expected_span_id.clone()));
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(&format!(
+        "chunk c000001 element_ref {expected_element_id} includes span_ref {expected_span_id} with default-excluded warning_ref w0001 (hidden_text_detected)"
+    )));
+}

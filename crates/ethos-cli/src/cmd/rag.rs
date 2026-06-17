@@ -16,6 +16,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use ethos_core::codes::WarningCode;
 use ethos_core::error::EthosError;
 use ethos_core::model::{Chunk, Document};
 
@@ -49,7 +50,11 @@ struct PageBounds {
 struct RagChunkRefs<'a> {
     page_bounds: BTreeMap<&'a str, PageBounds>,
     element_pages: BTreeMap<&'a str, &'a str>,
-    warning_codes: BTreeMap<&'a str, &'a str>,
+    element_span_refs: BTreeMap<&'a str, &'a [String]>,
+    element_warning_refs: BTreeMap<&'a str, &'a [String]>,
+    excluded_element_warnings: BTreeMap<&'a str, (&'a str, WarningCode)>,
+    excluded_span_warnings: BTreeMap<&'a str, (&'a str, WarningCode)>,
+    warning_codes: BTreeMap<&'a str, WarningCode>,
     schema_version: &'a str,
     document_fingerprint: &'a str,
     source_fingerprint: &'a str,
@@ -79,12 +84,50 @@ impl<'a> RagChunkRefs<'a> {
                 .iter()
                 .map(|element| (element.id.as_str(), element.page.as_str()))
                 .collect(),
+            element_span_refs: doc
+                .payload
+                .elements
+                .iter()
+                .map(|element| (element.id.as_str(), element.span_refs.as_slice()))
+                .collect(),
+            element_warning_refs: doc
+                .payload
+                .elements
+                .iter()
+                .map(|element| (element.id.as_str(), element.warning_refs.as_slice()))
+                .collect(),
+            excluded_element_warnings: doc
+                .payload
+                .security_warnings
+                .iter()
+                .chain(doc.payload.parser_warnings.iter())
+                .filter(|warning| excludes_from_default_chunks(warning.code))
+                .filter_map(|warning| {
+                    warning
+                        .element_ref
+                        .as_deref()
+                        .map(|element_ref| (element_ref, (warning.id.as_str(), warning.code)))
+                })
+                .collect(),
+            excluded_span_warnings: doc
+                .payload
+                .security_warnings
+                .iter()
+                .chain(doc.payload.parser_warnings.iter())
+                .filter(|warning| excludes_from_default_chunks(warning.code))
+                .filter_map(|warning| {
+                    warning
+                        .span_ref
+                        .as_deref()
+                        .map(|span_ref| (span_ref, (warning.id.as_str(), warning.code)))
+                })
+                .collect(),
             warning_codes: doc
                 .payload
                 .security_warnings
                 .iter()
                 .chain(doc.payload.parser_warnings.iter())
-                .map(|warning| (warning.id.as_str(), warning.code.as_str()))
+                .map(|warning| (warning.id.as_str(), warning.code))
                 .collect(),
             schema_version: doc.schema_version.as_str(),
             document_fingerprint: doc.fingerprint.as_str(),
@@ -92,6 +135,15 @@ impl<'a> RagChunkRefs<'a> {
             config_sha256: doc.config_sha256.as_str(),
         }
     }
+}
+
+fn excludes_from_default_chunks(code: WarningCode) -> bool {
+    matches!(
+        code,
+        WarningCode::HiddenTextDetected
+            | WarningCode::OffPageTextDetected
+            | WarningCode::LowContrastTextDetected
+    )
 }
 
 fn validate_chunk_refs(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Failure> {
@@ -139,6 +191,7 @@ fn validate_chunk_refs(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Fai
                 chunk.id, id, page
             )));
         }
+        validate_element_default_chunk_warnings(chunk, id, refs)?;
         backed_pages.insert(*page);
     }
     for (idx, bbox) in chunk.bboxes.iter().enumerate() {
@@ -178,10 +231,71 @@ fn validate_chunk_refs(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Fai
         }
     }
     for id in &chunk.warning_refs {
-        if !refs.warning_codes.contains_key(id.as_str()) {
+        let Some(code) = refs.warning_codes.get(id.as_str()) else {
             return Err(Failure::Usage(format!(
                 "chunk {} references unknown warning_ref {}",
                 chunk.id, id
+            )));
+        };
+        if excludes_from_default_chunks(*code) {
+            return Err(Failure::Usage(format!(
+                "chunk {} references default-excluded warning_ref {} ({})",
+                chunk.id,
+                id,
+                code.as_str()
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_element_default_chunk_warnings(
+    chunk: &Chunk,
+    element_ref: &str,
+    refs: &RagChunkRefs<'_>,
+) -> Result<(), Failure> {
+    for warning_ref in refs
+        .element_warning_refs
+        .get(element_ref)
+        .into_iter()
+        .flat_map(|warning_refs| warning_refs.iter())
+    {
+        let Some(code) = refs.warning_codes.get(warning_ref.as_str()) else {
+            continue;
+        };
+        if excludes_from_default_chunks(*code) {
+            return Err(Failure::Usage(format!(
+                "chunk {} element_ref {} carries default-excluded warning_ref {} ({})",
+                chunk.id,
+                element_ref,
+                warning_ref,
+                code.as_str()
+            )));
+        }
+    }
+    if let Some((warning_ref, code)) = refs.excluded_element_warnings.get(element_ref) {
+        return Err(Failure::Usage(format!(
+            "chunk {} element_ref {} carries default-excluded warning_ref {} ({})",
+            chunk.id,
+            element_ref,
+            warning_ref,
+            code.as_str()
+        )));
+    }
+    for span_ref in refs
+        .element_span_refs
+        .get(element_ref)
+        .into_iter()
+        .flat_map(|span_refs| span_refs.iter())
+    {
+        if let Some((warning_ref, code)) = refs.excluded_span_warnings.get(span_ref.as_str()) {
+            return Err(Failure::Usage(format!(
+                "chunk {} element_ref {} includes span_ref {} with default-excluded warning_ref {} ({})",
+                chunk.id,
+                element_ref,
+                span_ref,
+                warning_ref,
+                code.as_str()
             )));
         }
     }
@@ -245,7 +359,7 @@ fn rag_chunk_record(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<serde_json
             .warning_codes
             .get(id.as_str())
             .expect("chunk warning_refs validated before record serialization");
-        warnings.push(serde_json::Value::String(code.to_string()));
+        warnings.push(serde_json::Value::String(code.as_str().to_string()));
     }
     record.insert("warnings".into(), serde_json::Value::Array(warnings));
     Ok(serde_json::Value::Object(record))
