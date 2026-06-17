@@ -127,6 +127,10 @@ fn text_backed_warning_code(code: WarningCode) -> bool {
     )
 }
 
+fn page_backed_warning_code(code: WarningCode) -> bool {
+    text_backed_warning_code(code) || matches!(code, WarningCode::ImageOnlyPage)
+}
+
 fn excludes_from_default_chunks(code: WarningCode) -> bool {
     text_backed_warning_code(code)
 }
@@ -204,6 +208,15 @@ fn finding_record(
             .spans
             .get(span_ref)
             .expect("text warning span_ref validated");
+        let page_ref = warning
+            .page
+            .as_deref()
+            .expect("text warning page validated");
+        let page = refs
+            .pages
+            .get(page_ref)
+            .expect("text warning page validated");
+        validate_span_bbox(warning, span_ref, span, page)?;
         finding.insert("bbox".to_string(), serde_json::json!(span.bbox.to_array()));
         finding.insert(
             "text_preview".to_string(),
@@ -218,6 +231,13 @@ fn finding_record(
 }
 
 fn validate_warning_refs(warning: &Warning, refs: &SecurityReportRefs<'_>) -> Result<(), Failure> {
+    if page_backed_warning_code(warning.code) && warning.page.is_none() {
+        return Err(Failure::Usage(format!(
+            "security report warning {} ({}) requires page",
+            warning.id,
+            warning.code.as_str()
+        )));
+    }
     if let Some(page) = warning.page.as_deref() {
         if !refs.pages.contains_key(page) {
             return Err(Failure::Usage(format!(
@@ -276,6 +296,28 @@ fn validate_warning_refs(warning: &Warning, refs: &SecurityReportRefs<'_>) -> Re
                 )));
             }
         }
+    }
+    Ok(())
+}
+
+fn validate_span_bbox(
+    warning: &Warning,
+    span_ref: &str,
+    span: &Span,
+    page: &Page,
+) -> Result<(), Failure> {
+    let [x0, y0, x1, y1] = span.bbox.to_array();
+    if x0 >= x1 || y0 >= y1 {
+        return Err(Failure::Usage(format!(
+            "security report warning {} span_ref {} bbox has zero area",
+            warning.id, span_ref
+        )));
+    }
+    if x0 < 0 || y0 < 0 || x1 > page.width || y1 > page.height {
+        return Err(Failure::Usage(format!(
+            "security report warning {} span_ref {} bbox exceeds page {} bounds",
+            warning.id, span_ref, page.id
+        )));
     }
     Ok(())
 }

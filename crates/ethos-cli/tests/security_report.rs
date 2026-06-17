@@ -267,6 +267,76 @@ fn security_report_rejects_text_warning_without_span_ref() {
 }
 
 #[test]
+fn security_report_rejects_text_warning_without_page() {
+    let document = document_with_mutated_warning("text-warning-without-page", |doc| {
+        doc["payload"]["security_warnings"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("page");
+    });
+
+    let output = run_ethos(&["security", "report", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("security report warning w0001 (hidden_text_detected) requires page"));
+}
+
+#[test]
+fn security_report_rejects_image_only_warning_without_page() {
+    let document = document_with_mutated_warning("image-only-warning-without-page", |doc| {
+        doc["payload"]["security_warnings"][0]["code"] = serde_json::json!("image_only_page");
+        doc["payload"]["security_warnings"][0]["message"] = serde_json::json!("image-only page");
+        doc["payload"]["security_warnings"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("span_ref");
+        doc["payload"]["security_warnings"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("page");
+    });
+
+    let output = run_ethos(&["security", "report", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("security report warning w0001 (image_only_page) requires page"));
+}
+
+#[test]
+fn security_report_derives_image_only_page_warning() {
+    let document = document_with_mutated_warning("image-only-warning", |doc| {
+        doc["payload"]["security_warnings"][0]["code"] = serde_json::json!("image_only_page");
+        doc["payload"]["security_warnings"][0]["message"] = serde_json::json!("image-only page");
+        doc["payload"]["security_warnings"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("span_ref");
+    });
+
+    let output = run_ethos(&["security", "report", document.to_str().unwrap()]);
+
+    assert!(
+        output.status.success(),
+        "ethos security report failed\nstatus: {:?}\nstderr:\n{}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.stderr, b"");
+    let report: Value = serde_json::from_slice(&output.stdout).expect("report JSON parses");
+    assert_eq!(report["summary"]["image_only_page"], 1);
+    assert_eq!(report["findings"].as_array().unwrap().len(), 1);
+    assert_eq!(report["findings"][0]["code"], "image_only_page");
+    assert_eq!(report["findings"][0]["page"], "p0001");
+    assert!(report["findings"][0].get("bbox").is_none());
+    assert!(report["findings"][0].get("span_ref").is_none());
+    assert_eq!(report["findings"][0]["excluded_from_default_chunks"], false);
+}
+
+#[test]
 fn security_report_rejects_unknown_span_ref() {
     let document = document_with_mutated_warning("security-warning-unknown-span-ref", |doc| {
         doc["payload"]["security_warnings"][0]["span_ref"] = serde_json::json!("s999999");
@@ -293,4 +363,57 @@ fn security_report_rejects_span_not_owned_by_element_ref() {
     assert!(String::from_utf8_lossy(&output.stderr).contains(
         "security report warning w0001 span_ref s000003 is not owned by element_ref e000001"
     ));
+}
+
+#[test]
+fn security_report_rejects_invalid_text_warning_span_bbox() {
+    for (name, bbox, expected) in [
+        (
+            "zero-width",
+            serde_json::json!([100, 79100, 100, 79200]),
+            "security report warning w0001 span_ref s000003 bbox has zero area",
+        ),
+        (
+            "zero-height",
+            serde_json::json!([100, 79100, 6000, 79100]),
+            "security report warning w0001 span_ref s000003 bbox has zero area",
+        ),
+        (
+            "negative-x",
+            serde_json::json!([-1, 79100, 6000, 79200]),
+            "security report warning w0001 span_ref s000003 bbox exceeds page p0001 bounds",
+        ),
+        (
+            "negative-y",
+            serde_json::json!([100, -1, 6000, 79200]),
+            "security report warning w0001 span_ref s000003 bbox exceeds page p0001 bounds",
+        ),
+        (
+            "x-exceeds-page",
+            serde_json::json!([100, 79100, 61201, 79200]),
+            "security report warning w0001 span_ref s000003 bbox exceeds page p0001 bounds",
+        ),
+        (
+            "y-exceeds-page",
+            serde_json::json!([100, 79100, 6000, 79201]),
+            "security report warning w0001 span_ref s000003 bbox exceeds page p0001 bounds",
+        ),
+    ] {
+        let document = document_with_mutated_warning(
+            &format!("security-warning-invalid-span-bbox-{name}"),
+            |doc| {
+                doc["payload"]["spans"][2]["bbox"] = bbox;
+            },
+        );
+
+        let output = run_ethos(&["security", "report", document.to_str().unwrap()]);
+
+        assert_eq!(output.status.code(), Some(2), "{name}");
+        assert_eq!(output.stdout, b"", "{name}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(expected),
+            "{name}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
 }
