@@ -72,6 +72,7 @@ fn assemble_payload(extraction: Extraction) -> Result<Payload, EthosError> {
         extraction.warnings,
         layout.warnings,
     )?;
+    let tables = table_candidates(&extraction.pages, &spans)?;
 
     Ok(Payload {
         coordinate_system: CoordinateSystem {
@@ -82,12 +83,33 @@ fn assemble_payload(extraction: Extraction) -> Result<Payload, EthosError> {
         pages: extraction.pages,
         elements,
         spans,
-        tables: Vec::new(),
+        tables,
         chunks: Vec::new(),
         regions,
         security_warnings,
         parser_warnings,
     })
+}
+
+fn table_candidates(
+    pages: &[ethos_core::model::Page],
+    spans: &[Span],
+) -> Result<Vec<ethos_core::model::Table>, EthosError> {
+    let mut tables = Vec::new();
+    let mut next_table_ordinal = 1u32;
+
+    for page in pages {
+        let page_tables = ethos_tables::detect_regular_grid_candidates(
+            &page.id,
+            spans,
+            next_table_ordinal,
+            &ethos_tables::TableCandidateConfig::default(),
+        )?;
+        next_table_ordinal += page_tables.len() as u32;
+        tables.extend(page_tables);
+    }
+
+    Ok(tables)
 }
 
 struct DocumentHashes {
