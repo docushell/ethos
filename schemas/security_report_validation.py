@@ -217,6 +217,7 @@ def diagnose_security_report_example(
         for name in ("annotations", "actions", "attachments", "scripts", "links")
     }
     diagnose_inventory_required_fields(inventory_lists, ctx, diagnostics)
+    diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics)
     annotations = inventory_lists["annotations"]
     links = inventory_lists["links"]
     unsupported_annotations = [
@@ -574,6 +575,18 @@ def diagnose_inventory_required_fields(inventory_lists, ctx, diagnostics):
                     diagnostics.append(
                         f"{ctx}: inventories.{name}[{index}].{field} is required"
                     )
+
+
+def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
+    for index, item in enumerate(inventory_lists.get("attachments", [])):
+        if not isinstance(item, dict) or "bytes" not in item:
+            continue
+        bytes_value = item.get("bytes")
+        if not is_json_integer(bytes_value) or bytes_value < 0:
+            diagnostics.append(
+                f"{ctx}: inventories.attachments[{index}].bytes must be a "
+                "non-negative integer"
+            )
 
 
 def document_reference_index(payload):

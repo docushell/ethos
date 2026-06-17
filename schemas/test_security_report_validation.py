@@ -1043,6 +1043,22 @@ class SecurityReportValidationTests(unittest.TestCase):
                         diagnostics,
                     )
 
+    def test_attachment_inventory_bytes_must_be_non_negative_json_integer(self) -> None:
+        for value in (True, False, "1", 1.0, -1):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["inventories"]["attachments"] = [
+                    {"name": "attachment.bin", "bytes": value}
+                ]
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: inventories.attachments[0].bytes "
+                    "must be a non-negative integer",
+                    diagnostics,
+                )
+
     def test_action_inventory_shape_is_checked_without_action_semantics(self) -> None:
         report = copy.deepcopy(self.report)
         report["inventories"]["actions"] = {"kind": "uri"}
