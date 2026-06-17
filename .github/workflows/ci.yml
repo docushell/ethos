@@ -60,6 +60,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_b_internal_checks.py
       - name: execution status tests
         run: python3 .github/scripts/test_execution_status.py
+      - name: roadmap status tests
+        run: python3 .github/scripts/test_roadmap_status.py
       - name: Gate Zero harness tests
         run: python3 benchmarks/harness/test_run_gate_zero.py
       - name: same-platform double-parse byte-diff
