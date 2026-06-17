@@ -338,18 +338,38 @@ class SecurityReportValidationTests(unittest.TestCase):
         )
 
     def test_finding_codes_are_required(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0].pop("code")
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 code is required",
+            diagnostics,
+        )
+
+    def test_finding_codes_must_be_strings(self) -> None:
         for value in (None, 7, []):
             with self.subTest(value=value):
                 report = copy.deepcopy(self.report)
-                if value is None:
-                    report["findings"][0].pop("code")
-                else:
-                    report["findings"][0]["code"] = value
+                report["findings"].append(
+                    {
+                        "id": "f0004",
+                        "code": value,
+                        "message": "unknown",
+                        "page": "p0001",
+                        "excluded_from_default_chunks": False,
+                    }
+                )
 
                 diagnostics = diagnose_security_report_example(self.document, report)
 
                 self.assertIn(
-                    "security-report.example.json: finding f0001 code is required",
+                    "security-report.example.json: finding f0004.code must be a string",
+                    diagnostics,
+                )
+                self.assertNotIn(
+                    "security-report.example.json: finding f0004 code is required",
                     diagnostics,
                 )
 

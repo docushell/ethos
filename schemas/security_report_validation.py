@@ -541,9 +541,14 @@ def diagnose_finding_codes(findings, ctx, diagnostics):
     for index, finding in enumerate(findings):
         if not isinstance(finding, dict):
             continue
+        if "code" not in finding:
+            diagnostics.append(f"{ctx}: {finding_ctx(finding, index)} code is required")
+            continue
         code = finding.get("code")
         if not isinstance(code, str):
-            diagnostics.append(f"{ctx}: {finding_ctx(finding, index)} code is required")
+            diagnostics.append(
+                f"{ctx}: {finding_ctx(finding, index)}.code must be a string"
+            )
             continue
         if code not in SECURITY_WARNING_CODES:
             diagnostics.append(
