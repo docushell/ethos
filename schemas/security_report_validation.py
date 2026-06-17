@@ -794,6 +794,8 @@ def check_locator_ref(item, key, ref_kind, refs, ctx, item_ctx, diagnostics):
     ref = item.get(key)
     if ref is None:
         return
+    if not check_locator_shape(ref, key, ctx, item_ctx, diagnostics):
+        return
     target = refs[ref_kind].get(ref)
     if target is None:
         diagnostics.append(f"{ctx}: {item_ctx} references unknown {key} {ref}")
@@ -825,6 +827,21 @@ def check_page_shape(page, ctx, item_ctx, diagnostics):
         diagnostics.append(
             f"{ctx}: {item_ctx}.page must match pattern ^p[0-9]{{4}}$"
         )
+        return False
+    return True
+
+
+def check_locator_shape(ref, key, ctx, item_ctx, diagnostics):
+    if key == "element_ref":
+        pattern = "^e[0-9]{6}$"
+        valid = is_element_ref(ref)
+    elif key == "span_ref":
+        pattern = "^s[0-9]{6}$"
+        valid = is_span_ref(ref)
+    else:
+        return True
+    if not valid:
+        diagnostics.append(f"{ctx}: {item_ctx}.{key} must match pattern {pattern}")
         return False
     return True
 
@@ -864,6 +881,8 @@ def check_text_backed_finding(finding, refs, ctx, item_ctx, diagnostics):
         diagnostics.append(
             f"{ctx}: {item_ctx} requires span_ref for {finding.get('code')}"
         )
+        return
+    if not is_span_ref(span_ref):
         return
     span = refs["spans"].get(span_ref)
     if not isinstance(span, dict):
@@ -958,6 +977,24 @@ def is_page_ref(value):
     )
 
 
+def is_element_ref(value):
+    return (
+        isinstance(value, str)
+        and len(value) == 7
+        and value.startswith("e")
+        and is_ascii_digits(value[1:])
+    )
+
+
+def is_span_ref(value):
+    return (
+        isinstance(value, str)
+        and len(value) == 7
+        and value.startswith("s")
+        and is_ascii_digits(value[1:])
+    )
+
+
 def is_ascii_digits(value):
     return (
         isinstance(value, str)
@@ -968,7 +1005,7 @@ def is_ascii_digits(value):
 
 def check_element_span_ownership(item, refs, ctx, item_ctx, span_ref, diagnostics):
     element_ref = item.get("element_ref")
-    if element_ref is None:
+    if element_ref is None or not is_element_ref(element_ref):
         return
     element = refs["elements"].get(element_ref)
     if not isinstance(element, dict):

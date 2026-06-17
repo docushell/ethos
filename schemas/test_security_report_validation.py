@@ -780,6 +780,70 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_finding_element_refs_must_match_schema_pattern(self) -> None:
+        for value in ("element-1", []):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["findings"][1]["element_ref"] = value
+                report["findings"][1]["span_ref"] = "s000003"
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: finding f0002.element_ref "
+                    "must match pattern ^e[0-9]{6}$",
+                    diagnostics,
+                )
+                self.assertFalse(
+                    any(
+                        diagnostic.startswith(
+                            "security-report.example.json: finding f0002 "
+                            "references unknown element_ref"
+                        )
+                        for diagnostic in diagnostics
+                    )
+                )
+                self.assertFalse(
+                    any(
+                        "owned by element_ref" in diagnostic
+                        for diagnostic in diagnostics
+                    )
+                )
+
+    def test_finding_span_refs_must_exist_in_document(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["span_ref"] = "s999999"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 references unknown span_ref s999999",
+            diagnostics,
+        )
+
+    def test_finding_span_refs_must_match_schema_pattern(self) -> None:
+        for value in ("span-1", []):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["findings"][0]["span_ref"] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: finding f0001.span_ref "
+                    "must match pattern ^s[0-9]{6}$",
+                    diagnostics,
+                )
+                self.assertFalse(
+                    any(
+                        diagnostic.startswith(
+                            "security-report.example.json: finding f0001 "
+                            "references unknown span_ref"
+                        )
+                        for diagnostic in diagnostics
+                    )
+                )
+
     def test_finding_span_refs_must_match_finding_page(self) -> None:
         document = copy.deepcopy(self.document)
         document["payload"]["pages"].append(
