@@ -1,8 +1,8 @@
 # Ethos Execution Status
 
-Date: 2026-06-16
+Date: 2026-06-17
 Owner: product / decider
-Status: Pre-alpha / Milestone B entry. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, the Gate Zero corpus/hardware manifest and direct competitor lock are frozen/signed, ADR-0005 records an accepted `PROCEED` decision for internal Milestone B continuation, ADR-0006 closes package identifier/trademark validation, ADR-0007 locks the product direction, and the public-source preflight is green for a source-only pre-alpha GitHub push. Public benchmark reports, releases, packages, production positioning, and all performance/quality/footprint claims remain blocked. The controlled-run handoff remains `docs/gate-zero-evidence-runbook.md`; the accepted decision record is `docs/decisions/ADR-0005-gate-zero-decision.md`.
+Status: Pre-alpha / internal Milestone B closeout. Week 0 governance is accepted, WS-ENGINE Phase 1 has a real narrow PDFium path, WS-VERIFY-ALPHA has real deterministic evidence checks over native Ethos JSON and pinned OpenDataLoader output, WS-HARNESS has fail-closed readiness scaffolding, the Gate Zero corpus/hardware manifest and direct competitor lock are frozen/signed, ADR-0005 records an accepted `PROCEED` decision for internal Milestone B continuation, ADR-0006 closes package identifier/trademark validation, ADR-0007 locks the product direction, and the public-source preflight is green for a source-only pre-alpha GitHub push. Public benchmark reports, releases, packages, production positioning, and all performance/quality/footprint claims remain blocked. The controlled-run handoff remains `docs/gate-zero-evidence-runbook.md`; the accepted decision record is `docs/decisions/ADR-0005-gate-zero-decision.md`.
 
 ## Current Reality
 
