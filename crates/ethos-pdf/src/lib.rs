@@ -1900,11 +1900,20 @@ fn union_rects(mut rects: impl Iterator<Item = QRect>) -> Option<QRect> {
 }
 
 fn deterministic_font_id(raw_name: &str) -> Option<String> {
-    let (name, subset) = strip_subset_prefix(raw_name.trim());
-    let normalized = normalize_font_name(name)?;
-    if subset {
-        return Some(format!("embedded:{normalized}"));
+    let raw_name = raw_name.trim();
+    if raw_name.is_empty() {
+        return None;
     }
+    let (name, subset) = strip_subset_prefix(raw_name);
+    if subset {
+        if let Some(normalized) = normalize_font_name(name) {
+            if is_safe_font_id_suffix(&normalized) {
+                return Some(format!("embedded:{normalized}"));
+            }
+        }
+        return Some(hashed_embedded_font_id(name));
+    }
+    let normalized = normalize_font_name(name)?;
     font_substitution(&normalized)
         .or_else(|| Some(font_substitution_table().default_unresolved_font_id.clone()))
 }
@@ -1944,6 +1953,20 @@ fn normalize_font_name(name: &str) -> Option<String> {
     }
     let out = out.trim_matches('-').to_string();
     (!out.is_empty()).then_some(out)
+}
+
+fn is_safe_font_id_suffix(name: &str) -> bool {
+    !name.is_empty()
+        && name
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))
+}
+
+fn hashed_embedded_font_id(name: &str) -> String {
+    format!(
+        "embedded:sha256-{}",
+        ethos_core::c14n::sha256_hex_bytes(name.as_bytes())
+    )
 }
 
 fn font_substitution(name: &str) -> Option<String> {
@@ -2434,6 +2457,26 @@ mod tests {
             Some("subst:liberation-sans-regular")
         );
         assert_eq!(deterministic_font_id("   "), None);
+    }
+
+    #[test]
+    fn deterministic_font_ids_keep_embedded_ids_ascii_only() {
+        let unsafe_unicode = deterministic_font_id("ABCDEF+明朝").unwrap();
+        assert_eq!(unsafe_unicode, hashed_embedded_font_id("明朝"));
+        assert!(unsafe_unicode.is_ascii());
+
+        let unsafe_punctuation = deterministic_font_id("ABCDEF+Fixture+Font").unwrap();
+        assert_eq!(unsafe_punctuation, hashed_embedded_font_id("Fixture+Font"));
+        assert!(unsafe_punctuation.is_ascii());
+
+        let separator_only = deterministic_font_id("ABCDEF+///").unwrap();
+        assert_eq!(separator_only, hashed_embedded_font_id("///"));
+        assert!(separator_only.is_ascii());
+
+        assert_eq!(
+            deterministic_font_id("明朝").as_deref(),
+            Some("subst:liberation-sans-regular")
+        );
     }
 
     #[test]
