@@ -145,6 +145,30 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_unsupported_annotation_finding_message_must_match_fixed_template(
+        self,
+    ) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"].append(
+            {
+                "id": "f0004",
+                "code": "unsupported_annotation",
+                "message": "unsupported annotation changed",
+                "page": "p0001",
+                "excluded_from_default_chunks": False,
+            }
+        )
+        report["summary"]["unsupported_annotation"] = 1
+        report["inventories"]["annotations"][0]["supported"] = False
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0004 message must match "
+            "fixed template for unsupported_annotation",
+            diagnostics,
+        )
+
     def test_warning_derived_summary_must_match_document_warning_count(self) -> None:
         report = copy.deepcopy(self.report)
         report["summary"]["hidden_text_detected"] = 2
@@ -523,7 +547,7 @@ class SecurityReportValidationTests(unittest.TestCase):
             {
                 "id": "f0004",
                 "code": "unsupported_annotation",
-                "message": "unsupported annotation",
+                "message": "unsupported annotation ignored",
                 "page": "p0001",
                 "excluded_from_default_chunks": False,
             }

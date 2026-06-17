@@ -52,6 +52,7 @@ FINDING_MESSAGE_TEMPLATES = {
     "hidden_text_detected": "hidden text detected: excluded from default chunks",
     "annotations_present": "annotations present on page",
     "external_links_present": "external links present on page",
+    "unsupported_annotation": "unsupported annotation ignored",
 }
 
 
