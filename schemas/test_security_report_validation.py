@@ -287,6 +287,25 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_finding_ids_must_match_schema_pattern(self) -> None:
+        for value in ("finding-1", "f001", "F0001", []):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["findings"][0]["id"] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: findings[0].id must match "
+                    "pattern ^f[0-9]{4}$",
+                    diagnostics,
+                )
+                self.assertNotIn(
+                    "security-report.example.json: findings[0].id must be f0001 "
+                    "for deterministic numbering",
+                    diagnostics,
+                )
+
     def test_finding_ids_must_be_unique(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][1]["id"] = "f0001"

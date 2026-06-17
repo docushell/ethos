@@ -480,15 +480,19 @@ def diagnose_finding_ids(findings, ctx, diagnostics):
         if "id" not in finding:
             continue
         finding_id = finding.get("id")
+        if not is_finding_id(finding_id):
+            diagnostics.append(
+                f"{ctx}: findings[{index}].id must match pattern ^f[0-9]{{4}}$"
+            )
+            continue
         expected_id = f"f{index + 1:04d}"
         if finding_id != expected_id:
             diagnostics.append(
                 f"{ctx}: findings[{index}].id must be {expected_id} for deterministic numbering"
             )
-        if isinstance(finding_id, str):
-            if finding_id in seen:
-                diagnostics.append(f"{ctx}: duplicate finding id {finding_id}")
-            seen.add(finding_id)
+        if finding_id in seen:
+            diagnostics.append(f"{ctx}: duplicate finding id {finding_id}")
+        seen.add(finding_id)
 
 
 def diagnose_finding_required_fields(findings, ctx, diagnostics):
@@ -991,6 +995,15 @@ def is_span_ref(value):
         isinstance(value, str)
         and len(value) == 7
         and value.startswith("s")
+        and is_ascii_digits(value[1:])
+    )
+
+
+def is_finding_id(value):
+    return (
+        isinstance(value, str)
+        and len(value) == 5
+        and value.startswith("f")
         and is_ascii_digits(value[1:])
     )
 
