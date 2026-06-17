@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:chunks:1",
   "title": "Ethos chunk record (one line of chunks.jsonl)",
-  "description": "Self-describing RAG chunk: each JSONL line carries provenance so a chunk can be cited and later verified without the full document at hand. Derived deterministically from the canonical document (ethos.json) — same document + same config => byte-identical chunks.jsonl. Warning codes are inlined (not refs) so RAG consumers need no join; hidden/off-page/low-contrast content is never present in default chunks.",
+  "description": "Self-describing default RAG chunk: each JSONL line carries provenance so a chunk can be cited and later verified without the full document at hand. Derived deterministically from the canonical document (ethos.json) — same document + same config => byte-identical chunks.jsonl. Warning codes are inlined (not refs) so RAG consumers need no join; hidden/off-page/low-contrast content is never present in default chunks.",
   "type": "object",
   "required": [
     "schema_version",
@@ -52,14 +52,11 @@
     },
     "warnings": {
       "type": "array",
-      "description": "Inherited warning codes from source regions (e.g. low_confidence_table_structure).",
+      "description": "Inherited warning codes from source regions that are still valid in default chunks. Text-exclusion security codes hidden_text_detected, off_page_text_detected, and low_contrast_text_detected are omitted from default chunks.",
       "items": {
         "enum": [
           "low_confidence_reading_order",
           "low_confidence_table_structure",
-          "hidden_text_detected",
-          "off_page_text_detected",
-          "low_contrast_text_detected",
           "annotations_present",
           "external_links_present",
           "image_only_page",
