@@ -92,7 +92,7 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
                     let source = NativeCropSource { document: &doc };
                     let mut report =
                         ethos_verify::verify_claims(&source, citations, &config, config_sha256);
-                    assign_logical_crop_refs(&mut report);
+                    assign_logical_crop_refs(&mut report)?;
                     if let Some(crop_dir) = args.crop_dir.as_deref() {
                         write_crop_artifacts(crop_dir, &report, crop_source_pdf.as_ref())?;
                     }
@@ -547,9 +547,9 @@ fn logical_crop_ref_for(
     Ok(format!("crop-{hash}.json"))
 }
 
-fn assign_logical_crop_refs(report: &mut VerificationReport) {
+fn assign_logical_crop_refs(report: &mut VerificationReport) -> Result<(), Failure> {
     let Some(document_fingerprint) = report.document_fingerprint.as_deref() else {
-        return;
+        return Ok(());
     };
     for check in &mut report.checks {
         let Some(evidence) = check.evidence.as_mut() else {
@@ -561,10 +561,10 @@ fn assign_logical_crop_refs(report: &mut VerificationReport) {
         let Some(page) = evidence.page.as_deref() else {
             continue;
         };
-        if let Ok(crop_ref) = logical_crop_ref_for(document_fingerprint, &check.id, page) {
-            evidence.crop_ref = Some(crop_ref);
-        }
+        let crop_ref = logical_crop_ref_for(document_fingerprint, &check.id, page)?;
+        evidence.crop_ref = Some(crop_ref);
     }
+    Ok(())
 }
 
 #[derive(Debug)]
@@ -862,7 +862,8 @@ fn zlib_store(data: &[u8]) -> Result<Vec<u8>, Failure> {
         let len = remaining.len().min(u16::MAX as usize);
         let final_block = len == remaining.len();
         out.push(if final_block { 0x01 } else { 0x00 });
-        let len_u16 = u16::try_from(len).expect("block length is capped at u16::MAX");
+        let len_u16 = u16::try_from(len)
+            .map_err(|_| Failure::Ethos(EthosError::internal("PNG zlib block length overflow")))?;
         out.extend_from_slice(&len_u16.to_le_bytes());
         out.extend_from_slice(&(!len_u16).to_le_bytes());
         out.extend_from_slice(&remaining[..len]);
@@ -1073,6 +1074,23 @@ mod tests {
     }
 
     #[test]
+    fn zlib_store_splits_blocks_larger_than_u16_max() {
+        let data = vec![0x41; u16::MAX as usize + 1];
+        let zlib = zlib_store(&data).unwrap_or_else(|_| panic!("zlib store should encode"));
+
+        assert_eq!(&zlib[..2], &[0x78, 0x01]);
+        assert_eq!(zlib[2], 0x00);
+        assert_eq!(u16::from_le_bytes([zlib[3], zlib[4]]), u16::MAX);
+
+        let second_block = 2 + 1 + 2 + 2 + u16::MAX as usize;
+        assert_eq!(zlib[second_block], 0x01);
+        assert_eq!(
+            u16::from_le_bytes([zlib[second_block + 1], zlib[second_block + 2]]),
+            1
+        );
+    }
+
+    #[test]
     fn logical_crop_ref_uses_check_identity_not_bbox() {
         let first = logical_crop_ref_for(
             "sha256:7164f43f104dc248193f12ea828e0ab857eae194210114c6f6c0160fd643c87b",
@@ -1185,7 +1203,8 @@ mod tests {
             warnings: Vec::new(),
         };
 
-        assign_logical_crop_refs(&mut report);
+        assign_logical_crop_refs(&mut report)
+            .unwrap_or_else(|_| panic!("logical crop refs should be assigned"));
 
         let expected = logical_crop_ref_for(
             report.document_fingerprint.as_deref().unwrap(),
