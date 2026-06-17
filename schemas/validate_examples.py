@@ -30,6 +30,7 @@ import sys
 from pathlib import Path
 
 from font_policy_validation import diagnose_font_policy
+from security_report_validation import diagnose_security_report_example
 from table_model_validation import diagnose_table_model
 
 try:
@@ -240,6 +241,13 @@ for label, got in [
     if got != want:
         fail(f"{label} diverges from document example")
 print("ok    example fingerprints coherent across artifacts")
+
+security_report_diagnostics = diagnose_security_report_example(doc, sec)
+if security_report_diagnostics:
+    for diagnostic in security_report_diagnostics:
+        fail(diagnostic)
+else:
+    print("ok    security report example findings are grounded in document example")
 
 # deterministic profile font-policy artifact checks
 profile = json.loads(
