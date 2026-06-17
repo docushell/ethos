@@ -59,15 +59,15 @@ fn temp_json(name: &str, json: &str) -> PathBuf {
     path
 }
 
-fn document_with_stale_chunk_warning_ref() -> PathBuf {
+fn document_with_mutated_chunk(name: &str, mutate: impl FnOnce(&mut Value)) -> PathBuf {
     let mut doc = json_file(document_example());
-    doc["payload"]["chunks"][0]["warning_refs"] = serde_json::json!(["w999999"]);
+    mutate(&mut doc);
 
     let mut doc: Document = serde_json::from_value(doc).expect("document parses");
     doc.payload_sha256 = doc.compute_payload_sha256().expect("payload hash computes");
     doc.fingerprint = doc.compute_fingerprint().expect("fingerprint computes");
     temp_json(
-        "stale-chunk-warning-ref-document",
+        name,
         &serde_json::to_string(&doc).expect("document serializes"),
     )
 }
@@ -89,8 +89,71 @@ fn rag_chunk_matches_schema_example_jsonl() {
 }
 
 #[test]
+fn rag_chunk_output_is_byte_identical_across_runs() {
+    let first = run_ethos(&["rag", "chunk", document_example().to_str().unwrap()]);
+    let second = run_ethos(&["rag", "chunk", document_example().to_str().unwrap()]);
+
+    assert!(
+        first.status.success(),
+        "first ethos rag chunk failed\nstatus: {:?}\nstderr:\n{}",
+        first.status.code(),
+        String::from_utf8_lossy(&first.stderr)
+    );
+    assert!(
+        second.status.success(),
+        "second ethos rag chunk failed\nstatus: {:?}\nstderr:\n{}",
+        second.status.code(),
+        String::from_utf8_lossy(&second.stderr)
+    );
+    assert_eq!(first.stderr, b"");
+    assert_eq!(second.stderr, b"");
+    assert_eq!(first.stdout, second.stdout);
+}
+
+#[test]
+fn rag_chunk_rejects_unknown_chunk_element_ref() {
+    let document = document_with_mutated_chunk("stale-chunk-element-ref-document", |doc| {
+        doc["payload"]["chunks"][0]["element_refs"][0] = serde_json::json!("e999999");
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("chunk c000001 references unknown element_ref e999999"));
+}
+
+#[test]
+fn rag_chunk_rejects_unknown_chunk_page_ref() {
+    let document = document_with_mutated_chunk("stale-chunk-page-ref-document", |doc| {
+        doc["payload"]["chunks"][0]["page_refs"][0] = serde_json::json!("p9999");
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("chunk c000001 references unknown page_ref p9999"));
+}
+
+#[test]
+fn rag_chunk_rejects_unknown_chunk_bbox_page_ref() {
+    let document = document_with_mutated_chunk("stale-chunk-bbox-page-ref-document", |doc| {
+        doc["payload"]["chunks"][0]["bboxes"][0]["page"] = serde_json::json!("p9999");
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("chunk c000001 bboxes[0] references unknown page_ref p9999"));
+}
+
+#[test]
 fn rag_chunk_rejects_unknown_chunk_warning_ref() {
-    let document = document_with_stale_chunk_warning_ref();
+    let document = document_with_mutated_chunk("stale-chunk-warning-ref-document", |doc| {
+        doc["payload"]["chunks"][0]["warning_refs"] = serde_json::json!(["w999999"]);
+    });
     let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
 
     assert_eq!(output.status.code(), Some(2));
