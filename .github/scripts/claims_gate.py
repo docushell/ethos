@@ -35,7 +35,6 @@ SURFACES = [
     "README.md",
     "docs/roadmap.md",
     "docs/landscape-log.md",
-    "docs/whitepaper.md",
     "examples",
     "announcements",
     "bindings",
