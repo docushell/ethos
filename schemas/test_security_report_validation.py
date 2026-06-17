@@ -1429,7 +1429,7 @@ class SecurityReportValidationTests(unittest.TestCase):
                 )
 
     def test_script_inventory_location_must_be_supported(self) -> None:
-        for value in ("widget", "", 7, None):
+        for value in ("widget", "", 7, None, [], {}):
             with self.subTest(value=value):
                 report = copy.deepcopy(self.report)
                 report["inventories"]["scripts"] = [{"location": value}]

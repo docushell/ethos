@@ -721,7 +721,8 @@ def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
     for index, item in enumerate(inventory_lists.get("scripts", [])):
         if not isinstance(item, dict) or "location" not in item:
             continue
-        if item.get("location") not in SCRIPT_LOCATIONS:
+        location = item.get("location")
+        if not isinstance(location, str) or location not in SCRIPT_LOCATIONS:
             diagnostics.append(
                 f"{ctx}: inventories.scripts[{index}].location must be a "
                 "supported script location"
