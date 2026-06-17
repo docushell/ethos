@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use ethos_core::error::EthosError;
 use ethos_core::model::{Chunk, Document};
 
@@ -26,9 +28,11 @@ pub(crate) fn rag_chunk(args: RagChunkArgs) -> Result<(), Failure> {
 }
 
 fn rag_chunk_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
+    let refs = RagChunkRefs::new(doc);
     let mut out = Vec::with_capacity(4096);
     for chunk in &doc.payload.chunks {
-        let line = ethos_core::c14n::c14n_bytes(&rag_chunk_record(doc, chunk)?)
+        validate_chunk_refs(chunk, &refs)?;
+        let line = ethos_core::c14n::c14n_bytes(&rag_chunk_record(chunk, &refs)?)
             .map_err(|e| EthosError::internal(e.message))?;
         out.extend_from_slice(&line);
         out.push(b'\n');
@@ -36,32 +40,99 @@ fn rag_chunk_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
     Ok(out)
 }
 
-fn rag_chunk_record(doc: &Document, chunk: &Chunk) -> Result<serde_json::Value, Failure> {
-    let warning_code = |id: &str| -> Option<&'static str> {
-        doc.payload
-            .security_warnings
-            .iter()
-            .chain(doc.payload.parser_warnings.iter())
-            .find(|w| w.id == id)
-            .map(|w| w.code.as_str())
-    };
+struct RagChunkRefs<'a> {
+    page_ids: BTreeSet<&'a str>,
+    element_ids: BTreeSet<&'a str>,
+    warning_codes: BTreeMap<&'a str, &'a str>,
+    schema_version: &'a str,
+    document_fingerprint: &'a str,
+    source_fingerprint: &'a str,
+    config_sha256: &'a str,
+}
 
+impl<'a> RagChunkRefs<'a> {
+    fn new(doc: &'a Document) -> Self {
+        Self {
+            page_ids: doc
+                .payload
+                .pages
+                .iter()
+                .map(|page| page.id.as_str())
+                .collect(),
+            element_ids: doc
+                .payload
+                .elements
+                .iter()
+                .map(|element| element.id.as_str())
+                .collect(),
+            warning_codes: doc
+                .payload
+                .security_warnings
+                .iter()
+                .chain(doc.payload.parser_warnings.iter())
+                .map(|warning| (warning.id.as_str(), warning.code.as_str()))
+                .collect(),
+            schema_version: doc.schema_version.as_str(),
+            document_fingerprint: doc.fingerprint.as_str(),
+            source_fingerprint: doc.source.fingerprint.as_str(),
+            config_sha256: doc.config_sha256.as_str(),
+        }
+    }
+}
+
+fn validate_chunk_refs(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Failure> {
+    for id in &chunk.element_refs {
+        if !refs.element_ids.contains(id.as_str()) {
+            return Err(Failure::Usage(format!(
+                "chunk {} references unknown element_ref {}",
+                chunk.id, id
+            )));
+        }
+    }
+    for id in &chunk.page_refs {
+        if !refs.page_ids.contains(id.as_str()) {
+            return Err(Failure::Usage(format!(
+                "chunk {} references unknown page_ref {}",
+                chunk.id, id
+            )));
+        }
+    }
+    for (idx, bbox) in chunk.bboxes.iter().enumerate() {
+        if !refs.page_ids.contains(bbox.page.as_str()) {
+            return Err(Failure::Usage(format!(
+                "chunk {} bboxes[{}] references unknown page_ref {}",
+                chunk.id, idx, bbox.page
+            )));
+        }
+    }
+    for id in &chunk.warning_refs {
+        if !refs.warning_codes.contains_key(id.as_str()) {
+            return Err(Failure::Usage(format!(
+                "chunk {} references unknown warning_ref {}",
+                chunk.id, id
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn rag_chunk_record(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<serde_json::Value, Failure> {
     let mut record = serde_json::Map::new();
     record.insert(
         "schema_version".into(),
-        serde_json::Value::String(doc.schema_version.clone()),
+        serde_json::Value::String(refs.schema_version.to_string()),
     );
     record.insert(
         "document_fingerprint".into(),
-        serde_json::Value::String(doc.fingerprint.clone()),
+        serde_json::Value::String(refs.document_fingerprint.to_string()),
     );
     record.insert(
         "source_fingerprint".into(),
-        serde_json::Value::String(doc.source.fingerprint.clone()),
+        serde_json::Value::String(refs.source_fingerprint.to_string()),
     );
     record.insert(
         "config_sha256".into(),
-        serde_json::Value::String(doc.config_sha256.clone()),
+        serde_json::Value::String(refs.config_sha256.to_string()),
     );
     record.insert("id".into(), serde_json::Value::String(chunk.id.clone()));
     record.insert("text".into(), serde_json::Value::String(chunk.text.clone()));
@@ -98,12 +169,10 @@ fn rag_chunk_record(doc: &Document, chunk: &Chunk) -> Result<serde_json::Value, 
     );
     let mut warnings = Vec::with_capacity(chunk.warning_refs.len());
     for id in &chunk.warning_refs {
-        let Some(code) = warning_code(id) else {
-            return Err(Failure::Usage(format!(
-                "chunk {} references unknown warning_ref {}",
-                chunk.id, id
-            )));
-        };
+        let code = refs
+            .warning_codes
+            .get(id.as_str())
+            .expect("chunk warning_refs validated before record serialization");
         warnings.push(serde_json::Value::String(code.to_string()));
     }
     record.insert("warnings".into(), serde_json::Value::Array(warnings));
