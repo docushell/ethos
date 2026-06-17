@@ -20,7 +20,7 @@
 from __future__ import annotations
 
 
-REPORTABLE_WARNING_CODES = {
+SECURITY_WARNING_CODES = {
     "hidden_text_detected",
     "off_page_text_detected",
     "low_contrast_text_detected",
@@ -29,6 +29,16 @@ REPORTABLE_WARNING_CODES = {
     "unsupported_annotation",
     "image_only_page",
 }
+
+REPORTABLE_WARNING_CODES = SECURITY_WARNING_CODES
+
+INVENTORY_BACKED_FINDING_CODES = {
+    "annotations_present",
+    "external_links_present",
+    "unsupported_annotation",
+}
+
+WARNING_DERIVED_FINDING_CODES = SECURITY_WARNING_CODES - INVENTORY_BACKED_FINDING_CODES
 
 DEFAULT_CHUNK_EXCLUDED_CODES = {
     "hidden_text_detected",
@@ -52,12 +62,14 @@ def diagnose_security_report_example(
 ):
     diagnostics = []
     payload = document.get("payload") if isinstance(document, dict) else {}
-    warnings = []
+    security_warnings = []
+    parser_warnings = []
     if isinstance(payload, dict):
-        warnings.extend(payload.get("security_warnings", []))
-        warnings.extend(payload.get("parser_warnings", []))
+        security_warnings = warning_items(payload.get("security_warnings", []))
+        parser_warnings = warning_items(payload.get("parser_warnings", []))
     refs = document_reference_index(payload)
     diagnose_report_identity(document, report, ctx, diagnostics)
+    diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
 
     findings = report.get("findings") if isinstance(report, dict) else []
     if not isinstance(findings, list):
@@ -68,7 +80,7 @@ def diagnose_security_report_example(
 
     warning_derived_findings = [
         projected_warning_finding(warning)
-        for warning in warnings
+        for warning in security_warnings
         if isinstance(warning, dict) and warning.get("code") in REPORTABLE_WARNING_CODES
     ]
     actual_projected_findings = [
@@ -86,6 +98,19 @@ def diagnose_security_report_example(
         if expected not in actual_projected_findings:
             diagnostics.append(
                 f"{ctx}: missing warning-derived finding for {expected['code']}"
+            )
+
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        code = finding.get("code")
+        if code not in WARNING_DERIVED_FINDING_CODES:
+            continue
+        projected = project_report_finding(finding)
+        if projected not in warning_derived_findings:
+            diagnostics.append(
+                f"{ctx}: {finding_ctx(finding, index)} has no matching "
+                f"security_warnings entry for {code}"
             )
 
     for code in sorted({finding["code"] for finding in warning_derived_findings}):
@@ -146,6 +171,34 @@ def diagnose_security_report_example(
     diagnose_inventory_references(inventory_lists, refs, ctx, diagnostics)
 
     return diagnostics
+
+
+def warning_items(value):
+    if isinstance(value, list):
+        return value
+    return []
+
+
+def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics):
+    for warning in parser_warnings:
+        if not isinstance(warning, dict):
+            continue
+        code = warning.get("code")
+        if code in SECURITY_WARNING_CODES:
+            diagnostics.append(
+                f"{ctx}: parser warning {warning_id(warning)} ({code}) "
+                "must be in security_warnings"
+            )
+
+    for warning in security_warnings:
+        if not isinstance(warning, dict):
+            continue
+        code = warning.get("code")
+        if isinstance(code, str) and code not in SECURITY_WARNING_CODES:
+            diagnostics.append(
+                f"{ctx}: security warning {warning_id(warning)} ({code}) "
+                "is not a security warning code"
+            )
 
 
 def projected_warning_finding(warning):
@@ -422,3 +475,10 @@ def finding_ctx(finding, index):
     if isinstance(finding_id, str):
         return f"finding {finding_id}"
     return f"findings[{index}]"
+
+
+def warning_id(warning):
+    identifier = warning.get("id")
+    if isinstance(identifier, str):
+        return identifier
+    return "<missing-id>"

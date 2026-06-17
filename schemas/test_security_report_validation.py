@@ -201,6 +201,27 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_unexpected_warning_derived_report_finding_fails_closed(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"].append(
+            {
+                "id": "f0004",
+                "code": "image_only_page",
+                "message": "image-only page",
+                "page": "p0001",
+                "excluded_from_default_chunks": False,
+            }
+        )
+        report["summary"]["image_only_page"] = 1
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0004 has no matching "
+            "security_warnings entry for image_only_page",
+            diagnostics,
+        )
+
     def test_warning_refs_must_match_report_finding_projection(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][0]["span_ref"] = "s999999"
@@ -580,7 +601,7 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
-    def test_reportable_parser_warning_codes_are_included_when_present(self) -> None:
+    def test_security_codes_in_parser_warnings_fail_closed(self) -> None:
         document = copy.deepcopy(self.document)
         document["payload"]["parser_warnings"].append(
             {
@@ -594,7 +615,31 @@ class SecurityReportValidationTests(unittest.TestCase):
         diagnostics = diagnose_security_report_example(document, self.report)
 
         self.assertIn(
+            "security-report.example.json: parser warning w0099 (image_only_page) "
+            "must be in security_warnings",
+            diagnostics,
+        )
+        self.assertNotIn(
             "security-report.example.json: missing warning-derived finding for image_only_page",
+            diagnostics,
+        )
+
+    def test_parser_codes_in_security_warnings_fail_closed(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["security_warnings"].append(
+            {
+                "id": "w0099",
+                "code": "low_confidence_reading_order",
+                "message": "parser warning placed in security lane",
+                "page": "p0001",
+            }
+        )
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: security warning w0099 "
+            "(low_confidence_reading_order) is not a security warning code",
             diagnostics,
         )
 
