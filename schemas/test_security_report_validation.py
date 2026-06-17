@@ -22,7 +22,11 @@ import json
 import unittest
 from pathlib import Path
 
-from security_report_validation import diagnose_security_report_example
+from security_report_validation import (
+    FINDING_MESSAGE_TEMPLATES,
+    SECURITY_WARNING_CODES,
+    diagnose_security_report_example,
+)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -36,6 +40,9 @@ class SecurityReportValidationTests(unittest.TestCase):
 
     def test_current_examples_are_coherent(self) -> None:
         self.assertEqual(diagnose_security_report_example(self.document, self.report), [])
+
+    def test_all_security_warning_codes_have_fixed_message_templates(self) -> None:
+        self.assertEqual(set(FINDING_MESSAGE_TEMPLATES), SECURITY_WARNING_CODES)
 
     def test_schema_version_must_match_document(self) -> None:
         report = copy.deepcopy(self.report)
@@ -120,6 +127,27 @@ class SecurityReportValidationTests(unittest.TestCase):
             "fixed template for hidden_text_detected",
             diagnostics,
         )
+
+    def test_security_warning_message_must_match_fixed_template(self) -> None:
+        for code in sorted(SECURITY_WARNING_CODES):
+            with self.subTest(code=code):
+                document = copy.deepcopy(self.document)
+                document["payload"]["security_warnings"].append(
+                    {
+                        "id": "w0099",
+                        "code": code,
+                        "message": "security warning changed",
+                        "page": "p0001",
+                    }
+                )
+
+                diagnostics = diagnose_security_report_example(document, self.report)
+
+                self.assertIn(
+                    "security-report.example.json: security warning w0099 message "
+                    f"must match fixed template for {code}",
+                    diagnostics,
+                )
 
     def test_text_exclusion_finding_messages_must_match_fixed_templates(self) -> None:
         for code, changed_message in (
@@ -785,6 +813,11 @@ class SecurityReportValidationTests(unittest.TestCase):
         )
         self.assertNotIn(
             "security-report.example.json: missing warning-derived finding for image_only_page",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: security warning w0099 message must "
+            "match fixed template for image_only_page",
             diagnostics,
         )
 

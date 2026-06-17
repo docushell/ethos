@@ -74,6 +74,7 @@ def diagnose_security_report_example(
     refs = document_reference_index(payload)
     diagnose_report_identity(document, report, ctx, diagnostics)
     diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
+    diagnose_security_warning_messages(security_warnings, ctx, diagnostics)
 
     findings = report.get("findings") if isinstance(report, dict) else []
     if not isinstance(findings, list):
@@ -224,6 +225,22 @@ def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
             diagnostics.append(
                 f"{ctx}: security warning {warning_id(warning)} ({code}) "
                 "is not a security warning code"
+            )
+
+
+def diagnose_security_warning_messages(security_warnings, ctx, diagnostics):
+    for warning in security_warnings:
+        if not isinstance(warning, dict):
+            continue
+        code = warning.get("code")
+        expected_message = FINDING_MESSAGE_TEMPLATES.get(code)
+        if expected_message is None:
+            continue
+        actual_message = warning.get("message")
+        if actual_message != expected_message:
+            diagnostics.append(
+                f"{ctx}: security warning {warning_id(warning)} "
+                f"message must match fixed template for {code}"
             )
 
 
