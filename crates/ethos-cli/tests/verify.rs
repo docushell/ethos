@@ -123,6 +123,10 @@ fn document_example() -> PathBuf {
     repo_root().join("schemas/examples/document.example.json")
 }
 
+fn table_regular_grid_fixture() -> PathBuf {
+    repo_root().join("fixtures/synthetic/table-regular-grid/document.pdf")
+}
+
 fn odl_example() -> PathBuf {
     repo_root().join("examples/verify/opendataloader.json")
 }
@@ -582,9 +586,22 @@ fn crop_source_pdf_writes_rendered_crop_artifacts_when_pdfium_is_configured() {
     assert_eq!(parse.stdout, b"");
     assert_eq!(parse.stderr, b"");
 
+    let doc = json_file(&doc_path);
+    let citations = serde_json::json!({
+        "document_fingerprint": doc["fingerprint"],
+        "claims": [
+            {
+                "kind": "quote",
+                "text": "Hello",
+                "citation": {
+                    "element_id": "e000001"
+                }
+            }
+        ]
+    });
     let citations = temp_json(
         "simple-text-citation",
-        r#"[{"kind":"quote","text":"Hello","citation":{"element_id":"e000001"}}]"#,
+        &serde_json::to_string(&citations).expect("citations serialize"),
     );
     let out = temp_output("simple-text-rendered-crop-report");
     let crop_dir = tempfile::tempdir().expect("temp crop dir");
@@ -1684,6 +1701,105 @@ fn table_cell_claim_verifies_against_native_ethos_table() {
     assert_eq!(report["checks"][0]["match_method"], "table_cell_lookup");
     assert_eq!(report["checks"][0]["evidence"]["text"], "$12.4M");
     assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn parsed_table_candidate_fixture_verifies_table_cell_citations() {
+    if !pdfium_configured() {
+        eprintln!("skipping table candidate verify fixture test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
+        return;
+    }
+
+    let fixture = table_regular_grid_fixture();
+    let parsed = parse_success(&[
+        "doc",
+        "parse",
+        fixture.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+    assert_eq!(parsed["payload"]["tables"].as_array().unwrap().len(), 1);
+    assert_eq!(parsed["payload"]["tables"][0]["id"], "t0001");
+    assert_eq!(
+        parsed["payload"]["tables"][0]["cells"]
+            .as_array()
+            .unwrap()
+            .len(),
+        6
+    );
+    let fingerprint = parsed["fingerprint"]
+        .as_str()
+        .expect("parsed fixture document has a fingerprint");
+    let doc = temp_json(
+        "table-candidate-fixture-document",
+        &serde_json::to_string(&parsed).expect("parsed fixture serializes"),
+    );
+    let citations = serde_json::json!({
+        "document_fingerprint": fingerprint,
+        "claims": [
+            {
+                "kind": "table_cell",
+                "text": "10",
+                "citation": {
+                    "table_id": "t0001",
+                    "cell": {
+                        "row": 1,
+                        "col": 1
+                    }
+                }
+            },
+            {
+                "kind": "table_cell",
+                "text": "99",
+                "citation": {
+                    "table_id": "t0001",
+                    "cell": {
+                        "row": 1,
+                        "col": 1
+                    }
+                }
+            },
+            {
+                "kind": "table_cell",
+                "text": "12",
+                "citation": {
+                    "table_id": "t0001",
+                    "cell": {
+                        "row": 9,
+                        "col": 9
+                    }
+                }
+            }
+        ]
+    });
+    let citations = temp_json(
+        "table-candidate-fixture-citations",
+        &serde_json::to_string(&citations).expect("citations serialize"),
+    );
+    let report = parse_success(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["grounding"]["parser"]["name"], "ethos");
+    assert_eq!(report["fingerprint_stale"], false);
+    assert_eq!(report["checks"].as_array().unwrap().len(), 3);
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(report["checks"][0]["match_method"], "table_cell_lookup");
+    assert_eq!(report["checks"][0]["evidence"]["page"], "p0001");
+    assert_eq!(report["checks"][0]["evidence"]["text"], "10");
+    assert_eq!(
+        report["checks"][0]["evidence"]["bbox"],
+        serde_json::json!([18131, 8737, 19277, 9613])
+    );
+    assert_eq!(report["checks"][1]["status"], "mismatch");
+    assert_eq!(report["checks"][1]["match_method"], "table_cell_lookup");
+    assert_eq!(report["checks"][1]["reason"], "text_mismatch");
+    assert_eq!(report["checks"][2]["status"], "not_found");
+    assert_eq!(report["checks"][2]["reason"], "table_cell_not_found");
+    assert_eq!(report["all_evidence_grounded"], false);
 }
 
 #[test]
