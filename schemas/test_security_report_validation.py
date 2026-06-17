@@ -1101,6 +1101,36 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_inventory_string_fields_must_be_strings(self) -> None:
+        inventory_items = {
+            "annotations": {"page": "p0001", "kind": "link"},
+            "actions": {"kind": "uri", "target": "https://example.com/q3"},
+            "attachments": {"name": "attachment.bin", "bytes": 0},
+            "scripts": {"location": "document", "trigger": "open"},
+            "links": {"page": "p0001", "uri": "https://example.com/q3", "external": True},
+        }
+        cases = (
+            ("annotations", "kind", 7),
+            ("actions", "kind", False),
+            ("actions", "target", ["https://example.com/q3"]),
+            ("attachments", "name", None),
+            ("scripts", "trigger", 7),
+            ("links", "uri", ["https://example.com/q3"]),
+        )
+        for name, field, value in cases:
+            with self.subTest(name=name, field=field, value=value):
+                report = copy.deepcopy(self.report)
+                report["inventories"][name] = [copy.deepcopy(inventory_items[name])]
+                report["inventories"][name][0][field] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    f"security-report.example.json: inventories.{name}[0].{field} "
+                    "must be a string",
+                    diagnostics,
+                )
+
     def test_attachment_inventory_sha256_must_be_lowercase_hex_digest(self) -> None:
         for value in ("abc", "g" * 64, "A" * 64, 64, None):
             with self.subTest(value=value):

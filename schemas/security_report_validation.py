@@ -104,6 +104,14 @@ INVENTORY_ALLOWED_FIELDS = {
     "links": ("page", "uri", "external", "bbox"),
 }
 
+INVENTORY_STRING_FIELDS = {
+    "annotations": ("kind",),
+    "actions": ("kind", "target"),
+    "attachments": ("name",),
+    "scripts": ("trigger",),
+    "links": ("uri",),
+}
+
 SCRIPT_LOCATIONS = {"document", "page", "annotation", "field", "other"}
 LOWER_HEX_DIGITS = set("0123456789abcdef")
 
@@ -595,6 +603,17 @@ def diagnose_inventory_required_fields(inventory_lists, ctx, diagnostics):
 
 
 def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
+    for name, fields in INVENTORY_STRING_FIELDS.items():
+        for index, item in enumerate(inventory_lists.get(name, [])):
+            if not isinstance(item, dict):
+                continue
+            for field in fields:
+                if field in item and not isinstance(item.get(field), str):
+                    diagnostics.append(
+                        f"{ctx}: inventories.{name}[{index}].{field} "
+                        "must be a string"
+                    )
+
     for index, item in enumerate(inventory_lists.get("annotations", [])):
         if not isinstance(item, dict) or "supported" not in item:
             continue
