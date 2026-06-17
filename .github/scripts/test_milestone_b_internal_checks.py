@@ -61,6 +61,7 @@ class MilestoneBInternalCheckTests(unittest.TestCase):
             "$(PYTHON) fixtures/validate_fixtures.py",
             "$(PYTHON) fixtures/test_validate_fixtures.py",
             "$(PYTHON) schemas/test_font_policy_validation.py",
+            "$(PYTHON) schemas/test_security_report_validation.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_milestone_b_closeout_record.py",
