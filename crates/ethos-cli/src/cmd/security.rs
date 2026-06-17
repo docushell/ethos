@@ -31,6 +31,15 @@ pub(crate) fn security_report(args: SecurityReportArgs) -> Result<(), Failure> {
 
 fn security_report_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
     let refs = SecurityReportRefs::new(doc);
+    for warning in &doc.payload.parser_warnings {
+        if warning.code.is_security() {
+            return Err(Failure::Usage(format!(
+                "security report parser warning {} ({}) must be in security_warnings",
+                warning.id,
+                warning.code.as_str()
+            )));
+        }
+    }
     let mut warnings = Vec::with_capacity(doc.payload.security_warnings.len());
     for warning in &doc.payload.security_warnings {
         if !warning.code.is_security() {
@@ -231,6 +240,12 @@ fn finding_record(
 }
 
 fn validate_warning_refs(warning: &Warning, refs: &SecurityReportRefs<'_>) -> Result<(), Failure> {
+    if let Some(region_ref) = warning.region_ref.as_deref() {
+        return Err(Failure::Usage(format!(
+            "security report warning {} region_ref {} is unsupported until security report schema supports region_ref",
+            warning.id, region_ref
+        )));
+    }
     if page_backed_warning_code(warning.code) && warning.page.is_none() {
         return Err(Failure::Usage(format!(
             "security report warning {} ({}) requires page",

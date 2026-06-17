@@ -202,11 +202,11 @@ fn security_report_rejects_inventory_backed_warning_without_inventory_source() {
 }
 
 #[test]
-fn security_report_ignores_reportable_parser_warnings() {
-    let document = document_with_mutated_warning("reportable-parser-warning", |doc| {
+fn security_report_rejects_security_code_in_parser_warnings() {
+    let document = document_with_mutated_warning("security-code-in-parser-warning", |doc| {
         doc["payload"]["parser_warnings"][0]["code"] = serde_json::json!("hidden_text_detected");
         doc["payload"]["parser_warnings"][0]["message"] =
-            serde_json::json!("parser warning must stay outside security report");
+            serde_json::json!("security warning code in parser warnings");
         doc["payload"]["parser_warnings"][0]["span_ref"] = serde_json::json!("s000002");
         doc["payload"]["parser_warnings"][0]
             .as_object_mut()
@@ -216,15 +216,11 @@ fn security_report_ignores_reportable_parser_warnings() {
 
     let output = run_ethos(&["security", "report", document.to_str().unwrap()]);
 
-    assert!(
-        output.status.success(),
-        "ethos security report failed\nstatus: {:?}\nstderr:\n{}",
-        output.status.code(),
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let report: Value = serde_json::from_slice(&output.stdout).expect("report JSON parses");
-    assert_eq!(report["summary"]["hidden_text_detected"], 1);
-    assert_eq!(report["findings"].as_array().unwrap().len(), 1);
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(
+        "security report parser warning w0002 (hidden_text_detected) must be in security_warnings"
+    ));
 }
 
 #[test]
@@ -264,6 +260,21 @@ fn security_report_rejects_text_warning_without_span_ref() {
     assert_eq!(output.stdout, b"");
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("security report warning w0001 (hidden_text_detected) requires span_ref"));
+}
+
+#[test]
+fn security_report_rejects_region_ref_until_report_schema_support() {
+    let document = document_with_mutated_warning("security-warning-region-ref", |doc| {
+        doc["payload"]["security_warnings"][0]["region_ref"] = serde_json::json!("r0001");
+    });
+
+    let output = run_ethos(&["security", "report", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(
+        "security report warning w0001 region_ref r0001 is unsupported until security report schema supports region_ref"
+    ));
 }
 
 #[test]
