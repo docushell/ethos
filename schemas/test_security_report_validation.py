@@ -374,6 +374,36 @@ class SecurityReportValidationTests(unittest.TestCase):
                     for diagnostic in suppressed_projection_diagnostics:
                         self.assertNotIn(diagnostic, diagnostics)
 
+    def test_finding_string_fields_must_be_strings(self) -> None:
+        cases = (
+            (
+                0,
+                "message",
+                7,
+                "security-report.example.json: finding f0001.message must be a string",
+                "security-report.example.json: finding f0001 message must match "
+                "fixed template for hidden_text_detected",
+            ),
+            (
+                0,
+                "text_preview",
+                ["internal-draft-do-not-cite"],
+                "security-report.example.json: finding f0001.text_preview "
+                "must be a string",
+                "security-report.example.json: finding f0001 text_preview must match "
+                "span_ref s000003 text",
+            ),
+        )
+        for index, field, value, expected_diagnostic, suppressed_diagnostic in cases:
+            with self.subTest(field=field, value=value):
+                report = copy.deepcopy(self.report)
+                report["findings"][index][field] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(expected_diagnostic, diagnostics)
+                self.assertNotIn(suppressed_diagnostic, diagnostics)
+
     def test_unexpected_finding_fields_fail_closed(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][0]["unexpected"] = True

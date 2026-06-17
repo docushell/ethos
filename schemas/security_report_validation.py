@@ -96,6 +96,8 @@ FINDING_ALLOWED_FIELDS = (
     "excluded_from_default_chunks",
 )
 
+FINDING_STRING_FIELDS = ("message", "text_preview")
+
 INVENTORY_ALLOWED_FIELDS = {
     "annotations": ("page", "kind", "bbox", "supported"),
     "actions": ("kind", "page", "target"),
@@ -216,6 +218,7 @@ def diagnose_security_report_example(
     diagnose_finding_allowed_fields(findings, ctx, diagnostics)
     diagnose_finding_ids(findings, ctx, diagnostics)
     diagnose_finding_codes(findings, ctx, diagnostics)
+    diagnose_finding_scalar_fields(findings, ctx, diagnostics)
     diagnose_finding_messages(findings, ctx, diagnostics)
     diagnose_finding_exclusion_flags(findings, ctx, diagnostics)
     diagnose_findings_references(findings, refs, ctx, diagnostics)
@@ -522,6 +525,17 @@ def diagnose_finding_codes(findings, ctx, diagnostics):
             )
 
 
+def diagnose_finding_scalar_fields(findings, ctx, diagnostics):
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        for field in FINDING_STRING_FIELDS:
+            if field in finding and not isinstance(finding.get(field), str):
+                diagnostics.append(
+                    f"{ctx}: {finding_ctx(finding, index)}.{field} must be a string"
+                )
+
+
 def diagnose_finding_messages(findings, ctx, diagnostics):
     for index, finding in enumerate(findings):
         if not isinstance(finding, dict):
@@ -533,6 +547,8 @@ def diagnose_finding_messages(findings, ctx, diagnostics):
         if "message" not in finding:
             continue
         actual_message = finding.get("message")
+        if not isinstance(actual_message, str):
+            continue
         if actual_message != expected_message:
             diagnostics.append(
                 f"{ctx}: {finding_ctx(finding, index)} message must match fixed template for {code}"
@@ -846,10 +862,14 @@ def check_text_backed_finding(finding, refs, ctx, item_ctx, diagnostics):
         diagnostics.append(
             f"{ctx}: {item_ctx} span_ref {span_ref} requires text_preview"
         )
-    elif finding.get("text_preview") != expected_preview:
-        diagnostics.append(
-            f"{ctx}: {item_ctx} text_preview must match span_ref {span_ref} text"
-        )
+    else:
+        text_preview = finding.get("text_preview")
+        if not isinstance(text_preview, str):
+            return
+        if text_preview != expected_preview:
+            diagnostics.append(
+                f"{ctx}: {item_ctx} text_preview must match span_ref {span_ref} text"
+            )
 
 
 def deterministic_preview(text):
