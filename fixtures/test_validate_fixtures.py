@@ -208,5 +208,207 @@ class FixtureValidatorTableRefTests(unittest.TestCase):
         return {"span_refs": ["s000001"], "element_refs": ["e000001"]}
 
 
+class FixtureValidatorRegionRefTests(unittest.TestCase):
+    def setUp(self) -> None:
+        VALIDATOR.failures = 0
+
+    def tearDown(self) -> None:
+        VALIDATOR.failures = 0
+
+    def test_region_refs_reject_unknown_pages(self) -> None:
+        failures, output = self.validate_regions(
+            [
+                {
+                    "id": "r0001",
+                    "page": "p9999",
+                    "bbox": [10, 20, 30, 40],
+                    "kind": "unknown",
+                }
+            ],
+        )
+
+        self.assertEqual(failures, 1)
+        self.assertIn(
+            "extraction.json regions[0] references unknown page 'p9999'",
+            output,
+        )
+
+    def test_region_refs_reject_malformed_bbox(self) -> None:
+        failures, output = self.validate_regions(
+            [
+                {
+                    "id": "r0001",
+                    "page": "p0001",
+                    "bbox": [30, 20, 10, 40],
+                    "kind": "unknown",
+                }
+            ],
+        )
+
+        self.assertEqual(failures, 1)
+        self.assertIn(
+            "extraction.json regions[0].bbox must satisfy x0<=x1 and y0<=y1",
+            output,
+        )
+
+    def test_region_refs_reject_non_four_integer_bbox(self) -> None:
+        cases = [
+            [10, 20, 30],
+            [10, 20, 30, 40.5],
+            [10, True, 30, 40],
+        ]
+        for bbox in cases:
+            with self.subTest(bbox=bbox):
+                VALIDATOR.failures = 0
+                failures, output = self.validate_regions(
+                    [
+                        {
+                            "id": "r0001",
+                            "page": "p0001",
+                            "bbox": bbox,
+                            "kind": "unknown",
+                        }
+                    ],
+                )
+
+                self.assertEqual(failures, 1)
+                self.assertIn(
+                    "extraction.json regions[0].bbox must be a four-integer array",
+                    output,
+                )
+
+    def test_region_refs_reject_bbox_outside_page_bounds(self) -> None:
+        failures, output = self.validate_regions(
+            [
+                {
+                    "id": "r0001",
+                    "page": "p0001",
+                    "bbox": [10, 20, 1001, 40],
+                    "kind": "unknown",
+                }
+            ],
+        )
+
+        self.assertEqual(failures, 1)
+        self.assertIn(
+            "extraction.json regions[0].bbox must stay within page bounds",
+            output,
+        )
+
+    def test_region_refs_reject_unknown_warning_refs(self) -> None:
+        failures, output = self.validate_regions(
+            [
+                {
+                    "id": "r0001",
+                    "page": "p0001",
+                    "bbox": [10, 20, 30, 40],
+                    "kind": "unknown",
+                    "warning_refs": ["w9999"],
+                }
+            ],
+        )
+
+        self.assertEqual(failures, 1)
+        self.assertIn(
+            "extraction.json regions[0] references unknown warning 'w9999'",
+            output,
+        )
+
+    def test_warning_refs_reject_unknown_region_refs(self) -> None:
+        failures, output = self.validate_regions(
+            [
+                {
+                    "id": "r0001",
+                    "page": "p0001",
+                    "bbox": [10, 20, 30, 40],
+                    "kind": "unknown",
+                }
+            ],
+            [{"id": "w0001", "region_ref": "r9999"}],
+        )
+
+        self.assertEqual(failures, 1)
+        self.assertIn(
+            "extraction.json warnings[0] references unknown region 'r9999'",
+            output,
+        )
+
+    def test_region_refs_reject_duplicate_region_ids(self) -> None:
+        failures, output = self.validate_regions(
+            [
+                {
+                    "id": "r0001",
+                    "page": "p0001",
+                    "bbox": [10, 20, 30, 40],
+                    "kind": "unknown",
+                },
+                {
+                    "id": "r0001",
+                    "page": "p0001",
+                    "bbox": [50, 60, 70, 80],
+                    "kind": "unknown",
+                },
+            ],
+        )
+
+        self.assertEqual(failures, 1)
+        self.assertIn("extraction.json regions[1].id duplicates 'r0001'", output)
+
+    def test_layout_element_region_refs_reject_unknown_regions(self) -> None:
+        failures, output = self.validate_layout_region_refs(
+            {"elements": [{"id": "e000001", "region_ref": "r9999"}], "warnings": []},
+        )
+
+        self.assertEqual(failures, 1)
+        self.assertIn("layout.json elements[0] references unknown region 'r9999'", output)
+
+    def test_layout_warning_region_refs_reject_unknown_regions(self) -> None:
+        failures, output = self.validate_layout_region_refs(
+            {"elements": [], "warnings": [{"id": "w0001", "region_ref": "r9999"}]},
+        )
+
+        self.assertEqual(failures, 1)
+        self.assertIn("layout.json warnings[0] references unknown region 'r9999'", output)
+
+    def test_valid_region_refs_are_accepted(self) -> None:
+        failures, output = self.validate_regions(
+            [
+                {
+                    "id": "r0001",
+                    "page": "p0001",
+                    "bbox": [10, 20, 30, 40],
+                    "kind": "unknown",
+                    "warning_refs": ["w0001"],
+                }
+            ],
+            [{"id": "w0001", "region_ref": "r0001"}],
+        )
+
+        self.assertEqual(failures, 0)
+        self.assertEqual(output, "")
+
+    def validate_regions(self, regions, warnings=None) -> tuple[int, str]:
+        extraction = {
+            "pages": [{"id": "p0001", "width": 1000, "height": 1000}],
+            "regions": regions,
+            "warnings": warnings or [{"id": "w0001"}],
+        }
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            VALIDATOR.validate_extraction_region_refs("extraction.json", extraction)
+        return VALIDATOR.failures, output.getvalue()
+
+    def validate_layout_region_refs(self, layout) -> tuple[int, str]:
+        extraction = {
+            "regions": [
+                {"id": "r0001", "page": "p0001", "bbox": [10, 20, 30, 40]}
+            ],
+        }
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            VALIDATOR.validate_layout_region_refs("layout.json", layout, extraction)
+        return VALIDATOR.failures, output.getvalue()
+
+
 if __name__ == "__main__":
     unittest.main()
