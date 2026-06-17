@@ -109,6 +109,42 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_hidden_text_finding_message_must_match_fixed_template(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["message"] = "hidden text changed"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 message must match "
+            "fixed template for hidden_text_detected",
+            diagnostics,
+        )
+
+    def test_annotation_finding_message_must_match_fixed_template(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][1]["message"] = "annotations changed"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0002 message must match "
+            "fixed template for annotations_present",
+            diagnostics,
+        )
+
+    def test_external_link_finding_message_must_match_fixed_template(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][2]["message"] = "links changed"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0003 message must match "
+            "fixed template for external_links_present",
+            diagnostics,
+        )
+
     def test_warning_derived_summary_must_match_document_warning_count(self) -> None:
         report = copy.deepcopy(self.report)
         report["summary"]["hidden_text_detected"] = 2

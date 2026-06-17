@@ -38,6 +38,12 @@ DEFAULT_CHUNK_EXCLUDED_CODES = {
 
 TEXT_BACKED_FINDING_CODES = DEFAULT_CHUNK_EXCLUDED_CODES
 
+FINDING_MESSAGE_TEMPLATES = {
+    "hidden_text_detected": "hidden text detected: excluded from default chunks",
+    "annotations_present": "annotations present on page",
+    "external_links_present": "external links present on page",
+}
+
 
 def diagnose_security_report_example(
     document,
@@ -100,6 +106,7 @@ def diagnose_security_report_example(
             )
 
     diagnose_finding_ids(findings, ctx, diagnostics)
+    diagnose_finding_messages(findings, ctx, diagnostics)
     diagnose_findings_references(findings, refs, ctx, diagnostics)
 
     inventories = report.get("inventories") if isinstance(report, dict) else {}
@@ -189,6 +196,21 @@ def diagnose_finding_ids(findings, ctx, diagnostics):
             if finding_id in seen:
                 diagnostics.append(f"{ctx}: duplicate finding id {finding_id}")
             seen.add(finding_id)
+
+
+def diagnose_finding_messages(findings, ctx, diagnostics):
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        code = finding.get("code")
+        expected_message = FINDING_MESSAGE_TEMPLATES.get(code)
+        if expected_message is None:
+            continue
+        actual_message = finding.get("message")
+        if actual_message != expected_message:
+            diagnostics.append(
+                f"{ctx}: {finding_ctx(finding, index)} message must match fixed template for {code}"
+            )
 
 
 def nested_get(value, outer_key, inner_key):
