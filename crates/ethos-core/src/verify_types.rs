@@ -241,7 +241,9 @@ pub struct Check {
     /// Method used.
     pub match_method: MatchMethod,
     /// True when grounding would require semantic judgment beyond the declared
-    /// method. Such checks can never make `all_evidence_grounded` true.
+    /// method. Alpha literal checkers keep this false because unsupported or
+    /// non-literal claims fail closed instead of being marked semantically checked.
+    /// Such checks can never make `all_evidence_grounded` true.
     pub semantic_unverified: bool,
     /// Echoed evidence, when configured.
     #[serde(skip_serializing_if = "Option::is_none")]
