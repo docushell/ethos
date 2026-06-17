@@ -687,6 +687,17 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_finding_bbox_rejects_boolean_coordinates(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["bbox"][0] = True
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 bbox must be four integer coordinates",
+            diagnostics,
+        )
+
     def test_finding_bbox_must_stay_inside_page_bounds(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][0]["bbox"][2] = 61201
@@ -868,6 +879,18 @@ class SecurityReportValidationTests(unittest.TestCase):
 
         self.assertIn(
             "security-report.example.json: inventories.links[0] bbox has zero area",
+            diagnostics,
+        )
+
+    def test_inventory_bbox_rejects_boolean_coordinates(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["links"][0]["bbox"][0] = True
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.links[0] bbox must be four "
+            "integer coordinates",
             diagnostics,
         )
 

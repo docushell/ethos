@@ -654,7 +654,7 @@ def check_bbox(bbox, page, refs, ctx, item_ctx, diagnostics):
     if (
         not isinstance(bbox, list)
         or len(bbox) != 4
-        or any(not isinstance(coord, int) for coord in bbox)
+        or any(not is_json_integer(coord) for coord in bbox)
     ):
         diagnostics.append(f"{ctx}: {item_ctx} bbox must be four integer coordinates")
         return
@@ -707,6 +707,10 @@ def deterministic_preview(text):
     if len(text) <= 120:
         return text
     return text[:120] + "\u2026"
+
+
+def is_json_integer(value):
+    return isinstance(value, int) and not isinstance(value, bool)
 
 
 def check_element_span_ownership(item, refs, ctx, item_ctx, span_ref, diagnostics):
