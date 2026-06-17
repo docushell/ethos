@@ -475,6 +475,12 @@ def diagnose_finding_exclusion_flags(findings, ctx, diagnostics):
             continue
         if "excluded_from_default_chunks" not in finding:
             continue
+        if not is_json_boolean(finding.get("excluded_from_default_chunks")):
+            diagnostics.append(
+                f"{ctx}: {finding_ctx(finding, index)} "
+                "excluded_from_default_chunks must be a boolean"
+            )
+            continue
         expected = code in DEFAULT_CHUNK_EXCLUDED_CODES
         if finding.get("excluded_from_default_chunks") != expected:
             diagnostics.append(
@@ -578,6 +584,14 @@ def diagnose_inventory_required_fields(inventory_lists, ctx, diagnostics):
 
 
 def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
+    for index, item in enumerate(inventory_lists.get("annotations", [])):
+        if not isinstance(item, dict) or "supported" not in item:
+            continue
+        if not is_json_boolean(item.get("supported")):
+            diagnostics.append(
+                f"{ctx}: inventories.annotations[{index}].supported must be a boolean"
+            )
+
     for index, item in enumerate(inventory_lists.get("attachments", [])):
         if not isinstance(item, dict) or "bytes" not in item:
             continue
@@ -586,6 +600,14 @@ def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
             diagnostics.append(
                 f"{ctx}: inventories.attachments[{index}].bytes must be a "
                 "non-negative integer"
+            )
+
+    for index, item in enumerate(inventory_lists.get("links", [])):
+        if not isinstance(item, dict) or "external" not in item:
+            continue
+        if not is_json_boolean(item.get("external")):
+            diagnostics.append(
+                f"{ctx}: inventories.links[{index}].external must be a boolean"
             )
 
 
@@ -733,6 +755,10 @@ def deterministic_preview(text):
 
 def is_json_integer(value):
     return isinstance(value, int) and not isinstance(value, bool)
+
+
+def is_json_boolean(value):
+    return isinstance(value, bool)
 
 
 def check_element_span_ownership(item, refs, ctx, item_ctx, span_ref, diagnostics):

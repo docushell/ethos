@@ -597,6 +597,21 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_excluded_from_default_chunks_must_be_boolean(self) -> None:
+        for index, value in ((0, 1), (1, 0), (0, "true")):
+            with self.subTest(index=index, value=value):
+                report = copy.deepcopy(self.report)
+                report["findings"][index]["excluded_from_default_chunks"] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                finding_id = report["findings"][index]["id"]
+                self.assertIn(
+                    f"security-report.example.json: finding {finding_id} "
+                    "excluded_from_default_chunks must be a boolean",
+                    diagnostics,
+                )
+
     def test_finding_page_refs_must_exist_in_document(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][1]["page"] = "p9999"
@@ -1056,6 +1071,26 @@ class SecurityReportValidationTests(unittest.TestCase):
                 self.assertIn(
                     "security-report.example.json: inventories.attachments[0].bytes "
                     "must be a non-negative integer",
+                    diagnostics,
+                )
+
+    def test_inventory_boolean_fields_must_be_boolean(self) -> None:
+        cases = (
+            ("annotations", "supported", 1),
+            ("annotations", "supported", "false"),
+            ("links", "external", 1),
+            ("links", "external", "true"),
+        )
+        for name, field, value in cases:
+            with self.subTest(name=name, field=field, value=value):
+                report = copy.deepcopy(self.report)
+                report["inventories"][name][0][field] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    f"security-report.example.json: inventories.{name}[0].{field} "
+                    "must be a boolean",
                     diagnostics,
                 )
 
