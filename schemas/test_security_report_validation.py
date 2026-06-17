@@ -222,6 +222,23 @@ class SecurityReportValidationTests(unittest.TestCase):
             "security-report.example.json: missing warning-derived finding for hidden_text_detected",
             diagnostics,
         )
+        self.assertIn(
+            "security-report.example.json: finding f0001 excluded_from_default_chunks "
+            "must be true for hidden_text_detected",
+            diagnostics,
+        )
+
+    def test_non_exclusion_finding_codes_must_not_be_default_excluded(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][1]["excluded_from_default_chunks"] = True
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0002 excluded_from_default_chunks "
+            "must be false for annotations_present",
+            diagnostics,
+        )
 
     def test_finding_page_refs_must_exist_in_document(self) -> None:
         report = copy.deepcopy(self.report)

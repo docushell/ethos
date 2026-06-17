@@ -107,6 +107,7 @@ def diagnose_security_report_example(
 
     diagnose_finding_ids(findings, ctx, diagnostics)
     diagnose_finding_messages(findings, ctx, diagnostics)
+    diagnose_finding_exclusion_flags(findings, ctx, diagnostics)
     diagnose_findings_references(findings, refs, ctx, diagnostics)
 
     inventories = report.get("inventories") if isinstance(report, dict) else {}
@@ -210,6 +211,21 @@ def diagnose_finding_messages(findings, ctx, diagnostics):
         if actual_message != expected_message:
             diagnostics.append(
                 f"{ctx}: {finding_ctx(finding, index)} message must match fixed template for {code}"
+            )
+
+
+def diagnose_finding_exclusion_flags(findings, ctx, diagnostics):
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        code = finding.get("code")
+        if not isinstance(code, str):
+            continue
+        expected = code in DEFAULT_CHUNK_EXCLUDED_CODES
+        if finding.get("excluded_from_default_chunks") != expected:
+            diagnostics.append(
+                f"{ctx}: {finding_ctx(finding, index)} excluded_from_default_chunks "
+                f"must be {str(expected).lower()} for {code}"
             )
 
 
