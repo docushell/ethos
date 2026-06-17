@@ -49,6 +49,18 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_summary_must_match_all_report_finding_counts(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["summary"]["external_links_present"] = 2
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: summary.external_links_present must be 1 "
+            "for report findings",
+            diagnostics,
+        )
+
     def test_document_security_warnings_must_have_matching_findings(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"] = [
@@ -62,6 +74,22 @@ class SecurityReportValidationTests(unittest.TestCase):
 
         self.assertIn(
             "security-report.example.json: missing warning-derived finding for hidden_text_detected",
+            diagnostics,
+        )
+
+    def test_stale_summary_without_matching_finding_fails_closed(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"] = [
+            finding
+            for finding in report["findings"]
+            if finding["code"] != "external_links_present"
+        ]
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: summary.external_links_present must be 0 "
+            "for report findings",
             diagnostics,
         )
 
@@ -84,6 +112,96 @@ class SecurityReportValidationTests(unittest.TestCase):
 
         self.assertIn(
             "security-report.example.json: missing warning-derived finding for hidden_text_detected",
+            diagnostics,
+        )
+
+    def test_annotations_inventory_requires_matching_finding(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"] = [
+            finding
+            for finding in report["findings"]
+            if finding["code"] != "annotations_present"
+        ]
+        report["summary"].pop("annotations_present")
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.annotations requires annotations_present finding",
+            diagnostics,
+        )
+
+    def test_annotations_finding_requires_inventory_entry(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["annotations"] = []
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: annotations_present finding requires "
+            "inventories.annotations entry",
+            diagnostics,
+        )
+
+    def test_external_link_inventory_requires_matching_finding(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"] = [
+            finding
+            for finding in report["findings"]
+            if finding["code"] != "external_links_present"
+        ]
+        report["summary"].pop("external_links_present")
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.links external=true requires "
+            "external_links_present finding",
+            diagnostics,
+        )
+
+    def test_external_link_finding_requires_external_inventory_entry(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["links"][0]["external"] = False
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: external_links_present finding requires "
+            "inventories.links external=true entry",
+            diagnostics,
+        )
+
+    def test_inventory_shape_must_be_deterministic_arrays(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["links"] = {"page": "p0001"}
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.links must be an array",
+            diagnostics,
+        )
+
+    def test_action_inventory_shape_is_checked_without_action_semantics(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["actions"] = {"kind": "uri"}
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.actions must be an array",
+            diagnostics,
+        )
+
+    def test_inventories_must_be_deterministic_object(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"] = []
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories must be an object",
             diagnostics,
         )
 
