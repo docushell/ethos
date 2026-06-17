@@ -807,6 +807,37 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_required_inventory_item_fields_must_be_present(self) -> None:
+        inventory_items = {
+            "annotations": {"page": "p0001", "kind": "link"},
+            "actions": {"kind": "uri"},
+            "attachments": {"name": "attachment.bin", "bytes": 0},
+            "scripts": {"location": "document"},
+            "links": {"page": "p0001", "uri": "https://example.com/q3", "external": True},
+        }
+        required_fields = {
+            "annotations": ("page", "kind"),
+            "actions": ("kind",),
+            "attachments": ("name", "bytes"),
+            "scripts": ("location",),
+            "links": ("page", "uri", "external"),
+        }
+
+        for name, fields in required_fields.items():
+            for field in fields:
+                with self.subTest(name=name, field=field):
+                    report = copy.deepcopy(self.report)
+                    report["inventories"][name] = [copy.deepcopy(inventory_items[name])]
+                    report["inventories"][name][0].pop(field)
+
+                    diagnostics = diagnose_security_report_example(self.document, report)
+
+                    self.assertIn(
+                        f"security-report.example.json: inventories.{name}[0].{field} "
+                        "is required",
+                        diagnostics,
+                    )
+
     def test_action_inventory_shape_is_checked_without_action_semantics(self) -> None:
         report = copy.deepcopy(self.report)
         report["inventories"]["actions"] = {"kind": "uri"}

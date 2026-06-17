@@ -58,6 +58,14 @@ FINDING_MESSAGE_TEMPLATES = {
     "image_only_page": "image-only page",
 }
 
+INVENTORY_REQUIRED_FIELDS = {
+    "annotations": ("page", "kind"),
+    "actions": ("kind",),
+    "attachments": ("name", "bytes"),
+    "scripts": ("location",),
+    "links": ("page", "uri", "external"),
+}
+
 
 def diagnose_security_report_example(
     document,
@@ -158,6 +166,7 @@ def diagnose_security_report_example(
         name: inventory_items(inventories, name, ctx, diagnostics)
         for name in ("annotations", "actions", "attachments", "scripts", "links")
     }
+    diagnose_inventory_required_fields(inventory_lists, ctx, diagnostics)
     annotations = inventory_lists["annotations"]
     links = inventory_lists["links"]
     unsupported_annotations = [
@@ -369,6 +378,18 @@ def inventory_items(inventories, name, ctx, diagnostics):
         diagnostics.append(f"{ctx}: inventories.{name} must be an array")
         return []
     return items
+
+
+def diagnose_inventory_required_fields(inventory_lists, ctx, diagnostics):
+    for name, required_fields in INVENTORY_REQUIRED_FIELDS.items():
+        for index, item in enumerate(inventory_lists.get(name, [])):
+            if not isinstance(item, dict):
+                continue
+            for field in required_fields:
+                if field not in item:
+                    diagnostics.append(
+                        f"{ctx}: inventories.{name}[{index}].{field} is required"
+                    )
 
 
 def document_reference_index(payload):
