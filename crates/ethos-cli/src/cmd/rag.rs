@@ -40,9 +40,15 @@ fn rag_chunk_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
     Ok(out)
 }
 
+#[derive(Clone, Copy)]
+struct PageBounds {
+    width: i64,
+    height: i64,
+}
+
 struct RagChunkRefs<'a> {
-    page_ids: BTreeSet<&'a str>,
-    element_ids: BTreeSet<&'a str>,
+    page_bounds: BTreeMap<&'a str, PageBounds>,
+    element_pages: BTreeMap<&'a str, &'a str>,
     warning_codes: BTreeMap<&'a str, &'a str>,
     schema_version: &'a str,
     document_fingerprint: &'a str,
@@ -53,17 +59,25 @@ struct RagChunkRefs<'a> {
 impl<'a> RagChunkRefs<'a> {
     fn new(doc: &'a Document) -> Self {
         Self {
-            page_ids: doc
+            page_bounds: doc
                 .payload
                 .pages
                 .iter()
-                .map(|page| page.id.as_str())
+                .map(|page| {
+                    (
+                        page.id.as_str(),
+                        PageBounds {
+                            width: page.width,
+                            height: page.height,
+                        },
+                    )
+                })
                 .collect(),
-            element_ids: doc
+            element_pages: doc
                 .payload
                 .elements
                 .iter()
-                .map(|element| element.id.as_str())
+                .map(|element| (element.id.as_str(), element.page.as_str()))
                 .collect(),
             warning_codes: doc
                 .payload
@@ -81,27 +95,85 @@ impl<'a> RagChunkRefs<'a> {
 }
 
 fn validate_chunk_refs(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Failure> {
-    for id in &chunk.element_refs {
-        if !refs.element_ids.contains(id.as_str()) {
-            return Err(Failure::Usage(format!(
-                "chunk {} references unknown element_ref {}",
-                chunk.id, id
-            )));
-        }
+    if chunk.element_refs.is_empty() {
+        return Err(Failure::Usage(format!(
+            "chunk {} must include at least one element_ref",
+            chunk.id
+        )));
     }
+    if chunk.page_refs.is_empty() {
+        return Err(Failure::Usage(format!(
+            "chunk {} must include at least one page_ref",
+            chunk.id
+        )));
+    }
+    if chunk.bboxes.is_empty() {
+        return Err(Failure::Usage(format!(
+            "chunk {} must include at least one bbox",
+            chunk.id
+        )));
+    }
+
+    let mut page_refs = BTreeSet::new();
     for id in &chunk.page_refs {
-        if !refs.page_ids.contains(id.as_str()) {
+        if !refs.page_bounds.contains_key(id.as_str()) {
             return Err(Failure::Usage(format!(
                 "chunk {} references unknown page_ref {}",
                 chunk.id, id
             )));
         }
+        page_refs.insert(id.as_str());
+    }
+
+    let mut backed_pages = BTreeSet::new();
+    for id in &chunk.element_refs {
+        let Some(page) = refs.element_pages.get(id.as_str()) else {
+            return Err(Failure::Usage(format!(
+                "chunk {} references unknown element_ref {}",
+                chunk.id, id
+            )));
+        };
+        if !page_refs.contains(page) {
+            return Err(Failure::Usage(format!(
+                "chunk {} element_ref {} page {} is not listed in page_refs",
+                chunk.id, id, page
+            )));
+        }
+        backed_pages.insert(*page);
     }
     for (idx, bbox) in chunk.bboxes.iter().enumerate() {
-        if !refs.page_ids.contains(bbox.page.as_str()) {
+        let Some(page_bounds) = refs.page_bounds.get(bbox.page.as_str()) else {
             return Err(Failure::Usage(format!(
                 "chunk {} bboxes[{}] references unknown page_ref {}",
                 chunk.id, idx, bbox.page
+            )));
+        };
+        if !page_refs.contains(bbox.page.as_str()) {
+            return Err(Failure::Usage(format!(
+                "chunk {} bboxes[{}] page {} is not listed in page_refs",
+                chunk.id, idx, bbox.page
+            )));
+        }
+        let [x0, y0, x1, y1] = bbox.bbox.to_array();
+        if x0 >= x1 || y0 >= y1 {
+            return Err(Failure::Usage(format!(
+                "chunk {} bboxes[{}] has zero area",
+                chunk.id, idx
+            )));
+        }
+        if x0 < 0 || y0 < 0 || x1 > page_bounds.width || y1 > page_bounds.height {
+            return Err(Failure::Usage(format!(
+                "chunk {} bboxes[{}] exceeds page {} bounds",
+                chunk.id, idx, bbox.page
+            )));
+        }
+        backed_pages.insert(bbox.page.as_str());
+    }
+    for id in page_refs {
+        if !backed_pages.contains(id) {
+            return Err(Failure::Usage(format!(
+                "chunk {} page_ref {} is not backed by element_refs or bboxes",
+                chunk.id, id
             )));
         }
     }

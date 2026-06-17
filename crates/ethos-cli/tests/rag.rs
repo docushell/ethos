@@ -72,6 +72,28 @@ fn document_with_mutated_chunk(name: &str, mutate: impl FnOnce(&mut Value)) -> P
     )
 }
 
+fn append_next_page(doc: &mut Value) -> String {
+    let pages = doc["payload"]["pages"]
+        .as_array_mut()
+        .expect("fixture pages are an array");
+    let first_page = pages.first().expect("fixture has at least one page");
+    let first_id = first_page["id"]
+        .as_str()
+        .expect("fixture page id is a string");
+    let next_id = format!(
+        "p{:04}",
+        first_id[1..]
+            .parse::<u32>()
+            .expect("fixture page id has numeric suffix")
+            + 1
+    );
+    let mut page = first_page.clone();
+    page["id"] = serde_json::json!(next_id);
+    page["index"] = serde_json::json!(pages.len() + 1);
+    pages.push(page);
+    next_id
+}
+
 #[test]
 fn rag_chunk_matches_schema_example_jsonl() {
     let output = run_ethos(&["rag", "chunk", document_example().to_str().unwrap()]);
@@ -108,6 +130,141 @@ fn rag_chunk_output_is_byte_identical_across_runs() {
     assert_eq!(first.stderr, b"");
     assert_eq!(second.stderr, b"");
     assert_eq!(first.stdout, second.stdout);
+}
+
+#[test]
+fn rag_chunk_rejects_empty_chunk_element_refs() {
+    let document = document_with_mutated_chunk("empty-chunk-element-refs-document", |doc| {
+        doc["payload"]["chunks"][0]["element_refs"] = serde_json::json!([]);
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("chunk c000001 must include at least one element_ref"));
+}
+
+#[test]
+fn rag_chunk_rejects_empty_chunk_page_refs() {
+    let document = document_with_mutated_chunk("empty-chunk-page-refs-document", |doc| {
+        doc["payload"]["chunks"][0]["page_refs"] = serde_json::json!([]);
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("chunk c000001 must include at least one page_ref"));
+}
+
+#[test]
+fn rag_chunk_rejects_empty_chunk_bboxes() {
+    let document = document_with_mutated_chunk("empty-chunk-bboxes-document", |doc| {
+        doc["payload"]["chunks"][0]["bboxes"] = serde_json::json!([]);
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("chunk c000001 must include at least one bbox"));
+}
+
+#[test]
+fn rag_chunk_rejects_chunk_bbox_page_not_listed_in_page_refs() {
+    let mut expected_page_id = String::new();
+    let document = document_with_mutated_chunk("chunk-bbox-page-not-listed-document", |doc| {
+        expected_page_id = append_next_page(doc);
+        doc["payload"]["chunks"][0]["bboxes"][0]["page"] =
+            serde_json::json!(expected_page_id.clone());
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(&format!(
+        "chunk c000001 bboxes[0] page {expected_page_id} is not listed in page_refs"
+    )));
+}
+
+#[test]
+fn rag_chunk_rejects_chunk_element_page_not_listed_in_page_refs() {
+    let mut expected_element_id = String::new();
+    let mut expected_page_id = String::new();
+    let document = document_with_mutated_chunk("chunk-element-page-not-listed-document", |doc| {
+        expected_element_id = doc["payload"]["chunks"][0]["element_refs"][0]
+            .as_str()
+            .expect("fixture chunk element_ref is a string")
+            .to_string();
+        expected_page_id = append_next_page(doc);
+        doc["payload"]["elements"][0]["page"] = serde_json::json!(expected_page_id.clone());
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(&format!(
+        "chunk c000001 element_ref {expected_element_id} page {expected_page_id} is not listed in page_refs"
+    )));
+}
+
+#[test]
+fn rag_chunk_rejects_unbacked_chunk_page_ref() {
+    let mut expected_page_id = String::new();
+    let document = document_with_mutated_chunk("unbacked-chunk-page-ref-document", |doc| {
+        expected_page_id = append_next_page(doc);
+        doc["payload"]["chunks"][0]["page_refs"]
+            .as_array_mut()
+            .expect("fixture chunk page_refs are an array")
+            .push(serde_json::json!(expected_page_id.clone()));
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(&format!(
+        "chunk c000001 page_ref {expected_page_id} is not backed by element_refs or bboxes"
+    )));
+}
+
+#[test]
+fn rag_chunk_rejects_zero_area_chunk_bbox() {
+    let document = document_with_mutated_chunk("zero-area-chunk-bbox-document", |doc| {
+        let x0 = doc["payload"]["chunks"][0]["bboxes"][0]["bbox"][0]
+            .as_i64()
+            .expect("fixture bbox x0 is an integer");
+        doc["payload"]["chunks"][0]["bboxes"][0]["bbox"][2] = serde_json::json!(x0);
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("chunk c000001 bboxes[0] has zero area")
+    );
+}
+
+#[test]
+fn rag_chunk_rejects_out_of_bounds_chunk_bbox() {
+    let mut expected_page_id = String::new();
+    let document = document_with_mutated_chunk("out-of-bounds-chunk-bbox-document", |doc| {
+        expected_page_id = doc["payload"]["chunks"][0]["bboxes"][0]["page"]
+            .as_str()
+            .expect("fixture bbox page is a string")
+            .to_string();
+        let page_width = doc["payload"]["pages"][0]["width"]
+            .as_i64()
+            .expect("fixture page width is an integer");
+        doc["payload"]["chunks"][0]["bboxes"][0]["bbox"][2] = serde_json::json!(page_width + 1);
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(&format!(
+        "chunk c000001 bboxes[0] exceeds page {expected_page_id} bounds"
+    )));
 }
 
 #[test]
