@@ -22,6 +22,9 @@ Records:
   non-advisory `cargo-deny` policy checks pass; the follow-up advisory scan is recorded in
   `advisory-scan-2026-06-16.md`, and release artifacts still need artifact-specific
   license/NOTICE bundles.
+- `milestone-b-closeout-validation-2026-06-17.md` - internal Milestone B closeout validation
+  passed through `make milestone-b-internal-checks`; public benchmark reports, release artifacts,
+  package publication, production positioning, and claim wording remain blocked.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
