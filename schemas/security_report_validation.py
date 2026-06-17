@@ -752,6 +752,11 @@ def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
                 f"{ctx}: inventories.scripts[{index}].location must be a "
                 "supported script location"
             )
+        trigger = item.get("trigger")
+        if isinstance(trigger, str) and trigger != trigger.lower():
+            diagnostics.append(
+                f"{ctx}: inventories.scripts[{index}].trigger must be lowercase"
+            )
 
     for index, item in enumerate(inventory_lists.get("links", [])):
         if not isinstance(item, dict) or "external" not in item:

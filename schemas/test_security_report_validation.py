@@ -1443,6 +1443,25 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_script_inventory_trigger_must_be_lowercase(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["scripts"] = [
+            {"location": "document", "trigger": "Open"}
+        ]
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.scripts[0].trigger "
+            "must be lowercase",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: inventories.scripts[0].trigger "
+            "must be a string",
+            diagnostics,
+        )
+
     def test_action_inventory_shape_is_checked_without_action_semantics(self) -> None:
         report = copy.deepcopy(self.report)
         report["inventories"]["actions"] = {"kind": "uri"}
