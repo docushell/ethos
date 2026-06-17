@@ -13,7 +13,7 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -47,6 +47,15 @@ layout-evaluator-alpha:
 
 python-surface-test:
 	PYTHONPATH=$(ROOT)/python $(PYTHON) -m unittest discover -s python/tests
+
+milestone-b-internal-checks:
+	$(PYTHON) fixtures/validate_fixtures.py
+	$(MAKE) verify-alpha PYTHON=$(PYTHON)
+	$(MAKE) layout-evaluator-alpha PYTHON=$(PYTHON)
+	$(MAKE) python-surface-test PYTHON=$(PYTHON)
+	$(PYTHON) .github/scripts/claims_gate.py
+	$(PYTHON) .github/scripts/readiness_gate.py public
+	git diff --check
 
 release-hygiene:
 	cargo metadata --locked --offline --format-version 1 --no-deps >/dev/null
