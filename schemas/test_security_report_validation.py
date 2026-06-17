@@ -1705,6 +1705,32 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_parser_warning_messages_are_required(self) -> None:
+        document = copy.deepcopy(self.document)
+        parser_warning_id = document["payload"]["parser_warnings"][0]["id"]
+        document["payload"]["parser_warnings"][0].pop("message")
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: "
+            f"parser warning {parser_warning_id}.message is required",
+            diagnostics,
+        )
+
+    def test_parser_warning_messages_must_be_strings(self) -> None:
+        document = copy.deepcopy(self.document)
+        parser_warning_id = document["payload"]["parser_warnings"][0]["id"]
+        document["payload"]["parser_warnings"][0]["message"] = []
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: "
+            f"parser warning {parser_warning_id}.message must be a string",
+            diagnostics,
+        )
+
     def test_parser_codes_in_security_warnings_fail_closed(self) -> None:
         document = copy.deepcopy(self.document)
         document["payload"]["security_warnings"].append(

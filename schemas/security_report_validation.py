@@ -138,6 +138,7 @@ def diagnose_security_report_example(
     diagnose_report_identity(document, report, ctx, diagnostics)
     diagnose_warning_ids(security_warnings, parser_warnings, ctx, diagnostics)
     diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
+    diagnose_parser_warning_messages(parser_warnings, ctx, diagnostics)
     diagnose_security_warning_locator_shapes(security_warnings, ctx, diagnostics)
     diagnose_security_warning_messages(security_warnings, ctx, diagnostics)
 
@@ -347,6 +348,22 @@ def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
             diagnostics.append(
                 f"{ctx}: security warning {warning_id(warning)} ({code}) "
                 "is not a security warning code"
+            )
+
+
+def diagnose_parser_warning_messages(parser_warnings, ctx, diagnostics):
+    for warning in parser_warnings:
+        if not isinstance(warning, dict):
+            continue
+        if "message" not in warning:
+            diagnostics.append(
+                f"{ctx}: parser warning {warning_id(warning)}.message is required"
+            )
+            continue
+        actual_message = warning.get("message")
+        if not isinstance(actual_message, str):
+            diagnostics.append(
+                f"{ctx}: parser warning {warning_id(warning)}.message must be a string"
             )
 
 
