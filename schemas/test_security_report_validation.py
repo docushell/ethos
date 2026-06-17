@@ -1074,6 +1074,36 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_attachment_inventory_sha256_must_be_lowercase_hex_digest(self) -> None:
+        for value in ("abc", "g" * 64, "A" * 64, 64, None):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["inventories"]["attachments"] = [
+                    {"name": "attachment.bin", "bytes": 0, "sha256": value}
+                ]
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: inventories.attachments[0].sha256 "
+                    "must be a 64-character lowercase hex digest",
+                    diagnostics,
+                )
+
+    def test_attachment_inventory_sha256_accepts_lowercase_hex_digest(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["attachments"] = [
+            {"name": "attachment.bin", "bytes": 0, "sha256": "a" * 64}
+        ]
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertNotIn(
+            "security-report.example.json: inventories.attachments[0].sha256 "
+            "must be a 64-character lowercase hex digest",
+            diagnostics,
+        )
+
     def test_inventory_boolean_fields_must_be_boolean(self) -> None:
         cases = (
             ("annotations", "supported", 1),

@@ -105,6 +105,7 @@ INVENTORY_ALLOWED_FIELDS = {
 }
 
 SCRIPT_LOCATIONS = {"document", "page", "annotation", "field", "other"}
+LOWER_HEX_DIGITS = set("0123456789abcdef")
 
 
 def diagnose_security_report_example(
@@ -603,6 +604,11 @@ def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
                 f"{ctx}: inventories.attachments[{index}].bytes must be a "
                 "non-negative integer"
             )
+        if "sha256" in item and not is_lower_hex_sha256(item.get("sha256")):
+            diagnostics.append(
+                f"{ctx}: inventories.attachments[{index}].sha256 must be a "
+                "64-character lowercase hex digest"
+            )
 
     for index, item in enumerate(inventory_lists.get("scripts", [])):
         if not isinstance(item, dict) or "location" not in item:
@@ -770,6 +776,14 @@ def is_json_integer(value):
 
 def is_json_boolean(value):
     return isinstance(value, bool)
+
+
+def is_lower_hex_sha256(value):
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(char in LOWER_HEX_DIGITS for char in value)
+    )
 
 
 def check_element_span_ownership(item, refs, ctx, item_ctx, span_ref, diagnostics):
