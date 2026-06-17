@@ -131,6 +131,7 @@ def diagnose_security_report_example(
     if not isinstance(findings, list):
         diagnostics.append(f"{ctx}: findings must be an array")
         return diagnostics
+    diagnose_array_item_objects(findings, "findings", ctx, diagnostics)
     summary = report.get("summary") if isinstance(report, dict) else {}
     if not isinstance(summary, dict):
         diagnostics.append(f"{ctx}: summary must be an object")
@@ -571,7 +572,14 @@ def inventory_items(inventories, name, ctx, diagnostics):
     if not isinstance(items, list):
         diagnostics.append(f"{ctx}: inventories.{name} must be an array")
         return []
+    diagnose_array_item_objects(items, f"inventories.{name}", ctx, diagnostics)
     return items
+
+
+def diagnose_array_item_objects(items, path, ctx, diagnostics):
+    for index, item in enumerate(items):
+        if not isinstance(item, dict):
+            diagnostics.append(f"{ctx}: {path}[{index}] must be an object")
 
 
 def diagnose_inventory_required_fields(inventory_lists, ctx, diagnostics):

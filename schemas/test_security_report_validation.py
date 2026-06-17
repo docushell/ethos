@@ -129,6 +129,19 @@ class SecurityReportValidationTests(unittest.TestCase):
                 if field in identity_diagnostics:
                     self.assertNotIn(identity_diagnostics[field], diagnostics)
 
+    def test_finding_items_must_be_objects(self) -> None:
+        for value in ("bad", [], None):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["findings"].append(value)
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: findings[3] must be an object",
+                    diagnostics,
+                )
+
     def test_profile_must_be_object(self) -> None:
         report = copy.deepcopy(self.report)
         report["profile"] = []
@@ -985,6 +998,20 @@ class SecurityReportValidationTests(unittest.TestCase):
             "security-report.example.json: inventories.links must be an array",
             diagnostics,
         )
+
+    def test_inventory_items_must_be_objects(self) -> None:
+        for name in ("annotations", "actions", "attachments", "scripts", "links"):
+            with self.subTest(name=name):
+                report = copy.deepcopy(self.report)
+                report["inventories"][name] = ["bad"]
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    f"security-report.example.json: inventories.{name}[0] "
+                    "must be an object",
+                    diagnostics,
+                )
 
     def test_required_inventory_lanes_must_be_present(self) -> None:
         for name in ("annotations", "actions", "attachments", "scripts", "links"):
