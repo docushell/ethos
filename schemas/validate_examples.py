@@ -179,8 +179,20 @@ def c14n_line(v) -> str:
 
 
 wcodes = {w["id"]: w["code"] for w in p["security_warnings"] + p["parser_warnings"]}
+default_chunk_excluded_warning_codes = {
+    "hidden_text_detected",
+    "off_page_text_detected",
+    "low_contrast_text_detected",
+}
 expected_lines = []
 for ch in p["chunks"]:
+    for warning_ref in ch.get("warning_refs", []):
+        code = wcodes[warning_ref]
+        if code in default_chunk_excluded_warning_codes:
+            fail(
+                "document.example.json: "
+                f"chunk {ch['id']} references default-excluded warning_ref {warning_ref} ({code})"
+            )
     expected_lines.append(c14n_line({
         "schema_version": doc["schema_version"],
         "document_fingerprint": doc["fingerprint"],
