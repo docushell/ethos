@@ -9,6 +9,12 @@ layer that includes a deterministic parser, not a parser that may later add veri
 
 Current PM status and blockers: `docs/execution-status.md`.
 
+Milestone B is in internal closeout. The canonical status tracker records the
+current pre-alpha trust-loop, layout/export, Python-surface, and determinism
+validation posture plus the remaining external blockers. This closeout does not
+approve public benchmark reports, releases, packages, production positioning, or
+performance/quality/footprint claims.
+
 | Milestone | Window | Contents | Gate |
 | --- | --- | --- | --- |
 | Week 0 | pre-kickoff | ADRs, governance, corpus freeze, CI bootstrap, competitor pins | All 11 rows done; clock starts |
