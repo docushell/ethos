@@ -51,6 +51,7 @@ python-surface-test:
 milestone-b-internal-checks:
 	$(PYTHON) fixtures/validate_fixtures.py
 	$(PYTHON) schemas/test_font_policy_validation.py
+	$(PYTHON) .github/scripts/test_execution_status.py
 	$(MAKE) verify-alpha PYTHON=$(PYTHON)
 	$(MAKE) layout-evaluator-alpha PYTHON=$(PYTHON)
 	$(MAKE) python-surface-test PYTHON=$(PYTHON)
