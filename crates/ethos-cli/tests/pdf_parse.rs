@@ -86,6 +86,29 @@ fn successful_fixture_ids() -> Vec<String> {
         .collect()
 }
 
+fn table_fixture_ids() -> Vec<String> {
+    fixture_manifest_entries()
+        .into_iter()
+        .filter(|entry| {
+            let subsets = entry["subsets"]
+                .as_array()
+                .expect("fixture subsets are an array");
+            subsets
+                .iter()
+                .any(|subset| subset.as_str() == Some("tables"))
+                && !subsets
+                    .iter()
+                    .any(|subset| subset.as_str() == Some("failure"))
+        })
+        .map(|entry| {
+            entry["id"]
+                .as_str()
+                .expect("fixture id is a string")
+                .to_string()
+        })
+        .collect()
+}
+
 fn fixture_pdf() -> PathBuf {
     fixture_pdf_by_id("simple-text")
 }
@@ -347,6 +370,33 @@ fn doc_parse_text_and_markdown_exports_match_fixture_goldens_when_pdfium_is_conf
                 format,
             );
         }
+    }
+}
+
+#[test]
+fn doc_parse_table_fixtures_match_table_goldens_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        eprintln!(
+            "skipping table fixture golden test: ETHOS_PDFIUM_LIBRARY_PATH is not configured"
+        );
+        return;
+    }
+
+    for fixture_id in table_fixture_ids() {
+        let fixture = fixture_pdf_by_id(&fixture_id);
+        let doc = parse_json(&[
+            "doc",
+            "parse",
+            fixture.to_str().unwrap(),
+            "--format",
+            "json",
+        ]);
+        let tables = doc["payload"]["tables"].clone();
+        assert!(
+            tables.as_array().is_some_and(|tables| !tables.is_empty()),
+            "tables fixture {fixture_id} must emit at least one table candidate"
+        );
+        assert_or_accept_golden(fixture_dir_by_id(&fixture_id).join("tables.json"), &tables);
     }
 }
 

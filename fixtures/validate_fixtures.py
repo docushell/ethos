@@ -38,12 +38,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parent
+sys.path.insert(0, str(REPO_ROOT / "schemas"))
+
+from table_model_validation import diagnose_table_model  # noqa: E402
+
 MANIFEST = ROOT / "manifest.json"
 ALLOWED_CATEGORIES = {"failure", "public", "security", "synthetic"}
 MANIFEST_KEYS = {"manifest_version", "root", "subsets_declared", "fixtures"}
 ENTRY_KEYS = {"id", "file", "sha256", "pages", "subsets", "provenance", "license"}
 EXTRACTION_GOLDEN_KEYS = {"pages", "spans", "regions", "warnings"}
 LAYOUT_GOLDEN_KEYS = {"elements", "warnings"}
+TABLE_GOLDEN = "tables.json"
 TEXT_EXPORT = "text.txt"
 MARKDOWN_EXPORT = "markdown.md"
 FOREIGN_MANIFEST_KEYS = {
@@ -258,6 +263,112 @@ def validate_export_goldens(fixture_dir: Path, layout) -> None:
         render_markdown_export(layout, ctx),
         "Markdown export",
     )
+
+
+def validate_table_goldens(fixture_dir: Path, metadata, extraction, layout) -> None:
+    ctx = str((fixture_dir / TABLE_GOLDEN).relative_to(ROOT))
+    subsets = metadata.get("subsets")
+    has_table_subset = isinstance(subsets, list) and "tables" in subsets
+    path = fixture_dir / TABLE_GOLDEN
+    if not has_table_subset:
+        if path.exists():
+            fail(f"{ctx} exists but fixture is not tagged tables")
+        return
+    if not path.is_file():
+        fail(f"{ctx} missing for tables fixture")
+        return
+
+    tables = load_json(path)
+    if tables is None:
+        return
+    if not isinstance(tables, list):
+        fail(f"{ctx} must be an array")
+        return
+    validate_c14n_scalar_contract(tables, ctx)
+    if path.read_bytes() != canonical_json_bytes(tables):
+        fail(f"{ctx} must be canonical JSON with one trailing newline")
+    if not tables:
+        fail(f"{ctx} must contain at least one table")
+
+    for diagnostic in diagnose_table_model({"tables": tables}, ctx):
+        fail(diagnostic)
+    validate_table_refs(ctx, tables, extraction, layout)
+
+
+def validate_table_refs(ctx: str, tables, extraction, layout) -> None:
+    pages = extraction.get("pages") if isinstance(extraction, dict) else []
+    spans = extraction.get("spans") if isinstance(extraction, dict) else []
+    elements = layout.get("elements") if isinstance(layout, dict) else []
+    page_ids = {
+        page.get("id")
+        for page in pages
+        if isinstance(page, dict) and isinstance(page.get("id"), str)
+    }
+    span_ids = {
+        span.get("id")
+        for span in spans
+        if isinstance(span, dict) and isinstance(span.get("id"), str)
+    }
+    element_ids = {
+        element.get("id")
+        for element in elements
+        if isinstance(element, dict) and isinstance(element.get("id"), str)
+    }
+    warning_ids = set()
+    for warning in (extraction.get("warnings") if isinstance(extraction, dict) else []) or []:
+        if isinstance(warning, dict) and isinstance(warning.get("id"), str):
+            warning_ids.add(warning["id"])
+    for warning in (layout.get("warnings") if isinstance(layout, dict) else []) or []:
+        if isinstance(warning, dict) and isinstance(warning.get("id"), str):
+            warning_ids.add(warning["id"])
+
+    for table_index, table in enumerate(tables):
+        table_ctx = f"{ctx} tables[{table_index}]"
+        if not isinstance(table, dict):
+            fail(f"{table_ctx} must be an object")
+            continue
+        table_id = table.get("id", f"index-{table_index}")
+        for ref in string_ref_array(table.get("page_refs", []), f"{table_ctx}.page_refs"):
+            if ref not in page_ids:
+                fail(f"{table_ctx} references unknown page '{ref}'")
+        for ref in string_ref_array(
+            table.get("warning_refs", []), f"{table_ctx}.warning_refs"
+        ):
+            if ref not in warning_ids:
+                fail(f"{table_ctx} references unknown warning '{ref}'")
+        cells = table.get("cells", [])
+        if not isinstance(cells, list):
+            continue
+        for cell_index, cell in enumerate(cells):
+            if not isinstance(cell, dict):
+                fail(f"{table_ctx} cells[{cell_index}] must be an object")
+                continue
+            cell_ctx = f"{table_ctx} cell[{cell_index}]"
+            span_refs = string_ref_array(cell.get("span_refs", []), f"{cell_ctx}.span_refs")
+            element_refs = string_ref_array(
+                cell.get("element_refs", []), f"{cell_ctx}.element_refs"
+            )
+            for ref in span_refs:
+                if ref not in span_ids:
+                    fail(f"{cell_ctx} references unknown span '{ref}'")
+            for ref in element_refs:
+                if ref not in element_ids:
+                    fail(f"{cell_ctx} references unknown element '{ref}'")
+            if not span_refs and not element_refs:
+                fail(f"{cell_ctx} in table {table_id} must cite span_refs or element_refs")
+
+
+def string_ref_array(value, ctx: str) -> list[str]:
+    if not isinstance(value, list):
+        fail(f"{ctx} must be an array")
+        return []
+    refs = []
+    for index, item in enumerate(value):
+        if not isinstance(item, str) or not item:
+            fail(f"{ctx}[{index}] must be a non-empty string")
+        else:
+            refs.append(item)
+    return refs
 
 
 def validate_projection_items(ctx: str, key: str, value, required: bool) -> None:
@@ -742,6 +853,12 @@ for index, entry in enumerate(entries):
                 extraction_golden,
                 layout_golden,
             )
+            validate_table_goldens(
+                fixture_dir,
+                metadata,
+                extraction_golden,
+                layout_golden,
+            )
 
 if indexed_files != sorted(indexed_files):
     fail("manifest fixture entries must be sorted by file")
@@ -771,6 +888,7 @@ if not failures:
     ok("successful fixture goldens have valid stage metadata")
     ok("successful fixture metadata expectations match committed stage goldens")
     ok("successful fixture text and Markdown exports match committed layout goldens")
+    ok("tables fixture goldens match committed extraction and layout refs")
     ok(f"foreign fixture manifests bind {foreign_package_count} package(s) to committed hashes")
     ok(f"font-isolation manifest binds {font_isolation_fixture_count} PDF fixture(s)")
 
