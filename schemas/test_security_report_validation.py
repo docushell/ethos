@@ -225,6 +225,46 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_finding_required_fields_must_be_present(self) -> None:
+        expected_diagnostics = {
+            "id": "security-report.example.json: findings[0].id is required",
+            "message": "security-report.example.json: finding f0001.message is required",
+            "excluded_from_default_chunks": (
+                "security-report.example.json: "
+                "finding f0001.excluded_from_default_chunks is required"
+            ),
+        }
+        suppressed_diagnostics = {
+            "id": "security-report.example.json: findings[0].id must be f0001 "
+            "for deterministic numbering",
+            "message": (
+                "security-report.example.json: finding f0001 message must match "
+                "fixed template for hidden_text_detected"
+            ),
+            "excluded_from_default_chunks": (
+                "security-report.example.json: finding f0001 "
+                "excluded_from_default_chunks must be true for hidden_text_detected"
+            ),
+        }
+        suppressed_projection_diagnostics = (
+            "security-report.example.json: missing warning-derived finding for hidden_text_detected",
+            "security-report.example.json: finding f0001 has no matching "
+            "security_warnings entry for hidden_text_detected",
+        )
+
+        for field in ("id", "message", "excluded_from_default_chunks"):
+            with self.subTest(field=field):
+                report = copy.deepcopy(self.report)
+                report["findings"][0].pop(field)
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(expected_diagnostics[field], diagnostics)
+                self.assertNotIn(suppressed_diagnostics[field], diagnostics)
+                if field in ("message", "excluded_from_default_chunks"):
+                    for diagnostic in suppressed_projection_diagnostics:
+                        self.assertNotIn(diagnostic, diagnostics)
+
     def test_hidden_text_finding_message_must_match_fixed_template(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][0]["message"] = "hidden text changed"

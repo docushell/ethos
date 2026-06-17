@@ -78,6 +78,8 @@ REPORT_REQUIRED_FIELDS = (
 
 PROFILE_REQUIRED_FIELDS = ("id", "sha256")
 
+FINDING_REQUIRED_FIELDS = ("id", "message", "excluded_from_default_chunks")
+
 
 def diagnose_security_report_example(
     document,
@@ -124,6 +126,8 @@ def diagnose_security_report_example(
 
     for expected in warning_derived_findings:
         if expected not in actual_projected_findings:
+            if has_incomplete_projected_finding(findings, expected):
+                continue
             diagnostics.append(
                 f"{ctx}: missing warning-derived finding for {expected['code']}"
             )
@@ -133,6 +137,8 @@ def diagnose_security_report_example(
             continue
         code = finding.get("code")
         if code not in WARNING_DERIVED_FINDING_CODES:
+            continue
+        if projected_finding_fields_missing(finding):
             continue
         projected = project_report_finding(finding)
         if projected not in warning_derived_findings:
@@ -166,6 +172,7 @@ def diagnose_security_report_example(
                 f"{ctx}: summary.{code} must be {expected_count} for report findings"
             )
 
+    diagnose_finding_required_fields(findings, ctx, diagnostics)
     diagnose_finding_ids(findings, ctx, diagnostics)
     diagnose_finding_codes(findings, ctx, diagnostics)
     diagnose_finding_messages(findings, ctx, diagnostics)
@@ -346,6 +353,8 @@ def diagnose_finding_ids(findings, ctx, diagnostics):
     for index, finding in enumerate(findings):
         if not isinstance(finding, dict):
             continue
+        if "id" not in finding:
+            continue
         finding_id = finding.get("id")
         expected_id = f"f{index + 1:04d}"
         if finding_id != expected_id:
@@ -356,6 +365,16 @@ def diagnose_finding_ids(findings, ctx, diagnostics):
             if finding_id in seen:
                 diagnostics.append(f"{ctx}: duplicate finding id {finding_id}")
             seen.add(finding_id)
+
+
+def diagnose_finding_required_fields(findings, ctx, diagnostics):
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        item_ctx = finding_ctx(finding, index)
+        for field in FINDING_REQUIRED_FIELDS:
+            if field not in finding:
+                diagnostics.append(f"{ctx}: {item_ctx}.{field} is required")
 
 
 def diagnose_finding_codes(findings, ctx, diagnostics):
@@ -381,6 +400,8 @@ def diagnose_finding_messages(findings, ctx, diagnostics):
         expected_message = FINDING_MESSAGE_TEMPLATES.get(code)
         if expected_message is None:
             continue
+        if "message" not in finding:
+            continue
         actual_message = finding.get("message")
         if actual_message != expected_message:
             diagnostics.append(
@@ -394,6 +415,8 @@ def diagnose_finding_exclusion_flags(findings, ctx, diagnostics):
             continue
         code = finding.get("code")
         if not isinstance(code, str):
+            continue
+        if "excluded_from_default_chunks" not in finding:
             continue
         expected = code in DEFAULT_CHUNK_EXCLUDED_CODES
         if finding.get("excluded_from_default_chunks") != expected:
@@ -420,6 +443,30 @@ def project_report_finding(finding):
         if key in finding:
             projected[key] = finding[key]
     return projected
+
+
+def has_incomplete_projected_finding(findings, expected):
+    for finding in findings:
+        if not isinstance(finding, dict):
+            continue
+        if not projected_finding_fields_missing(finding):
+            continue
+        if warning_locator_matches(finding, expected):
+            return True
+    return False
+
+
+def projected_finding_fields_missing(finding):
+    return "message" not in finding or "excluded_from_default_chunks" not in finding
+
+
+def warning_locator_matches(finding, expected):
+    if finding.get("code") != expected.get("code"):
+        return False
+    for key in ("page", "element_ref", "span_ref"):
+        if finding.get(key) != expected.get(key):
+            return False
+    return True
 
 
 def inventory_items(inventories, name, ctx, diagnostics):
