@@ -1803,6 +1803,112 @@ fn parsed_table_candidate_fixture_verifies_table_cell_citations() {
 }
 
 #[test]
+fn parsed_table_candidate_fixture_writes_table_cell_crop_artifacts() {
+    if !pdfium_configured() {
+        eprintln!(
+            "skipping table candidate crop fixture test: ETHOS_PDFIUM_LIBRARY_PATH is not configured"
+        );
+        return;
+    }
+
+    let source_pdf = table_regular_grid_fixture();
+    let parsed = parse_success(&[
+        "doc",
+        "parse",
+        source_pdf.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+    let fingerprint = parsed["fingerprint"]
+        .as_str()
+        .expect("parsed fixture document has a fingerprint");
+    let doc = temp_json(
+        "table-candidate-crop-fixture-document",
+        &serde_json::to_string(&parsed).expect("parsed fixture serializes"),
+    );
+    let citations = serde_json::json!({
+        "document_fingerprint": fingerprint,
+        "claims": [
+            {
+                "kind": "table_cell",
+                "text": "10",
+                "citation": {
+                    "table_id": "t0001",
+                    "cell": {
+                        "row": 1,
+                        "col": 1
+                    }
+                }
+            }
+        ]
+    });
+    let citations = temp_json(
+        "table-candidate-crop-fixture-citations",
+        &serde_json::to_string(&citations).expect("citations serialize"),
+    );
+    let out = temp_output("table-candidate-crop-fixture-report");
+    let crop_dir = tempfile::tempdir().expect("temp crop dir");
+
+    let output = run_ethos(&[
+        "verify",
+        doc.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+        "--crop-dir",
+        crop_dir.path().to_str().unwrap(),
+        "--crop-source-pdf",
+        source_pdf.to_str().unwrap(),
+        "--out",
+        out.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(output.stdout, b"");
+    assert_eq!(output.stderr, b"");
+
+    let report = json_file(&out);
+    assert_eq!(report["all_evidence_grounded"], true);
+    assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(report["checks"][0]["match_method"], "table_cell_lookup");
+    assert_eq!(report["checks"][0]["evidence"]["page"], "p0001");
+    assert_eq!(report["checks"][0]["evidence"]["text"], "10");
+    assert_eq!(
+        report["checks"][0]["evidence"]["bbox"],
+        serde_json::json!([18131, 8737, 19277, 9613])
+    );
+
+    let crop_ref = report["checks"][0]["evidence"]["crop_ref"]
+        .as_str()
+        .unwrap();
+    let descriptor = json_file(crop_dir.path().join(crop_ref));
+    assert_eq!(descriptor["rendering_status"], "rendered");
+    assert_eq!(descriptor["rendered_format"], "png");
+    let source_bytes = std::fs::read(&source_pdf).expect("source PDF fixture is readable");
+    assert_eq!(
+        descriptor["source_pdf_fingerprint"],
+        source_fingerprint(&source_bytes)
+    );
+    assert_eq!(
+        descriptor["document_fingerprint"],
+        report["document_fingerprint"]
+    );
+    assert_eq!(descriptor["check_ids"], serde_json::json!(["v0001"]));
+    assert!(descriptor["rendered_width_px"].as_u64().unwrap() > 0);
+    assert!(descriptor["rendered_height_px"].as_u64().unwrap() > 0);
+
+    let rendered_ref = descriptor["rendered_ref"].as_str().unwrap();
+    assert!(rendered_ref.starts_with("crop-"));
+    assert!(rendered_ref.ends_with(".png"));
+    let png = std::fs::read(crop_dir.path().join(rendered_ref)).unwrap();
+    assert!(png.starts_with(b"\x89PNG\r\n\x1a\n"));
+    assert_eq!(
+        descriptor["rendered_sha256"],
+        ethos_core::c14n::sha256_hex_bytes(&png)
+    );
+    assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 2);
+}
+
+#[test]
 fn table_cell_mismatch_and_missing_cell_fail_gate() {
     let doc = document_example();
     let citations = temp_json(
