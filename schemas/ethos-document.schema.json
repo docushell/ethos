@@ -156,7 +156,11 @@
         "bbox": { "$ref": "#/$defs/bbox" },
         "origin_locator": { "$ref": "#/$defs/origin_locator" },
         "text": { "type": "string" },
-        "font_id": { "type": "string", "description": "Resolved font identity under the deterministic font profile (ADR-0003): embedded name or substitution-table key." },
+        "font_id": {
+          "type": "string",
+          "pattern": "^(embedded|subst):[A-Za-z0-9][A-Za-z0-9._-]*$",
+          "description": "Resolved ASCII font identity under the deterministic font profile (ADR-0003): embedded name/hash or substitution-table key."
+        },
         "font_size_q": { "type": "integer", "minimum": 0, "description": "Font size in quanta." },
         "char_start": { "type": "integer", "minimum": 0, "description": "Char offset range within the owning element's text, when span->element ownership exists." },
         "char_end": { "type": "integer", "minimum": 0 },
