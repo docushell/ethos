@@ -114,6 +114,7 @@ INVENTORY_STRING_FIELDS = {
 
 SCRIPT_LOCATIONS = {"document", "page", "annotation", "field", "other"}
 LOWER_HEX_DIGITS = set("0123456789abcdef")
+ASCII_DIGITS = set("0123456789")
 
 
 def diagnose_security_report_example(
@@ -131,6 +132,7 @@ def diagnose_security_report_example(
     refs = document_reference_index(payload)
     diagnose_report_allowed_fields(report, ctx, diagnostics)
     diagnose_report_required_fields(report, ctx, diagnostics)
+    diagnose_report_identity_scalar_fields(report, ctx, diagnostics)
     diagnose_report_identity(document, report, ctx, diagnostics)
     diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
     diagnose_security_warning_messages(security_warnings, ctx, diagnostics)
@@ -367,8 +369,67 @@ def diagnose_report_identity(document, report, ctx, diagnostics):
         ),
     )
     for key, want, actual_present, actual in comparisons:
-        if want is not None and actual_present and actual != want:
+        if (
+            want is not None
+            and actual_present
+            and report_identity_scalar_valid(key, actual)
+            and actual != want
+        ):
             diagnostics.append(f"{ctx}: {key} diverges from document example")
+
+
+def diagnose_report_identity_scalar_fields(report, ctx, diagnostics):
+    if not isinstance(report, dict):
+        return
+    scalar_checks = (
+        (
+            "schema_version",
+            report.get("schema_version"),
+            "schema_version" in report,
+            is_numeric_version,
+            r"must match pattern ^[0-9]+\.[0-9]+\.[0-9]+$",
+        ),
+        (
+            "document_fingerprint",
+            report.get("document_fingerprint"),
+            "document_fingerprint" in report,
+            is_sha256_fingerprint,
+            "must match pattern ^sha256:[0-9a-f]{64}$",
+        ),
+        (
+            "source_fingerprint",
+            report.get("source_fingerprint"),
+            "source_fingerprint" in report,
+            is_sha256_fingerprint,
+            "must match pattern ^sha256:[0-9a-f]{64}$",
+        ),
+    )
+    for key, value, present, predicate, message in scalar_checks:
+        if present and not predicate(value):
+            diagnostics.append(f"{ctx}: {key} {message}")
+
+    profile = report.get("profile")
+    if not isinstance(profile, dict):
+        return
+    profile_checks = (
+        (
+            "profile.id",
+            profile.get("id"),
+            "id" in profile,
+            is_deterministic_profile_id,
+            "must match pattern ^ethos-deterministic-v[0-9]+$",
+        ),
+        (
+            "profile.sha256",
+            profile.get("sha256"),
+            "sha256" in profile,
+            is_lower_hex_sha256,
+            "must match pattern ^[0-9a-f]{64}$",
+        ),
+    )
+    for key, value, present, predicate, message in profile_checks:
+        if present and not predicate(value):
+            diagnostics.append(f"{ctx}: {key} {message}")
 
 
 def diagnose_report_required_fields(report, ctx, diagnostics):
@@ -810,6 +871,49 @@ def is_lower_hex_sha256(value):
         isinstance(value, str)
         and len(value) == 64
         and all(char in LOWER_HEX_DIGITS for char in value)
+    )
+
+
+def is_numeric_version(value):
+    if not isinstance(value, str):
+        return False
+    parts = value.split(".")
+    return len(parts) == 3 and all(is_ascii_digits(part) for part in parts)
+
+
+def is_sha256_fingerprint(value):
+    return (
+        isinstance(value, str)
+        and value.startswith("sha256:")
+        and is_lower_hex_sha256(value[len("sha256:") :])
+    )
+
+
+def is_deterministic_profile_id(value):
+    prefix = "ethos-deterministic-v"
+    return (
+        isinstance(value, str)
+        and value.startswith(prefix)
+        and is_ascii_digits(value[len(prefix) :])
+    )
+
+
+def report_identity_scalar_valid(key, value):
+    checks = {
+        "schema_version": is_numeric_version,
+        "document_fingerprint": is_sha256_fingerprint,
+        "source_fingerprint": is_sha256_fingerprint,
+        "profile.id": is_deterministic_profile_id,
+        "profile.sha256": is_lower_hex_sha256,
+    }
+    return checks[key](value)
+
+
+def is_ascii_digits(value):
+    return (
+        isinstance(value, str)
+        and value != ""
+        and all(char in ASCII_DIGITS for char in value)
     )
 
 

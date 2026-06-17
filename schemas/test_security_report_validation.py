@@ -93,6 +93,86 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_report_identity_scalar_fields_must_match_schema_patterns(self) -> None:
+        cases = (
+            (
+                ("schema_version",),
+                "1.0",
+                r"security-report.example.json: schema_version must match "
+                r"pattern ^[0-9]+\.[0-9]+\.[0-9]+$",
+                "security-report.example.json: schema_version diverges from "
+                "document example",
+            ),
+            (
+                ("schema_version",),
+                100,
+                r"security-report.example.json: schema_version must match "
+                r"pattern ^[0-9]+\.[0-9]+\.[0-9]+$",
+                "security-report.example.json: schema_version diverges from "
+                "document example",
+            ),
+            (
+                ("document_fingerprint",),
+                "sha256:" + ("g" * 64),
+                "security-report.example.json: document_fingerprint must match "
+                "pattern ^sha256:[0-9a-f]{64}$",
+                "security-report.example.json: document_fingerprint diverges from "
+                "document example",
+            ),
+            (
+                ("document_fingerprint",),
+                None,
+                "security-report.example.json: document_fingerprint must match "
+                "pattern ^sha256:[0-9a-f]{64}$",
+                "security-report.example.json: document_fingerprint diverges from "
+                "document example",
+            ),
+            (
+                ("source_fingerprint",),
+                "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "security-report.example.json: source_fingerprint must match "
+                "pattern ^sha256:[0-9a-f]{64}$",
+                "security-report.example.json: source_fingerprint diverges from "
+                "document example",
+            ),
+            (
+                ("profile", "id"),
+                "ethos-deterministic-v",
+                "security-report.example.json: profile.id must match "
+                "pattern ^ethos-deterministic-v[0-9]+$",
+                "security-report.example.json: profile.id diverges from "
+                "document example",
+            ),
+            (
+                ("profile", "id"),
+                None,
+                "security-report.example.json: profile.id must match "
+                "pattern ^ethos-deterministic-v[0-9]+$",
+                "security-report.example.json: profile.id diverges from "
+                "document example",
+            ),
+            (
+                ("profile", "sha256"),
+                "A" * 64,
+                "security-report.example.json: profile.sha256 must match "
+                "pattern ^[0-9a-f]{64}$",
+                "security-report.example.json: profile.sha256 diverges from "
+                "document example",
+            ),
+        )
+        for path, value, expected_diagnostic, divergence_diagnostic in cases:
+            with self.subTest(path=".".join(path)):
+                report = copy.deepcopy(self.report)
+                target = report
+                for key in path[:-1]:
+                    target = target[key]
+                target[path[-1]] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(expected_diagnostic, diagnostics)
+                self.assertNotIn(divergence_diagnostic, diagnostics)
+
     def test_report_must_be_object(self) -> None:
         diagnostics = diagnose_security_report_example(self.document, [])
 
