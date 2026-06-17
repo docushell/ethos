@@ -758,15 +758,18 @@ def diagnose_findings_references(findings, refs, ctx, diagnostics):
             continue
         item_ctx = finding_ctx(finding, index)
         page = finding.get("page")
+        page_shape_valid = True
         if page is not None:
-            check_page_ref(page, refs, ctx, item_ctx, diagnostics)
+            page_shape_valid = check_page_shape(page, ctx, item_ctx, diagnostics)
+            if page_shape_valid:
+                check_page_ref(page, refs, ctx, item_ctx, diagnostics)
         check_locator_ref(
             finding, "element_ref", "elements", refs, ctx, item_ctx, diagnostics
         )
         check_locator_ref(
             finding, "span_ref", "spans", refs, ctx, item_ctx, diagnostics
         )
-        if "bbox" in finding:
+        if "bbox" in finding and page_shape_valid:
             check_bbox(finding.get("bbox"), page, refs, ctx, item_ctx, diagnostics)
         check_text_backed_finding(finding, refs, ctx, item_ctx, diagnostics)
 
@@ -778,9 +781,12 @@ def diagnose_inventory_references(inventory_lists, refs, ctx, diagnostics):
                 continue
             item_ctx = f"inventories.{name}[{index}]"
             page = item.get("page")
+            page_shape_valid = True
             if page is not None:
-                check_page_ref(page, refs, ctx, item_ctx, diagnostics)
-            if "bbox" in item:
+                page_shape_valid = check_page_shape(page, ctx, item_ctx, diagnostics)
+                if page_shape_valid:
+                    check_page_ref(page, refs, ctx, item_ctx, diagnostics)
+            if "bbox" in item and page_shape_valid:
                 check_bbox(item.get("bbox"), page, refs, ctx, item_ctx, diagnostics)
 
 
@@ -794,7 +800,12 @@ def check_locator_ref(item, key, ref_kind, refs, ctx, item_ctx, diagnostics):
         return
     page = item.get("page")
     target_page = target.get("page") if isinstance(target, dict) else None
-    if page is not None and target_page is not None and page != target_page:
+    if (
+        page is not None
+        and is_page_ref(page)
+        and target_page is not None
+        and page != target_page
+    ):
         diagnostics.append(
             f"{ctx}: {item_ctx} {key} {ref} page {target_page} does not match page {page}"
         )
@@ -807,6 +818,15 @@ def check_page_ref(page, refs, ctx, item_ctx, diagnostics):
         diagnostics.append(f"{ctx}: {item_ctx} references unknown page {page}")
         return None
     return refs["pages"][page]
+
+
+def check_page_shape(page, ctx, item_ctx, diagnostics):
+    if not is_page_ref(page):
+        diagnostics.append(
+            f"{ctx}: {item_ctx}.page must match pattern ^p[0-9]{{4}}$"
+        )
+        return False
+    return True
 
 
 def check_bbox(bbox, page, refs, ctx, item_ctx, diagnostics):
@@ -927,6 +947,15 @@ def report_identity_scalar_valid(key, value):
         "profile.sha256": is_lower_hex_sha256,
     }
     return checks[key](value)
+
+
+def is_page_ref(value):
+    return (
+        isinstance(value, str)
+        and len(value) == 5
+        and value.startswith("p")
+        and is_ascii_digits(value[1:])
+    )
 
 
 def is_ascii_digits(value):

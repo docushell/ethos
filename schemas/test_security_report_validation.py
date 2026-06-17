@@ -746,6 +746,29 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_finding_page_refs_must_match_schema_pattern(self) -> None:
+        for value in ("page-1", []):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["findings"][1]["page"] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: finding f0002.page must match "
+                    "pattern ^p[0-9]{4}$",
+                    diagnostics,
+                )
+                self.assertFalse(
+                    any(
+                        diagnostic.startswith(
+                            "security-report.example.json: finding f0002 "
+                            "references unknown page"
+                        )
+                        for diagnostic in diagnostics
+                    )
+                )
+
     def test_finding_element_refs_must_exist_in_document(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][1]["element_ref"] = "e999999"
@@ -1009,6 +1032,37 @@ class SecurityReportValidationTests(unittest.TestCase):
             "references unknown page p9999",
             diagnostics,
         )
+
+    def test_inventory_page_refs_must_match_schema_pattern(self) -> None:
+        cases = (
+            ("annotations", "page-1"),
+            ("actions", []),
+            ("scripts", "1"),
+            ("links", []),
+        )
+        for name, value in cases:
+            with self.subTest(name=name, value=value):
+                report = copy.deepcopy(self.report)
+                if not report["inventories"][name]:
+                    report["inventories"][name] = [{"location": "document"}]
+                report["inventories"][name][0]["page"] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    f"security-report.example.json: inventories.{name}[0].page "
+                    "must match pattern ^p[0-9]{4}$",
+                    diagnostics,
+                )
+                self.assertFalse(
+                    any(
+                        diagnostic.startswith(
+                            f"security-report.example.json: inventories.{name}[0] "
+                            "references unknown page"
+                        )
+                        for diagnostic in diagnostics
+                    )
+                )
 
     def test_inventory_bbox_must_have_page(self) -> None:
         report = copy.deepcopy(self.report)
