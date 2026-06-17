@@ -154,6 +154,11 @@ def diagnose_security_report_example(
     }
     annotations = inventory_lists["annotations"]
     links = inventory_lists["links"]
+    unsupported_annotations = [
+        annotation
+        for annotation in annotations
+        if isinstance(annotation, dict) and annotation.get("supported") is False
+    ]
     external_links = [
         link for link in links if isinstance(link, dict) and link.get("external") is True
     ]
@@ -165,6 +170,15 @@ def diagnose_security_report_example(
     if finding_counts.get("annotations_present", 0) > 0 and not annotations:
         diagnostics.append(
             f"{ctx}: annotations_present finding requires inventories.annotations entry"
+        )
+
+    if unsupported_annotations and finding_counts.get("unsupported_annotation", 0) == 0:
+        diagnostics.append(
+            f"{ctx}: inventories.annotations supported=false requires unsupported_annotation finding"
+        )
+    if finding_counts.get("unsupported_annotation", 0) > 0 and not unsupported_annotations:
+        diagnostics.append(
+            f"{ctx}: unsupported_annotation finding requires inventories.annotations supported=false entry"
         )
 
     if external_links and finding_counts.get("external_links_present", 0) == 0:

@@ -505,6 +505,39 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_unsupported_annotation_inventory_requires_matching_finding(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["annotations"][0]["supported"] = False
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.annotations supported=false "
+            "requires unsupported_annotation finding",
+            diagnostics,
+        )
+
+    def test_unsupported_annotation_finding_requires_inventory_entry(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"].append(
+            {
+                "id": "f0004",
+                "code": "unsupported_annotation",
+                "message": "unsupported annotation",
+                "page": "p0001",
+                "excluded_from_default_chunks": False,
+            }
+        )
+        report["summary"]["unsupported_annotation"] = 1
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: unsupported_annotation finding requires "
+            "inventories.annotations supported=false entry",
+            diagnostics,
+        )
+
     def test_inventory_page_refs_must_exist_in_document(self) -> None:
         report = copy.deepcopy(self.report)
         report["inventories"]["annotations"][0]["page"] = "p9999"
