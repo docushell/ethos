@@ -192,6 +192,82 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_text_backed_finding_requires_span_bbox(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0].pop("bbox")
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 span_ref s000003 requires bbox",
+            diagnostics,
+        )
+
+    def test_text_backed_finding_bbox_must_match_span_bbox(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["bbox"][0] = 101
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 bbox must match span_ref "
+            "s000003 bbox",
+            diagnostics,
+        )
+
+    def test_text_backed_finding_requires_text_preview(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0].pop("text_preview")
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 span_ref s000003 requires text_preview",
+            diagnostics,
+        )
+
+    def test_text_backed_finding_preview_must_match_span_text(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["text_preview"] = "internal-draft"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 text_preview must match "
+            "span_ref s000003 text",
+            diagnostics,
+        )
+
+    def test_text_backed_finding_preview_uses_deterministic_truncation(self) -> None:
+        document = copy.deepcopy(self.document)
+        span_text = "x" * 121
+        document["payload"]["spans"][2]["text"] = span_text
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["text_preview"] = "x" * 120
+
+        diagnostics = diagnose_security_report_example(document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 text_preview must match "
+            "span_ref s000003 text",
+            diagnostics,
+        )
+
+    def test_text_backed_finding_accepts_deterministic_truncated_preview(self) -> None:
+        document = copy.deepcopy(self.document)
+        span_text = "x" * 121
+        document["payload"]["spans"][2]["text"] = span_text
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["text_preview"] = ("x" * 120) + "\u2026"
+
+        diagnostics = diagnose_security_report_example(document, report)
+
+        self.assertNotIn(
+            "security-report.example.json: finding f0001 text_preview must match "
+            "span_ref s000003 text",
+            diagnostics,
+        )
+
     def test_annotations_inventory_requires_matching_finding(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"] = [

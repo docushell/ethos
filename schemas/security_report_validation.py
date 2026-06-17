@@ -36,6 +36,8 @@ DEFAULT_CHUNK_EXCLUDED_CODES = {
     "low_contrast_text_detected",
 }
 
+TEXT_BACKED_FINDING_CODES = DEFAULT_CHUNK_EXCLUDED_CODES
+
 
 def diagnose_security_report_example(
     document,
@@ -204,6 +206,7 @@ def diagnose_findings_references(findings, refs, ctx, diagnostics):
         )
         if "bbox" in finding:
             check_bbox(finding.get("bbox"), page, refs, ctx, item_ctx, diagnostics)
+        check_text_backed_finding(finding, refs, ctx, item_ctx, diagnostics)
 
 
 def diagnose_inventory_references(inventory_lists, refs, ctx, diagnostics):
@@ -267,6 +270,41 @@ def check_bbox(bbox, page, refs, ctx, item_ctx, diagnostics):
         or y1 > page_obj.get("height", 0)
     ):
         diagnostics.append(f"{ctx}: {item_ctx} bbox exceeds page {page} bounds")
+
+
+def check_text_backed_finding(finding, refs, ctx, item_ctx, diagnostics):
+    if finding.get("code") not in TEXT_BACKED_FINDING_CODES:
+        return
+    span_ref = finding.get("span_ref")
+    if span_ref is None:
+        return
+    span = refs["spans"].get(span_ref)
+    if not isinstance(span, dict):
+        return
+
+    if "bbox" not in finding:
+        diagnostics.append(f"{ctx}: {item_ctx} span_ref {span_ref} requires bbox")
+    elif finding.get("bbox") != span.get("bbox"):
+        diagnostics.append(f"{ctx}: {item_ctx} bbox must match span_ref {span_ref} bbox")
+
+    span_text = span.get("text")
+    if not isinstance(span_text, str):
+        return
+    expected_preview = deterministic_preview(span_text)
+    if "text_preview" not in finding:
+        diagnostics.append(
+            f"{ctx}: {item_ctx} span_ref {span_ref} requires text_preview"
+        )
+    elif finding.get("text_preview") != expected_preview:
+        diagnostics.append(
+            f"{ctx}: {item_ctx} text_preview must match span_ref {span_ref} text"
+        )
+
+
+def deterministic_preview(text):
+    if len(text) <= 120:
+        return text
+    return text[:120] + "\u2026"
 
 
 def finding_ctx(finding, index):
