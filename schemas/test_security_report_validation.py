@@ -800,7 +800,7 @@ class SecurityReportValidationTests(unittest.TestCase):
         )
 
     def test_finding_element_refs_must_match_schema_pattern(self) -> None:
-        for value in ("element-1", []):
+        for value in ("element-1", [], None):
             with self.subTest(value=value):
                 report = copy.deepcopy(self.report)
                 report["findings"][1]["element_ref"] = value
@@ -862,6 +862,30 @@ class SecurityReportValidationTests(unittest.TestCase):
                         for diagnostic in diagnostics
                     )
                 )
+                self.assertFalse(
+                    any("requires span_ref" in diagnostic for diagnostic in diagnostics)
+                )
+
+    def test_present_null_finding_span_refs_must_match_schema_pattern(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][1]["span_ref"] = None
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0002.span_ref "
+            "must match pattern ^s[0-9]{6}$",
+            diagnostics,
+        )
+        self.assertFalse(
+            any(
+                diagnostic.startswith(
+                    "security-report.example.json: finding f0002 "
+                    "references unknown span_ref"
+                )
+                for diagnostic in diagnostics
+            )
+        )
 
     def test_finding_span_refs_must_match_finding_page(self) -> None:
         document = copy.deepcopy(self.document)

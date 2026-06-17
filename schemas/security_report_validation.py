@@ -826,9 +826,9 @@ def diagnose_inventory_references(inventory_lists, refs, ctx, diagnostics):
 
 
 def check_locator_ref(item, key, ref_kind, refs, ctx, item_ctx, diagnostics):
-    ref = item.get(key)
-    if ref is None:
+    if key not in item:
         return
+    ref = item.get(key)
     if not check_locator_shape(ref, key, ctx, item_ctx, diagnostics):
         return
     target = refs[ref_kind].get(ref)
@@ -912,10 +912,10 @@ def check_text_backed_finding(finding, refs, ctx, item_ctx, diagnostics):
     code = finding.get("code")
     if not isinstance(code, str) or code not in TEXT_BACKED_FINDING_CODES:
         return
-    span_ref = finding.get("span_ref")
-    if span_ref is None:
+    if "span_ref" not in finding:
         diagnostics.append(f"{ctx}: {item_ctx} requires span_ref for {code}")
         return
+    span_ref = finding.get("span_ref")
     if not is_span_ref(span_ref):
         return
     span = refs["spans"].get(span_ref)
