@@ -1687,6 +1687,48 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_security_warning_locator_fields_must_match_schema_patterns(self) -> None:
+        cases = (
+            (
+                "page",
+                "page-1",
+                "security-report.example.json: security warning w0099.page "
+                "must match pattern ^p[0-9]{4}$",
+            ),
+            (
+                "element_ref",
+                [],
+                "security-report.example.json: security warning w0099.element_ref "
+                "must match pattern ^e[0-9]{6}$",
+            ),
+            (
+                "span_ref",
+                None,
+                "security-report.example.json: security warning w0099.span_ref "
+                "must match pattern ^s[0-9]{6}$",
+            ),
+        )
+        for field, value, expected_diagnostic in cases:
+            with self.subTest(field=field):
+                document = copy.deepcopy(self.document)
+                warning = {
+                    "id": "w0099",
+                    "code": "image_only_page",
+                    "message": "image-only page",
+                    "page": "p0001",
+                }
+                warning[field] = value
+                document["payload"]["security_warnings"].append(warning)
+
+                diagnostics = diagnose_security_report_example(document, self.report)
+
+                self.assertIn(expected_diagnostic, diagnostics)
+                self.assertNotIn(
+                    f"security-report.example.json: security warning w0099 "
+                    f"references unknown {field}",
+                    diagnostics,
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

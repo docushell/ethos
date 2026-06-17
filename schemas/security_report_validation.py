@@ -137,6 +137,7 @@ def diagnose_security_report_example(
     diagnose_report_identity_scalar_fields(report, ctx, diagnostics)
     diagnose_report_identity(document, report, ctx, diagnostics)
     diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
+    diagnose_security_warning_locator_shapes(security_warnings, ctx, diagnostics)
     diagnose_security_warning_messages(security_warnings, ctx, diagnostics)
 
     findings = report.get("findings") if isinstance(report, dict) else []
@@ -346,6 +347,18 @@ def diagnose_security_warning_messages(security_warnings, ctx, diagnostics):
                 f"{ctx}: security warning {warning_id(warning)} "
                 f"message must match fixed template for {code}"
             )
+
+
+def diagnose_security_warning_locator_shapes(security_warnings, ctx, diagnostics):
+    for warning in security_warnings:
+        if not isinstance(warning, dict):
+            continue
+        item_ctx = f"security warning {warning_id(warning)}"
+        if "page" in warning:
+            check_page_shape(warning.get("page"), ctx, item_ctx, diagnostics)
+        for key in ("element_ref", "span_ref"):
+            if key in warning:
+                check_locator_shape(warning.get(key), key, ctx, item_ctx, diagnostics)
 
 
 def projected_warning_finding(warning):
