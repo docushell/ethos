@@ -338,7 +338,7 @@ class SecurityReportValidationTests(unittest.TestCase):
         )
 
     def test_finding_codes_are_required(self) -> None:
-        for value in (None, 7):
+        for value in (None, 7, []):
             with self.subTest(value=value):
                 report = copy.deepcopy(self.report)
                 if value is None:
@@ -1492,6 +1492,29 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_parser_warning_codes_must_be_strings(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["parser_warnings"].append(
+            {
+                "id": "w0099",
+                "code": [],
+                "message": "parser warning code drifted",
+                "page": "p0001",
+            }
+        )
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: parser warning w0099 code must be a string",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: parser warning w0099 ([]) "
+            "must be in security_warnings",
+            diagnostics,
+        )
+
     def test_parser_codes_in_security_warnings_fail_closed(self) -> None:
         document = copy.deepcopy(self.document)
         document["payload"]["security_warnings"].append(
@@ -1508,6 +1531,28 @@ class SecurityReportValidationTests(unittest.TestCase):
         self.assertIn(
             "security-report.example.json: security warning w0099 "
             "(low_confidence_reading_order) is not a security warning code",
+            diagnostics,
+        )
+
+    def test_security_warning_codes_must_be_strings(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["security_warnings"].append(
+            {
+                "id": "w0099",
+                "code": [],
+                "message": "security warning code drifted",
+                "page": "p0001",
+            }
+        )
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: security warning w0099 code must be a string",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: missing warning-derived finding for []",
             diagnostics,
         )
 

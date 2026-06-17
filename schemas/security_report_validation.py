@@ -153,7 +153,11 @@ def diagnose_security_report_example(
     warning_derived_findings = [
         projected_warning_finding(warning)
         for warning in security_warnings
-        if isinstance(warning, dict) and warning.get("code") in REPORTABLE_WARNING_CODES
+        if (
+            isinstance(warning, dict)
+            and isinstance(warning.get("code"), str)
+            and warning.get("code") in REPORTABLE_WARNING_CODES
+        )
     ]
     actual_projected_findings = [
         project_report_finding(finding)
@@ -178,7 +182,7 @@ def diagnose_security_report_example(
         if not isinstance(finding, dict):
             continue
         code = finding.get("code")
-        if code not in WARNING_DERIVED_FINDING_CODES:
+        if not isinstance(code, str) or code not in WARNING_DERIVED_FINDING_CODES:
             continue
         if projected_finding_fields_missing(finding):
             continue
@@ -288,7 +292,14 @@ def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
     for warning in parser_warnings:
         if not isinstance(warning, dict):
             continue
+        if "code" not in warning:
+            continue
         code = warning.get("code")
+        if not isinstance(code, str):
+            diagnostics.append(
+                f"{ctx}: parser warning {warning_id(warning)} code must be a string"
+            )
+            continue
         if code in SECURITY_WARNING_CODES:
             diagnostics.append(
                 f"{ctx}: parser warning {warning_id(warning)} ({code}) "
@@ -298,8 +309,15 @@ def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
     for warning in security_warnings:
         if not isinstance(warning, dict):
             continue
+        if "code" not in warning:
+            continue
         code = warning.get("code")
-        if isinstance(code, str) and code not in SECURITY_WARNING_CODES:
+        if not isinstance(code, str):
+            diagnostics.append(
+                f"{ctx}: security warning {warning_id(warning)} code must be a string"
+            )
+            continue
+        if code not in SECURITY_WARNING_CODES:
             diagnostics.append(
                 f"{ctx}: security warning {warning_id(warning)} ({code}) "
                 "is not a security warning code"
@@ -311,6 +329,8 @@ def diagnose_security_warning_messages(security_warnings, ctx, diagnostics):
         if not isinstance(warning, dict):
             continue
         code = warning.get("code")
+        if not isinstance(code, str):
+            continue
         expected_message = FINDING_MESSAGE_TEMPLATES.get(code)
         if expected_message is None:
             continue
@@ -323,10 +343,13 @@ def diagnose_security_warning_messages(security_warnings, ctx, diagnostics):
 
 
 def projected_warning_finding(warning):
+    code = warning.get("code")
     projected = {
-        "code": warning.get("code"),
+        "code": code,
         "message": warning.get("message"),
-        "excluded_from_default_chunks": warning.get("code") in DEFAULT_CHUNK_EXCLUDED_CODES,
+        "excluded_from_default_chunks": (
+            isinstance(code, str) and code in DEFAULT_CHUNK_EXCLUDED_CODES
+        ),
     }
     for key in ("page", "element_ref", "span_ref"):
         if key in warning:
@@ -545,6 +568,8 @@ def diagnose_finding_messages(findings, ctx, diagnostics):
         if not isinstance(finding, dict):
             continue
         code = finding.get("code")
+        if not isinstance(code, str):
+            continue
         expected_message = FINDING_MESSAGE_TEMPLATES.get(code)
         if expected_message is None:
             continue
@@ -879,13 +904,12 @@ def check_bbox(bbox, page, refs, ctx, item_ctx, diagnostics):
 
 
 def check_text_backed_finding(finding, refs, ctx, item_ctx, diagnostics):
-    if finding.get("code") not in TEXT_BACKED_FINDING_CODES:
+    code = finding.get("code")
+    if not isinstance(code, str) or code not in TEXT_BACKED_FINDING_CODES:
         return
     span_ref = finding.get("span_ref")
     if span_ref is None:
-        diagnostics.append(
-            f"{ctx}: {item_ctx} requires span_ref for {finding.get('code')}"
-        )
+        diagnostics.append(f"{ctx}: {item_ctx} requires span_ref for {code}")
         return
     if not is_span_ref(span_ref):
         return
