@@ -66,6 +66,11 @@ def diagnose_security_report_example(
         for finding in findings
         if isinstance(finding, dict)
     ]
+    finding_counts = {}
+    for finding in findings:
+        if isinstance(finding, dict) and isinstance(finding.get("code"), str):
+            code = finding["code"]
+            finding_counts[code] = finding_counts.get(code, 0) + 1
 
     for expected in warning_derived_findings:
         if expected not in actual_projected_findings:
@@ -82,6 +87,46 @@ def diagnose_security_report_example(
                 f"{ctx}: summary.{code} must be {expected_count} "
                 "for warning-derived findings"
             )
+
+    for code in sorted(set(summary.keys()) | set(finding_counts.keys())):
+        expected_count = finding_counts.get(code, 0)
+        if summary.get(code, 0) != expected_count:
+            diagnostics.append(
+                f"{ctx}: summary.{code} must be {expected_count} for report findings"
+            )
+
+    inventories = report.get("inventories") if isinstance(report, dict) else {}
+    if not isinstance(inventories, dict):
+        diagnostics.append(f"{ctx}: inventories must be an object")
+        return diagnostics
+
+    inventory_lists = {
+        name: inventory_items(inventories, name, ctx, diagnostics)
+        for name in ("annotations", "actions", "attachments", "scripts", "links")
+    }
+    annotations = inventory_lists["annotations"]
+    links = inventory_lists["links"]
+    external_links = [
+        link for link in links if isinstance(link, dict) and link.get("external") is True
+    ]
+
+    if annotations and finding_counts.get("annotations_present", 0) == 0:
+        diagnostics.append(
+            f"{ctx}: inventories.annotations requires annotations_present finding"
+        )
+    if finding_counts.get("annotations_present", 0) > 0 and not annotations:
+        diagnostics.append(
+            f"{ctx}: annotations_present finding requires inventories.annotations entry"
+        )
+
+    if external_links and finding_counts.get("external_links_present", 0) == 0:
+        diagnostics.append(
+            f"{ctx}: inventories.links external=true requires external_links_present finding"
+        )
+    if finding_counts.get("external_links_present", 0) > 0 and not external_links:
+        diagnostics.append(
+            f"{ctx}: external_links_present finding requires inventories.links external=true entry"
+        )
 
     return diagnostics
 
@@ -108,3 +153,11 @@ def project_report_finding(finding):
         if key in finding:
             projected[key] = finding[key]
     return projected
+
+
+def inventory_items(inventories, name, ctx, diagnostics):
+    items = inventories.get(name, [])
+    if not isinstance(items, list):
+        diagnostics.append(f"{ctx}: inventories.{name} must be an array")
+        return []
+    return items
