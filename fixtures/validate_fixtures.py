@@ -192,6 +192,8 @@ def validate_golden_file(path: Path, stage: str, keys: set[str]):
                 fail(f"{ctx} {key} must be an array")
         validate_projection_items(ctx, "pages", golden.get("pages"), required=True)
         validate_projection_items(ctx, "spans", golden.get("spans"), required=True)
+        validate_projection_items(ctx, "regions", golden.get("regions"), required=False)
+        validate_extraction_region_refs(ctx, golden)
     elif stage == "layout":
         if not isinstance(golden.get("elements"), list):
             fail(f"{ctx} elements must be an array")
@@ -356,6 +358,135 @@ def validate_table_refs(ctx: str, tables, extraction, layout) -> None:
                     fail(f"{cell_ctx} references unknown element '{ref}'")
             if not span_refs and not element_refs:
                 fail(f"{cell_ctx} in table {table_id} must cite span_refs or element_refs")
+
+
+def validate_extraction_region_refs(ctx: str, extraction) -> None:
+    if not isinstance(extraction, dict):
+        return
+    pages = extraction.get("pages") if isinstance(extraction.get("pages"), list) else []
+    regions = (
+        extraction.get("regions") if isinstance(extraction.get("regions"), list) else []
+    )
+    warnings = (
+        extraction.get("warnings") if isinstance(extraction.get("warnings"), list) else []
+    )
+
+    page_dims = {}
+    for page in pages:
+        if not isinstance(page, dict) or not isinstance(page.get("id"), str):
+            continue
+        width = page.get("width")
+        height = page.get("height")
+        if (
+            isinstance(width, int)
+            and not isinstance(width, bool)
+            and isinstance(height, int)
+            and not isinstance(height, bool)
+        ):
+            page_dims[page["id"]] = (width, height)
+
+    region_ids = set()
+    for region_index, region in enumerate(regions):
+        region_ctx = f"{ctx} regions[{region_index}]"
+        if not isinstance(region, dict):
+            fail(f"{region_ctx} must be an object")
+            continue
+        region_id = region.get("id")
+        if isinstance(region_id, str) and region_id:
+            if region_id in region_ids:
+                fail(f"{region_ctx}.id duplicates '{region_id}'")
+            region_ids.add(region_id)
+
+    warning_ids = {
+        warning.get("id")
+        for warning in warnings
+        if isinstance(warning, dict) and isinstance(warning.get("id"), str)
+    }
+
+    for region_index, region in enumerate(regions):
+        region_ctx = f"{ctx} regions[{region_index}]"
+        if not isinstance(region, dict):
+            continue
+        page = region.get("page")
+        if not isinstance(page, str) or not page:
+            fail(f"{region_ctx}.page must be a non-empty string")
+            page_dims_for_region = None
+        elif page not in page_dims:
+            fail(f"{region_ctx} references unknown page '{page}'")
+            page_dims_for_region = None
+        else:
+            page_dims_for_region = page_dims[page]
+
+        validate_bbox(region.get("bbox"), region_ctx, page_dims_for_region)
+        for ref in string_ref_array(
+            region.get("warning_refs", []), f"{region_ctx}.warning_refs"
+        ):
+            if ref not in warning_ids:
+                fail(f"{region_ctx} references unknown warning '{ref}'")
+
+    for warning_index, warning in enumerate(warnings):
+        warning_ctx = f"{ctx} warnings[{warning_index}]"
+        if not isinstance(warning, dict) or "region_ref" not in warning:
+            continue
+        region_ref = warning.get("region_ref")
+        if not isinstance(region_ref, str) or not region_ref:
+            fail(f"{warning_ctx}.region_ref must be a non-empty string")
+        elif region_ref not in region_ids:
+            fail(f"{warning_ctx} references unknown region '{region_ref}'")
+
+
+def validate_layout_region_refs(ctx: str, layout, extraction) -> None:
+    if not isinstance(layout, dict) or not isinstance(extraction, dict):
+        return
+    regions = (
+        extraction.get("regions") if isinstance(extraction.get("regions"), list) else []
+    )
+    region_ids = {
+        region.get("id")
+        for region in regions
+        if isinstance(region, dict) and isinstance(region.get("id"), str)
+    }
+    elements = layout.get("elements") if isinstance(layout.get("elements"), list) else []
+    warnings = layout.get("warnings") if isinstance(layout.get("warnings"), list) else []
+
+    for element_index, element in enumerate(elements):
+        element_ctx = f"{ctx} elements[{element_index}]"
+        if not isinstance(element, dict) or "region_ref" not in element:
+            continue
+        region_ref = element.get("region_ref")
+        if not isinstance(region_ref, str) or not region_ref:
+            fail(f"{element_ctx}.region_ref must be a non-empty string")
+        elif region_ref not in region_ids:
+            fail(f"{element_ctx} references unknown region '{region_ref}'")
+
+    for warning_index, warning in enumerate(warnings):
+        warning_ctx = f"{ctx} warnings[{warning_index}]"
+        if not isinstance(warning, dict) or "region_ref" not in warning:
+            continue
+        region_ref = warning.get("region_ref")
+        if not isinstance(region_ref, str) or not region_ref:
+            fail(f"{warning_ctx}.region_ref must be a non-empty string")
+        elif region_ref not in region_ids:
+            fail(f"{warning_ctx} references unknown region '{region_ref}'")
+
+
+def validate_bbox(value, ctx: str, page_dims=None) -> None:
+    if (
+        not isinstance(value, list)
+        or len(value) != 4
+        or any(not isinstance(item, int) or isinstance(item, bool) for item in value)
+    ):
+        fail(f"{ctx}.bbox must be a four-integer array")
+        return
+    x0, y0, x1, y1 = value
+    if x0 > x1 or y0 > y1:
+        fail(f"{ctx}.bbox must satisfy x0<=x1 and y0<=y1")
+        return
+    if page_dims is None:
+        return
+    width, height = page_dims
+    if x0 < 0 or y0 < 0 or x1 > width or y1 > height:
+        fail(f"{ctx}.bbox must stay within page bounds")
 
 
 def string_ref_array(value, ctx: str) -> list[str]:
@@ -852,6 +983,11 @@ for index, entry in enumerate(entries):
                 metadata,
                 extraction_golden,
                 layout_golden,
+            )
+            validate_layout_region_refs(
+                str((fixture_dir / "layout.json").relative_to(ROOT)),
+                layout_golden,
+                extraction_golden,
             )
             validate_table_goldens(
                 fixture_dir,
