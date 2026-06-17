@@ -13,7 +13,7 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -32,6 +32,12 @@ verify-alpha: $(ETHOS_BIN)
 	$(MAKE) verify-alpha-tree
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) examples/verify/check_verify_alpha.py --repo-root $(ROOT) --ethos-bin $(ETHOS_BIN) --out-dir $(VERIFY_ALPHA_OUT)
+	git diff --check
+
+rag-chunk-alpha:
+	cargo test --locked -p ethos-cli --test rag
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_rag_chunk_alpha.py
 	git diff --check
 
 verify-rendered-crops: $(ETHOS_BIN)
