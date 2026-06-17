@@ -166,6 +166,22 @@ class SecurityReportValidationTests(unittest.TestCase):
                 )
                 self.assertNotIn(identity_diagnostics[field], diagnostics)
 
+    def test_unexpected_report_fields_fail_closed(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["unexpected"] = True
+        report["profile"]["unexpected"] = True
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: unexpected is not allowed",
+            diagnostics,
+        )
+        self.assertIn(
+            "security-report.example.json: profile.unexpected is not allowed",
+            diagnostics,
+        )
+
     def test_finding_ids_must_be_contiguous_in_report_order(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][1]["id"] = "f0004"
@@ -264,6 +280,17 @@ class SecurityReportValidationTests(unittest.TestCase):
                 if field in ("message", "excluded_from_default_chunks"):
                     for diagnostic in suppressed_projection_diagnostics:
                         self.assertNotIn(diagnostic, diagnostics)
+
+    def test_unexpected_finding_fields_fail_closed(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["unexpected"] = True
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001.unexpected is not allowed",
+            diagnostics,
+        )
 
     def test_hidden_text_finding_message_must_match_fixed_template(self) -> None:
         report = copy.deepcopy(self.report)
@@ -917,6 +944,34 @@ class SecurityReportValidationTests(unittest.TestCase):
 
                 self.assertIn(
                     f"security-report.example.json: inventories.{name} is required",
+                    diagnostics,
+                )
+
+    def test_unexpected_inventory_fields_fail_closed(self) -> None:
+        inventory_items = {
+            "annotations": {"page": "p0001", "kind": "link"},
+            "actions": {"kind": "uri"},
+            "attachments": {"name": "attachment.bin", "bytes": 0},
+            "scripts": {"location": "document"},
+            "links": {"page": "p0001", "uri": "https://example.com/q3", "external": True},
+        }
+        report = copy.deepcopy(self.report)
+        report["inventories"]["widgets"] = []
+        for name, item in inventory_items.items():
+            report["inventories"][name] = [copy.deepcopy(item)]
+            report["inventories"][name][0]["unexpected"] = True
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.widgets is not allowed",
+            diagnostics,
+        )
+        for name in inventory_items:
+            with self.subTest(name=name):
+                self.assertIn(
+                    f"security-report.example.json: inventories.{name}[0].unexpected "
+                    "is not allowed",
                     diagnostics,
                 )
 

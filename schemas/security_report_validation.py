@@ -80,6 +80,30 @@ PROFILE_REQUIRED_FIELDS = ("id", "sha256")
 
 FINDING_REQUIRED_FIELDS = ("id", "message", "excluded_from_default_chunks")
 
+REPORT_ALLOWED_FIELDS = REPORT_REQUIRED_FIELDS
+
+PROFILE_ALLOWED_FIELDS = PROFILE_REQUIRED_FIELDS
+
+FINDING_ALLOWED_FIELDS = (
+    "id",
+    "code",
+    "message",
+    "page",
+    "element_ref",
+    "span_ref",
+    "bbox",
+    "text_preview",
+    "excluded_from_default_chunks",
+)
+
+INVENTORY_ALLOWED_FIELDS = {
+    "annotations": ("page", "kind", "bbox", "supported"),
+    "actions": ("kind", "page", "target"),
+    "attachments": ("name", "bytes", "sha256"),
+    "scripts": ("location", "page", "trigger"),
+    "links": ("page", "uri", "external", "bbox"),
+}
+
 
 def diagnose_security_report_example(
     document,
@@ -94,6 +118,7 @@ def diagnose_security_report_example(
         security_warnings = warning_items(payload.get("security_warnings", []))
         parser_warnings = warning_items(payload.get("parser_warnings", []))
     refs = document_reference_index(payload)
+    diagnose_report_allowed_fields(report, ctx, diagnostics)
     diagnose_report_required_fields(report, ctx, diagnostics)
     diagnose_report_identity(document, report, ctx, diagnostics)
     diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
@@ -173,6 +198,7 @@ def diagnose_security_report_example(
             )
 
     diagnose_finding_required_fields(findings, ctx, diagnostics)
+    diagnose_finding_allowed_fields(findings, ctx, diagnostics)
     diagnose_finding_ids(findings, ctx, diagnostics)
     diagnose_finding_codes(findings, ctx, diagnostics)
     diagnose_finding_messages(findings, ctx, diagnostics)
@@ -184,6 +210,7 @@ def diagnose_security_report_example(
         diagnostics.append(f"{ctx}: inventories must be an object")
         return diagnostics
 
+    diagnose_inventory_allowed_fields(inventories, ctx, diagnostics)
     inventory_lists = {
         name: inventory_items(inventories, name, ctx, diagnostics)
         for name in ("annotations", "actions", "attachments", "scripts", "links")
@@ -348,6 +375,17 @@ def diagnose_report_required_fields(report, ctx, diagnostics):
             diagnostics.append(f"{ctx}: profile.{field} is required")
 
 
+def diagnose_report_allowed_fields(report, ctx, diagnostics):
+    if not isinstance(report, dict):
+        return
+    diagnose_allowed_fields(report, REPORT_ALLOWED_FIELDS, None, ctx, diagnostics)
+    profile = report.get("profile")
+    if isinstance(profile, dict):
+        diagnose_allowed_fields(
+            profile, PROFILE_ALLOWED_FIELDS, "profile", ctx, diagnostics
+        )
+
+
 def diagnose_finding_ids(findings, ctx, diagnostics):
     seen = set()
     for index, finding in enumerate(findings):
@@ -375,6 +413,15 @@ def diagnose_finding_required_fields(findings, ctx, diagnostics):
         for field in FINDING_REQUIRED_FIELDS:
             if field not in finding:
                 diagnostics.append(f"{ctx}: {item_ctx}.{field} is required")
+
+
+def diagnose_finding_allowed_fields(findings, ctx, diagnostics):
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        diagnose_allowed_fields(
+            finding, FINDING_ALLOWED_FIELDS, finding_ctx(finding, index), ctx, diagnostics
+        )
 
 
 def diagnose_finding_codes(findings, ctx, diagnostics):
@@ -467,6 +514,34 @@ def warning_locator_matches(finding, expected):
         if finding.get(key) != expected.get(key):
             return False
     return True
+
+
+def diagnose_inventory_allowed_fields(inventories, ctx, diagnostics):
+    diagnose_allowed_fields(
+        inventories, INVENTORY_ALLOWED_FIELDS.keys(), "inventories", ctx, diagnostics
+    )
+    for name, allowed_fields in INVENTORY_ALLOWED_FIELDS.items():
+        items = inventories.get(name)
+        if not isinstance(items, list):
+            continue
+        for index, item in enumerate(items):
+            if not isinstance(item, dict):
+                continue
+            diagnose_allowed_fields(
+                item,
+                allowed_fields,
+                f"inventories.{name}[{index}]",
+                ctx,
+                diagnostics,
+            )
+
+
+def diagnose_allowed_fields(value, allowed_fields, item_ctx, ctx, diagnostics):
+    allowed = set(allowed_fields)
+    for field in sorted(value.keys()):
+        if field not in allowed:
+            path = field if item_ctx is None else f"{item_ctx}.{field}"
+            diagnostics.append(f"{ctx}: {path} is not allowed")
 
 
 def inventory_items(inventories, name, ctx, diagnostics):
