@@ -466,6 +466,20 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_summary_counts_must_be_non_negative_json_integers(self) -> None:
+        for value in (True, "1", -1):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["summary"]["hidden_text_detected"] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: summary.hidden_text_detected "
+                    "must be a non-negative integer",
+                    diagnostics,
+                )
+
     def test_zero_count_summary_keys_must_be_omitted(self) -> None:
         report = copy.deepcopy(self.report)
         report["summary"]["image_only_page"] = 0

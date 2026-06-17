@@ -132,6 +132,7 @@ def diagnose_security_report_example(
     if not isinstance(summary, dict):
         diagnostics.append(f"{ctx}: summary must be an object")
         return diagnostics
+    diagnose_summary_counts(summary, ctx, diagnostics)
 
     warning_derived_findings = [
         projected_warning_finding(warning)
@@ -373,6 +374,14 @@ def diagnose_report_required_fields(report, ctx, diagnostics):
     for field in PROFILE_REQUIRED_FIELDS:
         if field not in profile:
             diagnostics.append(f"{ctx}: profile.{field} is required")
+
+
+def diagnose_summary_counts(summary, ctx, diagnostics):
+    for code, count in summary.items():
+        if not is_json_integer(count) or count < 0:
+            diagnostics.append(
+                f"{ctx}: summary.{code} must be a non-negative integer"
+            )
 
 
 def diagnose_report_allowed_fields(report, ctx, diagnostics):
