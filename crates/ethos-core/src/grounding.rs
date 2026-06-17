@@ -188,6 +188,10 @@ pub trait GroundingSource {
         None
     }
     /// Element lookup by id. Default: linear scan over [`Self::elements`].
+    ///
+    /// Adapters may override this as a convenience API for direct callers. The
+    /// verifier builds its own deterministic per-run index from [`Self::elements`]
+    /// so duplicate handling and traversal order stay tied to the evidence list.
     fn element_by_id(&self, id: &str) -> Option<GroundingElement> {
         self.elements().into_iter().find(|e| e.id == id)
     }
