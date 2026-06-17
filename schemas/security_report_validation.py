@@ -728,6 +728,16 @@ def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
                 f"{ctx}: inventories.annotations[{index}].supported must be a boolean"
             )
 
+    for name in ("annotations", "actions"):
+        for index, item in enumerate(inventory_lists.get(name, [])):
+            if not isinstance(item, dict):
+                continue
+            kind = item.get("kind")
+            if isinstance(kind, str) and kind != kind.lower():
+                diagnostics.append(
+                    f"{ctx}: inventories.{name}[{index}].kind must be lowercase"
+                )
+
     for index, item in enumerate(inventory_lists.get("attachments", [])):
         if not isinstance(item, dict) or "bytes" not in item:
             continue

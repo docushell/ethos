@@ -1403,6 +1403,29 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_inventory_kind_fields_must_be_lowercase(self) -> None:
+        cases = (
+            ("annotations", "Link"),
+            ("actions", "URI"),
+        )
+        for name, value in cases:
+            with self.subTest(name=name):
+                report = copy.deepcopy(self.report)
+                report["inventories"][name][0]["kind"] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    f"security-report.example.json: inventories.{name}[0].kind "
+                    "must be lowercase",
+                    diagnostics,
+                )
+                self.assertNotIn(
+                    f"security-report.example.json: inventories.{name}[0].kind "
+                    "must be a string",
+                    diagnostics,
+                )
+
     def test_attachment_inventory_sha256_must_be_lowercase_hex_digest(self) -> None:
         for value in ("abc", "g" * 64, "A" * 64, 64, None):
             with self.subTest(value=value):
