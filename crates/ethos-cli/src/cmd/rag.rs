@@ -96,12 +96,16 @@ fn rag_chunk_record(doc: &Document, chunk: &Chunk) -> Result<serde_json::Value, 
         serde_json::to_value(&chunk.token_estimate)
             .map_err(|e| EthosError::internal(e.to_string()))?,
     );
-    let warnings: Vec<serde_json::Value> = chunk
-        .warning_refs
-        .iter()
-        .filter_map(|id| warning_code(id))
-        .map(|c| serde_json::Value::String(c.to_string()))
-        .collect();
+    let mut warnings = Vec::with_capacity(chunk.warning_refs.len());
+    for id in &chunk.warning_refs {
+        let Some(code) = warning_code(id) else {
+            return Err(Failure::Usage(format!(
+                "chunk {} references unknown warning_ref {}",
+                chunk.id, id
+            )));
+        };
+        warnings.push(serde_json::Value::String(code.to_string()));
+    }
     record.insert("warnings".into(), serde_json::Value::Array(warnings));
     Ok(serde_json::Value::Object(record))
 }
