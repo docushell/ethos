@@ -115,6 +115,83 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_finding_page_refs_must_exist_in_document(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][1]["page"] = "p9999"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0002 references unknown page p9999",
+            diagnostics,
+        )
+
+    def test_finding_element_refs_must_exist_in_document(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][1]["element_ref"] = "e999999"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0002 references unknown element_ref e999999",
+            diagnostics,
+        )
+
+    def test_finding_span_refs_must_match_finding_page(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["pages"].append(
+            {
+                "id": "p0002",
+                "index": 2,
+                "width": 61200,
+                "height": 79200,
+                "rotation": 0,
+            }
+        )
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["page"] = "p0002"
+
+        diagnostics = diagnose_security_report_example(document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 span_ref s000003 page p0001 "
+            "does not match page p0002",
+            diagnostics,
+        )
+
+    def test_finding_bbox_must_have_page(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0].pop("page")
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 bbox requires page",
+            diagnostics,
+        )
+
+    def test_finding_bbox_must_have_positive_area(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["bbox"][2] = report["findings"][0]["bbox"][0]
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 bbox has zero area",
+            diagnostics,
+        )
+
+    def test_finding_bbox_must_stay_inside_page_bounds(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["bbox"][2] = 61201
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 bbox exceeds page p0001 bounds",
+            diagnostics,
+        )
+
     def test_annotations_inventory_requires_matching_finding(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"] = [
@@ -140,6 +217,65 @@ class SecurityReportValidationTests(unittest.TestCase):
         self.assertIn(
             "security-report.example.json: annotations_present finding requires "
             "inventories.annotations entry",
+            diagnostics,
+        )
+
+    def test_inventory_page_refs_must_exist_in_document(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["annotations"][0]["page"] = "p9999"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.annotations[0] "
+            "references unknown page p9999",
+            diagnostics,
+        )
+
+    def test_inventory_bbox_must_have_page(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["links"][0].pop("page")
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.links[0] bbox requires page",
+            diagnostics,
+        )
+
+    def test_inventory_bbox_must_have_positive_area(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["links"][0]["bbox"][2] = report["inventories"]["links"][0][
+            "bbox"
+        ][0]
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.links[0] bbox has zero area",
+            diagnostics,
+        )
+
+    def test_inventory_bbox_must_stay_inside_page_bounds(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["annotations"][0]["bbox"][3] = 79201
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.annotations[0] "
+            "bbox exceeds page p0001 bounds",
+            diagnostics,
+        )
+
+    def test_action_inventory_page_refs_are_checked_without_action_semantics(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["inventories"]["actions"][0]["page"] = "p9999"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: inventories.actions[0] references unknown page p9999",
             diagnostics,
         )
 
