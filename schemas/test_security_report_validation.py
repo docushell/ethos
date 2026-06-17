@@ -116,6 +116,42 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_finding_codes_must_be_security_report_codes(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"].append(
+            {
+                "id": "f0004",
+                "code": "unknown_code",
+                "message": "unknown",
+                "page": "p0001",
+                "excluded_from_default_chunks": False,
+            }
+        )
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0004 code unknown_code "
+            "is not a security report code",
+            diagnostics,
+        )
+
+    def test_finding_codes_are_required(self) -> None:
+        for value in (None, 7):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                if value is None:
+                    report["findings"][0].pop("code")
+                else:
+                    report["findings"][0]["code"] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: finding f0001 code is required",
+                    diagnostics,
+                )
+
     def test_hidden_text_finding_message_must_match_fixed_template(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][0]["message"] = "hidden text changed"

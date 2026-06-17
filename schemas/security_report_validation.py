@@ -144,6 +144,7 @@ def diagnose_security_report_example(
             )
 
     diagnose_finding_ids(findings, ctx, diagnostics)
+    diagnose_finding_codes(findings, ctx, diagnostics)
     diagnose_finding_messages(findings, ctx, diagnostics)
     diagnose_finding_exclusion_flags(findings, ctx, diagnostics)
     diagnose_findings_references(findings, refs, ctx, diagnostics)
@@ -293,6 +294,21 @@ def diagnose_finding_ids(findings, ctx, diagnostics):
             if finding_id in seen:
                 diagnostics.append(f"{ctx}: duplicate finding id {finding_id}")
             seen.add(finding_id)
+
+
+def diagnose_finding_codes(findings, ctx, diagnostics):
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        code = finding.get("code")
+        if not isinstance(code, str):
+            diagnostics.append(f"{ctx}: {finding_ctx(finding, index)} code is required")
+            continue
+        if code not in SECURITY_WARNING_CODES:
+            diagnostics.append(
+                f"{ctx}: {finding_ctx(finding, index)} code {code} "
+                "is not a security report code"
+            )
 
 
 def diagnose_finding_messages(findings, ctx, diagnostics):
