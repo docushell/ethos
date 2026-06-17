@@ -284,6 +284,44 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_text_backed_finding_requires_span_ref(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0].pop("span_ref")
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 requires span_ref for "
+            "hidden_text_detected",
+            diagnostics,
+        )
+
+    def test_finding_span_ref_must_be_owned_by_element_ref_when_both_present(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["element_ref"] = "e000001"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 span_ref s000003 is not "
+            "owned by element_ref e000001",
+            diagnostics,
+        )
+
+    def test_finding_element_span_refs_must_be_deterministic_array(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["elements"][0]["span_refs"] = "s000001"
+        report = copy.deepcopy(self.report)
+        report["findings"][0]["element_ref"] = "e000001"
+
+        diagnostics = diagnose_security_report_example(document, report)
+
+        self.assertIn(
+            "security-report.example.json: finding f0001 element_ref e000001 "
+            "span_refs must be an array",
+            diagnostics,
+        )
+
     def test_finding_bbox_must_have_page(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][0].pop("page")

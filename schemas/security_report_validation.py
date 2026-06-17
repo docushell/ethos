@@ -322,6 +322,8 @@ def check_locator_ref(item, key, ref_kind, refs, ctx, item_ctx, diagnostics):
         diagnostics.append(
             f"{ctx}: {item_ctx} {key} {ref} page {target_page} does not match page {page}"
         )
+    if key == "span_ref":
+        check_element_span_ownership(item, refs, ctx, item_ctx, ref, diagnostics)
 
 
 def check_page_ref(page, refs, ctx, item_ctx, diagnostics):
@@ -363,6 +365,9 @@ def check_text_backed_finding(finding, refs, ctx, item_ctx, diagnostics):
         return
     span_ref = finding.get("span_ref")
     if span_ref is None:
+        diagnostics.append(
+            f"{ctx}: {item_ctx} requires span_ref for {finding.get('code')}"
+        )
         return
     span = refs["spans"].get(span_ref)
     if not isinstance(span, dict):
@@ -391,6 +396,25 @@ def deterministic_preview(text):
     if len(text) <= 120:
         return text
     return text[:120] + "\u2026"
+
+
+def check_element_span_ownership(item, refs, ctx, item_ctx, span_ref, diagnostics):
+    element_ref = item.get("element_ref")
+    if element_ref is None:
+        return
+    element = refs["elements"].get(element_ref)
+    if not isinstance(element, dict):
+        return
+    span_refs = element.get("span_refs", [])
+    if not isinstance(span_refs, list):
+        diagnostics.append(
+            f"{ctx}: {item_ctx} element_ref {element_ref} span_refs must be an array"
+        )
+        return
+    if span_ref not in span_refs:
+        diagnostics.append(
+            f"{ctx}: {item_ctx} span_ref {span_ref} is not owned by element_ref {element_ref}"
+        )
 
 
 def finding_ctx(finding, index):
