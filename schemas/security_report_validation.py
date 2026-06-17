@@ -123,8 +123,16 @@ def diagnose_security_report_example(
                 "for warning-derived findings"
             )
 
+    for code in sorted(summary.keys()):
+        if code not in SECURITY_WARNING_CODES:
+            diagnostics.append(f"{ctx}: summary.{code} is not a security report code")
+
     for code in sorted(set(summary.keys()) | set(finding_counts.keys())):
         expected_count = finding_counts.get(code, 0)
+        if code in summary and summary.get(code) == 0 and expected_count == 0:
+            diagnostics.append(
+                f"{ctx}: summary.{code} must be omitted when no report findings use that code"
+            )
         if summary.get(code, 0) != expected_count:
             diagnostics.append(
                 f"{ctx}: summary.{code} must be {expected_count} for report findings"

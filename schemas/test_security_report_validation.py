@@ -169,6 +169,31 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_zero_count_summary_keys_must_be_omitted(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["summary"]["image_only_page"] = 0
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: summary.image_only_page must be omitted "
+            "when no report findings use that code",
+            diagnostics,
+        )
+
+    def test_unknown_summary_keys_fail_closed(self) -> None:
+        for value in (0, 1):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["summary"]["unknown_code"] = value
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: summary.unknown_code is not a security report code",
+                    diagnostics,
+                )
+
     def test_document_security_warnings_must_have_matching_findings(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"] = [
