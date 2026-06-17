@@ -58,6 +58,7 @@ class SecurityReportAlphaTests(unittest.TestCase):
         block = target_block("security-report-alpha")
 
         required = [
+            "cargo test --locked -p ethos-cli --test security_report",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) schemas/test_security_report_validation.py",
             "$(PYTHON) .github/scripts/test_security_report_alpha.py",
@@ -69,7 +70,8 @@ class SecurityReportAlphaTests(unittest.TestCase):
     def test_target_stays_security_report_scoped(self) -> None:
         block = target_block("security-report-alpha")
 
-        self.assertNotIn("cargo test", block)
+        self.assertNotIn("cargo test --locked -p ethos-cli --test rag", block)
+        self.assertNotIn("cargo test --locked -p ethos-cli --test verify", block)
         self.assertNotIn("rag-chunk-alpha", block)
         self.assertNotIn("layout-evaluator-alpha", block)
         self.assertNotIn("python-surface-test", block)

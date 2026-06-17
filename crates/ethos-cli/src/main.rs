@@ -69,6 +69,11 @@ enum Command {
         #[command(subcommand)]
         command: RagCommand,
     },
+    /// Security report artifacts (ethos-security)
+    Security {
+        #[command(subcommand)]
+        command: SecurityCommand,
+    },
     /// Citation evidence verification (ethos-verify)
     Verify(VerifyArgs),
     /// Recompute and check a document fingerprint
@@ -167,11 +172,26 @@ enum RagCommand {
     Chunk(RagChunkArgs),
 }
 
+#[derive(Subcommand)]
+enum SecurityCommand {
+    /// Derive security_report.json from canonical document warnings
+    Report(SecurityReportArgs),
+}
+
 #[derive(Args)]
 pub(crate) struct RagChunkArgs {
     /// Canonical document (`*.ethos.json`)
     pub(crate) input: PathBuf,
     /// Output path for chunks.jsonl (default: stdout)
+    #[arg(long)]
+    pub(crate) out: Option<PathBuf>,
+}
+
+#[derive(Args)]
+pub(crate) struct SecurityReportArgs {
+    /// Canonical document (`*.ethos.json`)
+    pub(crate) input: PathBuf,
+    /// Output path for security_report.json (default: stdout)
     #[arg(long)]
     pub(crate) out: Option<PathBuf>,
 }
@@ -304,6 +324,9 @@ fn run(cli: Cli) -> Result<(), Failure> {
         Command::Rag {
             command: RagCommand::Chunk(args),
         } => cmd::rag::rag_chunk(args),
+        Command::Security {
+            command: SecurityCommand::Report(args),
+        } => cmd::security::security_report(args),
         Command::Verify(args) => cmd::verify::verify(args),
         Command::Fingerprint(args) => cmd::doc::fingerprint(args),
         Command::PdfiumWorker(args) => cmd::doc::pdfium_worker(args),

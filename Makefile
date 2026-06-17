@@ -41,6 +41,7 @@ rag-chunk-alpha:
 	git diff --check
 
 security-report-alpha:
+	cargo test --locked -p ethos-cli --test security_report
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) schemas/test_security_report_validation.py
 	$(PYTHON) .github/scripts/test_security_report_alpha.py
