@@ -104,6 +104,8 @@ INVENTORY_ALLOWED_FIELDS = {
     "links": ("page", "uri", "external", "bbox"),
 }
 
+SCRIPT_LOCATIONS = {"document", "page", "annotation", "field", "other"}
+
 
 def diagnose_security_report_example(
     document,
@@ -600,6 +602,15 @@ def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
             diagnostics.append(
                 f"{ctx}: inventories.attachments[{index}].bytes must be a "
                 "non-negative integer"
+            )
+
+    for index, item in enumerate(inventory_lists.get("scripts", [])):
+        if not isinstance(item, dict) or "location" not in item:
+            continue
+        if item.get("location") not in SCRIPT_LOCATIONS:
+            diagnostics.append(
+                f"{ctx}: inventories.scripts[{index}].location must be a "
+                "supported script location"
             )
 
     for index, item in enumerate(inventory_lists.get("links", [])):

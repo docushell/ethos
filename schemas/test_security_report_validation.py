@@ -1094,6 +1094,20 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_script_inventory_location_must_be_supported(self) -> None:
+        for value in ("widget", "", 7, None):
+            with self.subTest(value=value):
+                report = copy.deepcopy(self.report)
+                report["inventories"]["scripts"] = [{"location": value}]
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    "security-report.example.json: inventories.scripts[0].location "
+                    "must be a supported script location",
+                    diagnostics,
+                )
+
     def test_action_inventory_shape_is_checked_without_action_semantics(self) -> None:
         report = copy.deepcopy(self.report)
         report["inventories"]["actions"] = {"kind": "uri"}
