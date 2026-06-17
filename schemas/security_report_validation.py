@@ -50,6 +50,8 @@ TEXT_BACKED_FINDING_CODES = DEFAULT_CHUNK_EXCLUDED_CODES
 
 FINDING_MESSAGE_TEMPLATES = {
     "hidden_text_detected": "hidden text detected: excluded from default chunks",
+    "off_page_text_detected": "off-page text detected: excluded from default chunks",
+    "low_contrast_text_detected": "low-contrast text detected: excluded from default chunks",
     "annotations_present": "annotations present on page",
     "external_links_present": "external links present on page",
     "unsupported_annotation": "unsupported annotation ignored",

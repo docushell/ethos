@@ -121,6 +121,45 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_text_exclusion_finding_messages_must_match_fixed_templates(self) -> None:
+        for code, changed_message in (
+            ("off_page_text_detected", "off-page text changed"),
+            ("low_contrast_text_detected", "low-contrast text changed"),
+        ):
+            with self.subTest(code=code):
+                document = copy.deepcopy(self.document)
+                document["payload"]["security_warnings"].append(
+                    {
+                        "id": "w0099",
+                        "code": code,
+                        "message": changed_message,
+                        "page": "p0001",
+                        "span_ref": "s000003",
+                    }
+                )
+                report = copy.deepcopy(self.report)
+                report["findings"].append(
+                    {
+                        "id": "f0004",
+                        "code": code,
+                        "message": changed_message,
+                        "page": "p0001",
+                        "span_ref": "s000003",
+                        "bbox": [100, 79100, 6000, 79200],
+                        "text_preview": "internal-draft-do-not-cite",
+                        "excluded_from_default_chunks": True,
+                    }
+                )
+                report["summary"][code] = 1
+
+                diagnostics = diagnose_security_report_example(document, report)
+
+                self.assertIn(
+                    "security-report.example.json: finding f0004 message must match "
+                    f"fixed template for {code}",
+                    diagnostics,
+                )
+
     def test_annotation_finding_message_must_match_fixed_template(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][1]["message"] = "annotations changed"
