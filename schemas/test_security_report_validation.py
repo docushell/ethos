@@ -487,6 +487,52 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_security_warning_messages_are_required(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["security_warnings"].append(
+            {
+                "id": "w0099",
+                "code": "image_only_page",
+                "page": "p0001",
+            }
+        )
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: security warning w0099.message is required",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: security warning w0099 message "
+            "must match fixed template for image_only_page",
+            diagnostics,
+        )
+
+    def test_security_warning_messages_must_be_strings(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["security_warnings"].append(
+            {
+                "id": "w0099",
+                "code": "image_only_page",
+                "message": [],
+                "page": "p0001",
+            }
+        )
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: security warning w0099.message "
+            "must be a string",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: security warning w0099 message "
+            "must match fixed template for image_only_page",
+            diagnostics,
+        )
+
     def test_text_exclusion_finding_messages_must_match_fixed_templates(self) -> None:
         for code, changed_message in (
             ("off_page_text_detected", "off-page text changed"),

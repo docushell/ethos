@@ -341,7 +341,17 @@ def diagnose_security_warning_messages(security_warnings, ctx, diagnostics):
         expected_message = FINDING_MESSAGE_TEMPLATES.get(code)
         if expected_message is None:
             continue
+        if "message" not in warning:
+            diagnostics.append(
+                f"{ctx}: security warning {warning_id(warning)}.message is required"
+            )
+            continue
         actual_message = warning.get("message")
+        if not isinstance(actual_message, str):
+            diagnostics.append(
+                f"{ctx}: security warning {warning_id(warning)}.message must be a string"
+            )
+            continue
         if actual_message != expected_message:
             diagnostics.append(
                 f"{ctx}: security warning {warning_id(warning)} "
