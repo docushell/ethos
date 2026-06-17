@@ -1602,6 +1602,28 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_parser_warning_codes_are_required(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["parser_warnings"].append(
+            {
+                "id": "w0099",
+                "message": "parser warning code missing",
+                "page": "p0001",
+            }
+        )
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: parser warning w0099 code is required",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: parser warning w0099 "
+            "must be in security_warnings",
+            diagnostics,
+        )
+
     def test_parser_codes_in_security_warnings_fail_closed(self) -> None:
         document = copy.deepcopy(self.document)
         document["payload"]["security_warnings"].append(
@@ -1640,6 +1662,28 @@ class SecurityReportValidationTests(unittest.TestCase):
         )
         self.assertNotIn(
             "security-report.example.json: missing warning-derived finding for []",
+            diagnostics,
+        )
+
+    def test_security_warning_codes_are_required(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["security_warnings"].append(
+            {
+                "id": "w0099",
+                "message": "security warning code missing",
+                "page": "p0001",
+            }
+        )
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: security warning w0099 code is required",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: security warning w0099 "
+            "is not a security warning code",
             diagnostics,
         )
 

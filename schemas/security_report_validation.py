@@ -293,6 +293,9 @@ def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
         if not isinstance(warning, dict):
             continue
         if "code" not in warning:
+            diagnostics.append(
+                f"{ctx}: parser warning {warning_id(warning)} code is required"
+            )
             continue
         code = warning.get("code")
         if not isinstance(code, str):
@@ -310,6 +313,9 @@ def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
         if not isinstance(warning, dict):
             continue
         if "code" not in warning:
+            diagnostics.append(
+                f"{ctx}: security warning {warning_id(warning)} code is required"
+            )
             continue
         code = warning.get("code")
         if not isinstance(code, str):
