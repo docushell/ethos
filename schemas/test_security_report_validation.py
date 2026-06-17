@@ -93,6 +93,79 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_report_must_be_object(self) -> None:
+        diagnostics = diagnose_security_report_example(self.document, [])
+
+        self.assertIn(
+            "security-report.example.json: report must be an object",
+            diagnostics,
+        )
+
+    def test_top_level_report_fields_are_required(self) -> None:
+        identity_diagnostics = {
+            "schema_version": "security-report.example.json: schema_version diverges from document example",
+            "document_fingerprint": "security-report.example.json: document_fingerprint diverges from document example",
+            "source_fingerprint": "security-report.example.json: source_fingerprint diverges from document example",
+        }
+        for field in (
+            "schema_version",
+            "document_fingerprint",
+            "source_fingerprint",
+            "profile",
+            "summary",
+            "findings",
+            "inventories",
+        ):
+            with self.subTest(field=field):
+                report = copy.deepcopy(self.report)
+                report.pop(field)
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    f"security-report.example.json: {field} is required",
+                    diagnostics,
+                )
+                if field in identity_diagnostics:
+                    self.assertNotIn(identity_diagnostics[field], diagnostics)
+
+    def test_profile_must_be_object(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["profile"] = []
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: profile must be an object",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: profile.id diverges from document example",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: profile.sha256 diverges from document example",
+            diagnostics,
+        )
+
+    def test_profile_fields_are_required(self) -> None:
+        identity_diagnostics = {
+            "id": "security-report.example.json: profile.id diverges from document example",
+            "sha256": "security-report.example.json: profile.sha256 diverges from document example",
+        }
+        for field in ("id", "sha256"):
+            with self.subTest(field=field):
+                report = copy.deepcopy(self.report)
+                report["profile"].pop(field)
+
+                diagnostics = diagnose_security_report_example(self.document, report)
+
+                self.assertIn(
+                    f"security-report.example.json: profile.{field} is required",
+                    diagnostics,
+                )
+                self.assertNotIn(identity_diagnostics[field], diagnostics)
+
     def test_finding_ids_must_be_contiguous_in_report_order(self) -> None:
         report = copy.deepcopy(self.report)
         report["findings"][1]["id"] = "f0004"

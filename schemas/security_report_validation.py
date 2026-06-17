@@ -66,6 +66,18 @@ INVENTORY_REQUIRED_FIELDS = {
     "links": ("page", "uri", "external"),
 }
 
+REPORT_REQUIRED_FIELDS = (
+    "schema_version",
+    "document_fingerprint",
+    "source_fingerprint",
+    "profile",
+    "summary",
+    "findings",
+    "inventories",
+)
+
+PROFILE_REQUIRED_FIELDS = ("id", "sha256")
+
 
 def diagnose_security_report_example(
     document,
@@ -80,16 +92,19 @@ def diagnose_security_report_example(
         security_warnings = warning_items(payload.get("security_warnings", []))
         parser_warnings = warning_items(payload.get("parser_warnings", []))
     refs = document_reference_index(payload)
+    diagnose_report_required_fields(report, ctx, diagnostics)
     diagnose_report_identity(document, report, ctx, diagnostics)
     diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
     diagnose_security_warning_messages(security_warnings, ctx, diagnostics)
 
     findings = report.get("findings") if isinstance(report, dict) else []
     if not isinstance(findings, list):
-        return [f"{ctx}: findings must be an array"]
+        diagnostics.append(f"{ctx}: findings must be an array")
+        return diagnostics
     summary = report.get("summary") if isinstance(report, dict) else {}
     if not isinstance(summary, dict):
-        return [f"{ctx}: summary must be an object"]
+        diagnostics.append(f"{ctx}: summary must be an object")
+        return diagnostics
 
     warning_derived_findings = [
         projected_warning_finding(warning)
@@ -269,23 +284,61 @@ def projected_warning_finding(warning):
 def diagnose_report_identity(document, report, ctx, diagnostics):
     if not isinstance(document, dict) or not isinstance(report, dict):
         return
-    expected = {
-        "schema_version": document.get("schema_version"),
-        "document_fingerprint": document.get("fingerprint"),
-        "source_fingerprint": nested_get(document, "source", "fingerprint"),
-        "profile.id": nested_get(document, "profile", "id"),
-        "profile.sha256": nested_get(document, "profile", "sha256"),
-    }
-    actual = {
-        "schema_version": report.get("schema_version"),
-        "document_fingerprint": report.get("document_fingerprint"),
-        "source_fingerprint": report.get("source_fingerprint"),
-        "profile.id": nested_get(report, "profile", "id"),
-        "profile.sha256": nested_get(report, "profile", "sha256"),
-    }
-    for key, want in expected.items():
-        if want is not None and actual.get(key) != want:
+    profile = report.get("profile")
+    profile_is_object = isinstance(profile, dict)
+    comparisons = (
+        (
+            "schema_version",
+            document.get("schema_version"),
+            "schema_version" in report,
+            report.get("schema_version"),
+        ),
+        (
+            "document_fingerprint",
+            document.get("fingerprint"),
+            "document_fingerprint" in report,
+            report.get("document_fingerprint"),
+        ),
+        (
+            "source_fingerprint",
+            nested_get(document, "source", "fingerprint"),
+            "source_fingerprint" in report,
+            report.get("source_fingerprint"),
+        ),
+        (
+            "profile.id",
+            nested_get(document, "profile", "id"),
+            profile_is_object and "id" in profile,
+            profile.get("id") if profile_is_object else None,
+        ),
+        (
+            "profile.sha256",
+            nested_get(document, "profile", "sha256"),
+            profile_is_object and "sha256" in profile,
+            profile.get("sha256") if profile_is_object else None,
+        ),
+    )
+    for key, want, actual_present, actual in comparisons:
+        if want is not None and actual_present and actual != want:
             diagnostics.append(f"{ctx}: {key} diverges from document example")
+
+
+def diagnose_report_required_fields(report, ctx, diagnostics):
+    if not isinstance(report, dict):
+        diagnostics.append(f"{ctx}: report must be an object")
+        return
+    for field in REPORT_REQUIRED_FIELDS:
+        if field not in report:
+            diagnostics.append(f"{ctx}: {field} is required")
+    if "profile" not in report:
+        return
+    profile = report.get("profile")
+    if not isinstance(profile, dict):
+        diagnostics.append(f"{ctx}: profile must be an object")
+        return
+    for field in PROFILE_REQUIRED_FIELDS:
+        if field not in profile:
+            diagnostics.append(f"{ctx}: profile.{field} is required")
 
 
 def diagnose_finding_ids(findings, ctx, diagnostics):
