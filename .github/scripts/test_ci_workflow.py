@@ -51,6 +51,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("python3 .github/scripts/test_execution_status.py", text)
         self.assertIn("python3 .github/scripts/test_roadmap_status.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_b_closeout_record.py", text)
+        self.assertIn("python3 .github/scripts/test_milestone_b_exit_checklist.py", text)
 
 
 if __name__ == "__main__":
