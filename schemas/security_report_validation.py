@@ -51,6 +51,7 @@ def diagnose_security_report_example(
         warnings.extend(payload.get("security_warnings", []))
         warnings.extend(payload.get("parser_warnings", []))
     refs = document_reference_index(payload)
+    diagnose_report_identity(document, report, ctx, diagnostics)
 
     findings = report.get("findings") if isinstance(report, dict) else []
     if not isinstance(findings, list):
@@ -148,6 +149,35 @@ def projected_warning_finding(warning):
         if key in warning:
             projected[key] = warning[key]
     return projected
+
+
+def diagnose_report_identity(document, report, ctx, diagnostics):
+    if not isinstance(document, dict) or not isinstance(report, dict):
+        return
+    expected = {
+        "schema_version": document.get("schema_version"),
+        "document_fingerprint": document.get("fingerprint"),
+        "source_fingerprint": nested_get(document, "source", "fingerprint"),
+        "profile.id": nested_get(document, "profile", "id"),
+        "profile.sha256": nested_get(document, "profile", "sha256"),
+    }
+    actual = {
+        "schema_version": report.get("schema_version"),
+        "document_fingerprint": report.get("document_fingerprint"),
+        "source_fingerprint": report.get("source_fingerprint"),
+        "profile.id": nested_get(report, "profile", "id"),
+        "profile.sha256": nested_get(report, "profile", "sha256"),
+    }
+    for key, want in expected.items():
+        if want is not None and actual.get(key) != want:
+            diagnostics.append(f"{ctx}: {key} diverges from document example")
+
+
+def nested_get(value, outer_key, inner_key):
+    outer = value.get(outer_key) if isinstance(value, dict) else None
+    if not isinstance(outer, dict):
+        return None
+    return outer.get(inner_key)
 
 
 def project_report_finding(finding):

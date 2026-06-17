@@ -37,6 +37,55 @@ class SecurityReportValidationTests(unittest.TestCase):
     def test_current_examples_are_coherent(self) -> None:
         self.assertEqual(diagnose_security_report_example(self.document, self.report), [])
 
+    def test_schema_version_must_match_document(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["schema_version"] = "1.0.1"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: schema_version diverges from document example",
+            diagnostics,
+        )
+
+    def test_document_fingerprint_must_match_document(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["document_fingerprint"] = "sha256:" + ("0" * 64)
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: document_fingerprint diverges from document example",
+            diagnostics,
+        )
+
+    def test_source_fingerprint_must_match_document_source(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["source_fingerprint"] = "sha256:" + ("0" * 64)
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: source_fingerprint diverges from document example",
+            diagnostics,
+        )
+
+    def test_profile_identity_must_match_document_profile(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["profile"]["id"] = "ethos-deterministic-v2"
+        report["profile"]["sha256"] = "0" * 64
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: profile.id diverges from document example",
+            diagnostics,
+        )
+        self.assertIn(
+            "security-report.example.json: profile.sha256 diverges from document example",
+            diagnostics,
+        )
+
     def test_warning_derived_summary_must_match_document_warning_count(self) -> None:
         report = copy.deepcopy(self.report)
         report["summary"]["hidden_text_detected"] = 2
