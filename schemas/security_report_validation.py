@@ -99,6 +99,7 @@ def diagnose_security_report_example(
                 f"{ctx}: summary.{code} must be {expected_count} for report findings"
             )
 
+    diagnose_finding_ids(findings, ctx, diagnostics)
     diagnose_findings_references(findings, refs, ctx, diagnostics)
 
     inventories = report.get("inventories") if isinstance(report, dict) else {}
@@ -171,6 +172,23 @@ def diagnose_report_identity(document, report, ctx, diagnostics):
     for key, want in expected.items():
         if want is not None and actual.get(key) != want:
             diagnostics.append(f"{ctx}: {key} diverges from document example")
+
+
+def diagnose_finding_ids(findings, ctx, diagnostics):
+    seen = set()
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        finding_id = finding.get("id")
+        expected_id = f"f{index + 1:04d}"
+        if finding_id != expected_id:
+            diagnostics.append(
+                f"{ctx}: findings[{index}].id must be {expected_id} for deterministic numbering"
+            )
+        if isinstance(finding_id, str):
+            if finding_id in seen:
+                diagnostics.append(f"{ctx}: duplicate finding id {finding_id}")
+            seen.add(finding_id)
 
 
 def nested_get(value, outer_key, inner_key):

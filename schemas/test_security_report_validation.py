@@ -86,6 +86,29 @@ class SecurityReportValidationTests(unittest.TestCase):
             diagnostics,
         )
 
+    def test_finding_ids_must_be_contiguous_in_report_order(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][1]["id"] = "f0004"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: findings[1].id must be f0002 "
+            "for deterministic numbering",
+            diagnostics,
+        )
+
+    def test_finding_ids_must_be_unique(self) -> None:
+        report = copy.deepcopy(self.report)
+        report["findings"][1]["id"] = "f0001"
+
+        diagnostics = diagnose_security_report_example(self.document, report)
+
+        self.assertIn(
+            "security-report.example.json: duplicate finding id f0001",
+            diagnostics,
+        )
+
     def test_warning_derived_summary_must_match_document_warning_count(self) -> None:
         report = copy.deepcopy(self.report)
         report["summary"]["hidden_text_detected"] = 2
