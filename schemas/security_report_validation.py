@@ -48,6 +48,7 @@ def diagnose_security_report_example(
     if isinstance(payload, dict):
         warnings.extend(payload.get("security_warnings", []))
         warnings.extend(payload.get("parser_warnings", []))
+    refs = document_reference_index(payload)
 
     findings = report.get("findings") if isinstance(report, dict) else []
     if not isinstance(findings, list):
@@ -95,6 +96,8 @@ def diagnose_security_report_example(
                 f"{ctx}: summary.{code} must be {expected_count} for report findings"
             )
 
+    diagnose_findings_references(findings, refs, ctx, diagnostics)
+
     inventories = report.get("inventories") if isinstance(report, dict) else {}
     if not isinstance(inventories, dict):
         diagnostics.append(f"{ctx}: inventories must be an object")
@@ -127,6 +130,8 @@ def diagnose_security_report_example(
         diagnostics.append(
             f"{ctx}: external_links_present finding requires inventories.links external=true entry"
         )
+
+    diagnose_inventory_references(inventory_lists, refs, ctx, diagnostics)
 
     return diagnostics
 
@@ -161,3 +166,111 @@ def inventory_items(inventories, name, ctx, diagnostics):
         diagnostics.append(f"{ctx}: inventories.{name} must be an array")
         return []
     return items
+
+
+def document_reference_index(payload):
+    if not isinstance(payload, dict):
+        return {"pages": {}, "elements": {}, "spans": {}}
+    return {
+        "pages": keyed_objects(payload.get("pages", [])),
+        "elements": keyed_objects(payload.get("elements", [])),
+        "spans": keyed_objects(payload.get("spans", [])),
+    }
+
+
+def keyed_objects(items):
+    if not isinstance(items, list):
+        return {}
+    return {
+        item["id"]: item
+        for item in items
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+
+
+def diagnose_findings_references(findings, refs, ctx, diagnostics):
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        item_ctx = finding_ctx(finding, index)
+        page = finding.get("page")
+        if page is not None:
+            check_page_ref(page, refs, ctx, item_ctx, diagnostics)
+        check_locator_ref(
+            finding, "element_ref", "elements", refs, ctx, item_ctx, diagnostics
+        )
+        check_locator_ref(
+            finding, "span_ref", "spans", refs, ctx, item_ctx, diagnostics
+        )
+        if "bbox" in finding:
+            check_bbox(finding.get("bbox"), page, refs, ctx, item_ctx, diagnostics)
+
+
+def diagnose_inventory_references(inventory_lists, refs, ctx, diagnostics):
+    for name, items in inventory_lists.items():
+        for index, item in enumerate(items):
+            if not isinstance(item, dict):
+                continue
+            item_ctx = f"inventories.{name}[{index}]"
+            page = item.get("page")
+            if page is not None:
+                check_page_ref(page, refs, ctx, item_ctx, diagnostics)
+            if "bbox" in item:
+                check_bbox(item.get("bbox"), page, refs, ctx, item_ctx, diagnostics)
+
+
+def check_locator_ref(item, key, ref_kind, refs, ctx, item_ctx, diagnostics):
+    ref = item.get(key)
+    if ref is None:
+        return
+    target = refs[ref_kind].get(ref)
+    if target is None:
+        diagnostics.append(f"{ctx}: {item_ctx} references unknown {key} {ref}")
+        return
+    page = item.get("page")
+    target_page = target.get("page") if isinstance(target, dict) else None
+    if page is not None and target_page is not None and page != target_page:
+        diagnostics.append(
+            f"{ctx}: {item_ctx} {key} {ref} page {target_page} does not match page {page}"
+        )
+
+
+def check_page_ref(page, refs, ctx, item_ctx, diagnostics):
+    if page not in refs["pages"]:
+        diagnostics.append(f"{ctx}: {item_ctx} references unknown page {page}")
+        return None
+    return refs["pages"][page]
+
+
+def check_bbox(bbox, page, refs, ctx, item_ctx, diagnostics):
+    if page is None:
+        diagnostics.append(f"{ctx}: {item_ctx} bbox requires page")
+        return
+    page_obj = refs["pages"].get(page)
+    if page_obj is None:
+        return
+    if (
+        not isinstance(bbox, list)
+        or len(bbox) != 4
+        or any(not isinstance(coord, int) for coord in bbox)
+    ):
+        diagnostics.append(f"{ctx}: {item_ctx} bbox must be four integer coordinates")
+        return
+    x0, y0, x1, y1 = bbox
+    if x0 >= x1 or y0 >= y1:
+        diagnostics.append(f"{ctx}: {item_ctx} bbox has zero area")
+        return
+    if (
+        x0 < 0
+        or y0 < 0
+        or x1 > page_obj.get("width", 0)
+        or y1 > page_obj.get("height", 0)
+    ):
+        diagnostics.append(f"{ctx}: {item_ctx} bbox exceeds page {page} bounds")
+
+
+def finding_ctx(finding, index):
+    finding_id = finding.get("id")
+    if isinstance(finding_id, str):
+        return f"finding {finding_id}"
+    return f"findings[{index}]"
