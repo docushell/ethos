@@ -789,7 +789,7 @@ def diagnose_findings_references(findings, refs, ctx, diagnostics):
         item_ctx = finding_ctx(finding, index)
         page = finding.get("page")
         page_shape_valid = True
-        if page is not None:
+        if "page" in finding:
             page_shape_valid = check_page_shape(page, ctx, item_ctx, diagnostics)
             if page_shape_valid:
                 check_page_ref(page, refs, ctx, item_ctx, diagnostics)
@@ -812,7 +812,7 @@ def diagnose_inventory_references(inventory_lists, refs, ctx, diagnostics):
             item_ctx = f"inventories.{name}[{index}]"
             page = item.get("page")
             page_shape_valid = True
-            if page is not None:
+            if "page" in item:
                 page_shape_valid = check_page_shape(page, ctx, item_ctx, diagnostics)
                 if page_shape_valid:
                     check_page_ref(page, refs, ctx, item_ctx, diagnostics)

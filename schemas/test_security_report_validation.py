@@ -766,7 +766,7 @@ class SecurityReportValidationTests(unittest.TestCase):
         )
 
     def test_finding_page_refs_must_match_schema_pattern(self) -> None:
-        for value in ("page-1", []):
+        for value in ("page-1", [], None):
             with self.subTest(value=value):
                 report = copy.deepcopy(self.report)
                 report["findings"][1]["page"] = value
@@ -1120,6 +1120,7 @@ class SecurityReportValidationTests(unittest.TestCase):
         cases = (
             ("annotations", "page-1"),
             ("actions", []),
+            ("actions", None),
             ("scripts", "1"),
             ("links", []),
         )
