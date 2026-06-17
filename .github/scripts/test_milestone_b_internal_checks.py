@@ -59,6 +59,7 @@ class MilestoneBInternalCheckTests(unittest.TestCase):
 
         required = [
             "$(PYTHON) fixtures/validate_fixtures.py",
+            "$(PYTHON) schemas/test_font_policy_validation.py",
             "$(MAKE) verify-alpha PYTHON=$(PYTHON)",
             "$(MAKE) layout-evaluator-alpha PYTHON=$(PYTHON)",
             "$(MAKE) python-surface-test PYTHON=$(PYTHON)",
