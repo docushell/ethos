@@ -94,6 +94,46 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def sha256_c14n(value: dict) -> str:
+    encoded = json.dumps(
+        value,
+        separators=(",", ":"),
+        sort_keys=True,
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def logical_crop_ref(document_fingerprint: str, check_id: str, page: str) -> str:
+    return "crop-{}.json".format(
+        sha256_c14n(
+            {
+                "check_id": check_id,
+                "document_fingerprint": document_fingerprint,
+                "page": page,
+                "version": "ethos.logical_crop_ref.v1",
+            }
+        )
+    )
+
+
+def crop_ref_drift_diagnostics(descriptor: dict) -> list[str]:
+    diagnostics: list[str] = []
+    check_ids = descriptor.get("check_ids", [])
+    if len(check_ids) != 1:
+        diagnostics.append("descriptor must bind exactly one logical check id")
+        return diagnostics
+
+    expected = logical_crop_ref(
+        descriptor["document_fingerprint"],
+        check_ids[0],
+        descriptor["page"],
+    )
+    if descriptor["crop_ref"] != expected:
+        diagnostics.append("descriptor crop_ref does not match logical identity tuple")
+    return diagnostics
+
+
 def schema_errors(schema: dict, instance: dict) -> list:
     return sorted(
         Draft202012Validator(schema).iter_errors(instance),
@@ -211,7 +251,10 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             "element id",
             "page id",
             "bbox",
+            "check id",
             "crop descriptor filename",
+            "logical evidence identity",
+            "`ethos.logical_crop_ref.v1`",
             "optional rendered PNG metadata and source PDF fingerprint",
             "`make milestone-d-crop-element-contract PYTHON=<jsonschema-venv>/bin/python`",
         ]:
@@ -295,6 +338,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             self.assertEqual(descriptor["bbox"], element["bbox"])
             self.assertEqual(descriptor["rendering_status"], request["rendering"])
             self.assertEqual(descriptor["check_ids"], ["v0001"])
+            self.assertEqual([], crop_ref_drift_diagnostics(descriptor), case["name"])
             self.assertEqual([], request_case_diagnostics(request, document, descriptor, case))
 
     def test_request_binding_guard_fails_closed_on_stale_or_unresolved_inputs(self) -> None:
@@ -354,10 +398,54 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
                 self.assertEqual(evidence["page"], descriptor["page"], case["name"])
                 self.assertEqual(evidence["bbox"], descriptor["bbox"], case["name"])
                 self.assertEqual(
+                    logical_crop_ref(report["document_fingerprint"], check_id, descriptor["page"]),
+                    descriptor["crop_ref"],
+                    case["name"],
+                )
+                self.assertEqual(
                     descriptor["text_sha256"],
                     sha256_text(evidence["text"]),
                     case["name"],
                 )
+
+    def test_crop_descriptor_crop_ref_fails_closed_on_logical_identity_drift(self) -> None:
+        descriptor = load_json(ROOT / "schemas/examples/crop-descriptor.example.json")
+
+        self.assertEqual(
+            "crop-17e98204468b3c83e92fabe1ce7749ff4c1c1eaf919c327e6234ab29b50b2677.json",
+            logical_crop_ref(descriptor["document_fingerprint"], "v0001", descriptor["page"]),
+        )
+        self.assertEqual(
+            [],
+            crop_ref_drift_diagnostics(descriptor),
+        )
+
+        stale_crop_ref = dict(descriptor, crop_ref="crop-" + "0" * 64 + ".json")
+        self.assertIn(
+            "descriptor crop_ref does not match logical identity tuple",
+            crop_ref_drift_diagnostics(stale_crop_ref),
+        )
+
+        stale_page = dict(descriptor, page="p0002")
+        self.assertIn(
+            "descriptor crop_ref does not match logical identity tuple",
+            crop_ref_drift_diagnostics(stale_page),
+        )
+
+        ambiguous_checks = dict(descriptor, check_ids=["v0001", "v0002"])
+        self.assertIn(
+            "descriptor must bind exactly one logical check id",
+            crop_ref_drift_diagnostics(ambiguous_checks),
+        )
+
+        self.assertNotEqual(
+            logical_crop_ref("sha256:" + "0" * 64, "v0001", descriptor["page"]),
+            descriptor["crop_ref"],
+        )
+        self.assertNotEqual(
+            logical_crop_ref(descriptor["document_fingerprint"], "v9999", descriptor["page"]),
+            descriptor["crop_ref"],
+        )
 
     def test_crop_descriptor_example_validates_against_descriptor_schema(self) -> None:
         schema = load_json(CROP_DESCRIPTOR_SCHEMA)
