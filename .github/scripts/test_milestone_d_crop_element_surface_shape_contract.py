@@ -258,6 +258,96 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             descriptor_schema["properties"]["rendering_status"]["enum"],
         )
 
+    def test_rendered_surface_fields_match_schema_conditionals(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        request_schema = load_json(CROP_ELEMENT_REQUEST_SCHEMA)
+        descriptor_schema = load_json(CROP_DESCRIPTOR_SCHEMA)
+        conditional_fields = {
+            field["name"]: field["maps_to"]
+            for field in inventory["planned_surface_fields"]
+            if field.get("required_when") == "rendering=rendered"
+        }
+        rendered_descriptor_fields = [
+            "source_pdf_fingerprint",
+            "rendered_ref",
+            "rendered_format",
+            "rendered_sha256",
+            "rendered_width_px",
+            "rendered_height_px",
+        ]
+
+        self.assertEqual(
+            {
+                "source_pdf_fingerprint": "request.source_pdf_fingerprint",
+                "rendered_artifact": "descriptor.rendered_ref",
+            },
+            conditional_fields,
+        )
+
+        descriptor_only_request = {
+            "artifact_type": "ethos.crop_element_request.v1",
+            "schema_version": "0.1.0",
+            "request_ref": "request-" + "1" * 64,
+            "document_fingerprint": "sha256:" + "2" * 64,
+            "element_id": "e000001",
+            "rendering": "descriptor_only",
+        }
+        rendered_request = dict(
+            descriptor_only_request,
+            rendering="rendered",
+            source_pdf_fingerprint="sha256:" + "3" * 64,
+        )
+
+        self.assertEqual([], schema_errors(request_schema, descriptor_only_request))
+        self.assertEqual([], schema_errors(request_schema, rendered_request))
+        self.assertNotEqual(
+            [],
+            schema_errors(request_schema, dict(descriptor_only_request, rendering="rendered")),
+        )
+        self.assertNotEqual(
+            [],
+            schema_errors(
+                request_schema,
+                dict(descriptor_only_request, source_pdf_fingerprint="sha256:" + "3" * 64),
+            ),
+        )
+
+        descriptor_only = {
+            "artifact_type": "ethos.crop_descriptor.v1",
+            "schema_version": "0.1.0",
+            "crop_ref": "crop-" + "4" * 64 + ".json",
+            "document_fingerprint": "sha256:" + "2" * 64,
+            "page": "1",
+            "bbox": [0, 0, 100, 100],
+            "check_ids": ["v0001"],
+            "rendering_status": "descriptor_only",
+        }
+        rendered_descriptor = dict(
+            descriptor_only,
+            rendering_status="rendered",
+            source_pdf_fingerprint="sha256:" + "3" * 64,
+            rendered_ref="crop-" + "5" * 64 + ".png",
+            rendered_format="png",
+            rendered_sha256="6" * 64,
+            rendered_width_px=100,
+            rendered_height_px=100,
+        )
+
+        self.assertEqual([], schema_errors(descriptor_schema, descriptor_only))
+        self.assertEqual([], schema_errors(descriptor_schema, rendered_descriptor))
+        for field in rendered_descriptor_fields:
+            missing_field = dict(rendered_descriptor)
+            del missing_field[field]
+            self.assertNotEqual([], schema_errors(descriptor_schema, missing_field), field)
+
+            descriptor_only_with_rendered_metadata = dict(descriptor_only)
+            descriptor_only_with_rendered_metadata[field] = rendered_descriptor[field]
+            self.assertNotEqual(
+                [],
+                schema_errors(descriptor_schema, descriptor_only_with_rendered_metadata),
+                field,
+            )
+
     def test_current_cli_and_python_surface_absence_is_guarded(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
         checked_files = [ROOT / path for path in inventory["current_surface_absence"]["checked_files"]]
