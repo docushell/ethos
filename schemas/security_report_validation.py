@@ -296,6 +296,7 @@ def diagnose_warning_ids(security_warnings, parser_warnings, ctx, diagnostics):
         ("security_warnings", security_warnings),
         ("parser_warnings", parser_warnings),
     )
+    seen = set()
     for lane, warnings in lanes:
         for index, warning in enumerate(warnings):
             if not isinstance(warning, dict):
@@ -303,10 +304,15 @@ def diagnose_warning_ids(security_warnings, parser_warnings, ctx, diagnostics):
             if "id" not in warning:
                 diagnostics.append(f"{ctx}: {lane}[{index}].id is required")
                 continue
-            if not is_warning_id(warning.get("id")):
+            warning_id_value = warning.get("id")
+            if not is_warning_id(warning_id_value):
                 diagnostics.append(
                     f"{ctx}: {lane}[{index}].id must match pattern ^w[0-9]{{4}}$"
                 )
+                continue
+            if warning_id_value in seen:
+                diagnostics.append(f"{ctx}: duplicate warning id {warning_id_value}")
+            seen.add(warning_id_value)
 
 
 def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics):

@@ -1660,6 +1660,28 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_warning_ids_must_be_unique_across_warning_lanes(self) -> None:
+        cases = (
+            ("security_warnings", "security_warnings", "w0001"),
+            ("parser_warnings", "parser_warnings", "w0002"),
+            ("security_warnings", "parser_warnings", "w0001"),
+        )
+        for source_lane, target_lane, duplicate_id in cases:
+            with self.subTest(source_lane=source_lane, target_lane=target_lane):
+                document = copy.deepcopy(self.document)
+                document["payload"][target_lane][0]["id"] = duplicate_id
+                if source_lane == target_lane:
+                    document["payload"][target_lane].append(
+                        copy.deepcopy(document["payload"][target_lane][0])
+                    )
+
+                diagnostics = diagnose_security_report_example(document, self.report)
+
+                self.assertIn(
+                    f"security-report.example.json: duplicate warning id {duplicate_id}",
+                    diagnostics,
+                )
+
     def test_parser_warning_codes_must_be_strings(self) -> None:
         document = copy.deepcopy(self.document)
         document["payload"]["parser_warnings"].append(
