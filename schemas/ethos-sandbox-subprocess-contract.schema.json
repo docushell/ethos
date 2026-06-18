@@ -26,6 +26,7 @@
         "required": [
           "name",
           "command_surface",
+          "request",
           "test_filter",
           "boundary"
         ],
@@ -35,6 +36,7 @@
           "command_surface": {
             "enum": ["ethos doc parse", "ethos fingerprint"]
           },
+          "request": { "$ref": "#/$defs/repo_path" },
           "test_filter": { "$ref": "#/$defs/rust_test_filter" },
           "boundary": {
             "enum": [
@@ -56,6 +58,7 @@
   },
   "$defs": {
     "case_name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "repo_path": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_./-]+$" },
     "rust_test_filter": { "type": "string", "pattern": "^[a-z0-9_]+$" }
   }
 }

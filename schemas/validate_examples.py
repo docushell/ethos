@@ -89,6 +89,12 @@ PAIRS = [
     ("ethos-crop-element-contract.schema.json", [
         ROOT / "examples" / "crop" / "crop_element_v1_contract.json",
     ]),
+    ("ethos-sandbox-subprocess-request.schema.json", [
+        EXAMPLES / "sandbox-subprocess-doc-parse-request.example.json",
+        EXAMPLES / "sandbox-subprocess-doc-parse-timeout-request.example.json",
+        EXAMPLES / "sandbox-subprocess-doc-parse-diagnostics-request.example.json",
+        EXAMPLES / "sandbox-subprocess-fingerprint-timeout-request.example.json",
+    ]),
     ("ethos-sandbox-subprocess-contract.schema.json", [
         ROOT / "examples" / "sandbox" / "sandbox_subprocess_v1_contract.json",
     ]),

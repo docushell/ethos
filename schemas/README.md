@@ -16,6 +16,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |
 | `ethos-verify-citations-contract.schema.json` | Milestone D `verify_citations` v1 source-only contract inventory |
 | `ethos-crop-element-contract.schema.json` | Milestone D `crop_element` v1 source-only contract inventory |
+| `ethos-sandbox-subprocess-request.schema.json` | source-only request envelope for Milestone D `sandbox_subprocess` v1 contract work |
 | `ethos-sandbox-subprocess-contract.schema.json` | Milestone D `sandbox_subprocess` v1 source-only contract inventory |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
 
@@ -53,9 +54,10 @@ Milestone D `sandbox_subprocess` v1 contract work is tracked in
 `docs/milestone-d-sandbox-subprocess-contract.md`. In this source-only pre-alpha slice,
 `sandbox_subprocess` names the future worker-boundary contract currently represented by the
 existing PDF worker process behind `ethos doc parse` and `ethos fingerprint`; it does not add a
-hardened sandbox or a new command/binding surface. The contract inventory at
-`examples/sandbox/sandbox_subprocess_v1_contract.json` is schema-validated here; its alignment with
-the executable worker tests is checked by the Milestone D repository guard.
+hardened sandbox or a new command/binding surface. The request envelope examples under
+`schemas/examples/sandbox-subprocess-*.example.json` and the contract inventory at
+`examples/sandbox/sandbox_subprocess_v1_contract.json` are schema-validated here; their alignment
+with the executable worker tests is checked by the Milestone D repository guard.
 
 Derived artifacts not schema'd here: `document.md` / `document.txt` (deterministic exports
 specified by the exporter config, Milestone B) and `debug.html` (Milestone C).

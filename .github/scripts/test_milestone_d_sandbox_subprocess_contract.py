@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / "docs/milestone-d-sandbox-subprocess-contract.md"
 CONTRACT_INVENTORY = ROOT / "examples/sandbox/sandbox_subprocess_v1_contract.json"
 CONTRACT_INVENTORY_SCHEMA = ROOT / "schemas/ethos-sandbox-subprocess-contract.schema.json"
+SANDBOX_REQUEST_SCHEMA = ROOT / "schemas/ethos-sandbox-subprocess-request.schema.json"
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
@@ -76,6 +77,74 @@ def contract_explicit_blockers() -> list[str]:
         line.removeprefix("- ").rstrip(";.")
         for line in match.group("bullets").strip().splitlines()
     ]
+
+
+def schema_errors(schema: dict, instance: dict) -> list:
+    return sorted(
+        Draft202012Validator(schema).iter_errors(instance),
+        key=lambda error: list(error.absolute_path),
+    )
+
+
+def expected_operation(command_surface: str) -> str:
+    return {
+        "ethos doc parse": "doc_parse",
+        "ethos fingerprint": "fingerprint",
+    }[command_surface]
+
+
+def expected_request_policy(case: dict) -> tuple[bool, str, int]:
+    if case["name"] == "doc-parse-diagnostics-gated-stderr":
+        return True, "stable_error_envelope_with_worker_stderr", 120_000
+    if case["boundary"] == "max_parse_ms_timeout":
+        return False, "stable_error_envelope", 25
+    return False, "stable_error_envelope", 120_000
+
+
+def request_case_diagnostics(request: dict, case: dict) -> list[str]:
+    diagnostics: list[str] = []
+    want_diagnostics, want_stderr_policy, want_max_parse_ms = expected_request_policy(case)
+
+    if request["operation"] != expected_operation(case["command_surface"]):
+        diagnostics.append("request operation does not match command surface")
+    if request["diagnostics"] != want_diagnostics:
+        diagnostics.append("request diagnostics does not match inventory case")
+    if request["stderr_policy"] != want_stderr_policy:
+        diagnostics.append("request stderr policy does not match diagnostics mode")
+    if request["stdout_on_failure"] != "empty":
+        diagnostics.append("request failure stdout policy is not empty")
+    if request["limits"]["max_parse_ms"] != want_max_parse_ms:
+        diagnostics.append("request max_parse_ms does not match inventory case")
+
+    if request["operation"] == "doc_parse" and request.get("page_selection") != "all":
+        diagnostics.append("doc_parse request must bind explicit page selection")
+    if request["operation"] == "fingerprint" and "page_selection" in request:
+        diagnostics.append("fingerprint request must not carry page selection")
+
+    return diagnostics
+
+
+def rust_test_body(source: str, test_name: str) -> str:
+    match = re.search(
+        rf"(?:#\[[^\n]+\]\n)*\s*#\[test\]\s*fn {re.escape(test_name)}\(\) \{{",
+        source,
+    )
+    if match is None:
+        raise AssertionError(f"missing Rust test body for {test_name}")
+
+    depth = 1
+    index = match.end()
+    while index < len(source):
+        char = source[index]
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return source[match.end():index]
+        index += 1
+
+    raise AssertionError(f"unterminated Rust test body for {test_name}")
 
 
 class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
@@ -141,9 +210,12 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         for required in [
             "`parse_timeout` error code",
             "`memory_limit_exceeded` error code",
+            "`schemas/ethos-sandbox-subprocess-request.schema.json`",
+            "`schemas/examples/sandbox-subprocess-*.example.json`",
             "stable worker error envelopes are relayed",
             "non-envelope worker stderr is hidden by default",
             "explicit diagnostics",
+            "request envelopes bind each failure case",
             "stdout remains empty on worker failures",
             "`make milestone-d-sandbox-subprocess-contract PYTHON=<jsonschema-venv>/bin/python`",
         ]:
@@ -160,8 +232,37 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         )
         self.assertEqual([], errors)
 
+    def test_request_examples_validate_against_request_schema(self) -> None:
+        schema = load_json(SANDBOX_REQUEST_SCHEMA)
+        inventory = load_json(CONTRACT_INVENTORY)
+        Draft202012Validator.check_schema(schema)
+
+        request_paths = sorted({case["request"] for case in inventory["cases"]})
+        self.assertGreaterEqual(len(request_paths), 3)
+
+        for request_path in request_paths:
+            request = load_json(ROOT / request_path)
+            self.assertEqual([], schema_errors(schema, request), request_path)
+
+        doc_parse_request = load_json(ROOT / "schemas/examples/sandbox-subprocess-doc-parse-request.example.json")
+        doc_parse_without_pages = dict(doc_parse_request)
+        del doc_parse_without_pages["page_selection"]
+        self.assertNotEqual([], schema_errors(schema, doc_parse_without_pages))
+
+        fingerprint_request = load_json(ROOT / "schemas/examples/sandbox-subprocess-fingerprint-timeout-request.example.json")
+        fingerprint_with_pages = dict(fingerprint_request, page_selection="all")
+        self.assertNotEqual([], schema_errors(schema, fingerprint_with_pages))
+
+        diagnostics_request = load_json(ROOT / "schemas/examples/sandbox-subprocess-doc-parse-diagnostics-request.example.json")
+        diagnostics_without_stderr = dict(
+            diagnostics_request,
+            stderr_policy="stable_error_envelope",
+        )
+        self.assertNotEqual([], schema_errors(schema, diagnostics_without_stderr))
+
     def test_contract_inventory_matches_existing_worker_tests(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
+        request_schema = load_json(SANDBOX_REQUEST_SCHEMA)
         test_source = PDF_PARSE_TESTS.read_text(encoding="utf-8")
 
         self.assertEqual(inventory["schema_version"], 1)
@@ -177,7 +278,57 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             sorted({case["boundary"] for case in inventory["cases"]}),
         )
         for case in inventory["cases"]:
+            request_path = ROOT / case["request"]
+            self.assertTrue(request_path.is_file(), case["name"])
+            request = load_json(request_path)
+            self.assertEqual([], schema_errors(request_schema, request), case["name"])
+            self.assertEqual([], request_case_diagnostics(request, case), case["name"])
             self.assertIn(f"fn {case['test_filter']}()", test_source, case["name"])
+
+    def test_request_binding_guard_fails_closed_on_policy_drift(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        case = next(
+            case
+            for case in inventory["cases"]
+            if case["name"] == "doc-parse-diagnostics-gated-stderr"
+        )
+        request = load_json(ROOT / case["request"])
+
+        wrong_operation = dict(request, operation="fingerprint")
+        self.assertIn(
+            "request operation does not match command surface",
+            request_case_diagnostics(wrong_operation, case),
+        )
+
+        diagnostics_disabled = dict(request, diagnostics=False)
+        self.assertIn(
+            "request diagnostics does not match inventory case",
+            request_case_diagnostics(diagnostics_disabled, case),
+        )
+
+        stdout_not_empty = dict(request, stdout_on_failure="not-empty")
+        self.assertIn(
+            "request failure stdout policy is not empty",
+            request_case_diagnostics(stdout_not_empty, case),
+        )
+
+        wrong_timeout = dict(request, limits={"max_parse_ms": 25})
+        self.assertIn(
+            "request max_parse_ms does not match inventory case",
+            request_case_diagnostics(wrong_timeout, case),
+        )
+
+    def test_inventory_worker_failure_tests_keep_stdout_empty(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        test_source = PDF_PARSE_TESTS.read_text(encoding="utf-8")
+
+        for case in inventory["cases"]:
+            body = rust_test_body(test_source, case["test_filter"])
+            self.assertIn(
+                "assert!(output.stdout.is_empty());",
+                body,
+                case["name"],
+            )
 
     def test_inventory_keeps_current_command_surfaces_narrow(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
