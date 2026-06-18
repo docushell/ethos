@@ -23,7 +23,8 @@ PDF input, bounded worker execution, normalized document output, and stable erro
 The current source-tree inventory for this contract boundary is
 `examples/sandbox/sandbox_subprocess_v1_contract.json`. It classifies existing worker tests that
 exercise timeout handling, memory-limit error reporting, stable error relay, and diagnostics-gated
-stderr behavior. Each inventory case binds to a request envelope under
+stderr behavior. It also records worker JSON artifact-header integrity cases for the existing
+temporary artifact handoff. Each inventory case binds to a request envelope under
 `schemas/examples/sandbox-subprocess-*.example.json` and records the expected process exit code,
 stable error code, stable error message, and diagnostics policy. The inventory also records the
 request identity and request-policy diagnostics that the source-tree guard exercises for this
@@ -44,6 +45,8 @@ The v1 contract boundary is fail-closed and error-envelope-first:
 - `max_parse_ms` timeout exits through the stable `parse_timeout` error code;
 - worker memory-limit failures exit through the stable `memory_limit_exceeded` error code;
 - stable worker error envelopes are relayed without converting them to generic failures;
+- worker JSON artifact headers bind output byte count, output hash, document fingerprint, and
+  payload hash to the temporary JSON artifact before the parent process accepts it;
 - non-envelope worker stderr is hidden by default;
 - non-envelope worker stderr is exposed only under explicit diagnostics;
 - request envelopes bind each failure case to the intended operation, timeout limit, diagnostics

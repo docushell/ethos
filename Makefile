@@ -95,6 +95,7 @@ milestone-d-crop-element-surface-shape-contract:
 	git diff --check
 
 milestone-d-sandbox-subprocess-contract:
+	cargo test --locked -p ethos-cli json_artifact_header
 	cargo test --locked -p ethos-cli --test pdf_parse worker
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py

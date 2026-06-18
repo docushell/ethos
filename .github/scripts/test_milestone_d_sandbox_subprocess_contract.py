@@ -36,6 +36,7 @@ ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 PDF_PARSE_TESTS = ROOT / "crates/ethos-cli/tests/pdf_parse.rs"
+WORKER_SOURCE = ROOT / "crates/ethos-cli/src/worker.rs"
 EXPECTED_EXPLICIT_BLOCKERS = [
     "hardened OS sandbox rules",
     "network-denying runtime proof",
@@ -50,6 +51,30 @@ EXPECTED_BOUNDARIES = [
     "memory_limit_error",
     "stable_error_envelope",
     "diagnostics_gated_stderr",
+]
+EXPECTED_ARTIFACT_HEADER_CASES = [
+    {
+        "name": "json-artifact-header-valid",
+        "test_filter": "validates_json_artifact_header_against_file_hash",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "accepted",
+    },
+    {
+        "name": "json-artifact-header-hash-mismatch",
+        "test_filter": "rejects_json_artifact_header_hash_mismatch",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker JSON artifact hash mismatch",
+    },
+    {
+        "name": "json-artifact-header-envelope-mismatch",
+        "test_filter": "rejects_json_artifact_header_envelope_mismatch",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker JSON artifact header does not match artifact",
+    },
 ]
 EXPECTED_DIAGNOSTIC_MESSAGES = [
     "request_ref is missing",
@@ -455,6 +480,7 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         block = target_block("milestone-d-sandbox-subprocess-contract")
 
         required = [
+            "cargo test --locked -p ethos-cli json_artifact_header",
             "cargo test --locked -p ethos-cli --test pdf_parse worker",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
@@ -513,6 +539,8 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             "`ethos.sandbox_subprocess_request_ref.v1`",
             "request identity and request-policy diagnostics",
             "stable worker error envelopes are relayed",
+            "worker JSON artifact headers bind output byte count, output hash, document "
+            "fingerprint, and payload hash",
             "non-envelope worker stderr is hidden by default",
             "explicit diagnostics",
             "request envelopes bind each failure case",
@@ -584,6 +612,7 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         self.assertEqual(inventory["status"], "source-only-pre-alpha")
         self.assertEqual(inventory["carrier"], "pdfium worker process")
         self.assertEqual(EXPECTED_EXPLICIT_BLOCKERS, inventory["explicit_blockers"])
+        self.assertEqual(EXPECTED_ARTIFACT_HEADER_CASES, inventory["artifact_header_cases"])
 
         case_names = [case["name"] for case in inventory["cases"]]
         self.assertEqual(len(case_names), len(set(case_names)))
@@ -604,6 +633,30 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
                 case["name"],
             )
             self.assertIn(f"fn {case['test_filter']}()", test_source, case["name"])
+
+    def test_contract_inventory_matches_existing_artifact_header_tests(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        worker_source = WORKER_SOURCE.read_text(encoding="utf-8")
+
+        self.assertEqual(
+            EXPECTED_ARTIFACT_HEADER_CASES,
+            inventory["artifact_header_cases"],
+        )
+
+        case_names = [case["name"] for case in inventory["artifact_header_cases"]]
+        self.assertEqual(len(case_names), len(set(case_names)))
+        for case in inventory["artifact_header_cases"]:
+            body = rust_test_body(worker_source, case["test_filter"])
+            self.assertIn("worker_json_artifact_from_header", body, case["name"])
+
+            if case["expected_result"] == "accepted":
+                self.assertIn("artifact header did not validate", body, case["name"])
+                self.assertIn("document_fingerprint()", body, case["name"])
+                self.assertIn("artifact is cleaned up on drop", body, case["name"])
+            else:
+                self.assertIn("InternalError", body, case["name"])
+                self.assertIn(case["error_message"], body, case["name"])
+                self.assertIn("temp dir is cleaned up on rejection", body, case["name"])
 
     def test_contract_inventory_pins_fail_closed_diagnostics(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

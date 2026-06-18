@@ -91,6 +91,30 @@
       }
     }
   ],
+  "artifact_header_cases": [
+    {
+      "name": "json-artifact-header-valid",
+      "test_filter": "validates_json_artifact_header_against_file_hash",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "accepted"
+    },
+    {
+      "name": "json-artifact-header-hash-mismatch",
+      "test_filter": "rejects_json_artifact_header_hash_mismatch",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker JSON artifact hash mismatch"
+    },
+    {
+      "name": "json-artifact-header-envelope-mismatch",
+      "test_filter": "rejects_json_artifact_header_envelope_mismatch",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker JSON artifact header does not match artifact"
+    }
+  ],
   "diagnostic_cases": [
     {
       "name": "request-ref-missing",
