@@ -27,6 +27,8 @@ from makefile_guard import makefile_text, target_block
 
 ROOT = Path(__file__).resolve().parents[2]
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
+ROADMAP = ROOT / "docs/roadmap.md"
+SCHEMAS_README = ROOT / "schemas/README.md"
 VALIDATE_EXAMPLES = ROOT / "schemas/validate_examples.py"
 CONTRACT_REGISTRY = [
     {
@@ -236,6 +238,18 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             doc = (ROOT / entry["doc"]).read_text(encoding="utf-8")
             self.assertIn(Path(entry["inventory"]).name, doc, entry["contract"])
             self.assertIn(entry["target"], doc, entry["contract"])
+
+    def test_registered_contracts_are_documented_in_status_surfaces(self) -> None:
+        roadmap = ROADMAP.read_text(encoding="utf-8")
+        execution_status = EXECUTION_STATUS.read_text(encoding="utf-8")
+        schemas_readme = SCHEMAS_README.read_text(encoding="utf-8")
+
+        for entry in CONTRACT_REGISTRY:
+            self.assertIn(Path(entry["doc"]).name, roadmap, entry["contract"])
+            self.assertIn(entry["doc"], execution_status, entry["contract"])
+            self.assertIn(entry["doc"], schemas_readme, entry["contract"])
+            self.assertIn(Path(entry["schema"]).name, schemas_readme, entry["contract"])
+            self.assertIn(entry["inventory"], schemas_readme, entry["contract"])
 
     def test_contract_docs_keep_common_public_language_boundary(self) -> None:
         required_text = [
