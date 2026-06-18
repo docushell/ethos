@@ -225,6 +225,34 @@ class MilestoneDClaimKindBoundaryContractTests(unittest.TestCase):
             self.assertNotIn("evidence", check)
             self.assertEqual([], check["warnings"])
 
+    def test_report_case_partitions_supported_and_unsupported_claims(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        case = inventory["report_case"]
+        citations = load_json(ROOT / case["citations"])
+        report = load_json(ROOT / case["golden"])
+        claims = citation_claims(citations)
+        unsupported_kinds = [
+            claim["kind"]
+            for claim in claims
+            if claim["kind"] in inventory["unsupported_claim_kinds"]
+        ]
+
+        self.assertEqual(unsupported_kinds, report["unsupported_claim_kinds"])
+        for claim, check in zip(claims, report["checks"]):
+            label = f"{case['name']} {check['id']}"
+            if claim["kind"] in inventory["supported_claim_kinds"]:
+                self.assertEqual("grounded", check["status"], label)
+                self.assertNotIn("reason", check, label)
+                self.assertNotEqual("none", check["match_method"], label)
+                self.assertIn("evidence", check, label)
+                continue
+
+            self.assertIn(claim["kind"], inventory["unsupported_claim_kinds"], label)
+            self.assertEqual("unsupported_claim_kind", check["status"], label)
+            self.assertEqual("unsupported_claim_kind", check["reason"], label)
+            self.assertEqual("none", check["match_method"], label)
+            self.assertNotIn("evidence", check, label)
+
     def test_verify_citations_inventory_keeps_non_v1_case_classified(self) -> None:
         inventory = load_json(VERIFY_CITATIONS_INVENTORY)
         matching = [
