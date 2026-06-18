@@ -27,6 +27,7 @@
           "name",
           "document",
           "element_id",
+          "request",
           "descriptor",
           "rendering_status"
         ],
@@ -35,6 +36,7 @@
           "name": { "$ref": "#/$defs/case_name" },
           "document": { "$ref": "#/$defs/repo_path" },
           "element_id": { "type": "string", "pattern": "^e[0-9]{6}$" },
+          "request": { "$ref": "#/$defs/repo_path" },
           "descriptor": { "$ref": "#/$defs/repo_path" },
           "rendering_status": { "enum": ["descriptor_only", "rendered"] }
         }

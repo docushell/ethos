@@ -12,9 +12,12 @@ document, an explicit element locator, a crop descriptor, and an optional render
 
 `crop_element` v1 will consume:
 
+- a `schemas/ethos-crop-element-request.schema.json` request envelope carrying the document
+  fingerprint, `element_id`, and requested rendering mode;
 - a canonical Ethos document JSON grounding source with explicit element ids, page ids, integer
-  bboxes, and a document fingerprint;
-- an `element_id` locator that resolves to one element with one page and one bbox;
+  bboxes, and a matching document fingerprint;
+- an `element_id` locator that resolves through that request to one element with one page and one
+  bbox;
 - optional source PDF bytes whose fingerprint matches the document source fingerprint when
   rendered output is requested.
 
@@ -24,7 +27,8 @@ filename, byte hash, dimensions, and source PDF fingerprint.
 
 The current source-tree fixture for this contract boundary is
 `examples/crop/crop_element_v1_contract.json`. That inventory binds
-`schemas/examples/document.example.json` element `e000002` to
+`schemas/examples/crop-element-request.example.json`,
+`schemas/examples/document.example.json` element `e000002`, and
 `schemas/examples/crop-descriptor.example.json`.
 
 Focused validation command:
@@ -61,7 +65,7 @@ preserve the same audit bindings before it can replace or wrap the current carri
 - page id;
 - bbox;
 - crop descriptor filename;
-- request identity;
+- request envelope identity;
 - optional rendered PNG metadata and source PDF fingerprint.
 
 ## Explicit Blockers For This Slice

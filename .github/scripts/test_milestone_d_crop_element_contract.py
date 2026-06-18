@@ -21,6 +21,7 @@ import hashlib
 import json
 import re
 import unittest
+from copy import deepcopy
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
@@ -31,6 +32,8 @@ ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / "docs/milestone-d-crop-element-contract.md"
 CONTRACT_INVENTORY = ROOT / "examples/crop/crop_element_v1_contract.json"
 CONTRACT_INVENTORY_SCHEMA = ROOT / "schemas/ethos-crop-element-contract.schema.json"
+CROP_ELEMENT_REQUEST_SCHEMA = ROOT / "schemas/ethos-crop-element-request.schema.json"
+CROP_ELEMENT_REQUEST_EXAMPLE = ROOT / "schemas/examples/crop-element-request.example.json"
 CROP_DESCRIPTOR_SCHEMA = ROOT / "schemas/ethos-crop-descriptor.schema.json"
 VERIFICATION_REPORT_EXAMPLE = ROOT / "schemas/examples/verification-report.example.json"
 ROADMAP = ROOT / "docs/roadmap.md"
@@ -89,6 +92,51 @@ def checks_by_id(report: dict) -> dict[str, dict]:
 
 def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def schema_errors(schema: dict, instance: dict) -> list:
+    return sorted(
+        Draft202012Validator(schema).iter_errors(instance),
+        key=lambda error: list(error.absolute_path),
+    )
+
+
+def request_case_diagnostics(
+    request: dict,
+    document: dict,
+    descriptor: dict,
+    case: dict,
+) -> list[str]:
+    diagnostics: list[str] = []
+
+    if request["document_fingerprint"] != document["fingerprint"]:
+        diagnostics.append("request document_fingerprint does not match document fingerprint")
+    if descriptor["document_fingerprint"] != request["document_fingerprint"]:
+        diagnostics.append("descriptor document_fingerprint does not match request")
+    if request["element_id"] != case["element_id"]:
+        diagnostics.append("request element_id does not match contract inventory case")
+
+    element = elements_by_id(document).get(request["element_id"])
+    if element is None:
+        diagnostics.append("request element_id does not resolve in document")
+        return diagnostics
+
+    if "page" not in element:
+        diagnostics.append("resolved element is missing page")
+    elif descriptor["page"] != element["page"]:
+        diagnostics.append("descriptor page does not match resolved element")
+
+    if "bbox" not in element:
+        diagnostics.append("resolved element is missing bbox")
+    elif descriptor["bbox"] != element["bbox"]:
+        diagnostics.append("descriptor bbox does not match resolved element")
+
+    if request["rendering"] != case["rendering_status"]:
+        diagnostics.append("request rendering does not match contract inventory case")
+    if descriptor["rendering_status"] != request["rendering"]:
+        diagnostics.append("descriptor rendering_status does not match request")
+
+    return diagnostics
 
 
 class MilestoneDCropElementContractTests(unittest.TestCase):
@@ -154,8 +202,10 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         text = normalized_contract_text()
 
         for required in [
+            "`schemas/ethos-crop-element-request.schema.json`",
             "`schemas/ethos-crop-descriptor.schema.json`",
             "`examples/crop/crop_element_v1_contract.json`",
+            "`schemas/examples/crop-element-request.example.json`",
             "`schemas/examples/crop-descriptor.example.json`",
             "document fingerprint",
             "element id",
@@ -186,8 +236,32 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         )
         self.assertEqual([], errors)
 
+    def test_crop_element_request_example_validates_against_request_schema(self) -> None:
+        schema = load_json(CROP_ELEMENT_REQUEST_SCHEMA)
+        request = load_json(CROP_ELEMENT_REQUEST_EXAMPLE)
+
+        Draft202012Validator.check_schema(schema)
+        self.assertEqual([], schema_errors(schema, request))
+
+        rendered_request = dict(
+            request,
+            rendering="rendered",
+            source_pdf_fingerprint="sha256:" + "1" * 64,
+        )
+        self.assertEqual([], schema_errors(schema, rendered_request))
+
+        rendered_without_source = dict(request, rendering="rendered")
+        self.assertNotEqual([], schema_errors(schema, rendered_without_source))
+
+        descriptor_only_with_source = dict(
+            request,
+            source_pdf_fingerprint="sha256:" + "1" * 64,
+        )
+        self.assertNotEqual([], schema_errors(schema, descriptor_only_with_source))
+
     def test_contract_inventory_binds_element_to_descriptor_example(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
+        request_schema = load_json(CROP_ELEMENT_REQUEST_SCHEMA)
 
         self.assertEqual(inventory["schema_version"], 1)
         self.assertEqual(inventory["contract"], "crop_element.v1")
@@ -200,20 +274,67 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
 
         for case in inventory["cases"]:
             document_path = ROOT / case["document"]
+            request_path = ROOT / case["request"]
             descriptor_path = ROOT / case["descriptor"]
             self.assertTrue(document_path.is_file(), case["name"])
+            self.assertTrue(request_path.is_file(), case["name"])
             self.assertTrue(descriptor_path.is_file(), case["name"])
 
             document = load_json(document_path)
+            request = load_json(request_path)
             descriptor = load_json(descriptor_path)
             element = elements_by_id(document)[case["element_id"]]
 
+            self.assertEqual([], schema_errors(request_schema, request), case["name"])
+            self.assertEqual(request["document_fingerprint"], document["fingerprint"])
+            self.assertEqual(request["element_id"], case["element_id"])
+            self.assertEqual(request["rendering"], case["rendering_status"])
             self.assertEqual(descriptor["artifact_type"], "ethos.crop_descriptor.v1")
-            self.assertEqual(descriptor["document_fingerprint"], document["fingerprint"])
+            self.assertEqual(descriptor["document_fingerprint"], request["document_fingerprint"])
             self.assertEqual(descriptor["page"], element["page"])
             self.assertEqual(descriptor["bbox"], element["bbox"])
-            self.assertEqual(descriptor["rendering_status"], case["rendering_status"])
+            self.assertEqual(descriptor["rendering_status"], request["rendering"])
             self.assertEqual(descriptor["check_ids"], ["v0001"])
+            self.assertEqual([], request_case_diagnostics(request, document, descriptor, case))
+
+    def test_request_binding_guard_fails_closed_on_stale_or_unresolved_inputs(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        case = inventory["cases"][0]
+        request = load_json(ROOT / case["request"])
+        document = load_json(ROOT / case["document"])
+        descriptor = load_json(ROOT / case["descriptor"])
+
+        unknown_element_request = dict(request, element_id="e999999")
+        self.assertIn(
+            "request element_id does not resolve in document",
+            request_case_diagnostics(unknown_element_request, document, descriptor, case),
+        )
+
+        stale_request = dict(request, document_fingerprint="sha256:" + "0" * 64)
+        self.assertIn(
+            "request document_fingerprint does not match document fingerprint",
+            request_case_diagnostics(stale_request, document, descriptor, case),
+        )
+
+        mismatched_element_request = dict(request, element_id="e000001")
+        self.assertIn(
+            "request element_id does not match contract inventory case",
+            request_case_diagnostics(mismatched_element_request, document, descriptor, case),
+        )
+
+        document_without_page = deepcopy(document)
+        del elements_by_id(document_without_page)[request["element_id"]]["page"]
+        self.assertIn(
+            "resolved element is missing page",
+            request_case_diagnostics(request, document_without_page, descriptor, case),
+        )
+
+        document_without_bbox = deepcopy(document)
+        del elements_by_id(document_without_bbox)[request["element_id"]]["bbox"]
+        self.assertIn(
+            "resolved element is missing bbox",
+            request_case_diagnostics(request, document_without_bbox, descriptor, case),
+        )
 
     def test_contract_inventory_binds_descriptor_to_verification_evidence(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

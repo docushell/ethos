@@ -8,6 +8,7 @@
       "name": "document-example-e000002",
       "document": "schemas/examples/document.example.json",
       "element_id": "e000002",
+      "request": "schemas/examples/crop-element-request.example.json",
       "descriptor": "schemas/examples/crop-descriptor.example.json",
       "rendering_status": "descriptor_only"
     }

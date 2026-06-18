@@ -13,6 +13,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-verification-report.schema.json` | `verification_report.json` |
 | `ethos-verification-config.schema.json` | verification config (its c14n hash stamps reports) |
 | `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos verify --crop-dir` |
+| `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |
 | `ethos-verify-citations-contract.schema.json` | Milestone D `verify_citations` v1 source-only contract inventory |
 | `ethos-crop-element-contract.schema.json` | Milestone D `crop_element` v1 source-only contract inventory |
 | `ethos-sandbox-subprocess-contract.schema.json` | Milestone D `sandbox_subprocess` v1 source-only contract inventory |
@@ -43,9 +44,10 @@ Milestone D `crop_element` v1 contract work is tracked in
 `docs/milestone-d-crop-element-contract.md`. In this source-only pre-alpha slice,
 `crop_element` names the future element-to-crop-descriptor contract currently represented by the
 existing `ethos verify --crop-dir` carrier; it does not add a first-class command or binding
-surface. The contract inventory at `examples/crop/crop_element_v1_contract.json` is
-schema-validated here; its alignment with the document and crop-descriptor examples is checked by
-the Milestone D repository guard.
+surface. The request envelope example at `schemas/examples/crop-element-request.example.json` and
+contract inventory at `examples/crop/crop_element_v1_contract.json` are schema-validated here;
+their alignment with the document and crop-descriptor examples is checked by the Milestone D
+repository guard.
 
 Milestone D `sandbox_subprocess` v1 contract work is tracked in
 `docs/milestone-d-sandbox-subprocess-contract.md`. In this source-only pre-alpha slice,
