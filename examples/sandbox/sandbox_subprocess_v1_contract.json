@@ -99,6 +99,30 @@
       "expected_result": "accepted"
     },
     {
+      "name": "json-artifact-header-invalid-json",
+      "test_filter": "rejects_json_artifact_header_invalid_json",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker returned an invalid JSON artifact header"
+    },
+    {
+      "name": "json-artifact-header-unsupported-schema",
+      "test_filter": "rejects_json_artifact_header_unsupported_schema",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker returned an unsupported JSON artifact header"
+    },
+    {
+      "name": "json-artifact-header-missing-output-bytes",
+      "test_filter": "rejects_json_artifact_header_missing_output_bytes",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker JSON artifact header missing output_bytes"
+    },
+    {
       "name": "json-artifact-header-hash-mismatch",
       "test_filter": "rejects_json_artifact_header_hash_mismatch",
       "boundary": "json_artifact_header_integrity",

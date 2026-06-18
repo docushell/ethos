@@ -60,6 +60,30 @@ EXPECTED_ARTIFACT_HEADER_CASES = [
         "expected_result": "accepted",
     },
     {
+        "name": "json-artifact-header-invalid-json",
+        "test_filter": "rejects_json_artifact_header_invalid_json",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker returned an invalid JSON artifact header",
+    },
+    {
+        "name": "json-artifact-header-unsupported-schema",
+        "test_filter": "rejects_json_artifact_header_unsupported_schema",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker returned an unsupported JSON artifact header",
+    },
+    {
+        "name": "json-artifact-header-missing-output-bytes",
+        "test_filter": "rejects_json_artifact_header_missing_output_bytes",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker JSON artifact header missing output_bytes",
+    },
+    {
         "name": "json-artifact-header-hash-mismatch",
         "test_filter": "rejects_json_artifact_header_hash_mismatch",
         "boundary": "json_artifact_header_integrity",
@@ -645,18 +669,33 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
 
         case_names = [case["name"] for case in inventory["artifact_header_cases"]]
         self.assertEqual(len(case_names), len(set(case_names)))
+        self.assertIn("fn assert_json_artifact_header_rejected", worker_source)
+        self.assertIn("worker_json_artifact_from_header", worker_source)
         for case in inventory["artifact_header_cases"]:
             body = rust_test_body(worker_source, case["test_filter"])
-            self.assertIn("worker_json_artifact_from_header", body, case["name"])
 
             if case["expected_result"] == "accepted":
+                self.assertIn("worker_json_artifact_from_header", body, case["name"])
                 self.assertIn("artifact header did not validate", body, case["name"])
                 self.assertIn("document_fingerprint()", body, case["name"])
                 self.assertIn("artifact is cleaned up on drop", body, case["name"])
             else:
-                self.assertIn("InternalError", body, case["name"])
+                self.assertTrue(
+                    "worker_json_artifact_from_header" in body
+                    or "assert_json_artifact_header_rejected" in body,
+                    case["name"],
+                )
+                self.assertIn(
+                    "InternalError",
+                    body if "InternalError" in body else worker_source,
+                    case["name"],
+                )
                 self.assertIn(case["error_message"], body, case["name"])
-                self.assertIn("temp dir is cleaned up on rejection", body, case["name"])
+                self.assertIn(
+                    "temp dir is cleaned up on rejection",
+                    body if "temp dir is cleaned up on rejection" in body else worker_source,
+                    case["name"],
+                )
 
     def test_contract_inventory_pins_fail_closed_diagnostics(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

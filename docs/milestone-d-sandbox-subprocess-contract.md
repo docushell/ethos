@@ -47,6 +47,7 @@ The v1 contract boundary is fail-closed and error-envelope-first:
 - stable worker error envelopes are relayed without converting them to generic failures;
 - worker JSON artifact headers bind output byte count, output hash, document fingerprint, and
   payload hash to the temporary JSON artifact before the parent process accepts it;
+- malformed, unsupported, or incomplete worker JSON artifact headers fail closed;
 - non-envelope worker stderr is hidden by default;
 - non-envelope worker stderr is exposed only under explicit diagnostics;
 - request envelopes bind each failure case to the intended operation, timeout limit, diagnostics
