@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import unittest
@@ -31,6 +32,7 @@ CONTRACT = ROOT / "docs/milestone-d-crop-element-contract.md"
 CONTRACT_INVENTORY = ROOT / "examples/crop/crop_element_v1_contract.json"
 CONTRACT_INVENTORY_SCHEMA = ROOT / "schemas/ethos-crop-element-contract.schema.json"
 CROP_DESCRIPTOR_SCHEMA = ROOT / "schemas/ethos-crop-descriptor.schema.json"
+VERIFICATION_REPORT_EXAMPLE = ROOT / "schemas/examples/verification-report.example.json"
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
@@ -79,6 +81,14 @@ def elements_by_id(document: dict) -> dict[str, dict]:
         for element in document["payload"]["elements"]
         if "id" in element
     }
+
+
+def checks_by_id(report: dict) -> dict[str, dict]:
+    return {check["id"]: check for check in report["checks"]}
+
+
+def sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 class MilestoneDCropElementContractTests(unittest.TestCase):
@@ -204,6 +214,29 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             self.assertEqual(descriptor["bbox"], element["bbox"])
             self.assertEqual(descriptor["rendering_status"], case["rendering_status"])
             self.assertEqual(descriptor["check_ids"], ["v0001"])
+
+    def test_contract_inventory_binds_descriptor_to_verification_evidence(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        report = load_json(VERIFICATION_REPORT_EXAMPLE)
+        report_checks = checks_by_id(report)
+
+        for case in inventory["cases"]:
+            descriptor = load_json(ROOT / case["descriptor"])
+
+            self.assertEqual(report["document_fingerprint"], descriptor["document_fingerprint"])
+            for check_id in descriptor["check_ids"]:
+                check = report_checks[check_id]
+                evidence = check["evidence"]
+                citation = check["claim"]["citation"]
+
+                self.assertEqual(citation["element_id"], case["element_id"], case["name"])
+                self.assertEqual(evidence["page"], descriptor["page"], case["name"])
+                self.assertEqual(evidence["bbox"], descriptor["bbox"], case["name"])
+                self.assertEqual(
+                    descriptor["text_sha256"],
+                    sha256_text(evidence["text"]),
+                    case["name"],
+                )
 
     def test_crop_descriptor_example_validates_against_descriptor_schema(self) -> None:
         schema = load_json(CROP_DESCRIPTOR_SCHEMA)
