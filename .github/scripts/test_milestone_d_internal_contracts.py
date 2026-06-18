@@ -554,6 +554,7 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
 
         for entry in CONTRACT_REGISTRY:
             inventory = load_json(entry["inventory"])
+            self.assertEqual(1, inventory["schema_version"], entry["contract"])
             self.assertEqual(entry["contract"], inventory["contract"])
             self.assertEqual("source-only-pre-alpha", inventory["status"])
             self.assertEqual(entry["carrier"], inventory["carrier"])
