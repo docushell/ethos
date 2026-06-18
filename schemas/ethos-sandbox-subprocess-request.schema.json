@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:sandbox-subprocess-request:1",
+  "title": "Ethos sandbox_subprocess v1 request",
+  "description": "Source-only pre-alpha request envelope for the future sandbox_subprocess v1 contract. The current executable carrier remains the existing PDF worker process until sandbox hardening is explicitly added.",
+  "type": "object",
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "request_ref",
+    "operation",
+    "input",
+    "limits",
+    "diagnostics",
+    "stdout_on_failure",
+    "stderr_policy"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": { "const": "ethos.sandbox_subprocess_request.v1" },
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "request_ref": {
+      "type": "string",
+      "pattern": "^request-[0-9a-f]{64}$",
+      "description": "Stable source-only request identity derived from operation, input kind, page selection when present, limits, diagnostics intent, failure-output policy, and the ethos.sandbox_subprocess_request_ref.v1 version marker."
+    },
+    "operation": { "enum": ["doc_parse", "fingerprint"] },
+    "input": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "caller_supplied_pdf_bytes" }
+      }
+    },
+    "page_selection": {
+      "oneOf": [
+        { "const": "all" },
+        { "type": "string", "pattern": "^[0-9]+(?:-[0-9]+)?(?:,[0-9]+(?:-[0-9]+)?)*$" }
+      ]
+    },
+    "limits": {
+      "type": "object",
+      "required": ["max_parse_ms"],
+      "additionalProperties": false,
+      "properties": {
+        "max_parse_ms": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "diagnostics": { "type": "boolean" },
+    "stdout_on_failure": { "const": "empty" },
+    "stderr_policy": {
+      "enum": [
+        "stable_error_envelope",
+        "stable_error_envelope_with_worker_stderr"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "operation": { "const": "doc_parse" } },
+        "required": ["operation"]
+      },
+      "then": {
+        "required": ["page_selection"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "operation": { "const": "fingerprint" } },
+        "required": ["operation"]
+      },
+      "then": {
+        "not": { "required": ["page_selection"] },
+        "properties": {
+          "diagnostics": { "const": false },
+          "stderr_policy": { "const": "stable_error_envelope" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "diagnostics": { "const": true } },
+        "required": ["diagnostics"]
+      },
+      "then": {
+        "properties": {
+          "stderr_policy": { "const": "stable_error_envelope_with_worker_stderr" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "diagnostics": { "const": false } },
+        "required": ["diagnostics"]
+      },
+      "then": {
+        "properties": {
+          "stderr_policy": { "const": "stable_error_envelope" }
+        }
+      }
+    }
+  ]
+}

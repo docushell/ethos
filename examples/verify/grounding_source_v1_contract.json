@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "contract": "grounding_source.v1",
+  "status": "source-only-pre-alpha",
+  "carrier": "GroundingSource trait",
+  "trait_module": "crates/ethos-core/src/grounding.rs",
+  "report_schema": "schemas/ethos-verification-report.schema.json",
+  "required_trait_methods": [
+    "parser",
+    "capabilities",
+    "fingerprint",
+    "pages",
+    "elements",
+    "spans",
+    "tables",
+    "crop_ref",
+    "element_by_id"
+  ],
+  "source_cases": [
+    {
+      "name": "native-ethos-document",
+      "category": "native",
+      "implementation": "crates/ethos-core/src/model.rs",
+      "rust_tests": [
+        "native_ethos_verify_produces_non_empty_checks"
+      ],
+      "report_golden": "examples/verify/goldens/native_grounded_report.json",
+      "document_fingerprint_required": true,
+      "expected_parser": {
+        "name": "ethos",
+        "version": "0.1.0"
+      },
+      "expected_capabilities": {
+        "spans": true,
+        "char_offsets": true,
+        "tables": true,
+        "fingerprint": true,
+        "coordinate_origin": "top-left",
+        "crop_support": false
+      }
+    },
+    {
+      "name": "opendataloader-documented-subset",
+      "category": "foreign-adapter",
+      "implementation": "adapters/grounding/opendataloader-json/src/lib.rs",
+      "rust_tests": [
+        "opendataloader_verify_adapter_produces_capability_aware_report"
+      ],
+      "report_golden": "examples/verify/goldens/opendataloader_grounded_report.json",
+      "document_fingerprint_required": false,
+      "expected_parser": {
+        "name": "opendataloader-pdf",
+        "version": "0.0.0-synthetic",
+        "adapter": "opendataloader-json",
+        "adapter_version": "0.1.0"
+      },
+      "expected_capabilities": {
+        "spans": false,
+        "char_offsets": false,
+        "tables": true,
+        "fingerprint": false,
+        "coordinate_origin": "unknown",
+        "crop_support": false
+      }
+    },
+    {
+      "name": "opendataloader-real-tree",
+      "category": "foreign-adapter",
+      "implementation": "adapters/grounding/opendataloader-json/src/lib.rs",
+      "rust_tests": [
+        "real_opendataloader_fixture_verifies_against_golden"
+      ],
+      "report_golden": "fixtures/foreign/opendataloader/real/expected.verification_report.json",
+      "document_fingerprint_required": false,
+      "expected_parser": {
+        "name": "opendataloader-pdf",
+        "version": "unknown",
+        "adapter": "opendataloader-json",
+        "adapter_version": "0.1.0"
+      },
+      "expected_capabilities": {
+        "spans": false,
+        "char_offsets": false,
+        "tables": false,
+        "fingerprint": false,
+        "coordinate_origin": "unknown",
+        "crop_support": false
+      }
+    }
+  ],
+  "trait_default_case": {
+    "name": "safe-defaults",
+    "implementation": "crates/ethos-core/src/grounding.rs",
+    "rust_tests": [
+      "defaults_are_safe"
+    ],
+    "expected_defaults": [
+      "spans",
+      "tables",
+      "crop_ref",
+      "element_by_id"
+    ]
+  },
+  "explicit_blockers": [
+    "a new command or binding surface",
+    "a new foreign parser adapter",
+    "adapter behavior beyond committed fixtures",
+    "first-class crop API behavior",
+    "sandbox backend behavior",
+    "claim-kind expansion or semantic verification"
+  ]
+}

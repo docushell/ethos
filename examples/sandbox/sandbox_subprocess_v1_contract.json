@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "contract": "sandbox_subprocess.v1",
+  "status": "source-only-pre-alpha",
+  "carrier": "pdfium worker process",
+  "cases": [
+    {
+      "name": "doc-parse-timeout",
+      "command_surface": "ethos doc parse",
+      "request": "schemas/examples/sandbox-subprocess-doc-parse-timeout-request.example.json",
+      "test_filter": "doc_parse_timeout_kills_pdfium_worker",
+      "boundary": "max_parse_ms_timeout",
+      "expected_failure": {
+        "exit_code": 10,
+        "error_code": "parse_timeout",
+        "error_message": "parse exceeded max_parse_ms",
+        "stdout": "empty",
+        "diagnostics": false
+      }
+    },
+    {
+      "name": "fingerprint-timeout",
+      "command_surface": "ethos fingerprint",
+      "request": "schemas/examples/sandbox-subprocess-fingerprint-timeout-request.example.json",
+      "test_filter": "pdf_fingerprint_timeout_kills_pdfium_worker",
+      "boundary": "max_parse_ms_timeout",
+      "expected_failure": {
+        "exit_code": 10,
+        "error_code": "parse_timeout",
+        "error_message": "parse exceeded max_parse_ms",
+        "stdout": "empty",
+        "diagnostics": false
+      }
+    },
+    {
+      "name": "doc-parse-memory-limit",
+      "command_surface": "ethos doc parse",
+      "request": "schemas/examples/sandbox-subprocess-doc-parse-request.example.json",
+      "test_filter": "doc_parse_memory_limit_worker_failure_is_stable",
+      "boundary": "memory_limit_error",
+      "expected_failure": {
+        "exit_code": 11,
+        "error_code": "memory_limit_exceeded",
+        "error_message": "parse exceeded memory limit",
+        "stdout": "empty",
+        "diagnostics": false
+      }
+    },
+    {
+      "name": "doc-parse-stable-error-envelope",
+      "command_surface": "ethos doc parse",
+      "request": "schemas/examples/sandbox-subprocess-doc-parse-request.example.json",
+      "test_filter": "doc_parse_relays_worker_stable_error_envelope",
+      "boundary": "stable_error_envelope",
+      "expected_failure": {
+        "exit_code": 3,
+        "error_code": "invalid_pdf",
+        "error_message": "input does not contain a PDF header",
+        "stdout": "empty",
+        "diagnostics": false
+      }
+    },
+    {
+      "name": "doc-parse-stderr-hidden-by-default",
+      "command_surface": "ethos doc parse",
+      "request": "schemas/examples/sandbox-subprocess-doc-parse-request.example.json",
+      "test_filter": "doc_parse_non_envelope_worker_failure_stays_canonical_without_diagnostics",
+      "boundary": "diagnostics_gated_stderr",
+      "expected_failure": {
+        "exit_code": 12,
+        "error_code": "internal_error",
+        "error_message": "pdfium worker failed",
+        "stdout": "empty",
+        "diagnostics": false
+      }
+    },
+    {
+      "name": "doc-parse-diagnostics-gated-stderr",
+      "command_surface": "ethos doc parse",
+      "request": "schemas/examples/sandbox-subprocess-doc-parse-diagnostics-request.example.json",
+      "test_filter": "doc_parse_non_envelope_worker_failure_includes_stderr_with_diagnostics",
+      "boundary": "diagnostics_gated_stderr",
+      "expected_failure": {
+        "exit_code": 12,
+        "error_code": "internal_error",
+        "error_message": "pdfium worker failed",
+        "stdout": "empty",
+        "diagnostics": true,
+        "worker_exit_code": 101,
+        "worker_stderr": "native pdfium stderr sentinel\nsecond line"
+      }
+    }
+  ],
+  "artifact_header_cases": [
+    {
+      "name": "json-artifact-header-valid",
+      "test_filter": "validates_json_artifact_header_against_file_hash",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "accepted"
+    },
+    {
+      "name": "json-artifact-header-invalid-json",
+      "test_filter": "rejects_json_artifact_header_invalid_json",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker returned an invalid JSON artifact header"
+    },
+    {
+      "name": "json-artifact-header-unsupported-schema",
+      "test_filter": "rejects_json_artifact_header_unsupported_schema",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker returned an unsupported JSON artifact header"
+    },
+    {
+      "name": "json-artifact-header-missing-output-bytes",
+      "test_filter": "rejects_json_artifact_header_missing_output_bytes",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker JSON artifact header missing output_bytes"
+    },
+    {
+      "name": "json-artifact-header-hash-mismatch",
+      "test_filter": "rejects_json_artifact_header_hash_mismatch",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker JSON artifact hash mismatch"
+    },
+    {
+      "name": "json-artifact-header-envelope-mismatch",
+      "test_filter": "rejects_json_artifact_header_envelope_mismatch",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker JSON artifact header does not match artifact"
+    }
+  ],
+  "diagnostic_cases": [
+    {
+      "name": "request-ref-missing",
+      "surface": "request_ref",
+      "expected_diagnostics": [
+        "request_ref is missing"
+      ]
+    },
+    {
+      "name": "request-ref-identity-drift",
+      "surface": "request_ref",
+      "expected_diagnostics": [
+        "request_ref does not match sandbox subprocess request identity tuple"
+      ]
+    },
+    {
+      "name": "request-operation-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request operation does not match command surface"
+      ]
+    },
+    {
+      "name": "request-diagnostics-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request diagnostics does not match inventory case"
+      ]
+    },
+    {
+      "name": "request-stderr-policy-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request stderr policy does not match diagnostics mode"
+      ]
+    },
+    {
+      "name": "request-stdout-policy-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request failure stdout policy is not empty"
+      ]
+    },
+    {
+      "name": "request-max-parse-ms-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request max_parse_ms does not match inventory case"
+      ]
+    },
+    {
+      "name": "doc-parse-page-selection-missing",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection"
+      ]
+    },
+    {
+      "name": "fingerprint-page-selection-present",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "fingerprint request must not carry page selection"
+      ]
+    },
+    {
+      "name": "doc-parse-page-selection-malformed",
+      "surface": "page_selection",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection",
+        "malformed page number"
+      ]
+    },
+    {
+      "name": "doc-parse-page-selection-zero",
+      "surface": "page_selection",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection",
+        "pages are 1-based"
+      ]
+    },
+    {
+      "name": "doc-parse-page-selection-descending-range",
+      "surface": "page_selection",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection",
+        "descending range in page selection"
+      ]
+    },
+    {
+      "name": "doc-parse-page-selection-overflow",
+      "surface": "page_selection",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection",
+        "page number out of range"
+      ]
+    }
+  ],
+  "explicit_blockers": [
+    "hardened OS sandbox rules",
+    "network-denying runtime proof",
+    "file-descriptor or child-process enforcement",
+    "arbitrary filesystem allowlist enforcement",
+    "a new public command or binding surface",
+    "Python, Node, MCP, or hosted sandbox surfaces",
+    "crop or verification API changes"
+  ]
+}

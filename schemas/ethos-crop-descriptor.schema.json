@@ -21,7 +21,7 @@
     "crop_ref": {
       "type": "string",
       "pattern": "^crop-[0-9a-f]{64}\\.json$",
-      "description": "Stable descriptor filename referenced from verification_report checks[].evidence.crop_ref. Native Ethos CLI crop refs are logical evidence references derived from document fingerprint, check id, and page, not from raw bbox."
+      "description": "Stable descriptor filename referenced from verification_report checks[].evidence.crop_ref. Native Ethos CLI crop refs are logical evidence references derived from document fingerprint, check id, page, and the ethos.logical_crop_ref.v1 version marker, not from raw bbox."
     },
     "document_fingerprint": { "$ref": "#/$defs/fingerprint" },
     "page": { "type": "string" },

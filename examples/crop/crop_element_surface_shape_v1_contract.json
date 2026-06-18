@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "contract": "crop_element_surface_shape.v1",
+  "status": "source-only-pre-alpha",
+  "carrier": "source-only crop_element surface shape",
+  "request_schema": "schemas/ethos-crop-element-request.schema.json",
+  "descriptor_schema": "schemas/ethos-crop-descriptor.schema.json",
+  "base_contract_inventory": "examples/crop/crop_element_v1_contract.json",
+  "planned_surface_fields": [
+    {
+      "name": "document_fingerprint",
+      "maps_to": "request.document_fingerprint",
+      "required": true
+    },
+    {
+      "name": "element_id",
+      "maps_to": "request.element_id",
+      "required": true
+    },
+    {
+      "name": "rendering",
+      "maps_to": "request.rendering",
+      "required": true
+    },
+    {
+      "name": "source_pdf_fingerprint",
+      "maps_to": "request.source_pdf_fingerprint",
+      "required_when": "rendering=rendered"
+    },
+    {
+      "name": "crop_descriptor",
+      "maps_to": "descriptor.crop_ref",
+      "required": true
+    },
+    {
+      "name": "rendered_artifact",
+      "maps_to": "descriptor.rendered_ref",
+      "required_when": "rendering=rendered"
+    }
+  ],
+  "current_surface_absence": {
+    "cli_command": "crop_element",
+    "python_method": "crop_element",
+    "checked_files": [
+      "crates/ethos-cli/src/main.rs",
+      "python/ethos_pdf/_cli.py"
+    ]
+  },
+  "explicit_blockers": [
+    "a first-class `crop_element` CLI command",
+    "a Python crop method",
+    "Node, MCP, or hosted crop surfaces",
+    "rendered-crop backend changes",
+    "sandbox backend behavior",
+    "foreign-adapter crop coordinate hardening"
+  ]
+}

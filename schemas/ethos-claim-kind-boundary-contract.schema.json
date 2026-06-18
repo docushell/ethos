@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:claim-kind-boundary-contract:1",
+  "title": "Ethos claim_kind_boundary v1 contract inventory",
+  "description": "Source-only pre-alpha Milestone D inventory for the current claim_kind_boundary v1 contract carried by ethos verify. This validates inventory shape and vocabulary; fixture alignment stays in the repository guard.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "contract",
+    "status",
+    "carrier",
+    "supported_claim_kinds",
+    "unsupported_claim_kinds",
+    "config_boundary",
+    "report_case",
+    "explicit_blockers"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "contract": { "const": "claim_kind_boundary.v1" },
+    "status": { "const": "source-only-pre-alpha" },
+    "carrier": { "const": "ethos verify" },
+    "supported_claim_kinds": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/supported_claim_kind" },
+      "uniqueItems": true
+    },
+    "unsupported_claim_kinds": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/unsupported_claim_kind" },
+      "uniqueItems": true
+    },
+    "config_boundary": {
+      "type": "object",
+      "required": [
+        "schema",
+        "accepted_claim_kinds",
+        "rejected_claim_kinds",
+        "usage_error"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema": { "$ref": "#/$defs/repo_path" },
+        "accepted_claim_kinds": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/supported_claim_kind" },
+          "uniqueItems": true
+        },
+        "rejected_claim_kinds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/unsupported_claim_kind" },
+          "uniqueItems": true
+        },
+        "usage_error": { "type": "string", "minLength": 1 }
+      }
+    },
+    "report_case": {
+      "type": "object",
+      "required": [
+        "name",
+        "citations",
+        "golden",
+        "expected_statuses",
+        "expected_reasons",
+        "expected_match_methods",
+        "expected_unsupported_claim_kinds",
+        "all_evidence_grounded",
+        "unsupported_checks_have_no_evidence",
+        "unsupported_checks_semantic_unverified"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/case_name" },
+        "citations": { "$ref": "#/$defs/repo_path" },
+        "golden": { "$ref": "#/$defs/repo_path" },
+        "expected_statuses": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/check_status" }
+        },
+        "expected_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/check_reason" }
+        },
+        "expected_match_methods": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/match_method" }
+        },
+        "expected_unsupported_claim_kinds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/unsupported_claim_kind" },
+          "uniqueItems": true
+        },
+        "all_evidence_grounded": { "const": false },
+        "unsupported_checks_have_no_evidence": { "const": true },
+        "unsupported_checks_semantic_unverified": { "const": false }
+      }
+    },
+    "explicit_blockers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "case_name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "repo_path": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_./-]+$" },
+    "supported_claim_kind": {
+      "enum": ["quote", "value", "presence", "table_cell"]
+    },
+    "unsupported_claim_kind": {
+      "enum": ["region", "other"]
+    },
+    "check_status": {
+      "enum": [
+        "grounded",
+        "not_found",
+        "mismatch",
+        "stale",
+        "unsupported_claim_kind",
+        "capability_blocked",
+        "error"
+      ]
+    },
+    "check_reason": {
+      "enum": [
+        "missing_locator",
+        "missing_required_text",
+        "unsupported_claim_kind",
+        "stale_fingerprint",
+        "missing_source_fingerprint",
+        "missing_citation_fingerprint",
+        "missing_span_capability",
+        "missing_table_capability",
+        "unknown_coordinate_origin",
+        "element_not_found",
+        "span_not_found",
+        "page_not_found",
+        "bbox_not_found",
+        "missing_page_for_bbox",
+        "missing_table_cell_locator",
+        "table_not_found",
+        "table_cell_not_found",
+        "text_mismatch"
+      ]
+    },
+    "match_method": {
+      "enum": [
+        "exact_text",
+        "normalized_text",
+        "exact_text_contains",
+        "normalized_text_contains",
+        "table_cell_lookup",
+        "bbox_containment",
+        "presence_only",
+        "none"
+      ]
+    }
+  }
+}

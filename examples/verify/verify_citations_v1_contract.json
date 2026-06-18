@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "contract": "verify_citations.v1",
+  "status": "source-only-pre-alpha",
+  "carrier": "ethos verify",
+  "report_cases": [
+    {
+      "name": "native-grounded",
+      "category": "grounded",
+      "all_evidence_grounded": true,
+      "statuses": ["grounded", "grounded", "grounded"],
+      "reasons": []
+    },
+    {
+      "name": "opendataloader-grounded",
+      "category": "grounded-with-capability-warning",
+      "all_evidence_grounded": true,
+      "statuses": ["grounded", "grounded", "grounded"],
+      "reasons": []
+    },
+    {
+      "name": "native-split-quote",
+      "category": "grounded",
+      "all_evidence_grounded": true,
+      "statuses": ["grounded"],
+      "reasons": []
+    },
+    {
+      "name": "native-non-v1-claims",
+      "category": "unsupported-non-v1",
+      "all_evidence_grounded": false,
+      "statuses": ["grounded", "unsupported_claim_kind", "unsupported_claim_kind"],
+      "reasons": ["unsupported_claim_kind", "unsupported_claim_kind"]
+    },
+    {
+      "name": "native-ungrounded",
+      "category": "diagnostic-non-grounded",
+      "all_evidence_grounded": false,
+      "statuses": ["mismatch", "not_found"],
+      "reasons": ["text_mismatch", "element_not_found"]
+    },
+    {
+      "name": "opendataloader-not-found",
+      "category": "diagnostic-non-grounded",
+      "all_evidence_grounded": false,
+      "statuses": ["not_found"],
+      "reasons": ["element_not_found"]
+    },
+    {
+      "name": "native-stale",
+      "category": "stale-fingerprint",
+      "all_evidence_grounded": false,
+      "statuses": ["stale"],
+      "reasons": ["stale_fingerprint"]
+    },
+    {
+      "name": "opendataloader-capability-limited",
+      "category": "capability-blocked",
+      "all_evidence_grounded": false,
+      "statuses": ["capability_blocked"],
+      "reasons": ["missing_table_capability"]
+    },
+    {
+      "name": "real-opendataloader-grounded",
+      "category": "grounded-with-capability-warning",
+      "all_evidence_grounded": true,
+      "statuses": ["grounded", "grounded", "grounded"],
+      "reasons": []
+    },
+    {
+      "name": "real-opendataloader-ungrounded",
+      "category": "diagnostic-non-grounded",
+      "all_evidence_grounded": false,
+      "statuses": ["mismatch"],
+      "reasons": ["text_mismatch"]
+    }
+  ],
+  "usage_error_cases": [
+    "invalid-table-cell-citation",
+    "invalid-bbox-citation",
+    "opendataloader-malformed-bbox-input",
+    "opendataloader-unknown-page-input"
+  ],
+  "usage_diagnostic_cases": [
+    {
+      "name": "invalid-table-cell-citation",
+      "exit_code": 2,
+      "stdout": "empty",
+      "stderr_contains": "table_cell citation must include table_id and cell"
+    },
+    {
+      "name": "invalid-bbox-citation",
+      "exit_code": 2,
+      "stdout": "empty",
+      "stderr_contains": "citation bbox requires page unless another target locator is present"
+    },
+    {
+      "name": "opendataloader-malformed-bbox-input",
+      "exit_code": 2,
+      "stdout": "empty",
+      "stderr_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)"
+    },
+    {
+      "name": "opendataloader-unknown-page-input",
+      "exit_code": 2,
+      "stdout": "empty",
+      "stderr_contains": "opendataloader-json adapter: element.page references unknown page"
+    }
+  ],
+  "summary_cases": ["native-ungrounded-summary"],
+  "explicit_blockers": [
+    "a new `verify_citations` CLI alias",
+    "Python, Node, MCP, or hosted API surfaces",
+    "broad foreign-adapter hardening beyond existing fixtures",
+    "crop API implementation",
+    "sandbox/subprocess backend expansion",
+    "semantic or arithmetic verification"
+  ]
+}

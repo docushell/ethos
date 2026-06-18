@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:crop-element-request:1",
+  "title": "Ethos crop_element v1 request",
+  "description": "Source-only pre-alpha request envelope for the future crop_element v1 contract. The current executable carrier remains ethos verify --crop-dir until a first-class surface is explicitly added.",
+  "type": "object",
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "request_ref",
+    "document_fingerprint",
+    "element_id",
+    "rendering"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": { "const": "ethos.crop_element_request.v1" },
+    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "request_ref": {
+      "type": "string",
+      "pattern": "^request-[0-9a-f]{64}$",
+      "description": "Stable source-only request identity derived from document fingerprint, element id, rendering mode, optional source PDF fingerprint, and the ethos.crop_element_request_ref.v1 version marker."
+    },
+    "document_fingerprint": { "$ref": "#/$defs/fingerprint" },
+    "element_id": {
+      "type": "string",
+      "pattern": "^e[0-9]{6}$",
+      "description": "Element id in the canonical Ethos document graph."
+    },
+    "rendering": {
+      "enum": ["descriptor_only", "rendered"],
+      "description": "descriptor_only requests only a crop descriptor; rendered requests a descriptor plus PNG artifact from matching source PDF bytes."
+    },
+    "source_pdf_fingerprint": {
+      "$ref": "#/$defs/fingerprint",
+      "description": "Fingerprint of the source PDF bytes supplied by the caller for rendered output."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "rendering": { "const": "rendered" } },
+        "required": ["rendering"]
+      },
+      "then": {
+        "required": ["source_pdf_fingerprint"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "rendering": { "const": "descriptor_only" } },
+        "required": ["rendering"]
+      },
+      "then": {
+        "not": {
+          "required": ["source_pdf_fingerprint"]
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}

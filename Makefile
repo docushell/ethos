@@ -13,7 +13,12 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: milestone-d-capability-downgrade-contract
+.PHONY: milestone-d-opendataloader-adapter-shape-contract
+.PHONY: milestone-d-grounding-source-contract
+.PHONY: milestone-d-crop-element-surface-shape-contract
+.PHONY: milestone-d-claim-kind-boundary-contract
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -53,6 +58,79 @@ milestone-d-verify-citations-contract:
 	$(PYTHON) .github/scripts/test_execution_status.py
 	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_verify_citations_contract.py
+	git diff --check
+
+milestone-d-claim-kind-boundary-contract:
+	cargo test --locked -p ethos-verify claim_kind
+	cargo test --locked -p ethos-cli --test verify invalid_config_constraints_are_usage_errors
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_claim_kind_boundary_contract.py
+	git diff --check
+
+milestone-d-grounding-source-contract:
+	cargo test --locked -p ethos-core grounding
+	cargo test --locked -p ethos-cli --test verify native_ethos_verify_produces_non_empty_checks
+	cargo test --locked -p ethos-cli --test verify opendataloader_verify_adapter_produces_capability_aware_report
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_grounding_source_contract.py
+	git diff --check
+
+milestone-d-crop-element-contract:
+	cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_crop_element_contract.py
+	git diff --check
+
+milestone-d-crop-element-surface-shape-contract:
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_crop_element_surface_shape_contract.py
+	git diff --check
+
+milestone-d-sandbox-subprocess-contract:
+	cargo test --locked -p ethos-cli json_artifact_header
+	cargo test --locked -p ethos-cli --test pdf_parse worker
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_sandbox_subprocess_contract.py
+	git diff --check
+
+milestone-d-capability-downgrade-contract:
+	cargo test --locked -p ethos-verify capability
+	cargo test --locked -p ethos-cli --test verify capability
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_capability_downgrade_contract.py
+	git diff --check
+
+milestone-d-opendataloader-adapter-shape-contract:
+	cargo test --locked -p ethos-grounding-opendataloader-json
+	cargo test --locked -p ethos-cli --test verify opendataloader
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_opendataloader_adapter_shape_contract.py
+	git diff --check
+
+milestone-d-internal-contracts:
+	$(MAKE) milestone-d-verify-citations-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-claim-kind-boundary-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-grounding-source-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-opendataloader-adapter-shape-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-capability-downgrade-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-crop-element-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-crop-element-surface-shape-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-sandbox-subprocess-contract PYTHON=$(PYTHON)
+	$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py
 	git diff --check
 
 verify-rendered-crops: $(ETHOS_BIN)

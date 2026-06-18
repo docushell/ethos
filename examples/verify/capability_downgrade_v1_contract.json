@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "contract": "capability_downgrade.v1",
+  "status": "source-only-pre-alpha",
+  "carrier": "ethos verify",
+  "report_cases": [
+    {
+      "name": "native-grounded",
+      "category": "no-downgrade-control",
+      "golden": "examples/verify/goldens/native_grounded_report.json",
+      "all_evidence_grounded": true,
+      "expected_statuses": ["grounded", "grounded", "grounded"],
+      "expected_reasons": [],
+      "expected_capability_limits": [],
+      "expected_report_warnings": [],
+      "expected_blocked_check_ids": [],
+      "expected_blocked_reasons": []
+    },
+    {
+      "name": "opendataloader-grounded",
+      "category": "report-only-downgrade",
+      "golden": "examples/verify/goldens/opendataloader_grounded_report.json",
+      "all_evidence_grounded": true,
+      "expected_statuses": ["grounded", "grounded", "grounded"],
+      "expected_reasons": [],
+      "expected_capability_limits": [
+        "missing_fingerprint",
+        "missing_spans",
+        "missing_char_offsets",
+        "unknown_coordinate_origin"
+      ],
+      "expected_report_warnings": ["capability_limited"],
+      "expected_blocked_check_ids": [],
+      "expected_blocked_reasons": []
+    },
+    {
+      "name": "opendataloader-not-found",
+      "category": "non-grounded-with-downgrade",
+      "golden": "examples/verify/goldens/opendataloader_not_found_report.json",
+      "all_evidence_grounded": false,
+      "expected_statuses": ["not_found"],
+      "expected_reasons": ["element_not_found"],
+      "expected_capability_limits": [
+        "missing_fingerprint",
+        "missing_spans",
+        "missing_char_offsets",
+        "unknown_coordinate_origin"
+      ],
+      "expected_report_warnings": ["capability_limited"],
+      "expected_blocked_check_ids": [],
+      "expected_blocked_reasons": []
+    },
+    {
+      "name": "opendataloader-capability-limited",
+      "category": "check-blocked-downgrade",
+      "golden": "examples/verify/goldens/opendataloader_capability_limited_report.json",
+      "all_evidence_grounded": false,
+      "expected_statuses": ["capability_blocked"],
+      "expected_reasons": ["missing_table_capability"],
+      "expected_capability_limits": [
+        "missing_fingerprint",
+        "missing_spans",
+        "missing_char_offsets",
+        "missing_tables",
+        "unknown_coordinate_origin"
+      ],
+      "expected_report_warnings": ["capability_limited"],
+      "expected_blocked_check_ids": ["v0001"],
+      "expected_blocked_reasons": ["missing_table_capability"]
+    },
+    {
+      "name": "real-opendataloader-grounded",
+      "category": "report-only-downgrade",
+      "golden": "fixtures/foreign/opendataloader/real/expected.verification_report.json",
+      "all_evidence_grounded": true,
+      "expected_statuses": ["grounded", "grounded", "grounded"],
+      "expected_reasons": [],
+      "expected_capability_limits": [
+        "missing_fingerprint",
+        "missing_spans",
+        "missing_char_offsets",
+        "missing_tables",
+        "unknown_coordinate_origin"
+      ],
+      "expected_report_warnings": ["capability_limited"],
+      "expected_blocked_check_ids": [],
+      "expected_blocked_reasons": []
+    },
+    {
+      "name": "real-opendataloader-ungrounded",
+      "category": "non-grounded-with-downgrade",
+      "golden": "fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json",
+      "all_evidence_grounded": false,
+      "expected_statuses": ["mismatch"],
+      "expected_reasons": ["text_mismatch"],
+      "expected_capability_limits": [
+        "missing_fingerprint",
+        "missing_spans",
+        "missing_char_offsets",
+        "missing_tables",
+        "unknown_coordinate_origin"
+      ],
+      "expected_report_warnings": ["capability_limited"],
+      "expected_blocked_check_ids": [],
+      "expected_blocked_reasons": []
+    }
+  ],
+  "category_invariants": [
+    {
+      "category": "no-downgrade-control",
+      "capability_limits": "absent",
+      "report_warning": "absent",
+      "blocked_checks": "absent",
+      "non_grounded_checks": "absent",
+      "all_evidence_grounded": true
+    },
+    {
+      "category": "report-only-downgrade",
+      "capability_limits": "present",
+      "report_warning": "capability_limited",
+      "blocked_checks": "absent",
+      "non_grounded_checks": "absent",
+      "all_evidence_grounded": true
+    },
+    {
+      "category": "non-grounded-with-downgrade",
+      "capability_limits": "present",
+      "report_warning": "capability_limited",
+      "blocked_checks": "absent",
+      "non_grounded_checks": "present",
+      "all_evidence_grounded": false
+    },
+    {
+      "category": "check-blocked-downgrade",
+      "capability_limits": "present",
+      "report_warning": "capability_limited",
+      "blocked_checks": "present",
+      "non_grounded_checks": "present",
+      "all_evidence_grounded": false
+    }
+  ],
+  "explicit_blockers": [
+    "a new public command or binding surface",
+    "Python, Node, MCP, or hosted capability surfaces",
+    "adapter hardening beyond committed fixtures",
+    "crop API implementation",
+    "sandbox backend expansion",
+    "semantic or arithmetic verification"
+  ]
+}
