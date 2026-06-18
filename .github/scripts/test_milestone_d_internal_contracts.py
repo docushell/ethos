@@ -365,6 +365,13 @@ def discovered_d_contract_schemas() -> list[str]:
     )
 
 
+def discovered_d_request_envelope_schemas() -> list[str]:
+    return sorted(
+        str(path.relative_to(ROOT))
+        for path in (ROOT / "schemas").glob("ethos-*-request.schema.json")
+    )
+
+
 def discovered_d_contract_inventories() -> list[str]:
     roots = [
         ROOT / "examples" / "verify",
@@ -712,6 +719,12 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
                 self.assertIn((envelope["schema"], example), validated_pairs)
             for needle in envelope["status_needles"]:
                 self.assertIn(needle, execution_status, envelope["schema"])
+
+    def test_request_envelope_schema_inventory_covers_current_d_artifacts(self) -> None:
+        self.assertEqual(
+            sorted(envelope["schema"] for envelope in D_REQUEST_ENVELOPES),
+            discovered_d_request_envelope_schemas(),
+        )
 
     def test_contract_docs_keep_common_public_language_boundary(self) -> None:
         required_text = [
