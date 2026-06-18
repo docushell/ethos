@@ -46,6 +46,42 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def case_names(items: list[dict]) -> list[str]:
+    return [item["name"] for item in items]
+
+
+def assert_unique(testcase: unittest.TestCase, values: list[str], label: str) -> None:
+    testcase.assertEqual(
+        len(values),
+        len(set(values)),
+        f"{label} contains duplicate names: {values}",
+    )
+
+
+def citation_claims(citations) -> list[dict]:
+    if isinstance(citations, list):
+        return citations
+    return citations["claims"]
+
+
+def derived_category(report: dict) -> str:
+    statuses = [check["status"] for check in report["checks"]]
+    warnings = set(report["warnings"])
+    capability_limits = report["capability_limits"]
+
+    if report["fingerprint_stale"] or "stale" in statuses:
+        return "stale-fingerprint"
+    if report["unsupported_claim_kinds"] or "unsupported_claim_kind" in statuses:
+        return "unsupported-non-v1"
+    if "capability_blocked" in statuses:
+        return "capability-blocked"
+    if report["all_evidence_grounded"]:
+        if "capability_limited" in warnings or capability_limits:
+            return "grounded-with-capability-warning"
+        return "grounded"
+    return "diagnostic-non-grounded"
+
+
 class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
     def test_target_is_declared_phony(self) -> None:
         text = makefile_text()
@@ -138,15 +174,19 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
         self.assertEqual(inventory["status"], "source-only-pre-alpha")
         self.assertEqual(inventory["carrier"], "ethos verify")
 
-        report_case_names = {case["name"] for case in cases["report_cases"]}
-        inventory_report_names = {case["name"] for case in inventory["report_cases"]}
+        report_case_names = case_names(cases["report_cases"])
+        inventory_report_names = case_names(inventory["report_cases"])
+        assert_unique(self, report_case_names, "cases.json report_cases")
+        assert_unique(self, inventory_report_names, "contract inventory report_cases")
         self.assertEqual(inventory_report_names, report_case_names)
 
-        usage_case_names = {case["name"] for case in cases["usage_error_cases"]}
-        self.assertEqual(set(inventory["usage_error_cases"]), usage_case_names)
+        usage_case_names = case_names(cases["usage_error_cases"])
+        assert_unique(self, usage_case_names, "cases.json usage_error_cases")
+        self.assertEqual(inventory["usage_error_cases"], usage_case_names)
 
-        summary_case_names = {case["name"] for case in cases["summary_cases"]}
-        self.assertEqual(set(inventory["summary_cases"]), summary_case_names)
+        summary_case_names = case_names(cases["summary_cases"])
+        assert_unique(self, summary_case_names, "cases.json summary_cases")
+        self.assertEqual(inventory["summary_cases"], summary_case_names)
 
     def test_contract_inventory_matches_report_goldens(self) -> None:
         cases = load_json(VERIFY_CASES)
@@ -179,6 +219,45 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
             )
             self.assertEqual(contract_case["statuses"], statuses, contract_case["name"])
             self.assertEqual(contract_case["reasons"], reasons, contract_case["name"])
+            self.assertEqual(
+                contract_case["category"],
+                derived_category(report),
+                contract_case["name"],
+            )
+
+    def test_report_goldens_echo_citation_inputs_in_order(self) -> None:
+        cases = load_json(VERIFY_CASES)
+
+        for case in cases["report_cases"]:
+            citations = load_json(ROOT / case["citations"])
+            report = load_json(ROOT / case["golden"])
+            claims = citation_claims(citations)
+
+            self.assertEqual(len(report["checks"]), len(claims), case["name"])
+            for index, (check, claim) in enumerate(zip(report["checks"], claims), 1):
+                self.assertEqual(check["id"], f"v{index:04}", case["name"])
+                self.assertEqual(check["claim"], claim, case["name"])
+
+    def test_report_goldens_keep_current_v1_literal_checks_non_semantic(self) -> None:
+        cases = load_json(VERIFY_CASES)
+
+        for case in cases["report_cases"]:
+            report = load_json(ROOT / case["golden"])
+            checks = report["checks"]
+            self.assertGreater(len(checks), 0, case["name"])
+            for check in checks:
+                self.assertFalse(check["semantic_unverified"], case["name"])
+            expected_gate = (
+                all(check["status"] == "grounded" for check in checks)
+                and not any(check["semantic_unverified"] for check in checks)
+                and report["unsupported_claim_kinds"] == []
+                and report["fingerprint_stale"] is False
+            )
+            self.assertEqual(
+                report["all_evidence_grounded"],
+                expected_gate,
+                case["name"],
+            )
 
     def test_contract_inventory_keeps_blockers_explicit(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
