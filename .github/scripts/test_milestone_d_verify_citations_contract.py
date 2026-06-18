@@ -34,6 +34,14 @@ VERIFICATION_REPORT_SCHEMA = ROOT / "schemas/ethos-verification-report.schema.js
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
+EXPECTED_EXPLICIT_BLOCKERS = [
+    "a new `verify_citations` CLI alias",
+    "Python, Node, MCP, or hosted API surfaces",
+    "broad foreign-adapter hardening beyond existing fixtures",
+    "crop API implementation",
+    "sandbox/subprocess backend expansion",
+    "semantic or arithmetic verification",
+]
 
 
 def contract_text() -> str:
@@ -46,6 +54,21 @@ def normalized_contract_text() -> str:
 
 def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def contract_explicit_blockers() -> list[str]:
+    match = re.search(
+        r"## Explicit Blockers For This Slice\n\n"
+        r"This first D slice does not add:\n\n"
+        r"(?P<bullets>(?:- .+\n)+)",
+        contract_text(),
+    )
+    if match is None:
+        raise AssertionError("missing explicit blocker list")
+    return [
+        line.removeprefix("- ").rstrip(";.")
+        for line in match.group("bullets").strip().splitlines()
+    ]
 
 
 def case_names(items: list[dict]) -> list[str]:
@@ -216,19 +239,19 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
     def test_contract_inventory_matches_report_goldens(self) -> None:
         cases = load_json(VERIFY_CASES)
         inventory = load_json(CONTRACT_INVENTORY)
+        inventory_schema = load_json(CONTRACT_INVENTORY_SCHEMA)
         case_by_name = {case["name"]: case for case in cases["report_cases"]}
-
-        allowed_categories = {
-            "grounded",
-            "grounded-with-capability-warning",
-            "unsupported-non-v1",
-            "diagnostic-non-grounded",
-            "stale-fingerprint",
-            "capability-blocked",
-        }
+        allowed_categories = set(
+            inventory_schema["properties"]["report_cases"]["items"]["properties"][
+                "category"
+            ]["enum"]
+        )
+        seen_categories = set()
+        derived_categories = set()
 
         for contract_case in inventory["report_cases"]:
             self.assertIn(contract_case["category"], allowed_categories)
+            seen_categories.add(contract_case["category"])
             report = load_json(ROOT / case_by_name[contract_case["name"]]["golden"])
             statuses = [check["status"] for check in report["checks"]]
             reasons = [
@@ -244,11 +267,15 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
             )
             self.assertEqual(contract_case["statuses"], statuses, contract_case["name"])
             self.assertEqual(contract_case["reasons"], reasons, contract_case["name"])
+            category = derived_category(report)
+            derived_categories.add(category)
             self.assertEqual(
                 contract_case["category"],
-                derived_category(report),
+                category,
                 contract_case["name"],
             )
+        self.assertEqual(allowed_categories, seen_categories)
+        self.assertEqual(allowed_categories, derived_categories)
 
     def test_report_goldens_echo_citation_inputs_in_order(self) -> None:
         cases = load_json(VERIFY_CASES)
@@ -286,17 +313,9 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
 
     def test_contract_inventory_keeps_blockers_explicit(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
-        blockers = " ".join(inventory["explicit_blockers"])
 
-        for expected in [
-            "new verify_citations CLI alias",
-            "Python Node MCP or hosted API surfaces",
-            "broad foreign-adapter hardening beyond existing fixtures",
-            "crop API implementation",
-            "sandbox subprocess backend expansion",
-            "semantic or arithmetic verification",
-        ]:
-            self.assertIn(expected, blockers)
+        self.assertEqual(EXPECTED_EXPLICIT_BLOCKERS, contract_explicit_blockers())
+        self.assertEqual(EXPECTED_EXPLICIT_BLOCKERS, inventory["explicit_blockers"])
 
 
 if __name__ == "__main__":
