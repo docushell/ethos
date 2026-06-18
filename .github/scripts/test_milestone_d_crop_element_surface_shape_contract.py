@@ -180,6 +180,46 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             self.assertTrue((ROOT / inventory[key]).is_file(), key)
         self.assertEqual(CROP_ELEMENT_CONTRACT_INVENTORY, ROOT / inventory["base_contract_inventory"])
 
+    def test_surface_shape_base_contract_cases_use_request_and_descriptor_fixtures(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        base_inventory = load_json(ROOT / inventory["base_contract_inventory"])
+        request_schema = load_json(ROOT / inventory["request_schema"])
+        descriptor_schema = load_json(ROOT / inventory["descriptor_schema"])
+        required_mappings = {
+            field["name"]: field["maps_to"]
+            for field in inventory["planned_surface_fields"]
+            if field.get("required") is True
+        }
+
+        self.assertEqual(
+            {
+                "document_fingerprint": "request.document_fingerprint",
+                "element_id": "request.element_id",
+                "rendering": "request.rendering",
+                "crop_descriptor": "descriptor.crop_ref",
+            },
+            required_mappings,
+        )
+        for case in base_inventory["cases"]:
+            document = load_json(ROOT / case["document"])
+            request = load_json(ROOT / case["request"])
+            descriptor = load_json(ROOT / case["descriptor"])
+
+            self.assertEqual([], schema_errors(request_schema, request), case["name"])
+            self.assertEqual([], schema_errors(descriptor_schema, descriptor), case["name"])
+            self.assertEqual(document["fingerprint"], request["document_fingerprint"], case["name"])
+            self.assertEqual(case["element_id"], request["element_id"], case["name"])
+            self.assertEqual(case["rendering_status"], request["rendering"], case["name"])
+            self.assertEqual(request["rendering"], descriptor["rendering_status"], case["name"])
+            self.assertEqual(
+                request["document_fingerprint"],
+                descriptor["document_fingerprint"],
+                case["name"],
+            )
+            self.assertIn("crop_ref", descriptor, case["name"])
+            self.assertTrue(descriptor["crop_ref"].startswith("crop-"), case["name"])
+            self.assertTrue(descriptor["crop_ref"].endswith(".json"), case["name"])
+
     def test_surface_fields_map_to_existing_request_and_descriptor_schema_fields(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
         request_schema = load_json(CROP_ELEMENT_REQUEST_SCHEMA)
