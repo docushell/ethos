@@ -25,6 +25,9 @@ Records:
 - `milestone-b-closeout-validation-2026-06-17.md` - internal Milestone B closeout validation
   passed through `make milestone-b-internal-checks`; public benchmark reports, release artifacts,
   package publication, production positioning, and claim wording remain blocked.
+- `milestone-c-closeout-validation-2026-06-18.md` - internal Milestone C artifact-validation
+  closeout passed through `make milestone-c-internal-checks`; public benchmark reports, release
+  artifacts, package publication, production positioning, and claim wording remain blocked.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
