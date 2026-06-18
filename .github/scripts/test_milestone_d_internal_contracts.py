@@ -184,6 +184,23 @@ def load_json(path: str) -> dict:
     return json.loads((ROOT / path).read_text(encoding="utf-8"))
 
 
+def inventory_named_collections(path: str) -> list[tuple[str, list[str]]]:
+    inventory = load_json(path)
+    collections = []
+    for key, value in inventory.items():
+        if isinstance(value, dict) and "name" in value:
+            collections.append((key, [value["name"]]))
+        elif isinstance(value, list):
+            names = [
+                item["name"]
+                for item in value
+                if isinstance(item, dict) and "name" in item
+            ]
+            if names:
+                collections.append((key, names))
+    return collections
+
+
 def registered_targets() -> list[str]:
     return [entry["target"] for entry in CONTRACT_REGISTRY]
 
@@ -573,6 +590,18 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             for blocker in blockers:
                 self.assertEqual(blocker.strip(), blocker, entry["contract"])
                 self.assertNotEqual("", blocker, entry["contract"])
+
+    def test_contract_inventory_named_collections_have_stable_unique_names(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            named_collections = inventory_named_collections(entry["inventory"])
+
+            self.assertGreater(len(named_collections), 0, entry["contract"])
+            for collection_name, names in named_collections:
+                for name in names:
+                    self.assertIsInstance(name, str, f"{entry['contract']}: {collection_name}")
+                    self.assertEqual(name.strip(), name, f"{entry['contract']}: {collection_name}: {name}")
+                    self.assertNotEqual("", name, f"{entry['contract']}: {collection_name}")
+                self.assertEqual(len(names), len(set(names)), f"{entry['contract']}: {collection_name}")
 
     def test_contract_docs_mirror_inventory_explicit_blockers(self) -> None:
         for entry in CONTRACT_REGISTRY:
