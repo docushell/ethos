@@ -149,6 +149,12 @@ def citation_claims(citations) -> list[dict]:
     return citations["claims"]
 
 
+def citation_document_fingerprint(citations) -> str | None:
+    if isinstance(citations, list):
+        return None
+    return citations.get("document_fingerprint")
+
+
 def derived_category(report: dict) -> str:
     statuses = [check["status"] for check in report["checks"]]
     warnings = set(report["warnings"])
@@ -438,6 +444,40 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
                 self.assertEqual(UNRESOLVED_OR_BLOCKED_REASONS[status], check["reason"], label)
                 self.assertEqual("none", check["match_method"], label)
                 self.assertNotIn("evidence", check, label)
+
+    def test_report_goldens_bind_fingerprint_capability_to_freshness_policy(self) -> None:
+        cases = load_json(VERIFY_CASES)
+
+        for case in cases["report_cases"]:
+            input_document = load_json(ROOT / case["input"])
+            citations = load_json(ROOT / case["citations"])
+            report = load_json(ROOT / case["golden"])
+            supports_fingerprint = report["grounding"]["capabilities"]["fingerprint"]
+            citation_fingerprint = citation_document_fingerprint(citations)
+
+            self.assertEqual(
+                supports_fingerprint,
+                "document_fingerprint" in report,
+                case["name"],
+            )
+            if supports_fingerprint:
+                self.assertEqual(
+                    input_document["fingerprint"],
+                    report["document_fingerprint"],
+                    case["name"],
+                )
+                self.assertNotIn("missing_fingerprint", report["capability_limits"])
+                if citation_fingerprint is not None:
+                    self.assertEqual(
+                        citation_fingerprint != report["document_fingerprint"],
+                        report["fingerprint_stale"],
+                        case["name"],
+                    )
+                continue
+
+            self.assertNotIn("document_fingerprint", report, case["name"])
+            self.assertIn("missing_fingerprint", report["capability_limits"], case["name"])
+            self.assertFalse(report["fingerprint_stale"], case["name"])
 
     def test_report_goldens_keep_current_v1_literal_checks_non_semantic(self) -> None:
         cases = load_json(VERIFY_CASES)
