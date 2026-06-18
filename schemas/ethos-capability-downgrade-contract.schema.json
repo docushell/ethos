@@ -10,6 +10,7 @@
     "status",
     "carrier",
     "report_cases",
+    "category_invariants",
     "explicit_blockers"
   ],
   "additionalProperties": false,
@@ -38,14 +39,7 @@
         "additionalProperties": false,
         "properties": {
           "name": { "$ref": "#/$defs/case_name" },
-          "category": {
-            "enum": [
-              "no-downgrade-control",
-              "report-only-downgrade",
-              "non-grounded-with-downgrade",
-              "check-blocked-downgrade"
-            ]
-          },
+          "category": { "$ref": "#/$defs/case_category" },
           "golden": { "$ref": "#/$defs/repo_path" },
           "all_evidence_grounded": { "type": "boolean" },
           "expected_statuses": {
@@ -79,6 +73,32 @@
         }
       }
     },
+    "category_invariants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "category",
+          "capability_limits",
+          "report_warning",
+          "blocked_checks",
+          "non_grounded_checks",
+          "all_evidence_grounded"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "category": { "$ref": "#/$defs/case_category" },
+          "capability_limits": { "$ref": "#/$defs/presence" },
+          "report_warning": {
+            "enum": ["absent", "capability_limited"]
+          },
+          "blocked_checks": { "$ref": "#/$defs/presence" },
+          "non_grounded_checks": { "$ref": "#/$defs/presence" },
+          "all_evidence_grounded": { "type": "boolean" }
+        }
+      }
+    },
     "explicit_blockers": {
       "type": "array",
       "minItems": 1,
@@ -90,6 +110,17 @@
     "case_name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "repo_path": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_./-]+$" },
     "check_id": { "type": "string", "pattern": "^v[0-9]{4}$" },
+    "case_category": {
+      "enum": [
+        "no-downgrade-control",
+        "report-only-downgrade",
+        "non-grounded-with-downgrade",
+        "check-blocked-downgrade"
+      ]
+    },
+    "presence": {
+      "enum": ["absent", "present"]
+    },
     "check_status": {
       "enum": [
         "grounded",

@@ -23,7 +23,8 @@ capability-blocked checks.
 The current source-tree inventory for this contract boundary is
 `examples/verify/capability_downgrade_v1_contract.json`. It binds existing native and
 OpenDataLoader-style verification report goldens to expected capability limits, warnings, and
-blocked-check reasons.
+blocked-check reasons. The inventory also records category invariants for downgrade-free,
+report-only downgrade, non-grounded downgrade, and check-blocked downgrade cases.
 
 Focused validation command:
 
@@ -45,6 +46,8 @@ The v1 contract boundary is explicit and fail-closed:
   grounding source does not expose tables;
 - evidence mismatches and not-found checks retain their specific diagnostics while still carrying
   report-level capability downgrade warnings when the source is limited;
+- source-tree fixture validation pins the category invariants for report-level downgrade warnings,
+  blocked checks, non-grounded checks, and `all_evidence_grounded`;
 - `all_evidence_grounded` remains true only when every supported check is grounded and no stale,
   unsupported, or blocked check is present.
 

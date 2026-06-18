@@ -42,6 +42,40 @@ EXPECTED_EXPLICIT_BLOCKERS = [
     "sandbox backend expansion",
     "semantic or arithmetic verification",
 ]
+EXPECTED_CATEGORY_INVARIANTS = [
+    {
+        "category": "no-downgrade-control",
+        "capability_limits": "absent",
+        "report_warning": "absent",
+        "blocked_checks": "absent",
+        "non_grounded_checks": "absent",
+        "all_evidence_grounded": True,
+    },
+    {
+        "category": "report-only-downgrade",
+        "capability_limits": "present",
+        "report_warning": "capability_limited",
+        "blocked_checks": "absent",
+        "non_grounded_checks": "absent",
+        "all_evidence_grounded": True,
+    },
+    {
+        "category": "non-grounded-with-downgrade",
+        "capability_limits": "present",
+        "report_warning": "capability_limited",
+        "blocked_checks": "absent",
+        "non_grounded_checks": "present",
+        "all_evidence_grounded": False,
+    },
+    {
+        "category": "check-blocked-downgrade",
+        "capability_limits": "present",
+        "report_warning": "capability_limited",
+        "blocked_checks": "present",
+        "non_grounded_checks": "present",
+        "all_evidence_grounded": False,
+    },
+]
 
 
 def load_json(path: Path):
@@ -80,6 +114,25 @@ def schema_errors(schema: dict, instance: dict) -> list:
 
 def blocked_checks(report: dict) -> list[dict]:
     return [check for check in report["checks"] if check["status"] == "capability_blocked"]
+
+
+def present_or_absent(value: bool) -> str:
+    return "present" if value else "absent"
+
+
+def category_invariant(case: dict, report: dict) -> dict:
+    return {
+        "category": case["category"],
+        "capability_limits": present_or_absent(bool(report["capability_limits"])),
+        "report_warning": (
+            "capability_limited" if "capability_limited" in report["warnings"] else "absent"
+        ),
+        "blocked_checks": present_or_absent(bool(blocked_checks(report))),
+        "non_grounded_checks": present_or_absent(
+            any(check["status"] != "grounded" for check in report["checks"])
+        ),
+        "all_evidence_grounded": report["all_evidence_grounded"],
+    }
 
 
 class MilestoneDCapabilityDowngradeContractTests(unittest.TestCase):
@@ -148,8 +201,10 @@ class MilestoneDCapabilityDowngradeContractTests(unittest.TestCase):
             "`capability_limited`",
             "`capability_blocked`",
             "`missing_table_capability`",
+            "category invariants",
             "native Ethos grounding",
             "OpenDataLoader-style grounding",
+            "source-tree fixture validation pins the category invariants",
             "`make milestone-d-capability-downgrade-contract PYTHON=<jsonschema-venv>/bin/python`",
         ]:
             self.assertIn(required, text)
@@ -207,6 +262,15 @@ class MilestoneDCapabilityDowngradeContractTests(unittest.TestCase):
             },
             {case["category"] for case in inventory["report_cases"]},
         )
+        self.assertEqual(
+            [
+                "no-downgrade-control",
+                "report-only-downgrade",
+                "non-grounded-with-downgrade",
+                "check-blocked-downgrade",
+            ],
+            [case["category"] for case in inventory["category_invariants"]],
+        )
 
     def test_contract_inventory_matches_report_goldens(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
@@ -263,6 +327,33 @@ class MilestoneDCapabilityDowngradeContractTests(unittest.TestCase):
                 [check["reason"] for check in blocked],
                 case["name"],
             )
+
+    def test_contract_inventory_pins_category_invariants(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+
+        self.assertEqual(EXPECTED_CATEGORY_INVARIANTS, inventory["category_invariants"])
+
+        categories = [case["category"] for case in inventory["category_invariants"]]
+        self.assertEqual(len(categories), len(set(categories)))
+        self.assertEqual(
+            {case["category"] for case in inventory["report_cases"]},
+            set(categories),
+        )
+
+    def test_category_invariants_match_report_goldens(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        expected_by_category = {
+            case["category"]: case for case in inventory["category_invariants"]
+        }
+        seen: dict[str, dict] = {}
+
+        for case in inventory["report_cases"]:
+            report = load_json(ROOT / case["golden"])
+            actual = category_invariant(case, report)
+            self.assertEqual(expected_by_category[case["category"]], actual, case["name"])
+
+            previous = seen.setdefault(case["category"], actual)
+            self.assertEqual(previous, actual, case["name"])
 
     def test_capability_warning_matches_structured_limits(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
