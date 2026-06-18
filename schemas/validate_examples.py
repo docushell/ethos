@@ -320,6 +320,7 @@ else:
 sec = actual_security_report
 sec_full = json.loads((EXAMPLES / "security-report.full.example.json").read_text(encoding="utf-8"))
 ver = json.loads((EXAMPLES / "verification-report.example.json").read_text(encoding="utf-8"))
+citations = json.loads((EXAMPLES / "citations.example.json").read_text(encoding="utf-8"))
 crop = json.loads((EXAMPLES / "crop-descriptor.example.json").read_text(encoding="utf-8"))
 for label, got in [
     ("security-report.document_fingerprint", sec["document_fingerprint"]),
@@ -347,6 +348,41 @@ if security_report_diagnostics or security_report_full_diagnostics:
         fail(diagnostic)
 else:
     print("ok    security report examples findings are grounded in document example")
+
+# Milestone D verify_citations v1 contract fixture: the minimal citation input example and
+# grounded report example must describe the same ordered claims over the document example.
+verify_citations_failures_before = failures
+if citations["document_fingerprint"] != doc["fingerprint"]:
+    fail("citations.example.json document_fingerprint diverges from document example")
+if ver["document_fingerprint"] != citations["document_fingerprint"]:
+    fail("verification-report.example.json document_fingerprint diverges from citations example")
+claims = citations["claims"]
+checks = ver["checks"]
+if len(checks) != len(claims):
+    fail(
+        "verification-report.example.json checks do not match citations.example.json claims "
+        f"({len(checks)} checks vs {len(claims)} claims)"
+    )
+else:
+    for index, (claim, check) in enumerate(zip(claims, checks), 1):
+        expected_id = f"v{index:04}"
+        if check["id"] != expected_id:
+            fail(f"verification-report.example.json check {index} id is not {expected_id}")
+        if c14n_value(check["claim"]) != c14n_value(claim):
+            fail(
+                "verification-report.example.json check "
+                f"{check['id']} does not echo citations.example.json claim {index}"
+            )
+        if check["status"] != "grounded":
+            fail(f"verification-report.example.json check {check['id']} is not grounded")
+        if check["semantic_unverified"]:
+            fail(f"verification-report.example.json check {check['id']} is semantically unverified")
+if not ver["all_evidence_grounded"]:
+    fail("verification-report.example.json all_evidence_grounded is not true")
+if ver["unsupported_claim_kinds"]:
+    fail("verification-report.example.json unexpectedly has unsupported claim kinds")
+if failures == verify_citations_failures_before:
+    print("ok    verify_citations v1 example pair coherent")
 
 # deterministic profile font-policy artifact checks
 profile = json.loads(

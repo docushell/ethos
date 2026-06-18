@@ -29,5 +29,10 @@ security-report / verification-report examples).
 `verification-report-negative.example.json` shows a non-grounded report with a per-check
 `reason` label.
 
+Milestone D `verify_citations` v1 contract work is tracked in
+`docs/milestone-d-verify-citations-contract.md`. In this source-only pre-alpha slice,
+`verify_citations` names the citation-input to verification-report contract currently carried by
+`ethos verify`; it does not add a new command or binding surface.
+
 Derived artifacts not schema'd here: `document.md` / `document.txt` (deterministic exports
 specified by the exporter config, Milestone B) and `debug.html` (Milestone C).
