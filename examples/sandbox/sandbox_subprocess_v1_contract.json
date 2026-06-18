@@ -156,6 +156,14 @@
       ]
     },
     {
+      "name": "doc-parse-page-selection-malformed",
+      "surface": "page_selection",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection",
+        "malformed page number"
+      ]
+    },
+    {
       "name": "doc-parse-page-selection-zero",
       "surface": "page_selection",
       "expected_diagnostics": [

@@ -51,8 +51,8 @@ The v1 contract boundary is fail-closed and error-envelope-first:
   `ethos.sandbox_subprocess_request_ref.v1`;
 - source-tree fixture validation pins expected diagnostics for request identity drift and request
   policy drift;
-- page-selection diagnostics reject zero pages, descending ranges, and overflowing page numbers
-  without changing the request schema shape;
+- page-selection diagnostics reject malformed page numbers, zero pages, descending ranges, and
+  overflowing page numbers without changing the request schema shape;
 - inventory outcome fields bind each failure case to its current exit code and stable error
   envelope;
 - stdout remains empty on worker failures covered by this contract inventory.

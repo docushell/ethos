@@ -61,6 +61,7 @@ EXPECTED_DIAGNOSTIC_MESSAGES = [
     "request max_parse_ms does not match inventory case",
     "doc_parse request must bind explicit page selection",
     "fingerprint request must not carry page selection",
+    "malformed page number",
     "pages are 1-based",
     "descending range in page selection",
     "page number out of range",
@@ -114,6 +115,14 @@ EXPECTED_DIAGNOSTIC_CASES = [
         "name": "fingerprint-page-selection-present",
         "surface": "request_policy",
         "expected_diagnostics": ["fingerprint request must not carry page selection"],
+    },
+    {
+        "name": "doc-parse-page-selection-malformed",
+        "surface": "page_selection",
+        "expected_diagnostics": [
+            "doc_parse request must bind explicit page selection",
+            "malformed page number",
+        ],
     },
     {
         "name": "doc-parse-page-selection-zero",
@@ -357,6 +366,7 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
     del doc_parse_without_pages["page_selection"]
 
     fingerprint_with_pages = dict(fingerprint_request, page_selection="all")
+    malformed_page_selection = dict(doc_parse_request, page_selection="1-a")
     zero_page_selection = dict(doc_parse_request, page_selection="0")
     descending_page_selection = dict(doc_parse_request, page_selection="5-2")
     overflow_page_selection = dict(doc_parse_request, page_selection="4294967296")
@@ -391,6 +401,10 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
         "fingerprint-page-selection-present": request_case_diagnostics(
             fingerprint_with_pages,
             fingerprint_case,
+        ),
+        "doc-parse-page-selection-malformed": request_case_diagnostics(
+            malformed_page_selection,
+            doc_parse_case,
         ),
         "doc-parse-page-selection-zero": request_case_diagnostics(
             zero_page_selection,
