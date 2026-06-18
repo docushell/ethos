@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import unittest
@@ -30,6 +31,7 @@ CONTRACT = ROOT / "docs/milestone-d-verify-citations-contract.md"
 VERIFY_CASES = ROOT / "examples/verify/cases.json"
 CONTRACT_INVENTORY = ROOT / "examples/verify/verify_citations_v1_contract.json"
 CONTRACT_INVENTORY_SCHEMA = ROOT / "schemas/ethos-verify-citations-contract.schema.json"
+VERIFICATION_CONFIG_EXAMPLE = ROOT / "schemas/examples/verification-config.example.json"
 VERIFICATION_REPORT_SCHEMA = ROOT / "schemas/ethos-verification-report.schema.json"
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
@@ -54,6 +56,16 @@ def normalized_contract_text() -> str:
 
 def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def sha256_c14n(value: dict) -> str:
+    encoded = json.dumps(
+        value,
+        separators=(",", ":"),
+        sort_keys=True,
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def contract_explicit_blockers() -> list[str]:
@@ -308,6 +320,18 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
             self.assertEqual(
                 report["all_evidence_grounded"],
                 expected_gate,
+                case["name"],
+            )
+
+    def test_report_goldens_use_default_verification_config_hash(self) -> None:
+        cases = load_json(VERIFY_CASES)
+        expected_hash = sha256_c14n(load_json(VERIFICATION_CONFIG_EXAMPLE))
+
+        for case in cases["report_cases"]:
+            report = load_json(ROOT / case["golden"])
+            self.assertEqual(
+                expected_hash,
+                report["verification_config_sha256"],
                 case["name"],
             )
 
