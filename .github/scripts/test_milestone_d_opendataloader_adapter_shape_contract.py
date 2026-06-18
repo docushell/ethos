@@ -233,6 +233,32 @@ class MilestoneDOpendataloaderAdapterShapeContractTests(unittest.TestCase):
             [case["name"] for case in inventory["rejected_shapes"]],
         )
 
+    def test_contract_inventory_keeps_accepted_and_rejected_lanes_partitioned(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        accepted = inventory["accepted_shapes"]
+        rejected = inventory["rejected_shapes"]
+
+        accepted_names = [case["name"] for case in accepted]
+        rejected_names = [case["name"] for case in rejected]
+        accepted_categories = {case["category"] for case in accepted}
+        rejected_categories = {case["category"] for case in rejected}
+        accepted_cli_cases = {
+            case_name
+            for shape in accepted
+            for case_name in shape["cli_verify_cases"]
+        }
+        rejected_cli_cases = {
+            shape["cli_usage_error_case"]
+            for shape in rejected
+            if "cli_usage_error_case" in shape
+        }
+
+        self.assertEqual(len(accepted_names), len(set(accepted_names)))
+        self.assertEqual(len(rejected_names), len(set(rejected_names)))
+        self.assertTrue(set(accepted_names).isdisjoint(rejected_names))
+        self.assertTrue(accepted_categories.isdisjoint(rejected_categories))
+        self.assertTrue(accepted_cli_cases.isdisjoint(rejected_cli_cases))
+
     def test_contract_inventory_binds_existing_tests_and_fixtures(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
         adapter_tests = rust_test_names(ADAPTER_SOURCE)
