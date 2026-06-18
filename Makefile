@@ -13,7 +13,7 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -75,6 +75,12 @@ milestone-b-internal-checks:
 	$(MAKE) python-surface-test PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/readiness_gate.py public
+	git diff --check
+
+milestone-c-internal-checks:
+	$(MAKE) rag-chunk-alpha PYTHON=$(PYTHON)
+	$(MAKE) security-report-alpha PYTHON=$(PYTHON)
+	$(PYTHON) .github/scripts/test_milestone_c_internal_checks.py
 	git diff --check
 
 release-hygiene:
