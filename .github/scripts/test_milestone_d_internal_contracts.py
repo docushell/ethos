@@ -293,6 +293,18 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
                 if command.startswith("cargo test "):
                     self.assertIn(" --locked ", f" {command} ", entry["contract"])
 
+    def test_registered_contract_commands_stay_on_source_tree_validation_tools(self) -> None:
+        allowed_prefixes = (
+            "cargo test ",
+            "$(PYTHON) .github/scripts/",
+            "$(PYTHON) schemas/",
+            "git diff --check",
+        )
+
+        for entry in CONTRACT_REGISTRY:
+            for command in entry["commands"]:
+                self.assertTrue(command.startswith(allowed_prefixes), f"{entry['contract']}: {command}")
+
     def test_contract_registry_matches_current_d_inventories(self) -> None:
         contracts = [entry["contract"] for entry in CONTRACT_REGISTRY]
         targets = registered_targets()
