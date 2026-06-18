@@ -16,6 +16,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |
 | `ethos-verify-citations-contract.schema.json` | Milestone D `verify_citations` v1 source-only contract inventory |
 | `ethos-capability-downgrade-contract.schema.json` | Milestone D `capability_downgrade` v1 source-only contract inventory |
+| `ethos-opendataloader-adapter-shape-contract.schema.json` | Milestone D `opendataloader_adapter_shape` v1 source-only contract inventory |
 | `ethos-crop-element-contract.schema.json` | Milestone D `crop_element` v1 source-only contract inventory |
 | `ethos-sandbox-subprocess-request.schema.json` | source-only request envelope for Milestone D `sandbox_subprocess` v1 contract work |
 | `ethos-sandbox-subprocess-contract.schema.json` | Milestone D `sandbox_subprocess` v1 source-only contract inventory |
@@ -49,6 +50,15 @@ downgrade contract currently carried by `ethos verify`; it does not add a new co
 surface. The contract inventory at `examples/verify/capability_downgrade_v1_contract.json` is
 schema-validated here; its alignment with report goldens is checked by the Milestone D repository
 guard.
+
+Milestone D `opendataloader_adapter_shape` v1 contract work is tracked in
+`docs/milestone-d-opendataloader-adapter-shape-contract.md`. In this source-only pre-alpha
+slice, `opendataloader_adapter_shape` names the adapter input-shape to `GroundingSource`
+contract currently carried by `ethos-grounding-opendataloader-json` and
+`ethos verify --grounding opendataloader-json`; it does not add a new command or binding surface.
+The contract inventory at `examples/verify/opendataloader_adapter_shape_v1_contract.json` is
+schema-validated here; its alignment with adapter tests, CLI grounding tests, report goldens, and
+usage diagnostics is checked by the Milestone D repository guard.
 
 Milestone D `crop_element` v1 contract work is tracked in
 `docs/milestone-d-crop-element-contract.md`. In this source-only pre-alpha slice,

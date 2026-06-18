@@ -36,6 +36,14 @@ CONTRACT_REGISTRY = [
         "schema": "schemas/ethos-verify-citations-contract.schema.json",
     },
     {
+        "contract": "opendataloader_adapter_shape.v1",
+        "carrier": "opendataloader-json adapter",
+        "target": "milestone-d-opendataloader-adapter-shape-contract",
+        "doc": "docs/milestone-d-opendataloader-adapter-shape-contract.md",
+        "inventory": "examples/verify/opendataloader_adapter_shape_v1_contract.json",
+        "schema": "schemas/ethos-opendataloader-adapter-shape-contract.schema.json",
+    },
+    {
         "contract": "capability_downgrade.v1",
         "carrier": "ethos verify",
         "target": "milestone-d-capability-downgrade-contract",

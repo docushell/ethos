@@ -89,6 +89,9 @@ PAIRS = [
     ("ethos-capability-downgrade-contract.schema.json", [
         ROOT / "examples" / "verify" / "capability_downgrade_v1_contract.json",
     ]),
+    ("ethos-opendataloader-adapter-shape-contract.schema.json", [
+        ROOT / "examples" / "verify" / "opendataloader_adapter_shape_v1_contract.json",
+    ]),
     ("ethos-crop-element-contract.schema.json", [
         ROOT / "examples" / "crop" / "crop_element_v1_contract.json",
     ]),

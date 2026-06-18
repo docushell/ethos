@@ -31,6 +31,10 @@ The source-only
 binds existing grounding-source capability declarations to verification-report
 capability limits, warnings, and blocked-check diagnostics without adding a new
 command or binding surface.
+The source-only
+[`opendataloader_adapter_shape` v1 contract](milestone-d-opendataloader-adapter-shape-contract.md)
+binds the existing OpenDataLoader-style adapter shape boundary to `GroundingSource`
+identity, capabilities, accepted fixture shapes, and deterministic diagnostics.
 The source-only [`sandbox_subprocess` v1 contract](milestone-d-sandbox-subprocess-contract.md)
 classifies the existing PDF worker-process boundary behind `ethos doc parse` and
 `ethos fingerprint`; it does not add hardened sandbox rules or a new command or

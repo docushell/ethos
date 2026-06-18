@@ -15,6 +15,7 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
 .PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 .PHONY: milestone-d-capability-downgrade-contract
+.PHONY: milestone-d-opendataloader-adapter-shape-contract
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -81,8 +82,18 @@ milestone-d-capability-downgrade-contract:
 	$(PYTHON) .github/scripts/test_milestone_d_capability_downgrade_contract.py
 	git diff --check
 
+milestone-d-opendataloader-adapter-shape-contract:
+	cargo test --locked -p ethos-grounding-opendataloader-json
+	cargo test --locked -p ethos-cli --test verify opendataloader
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_opendataloader_adapter_shape_contract.py
+	git diff --check
+
 milestone-d-internal-contracts:
 	$(MAKE) milestone-d-verify-citations-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-opendataloader-adapter-shape-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-capability-downgrade-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-crop-element-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-sandbox-subprocess-contract PYTHON=$(PYTHON)
