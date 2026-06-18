@@ -36,6 +36,14 @@ CONTRACT_REGISTRY = [
         "schema": "schemas/ethos-verify-citations-contract.schema.json",
     },
     {
+        "contract": "grounding_source.v1",
+        "carrier": "GroundingSource trait",
+        "target": "milestone-d-grounding-source-contract",
+        "doc": "docs/milestone-d-grounding-source-contract.md",
+        "inventory": "examples/verify/grounding_source_v1_contract.json",
+        "schema": "schemas/ethos-grounding-source-contract.schema.json",
+    },
+    {
         "contract": "opendataloader_adapter_shape.v1",
         "carrier": "opendataloader-json adapter",
         "target": "milestone-d-opendataloader-adapter-shape-contract",

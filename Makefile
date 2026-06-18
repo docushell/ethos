@@ -16,6 +16,7 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 .PHONY: milestone-d-capability-downgrade-contract
 .PHONY: milestone-d-opendataloader-adapter-shape-contract
+.PHONY: milestone-d-grounding-source-contract
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -57,6 +58,16 @@ milestone-d-verify-citations-contract:
 	$(PYTHON) .github/scripts/test_milestone_d_verify_citations_contract.py
 	git diff --check
 
+milestone-d-grounding-source-contract:
+	cargo test --locked -p ethos-core grounding
+	cargo test --locked -p ethos-cli --test verify native_ethos_verify_produces_non_empty_checks
+	cargo test --locked -p ethos-cli --test verify opendataloader_verify_adapter_produces_capability_aware_report
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_grounding_source_contract.py
+	git diff --check
+
 milestone-d-crop-element-contract:
 	cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors
 	$(PYTHON) schemas/validate_examples.py
@@ -93,6 +104,7 @@ milestone-d-opendataloader-adapter-shape-contract:
 
 milestone-d-internal-contracts:
 	$(MAKE) milestone-d-verify-citations-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-grounding-source-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-opendataloader-adapter-shape-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-capability-downgrade-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-crop-element-contract PYTHON=$(PYTHON)

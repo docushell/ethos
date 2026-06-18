@@ -21,6 +21,10 @@ Milestone D source-only pre-alpha contract work has started with the narrow
 current executable carrier remains `ethos verify`; the first D slice is a
 contract and fixture-backed validation boundary, not a new public command,
 binding, crop API, sandbox backend, Node beta, or MCP experimental scope.
+The source-only
+[`grounding_source` v1 contract](milestone-d-grounding-source-contract.md)
+binds the parser-neutral evidence boundary to current native and foreign-source
+report grounding metadata without adding a new command or binding surface.
 The next D contract-prep slice defines the source-only
 [`crop_element` v1 contract](milestone-d-crop-element-contract.md) over the
 existing `ethos verify --crop-dir` crop descriptor carrier; it does not add a
