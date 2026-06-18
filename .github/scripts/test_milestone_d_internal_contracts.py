@@ -48,6 +48,23 @@ OUT_OF_SCOPE_PUBLIC_CLAIM_TERMS = [
 ]
 SURFACE_EXPANSION_BLOCKER_PATTERN = re.compile(r"\b(surfaces?|bindings?|methods?)\b")
 COMMAND_EXPANSION_BLOCKER_PATTERN = re.compile(r"\b(commands?|cli)\b")
+INVENTORY_REPO_PATH_KEYS = {
+    "base_contract_inventory",
+    "checked_files",
+    "citations",
+    "descriptor",
+    "descriptor_schema",
+    "document",
+    "golden",
+    "implementation",
+    "report_golden",
+    "report_schema",
+    "request",
+    "request_schema",
+    "schema",
+    "source_fixture",
+    "trait_module",
+}
 CONTRACT_REGISTRY = [
     {
         "contract": "verify_citations.v1",
@@ -204,6 +221,32 @@ def inventory_named_collections(path: str) -> list[tuple[str, list[str]]]:
     return collections
 
 
+def repo_path_reference_values(value: object, pointer: str) -> list[tuple[str, str]]:
+    if isinstance(value, str):
+        return [(pointer, value)]
+    if isinstance(value, list):
+        return [
+            (f"{pointer}/{index}", item)
+            for index, item in enumerate(value)
+            if isinstance(item, str)
+        ]
+    return []
+
+
+def inventory_repo_path_references(node: object, pointer: str = "$") -> list[tuple[str, str]]:
+    references = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            child_pointer = f"{pointer}/{key}"
+            if key in INVENTORY_REPO_PATH_KEYS:
+                references.extend(repo_path_reference_values(value, child_pointer))
+            references.extend(inventory_repo_path_references(value, child_pointer))
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            references.extend(inventory_repo_path_references(value, f"{pointer}/{index}"))
+    return references
+
+
 def registered_targets() -> list[str]:
     return [entry["target"] for entry in CONTRACT_REGISTRY]
 
@@ -232,6 +275,15 @@ def expected_contract_guard_script(entry: dict) -> str:
 def schema_slug(entry: dict) -> str:
     name = Path(entry["schema"]).name
     return name.removeprefix("ethos-").removesuffix(".schema.json")
+
+
+def schemas_readme_table_entries() -> dict[str, str]:
+    entries = {}
+    for line in SCHEMAS_README.read_text(encoding="utf-8").splitlines():
+        parts = [part.strip() for part in line.strip().strip("|").split("|")]
+        if len(parts) == 2 and parts[0].startswith("`") and parts[0].endswith("`"):
+            entries[parts[0].strip("`")] = parts[1]
+    return entries
 
 
 def makefile_target_commands(target: str) -> list[str]:
@@ -560,6 +612,15 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertIn(Path(entry["schema"]).name, schemas_readme, entry["contract"])
             self.assertIn(entry["inventory"], schemas_readme, entry["contract"])
 
+    def test_schemas_readme_contract_table_matches_registry(self) -> None:
+        table_entries = schemas_readme_table_entries()
+
+        for entry in CONTRACT_REGISTRY:
+            schema_name = Path(entry["schema"]).name
+            description = f"Milestone D `{contract_name(entry)}` v1 source-only contract inventory"
+
+            self.assertEqual(description, table_entries.get(schema_name), entry["contract"])
+
     def test_contract_docs_keep_common_public_language_boundary(self) -> None:
         required_text = [
             "Status: source-only pre-alpha contract work for internal Milestone D continuation.",
@@ -621,6 +682,21 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
                     self.assertEqual(name.strip(), name, f"{entry['contract']}: {collection_name}: {name}")
                     self.assertNotEqual("", name, f"{entry['contract']}: {collection_name}")
                 self.assertEqual(len(names), len(set(names)), f"{entry['contract']}: {collection_name}")
+
+    def test_contract_inventory_repo_path_references_exist(self) -> None:
+        reference_count = 0
+        for entry in CONTRACT_REGISTRY:
+            references = inventory_repo_path_references(load_json(entry["inventory"]))
+            reference_count += len(references)
+
+            for pointer, repo_path in references:
+                path = Path(repo_path)
+
+                self.assertFalse(path.is_absolute(), f"{entry['contract']}: {pointer}: {repo_path}")
+                self.assertNotIn("..", path.parts, f"{entry['contract']}: {pointer}: {repo_path}")
+                self.assertTrue((ROOT / path).is_file(), f"{entry['contract']}: {pointer}: {repo_path}")
+
+        self.assertGreater(reference_count, 0)
 
     def test_contract_docs_mirror_inventory_explicit_blockers(self) -> None:
         for entry in CONTRACT_REGISTRY:
