@@ -199,6 +199,42 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             else:
                 raise AssertionError(f"unexpected surface mapping prefix: {prefix}")
 
+    def test_planned_surface_fields_keep_required_and_rendered_lanes_partitioned(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        fields = inventory["planned_surface_fields"]
+        names = [field["name"] for field in fields]
+
+        self.assertEqual(
+            [
+                "document_fingerprint",
+                "element_id",
+                "rendering",
+                "source_pdf_fingerprint",
+                "crop_descriptor",
+                "rendered_artifact",
+            ],
+            names,
+        )
+        self.assertEqual(len(names), len(set(names)))
+        self.assertEqual(
+            {
+                "document_fingerprint",
+                "element_id",
+                "rendering",
+                "crop_descriptor",
+            },
+            {field["name"] for field in fields if field.get("required") is True},
+        )
+        self.assertEqual(
+            {"source_pdf_fingerprint", "rendered_artifact"},
+            {field["name"] for field in fields if "required_when" in field},
+        )
+        for field in fields:
+            if "required_when" in field:
+                self.assertNotIn("required", field)
+            else:
+                self.assertNotIn("required_when", field)
+
     def test_rendering_conditions_reuse_existing_schema_modes(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
         request_schema = load_json(CROP_ELEMENT_REQUEST_SCHEMA)
