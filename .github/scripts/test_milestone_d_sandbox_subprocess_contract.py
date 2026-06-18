@@ -658,6 +658,35 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             )
             self.assertIn(f"fn {case['test_filter']}()", test_source, case["name"])
 
+    def test_failure_expectations_match_request_policy(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+
+        for case in inventory["cases"]:
+            request = load_json(ROOT / case["request"])
+            failure = case["expected_failure"]
+
+            self.assertEqual(request["diagnostics"], failure["diagnostics"], case["name"])
+            self.assertEqual(request["stdout_on_failure"], failure["stdout"], case["name"])
+            if failure["diagnostics"]:
+                self.assertEqual(
+                    "stable_error_envelope_with_worker_stderr",
+                    request["stderr_policy"],
+                    case["name"],
+                )
+                self.assertIn("worker_exit_code", failure, case["name"])
+                self.assertIn("worker_stderr", failure, case["name"])
+            else:
+                self.assertEqual("stable_error_envelope", request["stderr_policy"], case["name"])
+                self.assertNotIn("worker_exit_code", failure, case["name"])
+                self.assertNotIn("worker_stderr", failure, case["name"])
+
+            if case["boundary"] == "max_parse_ms_timeout":
+                self.assertEqual(25, request["limits"]["max_parse_ms"], case["name"])
+                self.assertEqual(10, failure["exit_code"], case["name"])
+                self.assertEqual("parse_timeout", failure["error_code"], case["name"])
+            else:
+                self.assertEqual(120_000, request["limits"]["max_parse_ms"], case["name"])
+
     def test_contract_inventory_matches_existing_artifact_header_tests(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
         worker_source = WORKER_SOURCE.read_text(encoding="utf-8")
