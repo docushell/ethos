@@ -109,6 +109,13 @@
       ]
     },
     {
+      "name": "descriptor-text-sha256-mismatch",
+      "surface": "descriptor_binding",
+      "expected_diagnostics": [
+        "descriptor text_sha256 does not match verification evidence"
+      ]
+    },
+    {
       "name": "descriptor-ambiguous-checks",
       "surface": "descriptor_ref",
       "expected_diagnostics": [

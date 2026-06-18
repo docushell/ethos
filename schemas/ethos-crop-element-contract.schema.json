@@ -58,6 +58,7 @@
           "name": { "$ref": "#/$defs/case_name" },
           "surface": {
             "enum": [
+              "descriptor_binding",
               "request_ref",
               "request_binding",
               "descriptor_ref"
@@ -87,6 +88,7 @@
         "request_ref does not match crop element request identity tuple",
         "descriptor must bind exactly one logical check id",
         "descriptor crop_ref does not match logical identity tuple",
+        "descriptor text_sha256 does not match verification evidence",
         "request document_fingerprint does not match document fingerprint",
         "descriptor document_fingerprint does not match request",
         "request element_id does not match contract inventory case",

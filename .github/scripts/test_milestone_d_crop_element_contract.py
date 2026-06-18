@@ -54,6 +54,7 @@ EXPECTED_DIAGNOSTIC_MESSAGES = [
     "request_ref does not match crop element request identity tuple",
     "descriptor must bind exactly one logical check id",
     "descriptor crop_ref does not match logical identity tuple",
+    "descriptor text_sha256 does not match verification evidence",
     "request document_fingerprint does not match document fingerprint",
     "descriptor document_fingerprint does not match request",
     "request element_id does not match contract inventory case",
@@ -152,6 +153,13 @@ EXPECTED_DIAGNOSTIC_CASES = [
         "surface": "descriptor_ref",
         "expected_diagnostics": [
             "descriptor crop_ref does not match logical identity tuple"
+        ],
+    },
+    {
+        "name": "descriptor-text-sha256-mismatch",
+        "surface": "descriptor_binding",
+        "expected_diagnostics": [
+            "descriptor text_sha256 does not match verification evidence"
         ],
     },
     {
@@ -265,6 +273,24 @@ def crop_ref_drift_diagnostics(descriptor: dict) -> list[str]:
     return diagnostics
 
 
+def descriptor_evidence_diagnostics(descriptor: dict, report: dict) -> list[str]:
+    if "text_sha256" not in descriptor:
+        return []
+
+    report_checks = checks_by_id(report)
+    for check_id in descriptor.get("check_ids", []):
+        check = report_checks.get(check_id)
+        if check is None:
+            continue
+        evidence_text = check.get("evidence", {}).get("text")
+        if evidence_text is None:
+            continue
+        if descriptor["text_sha256"] != sha256_text(evidence_text):
+            return ["descriptor text_sha256 does not match verification evidence"]
+
+    return []
+
+
 def schema_errors(schema: dict, instance: dict) -> list:
     return sorted(
         Draft202012Validator(schema).iter_errors(instance),
@@ -315,6 +341,7 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
     request = load_json(ROOT / case["request"])
     document = load_json(ROOT / case["document"])
     descriptor = load_json(ROOT / case["descriptor"])
+    report = load_json(VERIFICATION_REPORT_EXAMPLE)
 
     missing_request_ref = dict(request)
     del missing_request_ref["request_ref"]
@@ -340,6 +367,7 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
     del elements_by_id(document_without_bbox)[request["element_id"]]["bbox"]
 
     stale_crop_ref = dict(descriptor, crop_ref="crop-" + "0" * 64 + ".json")
+    stale_text_sha256 = dict(descriptor, text_sha256="0" * 64)
     ambiguous_checks = dict(descriptor, check_ids=["v0001", "v0002"])
 
     return {
@@ -406,6 +434,10 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
             case,
         ),
         "descriptor-crop-ref-identity-drift": crop_ref_drift_diagnostics(stale_crop_ref),
+        "descriptor-text-sha256-mismatch": descriptor_evidence_diagnostics(
+            stale_text_sha256,
+            report,
+        ),
         "descriptor-ambiguous-checks": crop_ref_drift_diagnostics(ambiguous_checks),
     }
 
@@ -622,7 +654,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         diagnostic_names = [case["name"] for case in inventory["diagnostic_cases"]]
         self.assertEqual(len(diagnostic_names), len(set(diagnostic_names)))
         self.assertEqual(
-            ["descriptor_ref", "request_binding", "request_ref"],
+            ["descriptor_binding", "descriptor_ref", "request_binding", "request_ref"],
             sorted({case["surface"] for case in inventory["diagnostic_cases"]}),
         )
         self.assertEqual(
@@ -715,6 +747,17 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
                     sha256_text(evidence["text"]),
                     case["name"],
                 )
+            self.assertEqual([], descriptor_evidence_diagnostics(descriptor, report))
+
+    def test_descriptor_text_hash_fails_closed_on_evidence_mismatch(self) -> None:
+        descriptor = load_json(ROOT / "schemas/examples/crop-descriptor.example.json")
+        report = load_json(VERIFICATION_REPORT_EXAMPLE)
+
+        stale_text_sha256 = dict(descriptor, text_sha256="0" * 64)
+        self.assertIn(
+            "descriptor text_sha256 does not match verification evidence",
+            descriptor_evidence_diagnostics(stale_text_sha256, report),
+        )
 
     def test_crop_descriptor_crop_ref_fails_closed_on_logical_identity_drift(self) -> None:
         descriptor = load_json(ROOT / "schemas/examples/crop-descriptor.example.json")
