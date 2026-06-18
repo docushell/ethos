@@ -361,6 +361,20 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertEqual("source-only-pre-alpha", properties["status"]["const"], entry["contract"])
             self.assertEqual(entry["carrier"], properties["carrier"]["const"], entry["contract"])
 
+    def test_registered_contract_schemas_require_identity_and_blockers(self) -> None:
+        required_fields = {
+            "schema_version",
+            "contract",
+            "status",
+            "carrier",
+            "explicit_blockers",
+        }
+
+        for entry in CONTRACT_REGISTRY:
+            schema_required = set(load_json(entry["schema"])["required"])
+
+            self.assertTrue(required_fields.issubset(schema_required), entry["contract"])
+
     def test_contract_registry_covers_current_d_artifacts(self) -> None:
         self.assertEqual(registered_paths("doc"), discovered_d_contract_docs())
         self.assertEqual(registered_paths("schema"), discovered_d_contract_schemas())
