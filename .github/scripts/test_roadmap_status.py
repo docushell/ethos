@@ -39,7 +39,8 @@ class RoadmapStatusTests(unittest.TestCase):
         text = roadmap_text()
 
         self.assertIn("Current PM status and blockers: `docs/execution-status.md`.", text)
-        self.assertIn("Milestone B is in internal closeout", text)
+        self.assertIn("Milestone C has an internal source-tree artifact-validation closeout", text)
+        self.assertIn("milestone-c-closeout-validation-2026-06-18.md", text)
 
     def test_closeout_note_keeps_public_boundaries_explicit(self) -> None:
         text = normalized_roadmap_text()

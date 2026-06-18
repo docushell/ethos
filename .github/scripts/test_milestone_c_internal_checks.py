@@ -60,6 +60,7 @@ class MilestoneCInternalCheckTests(unittest.TestCase):
         required = [
             "$(MAKE) rag-chunk-alpha PYTHON=$(PYTHON)",
             "$(MAKE) security-report-alpha PYTHON=$(PYTHON)",
+            "$(PYTHON) .github/scripts/test_milestone_c_closeout_record.py",
             "$(PYTHON) .github/scripts/test_milestone_c_internal_checks.py",
             "git diff --check",
         ]
