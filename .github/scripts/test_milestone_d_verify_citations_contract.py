@@ -44,6 +44,32 @@ EXPECTED_EXPLICIT_BLOCKERS = [
     "sandbox/subprocess backend expansion",
     "semantic or arithmetic verification",
 ]
+EXPECTED_USAGE_DIAGNOSTIC_CASES = [
+    {
+        "name": "invalid-table-cell-citation",
+        "exit_code": 2,
+        "stdout": "empty",
+        "stderr_contains": "table_cell citation must include table_id and cell",
+    },
+    {
+        "name": "invalid-bbox-citation",
+        "exit_code": 2,
+        "stdout": "empty",
+        "stderr_contains": "citation bbox requires page unless another target locator is present",
+    },
+    {
+        "name": "opendataloader-malformed-bbox-input",
+        "exit_code": 2,
+        "stdout": "empty",
+        "stderr_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)",
+    },
+    {
+        "name": "opendataloader-unknown-page-input",
+        "exit_code": 2,
+        "stdout": "empty",
+        "stderr_contains": "opendataloader-json adapter: element.page references unknown page",
+    },
+]
 
 
 def contract_text() -> str:
@@ -131,6 +157,18 @@ def derived_category(report: dict) -> str:
             return "grounded-with-capability-warning"
         return "grounded"
     return "diagnostic-non-grounded"
+
+
+def expected_usage_diagnostic_cases(cases: dict) -> list[dict]:
+    return [
+        {
+            "name": case["name"],
+            "exit_code": 2,
+            "stdout": "empty",
+            "stderr_contains": case["stderr_contains"],
+        }
+        for case in cases["usage_error_cases"]
+    ]
 
 
 class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
@@ -257,6 +295,22 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
         usage_case_names = case_names(cases["usage_error_cases"])
         assert_unique(self, usage_case_names, "cases.json usage_error_cases")
         self.assertEqual(inventory["usage_error_cases"], usage_case_names)
+
+        usage_diagnostic_names = case_names(inventory["usage_diagnostic_cases"])
+        assert_unique(
+            self,
+            usage_diagnostic_names,
+            "contract inventory usage_diagnostic_cases",
+        )
+        self.assertEqual(usage_case_names, usage_diagnostic_names)
+        self.assertEqual(
+            EXPECTED_USAGE_DIAGNOSTIC_CASES,
+            inventory["usage_diagnostic_cases"],
+        )
+        self.assertEqual(
+            expected_usage_diagnostic_cases(cases),
+            inventory["usage_diagnostic_cases"],
+        )
 
         summary_case_names = case_names(cases["summary_cases"])
         assert_unique(self, summary_case_names, "cases.json summary_cases")

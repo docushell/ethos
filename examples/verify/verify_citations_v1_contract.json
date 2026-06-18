@@ -81,6 +81,32 @@
     "opendataloader-malformed-bbox-input",
     "opendataloader-unknown-page-input"
   ],
+  "usage_diagnostic_cases": [
+    {
+      "name": "invalid-table-cell-citation",
+      "exit_code": 2,
+      "stdout": "empty",
+      "stderr_contains": "table_cell citation must include table_id and cell"
+    },
+    {
+      "name": "invalid-bbox-citation",
+      "exit_code": 2,
+      "stdout": "empty",
+      "stderr_contains": "citation bbox requires page unless another target locator is present"
+    },
+    {
+      "name": "opendataloader-malformed-bbox-input",
+      "exit_code": 2,
+      "stdout": "empty",
+      "stderr_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)"
+    },
+    {
+      "name": "opendataloader-unknown-page-input",
+      "exit_code": 2,
+      "stdout": "empty",
+      "stderr_contains": "opendataloader-json adapter: element.page references unknown page"
+    }
+  ],
   "summary_cases": ["native-ungrounded-summary"],
   "explicit_blockers": [
     "a new `verify_citations` CLI alias",

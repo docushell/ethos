@@ -11,6 +11,7 @@
     "carrier",
     "report_cases",
     "usage_error_cases",
+    "usage_diagnostic_cases",
     "summary_cases",
     "explicit_blockers"
   ],
@@ -64,6 +65,26 @@
       "items": { "$ref": "#/$defs/case_name" },
       "uniqueItems": true
     },
+    "usage_diagnostic_cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "exit_code",
+          "stdout",
+          "stderr_contains"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "$ref": "#/$defs/case_name" },
+          "exit_code": { "const": 2 },
+          "stdout": { "const": "empty" },
+          "stderr_contains": { "$ref": "#/$defs/usage_diagnostic_message" }
+        }
+      }
+    },
     "summary_cases": {
       "type": "array",
       "minItems": 1,
@@ -110,6 +131,14 @@
         "table_not_found",
         "table_cell_not_found",
         "text_mismatch"
+      ]
+    },
+    "usage_diagnostic_message": {
+      "enum": [
+        "table_cell citation must include table_id and cell",
+        "citation bbox requires page unless another target locator is present",
+        "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)",
+        "opendataloader-json adapter: element.page references unknown page"
       ]
     }
   }
