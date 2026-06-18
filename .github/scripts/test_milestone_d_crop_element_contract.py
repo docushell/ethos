@@ -518,6 +518,48 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         )
         self.assertEqual([], errors)
 
+    def test_crop_descriptor_rendering_metadata_schema_boundaries(self) -> None:
+        schema = load_json(CROP_DESCRIPTOR_SCHEMA)
+        descriptor = load_json(ROOT / "schemas/examples/crop-descriptor.example.json")
+
+        self.assertEqual("descriptor_only", descriptor["rendering_status"])
+        self.assertEqual([], schema_errors(schema, descriptor))
+
+        conditional_fields = [
+            "source_pdf_fingerprint",
+            "rendered_ref",
+            "rendered_format",
+            "rendered_sha256",
+            "rendered_width_px",
+            "rendered_height_px",
+        ]
+
+        rendered_descriptor = dict(
+            descriptor,
+            rendering_status="rendered",
+            source_pdf_fingerprint="sha256:" + "1" * 64,
+            rendered_ref="crop-" + "2" * 64 + ".png",
+            rendered_format="png",
+            rendered_sha256="3" * 64,
+            rendered_width_px=10,
+            rendered_height_px=20,
+        )
+        self.assertEqual([], schema_errors(schema, rendered_descriptor))
+
+        for field in conditional_fields:
+            missing_field = dict(rendered_descriptor)
+            del missing_field[field]
+            self.assertNotEqual([], schema_errors(schema, missing_field), field)
+
+        for field in conditional_fields:
+            descriptor_only_with_rendered_metadata = dict(descriptor)
+            descriptor_only_with_rendered_metadata[field] = rendered_descriptor[field]
+            self.assertNotEqual(
+                [],
+                schema_errors(schema, descriptor_only_with_rendered_metadata),
+                field,
+            )
+
     def test_current_cli_surface_has_no_first_class_crop_element_command(self) -> None:
         source = CLI_MAIN.read_text(encoding="utf-8")
         match = re.search(
