@@ -44,7 +44,8 @@ class MilestoneCCloseoutRecordTests(unittest.TestCase):
     def test_record_names_internal_validation_command(self) -> None:
         text = record_text()
 
-        self.assertIn("Validated `main` HEAD: `4e3adbb`", text)
+        self.assertIn("Validated source HEAD before this record: `4e3adbb`", text)
+        self.assertIn("Closeout record commit on `main`: `21d1810`", text)
         self.assertIn(
             "make milestone-c-internal-checks PYTHON=<jsonschema-venv>/bin/python",
             text,

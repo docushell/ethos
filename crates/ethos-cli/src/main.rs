@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-//! # `ethos` — CLI skeleton (Milestone A, WS-CONTRACTS weeks 3–4)
+//! # `ethos` — source-only pre-alpha CLI
 //!
-//! Public command groups follow the public architecture: `ethos doc …`, `ethos rag …`,
-//! `ethos verify …`, plus `ethos fingerprint` (PRD §9.1). Exit codes are the public
-//! contract from docs/architecture.md: 0 success, 2 usage, 3–12 stable error codes.
+//! Current command groups are `ethos doc …`, `ethos rag …`, `ethos security …`,
+//! `ethos verify …`, plus `ethos fingerprint`. Exit codes follow the contract from
+//! docs/architecture.md: 0 success, 2 usage, 3–12 stable error codes.
 //!
-//! Skeleton status (honest): `doc parse` is wired through the backend boundary and fails
-//! with a stable code until WS-ENGINE lands PDFium; `rag chunk` and `fingerprint` are
-//! fully functional over canonical JSON; `verify` runs literal quote/value,
-//! presence, and table-cell checks over native Ethos JSON and ODL-style JSON.
+//! Current status (honest): `doc parse` is wired through the backend boundary; `rag chunk`,
+//! `security report`, and `fingerprint` operate over canonical JSON; `verify` runs literal
+//! quote/value, presence, and table-cell checks over native Ethos JSON and ODL-style JSON.
 
 mod assembly;
 mod cmd;
@@ -367,11 +366,10 @@ pub(crate) fn read_file_limited(path: &Path, max_bytes: u64) -> Result<Vec<u8>, 
 
 pub(crate) fn read_document(path: &Path) -> Result<Document, Failure> {
     let bytes = read_file_limited(path, default_max_input_bytes())?;
-    let doc: Document = serde_json::from_slice(&bytes).map_err(|_| {
-        Failure::Usage(
-            "input is not a canonical ethos document (schema urn:ethos:schema:document:1)"
-                .to_string(),
-        )
+    let doc: Document = serde_json::from_slice(&bytes).map_err(|error| {
+        Failure::Usage(format!(
+            "input is not a canonical ethos document (schema urn:ethos:schema:document:1): {error}"
+        ))
     })?;
     doc.verify_integrity().map_err(|error| {
         Failure::Usage(format!(

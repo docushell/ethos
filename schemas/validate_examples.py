@@ -30,7 +30,14 @@ import sys
 from pathlib import Path
 
 from font_policy_validation import diagnose_font_policy
-from security_report_validation import diagnose_security_report_example
+from security_report_validation import (
+    DEFAULT_CHUNK_EXCLUDED_CODES,
+    FINDING_MESSAGE_TEMPLATES,
+    INVENTORY_BACKED_FINDING_CODES,
+    TEXT_BACKED_FINDING_CODES,
+    diagnose_security_report_example,
+    deterministic_preview,
+)
 from table_model_validation import diagnose_table_model
 
 try:
@@ -63,7 +70,10 @@ PAIRS = [
         EXAMPLES / "citations.example.json",
         EXAMPLES / "citations-array.example.json",
     ]),
-    ("ethos-security-report.schema.json", [EXAMPLES / "security-report.example.json"]),
+    ("ethos-security-report.schema.json", [
+        EXAMPLES / "security-report.example.json",
+        EXAMPLES / "security-report.full.example.json",
+    ]),
     ("ethos-verification-report.schema.json", [
         EXAMPLES / "verification-report.example.json",
         EXAMPLES / "verification-report-negative.example.json",
@@ -188,17 +198,16 @@ def c14n_line(v) -> str:
     return json.dumps(v, separators=(",", ":"), sort_keys=True, ensure_ascii=False)
 
 
+def c14n_value(v) -> str:
+    return json.dumps(v, separators=(",", ":"), sort_keys=True, ensure_ascii=False)
+
+
 wcodes = {w["id"]: w["code"] for w in p["security_warnings"] + p["parser_warnings"]}
-default_chunk_excluded_warning_codes = {
-    "hidden_text_detected",
-    "off_page_text_detected",
-    "low_contrast_text_detected",
-}
 expected_lines = []
 for ch in p["chunks"]:
     for warning_ref in ch.get("warning_refs", []):
         code = wcodes[warning_ref]
-        if code in default_chunk_excluded_warning_codes:
+        if code in DEFAULT_CHUNK_EXCLUDED_CODES:
             fail(
                 "document.example.json: "
                 f"chunk {ch['id']} references default-excluded warning_ref {warning_ref} ({code})"
@@ -227,13 +236,96 @@ if expected_lines != actual_lines:
 else:
     print(f"ok    chunks.example.jsonl derivable from document example ({len(actual_lines)} chunks)")
 
+spans = {span["id"]: span for span in p["spans"]}
+security_warnings = sorted(
+    p["security_warnings"],
+    key=lambda warning: (
+        warning["code"],
+        warning.get("page", ""),
+        warning.get("element_ref", ""),
+        warning.get("span_ref", ""),
+        warning.get("region_ref", ""),
+        warning.get("message", ""),
+    ),
+)
+summary = {}
+findings = []
+for index, warning in enumerate(security_warnings, 1):
+    if warning["code"] not in FINDING_MESSAGE_TEMPLATES:
+        continue
+    if warning["code"] in INVENTORY_BACKED_FINDING_CODES:
+        fail(
+            "document.example.json: security-report.example.json cannot derive "
+            f"inventory-backed warning {warning['id']} ({warning['code']}) "
+            "from source-only document warnings"
+        )
+        continue
+    summary[warning["code"]] = summary.get(warning["code"], 0) + 1
+    finding = {
+        "id": f"f{index:04}",
+        "code": warning["code"],
+        "message": warning["message"],
+        "excluded_from_default_chunks": warning["code"] in DEFAULT_CHUNK_EXCLUDED_CODES,
+    }
+    for field in ("page", "element_ref", "span_ref"):
+        if field in warning:
+            finding[field] = warning[field]
+    if warning["code"] in TEXT_BACKED_FINDING_CODES:
+        span_ref = warning.get("span_ref")
+        if span_ref is None or span_ref not in spans:
+            fail(
+                "document.example.json: security-report.example.json cannot derive "
+                f"text-backed warning {warning['id']} without a valid span_ref"
+            )
+        else:
+            finding["bbox"] = spans[span_ref]["bbox"]
+            finding["text_preview"] = deterministic_preview(spans[span_ref]["text"])
+    findings.append(finding)
+
+expected_security_report = {
+    "schema_version": doc["schema_version"],
+    "document_fingerprint": doc["fingerprint"],
+    "source_fingerprint": doc["source"]["fingerprint"],
+    "profile": {
+        "id": doc["profile"]["id"],
+        "sha256": doc["profile"]["sha256"],
+    },
+    "summary": summary,
+    "findings": findings,
+    "inventories": {
+        "annotations": [],
+        "actions": [],
+        "attachments": [],
+        "scripts": [],
+        "links": [],
+    },
+}
+actual_security_report = json.loads(
+    (EXAMPLES / "security-report.example.json").read_text(encoding="utf-8")
+)
+if c14n_value(expected_security_report) != c14n_value(actual_security_report):
+    fail(
+        "security-report.example.json is not derivable from document.example.json "
+        f"({len(actual_security_report.get('findings', []))} findings vs "
+        f"{len(findings)} derived)"
+    )
+else:
+    finding_label = "finding" if len(findings) == 1 else "findings"
+    print(
+        "ok    security-report.example.json derivable from document example "
+        f"({len(findings)} {finding_label})"
+    )
+
 # fingerprint coherence across example artifacts
-sec = json.loads((EXAMPLES / "security-report.example.json").read_text(encoding="utf-8"))
+sec = actual_security_report
+sec_full = json.loads((EXAMPLES / "security-report.full.example.json").read_text(encoding="utf-8"))
 ver = json.loads((EXAMPLES / "verification-report.example.json").read_text(encoding="utf-8"))
 crop = json.loads((EXAMPLES / "crop-descriptor.example.json").read_text(encoding="utf-8"))
 for label, got in [
     ("security-report.document_fingerprint", sec["document_fingerprint"]),
     ("security-report.source_fingerprint", sec["source_fingerprint"]),
+    ("security-report-full.document_fingerprint", sec_full["document_fingerprint"]),
+    ("security-report-full.source_fingerprint", sec_full["source_fingerprint"]),
     ("verification-report.document_fingerprint", ver["document_fingerprint"]),
     ("crop-descriptor.document_fingerprint", crop["document_fingerprint"]),
 ]:
@@ -243,11 +335,18 @@ for label, got in [
 print("ok    example fingerprints coherent across artifacts")
 
 security_report_diagnostics = diagnose_security_report_example(doc, sec)
-if security_report_diagnostics:
+security_report_full_diagnostics = diagnose_security_report_example(
+    doc,
+    sec_full,
+    ctx="security-report.full.example.json",
+)
+if security_report_diagnostics or security_report_full_diagnostics:
     for diagnostic in security_report_diagnostics:
         fail(diagnostic)
+    for diagnostic in security_report_full_diagnostics:
+        fail(diagnostic)
 else:
-    print("ok    security report example findings are grounded in document example")
+    print("ok    security report examples findings are grounded in document example")
 
 # deterministic profile font-policy artifact checks
 profile = json.loads(
