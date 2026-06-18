@@ -30,13 +30,15 @@ def status_text() -> str:
 
 
 class ExecutionStatusTests(unittest.TestCase):
-    def test_status_is_scoped_to_internal_closeout(self) -> None:
+    def test_status_is_scoped_to_internal_continuation(self) -> None:
         text = status_text()
 
         self.assertIn(
-            "Status: Pre-alpha / internal Milestone C artifact-validation closeout.",
+            "Status: Pre-alpha / internal transition from Milestone C artifact-validation "
+            "closeout to Milestone D source-only contract work.",
             text,
         )
+        self.assertIn("docs/milestone-d-verify-citations-contract.md", text)
         self.assertNotIn("Status: Pre-alpha / Milestone B entry.", text)
 
     def test_internal_check_command_is_documented(self) -> None:
@@ -44,13 +46,15 @@ class ExecutionStatusTests(unittest.TestCase):
 
         self.assertIn("make milestone-b-internal-checks", text)
         self.assertIn("make milestone-c-internal-checks", text)
+        self.assertIn("make milestone-d-verify-citations-contract", text)
         self.assertIn("CI has a static guard for that target's command wiring", text)
 
     def test_public_posture_boundary_remains_explicit(self) -> None:
         text = status_text()
 
         self.assertIn(
-            'Public language stays at "pre-alpha / internal Milestone C artifact-validation closeout"',
+            'Public language stays at "source-only pre-alpha / internal Milestone C closeout '
+            'and Milestone D contract continuation"',
             text,
         )
         self.assertIn("claim audit approves specific wording", text)
