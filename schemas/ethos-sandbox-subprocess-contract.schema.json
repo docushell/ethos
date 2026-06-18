@@ -118,6 +118,7 @@
           "name": { "$ref": "#/$defs/case_name" },
           "surface": {
             "enum": [
+              "page_selection",
               "request_ref",
               "request_policy"
             ]
@@ -150,7 +151,10 @@
         "request failure stdout policy is not empty",
         "request max_parse_ms does not match inventory case",
         "doc_parse request must bind explicit page selection",
-        "fingerprint request must not carry page selection"
+        "fingerprint request must not carry page selection",
+        "pages are 1-based",
+        "descending range in page selection",
+        "page number out of range"
       ]
     },
     "repo_path": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_./-]+$" },

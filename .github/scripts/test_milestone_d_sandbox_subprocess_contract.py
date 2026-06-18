@@ -61,6 +61,9 @@ EXPECTED_DIAGNOSTIC_MESSAGES = [
     "request max_parse_ms does not match inventory case",
     "doc_parse request must bind explicit page selection",
     "fingerprint request must not carry page selection",
+    "pages are 1-based",
+    "descending range in page selection",
+    "page number out of range",
 ]
 EXPECTED_DIAGNOSTIC_CASES = [
     {
@@ -111,6 +114,30 @@ EXPECTED_DIAGNOSTIC_CASES = [
         "name": "fingerprint-page-selection-present",
         "surface": "request_policy",
         "expected_diagnostics": ["fingerprint request must not carry page selection"],
+    },
+    {
+        "name": "doc-parse-page-selection-zero",
+        "surface": "page_selection",
+        "expected_diagnostics": [
+            "doc_parse request must bind explicit page selection",
+            "pages are 1-based",
+        ],
+    },
+    {
+        "name": "doc-parse-page-selection-descending-range",
+        "surface": "page_selection",
+        "expected_diagnostics": [
+            "doc_parse request must bind explicit page selection",
+            "descending range in page selection",
+        ],
+    },
+    {
+        "name": "doc-parse-page-selection-overflow",
+        "surface": "page_selection",
+        "expected_diagnostics": [
+            "doc_parse request must bind explicit page selection",
+            "page number out of range",
+        ],
     },
 ]
 EXPECTED_FAILURES = {
@@ -243,6 +270,31 @@ def request_ref_drift_diagnostics(request: dict) -> list[str]:
     return []
 
 
+def page_selection_diagnostics(page_selection: str) -> list[str]:
+    if page_selection == "all":
+        return []
+
+    for part in page_selection.split(","):
+        if "-" in part:
+            start, end = part.split("-", 1)
+        else:
+            start = part
+            end = part
+        if not start.isdigit() or not end.isdigit():
+            return ["malformed page number"]
+
+        low = int(start)
+        high = int(end)
+        if low > 2**32 - 1 or high > 2**32 - 1:
+            return ["page number out of range"]
+        if low == 0 or high == 0:
+            return ["pages are 1-based"]
+        if low > high:
+            return ["descending range in page selection"]
+
+    return []
+
+
 def request_case_diagnostics(request: dict, case: dict) -> list[str]:
     diagnostics: list[str] = []
     want_diagnostics, want_stderr_policy, want_max_parse_ms = expected_request_policy(case)
@@ -260,6 +312,10 @@ def request_case_diagnostics(request: dict, case: dict) -> list[str]:
 
     if request["operation"] == "doc_parse" and request.get("page_selection") != "all":
         diagnostics.append("doc_parse request must bind explicit page selection")
+        if "page_selection" in request:
+            diagnostics.extend(
+                page_selection_diagnostics(request["page_selection"])
+            )
     if request["operation"] == "fingerprint" and "page_selection" in request:
         diagnostics.append("fingerprint request must not carry page selection")
 
@@ -301,6 +357,9 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
     del doc_parse_without_pages["page_selection"]
 
     fingerprint_with_pages = dict(fingerprint_request, page_selection="all")
+    zero_page_selection = dict(doc_parse_request, page_selection="0")
+    descending_page_selection = dict(doc_parse_request, page_selection="5-2")
+    overflow_page_selection = dict(doc_parse_request, page_selection="4294967296")
 
     return {
         "request-ref-missing": request_ref_drift_diagnostics(missing_request_ref),
@@ -332,6 +391,18 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
         "fingerprint-page-selection-present": request_case_diagnostics(
             fingerprint_with_pages,
             fingerprint_case,
+        ),
+        "doc-parse-page-selection-zero": request_case_diagnostics(
+            zero_page_selection,
+            doc_parse_case,
+        ),
+        "doc-parse-page-selection-descending-range": request_case_diagnostics(
+            descending_page_selection,
+            doc_parse_case,
+        ),
+        "doc-parse-page-selection-overflow": request_case_diagnostics(
+            overflow_page_selection,
+            doc_parse_case,
         ),
     }
 
@@ -528,7 +599,7 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         diagnostic_names = [case["name"] for case in inventory["diagnostic_cases"]]
         self.assertEqual(len(diagnostic_names), len(set(diagnostic_names)))
         self.assertEqual(
-            ["request_policy", "request_ref"],
+            ["page_selection", "request_policy", "request_ref"],
             sorted({case["surface"] for case in inventory["diagnostic_cases"]}),
         )
         self.assertEqual(

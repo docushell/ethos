@@ -27,7 +27,7 @@ stderr behavior. Each inventory case binds to a request envelope under
 `schemas/examples/sandbox-subprocess-*.example.json` and records the expected process exit code,
 stable error code, stable error message, and diagnostics policy. The inventory also records the
 request identity and request-policy diagnostics that the source-tree guard exercises for this
-contract boundary.
+contract boundary, including semantic page-selection diagnostics for schema-shaped request values.
 
 Focused validation command:
 
@@ -51,6 +51,8 @@ The v1 contract boundary is fail-closed and error-envelope-first:
   `ethos.sandbox_subprocess_request_ref.v1`;
 - source-tree fixture validation pins expected diagnostics for request identity drift and request
   policy drift;
+- page-selection diagnostics reject zero pages, descending ranges, and overflowing page numbers
+  without changing the request schema shape;
 - inventory outcome fields bind each failure case to its current exit code and stable error
   envelope;
 - stdout remains empty on worker failures covered by this contract inventory.

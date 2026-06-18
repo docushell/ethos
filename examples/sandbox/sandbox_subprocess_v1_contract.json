@@ -154,6 +154,30 @@
       "expected_diagnostics": [
         "fingerprint request must not carry page selection"
       ]
+    },
+    {
+      "name": "doc-parse-page-selection-zero",
+      "surface": "page_selection",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection",
+        "pages are 1-based"
+      ]
+    },
+    {
+      "name": "doc-parse-page-selection-descending-range",
+      "surface": "page_selection",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection",
+        "descending range in page selection"
+      ]
+    },
+    {
+      "name": "doc-parse-page-selection-overflow",
+      "surface": "page_selection",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection",
+        "page number out of range"
+      ]
     }
   ],
   "explicit_blockers": [
