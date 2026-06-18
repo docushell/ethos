@@ -400,6 +400,14 @@ def object_schema_nodes(node: object, path: str = "#") -> list[tuple[str, dict]]
     return nodes
 
 
+def roadmap_table_row(milestone: str) -> str:
+    prefix = f"| {milestone} |"
+    for line in ROADMAP.read_text(encoding="utf-8").splitlines():
+        if line.startswith(prefix):
+            return line
+    raise AssertionError(f"docs/roadmap.md is missing the {milestone} row")
+
+
 class MilestoneDInternalContractsTests(unittest.TestCase):
     def test_target_is_declared_phony(self) -> None:
         text = makefile_text()
@@ -611,6 +619,13 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertIn(entry["doc"], schemas_readme, entry["contract"])
             self.assertIn(Path(entry["schema"]).name, schemas_readme, entry["contract"])
             self.assertIn(entry["inventory"], schemas_readme, entry["contract"])
+
+    def test_roadmap_milestone_d_row_lists_registered_contract_docs(self) -> None:
+        row = roadmap_table_row("D")
+        registered_docs = {Path(entry["doc"]).name for entry in CONTRACT_REGISTRY}
+        row_contract_docs = set(re.findall(r"\((milestone-d-[^)]+-contract\.md)\)", row))
+
+        self.assertEqual(registered_docs, row_contract_docs)
 
     def test_schemas_readme_contract_table_matches_registry(self) -> None:
         table_entries = schemas_readme_table_entries()
