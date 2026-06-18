@@ -110,6 +110,10 @@ def registered_paths(key: str) -> list[str]:
     return sorted(entry[key] for entry in CONTRACT_REGISTRY)
 
 
+def focused_validation_command(entry: dict) -> str:
+    return f"make {entry['target']} PYTHON=<jsonschema-venv>/bin/python"
+
+
 def discovered_d_contract_docs() -> list[str]:
     return sorted(
         str(path.relative_to(ROOT))
@@ -238,6 +242,16 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             doc = (ROOT / entry["doc"]).read_text(encoding="utf-8")
             self.assertIn(Path(entry["inventory"]).name, doc, entry["contract"])
             self.assertIn(entry["target"], doc, entry["contract"])
+
+    def test_registered_contracts_publish_focused_validation_commands(self) -> None:
+        execution_status = EXECUTION_STATUS.read_text(encoding="utf-8")
+
+        for entry in CONTRACT_REGISTRY:
+            command = f"`{focused_validation_command(entry)}`"
+            doc = (ROOT / entry["doc"]).read_text(encoding="utf-8")
+
+            self.assertIn(command, doc, entry["contract"])
+            self.assertIn(command, execution_status, entry["contract"])
 
     def test_registered_contracts_are_documented_in_status_surfaces(self) -> None:
         roadmap = ROADMAP.read_text(encoding="utf-8")
