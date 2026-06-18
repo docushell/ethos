@@ -30,6 +30,11 @@ EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 ROADMAP = ROOT / "docs/roadmap.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 VALIDATE_EXAMPLES = ROOT / "schemas/validate_examples.py"
+COMMON_CONTRACT_GATES = [
+    "$(PYTHON) schemas/validate_examples.py",
+    "$(PYTHON) .github/scripts/test_execution_status.py",
+    "$(PYTHON) .github/scripts/test_roadmap_status.py",
+]
 CONTRACT_REGISTRY = [
     {
         "contract": "verify_citations.v1",
@@ -38,6 +43,14 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-verify-citations-contract.md",
         "inventory": "examples/verify/verify_citations_v1_contract.json",
         "schema": "schemas/ethos-verify-citations-contract.schema.json",
+        "commands": [
+            "cargo test --locked -p ethos-cli --test verify",
+        ]
+        + COMMON_CONTRACT_GATES
+        + [
+            "$(PYTHON) .github/scripts/test_milestone_d_verify_citations_contract.py",
+            "git diff --check",
+        ],
     },
     {
         "contract": "claim_kind_boundary.v1",
@@ -46,6 +59,15 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-claim-kind-boundary-contract.md",
         "inventory": "examples/verify/claim_kind_boundary_v1_contract.json",
         "schema": "schemas/ethos-claim-kind-boundary-contract.schema.json",
+        "commands": [
+            "cargo test --locked -p ethos-verify claim_kind",
+            "cargo test --locked -p ethos-cli --test verify invalid_config_constraints_are_usage_errors",
+        ]
+        + COMMON_CONTRACT_GATES
+        + [
+            "$(PYTHON) .github/scripts/test_milestone_d_claim_kind_boundary_contract.py",
+            "git diff --check",
+        ],
     },
     {
         "contract": "grounding_source.v1",
@@ -54,6 +76,16 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-grounding-source-contract.md",
         "inventory": "examples/verify/grounding_source_v1_contract.json",
         "schema": "schemas/ethos-grounding-source-contract.schema.json",
+        "commands": [
+            "cargo test --locked -p ethos-core grounding",
+            "cargo test --locked -p ethos-cli --test verify native_ethos_verify_produces_non_empty_checks",
+            "cargo test --locked -p ethos-cli --test verify opendataloader_verify_adapter_produces_capability_aware_report",
+        ]
+        + COMMON_CONTRACT_GATES
+        + [
+            "$(PYTHON) .github/scripts/test_milestone_d_grounding_source_contract.py",
+            "git diff --check",
+        ],
     },
     {
         "contract": "opendataloader_adapter_shape.v1",
@@ -62,6 +94,15 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-opendataloader-adapter-shape-contract.md",
         "inventory": "examples/verify/opendataloader_adapter_shape_v1_contract.json",
         "schema": "schemas/ethos-opendataloader-adapter-shape-contract.schema.json",
+        "commands": [
+            "cargo test --locked -p ethos-grounding-opendataloader-json",
+            "cargo test --locked -p ethos-cli --test verify opendataloader",
+        ]
+        + COMMON_CONTRACT_GATES
+        + [
+            "$(PYTHON) .github/scripts/test_milestone_d_opendataloader_adapter_shape_contract.py",
+            "git diff --check",
+        ],
     },
     {
         "contract": "capability_downgrade.v1",
@@ -70,6 +111,15 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-capability-downgrade-contract.md",
         "inventory": "examples/verify/capability_downgrade_v1_contract.json",
         "schema": "schemas/ethos-capability-downgrade-contract.schema.json",
+        "commands": [
+            "cargo test --locked -p ethos-verify capability",
+            "cargo test --locked -p ethos-cli --test verify capability",
+        ]
+        + COMMON_CONTRACT_GATES
+        + [
+            "$(PYTHON) .github/scripts/test_milestone_d_capability_downgrade_contract.py",
+            "git diff --check",
+        ],
     },
     {
         "contract": "crop_element.v1",
@@ -78,6 +128,14 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-crop-element-contract.md",
         "inventory": "examples/crop/crop_element_v1_contract.json",
         "schema": "schemas/ethos-crop-element-contract.schema.json",
+        "commands": [
+            "cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors",
+        ]
+        + COMMON_CONTRACT_GATES
+        + [
+            "$(PYTHON) .github/scripts/test_milestone_d_crop_element_contract.py",
+            "git diff --check",
+        ],
     },
     {
         "contract": "crop_element_surface_shape.v1",
@@ -86,6 +144,11 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-crop-element-surface-shape-contract.md",
         "inventory": "examples/crop/crop_element_surface_shape_v1_contract.json",
         "schema": "schemas/ethos-crop-element-surface-shape-contract.schema.json",
+        "commands": COMMON_CONTRACT_GATES
+        + [
+            "$(PYTHON) .github/scripts/test_milestone_d_crop_element_surface_shape_contract.py",
+            "git diff --check",
+        ],
     },
     {
         "contract": "sandbox_subprocess.v1",
@@ -94,6 +157,15 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-sandbox-subprocess-contract.md",
         "inventory": "examples/sandbox/sandbox_subprocess_v1_contract.json",
         "schema": "schemas/ethos-sandbox-subprocess-contract.schema.json",
+        "commands": [
+            "cargo test --locked -p ethos-cli json_artifact_header",
+            "cargo test --locked -p ethos-cli --test pdf_parse worker",
+        ]
+        + COMMON_CONTRACT_GATES
+        + [
+            "$(PYTHON) .github/scripts/test_milestone_d_sandbox_subprocess_contract.py",
+            "git diff --check",
+        ],
     },
 ]
 
@@ -112,6 +184,10 @@ def registered_paths(key: str) -> list[str]:
 
 def focused_validation_command(entry: dict) -> str:
     return f"make {entry['target']} PYTHON=<jsonschema-venv>/bin/python"
+
+
+def makefile_target_commands(target: str) -> list[str]:
+    return [line.strip() for line in target_block(target).splitlines() if line.strip()]
 
 
 def discovered_d_contract_docs() -> list[str]:
@@ -192,8 +268,7 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
         self.assertIn("git diff --check", block)
 
     def test_target_commands_match_registered_contracts(self) -> None:
-        block = target_block("milestone-d-internal-contracts")
-        commands = [line.strip() for line in block.splitlines() if line.strip()]
+        commands = makefile_target_commands("milestone-d-internal-contracts")
 
         self.assertEqual(
             [f"$(MAKE) {target} PYTHON=$(PYTHON)" for target in registered_targets()]
@@ -203,6 +278,14 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             ],
             commands,
         )
+
+    def test_registered_contract_targets_match_declared_commands(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            self.assertEqual(
+                entry["commands"],
+                makefile_target_commands(entry["target"]),
+                entry["contract"],
+            )
 
     def test_contract_registry_matches_current_d_inventories(self) -> None:
         contracts = [entry["contract"] for entry in CONTRACT_REGISTRY]
