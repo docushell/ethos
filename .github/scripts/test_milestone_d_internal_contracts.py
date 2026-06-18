@@ -408,6 +408,14 @@ def roadmap_table_row(milestone: str) -> str:
     raise AssertionError(f"docs/roadmap.md is missing the {milestone} row")
 
 
+def execution_status_d_contract_bullets() -> list[str]:
+    return [
+        line
+        for line in EXECUTION_STATUS.read_text(encoding="utf-8").splitlines()
+        if line.startswith("- Milestone D ") and "Focused validation is" in line
+    ]
+
+
 class MilestoneDInternalContractsTests(unittest.TestCase):
     def test_target_is_declared_phony(self) -> None:
         text = makefile_text()
@@ -619,6 +627,15 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertIn(entry["doc"], schemas_readme, entry["contract"])
             self.assertIn(Path(entry["schema"]).name, schemas_readme, entry["contract"])
             self.assertIn(entry["inventory"], schemas_readme, entry["contract"])
+
+    def test_execution_status_d_contract_bullets_match_registry(self) -> None:
+        bullets = execution_status_d_contract_bullets()
+
+        self.assertEqual(len(CONTRACT_REGISTRY), len(bullets))
+        for entry, bullet in zip(CONTRACT_REGISTRY, bullets):
+            self.assertIn(f"`{contract_name(entry)}`", bullet, entry["contract"])
+            self.assertIn(f"`{entry['doc']}`", bullet, entry["contract"])
+            self.assertIn(f"`{focused_validation_command(entry)}`", bullet, entry["contract"])
 
     def test_roadmap_milestone_d_row_lists_registered_contract_docs(self) -> None:
         row = roadmap_table_row("D")
