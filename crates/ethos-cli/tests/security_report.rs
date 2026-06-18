@@ -20,6 +20,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use ethos_core::model::Document;
 use serde_json::Value;
+use tempfile::TempDir;
 
 fn ethos_bin() -> &'static str {
     env!("CARGO_BIN_EXE_ethos")
@@ -31,6 +32,10 @@ fn repo_root() -> PathBuf {
 
 fn document_example() -> PathBuf {
     repo_root().join("schemas/examples/document.example.json")
+}
+
+fn security_report_example() -> PathBuf {
+    repo_root().join("schemas/examples/security-report.example.json")
 }
 
 fn run_ethos(args: &[&str]) -> Output {
@@ -53,13 +58,25 @@ fn json_file(path: impl AsRef<Path>) -> Value {
     serde_json::from_slice(&bytes).expect("JSON fixture parses")
 }
 
-fn temp_json(name: &str, json: &str) -> PathBuf {
-    let path = temp_path(name, "json");
-    std::fs::write(&path, json).expect("temp JSON is writable");
-    path
+struct TempJson {
+    _dir: TempDir,
+    path: PathBuf,
 }
 
-fn document_with_mutated_warning(name: &str, mutate: impl FnOnce(&mut Value)) -> PathBuf {
+impl TempJson {
+    fn to_str(&self) -> Option<&str> {
+        self.path.to_str()
+    }
+}
+
+fn temp_json(name: &str, json: &str) -> TempJson {
+    let dir = tempfile::tempdir().expect("temp dir is writable");
+    let path = dir.path().join(format!("{name}.json"));
+    std::fs::write(&path, json).expect("temp JSON is writable");
+    TempJson { _dir: dir, path }
+}
+
+fn document_with_mutated_warning(name: &str, mutate: impl FnOnce(&mut Value)) -> TempJson {
     let mut doc = json_file(document_example());
     mutate(&mut doc);
 
@@ -70,6 +87,23 @@ fn document_with_mutated_warning(name: &str, mutate: impl FnOnce(&mut Value)) ->
         name,
         &serde_json::to_string(&doc).expect("document serializes"),
     )
+}
+
+#[test]
+fn security_report_matches_schema_example_json() {
+    let output = run_ethos(&["security", "report", document_example().to_str().unwrap()]);
+
+    assert!(
+        output.status.success(),
+        "ethos security report failed\nstatus: {:?}\nstderr:\n{}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.stderr, b"");
+
+    let actual: Value = serde_json::from_slice(&output.stdout).expect("report JSON parses");
+    let expected = json_file(security_report_example());
+    assert_eq!(actual, expected);
 }
 
 #[test]
@@ -168,6 +202,62 @@ fn security_report_output_is_byte_identical_across_runs() {
     assert_eq!(first.stderr, b"");
     assert_eq!(second.stderr, b"");
     assert_eq!(first.stdout, second.stdout);
+}
+
+#[test]
+fn security_report_rejects_warning_message_template_drift() {
+    let document = document_with_mutated_warning("security-warning-message-drift", |doc| {
+        doc["payload"]["security_warnings"][0]["message"] =
+            serde_json::json!("hidden text from local path /tmp/input.pdf");
+    });
+
+    let output = run_ethos(&["security", "report", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(
+        "security report warning w0001 (hidden_text_detected) message must match fixed template"
+    ));
+}
+
+#[test]
+fn security_report_orders_multiple_text_backed_findings_deterministically() {
+    let document = document_with_mutated_warning("multiple-text-backed-security-warnings", |doc| {
+        doc["payload"]["spans"][1]["text"] = serde_json::json!("x".repeat(121));
+        doc["payload"]["security_warnings"]
+            .as_array_mut()
+            .expect("fixture security_warnings are an array")
+            .push(serde_json::json!({
+                "id": "w0003",
+                "code": "low_contrast_text_detected",
+                "message": "low-contrast text detected: excluded from default chunks",
+                "page": "p0001",
+                "span_ref": "s000002"
+            }));
+    });
+
+    let output = run_ethos(&["security", "report", document.to_str().unwrap()]);
+
+    assert!(
+        output.status.success(),
+        "ethos security report failed\nstatus: {:?}\nstderr:\n{}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(output.stderr, b"");
+    let report: Value = serde_json::from_slice(&output.stdout).expect("report JSON parses");
+    assert_eq!(report["findings"].as_array().unwrap().len(), 2);
+    assert_eq!(report["summary"]["hidden_text_detected"], 1);
+    assert_eq!(report["summary"]["low_contrast_text_detected"], 1);
+    assert_eq!(report["findings"][0]["id"], "f0001");
+    assert_eq!(report["findings"][0]["code"], "hidden_text_detected");
+    assert_eq!(report["findings"][1]["id"], "f0002");
+    assert_eq!(report["findings"][1]["code"], "low_contrast_text_detected");
+    assert_eq!(report["findings"][1]["span_ref"], "s000002");
+    assert_eq!(
+        report["findings"][1]["text_preview"],
+        format!("{}\u{2026}", "x".repeat(120))
+    );
 }
 
 #[test]

@@ -17,11 +17,12 @@
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
-use ethos_core::codes::WarningCode;
 use ethos_core::error::EthosError;
 use ethos_core::model::{Document, Element, Page, Span, Warning};
 
 use crate::{read_document, write_output, Failure, SecurityReportArgs};
+
+const PREVIEW_MAX_CHARS: usize = 120;
 
 pub(crate) fn security_report(args: SecurityReportArgs) -> Result<(), Failure> {
     let doc = read_document(&args.input)?;
@@ -31,6 +32,23 @@ pub(crate) fn security_report(args: SecurityReportArgs) -> Result<(), Failure> {
 
 fn security_report_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
     let refs = SecurityReportRefs::new(doc);
+    let warnings = sorted_security_warnings(doc)?;
+    let (summary, findings) = security_report_records(&warnings, &refs)?;
+    let value = security_report_value(doc, summary, findings);
+    let mut bytes =
+        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+fn sorted_security_warnings(doc: &Document) -> Result<Vec<&Warning>, Failure> {
+    reject_security_codes_in_parser_warnings(doc)?;
+    let mut warnings = validate_security_warning_codes(doc)?;
+    warnings.sort_by(|left, right| warning_order(left, right));
+    Ok(warnings)
+}
+
+fn reject_security_codes_in_parser_warnings(doc: &Document) -> Result<(), Failure> {
     for warning in &doc.payload.parser_warnings {
         if warning.code.is_security() {
             return Err(Failure::Usage(format!(
@@ -40,6 +58,10 @@ fn security_report_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
             )));
         }
     }
+    Ok(())
+}
+
+fn validate_security_warning_codes(doc: &Document) -> Result<Vec<&Warning>, Failure> {
     let mut warnings = Vec::with_capacity(doc.payload.security_warnings.len());
     for warning in &doc.payload.security_warnings {
         if !warning.code.is_security() {
@@ -51,8 +73,13 @@ fn security_report_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
         }
         warnings.push(warning);
     }
-    warnings.sort_by(|left, right| warning_order(left, right));
+    Ok(warnings)
+}
 
+fn security_report_records(
+    warnings: &[&Warning],
+    refs: &SecurityReportRefs<'_>,
+) -> Result<(BTreeMap<String, u64>, Vec<serde_json::Value>), Failure> {
     let mut summary: BTreeMap<String, u64> = BTreeMap::new();
     let mut findings = Vec::with_capacity(warnings.len());
     for (index, warning) in warnings.iter().enumerate() {
@@ -60,10 +87,17 @@ fn security_report_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
         *summary
             .entry(warning.code.as_str().to_string())
             .or_insert(0) += 1;
-        findings.push(finding_record(index, warning, &refs)?);
+        findings.push(finding_record(index, warning, refs)?);
     }
+    Ok((summary, findings))
+}
 
-    let value = serde_json::json!({
+fn security_report_value(
+    doc: &Document,
+    summary: BTreeMap<String, u64>,
+    findings: Vec<serde_json::Value>,
+) -> serde_json::Value {
+    serde_json::json!({
         "schema_version": doc.schema_version.as_str(),
         "document_fingerprint": doc.fingerprint.as_str(),
         "source_fingerprint": doc.source.fingerprint.as_str(),
@@ -80,11 +114,7 @@ fn security_report_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
             "scripts": [],
             "links": [],
         },
-    });
-    let mut bytes =
-        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
-    bytes.push(b'\n');
-    Ok(bytes)
+    })
 }
 
 struct SecurityReportRefs<'a> {
@@ -118,32 +148,6 @@ impl<'a> SecurityReportRefs<'a> {
     }
 }
 
-fn inventory_backed_warning_code(code: WarningCode) -> bool {
-    matches!(
-        code,
-        WarningCode::AnnotationsPresent
-            | WarningCode::ExternalLinksPresent
-            | WarningCode::UnsupportedAnnotation
-    )
-}
-
-fn text_backed_warning_code(code: WarningCode) -> bool {
-    matches!(
-        code,
-        WarningCode::HiddenTextDetected
-            | WarningCode::OffPageTextDetected
-            | WarningCode::LowContrastTextDetected
-    )
-}
-
-fn page_backed_warning_code(code: WarningCode) -> bool {
-    text_backed_warning_code(code) || matches!(code, WarningCode::ImageOnlyPage)
-}
-
-fn excludes_from_default_chunks(code: WarningCode) -> bool {
-    text_backed_warning_code(code)
-}
-
 fn warning_order(left: &Warning, right: &Warning) -> Ordering {
     (
         left.code.as_str(),
@@ -164,7 +168,7 @@ fn warning_order(left: &Warning, right: &Warning) -> Ordering {
 }
 
 fn block_inventory_backed_warning(warning: &Warning) -> Result<(), Failure> {
-    if inventory_backed_warning_code(warning.code) {
+    if warning.code.is_inventory_backed_security() {
         return Err(Failure::Usage(format!(
             "security report warning {} ({}) requires inventory data not available in canonical document",
             warning.id,
@@ -180,6 +184,7 @@ fn finding_record(
     refs: &SecurityReportRefs<'_>,
 ) -> Result<serde_json::Value, Failure> {
     validate_warning_refs(warning, refs)?;
+    let message = fixed_finding_message(warning)?;
     let mut finding = serde_json::Map::new();
     finding.insert(
         "id".to_string(),
@@ -191,7 +196,7 @@ fn finding_record(
     );
     finding.insert(
         "message".to_string(),
-        serde_json::Value::String(warning.message.clone()),
+        serde_json::Value::String(message.to_string()),
     );
     if let Some(page) = &warning.page {
         finding.insert("page".to_string(), serde_json::Value::String(page.clone()));
@@ -208,45 +213,89 @@ fn finding_record(
             serde_json::Value::String(span_ref.clone()),
         );
     }
-    if text_backed_warning_code(warning.code) {
-        let span_ref = warning
-            .span_ref
-            .as_deref()
-            .expect("text warning refs validated");
-        let span = refs
-            .spans
-            .get(span_ref)
-            .expect("text warning span_ref validated");
-        let page_ref = warning
-            .page
-            .as_deref()
-            .expect("text warning page validated");
-        let page = refs
-            .pages
-            .get(page_ref)
-            .expect("text warning page validated");
-        validate_span_bbox(warning, span_ref, span, page)?;
-        finding.insert("bbox".to_string(), serde_json::json!(span.bbox.to_array()));
-        finding.insert(
-            "text_preview".to_string(),
-            serde_json::Value::String(deterministic_preview(&span.text)),
-        );
+    if warning.code.is_text_backed_security() {
+        insert_text_backed_fields(&mut finding, warning, refs)?;
     }
     finding.insert(
         "excluded_from_default_chunks".to_string(),
-        serde_json::Value::Bool(excludes_from_default_chunks(warning.code)),
+        serde_json::Value::Bool(warning.code.excludes_from_default_chunks()),
     );
     Ok(serde_json::Value::Object(finding))
 }
 
+fn fixed_finding_message(warning: &Warning) -> Result<&'static str, Failure> {
+    let template = warning
+        .code
+        .security_report_message_template()
+        .ok_or_else(|| {
+            Failure::Usage(format!(
+                "security report warning {} ({}) is not a security warning code",
+                warning.id,
+                warning.code.as_str()
+            ))
+        })?;
+    if warning.message != template {
+        return Err(Failure::Usage(format!(
+            "security report warning {} ({}) message must match fixed template",
+            warning.id,
+            warning.code.as_str()
+        )));
+    }
+    Ok(template)
+}
+
+fn insert_text_backed_fields(
+    finding: &mut serde_json::Map<String, serde_json::Value>,
+    warning: &Warning,
+    refs: &SecurityReportRefs<'_>,
+) -> Result<(), Failure> {
+    let span_ref = warning
+        .span_ref
+        .as_deref()
+        .expect("text warning refs validated");
+    let span = refs
+        .spans
+        .get(span_ref)
+        .expect("text warning span_ref validated");
+    let page_ref = warning
+        .page
+        .as_deref()
+        .expect("text warning page validated");
+    let page = refs
+        .pages
+        .get(page_ref)
+        .expect("text warning page validated");
+    validate_span_bbox(warning, span_ref, span, page)?;
+    finding.insert("bbox".to_string(), serde_json::json!(span.bbox.to_array()));
+    finding.insert(
+        "text_preview".to_string(),
+        serde_json::Value::String(deterministic_preview(&span.text)),
+    );
+    Ok(())
+}
+
 fn validate_warning_refs(warning: &Warning, refs: &SecurityReportRefs<'_>) -> Result<(), Failure> {
+    reject_unsupported_region_ref(warning)?;
+    validate_warning_page_ref(warning, refs)?;
+    let element = validate_warning_element_ref(warning, refs)?;
+    validate_warning_span_ref(warning, refs, element)
+}
+
+fn reject_unsupported_region_ref(warning: &Warning) -> Result<(), Failure> {
     if let Some(region_ref) = warning.region_ref.as_deref() {
         return Err(Failure::Usage(format!(
             "security report warning {} region_ref {} is unsupported until security report schema supports region_ref",
             warning.id, region_ref
         )));
     }
-    if page_backed_warning_code(warning.code) && warning.page.is_none() {
+    Ok(())
+}
+
+fn validate_warning_page_ref(
+    warning: &Warning,
+    refs: &SecurityReportRefs<'_>,
+) -> Result<(), Failure> {
+    if warning.code.is_page_backed_security() && warning.page.is_none() {
         return Err(Failure::Usage(format!(
             "security report warning {} ({}) requires page",
             warning.id,
@@ -261,6 +310,13 @@ fn validate_warning_refs(warning: &Warning, refs: &SecurityReportRefs<'_>) -> Re
             )));
         }
     }
+    Ok(())
+}
+
+fn validate_warning_element_ref<'a>(
+    warning: &Warning,
+    refs: &'a SecurityReportRefs<'_>,
+) -> Result<Option<&'a Element>, Failure> {
     let element = match warning.element_ref.as_deref() {
         Some(element_ref) => {
             let Some(element) = refs.elements.get(element_ref) else {
@@ -281,7 +337,15 @@ fn validate_warning_refs(warning: &Warning, refs: &SecurityReportRefs<'_>) -> Re
         }
         None => None,
     };
-    if text_backed_warning_code(warning.code) && warning.span_ref.is_none() {
+    Ok(element)
+}
+
+fn validate_warning_span_ref(
+    warning: &Warning,
+    refs: &SecurityReportRefs<'_>,
+    element: Option<&Element>,
+) -> Result<(), Failure> {
+    if warning.code.is_text_backed_security() && warning.span_ref.is_none() {
         return Err(Failure::Usage(format!(
             "security report warning {} ({}) requires span_ref",
             warning.id,
@@ -339,7 +403,7 @@ fn validate_span_bbox(
 
 fn deterministic_preview(text: &str) -> String {
     let mut chars = text.chars();
-    let preview: String = chars.by_ref().take(120).collect();
+    let preview: String = chars.by_ref().take(PREVIEW_MAX_CHARS).collect();
     if chars.next().is_some() {
         format!("{preview}\u{2026}")
     } else {

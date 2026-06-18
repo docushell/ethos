@@ -18,33 +18,8 @@
 from __future__ import annotations
 
 import unittest
-from pathlib import Path
 
-
-ROOT = Path(__file__).resolve().parents[2]
-MAKEFILE = ROOT / "Makefile"
-
-
-def makefile_text() -> str:
-    return MAKEFILE.read_text(encoding="utf-8")
-
-
-def target_block(target: str) -> str:
-    lines = makefile_text().splitlines()
-    start = None
-    for index, line in enumerate(lines):
-        if line == f"{target}:":
-            start = index + 1
-            break
-    if start is None:
-        raise AssertionError(f"{target} target is missing")
-
-    block: list[str] = []
-    for line in lines[start:]:
-        if line and not line.startswith(("\t", " ")):
-            break
-        block.append(line)
-    return "\n".join(block)
+from makefile_guard import makefile_text, target_block
 
 
 class MilestoneBInternalCheckTests(unittest.TestCase):

@@ -48,6 +48,8 @@ DEFAULT_CHUNK_EXCLUDED_CODES = {
 
 TEXT_BACKED_FINDING_CODES = DEFAULT_CHUNK_EXCLUDED_CODES
 
+PREVIEW_MAX_CHARS = 120
+
 FINDING_MESSAGE_TEMPLATES = {
     "hidden_text_detected": "hidden text detected: excluded from default chunks",
     "off_page_text_detected": "off-page text detected: excluded from default chunks",
@@ -1074,9 +1076,9 @@ def check_text_backed_finding(finding, refs, ctx, item_ctx, diagnostics):
 
 
 def deterministic_preview(text):
-    if len(text) <= 120:
+    if len(text) <= PREVIEW_MAX_CHARS:
         return text
-    return text[:120] + "\u2026"
+    return text[:PREVIEW_MAX_CHARS] + "\u2026"
 
 
 def is_json_integer(value):

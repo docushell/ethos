@@ -17,7 +17,8 @@ unchanged**.
 ## Subject
 
 - Repository: `docushell/ethos`
-- Validated `main` HEAD: `4e3adbb`
+- Validated source HEAD before this record: `4e3adbb`
+- Closeout record commit on `main`: `21d1810`
 - Scope: tracked source tree, committed schemas/examples, `ethos rag chunk`, current
   `ethos security report` source-only artifact checks, and Make/static guard wiring
 - Excluded: public benchmark-result publication, release artifacts, package publication,
