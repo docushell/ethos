@@ -150,6 +150,33 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertIn(Path(entry["inventory"]).name, doc, entry["contract"])
             self.assertIn(entry["target"], doc, entry["contract"])
 
+    def test_contract_docs_keep_common_public_language_boundary(self) -> None:
+        required_text = [
+            "Status: source-only pre-alpha contract work for internal Milestone D continuation.",
+            "## Explicit Blockers For This Slice",
+            "language remains limited to source-only pre-alpha internal continuation",
+            "evidence grounding",
+            "diagnostics",
+            "fixture-backed validation",
+            "explicit blockers",
+        ]
+
+        for entry in CONTRACT_REGISTRY:
+            doc = (ROOT / entry["doc"]).read_text(encoding="utf-8")
+            normalized_doc = " ".join(doc.split())
+            for text in required_text:
+                self.assertIn(" ".join(text.split()), normalized_doc, entry["contract"])
+
+    def test_contract_inventories_keep_explicit_blockers_nonempty(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            blockers = load_json(entry["inventory"])["explicit_blockers"]
+
+            self.assertGreater(len(blockers), 0, entry["contract"])
+            self.assertEqual(len(blockers), len(set(blockers)), entry["contract"])
+            for blocker in blockers:
+                self.assertEqual(blocker.strip(), blocker, entry["contract"])
+                self.assertNotEqual("", blocker, entry["contract"])
+
     def test_execution_status_names_registry_guard(self) -> None:
         text = EXECUTION_STATUS.read_text(encoding="utf-8")
 
