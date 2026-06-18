@@ -372,6 +372,15 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
                 case["name"],
             )
 
+    def test_default_contract_goldens_do_not_emit_crop_refs(self) -> None:
+        cases = load_json(VERIFY_CASES)
+
+        for case in cases["report_cases"]:
+            report = load_json(ROOT / case["golden"])
+            for check in report["checks"]:
+                evidence = check.get("evidence") or {}
+                self.assertNotIn("crop_ref", evidence, case["name"])
+
     def test_contract_inventory_keeps_blockers_explicit(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
 
