@@ -19,6 +19,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-capability-downgrade-contract.schema.json` | Milestone D `capability_downgrade` v1 source-only contract inventory |
 | `ethos-opendataloader-adapter-shape-contract.schema.json` | Milestone D `opendataloader_adapter_shape` v1 source-only contract inventory |
 | `ethos-crop-element-contract.schema.json` | Milestone D `crop_element` v1 source-only contract inventory |
+| `ethos-crop-element-surface-shape-contract.schema.json` | Milestone D `crop_element_surface_shape` v1 source-only contract inventory |
 | `ethos-sandbox-subprocess-request.schema.json` | source-only request envelope for Milestone D `sandbox_subprocess` v1 contract work |
 | `ethos-sandbox-subprocess-contract.schema.json` | Milestone D `sandbox_subprocess` v1 source-only contract inventory |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
@@ -79,6 +80,14 @@ contract inventory at `examples/crop/crop_element_v1_contract.json` are schema-v
 their alignment with the document and crop-descriptor examples is checked by the Milestone D
 repository guard. The request envelope carries a c14n-derived `request_ref` identity guarded in
 that same source-only contract check.
+
+Milestone D `crop_element_surface_shape` v1 contract work is tracked in
+`docs/milestone-d-crop-element-surface-shape-contract.md`. In this source-only pre-alpha slice,
+`crop_element_surface_shape` names the future callable crop surface shape that must preserve the
+existing crop request and descriptor bindings; it does not add a first-class command or binding
+surface. The contract inventory at `examples/crop/crop_element_surface_shape_v1_contract.json` is
+schema-validated here; its alignment with the request schema, descriptor schema, and current
+surface absence is checked by the Milestone D repository guard.
 
 Milestone D `sandbox_subprocess` v1 contract work is tracked in
 `docs/milestone-d-sandbox-subprocess-contract.md`. In this source-only pre-alpha slice,

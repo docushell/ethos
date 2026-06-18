@@ -31,6 +31,10 @@ existing `ethos verify --crop-dir` crop descriptor carrier; it does not add a
 first-class crop command, binding surface, sandbox backend, Node beta, or MCP
 experimental scope.
 The source-only
+[`crop_element_surface_shape` v1 contract](milestone-d-crop-element-surface-shape-contract.md)
+binds the future callable crop surface shape to the existing request and descriptor schemas
+without adding that surface.
+The source-only
 [`capability_downgrade` v1 contract](milestone-d-capability-downgrade-contract.md)
 binds existing grounding-source capability declarations to verification-report
 capability limits, warnings, and blocked-check diagnostics without adding a new

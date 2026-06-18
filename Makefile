@@ -17,6 +17,7 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: milestone-d-capability-downgrade-contract
 .PHONY: milestone-d-opendataloader-adapter-shape-contract
 .PHONY: milestone-d-grounding-source-contract
+.PHONY: milestone-d-crop-element-surface-shape-contract
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -76,6 +77,13 @@ milestone-d-crop-element-contract:
 	$(PYTHON) .github/scripts/test_milestone_d_crop_element_contract.py
 	git diff --check
 
+milestone-d-crop-element-surface-shape-contract:
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_crop_element_surface_shape_contract.py
+	git diff --check
+
 milestone-d-sandbox-subprocess-contract:
 	cargo test --locked -p ethos-cli --test pdf_parse worker
 	$(PYTHON) schemas/validate_examples.py
@@ -108,6 +116,7 @@ milestone-d-internal-contracts:
 	$(MAKE) milestone-d-opendataloader-adapter-shape-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-capability-downgrade-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-crop-element-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-crop-element-surface-shape-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-sandbox-subprocess-contract PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py
 	git diff --check

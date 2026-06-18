@@ -68,6 +68,14 @@ CONTRACT_REGISTRY = [
         "schema": "schemas/ethos-crop-element-contract.schema.json",
     },
     {
+        "contract": "crop_element_surface_shape.v1",
+        "carrier": "source-only crop_element surface shape",
+        "target": "milestone-d-crop-element-surface-shape-contract",
+        "doc": "docs/milestone-d-crop-element-surface-shape-contract.md",
+        "inventory": "examples/crop/crop_element_surface_shape_v1_contract.json",
+        "schema": "schemas/ethos-crop-element-surface-shape-contract.schema.json",
+    },
+    {
         "contract": "sandbox_subprocess.v1",
         "carrier": "pdfium worker process",
         "target": "milestone-d-sandbox-subprocess-contract",

@@ -98,6 +98,9 @@ PAIRS = [
     ("ethos-crop-element-contract.schema.json", [
         ROOT / "examples" / "crop" / "crop_element_v1_contract.json",
     ]),
+    ("ethos-crop-element-surface-shape-contract.schema.json", [
+        ROOT / "examples" / "crop" / "crop_element_surface_shape_v1_contract.json",
+    ]),
     ("ethos-sandbox-subprocess-request.schema.json", [
         EXAMPLES / "sandbox-subprocess-doc-parse-request.example.json",
         EXAMPLES / "sandbox-subprocess-doc-parse-timeout-request.example.json",
