@@ -13,6 +13,109 @@
       "rendering_status": "descriptor_only"
     }
   ],
+  "diagnostic_cases": [
+    {
+      "name": "request-ref-missing",
+      "surface": "request_ref",
+      "expected_diagnostics": [
+        "request_ref is missing"
+      ]
+    },
+    {
+      "name": "request-ref-identity-drift",
+      "surface": "request_ref",
+      "expected_diagnostics": [
+        "request_ref does not match crop element request identity tuple"
+      ]
+    },
+    {
+      "name": "request-element-unresolved",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "request element_id does not match contract inventory case",
+        "request element_id does not resolve in document"
+      ]
+    },
+    {
+      "name": "request-document-fingerprint-mismatch",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "request document_fingerprint does not match document fingerprint",
+        "descriptor document_fingerprint does not match request"
+      ]
+    },
+    {
+      "name": "request-element-mismatch",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "request element_id does not match contract inventory case",
+        "descriptor bbox does not match resolved element"
+      ]
+    },
+    {
+      "name": "descriptor-document-fingerprint-mismatch",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "descriptor document_fingerprint does not match request"
+      ]
+    },
+    {
+      "name": "descriptor-page-mismatch",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "descriptor page does not match resolved element"
+      ]
+    },
+    {
+      "name": "descriptor-bbox-mismatch",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "descriptor bbox does not match resolved element"
+      ]
+    },
+    {
+      "name": "request-rendering-mismatch",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "request rendering does not match contract inventory case"
+      ]
+    },
+    {
+      "name": "descriptor-rendering-status-mismatch",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "descriptor rendering_status does not match request"
+      ]
+    },
+    {
+      "name": "resolved-element-missing-page",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "resolved element is missing page"
+      ]
+    },
+    {
+      "name": "resolved-element-missing-bbox",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "resolved element is missing bbox"
+      ]
+    },
+    {
+      "name": "descriptor-crop-ref-identity-drift",
+      "surface": "descriptor_ref",
+      "expected_diagnostics": [
+        "descriptor crop_ref does not match logical identity tuple"
+      ]
+    },
+    {
+      "name": "descriptor-ambiguous-checks",
+      "surface": "descriptor_ref",
+      "expected_diagnostics": [
+        "descriptor must bind exactly one logical check id"
+      ]
+    }
+  ],
   "explicit_blockers": [
     "a first-class `crop_element` CLI command or binding surface",
     "Python, Node, MCP, or hosted crop API surfaces",

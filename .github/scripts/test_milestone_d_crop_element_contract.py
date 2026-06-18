@@ -49,6 +49,117 @@ EXPECTED_EXPLICIT_BLOCKERS = [
     "foreign-adapter crop coordinate hardening",
     "cross-platform rendered-crop byte identity claims",
 ]
+EXPECTED_DIAGNOSTIC_MESSAGES = [
+    "request_ref is missing",
+    "request_ref does not match crop element request identity tuple",
+    "descriptor must bind exactly one logical check id",
+    "descriptor crop_ref does not match logical identity tuple",
+    "request document_fingerprint does not match document fingerprint",
+    "descriptor document_fingerprint does not match request",
+    "request element_id does not match contract inventory case",
+    "request element_id does not resolve in document",
+    "resolved element is missing page",
+    "descriptor page does not match resolved element",
+    "resolved element is missing bbox",
+    "descriptor bbox does not match resolved element",
+    "request rendering does not match contract inventory case",
+    "descriptor rendering_status does not match request",
+]
+EXPECTED_DIAGNOSTIC_CASES = [
+    {
+        "name": "request-ref-missing",
+        "surface": "request_ref",
+        "expected_diagnostics": ["request_ref is missing"],
+    },
+    {
+        "name": "request-ref-identity-drift",
+        "surface": "request_ref",
+        "expected_diagnostics": [
+            "request_ref does not match crop element request identity tuple"
+        ],
+    },
+    {
+        "name": "request-element-unresolved",
+        "surface": "request_binding",
+        "expected_diagnostics": [
+            "request element_id does not match contract inventory case",
+            "request element_id does not resolve in document",
+        ],
+    },
+    {
+        "name": "request-document-fingerprint-mismatch",
+        "surface": "request_binding",
+        "expected_diagnostics": [
+            "request document_fingerprint does not match document fingerprint",
+            "descriptor document_fingerprint does not match request",
+        ],
+    },
+    {
+        "name": "request-element-mismatch",
+        "surface": "request_binding",
+        "expected_diagnostics": [
+            "request element_id does not match contract inventory case",
+            "descriptor bbox does not match resolved element",
+        ],
+    },
+    {
+        "name": "descriptor-document-fingerprint-mismatch",
+        "surface": "request_binding",
+        "expected_diagnostics": [
+            "descriptor document_fingerprint does not match request",
+        ],
+    },
+    {
+        "name": "descriptor-page-mismatch",
+        "surface": "request_binding",
+        "expected_diagnostics": [
+            "descriptor page does not match resolved element",
+        ],
+    },
+    {
+        "name": "descriptor-bbox-mismatch",
+        "surface": "request_binding",
+        "expected_diagnostics": [
+            "descriptor bbox does not match resolved element",
+        ],
+    },
+    {
+        "name": "request-rendering-mismatch",
+        "surface": "request_binding",
+        "expected_diagnostics": [
+            "request rendering does not match contract inventory case",
+        ],
+    },
+    {
+        "name": "descriptor-rendering-status-mismatch",
+        "surface": "request_binding",
+        "expected_diagnostics": [
+            "descriptor rendering_status does not match request",
+        ],
+    },
+    {
+        "name": "resolved-element-missing-page",
+        "surface": "request_binding",
+        "expected_diagnostics": ["resolved element is missing page"],
+    },
+    {
+        "name": "resolved-element-missing-bbox",
+        "surface": "request_binding",
+        "expected_diagnostics": ["resolved element is missing bbox"],
+    },
+    {
+        "name": "descriptor-crop-ref-identity-drift",
+        "surface": "descriptor_ref",
+        "expected_diagnostics": [
+            "descriptor crop_ref does not match logical identity tuple"
+        ],
+    },
+    {
+        "name": "descriptor-ambiguous-checks",
+        "surface": "descriptor_ref",
+        "expected_diagnostics": ["descriptor must bind exactly one logical check id"],
+    },
+]
 
 
 def load_json(path: Path):
@@ -197,6 +308,106 @@ def request_case_diagnostics(
         diagnostics.append("descriptor rendering_status does not match request")
 
     return diagnostics
+
+
+def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
+    case = inventory["cases"][0]
+    request = load_json(ROOT / case["request"])
+    document = load_json(ROOT / case["document"])
+    descriptor = load_json(ROOT / case["descriptor"])
+
+    missing_request_ref = dict(request)
+    del missing_request_ref["request_ref"]
+
+    stale_request_ref = dict(request, request_ref="request-" + "0" * 64)
+    unknown_element_request = dict(request, element_id="e999999")
+    stale_request = dict(request, document_fingerprint="sha256:" + "0" * 64)
+    mismatched_element_request = dict(request, element_id="e000001")
+    mismatched_rendering_case = dict(case, rendering_status="rendered")
+
+    stale_descriptor_fingerprint = dict(
+        descriptor,
+        document_fingerprint="sha256:" + "0" * 64,
+    )
+    stale_descriptor_page = dict(descriptor, page="p999999")
+    stale_descriptor_bbox = dict(descriptor, bbox=[0, 0, 1, 1])
+    stale_descriptor_rendering = dict(descriptor, rendering_status="rendered")
+
+    document_without_page = deepcopy(document)
+    del elements_by_id(document_without_page)[request["element_id"]]["page"]
+
+    document_without_bbox = deepcopy(document)
+    del elements_by_id(document_without_bbox)[request["element_id"]]["bbox"]
+
+    stale_crop_ref = dict(descriptor, crop_ref="crop-" + "0" * 64 + ".json")
+    ambiguous_checks = dict(descriptor, check_ids=["v0001", "v0002"])
+
+    return {
+        "request-ref-missing": request_ref_drift_diagnostics(missing_request_ref),
+        "request-ref-identity-drift": request_ref_drift_diagnostics(stale_request_ref),
+        "request-element-unresolved": request_case_diagnostics(
+            unknown_element_request,
+            document,
+            descriptor,
+            case,
+        ),
+        "request-document-fingerprint-mismatch": request_case_diagnostics(
+            stale_request,
+            document,
+            descriptor,
+            case,
+        ),
+        "request-element-mismatch": request_case_diagnostics(
+            mismatched_element_request,
+            document,
+            descriptor,
+            case,
+        ),
+        "descriptor-document-fingerprint-mismatch": request_case_diagnostics(
+            request,
+            document,
+            stale_descriptor_fingerprint,
+            case,
+        ),
+        "descriptor-page-mismatch": request_case_diagnostics(
+            request,
+            document,
+            stale_descriptor_page,
+            case,
+        ),
+        "descriptor-bbox-mismatch": request_case_diagnostics(
+            request,
+            document,
+            stale_descriptor_bbox,
+            case,
+        ),
+        "request-rendering-mismatch": request_case_diagnostics(
+            request,
+            document,
+            descriptor,
+            mismatched_rendering_case,
+        ),
+        "descriptor-rendering-status-mismatch": request_case_diagnostics(
+            request,
+            document,
+            stale_descriptor_rendering,
+            case,
+        ),
+        "resolved-element-missing-page": request_case_diagnostics(
+            request,
+            document_without_page,
+            descriptor,
+            case,
+        ),
+        "resolved-element-missing-bbox": request_case_diagnostics(
+            request,
+            document_without_bbox,
+            descriptor,
+            case,
+        ),
+        "descriptor-crop-ref-identity-drift": crop_ref_drift_diagnostics(stale_crop_ref),
+        "descriptor-ambiguous-checks": crop_ref_drift_diagnostics(ambiguous_checks),
+    }
 
 
 class MilestoneDCropElementContractTests(unittest.TestCase):
@@ -402,6 +613,41 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             self.assertEqual(descriptor["check_ids"], ["v0001"])
             self.assertEqual([], crop_ref_drift_diagnostics(descriptor), case["name"])
             self.assertEqual([], request_case_diagnostics(request, document, descriptor, case))
+
+    def test_contract_inventory_pins_fail_closed_diagnostics(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+
+        self.assertEqual(EXPECTED_DIAGNOSTIC_CASES, inventory["diagnostic_cases"])
+
+        diagnostic_names = [case["name"] for case in inventory["diagnostic_cases"]]
+        self.assertEqual(len(diagnostic_names), len(set(diagnostic_names)))
+        self.assertEqual(
+            ["descriptor_ref", "request_binding", "request_ref"],
+            sorted({case["surface"] for case in inventory["diagnostic_cases"]}),
+        )
+        self.assertEqual(
+            set(EXPECTED_DIAGNOSTIC_MESSAGES),
+            {
+                diagnostic
+                for case in inventory["diagnostic_cases"]
+                for diagnostic in case["expected_diagnostics"]
+            },
+        )
+
+    def test_contract_inventory_diagnostics_match_current_helpers(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        actual_diagnostics = inventory_diagnostic_outputs(inventory)
+
+        self.assertEqual(
+            {case["name"] for case in inventory["diagnostic_cases"]},
+            set(actual_diagnostics),
+        )
+        for case in inventory["diagnostic_cases"]:
+            self.assertEqual(
+                case["expected_diagnostics"],
+                actual_diagnostics[case["name"]],
+                case["name"],
+            )
 
     def test_request_binding_guard_fails_closed_on_stale_or_unresolved_inputs(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
