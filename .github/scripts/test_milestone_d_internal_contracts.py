@@ -36,6 +36,14 @@ CONTRACT_REGISTRY = [
         "schema": "schemas/ethos-verify-citations-contract.schema.json",
     },
     {
+        "contract": "claim_kind_boundary.v1",
+        "carrier": "ethos verify",
+        "target": "milestone-d-claim-kind-boundary-contract",
+        "doc": "docs/milestone-d-claim-kind-boundary-contract.md",
+        "inventory": "examples/verify/claim_kind_boundary_v1_contract.json",
+        "schema": "schemas/ethos-claim-kind-boundary-contract.schema.json",
+    },
+    {
         "contract": "grounding_source.v1",
         "carrier": "GroundingSource trait",
         "target": "milestone-d-grounding-source-contract",

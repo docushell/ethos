@@ -15,6 +15,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos verify --crop-dir` |
 | `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |
 | `ethos-verify-citations-contract.schema.json` | Milestone D `verify_citations` v1 source-only contract inventory |
+| `ethos-claim-kind-boundary-contract.schema.json` | Milestone D `claim_kind_boundary` v1 source-only contract inventory |
 | `ethos-grounding-source-contract.schema.json` | Milestone D `grounding_source` v1 source-only contract inventory |
 | `ethos-capability-downgrade-contract.schema.json` | Milestone D `capability_downgrade` v1 source-only contract inventory |
 | `ethos-opendataloader-adapter-shape-contract.schema.json` | Milestone D `opendataloader_adapter_shape` v1 source-only contract inventory |
@@ -44,6 +45,14 @@ Milestone D `verify_citations` v1 contract work is tracked in
 `ethos verify`; it does not add a new command or binding surface. The contract inventory at
 `examples/verify/verify_citations_v1_contract.json` is schema-validated here; its alignment with
 the executable case inventory and report goldens is checked by the Milestone D repository guard.
+
+Milestone D `claim_kind_boundary` v1 contract work is tracked in
+`docs/milestone-d-claim-kind-boundary-contract.md`. In this source-only pre-alpha slice,
+`claim_kind_boundary` names the supported v1 claim-kind boundary currently carried by
+`ethos verify`; it does not add new claim-kind support or a new command/binding surface. The
+contract inventory at `examples/verify/claim_kind_boundary_v1_contract.json` is schema-validated
+here; its alignment with the committed non-v1 claim fixture and report golden is checked by the
+Milestone D repository guard.
 
 Milestone D `grounding_source` v1 contract work is tracked in
 `docs/milestone-d-grounding-source-contract.md`. In this source-only pre-alpha slice,

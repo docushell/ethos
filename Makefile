@@ -18,6 +18,7 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: milestone-d-opendataloader-adapter-shape-contract
 .PHONY: milestone-d-grounding-source-contract
 .PHONY: milestone-d-crop-element-surface-shape-contract
+.PHONY: milestone-d-claim-kind-boundary-contract
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -57,6 +58,15 @@ milestone-d-verify-citations-contract:
 	$(PYTHON) .github/scripts/test_execution_status.py
 	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_verify_citations_contract.py
+	git diff --check
+
+milestone-d-claim-kind-boundary-contract:
+	cargo test --locked -p ethos-verify claim_kind
+	cargo test --locked -p ethos-cli --test verify invalid_config_constraints_are_usage_errors
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_claim_kind_boundary_contract.py
 	git diff --check
 
 milestone-d-grounding-source-contract:
@@ -112,6 +122,7 @@ milestone-d-opendataloader-adapter-shape-contract:
 
 milestone-d-internal-contracts:
 	$(MAKE) milestone-d-verify-citations-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-claim-kind-boundary-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-grounding-source-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-opendataloader-adapter-shape-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-capability-downgrade-contract PYTHON=$(PYTHON)

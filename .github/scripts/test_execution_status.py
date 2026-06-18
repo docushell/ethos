@@ -39,6 +39,7 @@ class ExecutionStatusTests(unittest.TestCase):
             text,
         )
         self.assertIn("docs/milestone-d-verify-citations-contract.md", text)
+        self.assertIn("docs/milestone-d-claim-kind-boundary-contract.md", text)
         self.assertIn("docs/milestone-d-grounding-source-contract.md", text)
         self.assertIn("docs/milestone-d-capability-downgrade-contract.md", text)
         self.assertIn("docs/milestone-d-opendataloader-adapter-shape-contract.md", text)
@@ -53,6 +54,7 @@ class ExecutionStatusTests(unittest.TestCase):
         self.assertIn("make milestone-b-internal-checks", text)
         self.assertIn("make milestone-c-internal-checks", text)
         self.assertIn("make milestone-d-verify-citations-contract", text)
+        self.assertIn("make milestone-d-claim-kind-boundary-contract", text)
         self.assertIn("make milestone-d-grounding-source-contract", text)
         self.assertIn("make milestone-d-capability-downgrade-contract", text)
         self.assertIn("make milestone-d-opendataloader-adapter-shape-contract", text)

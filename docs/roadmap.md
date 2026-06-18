@@ -22,6 +22,10 @@ current executable carrier remains `ethos verify`; the first D slice is a
 contract and fixture-backed validation boundary, not a new public command,
 binding, crop API, sandbox backend, Node beta, or MCP experimental scope.
 The source-only
+[`claim_kind_boundary` v1 contract](milestone-d-claim-kind-boundary-contract.md)
+binds the supported v1 claim-kind boundary to current citation/config/report
+fixtures so non-v1 claim inputs remain explicit diagnostics until deliberately expanded.
+The source-only
 [`grounding_source` v1 contract](milestone-d-grounding-source-contract.md)
 binds the parser-neutral evidence boundary to current native and foreign-source
 report grounding metadata without adding a new command or binding surface.
@@ -54,7 +58,7 @@ binding surface.
 | A | weeks 1-8 | Contracts (5 schemas, c14n, deterministic profile), trust-boundary artifacts (`GroundingSource`, verification schemas, OpenDataLoader adapter stub, `ethos verify` CLI stub), PDFium Phase 1 spike, harness + competitor adapters, CLI skeleton | **Gate Zero**: ADR-0005 is accepted as `PROCEED` for internal Milestone B continuation. This is not public benchmark, release, package, production, or claim approval. |
 | B | weeks 9-14 | **`ethos verify` alpha first**: native Ethos JSON + synthetic and pinned real OpenDataLoader verification demos, stale fingerprint checks, capability-limited reports, deterministic evidence matching including split-quote coverage, explicit unsupported non-v1 claim reporting, adapter structure diagnostics; then reading order, blocks, headings, lists, Markdown/text exporters, Python wheel scaffold, quality dashboard, Windows x64 nightly determinism | [13-B exit checklist](milestone-b-exit-checklist.md) |
 | C | weeks 15-22 | Simple/bordered tables; RAG chunker + citations; non-text region coordinates; security report + default-chunk exclusion; debug overlay; internal benchmark snapshot | Current artifact-validation checkpoint recorded in [Milestone C closeout validation](validation/milestone-c-closeout-validation-2026-06-18.md); broader debug/crop/table follow-ups remain explicit |
-| D | weeks 23-30 | [`verify_citations` v1](milestone-d-verify-citations-contract.md); [`crop_element` v1 contract prep](milestone-d-crop-element-contract.md); [`sandbox_subprocess` v1 contract prep](milestone-d-sandbox-subprocess-contract.md); crop API; sandbox/subprocess backend; Node beta and MCP experimental only if staffed or accepted by release-scope ADR | 13-D exit |
+| D | weeks 23-30 | [`verify_citations` v1](milestone-d-verify-citations-contract.md); [`claim_kind_boundary` v1 contract prep](milestone-d-claim-kind-boundary-contract.md); [`crop_element` v1 contract prep](milestone-d-crop-element-contract.md); [`sandbox_subprocess` v1 contract prep](milestone-d-sandbox-subprocess-contract.md); crop API; sandbox/subprocess backend; Node beta and MCP experimental only if staffed or accepted by release-scope ADR | 13-D exit |
 | E | weeks 31-40 | Public benchmark report (reproducible, labeled tiers); PDFium Phase 2 project-maintained builds; stable CLI/Python docs; proof-of-trust demos; **Public Beta** | Release 1 claim audit + public-beta checkpoint |
 | F / Release 2 | post-E | Complex tables, formula/LaTeX, chart classification, optional enrichment modules (never base) | Scoped after E from beta fixtures |
 
