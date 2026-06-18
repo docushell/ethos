@@ -23,6 +23,7 @@ import unittest
 from pathlib import Path
 
 from security_report_validation import (
+    DEFAULT_CHUNK_EXCLUDED_CODES,
     FINDING_MESSAGE_TEMPLATES,
     SECURITY_WARNING_CODES,
     diagnose_security_report_example,
@@ -33,16 +34,75 @@ ROOT = Path(__file__).resolve().parent
 EXAMPLES = ROOT / "examples"
 
 
+def schema(path: str) -> dict:
+    return json.loads((ROOT / path).read_text())
+
+
+def find_enum_with_value(node, value: str) -> set[str]:
+    if isinstance(node, dict):
+        enum = node.get("enum")
+        if isinstance(enum, list) and value in enum:
+            return set(enum)
+        for child in node.values():
+            found = find_enum_with_value(child, value)
+            if found:
+                return found
+    if isinstance(node, list):
+        for child in node:
+            found = find_enum_with_value(child, value)
+            if found:
+                return found
+    return set()
+
+
 class SecurityReportValidationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.document = json.loads((EXAMPLES / "document.example.json").read_text())
-        self.report = json.loads((EXAMPLES / "security-report.example.json").read_text())
+        self.source_report = json.loads(
+            (EXAMPLES / "security-report.example.json").read_text()
+        )
+        self.report = json.loads(
+            (EXAMPLES / "security-report.full.example.json").read_text()
+        )
 
     def test_current_examples_are_coherent(self) -> None:
+        self.assertEqual(
+            diagnose_security_report_example(self.document, self.source_report),
+            [],
+        )
         self.assertEqual(diagnose_security_report_example(self.document, self.report), [])
 
     def test_all_security_warning_codes_have_fixed_message_templates(self) -> None:
         self.assertEqual(set(FINDING_MESSAGE_TEMPLATES), SECURITY_WARNING_CODES)
+
+    def test_warning_policy_constants_match_schema_enums(self) -> None:
+        document_warning_codes = find_enum_with_value(
+            schema("ethos-document.schema.json"),
+            "hidden_text_detected",
+        )
+        self.assertTrue(document_warning_codes)
+        self.assertEqual(SECURITY_WARNING_CODES - document_warning_codes, set())
+
+        security_summary_codes = set(
+            schema("ethos-security-report.schema.json")["properties"]["summary"][
+                "patternProperties"
+            ]
+        )
+        security_summary_codes = {
+            code
+            for pattern in security_summary_codes
+            for code in pattern.strip("^$()").split("|")
+        }
+        self.assertEqual(security_summary_codes, SECURITY_WARNING_CODES)
+
+        chunk_warning_codes = set(
+            schema("ethos-chunks.schema.json")["properties"]["warnings"]["items"]["enum"]
+        )
+        self.assertEqual(
+            chunk_warning_codes,
+            document_warning_codes - DEFAULT_CHUNK_EXCLUDED_CODES,
+        )
+        self.assertEqual(chunk_warning_codes & DEFAULT_CHUNK_EXCLUDED_CODES, set())
 
     def test_schema_version_must_match_document(self) -> None:
         report = copy.deepcopy(self.report)

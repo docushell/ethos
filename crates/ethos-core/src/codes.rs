@@ -95,6 +95,57 @@ impl WarningCode {
                 | WarningCode::ImageOnlyPage
         )
     }
+
+    /// Security-report codes that currently require inventory data not present in the
+    /// canonical document warning lane.
+    pub fn is_inventory_backed_security(self) -> bool {
+        matches!(
+            self,
+            WarningCode::AnnotationsPresent
+                | WarningCode::ExternalLinksPresent
+                | WarningCode::UnsupportedAnnotation
+        )
+    }
+
+    /// Security-report codes backed by text spans and excluded from default chunks.
+    pub fn is_text_backed_security(self) -> bool {
+        matches!(
+            self,
+            WarningCode::HiddenTextDetected
+                | WarningCode::OffPageTextDetected
+                | WarningCode::LowContrastTextDetected
+        )
+    }
+
+    /// Security-report codes that require a page reference.
+    pub fn is_page_backed_security(self) -> bool {
+        self.is_text_backed_security() || matches!(self, WarningCode::ImageOnlyPage)
+    }
+
+    /// Warning codes that must never appear in default chunk artifacts.
+    pub fn excludes_from_default_chunks(self) -> bool {
+        self.is_text_backed_security()
+    }
+
+    /// Fixed message template for security-report findings.
+    pub fn security_report_message_template(self) -> Option<&'static str> {
+        match self {
+            WarningCode::HiddenTextDetected => {
+                Some("hidden text detected: excluded from default chunks")
+            }
+            WarningCode::OffPageTextDetected => {
+                Some("off-page text detected: excluded from default chunks")
+            }
+            WarningCode::LowContrastTextDetected => {
+                Some("low-contrast text detected: excluded from default chunks")
+            }
+            WarningCode::AnnotationsPresent => Some("annotations present on page"),
+            WarningCode::ExternalLinksPresent => Some("external links present on page"),
+            WarningCode::UnsupportedAnnotation => Some("unsupported annotation ignored"),
+            WarningCode::ImageOnlyPage => Some("image-only page"),
+            _ => None,
+        }
+    }
 }
 
 impl core::fmt::Display for WarningCode {
@@ -134,6 +185,91 @@ mod tests {
                 "external_links_present",
                 "image_only_page",
                 "unsupported_annotation",
+            ]
+        );
+    }
+
+    #[test]
+    fn security_report_warning_policy_matches_contract() {
+        let inventory_backed: Vec<_> = WarningCode::ALL
+            .iter()
+            .filter(|c| c.is_inventory_backed_security())
+            .map(|c| c.as_str())
+            .collect();
+        assert_eq!(
+            inventory_backed,
+            vec![
+                "annotations_present",
+                "external_links_present",
+                "unsupported_annotation",
+            ]
+        );
+
+        let text_backed: Vec<_> = WarningCode::ALL
+            .iter()
+            .filter(|c| c.is_text_backed_security())
+            .map(|c| c.as_str())
+            .collect();
+        assert_eq!(
+            text_backed,
+            vec![
+                "hidden_text_detected",
+                "off_page_text_detected",
+                "low_contrast_text_detected",
+            ]
+        );
+
+        let page_backed: Vec<_> = WarningCode::ALL
+            .iter()
+            .filter(|c| c.is_page_backed_security())
+            .map(|c| c.as_str())
+            .collect();
+        assert_eq!(
+            page_backed,
+            vec![
+                "hidden_text_detected",
+                "off_page_text_detected",
+                "low_contrast_text_detected",
+                "image_only_page",
+            ]
+        );
+
+        let default_chunk_excluded: Vec<_> = WarningCode::ALL
+            .iter()
+            .filter(|c| c.excludes_from_default_chunks())
+            .map(|c| c.as_str())
+            .collect();
+        assert_eq!(default_chunk_excluded, text_backed);
+    }
+
+    #[test]
+    fn security_report_message_templates_match_contract() {
+        let templates: Vec<_> = WarningCode::ALL
+            .iter()
+            .filter_map(|c| {
+                c.security_report_message_template()
+                    .map(|template| (c.as_str(), template))
+            })
+            .collect();
+        assert_eq!(
+            templates,
+            vec![
+                (
+                    "hidden_text_detected",
+                    "hidden text detected: excluded from default chunks",
+                ),
+                (
+                    "off_page_text_detected",
+                    "off-page text detected: excluded from default chunks",
+                ),
+                (
+                    "low_contrast_text_detected",
+                    "low-contrast text detected: excluded from default chunks",
+                ),
+                ("annotations_present", "annotations present on page"),
+                ("external_links_present", "external links present on page"),
+                ("image_only_page", "image-only page"),
+                ("unsupported_annotation", "unsupported annotation ignored"),
             ]
         );
     }

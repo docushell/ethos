@@ -691,9 +691,9 @@ fn malformed_native_document_is_usage_error() {
 
     assert_eq!(output.status.code(), Some(2));
     assert_eq!(output.stdout, b"");
-    assert!(
-        String::from_utf8_lossy(&output.stderr).contains("input is not a canonical ethos document")
-    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("input is not a canonical ethos document"));
+    assert!(stderr.contains("missing field `schema_version`"));
 }
 
 #[test]

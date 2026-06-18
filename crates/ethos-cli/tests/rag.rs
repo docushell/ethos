@@ -16,10 +16,10 @@
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use ethos_core::model::Document;
 use serde_json::Value;
+use tempfile::TempDir;
 
 fn ethos_bin() -> &'static str {
     env!("CARGO_BIN_EXE_ethos")
@@ -49,17 +49,25 @@ fn json_file(path: impl AsRef<Path>) -> Value {
     serde_json::from_slice(&bytes).expect("JSON fixture parses")
 }
 
-fn temp_json(name: &str, json: &str) -> PathBuf {
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock after unix epoch")
-        .as_nanos();
-    let path = std::env::temp_dir().join(format!("ethos-{name}-{nanos}.json"));
-    std::fs::write(&path, json).expect("temp JSON is writable");
-    path
+struct TempJson {
+    _dir: TempDir,
+    path: PathBuf,
 }
 
-fn document_with_mutated_chunk(name: &str, mutate: impl FnOnce(&mut Value)) -> PathBuf {
+impl TempJson {
+    fn to_str(&self) -> Option<&str> {
+        self.path.to_str()
+    }
+}
+
+fn temp_json(name: &str, json: &str) -> TempJson {
+    let dir = tempfile::tempdir().expect("temp dir is writable");
+    let path = dir.path().join(format!("{name}.json"));
+    std::fs::write(&path, json).expect("temp JSON is writable");
+    TempJson { _dir: dir, path }
+}
+
+fn document_with_mutated_chunk(name: &str, mutate: impl FnOnce(&mut Value)) -> TempJson {
     let mut doc = json_file(document_example());
     mutate(&mut doc);
 
@@ -169,6 +177,60 @@ fn rag_chunk_rejects_empty_chunk_bboxes() {
     assert_eq!(output.stdout, b"");
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("chunk c000001 must include at least one bbox"));
+}
+
+#[test]
+fn rag_chunk_rejects_duplicate_chunk_refs() {
+    type ChunkMutator = fn(&mut Value);
+    type DuplicateRefCase = (&'static str, ChunkMutator, &'static str);
+
+    let cases: [DuplicateRefCase; 3] = [
+        (
+            "duplicate-element-ref",
+            |doc: &mut Value| {
+                let element_ref = doc["payload"]["chunks"][0]["element_refs"][0].clone();
+                doc["payload"]["chunks"][0]["element_refs"]
+                    .as_array_mut()
+                    .expect("fixture chunk element_refs are an array")
+                    .push(element_ref);
+            },
+            "chunk c000001 has duplicate element_ref",
+        ),
+        (
+            "duplicate-page-ref",
+            |doc: &mut Value| {
+                let page_ref = doc["payload"]["chunks"][0]["page_refs"][0].clone();
+                doc["payload"]["chunks"][0]["page_refs"]
+                    .as_array_mut()
+                    .expect("fixture chunk page_refs are an array")
+                    .push(page_ref);
+            },
+            "chunk c000001 has duplicate page_ref",
+        ),
+        (
+            "duplicate-bbox",
+            |doc: &mut Value| {
+                let bbox = doc["payload"]["chunks"][0]["bboxes"][0].clone();
+                doc["payload"]["chunks"][0]["bboxes"]
+                    .as_array_mut()
+                    .expect("fixture chunk bboxes are an array")
+                    .push(bbox);
+            },
+            "duplicates an earlier bbox on page",
+        ),
+    ];
+    for (name, mutate, expected) in cases {
+        let document = document_with_mutated_chunk(name, mutate);
+        let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+        assert_eq!(output.status.code(), Some(2), "{name}");
+        assert_eq!(output.stdout, b"", "{name}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(expected),
+            "{name}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
 }
 
 #[test]
@@ -317,6 +379,25 @@ fn rag_chunk_rejects_unknown_chunk_warning_ref() {
     assert_eq!(output.stdout, b"");
     assert!(String::from_utf8_lossy(&output.stderr)
         .contains("chunk c000001 references unknown warning_ref w999999"));
+}
+
+#[test]
+fn rag_chunk_rejects_unknown_element_warning_ref() {
+    let mut expected_element_id = String::new();
+    let document = document_with_mutated_chunk("stale-element-warning-ref-document", |doc| {
+        expected_element_id = doc["payload"]["chunks"][0]["element_refs"][0]
+            .as_str()
+            .expect("fixture chunk element_ref is a string")
+            .to_string();
+        doc["payload"]["elements"][0]["warning_refs"] = serde_json::json!(["w999999"]);
+    });
+    let output = run_ethos(&["rag", "chunk", document.to_str().unwrap()]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(&format!(
+        "chunk c000001 element_ref {expected_element_id} references unknown warning_ref w999999"
+    )));
 }
 
 #[test]
