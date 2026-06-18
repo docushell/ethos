@@ -311,6 +311,14 @@ def schemas_readme_table_entries() -> dict[str, str]:
     return entries
 
 
+def schemas_readme_contract_table_entries() -> dict[str, str]:
+    return {
+        schema_name: description
+        for schema_name, description in schemas_readme_table_entries().items()
+        if re.fullmatch(r"ethos-.+-contract\.schema\.json", schema_name)
+    }
+
+
 def makefile_target_commands(target: str) -> list[str]:
     return [line.strip() for line in target_block(target).splitlines() if line.strip()]
 
@@ -677,6 +685,17 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             description = f"Milestone D `{contract_name(entry)}` v1 source-only contract inventory"
 
             self.assertEqual(description, table_entries.get(schema_name), entry["contract"])
+
+    def test_schemas_readme_contract_table_rows_match_registry(self) -> None:
+        expected_entries = {
+            Path(entry["schema"]).name: f"Milestone D `{contract_name(entry)}` v1 source-only contract inventory"
+            for entry in CONTRACT_REGISTRY
+        }
+
+        self.assertEqual(
+            expected_entries,
+            schemas_readme_contract_table_entries(),
+        )
 
     def test_request_envelope_schemas_are_documented_and_validated(self) -> None:
         table_entries = schemas_readme_table_entries()
