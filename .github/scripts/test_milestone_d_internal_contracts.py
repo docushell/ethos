@@ -186,6 +186,11 @@ def focused_validation_command(entry: dict) -> str:
     return f"make {entry['target']} PYTHON=<jsonschema-venv>/bin/python"
 
 
+def expected_contract_guard_script(entry: dict) -> str:
+    target_slug = entry["target"].removeprefix("milestone-d-").replace("-", "_")
+    return f".github/scripts/test_milestone_d_{target_slug}.py"
+
+
 def schema_slug(entry: dict) -> str:
     name = Path(entry["schema"]).name
     return name.removeprefix("ethos-").removesuffix(".schema.json")
@@ -243,6 +248,13 @@ def discovered_d_contract_inventories() -> list[str]:
         str(path.relative_to(ROOT))
         for root in roots
         for path in root.glob("*_v1_contract.json")
+    )
+
+
+def discovered_d_contract_guard_scripts() -> list[str]:
+    return sorted(
+        str(path.relative_to(ROOT))
+        for path in (ROOT / ".github" / "scripts").glob("test_milestone_d_*_contract.py")
     )
 
 
@@ -336,6 +348,18 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
                 entry["contract"],
             )
 
+    def test_registered_contracts_use_expected_focused_guard_scripts(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            expected_command = f"$(PYTHON) {expected_contract_guard_script(entry)}"
+            matching_commands = [
+                command
+                for command in entry["commands"]
+                if command.startswith("$(PYTHON) .github/scripts/test_milestone_d_")
+                and command.endswith("_contract.py")
+            ]
+
+            self.assertEqual([expected_command], matching_commands, entry["contract"])
+
     def test_registered_cargo_validation_commands_use_locked_resolution(self) -> None:
         for entry in CONTRACT_REGISTRY:
             for command in entry["commands"]:
@@ -413,6 +437,10 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
         self.assertEqual(registered_paths("doc"), discovered_d_contract_docs())
         self.assertEqual(registered_paths("schema"), discovered_d_contract_schemas())
         self.assertEqual(registered_paths("inventory"), discovered_d_contract_inventories())
+        self.assertEqual(
+            sorted(expected_contract_guard_script(entry) for entry in CONTRACT_REGISTRY),
+            discovered_d_contract_guard_scripts(),
+        )
 
     def test_registered_contract_inventories_are_schema_validated(self) -> None:
         registered_pairs = {
