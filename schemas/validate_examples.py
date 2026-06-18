@@ -83,6 +83,9 @@ PAIRS = [
     ("ethos-verify-citations-contract.schema.json", [
         ROOT / "examples" / "verify" / "verify_citations_v1_contract.json",
     ]),
+    ("ethos-crop-element-contract.schema.json", [
+        ROOT / "examples" / "crop" / "crop_element_v1_contract.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

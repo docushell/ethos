@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "contract": "crop_element.v1",
+  "status": "source-only-pre-alpha",
+  "carrier": "ethos verify --crop-dir",
+  "cases": [
+    {
+      "name": "document-example-e000002",
+      "document": "schemas/examples/document.example.json",
+      "element_id": "e000002",
+      "descriptor": "schemas/examples/crop-descriptor.example.json",
+      "rendering_status": "descriptor_only"
+    }
+  ],
+  "explicit_blockers": [
+    "a first-class `crop_element` CLI command or binding surface",
+    "Python, Node, MCP, or hosted crop API surfaces",
+    "sandbox/subprocess backend expansion",
+    "rendered-crop backend changes",
+    "foreign-adapter crop coordinate hardening",
+    "cross-platform rendered-crop byte identity claims"
+  ]
+}

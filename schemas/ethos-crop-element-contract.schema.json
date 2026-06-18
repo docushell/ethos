@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:crop-element-contract:1",
+  "title": "Ethos crop_element v1 contract inventory",
+  "description": "Source-only pre-alpha Milestone D inventory for the future crop_element v1 contract. This validates inventory shape and vocabulary; executable behavior remains on the existing verifier crop carrier until a first-class surface is explicitly added.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "contract",
+    "status",
+    "carrier",
+    "cases",
+    "explicit_blockers"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "contract": { "const": "crop_element.v1" },
+    "status": { "const": "source-only-pre-alpha" },
+    "carrier": { "const": "ethos verify --crop-dir" },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "document",
+          "element_id",
+          "descriptor",
+          "rendering_status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "$ref": "#/$defs/case_name" },
+          "document": { "$ref": "#/$defs/repo_path" },
+          "element_id": { "type": "string", "pattern": "^e[0-9]{6}$" },
+          "descriptor": { "$ref": "#/$defs/repo_path" },
+          "rendering_status": { "enum": ["descriptor_only", "rendered"] }
+        }
+      }
+    },
+    "explicit_blockers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "case_name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "repo_path": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_./-]+$" }
+  }
+}
