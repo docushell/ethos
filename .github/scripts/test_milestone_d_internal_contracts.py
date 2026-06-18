@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import unittest
 from pathlib import Path
@@ -26,6 +27,7 @@ from makefile_guard import makefile_text, target_block
 
 ROOT = Path(__file__).resolve().parents[2]
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
+VALIDATE_EXAMPLES = ROOT / "schemas/validate_examples.py"
 CONTRACT_REGISTRY = [
     {
         "contract": "verify_citations.v1",
@@ -133,6 +135,41 @@ def discovered_d_contract_inventories() -> list[str]:
     )
 
 
+def path_expr_to_repo_path(node: ast.AST) -> str:
+    roots = {
+        "ROOT": "",
+        "SCHEMAS": "schemas",
+        "EXAMPLES": "schemas/examples",
+    }
+    if isinstance(node, ast.Name) and node.id in roots:
+        return roots[node.id]
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        left = path_expr_to_repo_path(node.left)
+        right = path_expr_to_repo_path(node.right)
+        return f"{left}/{right}" if left else right
+    raise AssertionError(f"unsupported validate_examples path expression: {ast.dump(node)}")
+
+
+def schema_example_validation_pairs() -> set[tuple[str, str]]:
+    tree = ast.parse(VALIDATE_EXAMPLES.read_text(encoding="utf-8"))
+    pairs_node = next(
+        node.value
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "PAIRS" for target in node.targets)
+    )
+
+    pairs = set()
+    for pair_node in pairs_node.elts:
+        schema_node, example_nodes = pair_node.elts
+        schema_path = f"schemas/{schema_node.value}"
+        for example_node in example_nodes.elts:
+            pairs.add((schema_path, path_expr_to_repo_path(example_node)))
+    return pairs
+
+
 class MilestoneDInternalContractsTests(unittest.TestCase):
     def test_target_is_declared_phony(self) -> None:
         text = makefile_text()
@@ -179,6 +216,20 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
         self.assertEqual(registered_paths("doc"), discovered_d_contract_docs())
         self.assertEqual(registered_paths("schema"), discovered_d_contract_schemas())
         self.assertEqual(registered_paths("inventory"), discovered_d_contract_inventories())
+
+    def test_registered_contract_inventories_are_schema_validated(self) -> None:
+        registered_pairs = {
+            (entry["schema"], entry["inventory"])
+            for entry in CONTRACT_REGISTRY
+        }
+        registered_schemas = {entry["schema"] for entry in CONTRACT_REGISTRY}
+        validated_contract_pairs = {
+            pair
+            for pair in schema_example_validation_pairs()
+            if pair[0] in registered_schemas
+        }
+
+        self.assertEqual(registered_pairs, validated_contract_pairs)
 
     def test_registry_references_are_consistent(self) -> None:
         for entry in CONTRACT_REGISTRY:
