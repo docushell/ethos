@@ -28,7 +28,8 @@
           "command_surface",
           "request",
           "test_filter",
-          "boundary"
+          "boundary",
+          "expected_failure"
         ],
         "additionalProperties": false,
         "properties": {
@@ -44,6 +45,58 @@
               "memory_limit_error",
               "stable_error_envelope",
               "diagnostics_gated_stderr"
+            ]
+          },
+          "expected_failure": {
+            "type": "object",
+            "required": [
+              "exit_code",
+              "error_code",
+              "error_message",
+              "stdout",
+              "diagnostics"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "exit_code": { "type": "integer", "minimum": 1 },
+              "error_code": {
+                "enum": [
+                  "parse_timeout",
+                  "memory_limit_exceeded",
+                  "invalid_pdf",
+                  "internal_error"
+                ]
+              },
+              "error_message": { "type": "string", "minLength": 1 },
+              "stdout": { "const": "empty" },
+              "diagnostics": { "type": "boolean" },
+              "worker_exit_code": { "type": "integer", "minimum": 1 },
+              "worker_stderr": { "type": "string", "minLength": 1 }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": { "diagnostics": { "const": true } },
+                  "required": ["diagnostics"]
+                },
+                "then": {
+                  "required": ["worker_exit_code", "worker_stderr"]
+                }
+              },
+              {
+                "if": {
+                  "properties": { "diagnostics": { "const": false } },
+                  "required": ["diagnostics"]
+                },
+                "then": {
+                  "not": {
+                    "anyOf": [
+                      { "required": ["worker_exit_code"] },
+                      { "required": ["worker_stderr"] }
+                    ]
+                  }
+                }
+              }
             ]
           }
         }

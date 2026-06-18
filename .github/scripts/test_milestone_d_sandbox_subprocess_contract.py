@@ -51,6 +51,52 @@ EXPECTED_BOUNDARIES = [
     "stable_error_envelope",
     "diagnostics_gated_stderr",
 ]
+EXPECTED_FAILURES = {
+    "doc-parse-timeout": {
+        "exit_code": 10,
+        "error_code": "parse_timeout",
+        "error_message": "parse exceeded max_parse_ms",
+        "stdout": "empty",
+        "diagnostics": False,
+    },
+    "fingerprint-timeout": {
+        "exit_code": 10,
+        "error_code": "parse_timeout",
+        "error_message": "parse exceeded max_parse_ms",
+        "stdout": "empty",
+        "diagnostics": False,
+    },
+    "doc-parse-memory-limit": {
+        "exit_code": 11,
+        "error_code": "memory_limit_exceeded",
+        "error_message": "parse exceeded memory limit",
+        "stdout": "empty",
+        "diagnostics": False,
+    },
+    "doc-parse-stable-error-envelope": {
+        "exit_code": 3,
+        "error_code": "invalid_pdf",
+        "error_message": "input does not contain a PDF header",
+        "stdout": "empty",
+        "diagnostics": False,
+    },
+    "doc-parse-stderr-hidden-by-default": {
+        "exit_code": 12,
+        "error_code": "internal_error",
+        "error_message": "pdfium worker failed",
+        "stdout": "empty",
+        "diagnostics": False,
+    },
+    "doc-parse-diagnostics-gated-stderr": {
+        "exit_code": 12,
+        "error_code": "internal_error",
+        "error_message": "pdfium worker failed",
+        "stdout": "empty",
+        "diagnostics": True,
+        "worker_exit_code": 101,
+        "worker_stderr": "native pdfium stderr sentinel\nsecond line",
+    },
+}
 
 
 def load_json(path: Path):
@@ -333,6 +379,11 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             self.assertEqual([], schema_errors(request_schema, request), case["name"])
             self.assertEqual([], request_ref_drift_diagnostics(request), case["name"])
             self.assertEqual([], request_case_diagnostics(request, case), case["name"])
+            self.assertEqual(
+                EXPECTED_FAILURES[case["name"]],
+                case["expected_failure"],
+                case["name"],
+            )
             self.assertIn(f"fn {case['test_filter']}()", test_source, case["name"])
 
     def test_contract_inventory_case_order_is_deterministic(self) -> None:
@@ -472,6 +523,43 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
                 body,
                 case["name"],
             )
+
+    def test_inventory_worker_failure_tests_pin_expected_outcomes(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        test_source = PDF_PARSE_TESTS.read_text(encoding="utf-8")
+
+        for case in inventory["cases"]:
+            failure = case["expected_failure"]
+            body = rust_test_body(test_source, case["test_filter"])
+            self.assertIn(
+                f"assert_eq!(output.status.code(), Some({failure['exit_code']}));",
+                body,
+                case["name"],
+            )
+            self.assertIn(failure["error_code"], body, case["name"])
+            self.assertIn(failure["error_message"], body, case["name"])
+
+            if failure["diagnostics"]:
+                self.assertIn("--diagnostics", body, case["name"])
+                self.assertIn(
+                    f'error["diagnostics"]["pdfium_worker"]["exit_code"], {failure["worker_exit_code"]}',
+                    body,
+                    case["name"],
+                )
+                self.assertIn(
+                    failure["worker_stderr"].replace("\n", "\\n"),
+                    body,
+                    case["name"],
+                )
+            else:
+                self.assertNotIn('error["diagnostics"]', body, case["name"])
+
+            if case["name"] == "doc-parse-stderr-hidden-by-default":
+                self.assertIn(
+                    r'{\"error\":{\"code\":\"internal_error\",\"message\":\"pdfium worker failed\"}}\n',
+                    body,
+                    case["name"],
+                )
 
     def test_inventory_keeps_current_command_surfaces_narrow(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

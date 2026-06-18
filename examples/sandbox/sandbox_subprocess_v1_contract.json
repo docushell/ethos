@@ -9,42 +9,86 @@
       "command_surface": "ethos doc parse",
       "request": "schemas/examples/sandbox-subprocess-doc-parse-timeout-request.example.json",
       "test_filter": "doc_parse_timeout_kills_pdfium_worker",
-      "boundary": "max_parse_ms_timeout"
+      "boundary": "max_parse_ms_timeout",
+      "expected_failure": {
+        "exit_code": 10,
+        "error_code": "parse_timeout",
+        "error_message": "parse exceeded max_parse_ms",
+        "stdout": "empty",
+        "diagnostics": false
+      }
     },
     {
       "name": "fingerprint-timeout",
       "command_surface": "ethos fingerprint",
       "request": "schemas/examples/sandbox-subprocess-fingerprint-timeout-request.example.json",
       "test_filter": "pdf_fingerprint_timeout_kills_pdfium_worker",
-      "boundary": "max_parse_ms_timeout"
+      "boundary": "max_parse_ms_timeout",
+      "expected_failure": {
+        "exit_code": 10,
+        "error_code": "parse_timeout",
+        "error_message": "parse exceeded max_parse_ms",
+        "stdout": "empty",
+        "diagnostics": false
+      }
     },
     {
       "name": "doc-parse-memory-limit",
       "command_surface": "ethos doc parse",
       "request": "schemas/examples/sandbox-subprocess-doc-parse-request.example.json",
       "test_filter": "doc_parse_memory_limit_worker_failure_is_stable",
-      "boundary": "memory_limit_error"
+      "boundary": "memory_limit_error",
+      "expected_failure": {
+        "exit_code": 11,
+        "error_code": "memory_limit_exceeded",
+        "error_message": "parse exceeded memory limit",
+        "stdout": "empty",
+        "diagnostics": false
+      }
     },
     {
       "name": "doc-parse-stable-error-envelope",
       "command_surface": "ethos doc parse",
       "request": "schemas/examples/sandbox-subprocess-doc-parse-request.example.json",
       "test_filter": "doc_parse_relays_worker_stable_error_envelope",
-      "boundary": "stable_error_envelope"
+      "boundary": "stable_error_envelope",
+      "expected_failure": {
+        "exit_code": 3,
+        "error_code": "invalid_pdf",
+        "error_message": "input does not contain a PDF header",
+        "stdout": "empty",
+        "diagnostics": false
+      }
     },
     {
       "name": "doc-parse-stderr-hidden-by-default",
       "command_surface": "ethos doc parse",
       "request": "schemas/examples/sandbox-subprocess-doc-parse-request.example.json",
       "test_filter": "doc_parse_non_envelope_worker_failure_stays_canonical_without_diagnostics",
-      "boundary": "diagnostics_gated_stderr"
+      "boundary": "diagnostics_gated_stderr",
+      "expected_failure": {
+        "exit_code": 12,
+        "error_code": "internal_error",
+        "error_message": "pdfium worker failed",
+        "stdout": "empty",
+        "diagnostics": false
+      }
     },
     {
       "name": "doc-parse-diagnostics-gated-stderr",
       "command_surface": "ethos doc parse",
       "request": "schemas/examples/sandbox-subprocess-doc-parse-diagnostics-request.example.json",
       "test_filter": "doc_parse_non_envelope_worker_failure_includes_stderr_with_diagnostics",
-      "boundary": "diagnostics_gated_stderr"
+      "boundary": "diagnostics_gated_stderr",
+      "expected_failure": {
+        "exit_code": 12,
+        "error_code": "internal_error",
+        "error_message": "pdfium worker failed",
+        "stdout": "empty",
+        "diagnostics": true,
+        "worker_exit_code": 101,
+        "worker_stderr": "native pdfium stderr sentinel\nsecond line"
+      }
     }
   ],
   "explicit_blockers": [
