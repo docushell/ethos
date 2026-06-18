@@ -35,6 +35,16 @@ COMMON_CONTRACT_GATES = [
     "$(PYTHON) .github/scripts/test_execution_status.py",
     "$(PYTHON) .github/scripts/test_roadmap_status.py",
 ]
+OUT_OF_SCOPE_PUBLIC_CLAIM_TERMS = [
+    "benchmark",
+    "release",
+    "package",
+    "production",
+    "speed",
+    "footprint",
+    "table-quality",
+    "parser-quality",
+]
 CONTRACT_REGISTRY = [
     {
         "contract": "verify_citations.v1",
@@ -546,6 +556,13 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             normalized_doc = " ".join(doc.split())
             for text in required_text:
                 self.assertIn(" ".join(text.split()), normalized_doc, entry["contract"])
+
+    def test_registered_contract_artifacts_avoid_out_of_scope_public_claim_terms(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            for path in [entry["doc"], entry["inventory"], entry["schema"]]:
+                text = (ROOT / path).read_text(encoding="utf-8").lower()
+                for term in OUT_OF_SCOPE_PUBLIC_CLAIM_TERMS:
+                    self.assertNotIn(term, text, f"{entry['contract']}: {path}: {term}")
 
     def test_contract_inventories_keep_explicit_blockers_nonempty(self) -> None:
         for entry in CONTRACT_REGISTRY:
