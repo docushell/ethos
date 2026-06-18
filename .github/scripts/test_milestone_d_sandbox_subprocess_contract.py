@@ -335,6 +335,21 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             self.assertEqual([], request_case_diagnostics(request, case), case["name"])
             self.assertIn(f"fn {case['test_filter']}()", test_source, case["name"])
 
+    def test_contract_inventory_case_order_is_deterministic(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+
+        self.assertEqual(
+            [
+                "doc-parse-timeout",
+                "fingerprint-timeout",
+                "doc-parse-memory-limit",
+                "doc-parse-stable-error-envelope",
+                "doc-parse-stderr-hidden-by-default",
+                "doc-parse-diagnostics-gated-stderr",
+            ],
+            [case["name"] for case in inventory["cases"]],
+        )
+
     def test_request_ref_fails_closed_on_identity_drift(self) -> None:
         request = load_json(ROOT / "schemas/examples/sandbox-subprocess-doc-parse-request.example.json")
 
