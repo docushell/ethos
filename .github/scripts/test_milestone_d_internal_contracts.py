@@ -198,6 +198,22 @@ def makefile_phony_targets() -> set[str]:
     return targets
 
 
+def doc_explicit_blockers(path: str) -> list[str]:
+    lines = (ROOT / path).read_text(encoding="utf-8").splitlines()
+    try:
+        start = lines.index("## Explicit Blockers For This Slice") + 1
+    except ValueError as exc:
+        raise AssertionError(f"{path} is missing explicit blockers section") from exc
+
+    blockers: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("- "):
+            blockers.append(line.removeprefix("- ").rstrip(";."))
+        elif blockers and line.strip():
+            break
+    return blockers
+
+
 def discovered_d_contract_docs() -> list[str]:
     return sorted(
         str(path.relative_to(ROOT))
@@ -407,6 +423,16 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             for blocker in blockers:
                 self.assertEqual(blocker.strip(), blocker, entry["contract"])
                 self.assertNotEqual("", blocker, entry["contract"])
+
+    def test_contract_docs_mirror_inventory_explicit_blockers(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            inventory = load_json(entry["inventory"])
+
+            self.assertEqual(
+                inventory["explicit_blockers"],
+                doc_explicit_blockers(entry["doc"]),
+                entry["contract"],
+            )
 
     def test_execution_status_names_registry_guard(self) -> None:
         text = EXECUTION_STATUS.read_text(encoding="utf-8")
