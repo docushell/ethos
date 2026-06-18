@@ -186,6 +186,11 @@ def focused_validation_command(entry: dict) -> str:
     return f"make {entry['target']} PYTHON=<jsonschema-venv>/bin/python"
 
 
+def schema_slug(entry: dict) -> str:
+    name = Path(entry["schema"]).name
+    return name.removeprefix("ethos-").removesuffix(".schema.json")
+
+
 def makefile_target_commands(target: str) -> list[str]:
     return [line.strip() for line in target_block(target).splitlines() if line.strip()]
 
@@ -360,6 +365,17 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertEqual(entry["contract"], properties["contract"]["const"], entry["contract"])
             self.assertEqual("source-only-pre-alpha", properties["status"]["const"], entry["contract"])
             self.assertEqual(entry["carrier"], properties["carrier"]["const"], entry["contract"])
+
+    def test_registered_contract_schema_metadata_matches_registry(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            schema = load_json(entry["schema"])
+            contract_title = entry["contract"].removesuffix(".v1") + " v1"
+
+            self.assertEqual("https://json-schema.org/draft/2020-12/schema", schema["$schema"], entry["contract"])
+            self.assertEqual(f"urn:ethos:schema:{schema_slug(entry)}:1", schema["$id"], entry["contract"])
+            self.assertEqual(f"Ethos {contract_title} contract inventory", schema["title"], entry["contract"])
+            self.assertIn("Source-only pre-alpha Milestone D inventory", schema["description"], entry["contract"])
+            self.assertIn("validates inventory shape and vocabulary", schema["description"], entry["contract"])
 
     def test_registered_contract_schemas_require_identity_and_blockers(self) -> None:
         required_fields = {
