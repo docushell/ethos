@@ -29,6 +29,8 @@ ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / "docs/milestone-d-verify-citations-contract.md"
 VERIFY_CASES = ROOT / "examples/verify/cases.json"
 CONTRACT_INVENTORY = ROOT / "examples/verify/verify_citations_v1_contract.json"
+CONTRACT_INVENTORY_SCHEMA = ROOT / "schemas/ethos-verify-citations-contract.schema.json"
+VERIFICATION_REPORT_SCHEMA = ROOT / "schemas/ethos-verification-report.schema.json"
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
@@ -163,6 +165,29 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
         self.assertIn(
             "`make milestone-d-verify-citations-contract PYTHON=<jsonschema-venv>/bin/python`",
             text,
+        )
+
+    def test_contract_inventory_schema_check_enums_match_report_schema(self) -> None:
+        inventory_schema = load_json(CONTRACT_INVENTORY_SCHEMA)
+        report_schema = load_json(VERIFICATION_REPORT_SCHEMA)
+
+        self.assertEqual(
+            {
+                "check_status": sorted(
+                    inventory_schema["$defs"]["check_status"]["enum"]
+                ),
+                "check_reason": sorted(
+                    inventory_schema["$defs"]["check_reason"]["enum"]
+                ),
+            },
+            {
+                "check_status": sorted(
+                    report_schema["properties"]["checks"]["items"]["properties"][
+                        "status"
+                    ]["enum"]
+                ),
+                "check_reason": sorted(report_schema["$defs"]["check_reason"]["enum"]),
+            },
         )
 
     def test_contract_inventory_matches_executable_case_inventory(self) -> None:
