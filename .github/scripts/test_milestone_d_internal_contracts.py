@@ -190,6 +190,14 @@ def makefile_target_commands(target: str) -> list[str]:
     return [line.strip() for line in target_block(target).splitlines() if line.strip()]
 
 
+def makefile_phony_targets() -> set[str]:
+    targets: set[str] = set()
+    for line in makefile_text().splitlines():
+        if line.startswith(".PHONY:"):
+            targets.update(line.removeprefix(".PHONY:").split())
+    return targets
+
+
 def discovered_d_contract_docs() -> list[str]:
     return sorted(
         str(path.relative_to(ROOT))
@@ -258,6 +266,13 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
 
         self.assertIn(".PHONY:", text)
         self.assertIn("milestone-d-internal-contracts", text)
+
+    def test_registered_contract_targets_are_declared_phony(self) -> None:
+        phony_targets = makefile_phony_targets()
+
+        for target in registered_targets():
+            self.assertIn(target, phony_targets)
+        self.assertIn("milestone-d-internal-contracts", phony_targets)
 
     def test_target_composes_current_d_contract_targets(self) -> None:
         block = target_block("milestone-d-internal-contracts")
