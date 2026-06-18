@@ -232,6 +232,10 @@ def doc_explicit_blockers(path: str) -> list[str]:
     return blockers
 
 
+def doc_title(path: str) -> str:
+    return (ROOT / path).read_text(encoding="utf-8").splitlines()[0]
+
+
 def discovered_d_contract_docs() -> list[str]:
     return sorted(
         str(path.relative_to(ROOT))
@@ -425,6 +429,14 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertEqual(f"docs/milestone-d-{kebab}-contract.md", entry["doc"], entry["contract"])
             self.assertEqual(f"schemas/ethos-{kebab}-contract.schema.json", entry["schema"], entry["contract"])
             self.assertEqual(f"{contract_name(entry)}_v1_contract.json", Path(entry["inventory"]).name, entry["contract"])
+
+    def test_registered_contract_doc_titles_match_contract_names(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            self.assertEqual(
+                f"# Milestone D `{contract_name(entry)}` v1 Contract",
+                doc_title(entry["doc"]),
+                entry["contract"],
+            )
 
     def test_registered_contract_schema_identity_matches_registry(self) -> None:
         for entry in CONTRACT_REGISTRY:
