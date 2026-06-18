@@ -139,7 +139,7 @@ def diagnose_security_report_example(
     diagnose_warning_ids(security_warnings, parser_warnings, ctx, diagnostics)
     diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics)
     diagnose_parser_warning_messages(parser_warnings, ctx, diagnostics)
-    diagnose_security_warning_locator_shapes(security_warnings, ctx, diagnostics)
+    diagnose_security_warning_locator_shapes(security_warnings, refs, ctx, diagnostics)
     diagnose_security_warning_messages(security_warnings, ctx, diagnostics)
 
     findings = report.get("findings") if isinstance(report, dict) else []
@@ -431,16 +431,24 @@ def diagnose_security_warning_messages(security_warnings, ctx, diagnostics):
             )
 
 
-def diagnose_security_warning_locator_shapes(security_warnings, ctx, diagnostics):
+def diagnose_security_warning_locator_shapes(security_warnings, refs, ctx, diagnostics):
     for warning in security_warnings:
         if not isinstance(warning, dict):
             continue
         item_ctx = f"security warning {warning_id(warning)}"
+        page_shape_valid = True
         if "page" in warning:
-            check_page_shape(warning.get("page"), ctx, item_ctx, diagnostics)
-        for key in ("element_ref", "span_ref"):
-            if key in warning:
-                check_locator_shape(warning.get(key), key, ctx, item_ctx, diagnostics)
+            page_shape_valid = check_page_shape(
+                warning.get("page"), ctx, item_ctx, diagnostics
+            )
+            if page_shape_valid:
+                check_page_ref(warning.get("page"), refs, ctx, item_ctx, diagnostics)
+        for key, ref_kind in (
+            ("element_ref", "elements"),
+            ("span_ref", "spans"),
+            ("region_ref", "regions"),
+        ):
+            check_locator_ref(warning, key, ref_kind, refs, ctx, item_ctx, diagnostics)
 
 
 def projected_warning_finding(warning):
@@ -885,11 +893,12 @@ def diagnose_inventory_scalar_fields(inventory_lists, ctx, diagnostics):
 
 def document_reference_index(payload):
     if not isinstance(payload, dict):
-        return {"pages": {}, "elements": {}, "spans": {}}
+        return {"pages": {}, "elements": {}, "spans": {}, "regions": {}}
     return {
         "pages": keyed_objects(payload.get("pages", [])),
         "elements": keyed_objects(payload.get("elements", [])),
         "spans": keyed_objects(payload.get("spans", [])),
+        "regions": keyed_objects(payload.get("regions", [])),
     }
 
 
@@ -989,6 +998,9 @@ def check_locator_shape(ref, key, ctx, item_ctx, diagnostics):
     elif key == "span_ref":
         pattern = "^s[0-9]{6}$"
         valid = is_span_ref(ref)
+    elif key == "region_ref":
+        pattern = "^r[0-9]{4}$"
+        valid = is_region_ref(ref)
     else:
         return True
     if not valid:
@@ -1141,6 +1153,15 @@ def is_span_ref(value):
         isinstance(value, str)
         and len(value) == 7
         and value.startswith("s")
+        and is_ascii_digits(value[1:])
+    )
+
+
+def is_region_ref(value):
+    return (
+        isinstance(value, str)
+        and len(value) == 5
+        and value.startswith("r")
         and is_ascii_digits(value[1:])
     )
 

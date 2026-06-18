@@ -1852,6 +1852,12 @@ class SecurityReportValidationTests(unittest.TestCase):
                 "security-report.example.json: security warning w0099.span_ref "
                 "must match pattern ^s[0-9]{6}$",
             ),
+            (
+                "region_ref",
+                [],
+                "security-report.example.json: security warning w0099.region_ref "
+                "must match pattern ^r[0-9]{4}$",
+            ),
         )
         for field, value, expected_diagnostic in cases:
             with self.subTest(field=field):
@@ -1873,6 +1879,42 @@ class SecurityReportValidationTests(unittest.TestCase):
                     f"references unknown {field}",
                     diagnostics,
                 )
+
+    def test_security_warning_locator_refs_must_exist_in_document(self) -> None:
+        cases = (
+            (
+                "page",
+                "p9999",
+                "security-report.example.json: security warning w0001 "
+                "references unknown page p9999",
+            ),
+            (
+                "element_ref",
+                "e999999",
+                "security-report.example.json: security warning w0001 "
+                "references unknown element_ref e999999",
+            ),
+            (
+                "span_ref",
+                "s999999",
+                "security-report.example.json: security warning w0001 "
+                "references unknown span_ref s999999",
+            ),
+            (
+                "region_ref",
+                "r9999",
+                "security-report.example.json: security warning w0001 "
+                "references unknown region_ref r9999",
+            ),
+        )
+        for field, value, expected_diagnostic in cases:
+            with self.subTest(field=field):
+                document = copy.deepcopy(self.document)
+                document["payload"]["security_warnings"][0][field] = value
+
+                diagnostics = diagnose_security_report_example(document, self.report)
+
+                self.assertIn(expected_diagnostic, diagnostics)
 
 
 if __name__ == "__main__":
