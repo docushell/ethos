@@ -14,6 +14,7 @@ COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
 .PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: milestone-d-capability-downgrade-contract
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -71,8 +72,18 @@ milestone-d-sandbox-subprocess-contract:
 	$(PYTHON) .github/scripts/test_milestone_d_sandbox_subprocess_contract.py
 	git diff --check
 
+milestone-d-capability-downgrade-contract:
+	cargo test --locked -p ethos-verify capability
+	cargo test --locked -p ethos-cli --test verify capability
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_milestone_d_capability_downgrade_contract.py
+	git diff --check
+
 milestone-d-internal-contracts:
 	$(MAKE) milestone-d-verify-citations-contract PYTHON=$(PYTHON)
+	$(MAKE) milestone-d-capability-downgrade-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-crop-element-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-sandbox-subprocess-contract PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py

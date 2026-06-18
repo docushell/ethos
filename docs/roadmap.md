@@ -26,6 +26,11 @@ The next D contract-prep slice defines the source-only
 existing `ethos verify --crop-dir` crop descriptor carrier; it does not add a
 first-class crop command, binding surface, sandbox backend, Node beta, or MCP
 experimental scope.
+The source-only
+[`capability_downgrade` v1 contract](milestone-d-capability-downgrade-contract.md)
+binds existing grounding-source capability declarations to verification-report
+capability limits, warnings, and blocked-check diagnostics without adding a new
+command or binding surface.
 The source-only [`sandbox_subprocess` v1 contract](milestone-d-sandbox-subprocess-contract.md)
 classifies the existing PDF worker-process boundary behind `ethos doc parse` and
 `ethos fingerprint`; it does not add hardened sandbox rules or a new command or

@@ -86,6 +86,9 @@ PAIRS = [
     ("ethos-verify-citations-contract.schema.json", [
         ROOT / "examples" / "verify" / "verify_citations_v1_contract.json",
     ]),
+    ("ethos-capability-downgrade-contract.schema.json", [
+        ROOT / "examples" / "verify" / "capability_downgrade_v1_contract.json",
+    ]),
     ("ethos-crop-element-contract.schema.json", [
         ROOT / "examples" / "crop" / "crop_element_v1_contract.json",
     ]),

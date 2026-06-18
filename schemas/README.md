@@ -15,6 +15,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos verify --crop-dir` |
 | `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |
 | `ethos-verify-citations-contract.schema.json` | Milestone D `verify_citations` v1 source-only contract inventory |
+| `ethos-capability-downgrade-contract.schema.json` | Milestone D `capability_downgrade` v1 source-only contract inventory |
 | `ethos-crop-element-contract.schema.json` | Milestone D `crop_element` v1 source-only contract inventory |
 | `ethos-sandbox-subprocess-request.schema.json` | source-only request envelope for Milestone D `sandbox_subprocess` v1 contract work |
 | `ethos-sandbox-subprocess-contract.schema.json` | Milestone D `sandbox_subprocess` v1 source-only contract inventory |
@@ -40,6 +41,14 @@ Milestone D `verify_citations` v1 contract work is tracked in
 `ethos verify`; it does not add a new command or binding surface. The contract inventory at
 `examples/verify/verify_citations_v1_contract.json` is schema-validated here; its alignment with
 the executable case inventory and report goldens is checked by the Milestone D repository guard.
+
+Milestone D `capability_downgrade` v1 contract work is tracked in
+`docs/milestone-d-capability-downgrade-contract.md`. In this source-only pre-alpha slice,
+`capability_downgrade` names the grounding-source capability declaration to verification-report
+downgrade contract currently carried by `ethos verify`; it does not add a new command or binding
+surface. The contract inventory at `examples/verify/capability_downgrade_v1_contract.json` is
+schema-validated here; its alignment with report goldens is checked by the Milestone D repository
+guard.
 
 Milestone D `crop_element` v1 contract work is tracked in
 `docs/milestone-d-crop-element-contract.md`. In this source-only pre-alpha slice,

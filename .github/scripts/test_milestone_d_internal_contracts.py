@@ -36,6 +36,14 @@ CONTRACT_REGISTRY = [
         "schema": "schemas/ethos-verify-citations-contract.schema.json",
     },
     {
+        "contract": "capability_downgrade.v1",
+        "carrier": "ethos verify",
+        "target": "milestone-d-capability-downgrade-contract",
+        "doc": "docs/milestone-d-capability-downgrade-contract.md",
+        "inventory": "examples/verify/capability_downgrade_v1_contract.json",
+        "schema": "schemas/ethos-capability-downgrade-contract.schema.json",
+    },
+    {
         "contract": "crop_element.v1",
         "carrier": "ethos verify --crop-dir",
         "target": "milestone-d-crop-element-contract",
