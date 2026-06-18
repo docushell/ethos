@@ -95,6 +95,20 @@ def assert_unique(testcase: unittest.TestCase, values: list[str], label: str) ->
     )
 
 
+def assert_disjoint_case_groups(
+    testcase: unittest.TestCase, groups: dict[str, list[str]], label: str
+) -> None:
+    seen: dict[str, str] = {}
+    duplicates: list[str] = []
+    for group_name, names in groups.items():
+        for name in names:
+            if name in seen:
+                duplicates.append(f"{name} appears in both {seen[name]} and {group_name}")
+            else:
+                seen[name] = group_name
+    testcase.assertEqual([], duplicates, f"{label} case names overlap across groups")
+
+
 def citation_claims(citations) -> list[dict]:
     if isinstance(citations, list):
         return citations
@@ -247,6 +261,29 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
         summary_case_names = case_names(cases["summary_cases"])
         assert_unique(self, summary_case_names, "cases.json summary_cases")
         self.assertEqual(inventory["summary_cases"], summary_case_names)
+
+    def test_contract_inventory_case_names_are_disjoint_across_lanes(self) -> None:
+        cases = load_json(VERIFY_CASES)
+        inventory = load_json(CONTRACT_INVENTORY)
+
+        assert_disjoint_case_groups(
+            self,
+            {
+                "cases.json report_cases": case_names(cases["report_cases"]),
+                "cases.json usage_error_cases": case_names(cases["usage_error_cases"]),
+                "cases.json summary_cases": case_names(cases["summary_cases"]),
+            },
+            "examples/verify/cases.json",
+        )
+        assert_disjoint_case_groups(
+            self,
+            {
+                "contract inventory report_cases": case_names(inventory["report_cases"]),
+                "contract inventory usage_error_cases": inventory["usage_error_cases"],
+                "contract inventory summary_cases": inventory["summary_cases"],
+            },
+            "verify_citations v1 contract inventory",
+        )
 
     def test_contract_inventory_matches_report_goldens(self) -> None:
         cases = load_json(VERIFY_CASES)
