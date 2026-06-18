@@ -360,6 +360,23 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
 
             self.assertEqual([expected_command], matching_commands, entry["contract"])
 
+    def test_registered_contracts_run_common_gates_before_focused_guards(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            commands = entry["commands"]
+            focused_command = f"$(PYTHON) {expected_contract_guard_script(entry)}"
+
+            self.assertEqual(
+                COMMON_CONTRACT_GATES,
+                [command for command in commands if command in COMMON_CONTRACT_GATES],
+                entry["contract"],
+            )
+            self.assertLess(
+                commands.index(COMMON_CONTRACT_GATES[-1]),
+                commands.index(focused_command),
+                entry["contract"],
+            )
+            self.assertEqual("git diff --check", commands[-1], entry["contract"])
+
     def test_registered_cargo_validation_commands_use_locked_resolution(self) -> None:
         for entry in CONTRACT_REGISTRY:
             for command in entry["commands"]:
