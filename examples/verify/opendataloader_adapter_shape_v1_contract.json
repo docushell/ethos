@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "contract": "opendataloader_adapter_shape.v1",
+  "status": "source-only-pre-alpha",
+  "carrier": "opendataloader-json adapter",
+  "accepted_shapes": [
+    {
+      "name": "documented-subset",
+      "category": "documented-subset",
+      "input_shape": "tool/pages/elements/tables subset",
+      "source_fixture": "examples/verify/opendataloader.json",
+      "adapter_tests": [
+        "maps_the_documented_subset"
+      ],
+      "cli_verify_tests": [
+        "opendataloader_verify_adapter_produces_capability_aware_report"
+      ],
+      "cli_verify_cases": [
+        "opendataloader-grounded"
+      ],
+      "expected_parser": {
+        "name": "opendataloader-pdf",
+        "version": "0.0.0-synthetic",
+        "adapter": "opendataloader-json",
+        "adapter_version": "0.1.0"
+      },
+      "expected_capabilities": {
+        "spans": false,
+        "char_offsets": false,
+        "tables": true,
+        "fingerprint": false,
+        "coordinate_origin": "unknown",
+        "crop_support": false
+      }
+    },
+    {
+      "name": "real-basic-tree",
+      "category": "real-odl-tree",
+      "input_shape": "kids tree with page numbers, bounding boxes, and content",
+      "source_fixture": "fixtures/foreign/opendataloader/real/opendataloader-output.json",
+      "adapter_tests": [
+        "maps_real_opendataloader_json_shape"
+      ],
+      "cli_verify_tests": [
+        "real_opendataloader_fixture_verifies_against_golden",
+        "real_opendataloader_ungrounded_fixture_verifies_against_golden"
+      ],
+      "cli_verify_cases": [
+        "real-opendataloader-grounded",
+        "real-opendataloader-ungrounded"
+      ],
+      "expected_parser": {
+        "name": "opendataloader-pdf",
+        "version": "unknown",
+        "adapter": "opendataloader-json",
+        "adapter_version": "0.1.0"
+      },
+      "expected_capabilities": {
+        "spans": false,
+        "char_offsets": false,
+        "tables": false,
+        "fingerprint": false,
+        "coordinate_origin": "unknown",
+        "crop_support": false
+      }
+    },
+    {
+      "name": "real-text-child-aliases",
+      "category": "real-odl-aliases",
+      "input_shape": "text/content aliases plus kids/children/list_items aliases",
+      "adapter_tests": [
+        "maps_real_text_and_child_aliases_in_preorder"
+      ],
+      "cli_verify_tests": [
+        "real_opendataloader_text_and_child_alias_claim_grounds"
+      ],
+      "cli_verify_cases": [],
+      "expected_parser": {
+        "name": "opendataloader-pdf",
+        "version": "unknown",
+        "adapter": "opendataloader-json",
+        "adapter_version": "0.1.0"
+      },
+      "expected_capabilities": {
+        "spans": false,
+        "char_offsets": false,
+        "tables": true,
+        "fingerprint": false,
+        "coordinate_origin": "unknown",
+        "crop_support": false
+      }
+    },
+    {
+      "name": "real-table-cells",
+      "category": "real-odl-table",
+      "input_shape": "rows/cells table nodes with explicit page, bbox, and text",
+      "adapter_tests": [
+        "maps_real_nested_child_structures_in_preorder"
+      ],
+      "cli_verify_tests": [
+        "real_opendataloader_style_table_cell_claim_grounds"
+      ],
+      "cli_verify_cases": [],
+      "expected_parser": {
+        "name": "opendataloader-pdf",
+        "version": "unknown",
+        "adapter": "opendataloader-json",
+        "adapter_version": "0.1.0"
+      },
+      "expected_capabilities": {
+        "spans": false,
+        "char_offsets": false,
+        "tables": true,
+        "fingerprint": false,
+        "coordinate_origin": "unknown",
+        "crop_support": false
+      }
+    },
+    {
+      "name": "real-structural-containers",
+      "category": "real-odl-structural",
+      "input_shape": "pure child containers without table capability",
+      "adapter_tests": [
+        "maps_real_structural_containers_without_table_capability"
+      ],
+      "cli_verify_tests": [],
+      "cli_verify_cases": [],
+      "expected_parser": {
+        "name": "opendataloader-pdf",
+        "version": "unknown",
+        "adapter": "opendataloader-json",
+        "adapter_version": "0.1.0"
+      },
+      "expected_capabilities": {
+        "spans": false,
+        "char_offsets": false,
+        "tables": false,
+        "fingerprint": false,
+        "coordinate_origin": "unknown",
+        "crop_support": false
+      }
+    }
+  ],
+  "rejected_shapes": [
+    {
+      "name": "documented-malformed-bbox",
+      "category": "documented-subset-diagnostics",
+      "source_fixture": "examples/verify/opendataloader_malformed_bbox.json",
+      "adapter_tests": [],
+      "cli_verify_tests": [],
+      "cli_usage_error_case": "opendataloader-malformed-bbox-input",
+      "expected_error_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)"
+    },
+    {
+      "name": "documented-unknown-page",
+      "category": "documented-subset-diagnostics",
+      "source_fixture": "examples/verify/opendataloader_unknown_page.json",
+      "adapter_tests": [
+        "rejects_invalid_page_numbers_and_references"
+      ],
+      "cli_verify_tests": [
+        "opendataloader_adapter_errors_are_usage_errors"
+      ],
+      "cli_usage_error_case": "opendataloader-unknown-page-input",
+      "expected_error_contains": "opendataloader-json adapter: element.page references unknown page"
+    },
+    {
+      "name": "real-malformed-child-containers",
+      "category": "real-odl-diagnostics",
+      "adapter_tests": [
+        "rejects_malformed_real_child_containers"
+      ],
+      "cli_verify_tests": [],
+      "expected_error_contains": "kids must be an array"
+    },
+    {
+      "name": "real-malformed-table-cells",
+      "category": "real-odl-diagnostics",
+      "adapter_tests": [
+        "rejects_malformed_real_table_cells"
+      ],
+      "cli_verify_tests": [],
+      "expected_error_contains": "missing cell content"
+    },
+    {
+      "name": "unrecognized-root",
+      "category": "recognition-diagnostics",
+      "adapter_tests": [
+        "rejects_unrecognizable_input"
+      ],
+      "cli_verify_tests": [],
+      "expected_error_contains": "missing 'tool' object"
+    }
+  ],
+  "explicit_blockers": [
+    "a new command or binding surface",
+    "a new foreign parser adapter",
+    "adapter behavior beyond committed fixtures",
+    "coordinate-origin inference",
+    "fingerprint, span, char-offset, or crop support",
+    "claim-kind expansion or semantic verification"
+  ]
+}

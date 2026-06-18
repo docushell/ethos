@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:capability-downgrade-contract:1",
+  "title": "Ethos capability_downgrade v1 contract inventory",
+  "description": "Source-only pre-alpha Milestone D inventory for the current capability_downgrade v1 contract carried by ethos verify. This validates inventory shape and vocabulary; report-golden alignment stays in the repository guard.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "contract",
+    "status",
+    "carrier",
+    "report_cases",
+    "category_invariants",
+    "explicit_blockers"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "contract": { "const": "capability_downgrade.v1" },
+    "status": { "const": "source-only-pre-alpha" },
+    "carrier": { "const": "ethos verify" },
+    "report_cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "category",
+          "golden",
+          "all_evidence_grounded",
+          "expected_statuses",
+          "expected_reasons",
+          "expected_capability_limits",
+          "expected_report_warnings",
+          "expected_blocked_check_ids",
+          "expected_blocked_reasons"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "$ref": "#/$defs/case_name" },
+          "category": { "$ref": "#/$defs/case_category" },
+          "golden": { "$ref": "#/$defs/repo_path" },
+          "all_evidence_grounded": { "type": "boolean" },
+          "expected_statuses": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/check_status" }
+          },
+          "expected_reasons": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/check_reason" }
+          },
+          "expected_capability_limits": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/capability_limit" },
+            "uniqueItems": true
+          },
+          "expected_report_warnings": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/report_warning" },
+            "uniqueItems": true
+          },
+          "expected_blocked_check_ids": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/check_id" },
+            "uniqueItems": true
+          },
+          "expected_blocked_reasons": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/check_reason" }
+          }
+        }
+      }
+    },
+    "category_invariants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "category",
+          "capability_limits",
+          "report_warning",
+          "blocked_checks",
+          "non_grounded_checks",
+          "all_evidence_grounded"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "category": { "$ref": "#/$defs/case_category" },
+          "capability_limits": { "$ref": "#/$defs/presence" },
+          "report_warning": {
+            "enum": ["absent", "capability_limited"]
+          },
+          "blocked_checks": { "$ref": "#/$defs/presence" },
+          "non_grounded_checks": { "$ref": "#/$defs/presence" },
+          "all_evidence_grounded": { "type": "boolean" }
+        }
+      }
+    },
+    "explicit_blockers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "case_name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "repo_path": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_./-]+$" },
+    "check_id": { "type": "string", "pattern": "^v[0-9]{4}$" },
+    "case_category": {
+      "enum": [
+        "no-downgrade-control",
+        "report-only-downgrade",
+        "non-grounded-with-downgrade",
+        "check-blocked-downgrade"
+      ]
+    },
+    "presence": {
+      "enum": ["absent", "present"]
+    },
+    "check_status": {
+      "enum": [
+        "grounded",
+        "not_found",
+        "mismatch",
+        "stale",
+        "unsupported_claim_kind",
+        "capability_blocked",
+        "error"
+      ]
+    },
+    "capability_limit": {
+      "enum": [
+        "missing_fingerprint",
+        "missing_spans",
+        "missing_char_offsets",
+        "missing_tables",
+        "unknown_coordinate_origin",
+        "missing_crop_support"
+      ]
+    },
+    "report_warning": {
+      "enum": ["capability_limited"]
+    },
+    "check_reason": {
+      "enum": [
+        "missing_locator",
+        "missing_required_text",
+        "unsupported_claim_kind",
+        "stale_fingerprint",
+        "missing_source_fingerprint",
+        "missing_citation_fingerprint",
+        "missing_span_capability",
+        "missing_table_capability",
+        "unknown_coordinate_origin",
+        "element_not_found",
+        "span_not_found",
+        "page_not_found",
+        "bbox_not_found",
+        "missing_page_for_bbox",
+        "missing_table_cell_locator",
+        "table_not_found",
+        "table_cell_not_found",
+        "text_mismatch"
+      ]
+    }
+  }
+}

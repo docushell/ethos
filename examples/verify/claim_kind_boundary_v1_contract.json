@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "contract": "claim_kind_boundary.v1",
+  "status": "source-only-pre-alpha",
+  "carrier": "ethos verify",
+  "supported_claim_kinds": ["quote", "value", "presence", "table_cell"],
+  "unsupported_claim_kinds": ["region", "other"],
+  "config_boundary": {
+    "schema": "schemas/ethos-verification-config.schema.json",
+    "accepted_claim_kinds": ["quote", "value", "presence", "table_cell"],
+    "rejected_claim_kinds": ["region", "other"],
+    "usage_error": "verification config claim_kinds must include only quote, value, presence, and table_cell"
+  },
+  "report_case": {
+    "name": "native-non-v1-claims",
+    "citations": "examples/verify/native_non_v1_claims_citations.json",
+    "golden": "examples/verify/goldens/native_non_v1_claims_report.json",
+    "expected_statuses": ["grounded", "unsupported_claim_kind", "unsupported_claim_kind"],
+    "expected_reasons": ["unsupported_claim_kind", "unsupported_claim_kind"],
+    "expected_match_methods": ["presence_only", "none", "none"],
+    "expected_unsupported_claim_kinds": ["region", "other"],
+    "all_evidence_grounded": false,
+    "unsupported_checks_have_no_evidence": true,
+    "unsupported_checks_semantic_unverified": false
+  },
+  "explicit_blockers": [
+    "new claim-kind support",
+    "semantic, visual, arithmetic, or cross-region verification",
+    "a new command or binding surface",
+    "crop API changes",
+    "sandbox backend changes",
+    "foreign-adapter broadening beyond committed fixtures"
+  ]
+}

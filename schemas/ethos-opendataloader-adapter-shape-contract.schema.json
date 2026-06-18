@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:opendataloader-adapter-shape-contract:1",
+  "title": "Ethos opendataloader_adapter_shape v1 contract inventory",
+  "description": "Source-only pre-alpha Milestone D inventory for the current opendataloader_adapter_shape v1 contract carried by the opendataloader-json adapter. This validates inventory shape and vocabulary; fixture/test/golden alignment stays in the repository guard.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "contract",
+    "status",
+    "carrier",
+    "accepted_shapes",
+    "rejected_shapes",
+    "explicit_blockers"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "contract": { "const": "opendataloader_adapter_shape.v1" },
+    "status": { "const": "source-only-pre-alpha" },
+    "carrier": { "const": "opendataloader-json adapter" },
+    "accepted_shapes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/accepted_shape" }
+    },
+    "rejected_shapes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/rejected_shape" }
+    },
+    "explicit_blockers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "accepted_shape": {
+      "type": "object",
+      "required": [
+        "name",
+        "category",
+        "input_shape",
+        "adapter_tests",
+        "cli_verify_tests",
+        "cli_verify_cases",
+        "expected_parser",
+        "expected_capabilities"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/case_name" },
+        "category": {
+          "enum": [
+            "documented-subset",
+            "real-odl-tree",
+            "real-odl-aliases",
+            "real-odl-table",
+            "real-odl-structural"
+          ]
+        },
+        "input_shape": { "type": "string", "minLength": 1 },
+        "source_fixture": { "$ref": "#/$defs/repo_path" },
+        "adapter_tests": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/rust_test_name" },
+          "uniqueItems": true
+        },
+        "cli_verify_tests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/rust_test_name" },
+          "uniqueItems": true
+        },
+        "cli_verify_cases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/case_name" },
+          "uniqueItems": true
+        },
+        "expected_parser": { "$ref": "#/$defs/parser" },
+        "expected_capabilities": { "$ref": "#/$defs/capabilities" }
+      }
+    },
+    "rejected_shape": {
+      "type": "object",
+      "required": [
+        "name",
+        "category",
+        "adapter_tests",
+        "cli_verify_tests",
+        "expected_error_contains"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/case_name" },
+        "category": {
+          "enum": [
+            "documented-subset-diagnostics",
+            "real-odl-diagnostics",
+            "recognition-diagnostics"
+          ]
+        },
+        "source_fixture": { "$ref": "#/$defs/repo_path" },
+        "adapter_tests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/rust_test_name" },
+          "uniqueItems": true
+        },
+        "cli_verify_tests": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/rust_test_name" },
+          "uniqueItems": true
+        },
+        "cli_usage_error_case": { "$ref": "#/$defs/case_name" },
+        "expected_error_contains": { "type": "string", "minLength": 1 }
+      }
+    },
+    "parser": {
+      "type": "object",
+      "required": ["name", "version", "adapter", "adapter_version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "const": "opendataloader-pdf" },
+        "version": { "type": "string", "minLength": 1 },
+        "adapter": { "const": "opendataloader-json" },
+        "adapter_version": { "const": "0.1.0" }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "required": [
+        "spans",
+        "char_offsets",
+        "tables",
+        "fingerprint",
+        "coordinate_origin",
+        "crop_support"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "spans": { "const": false },
+        "char_offsets": { "const": false },
+        "tables": { "type": "boolean" },
+        "fingerprint": { "const": false },
+        "coordinate_origin": { "const": "unknown" },
+        "crop_support": { "const": false }
+      }
+    },
+    "case_name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "repo_path": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_./-]+$" },
+    "rust_test_name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+  }
+}

@@ -529,6 +529,7 @@ fn pdf_fingerprint_timeout_kills_pdfium_worker() {
     assert!(output.stdout.is_empty());
     let error: Value = serde_json::from_slice(&output.stderr).unwrap();
     assert_eq!(error["error"]["code"], "parse_timeout");
+    assert_eq!(error["error"]["message"], "parse exceeded max_parse_ms");
 }
 
 #[cfg(debug_assertions)]

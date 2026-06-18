@@ -25,6 +25,11 @@ The example pair `schemas/examples/citations.example.json` and
 contract. Schema validation now checks that the example report echoes the example claims in input
 order and keeps the grounded gate coherent.
 
+`examples/verify/verify_citations_v1_contract.json` classifies the existing executable verifier
+cases as the current v1 contract inventory. Schema validation checks the inventory shape and
+vocabulary; the guard checks that this inventory stays aligned with `examples/verify/cases.json`
+and each referenced report golden.
+
 Focused validation command:
 
 - `make milestone-d-verify-citations-contract PYTHON=<jsonschema-venv>/bin/python`

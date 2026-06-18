@@ -80,6 +80,39 @@ PAIRS = [
     ]),
     ("ethos-verification-config.schema.json", [EXAMPLES / "verification-config.example.json"]),
     ("ethos-crop-descriptor.schema.json", [EXAMPLES / "crop-descriptor.example.json"]),
+    ("ethos-crop-element-request.schema.json", [
+        EXAMPLES / "crop-element-request.example.json",
+    ]),
+    ("ethos-verify-citations-contract.schema.json", [
+        ROOT / "examples" / "verify" / "verify_citations_v1_contract.json",
+    ]),
+    ("ethos-claim-kind-boundary-contract.schema.json", [
+        ROOT / "examples" / "verify" / "claim_kind_boundary_v1_contract.json",
+    ]),
+    ("ethos-grounding-source-contract.schema.json", [
+        ROOT / "examples" / "verify" / "grounding_source_v1_contract.json",
+    ]),
+    ("ethos-capability-downgrade-contract.schema.json", [
+        ROOT / "examples" / "verify" / "capability_downgrade_v1_contract.json",
+    ]),
+    ("ethos-opendataloader-adapter-shape-contract.schema.json", [
+        ROOT / "examples" / "verify" / "opendataloader_adapter_shape_v1_contract.json",
+    ]),
+    ("ethos-crop-element-contract.schema.json", [
+        ROOT / "examples" / "crop" / "crop_element_v1_contract.json",
+    ]),
+    ("ethos-crop-element-surface-shape-contract.schema.json", [
+        ROOT / "examples" / "crop" / "crop_element_surface_shape_v1_contract.json",
+    ]),
+    ("ethos-sandbox-subprocess-request.schema.json", [
+        EXAMPLES / "sandbox-subprocess-doc-parse-request.example.json",
+        EXAMPLES / "sandbox-subprocess-doc-parse-timeout-request.example.json",
+        EXAMPLES / "sandbox-subprocess-doc-parse-diagnostics-request.example.json",
+        EXAMPLES / "sandbox-subprocess-fingerprint-timeout-request.example.json",
+    ]),
+    ("ethos-sandbox-subprocess-contract.schema.json", [
+        ROOT / "examples" / "sandbox" / "sandbox_subprocess_v1_contract.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

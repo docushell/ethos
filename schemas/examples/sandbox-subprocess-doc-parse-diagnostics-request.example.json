@@ -1,0 +1,16 @@
+{
+  "artifact_type": "ethos.sandbox_subprocess_request.v1",
+  "schema_version": "1.0.0",
+  "request_ref": "request-590058131f2c0b21a8892f131802d0d52b3db08efabe8164e22f119b8d4c4e18",
+  "operation": "doc_parse",
+  "input": {
+    "kind": "caller_supplied_pdf_bytes"
+  },
+  "page_selection": "all",
+  "limits": {
+    "max_parse_ms": 120000
+  },
+  "diagnostics": true,
+  "stdout_on_failure": "empty",
+  "stderr_policy": "stable_error_envelope_with_worker_stderr"
+}

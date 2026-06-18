@@ -1,0 +1,8 @@
+{
+  "artifact_type": "ethos.crop_element_request.v1",
+  "schema_version": "1.0.0",
+  "request_ref": "request-489e91879dd347b3fce36cec50598144cfa96d0158c557665b8f35c6dc46ef85",
+  "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "element_id": "e000002",
+  "rendering": "descriptor_only"
+}

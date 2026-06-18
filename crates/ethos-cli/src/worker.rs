@@ -520,6 +520,32 @@ mod tests {
         bytes
     }
 
+    fn test_header_bytes(value: serde_json::Value) -> Vec<u8> {
+        let mut bytes = ethos_core::c14n::c14n_bytes(&value).expect("test value is canonical");
+        bytes.push(b'\n');
+        bytes
+    }
+
+    fn assert_json_artifact_header_rejected(header: Vec<u8>, message: &str) {
+        let (temp_dir, path) = test_artifact();
+        let bytes = test_document_bytes(TEST_FINGERPRINT, TEST_PAYLOAD_SHA256);
+        std::fs::write(&path, &bytes).expect("test artifact can be written");
+
+        let error = match worker_json_artifact_from_header(&header, temp_dir, path.clone()) {
+            Ok(_) => panic!("invalid artifact header was accepted"),
+            Err(error) => error,
+        };
+
+        match error {
+            Failure::Ethos(error) => {
+                assert_eq!(error.code, ErrorCode::InternalError);
+                assert_eq!(error.message, message);
+            }
+            _ => panic!("expected Ethos failure"),
+        }
+        assert!(!path.exists(), "temp dir is cleaned up on rejection");
+    }
+
     #[test]
     fn validates_json_artifact_header_against_file_hash() {
         let (temp_dir, path) = test_artifact();
@@ -543,6 +569,42 @@ mod tests {
 
         drop(artifact);
         assert!(!path.exists(), "artifact is cleaned up on drop");
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_invalid_json() {
+        assert_json_artifact_header_rejected(
+            b"{".to_vec(),
+            "pdfium worker returned an invalid JSON artifact header",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_unsupported_schema() {
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": "unsupported-worker-json-artifact",
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker returned an unsupported JSON artifact header",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_missing_output_bytes() {
+        let bytes = test_document_bytes(TEST_FINGERPRINT, TEST_PAYLOAD_SHA256);
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+            "document_fingerprint": TEST_FINGERPRINT,
+            "payload_sha256": TEST_PAYLOAD_SHA256,
+            "output_sha256": sha256_hex(&bytes),
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker JSON artifact header missing output_bytes",
+        );
     }
 
     #[test]
