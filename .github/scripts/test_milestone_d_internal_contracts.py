@@ -102,6 +102,37 @@ def registered_targets() -> list[str]:
     return [entry["target"] for entry in CONTRACT_REGISTRY]
 
 
+def registered_paths(key: str) -> list[str]:
+    return sorted(entry[key] for entry in CONTRACT_REGISTRY)
+
+
+def discovered_d_contract_docs() -> list[str]:
+    return sorted(
+        str(path.relative_to(ROOT))
+        for path in (ROOT / "docs").glob("milestone-d-*-contract.md")
+    )
+
+
+def discovered_d_contract_schemas() -> list[str]:
+    return sorted(
+        str(path.relative_to(ROOT))
+        for path in (ROOT / "schemas").glob("ethos-*-contract.schema.json")
+    )
+
+
+def discovered_d_contract_inventories() -> list[str]:
+    roots = [
+        ROOT / "examples" / "verify",
+        ROOT / "examples" / "crop",
+        ROOT / "examples" / "sandbox",
+    ]
+    return sorted(
+        str(path.relative_to(ROOT))
+        for root in roots
+        for path in root.glob("*_v1_contract.json")
+    )
+
+
 class MilestoneDInternalContractsTests(unittest.TestCase):
     def test_target_is_declared_phony(self) -> None:
         text = makefile_text()
@@ -143,6 +174,11 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertEqual("source-only-pre-alpha", inventory["status"])
             self.assertEqual(entry["carrier"], inventory["carrier"])
             self.assertTrue((ROOT / entry["schema"]).is_file(), entry["contract"])
+
+    def test_contract_registry_covers_current_d_artifacts(self) -> None:
+        self.assertEqual(registered_paths("doc"), discovered_d_contract_docs())
+        self.assertEqual(registered_paths("schema"), discovered_d_contract_schemas())
+        self.assertEqual(registered_paths("inventory"), discovered_d_contract_inventories())
 
     def test_registry_references_are_consistent(self) -> None:
         for entry in CONTRACT_REGISTRY:
