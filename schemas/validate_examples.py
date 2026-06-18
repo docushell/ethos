@@ -86,6 +86,9 @@ PAIRS = [
     ("ethos-crop-element-contract.schema.json", [
         ROOT / "examples" / "crop" / "crop_element_v1_contract.json",
     ]),
+    ("ethos-sandbox-subprocess-contract.schema.json", [
+        ROOT / "examples" / "sandbox" / "sandbox_subprocess_v1_contract.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

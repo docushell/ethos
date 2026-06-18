@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "contract": "sandbox_subprocess.v1",
+  "status": "source-only-pre-alpha",
+  "carrier": "pdfium worker process",
+  "cases": [
+    {
+      "name": "doc-parse-timeout",
+      "command_surface": "ethos doc parse",
+      "test_filter": "doc_parse_timeout_kills_pdfium_worker",
+      "boundary": "max_parse_ms_timeout"
+    },
+    {
+      "name": "fingerprint-timeout",
+      "command_surface": "ethos fingerprint",
+      "test_filter": "pdf_fingerprint_timeout_kills_pdfium_worker",
+      "boundary": "max_parse_ms_timeout"
+    },
+    {
+      "name": "doc-parse-memory-limit",
+      "command_surface": "ethos doc parse",
+      "test_filter": "doc_parse_memory_limit_worker_failure_is_stable",
+      "boundary": "memory_limit_error"
+    },
+    {
+      "name": "doc-parse-stable-error-envelope",
+      "command_surface": "ethos doc parse",
+      "test_filter": "doc_parse_relays_worker_stable_error_envelope",
+      "boundary": "stable_error_envelope"
+    },
+    {
+      "name": "doc-parse-stderr-hidden-by-default",
+      "command_surface": "ethos doc parse",
+      "test_filter": "doc_parse_non_envelope_worker_failure_stays_canonical_without_diagnostics",
+      "boundary": "diagnostics_gated_stderr"
+    },
+    {
+      "name": "doc-parse-diagnostics-gated-stderr",
+      "command_surface": "ethos doc parse",
+      "test_filter": "doc_parse_non_envelope_worker_failure_includes_stderr_with_diagnostics",
+      "boundary": "diagnostics_gated_stderr"
+    }
+  ],
+  "explicit_blockers": [
+    "hardened OS sandbox rules",
+    "network-denying runtime proof",
+    "file-descriptor or child-process enforcement",
+    "arbitrary filesystem allowlist enforcement",
+    "a new public command or binding surface",
+    "Python, Node, MCP, or hosted sandbox surfaces",
+    "crop or verification API changes"
+  ]
+}
