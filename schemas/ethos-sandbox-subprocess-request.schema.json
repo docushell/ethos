@@ -7,6 +7,7 @@
   "required": [
     "artifact_type",
     "schema_version",
+    "request_ref",
     "operation",
     "input",
     "limits",
@@ -18,6 +19,11 @@
   "properties": {
     "artifact_type": { "const": "ethos.sandbox_subprocess_request.v1" },
     "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "request_ref": {
+      "type": "string",
+      "pattern": "^request-[0-9a-f]{64}$",
+      "description": "Stable source-only request identity derived from operation, input kind, page selection when present, limits, diagnostics intent, failure-output policy, and the ethos.sandbox_subprocess_request_ref.v1 version marker."
+    },
     "operation": { "enum": ["doc_parse", "fingerprint"] },
     "input": {
       "type": "object",

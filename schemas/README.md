@@ -58,7 +58,9 @@ existing PDF worker process behind `ethos doc parse` and `ethos fingerprint`; it
 hardened sandbox or a new command/binding surface. The request envelope examples under
 `schemas/examples/sandbox-subprocess-*.example.json` and the contract inventory at
 `examples/sandbox/sandbox_subprocess_v1_contract.json` are schema-validated here; their alignment
-with the executable worker tests is checked by the Milestone D repository guard.
+with the executable worker tests is checked by the Milestone D repository guard. Each request
+envelope carries a c14n-derived `request_ref` identity guarded in that same source-only contract
+check.
 
 Derived artifacts not schema'd here: `document.md` / `document.txt` (deterministic exports
 specified by the exporter config, Milestone B) and `debug.html` (Milestone C).

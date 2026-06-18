@@ -1,6 +1,7 @@
 {
   "artifact_type": "ethos.sandbox_subprocess_request.v1",
   "schema_version": "1.0.0",
+  "request_ref": "request-37ad10e9ab78491dfb4cb26268774f18d7d35b76cf226069d0ef16940f75350c",
   "operation": "doc_parse",
   "input": {
     "kind": "caller_supplied_pdf_bytes"

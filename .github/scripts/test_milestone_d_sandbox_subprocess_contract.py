@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import unittest
@@ -54,6 +55,16 @@ EXPECTED_BOUNDARIES = [
 
 def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def sha256_c14n(value: dict) -> str:
+    encoded = json.dumps(
+        value,
+        separators=(",", ":"),
+        sort_keys=True,
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def contract_text() -> str:
@@ -99,6 +110,29 @@ def expected_request_policy(case: dict) -> tuple[bool, str, int]:
     if case["boundary"] == "max_parse_ms_timeout":
         return False, "stable_error_envelope", 25
     return False, "stable_error_envelope", 120_000
+
+
+def logical_sandbox_request_ref(request: dict) -> str:
+    identity = {
+        "operation": request["operation"],
+        "input": request["input"],
+        "limits": request["limits"],
+        "diagnostics": request["diagnostics"],
+        "stdout_on_failure": request["stdout_on_failure"],
+        "stderr_policy": request["stderr_policy"],
+        "version": "ethos.sandbox_subprocess_request_ref.v1",
+    }
+    if "page_selection" in request:
+        identity["page_selection"] = request["page_selection"]
+    return "request-{}".format(sha256_c14n(identity))
+
+
+def request_ref_drift_diagnostics(request: dict) -> list[str]:
+    if "request_ref" not in request:
+        return ["request_ref is missing"]
+    if request["request_ref"] != logical_sandbox_request_ref(request):
+        return ["request_ref does not match sandbox subprocess request identity tuple"]
+    return []
 
 
 def request_case_diagnostics(request: dict, case: dict) -> list[str]:
@@ -212,6 +246,8 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             "`memory_limit_exceeded` error code",
             "`schemas/ethos-sandbox-subprocess-request.schema.json`",
             "`schemas/examples/sandbox-subprocess-*.example.json`",
+            "`request_ref`",
+            "`ethos.sandbox_subprocess_request_ref.v1`",
             "stable worker error envelopes are relayed",
             "non-envelope worker stderr is hidden by default",
             "explicit diagnostics",
@@ -245,6 +281,10 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             self.assertEqual([], schema_errors(schema, request), request_path)
 
         doc_parse_request = load_json(ROOT / "schemas/examples/sandbox-subprocess-doc-parse-request.example.json")
+        doc_parse_without_request_ref = dict(doc_parse_request)
+        del doc_parse_without_request_ref["request_ref"]
+        self.assertNotEqual([], schema_errors(schema, doc_parse_without_request_ref))
+
         doc_parse_without_pages = dict(doc_parse_request)
         del doc_parse_without_pages["page_selection"]
         self.assertNotEqual([], schema_errors(schema, doc_parse_without_pages))
@@ -291,8 +331,87 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             self.assertTrue(request_path.is_file(), case["name"])
             request = load_json(request_path)
             self.assertEqual([], schema_errors(request_schema, request), case["name"])
+            self.assertEqual([], request_ref_drift_diagnostics(request), case["name"])
             self.assertEqual([], request_case_diagnostics(request, case), case["name"])
             self.assertIn(f"fn {case['test_filter']}()", test_source, case["name"])
+
+    def test_request_ref_fails_closed_on_identity_drift(self) -> None:
+        request = load_json(ROOT / "schemas/examples/sandbox-subprocess-doc-parse-request.example.json")
+
+        expected_refs = {
+            "schemas/examples/sandbox-subprocess-doc-parse-request.example.json":
+                "request-5e6951ae8d44fcfa636bbf7cbd079414bcc6b9ca6cd1fd2037c10550014f94ac",
+            "schemas/examples/sandbox-subprocess-doc-parse-timeout-request.example.json":
+                "request-37ad10e9ab78491dfb4cb26268774f18d7d35b76cf226069d0ef16940f75350c",
+            "schemas/examples/sandbox-subprocess-doc-parse-diagnostics-request.example.json":
+                "request-590058131f2c0b21a8892f131802d0d52b3db08efabe8164e22f119b8d4c4e18",
+            "schemas/examples/sandbox-subprocess-fingerprint-timeout-request.example.json":
+                "request-da18cc9ac61abb6d4f11e20b72d1428b3e6a0d2c7036292f7dc5b2fb8c858ade",
+        }
+        for request_path, expected_ref in expected_refs.items():
+            current = load_json(ROOT / request_path)
+            self.assertEqual(expected_ref, current["request_ref"], request_path)
+            self.assertEqual(expected_ref, logical_sandbox_request_ref(current), request_path)
+
+        self.assertEqual(
+            "request-5e6951ae8d44fcfa636bbf7cbd079414bcc6b9ca6cd1fd2037c10550014f94ac",
+            logical_sandbox_request_ref(request),
+        )
+        self.assertEqual([], request_ref_drift_diagnostics(request))
+
+        missing_request_ref = dict(request)
+        del missing_request_ref["request_ref"]
+        self.assertEqual(
+            ["request_ref is missing"],
+            request_ref_drift_diagnostics(missing_request_ref),
+        )
+
+        stale_request_ref = dict(request, request_ref="request-" + "0" * 64)
+        self.assertEqual(
+            ["request_ref does not match sandbox subprocess request identity tuple"],
+            request_ref_drift_diagnostics(stale_request_ref),
+        )
+
+        stale_limit = dict(request, limits={"max_parse_ms": 25})
+        self.assertNotEqual(request["request_ref"], logical_sandbox_request_ref(stale_limit))
+        self.assertEqual(
+            ["request_ref does not match sandbox subprocess request identity tuple"],
+            request_ref_drift_diagnostics(stale_limit),
+        )
+
+        stale_stderr_policy = dict(
+            request,
+            stderr_policy="stable_error_envelope_with_worker_stderr",
+        )
+        self.assertNotEqual(
+            request["request_ref"],
+            logical_sandbox_request_ref(stale_stderr_policy),
+        )
+        self.assertEqual(
+            ["request_ref does not match sandbox subprocess request identity tuple"],
+            request_ref_drift_diagnostics(stale_stderr_policy),
+        )
+
+        stale_page_selection = dict(request, page_selection="1")
+        self.assertNotEqual(
+            request["request_ref"],
+            logical_sandbox_request_ref(stale_page_selection),
+        )
+        self.assertEqual(
+            ["request_ref does not match sandbox subprocess request identity tuple"],
+            request_ref_drift_diagnostics(stale_page_selection),
+        )
+
+        stale_operation = dict(request, operation="fingerprint")
+        del stale_operation["page_selection"]
+        self.assertNotEqual(
+            request["request_ref"],
+            logical_sandbox_request_ref(stale_operation),
+        )
+        self.assertEqual(
+            ["request_ref does not match sandbox subprocess request identity tuple"],
+            request_ref_drift_diagnostics(stale_operation),
+        )
 
     def test_request_binding_guard_fails_closed_on_policy_drift(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

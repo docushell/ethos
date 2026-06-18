@@ -13,7 +13,8 @@ PDF input, bounded worker execution, normalized document output, and stable erro
 `sandbox_subprocess` v1 will consume:
 
 - a `schemas/ethos-sandbox-subprocess-request.schema.json` request envelope carrying operation,
-  PDF-byte input kind, limits, diagnostics intent, and failure-output policy;
+  PDF-byte input kind, limits, diagnostics intent, failure-output policy, and stable
+  `request_ref`;
 - PDF input already accepted by the current parse/fingerprint paths;
 - parse configuration, including page selection for document parsing and `max_parse_ms`;
 - a worker boundary that returns either normalized graph data or a stable error envelope;
@@ -43,7 +44,8 @@ The v1 contract boundary is fail-closed and error-envelope-first:
 - non-envelope worker stderr is hidden by default;
 - non-envelope worker stderr is exposed only under explicit diagnostics;
 - request envelopes bind each failure case to the intended operation, timeout limit, diagnostics
-  mode, and failure-output policy;
+  mode, failure-output policy, and c14n-derived request identity
+  `ethos.sandbox_subprocess_request_ref.v1`;
 - stdout remains empty on worker failures covered by this contract inventory.
 
 ## Explicit Blockers For This Slice
