@@ -281,6 +281,19 @@ def schema_example_validation_pairs() -> set[tuple[str, str]]:
     return pairs
 
 
+def object_schema_nodes(node: object, path: str = "#") -> list[tuple[str, dict]]:
+    nodes: list[tuple[str, dict]] = []
+    if isinstance(node, dict):
+        if node.get("type") == "object":
+            nodes.append((path, node))
+        for key, value in node.items():
+            nodes.extend(object_schema_nodes(value, f"{path}/{key}"))
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            nodes.extend(object_schema_nodes(value, f"{path}/{index}"))
+    return nodes
+
+
 class MilestoneDInternalContractsTests(unittest.TestCase):
     def test_target_is_declared_phony(self) -> None:
         text = makefile_text()
@@ -390,6 +403,11 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             schema_required = set(load_json(entry["schema"])["required"])
 
             self.assertTrue(required_fields.issubset(schema_required), entry["contract"])
+
+    def test_registered_contract_schema_objects_are_closed(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            for path, node in object_schema_nodes(load_json(entry["schema"])):
+                self.assertEqual(False, node.get("additionalProperties"), f"{entry['contract']}: {path}")
 
     def test_contract_registry_covers_current_d_artifacts(self) -> None:
         self.assertEqual(registered_paths("doc"), discovered_d_contract_docs())
