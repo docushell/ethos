@@ -2587,7 +2587,13 @@ fn case_insensitive_config_allows_literal_case_difference() {
         "--config",
         config.to_str().unwrap(),
     ]);
+    let expected_config_hash =
+        ethos_core::c14n::sha256_hex(&json_file(&config)).expect("config hash computes");
 
+    assert_eq!(
+        report["verification_config_sha256"].as_str().unwrap(),
+        expected_config_hash
+    );
     assert_eq!(report["checks"][0]["status"], "grounded");
     assert_eq!(
         report["checks"][0]["match_method"],
