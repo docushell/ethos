@@ -677,6 +677,21 @@ fn fail_on_ungrounded_keeps_invalid_input_on_usage_exit_code() {
 }
 
 #[test]
+fn verify_citations_contract_is_not_a_cli_alias() {
+    for subcommand in ["verify-citations", "verify_citations"] {
+        let output = run_ethos(&[subcommand]);
+
+        assert_eq!(output.status.code(), Some(2), "case {subcommand}");
+        assert_eq!(output.stdout, b"", "case {subcommand}");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("unrecognized subcommand") && stderr.contains(subcommand),
+            "case {subcommand} stderr:\n{stderr}"
+        );
+    }
+}
+
+#[test]
 fn malformed_native_document_is_usage_error() {
     let root = repo_root();
     let doc = temp_json("malformed-native-document", "{}");
