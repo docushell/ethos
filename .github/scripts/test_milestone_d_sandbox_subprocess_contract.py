@@ -260,6 +260,15 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         )
         self.assertNotEqual([], schema_errors(schema, diagnostics_without_stderr))
 
+        doc_parse_with_stderr_without_diagnostics = dict(
+            doc_parse_request,
+            stderr_policy="stable_error_envelope_with_worker_stderr",
+        )
+        self.assertNotEqual(
+            [],
+            schema_errors(schema, doc_parse_with_stderr_without_diagnostics),
+        )
+
     def test_contract_inventory_matches_existing_worker_tests(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
         request_schema = load_json(SANDBOX_REQUEST_SCHEMA)
