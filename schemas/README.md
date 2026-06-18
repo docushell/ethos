@@ -13,6 +13,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-verification-report.schema.json` | `verification_report.json` |
 | `ethos-verification-config.schema.json` | verification config (its c14n hash stamps reports) |
 | `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos verify --crop-dir` |
+| `ethos-verify-citations-contract.schema.json` | Milestone D `verify_citations` v1 source-only contract inventory |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
 
 Conventions: snake_case keys; `additionalProperties: false` everywhere except the
@@ -32,7 +33,9 @@ security-report / verification-report examples).
 Milestone D `verify_citations` v1 contract work is tracked in
 `docs/milestone-d-verify-citations-contract.md`. In this source-only pre-alpha slice,
 `verify_citations` names the citation-input to verification-report contract currently carried by
-`ethos verify`; it does not add a new command or binding surface.
+`ethos verify`; it does not add a new command or binding surface. The contract inventory at
+`examples/verify/verify_citations_v1_contract.json` is schema-validated here; its alignment with
+the executable case inventory and report goldens is checked by the Milestone D repository guard.
 
 Derived artifacts not schema'd here: `document.md` / `document.txt` (deterministic exports
 specified by the exporter config, Milestone B) and `debug.html` (Milestone C).

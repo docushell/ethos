@@ -187,6 +187,7 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
         for expected in [
             "new verify_citations CLI alias",
             "Python Node MCP or hosted API surfaces",
+            "broad foreign-adapter hardening beyond existing fixtures",
             "crop API implementation",
             "sandbox subprocess backend expansion",
             "semantic or arithmetic verification",

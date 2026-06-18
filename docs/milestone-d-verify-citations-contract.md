@@ -26,8 +26,9 @@ contract. Schema validation now checks that the example report echoes the exampl
 order and keeps the grounded gate coherent.
 
 `examples/verify/verify_citations_v1_contract.json` classifies the existing executable verifier
-cases as the current v1 contract inventory. The guard checks that this inventory stays aligned with
-`examples/verify/cases.json` and each referenced report golden.
+cases as the current v1 contract inventory. Schema validation checks the inventory shape and
+vocabulary; the guard checks that this inventory stays aligned with `examples/verify/cases.json`
+and each referenced report golden.
 
 Focused validation command:
 

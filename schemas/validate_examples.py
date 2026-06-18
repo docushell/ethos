@@ -80,6 +80,9 @@ PAIRS = [
     ]),
     ("ethos-verification-config.schema.json", [EXAMPLES / "verification-config.example.json"]),
     ("ethos-crop-descriptor.schema.json", [EXAMPLES / "crop-descriptor.example.json"]),
+    ("ethos-verify-citations-contract.schema.json", [
+        ROOT / "examples" / "verify" / "verify_citations_v1_contract.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

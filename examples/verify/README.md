@@ -9,8 +9,8 @@ case.
 
 `verify_citations_v1_contract.json` classifies the same executable cases for the current
 Milestone D source-only pre-alpha `verify_citations` v1 contract. The focused
-`make milestone-d-verify-citations-contract` target checks that this contract inventory stays
-aligned with `cases.json` and the report goldens.
+`make milestone-d-verify-citations-contract` target schema-validates this contract inventory and
+checks that it stays aligned with `cases.json` and the report goldens.
 
 ## Verify-Alpha Case Inventory
 
