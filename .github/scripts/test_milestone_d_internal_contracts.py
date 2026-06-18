@@ -186,6 +186,14 @@ def focused_validation_command(entry: dict) -> str:
     return f"make {entry['target']} PYTHON=<jsonschema-venv>/bin/python"
 
 
+def contract_name(entry: dict) -> str:
+    return entry["contract"].removesuffix(".v1")
+
+
+def contract_kebab(entry: dict) -> str:
+    return contract_name(entry).replace("_", "-")
+
+
 def expected_contract_guard_script(entry: dict) -> str:
     target_slug = entry["target"].removeprefix("milestone-d-").replace("-", "_")
     return f".github/scripts/test_milestone_d_{target_slug}.py"
@@ -408,6 +416,15 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertEqual("source-only-pre-alpha", inventory["status"])
             self.assertEqual(entry["carrier"], inventory["carrier"])
             self.assertTrue((ROOT / entry["schema"]).is_file(), entry["contract"])
+
+    def test_registered_contract_artifact_names_match_contract_names(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            kebab = contract_kebab(entry)
+
+            self.assertEqual(f"milestone-d-{kebab}-contract", entry["target"], entry["contract"])
+            self.assertEqual(f"docs/milestone-d-{kebab}-contract.md", entry["doc"], entry["contract"])
+            self.assertEqual(f"schemas/ethos-{kebab}-contract.schema.json", entry["schema"], entry["contract"])
+            self.assertEqual(f"{contract_name(entry)}_v1_contract.json", Path(entry["inventory"]).name, entry["contract"])
 
     def test_registered_contract_schema_identity_matches_registry(self) -> None:
         for entry in CONTRACT_REGISTRY:
