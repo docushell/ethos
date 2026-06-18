@@ -198,6 +198,31 @@ CONTRACT_REGISTRY = [
         ],
     },
 ]
+D_REQUEST_ENVELOPES = [
+    {
+        "schema": "schemas/ethos-crop-element-request.schema.json",
+        "description": "source-only request envelope for Milestone D `crop_element` v1 contract work",
+        "examples": [
+            "schemas/examples/crop-element-request.example.json",
+        ],
+        "status_needles": [
+            "request envelope at `schemas/examples/crop-element-request.example.json`",
+        ],
+    },
+    {
+        "schema": "schemas/ethos-sandbox-subprocess-request.schema.json",
+        "description": "source-only request envelope for Milestone D `sandbox_subprocess` v1 contract work",
+        "examples": [
+            "schemas/examples/sandbox-subprocess-doc-parse-request.example.json",
+            "schemas/examples/sandbox-subprocess-doc-parse-timeout-request.example.json",
+            "schemas/examples/sandbox-subprocess-doc-parse-diagnostics-request.example.json",
+            "schemas/examples/sandbox-subprocess-fingerprint-timeout-request.example.json",
+        ],
+        "status_needles": [
+            "request envelopes under `schemas/examples/sandbox-subprocess-*.example.json`",
+        ],
+    },
+]
 
 
 def load_json(path: str) -> dict:
@@ -652,6 +677,22 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             description = f"Milestone D `{contract_name(entry)}` v1 source-only contract inventory"
 
             self.assertEqual(description, table_entries.get(schema_name), entry["contract"])
+
+    def test_request_envelope_schemas_are_documented_and_validated(self) -> None:
+        table_entries = schemas_readme_table_entries()
+        validated_pairs = schema_example_validation_pairs()
+        execution_status = EXECUTION_STATUS.read_text(encoding="utf-8")
+
+        for envelope in D_REQUEST_ENVELOPES:
+            schema_name = Path(envelope["schema"]).name
+
+            self.assertTrue((ROOT / envelope["schema"]).is_file(), envelope["schema"])
+            self.assertEqual(envelope["description"], table_entries.get(schema_name), envelope["schema"])
+            for example in envelope["examples"]:
+                self.assertTrue((ROOT / example).is_file(), example)
+                self.assertIn((envelope["schema"], example), validated_pairs)
+            for needle in envelope["status_needles"]:
+                self.assertIn(needle, execution_status, envelope["schema"])
 
     def test_contract_docs_keep_common_public_language_boundary(self) -> None:
         required_text = [
