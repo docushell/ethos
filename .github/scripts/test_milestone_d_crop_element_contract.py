@@ -117,6 +117,26 @@ def logical_crop_ref(document_fingerprint: str, check_id: str, page: str) -> str
     )
 
 
+def logical_request_ref(request: dict) -> str:
+    identity = {
+        "document_fingerprint": request["document_fingerprint"],
+        "element_id": request["element_id"],
+        "rendering": request["rendering"],
+        "version": "ethos.crop_element_request_ref.v1",
+    }
+    if "source_pdf_fingerprint" in request:
+        identity["source_pdf_fingerprint"] = request["source_pdf_fingerprint"]
+    return "request-{}".format(sha256_c14n(identity))
+
+
+def request_ref_drift_diagnostics(request: dict) -> list[str]:
+    if "request_ref" not in request:
+        return ["request_ref is missing"]
+    if request["request_ref"] != logical_request_ref(request):
+        return ["request_ref does not match crop element request identity tuple"]
+    return []
+
+
 def crop_ref_drift_diagnostics(descriptor: dict) -> list[str]:
     diagnostics: list[str] = []
     check_ids = descriptor.get("check_ids", [])
@@ -249,6 +269,9 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             "`schemas/examples/crop-descriptor.example.json`",
             "document fingerprint",
             "element id",
+            "request_ref",
+            "crop element request identity",
+            "`ethos.crop_element_request_ref.v1`",
             "page id",
             "bbox",
             "check id",
@@ -285,13 +308,24 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
 
         Draft202012Validator.check_schema(schema)
         self.assertEqual([], schema_errors(schema, request))
+        self.assertEqual(
+            "request-489e91879dd347b3fce36cec50598144cfa96d0158c557665b8f35c6dc46ef85",
+            request["request_ref"],
+        )
+        self.assertEqual([], request_ref_drift_diagnostics(request))
 
         rendered_request = dict(
             request,
             rendering="rendered",
             source_pdf_fingerprint="sha256:" + "1" * 64,
         )
+        rendered_request["request_ref"] = logical_request_ref(rendered_request)
         self.assertEqual([], schema_errors(schema, rendered_request))
+        self.assertEqual([], request_ref_drift_diagnostics(rendered_request))
+
+        missing_request_ref = dict(request)
+        del missing_request_ref["request_ref"]
+        self.assertNotEqual([], schema_errors(schema, missing_request_ref))
 
         rendered_without_source = dict(request, rendering="rendered")
         self.assertNotEqual([], schema_errors(schema, rendered_without_source))
@@ -301,6 +335,33 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             source_pdf_fingerprint="sha256:" + "1" * 64,
         )
         self.assertNotEqual([], schema_errors(schema, descriptor_only_with_source))
+
+        stale_request_ref = dict(request, request_ref="request-" + "0" * 64)
+        self.assertIn(
+            "request_ref does not match crop element request identity tuple",
+            request_ref_drift_diagnostics(stale_request_ref),
+        )
+
+        stale_request_element = dict(request, element_id="e000001")
+        self.assertIn(
+            "request_ref does not match crop element request identity tuple",
+            request_ref_drift_diagnostics(stale_request_element),
+        )
+
+        stale_request_fingerprint = dict(request, document_fingerprint="sha256:" + "0" * 64)
+        self.assertIn(
+            "request_ref does not match crop element request identity tuple",
+            request_ref_drift_diagnostics(stale_request_fingerprint),
+        )
+
+        rendered_stale_source = dict(
+            rendered_request,
+            source_pdf_fingerprint="sha256:" + "2" * 64,
+        )
+        self.assertIn(
+            "request_ref does not match crop element request identity tuple",
+            request_ref_drift_diagnostics(rendered_stale_source),
+        )
 
     def test_contract_inventory_binds_element_to_descriptor_example(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
@@ -329,6 +390,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             element = elements_by_id(document)[case["element_id"]]
 
             self.assertEqual([], schema_errors(request_schema, request), case["name"])
+            self.assertEqual([], request_ref_drift_diagnostics(request), case["name"])
             self.assertEqual(request["document_fingerprint"], document["fingerprint"])
             self.assertEqual(request["element_id"], case["element_id"])
             self.assertEqual(request["rendering"], case["rendering_status"])

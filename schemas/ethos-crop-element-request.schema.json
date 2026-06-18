@@ -7,6 +7,7 @@
   "required": [
     "artifact_type",
     "schema_version",
+    "request_ref",
     "document_fingerprint",
     "element_id",
     "rendering"
@@ -15,6 +16,11 @@
   "properties": {
     "artifact_type": { "const": "ethos.crop_element_request.v1" },
     "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "request_ref": {
+      "type": "string",
+      "pattern": "^request-[0-9a-f]{64}$",
+      "description": "Stable source-only request identity derived from document fingerprint, element id, rendering mode, optional source PDF fingerprint, and the ethos.crop_element_request_ref.v1 version marker."
+    },
     "document_fingerprint": { "$ref": "#/$defs/fingerprint" },
     "element_id": {
       "type": "string",

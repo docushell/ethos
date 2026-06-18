@@ -48,7 +48,8 @@ existing `ethos verify --crop-dir` carrier; it does not add a first-class comman
 surface. The request envelope example at `schemas/examples/crop-element-request.example.json` and
 contract inventory at `examples/crop/crop_element_v1_contract.json` are schema-validated here;
 their alignment with the document and crop-descriptor examples is checked by the Milestone D
-repository guard.
+repository guard. The request envelope carries a c14n-derived `request_ref` identity guarded in
+that same source-only contract check.
 
 Milestone D `sandbox_subprocess` v1 contract work is tracked in
 `docs/milestone-d-sandbox-subprocess-contract.md`. In this source-only pre-alpha slice,
