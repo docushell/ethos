@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import unittest
 from pathlib import Path
@@ -26,6 +27,8 @@ from makefile_guard import makefile_text, target_block
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / "docs/milestone-d-verify-citations-contract.md"
+VERIFY_CASES = ROOT / "examples/verify/cases.json"
+CONTRACT_INVENTORY = ROOT / "examples/verify/verify_citations_v1_contract.json"
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
@@ -37,6 +40,10 @@ def contract_text() -> str:
 
 def normalized_contract_text() -> str:
     return re.sub(r"\s+", " ", contract_text())
+
+
+def load_json(path: Path):
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
@@ -114,12 +121,77 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
 
         self.assertIn("`schemas/examples/citations.example.json`", text)
         self.assertIn("`schemas/examples/verification-report.example.json`", text)
+        self.assertIn("`examples/verify/verify_citations_v1_contract.json`", text)
         self.assertIn("echoes the example claims in input order", text)
         self.assertIn("`all_evidence_grounded` is true only under the invariant", text)
         self.assertIn(
             "`make milestone-d-verify-citations-contract PYTHON=<jsonschema-venv>/bin/python`",
             text,
         )
+
+    def test_contract_inventory_matches_executable_case_inventory(self) -> None:
+        cases = load_json(VERIFY_CASES)
+        inventory = load_json(CONTRACT_INVENTORY)
+
+        self.assertEqual(inventory["schema_version"], 1)
+        self.assertEqual(inventory["contract"], "verify_citations.v1")
+        self.assertEqual(inventory["status"], "source-only-pre-alpha")
+        self.assertEqual(inventory["carrier"], "ethos verify")
+
+        report_case_names = {case["name"] for case in cases["report_cases"]}
+        inventory_report_names = {case["name"] for case in inventory["report_cases"]}
+        self.assertEqual(inventory_report_names, report_case_names)
+
+        usage_case_names = {case["name"] for case in cases["usage_error_cases"]}
+        self.assertEqual(set(inventory["usage_error_cases"]), usage_case_names)
+
+        summary_case_names = {case["name"] for case in cases["summary_cases"]}
+        self.assertEqual(set(inventory["summary_cases"]), summary_case_names)
+
+    def test_contract_inventory_matches_report_goldens(self) -> None:
+        cases = load_json(VERIFY_CASES)
+        inventory = load_json(CONTRACT_INVENTORY)
+        case_by_name = {case["name"]: case for case in cases["report_cases"]}
+
+        allowed_categories = {
+            "grounded",
+            "grounded-with-capability-warning",
+            "unsupported-non-v1",
+            "diagnostic-non-grounded",
+            "stale-fingerprint",
+            "capability-blocked",
+        }
+
+        for contract_case in inventory["report_cases"]:
+            self.assertIn(contract_case["category"], allowed_categories)
+            report = load_json(ROOT / case_by_name[contract_case["name"]]["golden"])
+            statuses = [check["status"] for check in report["checks"]]
+            reasons = [
+                check["reason"]
+                for check in report["checks"]
+                if check.get("reason") is not None
+            ]
+
+            self.assertEqual(
+                contract_case["all_evidence_grounded"],
+                report["all_evidence_grounded"],
+                contract_case["name"],
+            )
+            self.assertEqual(contract_case["statuses"], statuses, contract_case["name"])
+            self.assertEqual(contract_case["reasons"], reasons, contract_case["name"])
+
+    def test_contract_inventory_keeps_blockers_explicit(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        blockers = " ".join(inventory["explicit_blockers"])
+
+        for expected in [
+            "new verify_citations CLI alias",
+            "Python Node MCP or hosted API surfaces",
+            "crop API implementation",
+            "sandbox subprocess backend expansion",
+            "semantic or arithmetic verification",
+        ]:
+            self.assertIn(expected, blockers)
 
 
 if __name__ == "__main__":
