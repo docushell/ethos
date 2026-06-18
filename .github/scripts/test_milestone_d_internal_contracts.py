@@ -287,6 +287,12 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
                 entry["contract"],
             )
 
+    def test_registered_cargo_validation_commands_use_locked_resolution(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            for command in entry["commands"]:
+                if command.startswith("cargo test "):
+                    self.assertIn(" --locked ", f" {command} ", entry["contract"])
+
     def test_contract_registry_matches_current_d_inventories(self) -> None:
         contracts = [entry["contract"] for entry in CONTRACT_REGISTRY]
         targets = registered_targets()
