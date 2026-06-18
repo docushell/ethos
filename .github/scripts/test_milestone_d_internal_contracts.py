@@ -727,6 +727,30 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             discovered_d_request_envelope_schemas(),
         )
 
+    def test_request_envelope_schema_identity_matches_registry(self) -> None:
+        for envelope in D_REQUEST_ENVELOPES:
+            schema = load_json(envelope["schema"])
+            envelope_slug = Path(envelope["schema"]).name.removeprefix("ethos-").removesuffix(".schema.json")
+            contract_name = envelope_slug.removesuffix("-request").replace("-", "_")
+
+            self.assertEqual("https://json-schema.org/draft/2020-12/schema", schema["$schema"], envelope["schema"])
+            self.assertEqual(f"urn:ethos:schema:{envelope_slug}:1", schema["$id"], envelope["schema"])
+            self.assertEqual(f"Ethos {contract_name} v1 request", schema["title"], envelope["schema"])
+            self.assertEqual(
+                f"ethos.{contract_name}_request.v1",
+                schema["properties"]["artifact_type"]["const"],
+                envelope["schema"],
+            )
+            self.assertTrue(
+                {"artifact_type", "schema_version", "request_ref"}.issubset(schema["required"]),
+                envelope["schema"],
+            )
+
+    def test_request_envelope_schema_objects_are_closed(self) -> None:
+        for envelope in D_REQUEST_ENVELOPES:
+            for path, node in object_schema_nodes(load_json(envelope["schema"])):
+                self.assertEqual(False, node.get("additionalProperties"), f"{envelope['schema']}: {path}")
+
     def test_contract_docs_keep_common_public_language_boundary(self) -> None:
         required_text = [
             "Status: source-only pre-alpha contract work for internal Milestone D continuation.",
