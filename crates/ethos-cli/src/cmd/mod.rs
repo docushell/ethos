@@ -16,4 +16,5 @@
 
 pub(crate) mod doc;
 pub(crate) mod rag;
+pub(crate) mod security;
 pub(crate) mod verify;
