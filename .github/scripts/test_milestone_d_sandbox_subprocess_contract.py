@@ -51,6 +51,68 @@ EXPECTED_BOUNDARIES = [
     "stable_error_envelope",
     "diagnostics_gated_stderr",
 ]
+EXPECTED_DIAGNOSTIC_MESSAGES = [
+    "request_ref is missing",
+    "request_ref does not match sandbox subprocess request identity tuple",
+    "request operation does not match command surface",
+    "request diagnostics does not match inventory case",
+    "request stderr policy does not match diagnostics mode",
+    "request failure stdout policy is not empty",
+    "request max_parse_ms does not match inventory case",
+    "doc_parse request must bind explicit page selection",
+    "fingerprint request must not carry page selection",
+]
+EXPECTED_DIAGNOSTIC_CASES = [
+    {
+        "name": "request-ref-missing",
+        "surface": "request_ref",
+        "expected_diagnostics": ["request_ref is missing"],
+    },
+    {
+        "name": "request-ref-identity-drift",
+        "surface": "request_ref",
+        "expected_diagnostics": [
+            "request_ref does not match sandbox subprocess request identity tuple"
+        ],
+    },
+    {
+        "name": "request-operation-mismatch",
+        "surface": "request_policy",
+        "expected_diagnostics": ["request operation does not match command surface"],
+    },
+    {
+        "name": "request-diagnostics-mismatch",
+        "surface": "request_policy",
+        "expected_diagnostics": ["request diagnostics does not match inventory case"],
+    },
+    {
+        "name": "request-stderr-policy-mismatch",
+        "surface": "request_policy",
+        "expected_diagnostics": [
+            "request stderr policy does not match diagnostics mode"
+        ],
+    },
+    {
+        "name": "request-stdout-policy-mismatch",
+        "surface": "request_policy",
+        "expected_diagnostics": ["request failure stdout policy is not empty"],
+    },
+    {
+        "name": "request-max-parse-ms-mismatch",
+        "surface": "request_policy",
+        "expected_diagnostics": ["request max_parse_ms does not match inventory case"],
+    },
+    {
+        "name": "doc-parse-page-selection-missing",
+        "surface": "request_policy",
+        "expected_diagnostics": ["doc_parse request must bind explicit page selection"],
+    },
+    {
+        "name": "fingerprint-page-selection-present",
+        "surface": "request_policy",
+        "expected_diagnostics": ["fingerprint request must not carry page selection"],
+    },
+]
 EXPECTED_FAILURES = {
     "doc-parse-timeout": {
         "exit_code": 10,
@@ -204,6 +266,76 @@ def request_case_diagnostics(request: dict, case: dict) -> list[str]:
     return diagnostics
 
 
+def contract_case_by_name(inventory: dict, name: str) -> dict:
+    return next(case for case in inventory["cases"] if case["name"] == name)
+
+
+def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
+    doc_parse_case = contract_case_by_name(inventory, "doc-parse-stable-error-envelope")
+    timeout_case = contract_case_by_name(inventory, "doc-parse-timeout")
+    diagnostics_case = contract_case_by_name(inventory, "doc-parse-diagnostics-gated-stderr")
+    fingerprint_case = contract_case_by_name(inventory, "fingerprint-timeout")
+
+    doc_parse_request = load_json(ROOT / doc_parse_case["request"])
+    timeout_request = load_json(ROOT / timeout_case["request"])
+    diagnostics_request = load_json(ROOT / diagnostics_case["request"])
+    fingerprint_request = load_json(ROOT / fingerprint_case["request"])
+
+    missing_request_ref = dict(doc_parse_request)
+    del missing_request_ref["request_ref"]
+
+    stale_request_ref = dict(doc_parse_request, request_ref="request-" + "0" * 64)
+
+    wrong_operation = dict(timeout_request, operation="fingerprint")
+    del wrong_operation["page_selection"]
+
+    diagnostics_disabled = dict(diagnostics_request, diagnostics=False)
+    wrong_stderr_policy = dict(
+        diagnostics_request,
+        stderr_policy="stable_error_envelope",
+    )
+    stdout_not_empty = dict(diagnostics_request, stdout_on_failure="not-empty")
+    wrong_timeout = dict(diagnostics_request, limits={"max_parse_ms": 25})
+
+    doc_parse_without_pages = dict(doc_parse_request)
+    del doc_parse_without_pages["page_selection"]
+
+    fingerprint_with_pages = dict(fingerprint_request, page_selection="all")
+
+    return {
+        "request-ref-missing": request_ref_drift_diagnostics(missing_request_ref),
+        "request-ref-identity-drift": request_ref_drift_diagnostics(stale_request_ref),
+        "request-operation-mismatch": request_case_diagnostics(
+            wrong_operation,
+            timeout_case,
+        ),
+        "request-diagnostics-mismatch": request_case_diagnostics(
+            diagnostics_disabled,
+            diagnostics_case,
+        ),
+        "request-stderr-policy-mismatch": request_case_diagnostics(
+            wrong_stderr_policy,
+            diagnostics_case,
+        ),
+        "request-stdout-policy-mismatch": request_case_diagnostics(
+            stdout_not_empty,
+            diagnostics_case,
+        ),
+        "request-max-parse-ms-mismatch": request_case_diagnostics(
+            wrong_timeout,
+            diagnostics_case,
+        ),
+        "doc-parse-page-selection-missing": request_case_diagnostics(
+            doc_parse_without_pages,
+            doc_parse_case,
+        ),
+        "fingerprint-page-selection-present": request_case_diagnostics(
+            fingerprint_with_pages,
+            fingerprint_case,
+        ),
+    }
+
+
 def rust_test_body(source: str, test_name: str) -> str:
     match = re.search(
         rf"(?:#\[[^\n]+\]\n)*\s*#\[test\]\s*fn {re.escape(test_name)}\(\) \{{",
@@ -294,10 +426,12 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             "`schemas/examples/sandbox-subprocess-*.example.json`",
             "`request_ref`",
             "`ethos.sandbox_subprocess_request_ref.v1`",
+            "request identity and request-policy diagnostics",
             "stable worker error envelopes are relayed",
             "non-envelope worker stderr is hidden by default",
             "explicit diagnostics",
             "request envelopes bind each failure case",
+            "source-tree fixture validation pins expected diagnostics",
             "stdout remains empty on worker failures",
             "`make milestone-d-sandbox-subprocess-contract PYTHON=<jsonschema-venv>/bin/python`",
         ]:
@@ -385,6 +519,41 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
                 case["name"],
             )
             self.assertIn(f"fn {case['test_filter']}()", test_source, case["name"])
+
+    def test_contract_inventory_pins_fail_closed_diagnostics(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+
+        self.assertEqual(EXPECTED_DIAGNOSTIC_CASES, inventory["diagnostic_cases"])
+
+        diagnostic_names = [case["name"] for case in inventory["diagnostic_cases"]]
+        self.assertEqual(len(diagnostic_names), len(set(diagnostic_names)))
+        self.assertEqual(
+            ["request_policy", "request_ref"],
+            sorted({case["surface"] for case in inventory["diagnostic_cases"]}),
+        )
+        self.assertEqual(
+            set(EXPECTED_DIAGNOSTIC_MESSAGES),
+            {
+                diagnostic
+                for case in inventory["diagnostic_cases"]
+                for diagnostic in case["expected_diagnostics"]
+            },
+        )
+
+    def test_contract_inventory_diagnostics_match_current_helpers(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        actual_diagnostics = inventory_diagnostic_outputs(inventory)
+
+        self.assertEqual(
+            {case["name"] for case in inventory["diagnostic_cases"]},
+            set(actual_diagnostics),
+        )
+        for case in inventory["diagnostic_cases"]:
+            self.assertEqual(
+                case["expected_diagnostics"],
+                actual_diagnostics[case["name"]],
+                case["name"],
+            )
 
     def test_contract_inventory_case_order_is_deterministic(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

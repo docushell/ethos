@@ -91,6 +91,71 @@
       }
     }
   ],
+  "diagnostic_cases": [
+    {
+      "name": "request-ref-missing",
+      "surface": "request_ref",
+      "expected_diagnostics": [
+        "request_ref is missing"
+      ]
+    },
+    {
+      "name": "request-ref-identity-drift",
+      "surface": "request_ref",
+      "expected_diagnostics": [
+        "request_ref does not match sandbox subprocess request identity tuple"
+      ]
+    },
+    {
+      "name": "request-operation-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request operation does not match command surface"
+      ]
+    },
+    {
+      "name": "request-diagnostics-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request diagnostics does not match inventory case"
+      ]
+    },
+    {
+      "name": "request-stderr-policy-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request stderr policy does not match diagnostics mode"
+      ]
+    },
+    {
+      "name": "request-stdout-policy-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request failure stdout policy is not empty"
+      ]
+    },
+    {
+      "name": "request-max-parse-ms-mismatch",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "request max_parse_ms does not match inventory case"
+      ]
+    },
+    {
+      "name": "doc-parse-page-selection-missing",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "doc_parse request must bind explicit page selection"
+      ]
+    },
+    {
+      "name": "fingerprint-page-selection-present",
+      "surface": "request_policy",
+      "expected_diagnostics": [
+        "fingerprint request must not carry page selection"
+      ]
+    }
+  ],
   "explicit_blockers": [
     "hardened OS sandbox rules",
     "network-denying runtime proof",

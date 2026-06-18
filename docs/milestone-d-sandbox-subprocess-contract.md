@@ -25,7 +25,9 @@ The current source-tree inventory for this contract boundary is
 exercise timeout handling, memory-limit error reporting, stable error relay, and diagnostics-gated
 stderr behavior. Each inventory case binds to a request envelope under
 `schemas/examples/sandbox-subprocess-*.example.json` and records the expected process exit code,
-stable error code, stable error message, and diagnostics policy.
+stable error code, stable error message, and diagnostics policy. The inventory also records the
+request identity and request-policy diagnostics that the source-tree guard exercises for this
+contract boundary.
 
 Focused validation command:
 
@@ -47,6 +49,8 @@ The v1 contract boundary is fail-closed and error-envelope-first:
 - request envelopes bind each failure case to the intended operation, timeout limit, diagnostics
   mode, failure-output policy, and c14n-derived request identity
   `ethos.sandbox_subprocess_request_ref.v1`;
+- source-tree fixture validation pins expected diagnostics for request identity drift and request
+  policy drift;
 - inventory outcome fields bind each failure case to its current exit code and stable error
   envelope;
 - stdout remains empty on worker failures covered by this contract inventory.

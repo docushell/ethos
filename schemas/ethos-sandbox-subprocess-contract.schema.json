@@ -10,6 +10,7 @@
     "status",
     "carrier",
     "cases",
+    "diagnostic_cases",
     "explicit_blockers"
   ],
   "additionalProperties": false,
@@ -102,6 +103,34 @@
         }
       }
     },
+    "diagnostic_cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "surface",
+          "expected_diagnostics"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "$ref": "#/$defs/case_name" },
+          "surface": {
+            "enum": [
+              "request_ref",
+              "request_policy"
+            ]
+          },
+          "expected_diagnostics": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/diagnostic_message" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
     "explicit_blockers": {
       "type": "array",
       "minItems": 1,
@@ -111,6 +140,19 @@
   },
   "$defs": {
     "case_name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "diagnostic_message": {
+      "enum": [
+        "request_ref is missing",
+        "request_ref does not match sandbox subprocess request identity tuple",
+        "request operation does not match command surface",
+        "request diagnostics does not match inventory case",
+        "request stderr policy does not match diagnostics mode",
+        "request failure stdout policy is not empty",
+        "request max_parse_ms does not match inventory case",
+        "doc_parse request must bind explicit page selection",
+        "fingerprint request must not carry page selection"
+      ]
+    },
     "repo_path": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_./-]+$" },
     "rust_test_filter": { "type": "string", "pattern": "^[a-z0-9_]+$" }
   }
