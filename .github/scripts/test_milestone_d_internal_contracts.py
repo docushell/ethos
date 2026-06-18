@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -45,6 +46,8 @@ OUT_OF_SCOPE_PUBLIC_CLAIM_TERMS = [
     "table-quality",
     "parser-quality",
 ]
+SURFACE_EXPANSION_BLOCKER_PATTERN = re.compile(r"\b(surfaces?|bindings?|methods?)\b")
+COMMAND_EXPANSION_BLOCKER_PATTERN = re.compile(r"\b(commands?|cli)\b")
 CONTRACT_REGISTRY = [
     {
         "contract": "verify_citations.v1",
@@ -590,6 +593,22 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             for blocker in blockers:
                 self.assertEqual(blocker.strip(), blocker, entry["contract"])
                 self.assertNotEqual("", blocker, entry["contract"])
+
+    def test_contract_inventories_keep_surface_expansion_explicitly_blocked(self) -> None:
+        for entry in CONTRACT_REGISTRY:
+            blockers_text = "\n".join(
+                blocker.lower()
+                for blocker in load_json(entry["inventory"])["explicit_blockers"]
+            )
+
+            self.assertTrue(
+                COMMAND_EXPANSION_BLOCKER_PATTERN.search(blockers_text),
+                entry["contract"],
+            )
+            self.assertTrue(
+                SURFACE_EXPANSION_BLOCKER_PATTERN.search(blockers_text),
+                entry["contract"],
+            )
 
     def test_contract_inventory_named_collections_have_stable_unique_names(self) -> None:
         for entry in CONTRACT_REGISTRY:
