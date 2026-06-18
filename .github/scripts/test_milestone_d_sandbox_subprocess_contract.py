@@ -791,6 +791,33 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             request_ref_drift_diagnostics(stale_limit),
         )
 
+        stale_input = dict(request, input={"kind": "fixture_path"})
+        self.assertNotEqual(request["request_ref"], logical_sandbox_request_ref(stale_input))
+        self.assertEqual(
+            ["request_ref does not match sandbox subprocess request identity tuple"],
+            request_ref_drift_diagnostics(stale_input),
+        )
+
+        stale_diagnostics = dict(request, diagnostics=True)
+        self.assertNotEqual(
+            request["request_ref"],
+            logical_sandbox_request_ref(stale_diagnostics),
+        )
+        self.assertEqual(
+            ["request_ref does not match sandbox subprocess request identity tuple"],
+            request_ref_drift_diagnostics(stale_diagnostics),
+        )
+
+        stale_stdout_policy = dict(request, stdout_on_failure="not-empty")
+        self.assertNotEqual(
+            request["request_ref"],
+            logical_sandbox_request_ref(stale_stdout_policy),
+        )
+        self.assertEqual(
+            ["request_ref does not match sandbox subprocess request identity tuple"],
+            request_ref_drift_diagnostics(stale_stdout_policy),
+        )
+
         stale_stderr_policy = dict(
             request,
             stderr_policy="stable_error_envelope_with_worker_stderr",
