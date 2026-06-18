@@ -1682,6 +1682,22 @@ class SecurityReportValidationTests(unittest.TestCase):
                     diagnostics,
                 )
 
+    def test_warning_ids_follow_deterministic_numbering(self) -> None:
+        document = copy.deepcopy(self.document)
+        document["payload"]["parser_warnings"][0]["id"] = "w0004"
+
+        diagnostics = diagnose_security_report_example(document, self.report)
+
+        self.assertIn(
+            "security-report.example.json: parser_warnings[0].id must be w0002 "
+            "for deterministic numbering",
+            diagnostics,
+        )
+        self.assertNotIn(
+            "security-report.example.json: duplicate warning id w0004",
+            diagnostics,
+        )
+
     def test_parser_warning_codes_must_be_strings(self) -> None:
         document = copy.deepcopy(self.document)
         document["payload"]["parser_warnings"].append(

@@ -297,6 +297,7 @@ def diagnose_warning_ids(security_warnings, parser_warnings, ctx, diagnostics):
         ("parser_warnings", parser_warnings),
     )
     seen = set()
+    numbered = []
     for lane, warnings in lanes:
         for index, warning in enumerate(warnings):
             if not isinstance(warning, dict):
@@ -313,6 +314,35 @@ def diagnose_warning_ids(security_warnings, parser_warnings, ctx, diagnostics):
             if warning_id_value in seen:
                 diagnostics.append(f"{ctx}: duplicate warning id {warning_id_value}")
             seen.add(warning_id_value)
+            sort_key = warning_sort_key(warning)
+            if sort_key is not None:
+                numbered.append((sort_key, lane, index, warning_id_value))
+
+    for ordinal, (_, lane, index, actual_id) in enumerate(sorted(numbered), start=1):
+        expected_id = f"w{ordinal:04d}"
+        if actual_id != expected_id:
+            diagnostics.append(
+                f"{ctx}: {lane}[{index}].id must be {expected_id} "
+                "for deterministic numbering"
+            )
+
+
+def warning_sort_key(warning):
+    code = warning.get("code")
+    message = warning.get("message")
+    if not isinstance(code, str) or not isinstance(message, str):
+        return None
+    key = [code]
+    for field in ("page", "element_ref", "span_ref", "region_ref"):
+        if field not in warning:
+            key.append((0, ""))
+            continue
+        value = warning.get(field)
+        if not isinstance(value, str):
+            return None
+        key.append((1, value))
+    key.append(message)
+    return tuple(key)
 
 
 def diagnose_warning_lanes(security_warnings, parser_warnings, ctx, diagnostics):
