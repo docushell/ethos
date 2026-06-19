@@ -70,6 +70,14 @@ EXPECTED_USAGE_DIAGNOSTIC_CASES = [
         "stderr_contains": "opendataloader-json adapter: element.page references unknown page",
     },
 ]
+REQUIRED_RESOLVED_EVIDENCE_FIELDS = {"bbox", "page"}
+TEXT_EVIDENCE_CLAIM_KINDS = {"quote", "table_cell", "value"}
+UNRESOLVED_OR_BLOCKED_REASONS = {
+    "capability_blocked": "missing_table_capability",
+    "not_found": "element_not_found",
+    "stale": "stale_fingerprint",
+    "unsupported_claim_kind": "unsupported_claim_kind",
+}
 
 
 def contract_text() -> str:
@@ -139,6 +147,12 @@ def citation_claims(citations) -> list[dict]:
     if isinstance(citations, list):
         return citations
     return citations["claims"]
+
+
+def citation_document_fingerprint(citations) -> str | None:
+    if isinstance(citations, list):
+        return None
+    return citations.get("document_fingerprint")
 
 
 def derived_category(report: dict) -> str:
@@ -392,6 +406,78 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
             for index, (check, claim) in enumerate(zip(report["checks"], claims), 1):
                 self.assertEqual(check["id"], f"v{index:04}", case["name"])
                 self.assertEqual(check["claim"], claim, case["name"])
+
+    def test_report_goldens_bind_evidence_to_resolved_target_statuses(self) -> None:
+        cases = load_json(VERIFY_CASES)
+
+        for case in cases["report_cases"]:
+            report = load_json(ROOT / case["golden"])
+            for check in report["checks"]:
+                label = f"{case['name']} {check['id']}"
+                status = check["status"]
+
+                if status == "grounded":
+                    self.assertNotIn("reason", check, label)
+                    self.assertNotEqual("none", check["match_method"], label)
+                    self.assertLessEqual(
+                        REQUIRED_RESOLVED_EVIDENCE_FIELDS,
+                        set(check["evidence"]),
+                        label,
+                    )
+                    if check["claim"]["kind"] in TEXT_EVIDENCE_CLAIM_KINDS:
+                        self.assertIn("text", check["evidence"], label)
+                    continue
+
+                if status == "mismatch":
+                    self.assertEqual("text_mismatch", check["reason"], label)
+                    self.assertNotEqual("none", check["match_method"], label)
+                    self.assertLessEqual(
+                        REQUIRED_RESOLVED_EVIDENCE_FIELDS,
+                        set(check["evidence"]),
+                        label,
+                    )
+                    if check["claim"]["kind"] in TEXT_EVIDENCE_CLAIM_KINDS:
+                        self.assertIn("text", check["evidence"], label)
+                    continue
+
+                self.assertIn(status, UNRESOLVED_OR_BLOCKED_REASONS, label)
+                self.assertEqual(UNRESOLVED_OR_BLOCKED_REASONS[status], check["reason"], label)
+                self.assertEqual("none", check["match_method"], label)
+                self.assertNotIn("evidence", check, label)
+
+    def test_report_goldens_bind_fingerprint_capability_to_freshness_policy(self) -> None:
+        cases = load_json(VERIFY_CASES)
+
+        for case in cases["report_cases"]:
+            input_document = load_json(ROOT / case["input"])
+            citations = load_json(ROOT / case["citations"])
+            report = load_json(ROOT / case["golden"])
+            supports_fingerprint = report["grounding"]["capabilities"]["fingerprint"]
+            citation_fingerprint = citation_document_fingerprint(citations)
+
+            self.assertEqual(
+                supports_fingerprint,
+                "document_fingerprint" in report,
+                case["name"],
+            )
+            if supports_fingerprint:
+                self.assertEqual(
+                    input_document["fingerprint"],
+                    report["document_fingerprint"],
+                    case["name"],
+                )
+                self.assertNotIn("missing_fingerprint", report["capability_limits"])
+                if citation_fingerprint is not None:
+                    self.assertEqual(
+                        citation_fingerprint != report["document_fingerprint"],
+                        report["fingerprint_stale"],
+                        case["name"],
+                    )
+                continue
+
+            self.assertNotIn("document_fingerprint", report, case["name"])
+            self.assertIn("missing_fingerprint", report["capability_limits"], case["name"])
+            self.assertFalse(report["fingerprint_stale"], case["name"])
 
     def test_report_goldens_keep_current_v1_literal_checks_non_semantic(self) -> None:
         cases = load_json(VERIFY_CASES)

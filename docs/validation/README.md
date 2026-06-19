@@ -28,6 +28,9 @@ Records:
 - `milestone-c-closeout-validation-2026-06-18.md` - internal Milestone C artifact-validation
   closeout passed through `make milestone-c-internal-checks`; public benchmark reports, release
   artifacts, package publication, production positioning, and claim wording remain blocked.
+- `milestone-d-contract-closeout-prep-2026-06-19.md` - internal Milestone D source-only contract
+  closeout prep passed through `make milestone-d-internal-contracts`; final D exit still requires
+  review, merge to `main`, and a fresh validation run.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.

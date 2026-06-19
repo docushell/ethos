@@ -66,10 +66,14 @@ jobs:
         run: python3 .github/scripts/test_execution_status.py
       - name: roadmap status tests
         run: python3 .github/scripts/test_roadmap_status.py
+      - name: Milestone D internal contract target tests
+        run: python3 .github/scripts/test_milestone_d_internal_contracts.py
       - name: Milestone B closeout validation record tests
         run: python3 .github/scripts/test_milestone_b_closeout_record.py
       - name: Milestone C closeout validation record tests
         run: python3 .github/scripts/test_milestone_c_closeout_record.py
+      - name: Milestone D contract closeout prep record tests
+        run: python3 .github/scripts/test_milestone_d_closeout_prep_record.py
       - name: Milestone B exit checklist tests
         run: python3 .github/scripts/test_milestone_b_exit_checklist.py
       - name: Gate Zero harness tests

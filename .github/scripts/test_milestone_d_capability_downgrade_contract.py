@@ -370,6 +370,19 @@ class MilestoneDCapabilityDowngradeContractTests(unittest.TestCase):
             for check in blocked_checks(report):
                 self.assertIn("capability_limited", check["warnings"], case["name"])
 
+    def test_check_level_capability_warnings_stay_blocked_only(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+
+        for case in inventory["report_cases"]:
+            report = load_json(ROOT / case["golden"])
+
+            for check in report["checks"]:
+                label = f"{case['name']} {check['id']}"
+                if check["status"] == "capability_blocked":
+                    self.assertEqual(["capability_limited"], check["warnings"], label)
+                else:
+                    self.assertEqual([], check["warnings"], label)
+
     def test_capability_blocked_checks_do_not_count_as_grounded(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
 
