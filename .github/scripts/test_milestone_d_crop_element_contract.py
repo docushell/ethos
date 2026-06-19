@@ -890,6 +890,22 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertIn("serde_json::to_value(&descriptor)", text)
         self.assertNotIn("serde_json::Map::new()", text)
 
+    def test_current_crop_carrier_has_fail_closed_descriptor_diagnostics(self) -> None:
+        text = VERIFY_SOURCE.read_text(encoding="utf-8")
+
+        for test_name in [
+            "write_crop_artifacts_requires_document_fingerprint_for_descriptors",
+            "write_crop_artifacts_rejects_crop_ref_collisions",
+            "crop_artifact_path_rejects_unsafe_crop_refs",
+        ]:
+            self.assertIn(f"fn {test_name}()", text)
+        for message in [
+            "crop descriptor requires document fingerprint",
+            "crop_ref collision while writing crop descriptors",
+            "crop_ref is not a safe artifact filename",
+        ]:
+            self.assertIn(message, text)
+
 
 if __name__ == "__main__":
     unittest.main()

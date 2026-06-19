@@ -58,7 +58,8 @@ The v1 contract boundary is native, explicit, and source-bound:
   text when textual evidence is present;
 - descriptor JSON remains the canonical crop audit artifact;
 - rendered PNG output is optional and must be bound to a matching source PDF fingerprint;
-- missing elements, missing pages, missing bboxes, malformed bboxes, and source fingerprint
+- missing elements, missing pages, missing bboxes, malformed bboxes, missing document
+  fingerprints, unsafe crop artifact filenames, crop reference collisions, and source fingerprint
   mismatch fail closed.
 
 The contract does not infer missing geometry, synthesize evidence, or reinterpret foreign adapter

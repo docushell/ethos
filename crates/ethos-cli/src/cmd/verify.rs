@@ -994,6 +994,68 @@ mod tests {
     use super::*;
     use ethos_core::verify_types::{Check, CheckStatus, Evidence, GroundingMeta, MatchMethod};
 
+    const TEST_DOCUMENT_FINGERPRINT: &str =
+        "sha256:7164f43f104dc248193f12ea828e0ab857eae194210114c6f6c0160fd643c87b";
+
+    fn crop_report(document_fingerprint: Option<&str>, checks: Vec<Check>) -> VerificationReport {
+        VerificationReport {
+            schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+            document_fingerprint: document_fingerprint.map(str::to_string),
+            verification_config_sha256: "0".repeat(64),
+            grounding: GroundingMeta {
+                parser: ParserIdentity {
+                    name: "ethos".to_string(),
+                    version: "0.1.0".to_string(),
+                    adapter: None,
+                    adapter_version: None,
+                },
+                capabilities: Capabilities {
+                    spans: true,
+                    char_offsets: true,
+                    tables: true,
+                    fingerprint: true,
+                    coordinate_origin: ethos_core::grounding::CoordinateOrigin::TopLeft,
+                    crop_support: true,
+                },
+            },
+            capability_limits: Vec::new(),
+            fingerprint_stale: false,
+            all_evidence_grounded: true,
+            checks,
+            unsupported_claim_kinds: Vec::new(),
+            warnings: Vec::new(),
+        }
+    }
+
+    fn crop_check(id: &str, crop_ref: &str, bbox: [i64; 4], text: Option<&str>) -> Check {
+        Check {
+            id: id.to_string(),
+            claim: ethos_core::verify_types::Claim {
+                kind: ClaimKind::Quote,
+                text: Some("Hello".to_string()),
+                citation: ethos_core::verify_types::Citation {
+                    page: None,
+                    element_id: Some("e000001".to_string()),
+                    span_id: None,
+                    table_id: None,
+                    cell: None,
+                    bbox: None,
+                },
+            },
+            status: CheckStatus::Grounded,
+            reason: None,
+            match_method: MatchMethod::ExactTextContains,
+            semantic_unverified: false,
+            evidence: Some(Evidence {
+                text: text.map(str::to_string),
+                page: Some("p0001".to_string()),
+                bbox: Some(bbox),
+                crop_ref: Some(crop_ref.to_string()),
+            }),
+            warnings: Vec::new(),
+        }
+    }
+
     #[test]
     fn png_from_bgra_writes_png_signature_and_dimensions() {
         let bgra = [
@@ -1181,58 +1243,15 @@ mod tests {
     #[test]
     fn write_crop_artifacts_requires_document_fingerprint_for_descriptors() {
         let crop_dir = tempfile::tempdir().unwrap();
-        let report = VerificationReport {
-            schema_version: ethos_core::SCHEMA_VERSION.to_string(),
-            document_fingerprint: None,
-            verification_config_sha256: "0".repeat(64),
-            grounding: GroundingMeta {
-                parser: ParserIdentity {
-                    name: "ethos".to_string(),
-                    version: "0.1.0".to_string(),
-                    adapter: None,
-                    adapter_version: None,
-                },
-                capabilities: Capabilities {
-                    spans: true,
-                    char_offsets: true,
-                    tables: true,
-                    fingerprint: true,
-                    coordinate_origin: ethos_core::grounding::CoordinateOrigin::TopLeft,
-                    crop_support: true,
-                },
-            },
-            capability_limits: Vec::new(),
-            fingerprint_stale: false,
-            all_evidence_grounded: true,
-            checks: vec![Check {
-                id: "v0001".to_string(),
-                claim: ethos_core::verify_types::Claim {
-                    kind: ClaimKind::Quote,
-                    text: Some("Hello".to_string()),
-                    citation: ethos_core::verify_types::Citation {
-                        page: None,
-                        element_id: Some("e000001".to_string()),
-                        span_id: None,
-                        table_id: None,
-                        cell: None,
-                        bbox: None,
-                    },
-                },
-                status: CheckStatus::Grounded,
-                reason: None,
-                match_method: MatchMethod::ExactTextContains,
-                semantic_unverified: false,
-                evidence: Some(Evidence {
-                    text: Some("Hello world".to_string()),
-                    page: Some("p0001".to_string()),
-                    bbox: Some([7392, 5482, 19378, 7226]),
-                    crop_ref: Some(format!("crop-{}.json", "a".repeat(64))),
-                }),
-                warnings: Vec::new(),
-            }],
-            unsupported_claim_kinds: Vec::new(),
-            warnings: Vec::new(),
-        };
+        let report = crop_report(
+            None,
+            vec![crop_check(
+                "v0001",
+                &format!("crop-{}.json", "a".repeat(64)),
+                [7392, 5482, 19378, 7226],
+                Some("Hello world"),
+            )],
+        );
 
         let err = write_crop_artifacts(crop_dir.path(), &report, None)
             .expect_err("crop descriptors require document fingerprint");
@@ -1247,5 +1266,59 @@ mod tests {
             _ => panic!("expected ethos failure"),
         }
         assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn write_crop_artifacts_rejects_crop_ref_collisions() {
+        let crop_dir = tempfile::tempdir().unwrap();
+        let crop_ref = format!("crop-{}.json", "b".repeat(64));
+        let report = crop_report(
+            Some(TEST_DOCUMENT_FINGERPRINT),
+            vec![
+                crop_check(
+                    "v0001",
+                    &crop_ref,
+                    [7392, 5482, 19378, 7226],
+                    Some("Hello world"),
+                ),
+                crop_check(
+                    "v0002",
+                    &crop_ref,
+                    [7392, 5482, 19378, 8000],
+                    Some("Hello world"),
+                ),
+            ],
+        );
+
+        let err = write_crop_artifacts(crop_dir.path(), &report, None)
+            .expect_err("colliding crop refs must fail");
+
+        match err {
+            Failure::Ethos(error) => {
+                assert_eq!(
+                    error.message,
+                    "crop_ref collision while writing crop descriptors"
+                );
+            }
+            _ => panic!("expected ethos failure"),
+        }
+        assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn crop_artifact_path_rejects_unsafe_crop_refs() {
+        let crop_dir = tempfile::tempdir().unwrap();
+
+        for crop_ref in ["../crop.json", "nested/crop.json", "crop.json/extra"] {
+            let err = crop_artifact_path(crop_dir.path(), crop_ref)
+                .expect_err("unsafe crop ref must fail");
+
+            match err {
+                Failure::Ethos(error) => {
+                    assert_eq!(error.message, "crop_ref is not a safe artifact filename");
+                }
+                _ => panic!("expected ethos failure"),
+            }
+        }
     }
 }

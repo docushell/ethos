@@ -32,9 +32,9 @@ report grounding metadata without adding a new command or binding surface.
 The next D contract-prep slice defines the source-only
 [`crop_element` v1 contract](milestone-d-crop-element-contract.md) over the
 existing `ethos verify --crop-dir` crop descriptor carrier. It now includes an
-internal `ethos-core::crop_element` descriptor-only resolver, descriptor type, and shared logical
-crop-ref identity helper, but still does not add a first-class crop command, binding surface,
-sandbox backend, Node beta, or MCP experimental scope.
+internal `ethos-core::crop_element` descriptor-only resolver, descriptor type, shared logical
+crop-ref identity helper, and fail-closed descriptor diagnostics, but still does not add a
+first-class crop command, binding surface, sandbox backend, Node beta, or MCP experimental scope.
 The source-only
 [`crop_element_surface_shape` v1 contract](milestone-d-crop-element-surface-shape-contract.md)
 binds the future callable crop surface shape to the existing request and descriptor schemas
