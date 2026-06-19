@@ -67,16 +67,21 @@ class MilestoneDContractCloseoutPrepRecordTests(unittest.TestCase):
         self.assertIn("source-only contract closeout prep", text)
         self.assertIn("final D exit still pending review and a fresh validation run on `main`", text)
         self.assertIn(
-            "Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces remain outside "
-            "this prep record",
+            "Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces are explicitly "
+            "out of Milestone D closeout scope and remain outside this prep record",
             text,
         )
         self.assertIn(
-            "Cross-platform rendered-crop byte identity remains outside this prep record",
+            "Cross-platform rendered-crop byte identity is not required for Milestone D closeout "
+            "and remains outside this prep record",
             text,
         )
         self.assertIn("Sandbox hardening remains outside this prep record", text)
-        self.assertIn("Node beta and MCP experimental work remain outside this prep record", text)
+        self.assertIn(
+            "Node beta and MCP experimental work remain outside this prep record and outside "
+            "Milestone D closeout scope",
+            text,
+        )
 
     def test_record_keeps_public_boundaries_explicit(self) -> None:
         text = normalized_record_text()

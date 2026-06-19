@@ -12,7 +12,8 @@ support descriptor-only requests and rendered requests that bind caller-provided
 `ethos verify --crop-dir` and optional `--crop-source-pdf` remain the verifier evidence-artifact
 carrier. The `crop_element_surface_shape` contract names the callable surface shape that must
 preserve the existing `crop_element` request and crop descriptor audit bindings before any
-Node, MCP, hosted, sandbox-backed, or foreign-adapter surface is added.
+Node, MCP, hosted, sandbox-backed, or foreign-adapter surface is added. Those surfaces are
+explicit post-D blockers, not Milestone D closeout requirements.
 
 ## Surface Shape
 

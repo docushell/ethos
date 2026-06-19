@@ -70,7 +70,8 @@ The v1 contract boundary is native, explicit, and source-bound:
   collisions, and source fingerprint mismatch fail closed.
 
 The contract does not infer missing geometry, synthesize evidence, or reinterpret foreign adapter
-coordinates. Cross-platform rendered crop byte identity is not part of this contract boundary.
+coordinates. Cross-platform rendered crop byte identity is not part of this contract boundary and
+is not required for Milestone D closeout.
 
 ## Relationship To Existing Verifier Artifacts
 

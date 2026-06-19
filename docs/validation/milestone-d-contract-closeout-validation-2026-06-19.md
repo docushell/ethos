@@ -97,12 +97,13 @@ git diff --check green
 ## Remaining Boundaries
 
 - Full 13-D exit still requires review of implementation lanes beyond the contract boundary.
-- Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces remain future work outside
-  this closeout record.
-- Cross-platform rendered-crop byte identity remains future work outside this closeout record.
+- Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces are explicitly out of
+  Milestone D closeout scope and remain future work outside this closeout record.
+- Cross-platform rendered-crop byte identity is not required for Milestone D closeout and remains
+  future work outside this closeout record.
 - Sandbox hardening remains future work outside this closeout record.
-- Node beta and MCP experimental work remain outside this closeout record unless separately
-  staffed or accepted by a scoped ADR.
+- Node beta and MCP experimental work remain outside this closeout record and outside Milestone D
+  closeout scope.
 - Public benchmark reports remain blocked.
 - Release artifacts and package publication remain blocked.
 - Production positioning remains blocked.

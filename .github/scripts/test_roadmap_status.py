@@ -50,6 +50,8 @@ class RoadmapStatusTests(unittest.TestCase):
         self.assertIn("does not approve public benchmark reports", text)
         self.assertIn("releases, packages, production positioning", text)
         self.assertIn("performance/quality/footprint claims", text)
+        self.assertIn("cross-platform rendered-crop byte identity is not required for D closeout", text)
+        self.assertIn("explicit post-D blockers, not D closeout requirements", text)
 
     def test_milestone_b_still_precedes_milestone_c(self) -> None:
         text = roadmap_text()

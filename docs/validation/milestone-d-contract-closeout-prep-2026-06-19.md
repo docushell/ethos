@@ -90,12 +90,13 @@ git diff --check green
 
 - Final Milestone D exit still requires review, merge to `main`, and a fresh validation run from
   the merged source tree.
-- Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces remain outside this prep
-  record.
-- Cross-platform rendered-crop byte identity remains outside this prep record.
+- Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces are explicitly out of
+  Milestone D closeout scope and remain outside this prep record.
+- Cross-platform rendered-crop byte identity is not required for Milestone D closeout and remains
+  outside this prep record.
 - Sandbox hardening remains outside this prep record.
-- Node beta and MCP experimental work remain outside this prep record unless separately staffed or
-  accepted by a release-scope ADR.
+- Node beta and MCP experimental work remain outside this prep record and outside Milestone D
+  closeout scope.
 - Public benchmark reports remain blocked.
 - Release artifacts and package publication remain blocked.
 - Production positioning remains blocked.

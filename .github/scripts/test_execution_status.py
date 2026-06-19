@@ -75,6 +75,8 @@ class ExecutionStatusTests(unittest.TestCase):
             text,
         )
         self.assertIn("claim audit approves specific wording", text)
+        self.assertIn("Post-D blockers/future work", text)
+        self.assertIn("these are not D closeout requirements", text)
         self.assertIn("product-differentiating path remains verification and grounding first", text)
 
 
