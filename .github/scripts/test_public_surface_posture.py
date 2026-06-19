@@ -58,6 +58,7 @@ class PublicSurfacePostureTests(unittest.TestCase):
         self.assertIn("contracts phase", text)
         self.assertIn("Gate Zero[^\\n]*has not run", text)
         self.assertIn("launch package", text)
+        self.assertIn('"docs/milestone-e-prep-scope.md"', text)
         self.assertIn("benchmark[- ]validated", text)
         self.assertIn("release[- ]ready", text)
         self.assertIn("package[- ]ready", text)

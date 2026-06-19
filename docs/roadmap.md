@@ -61,10 +61,12 @@ The prior contract closeout is recorded in
 keeps Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces out of Milestone D, and
 cross-platform rendered-crop byte identity is not required for D closeout.
 Milestone E prep begins with a source-only pre-alpha boundary note at
-[`docs/milestone-e-prep-scope.md`](milestone-e-prep-scope.md). This first slice only identifies
-tracked trust-loop fixture candidates and guard wiring for internal continuation; it does not
-approve public result wording, hosted surfaces, package/distribution work, or public-facing
-claims.
+[`docs/milestone-e-prep-scope.md`](milestone-e-prep-scope.md) and a guarded internal fixture
+candidate inventory at
+[`docs/milestone-e-fixture-candidates.json`](milestone-e-fixture-candidates.json). This first
+slice only identifies tracked trust-loop fixture candidates and guard wiring for internal
+continuation; it does not approve public result wording, hosted surfaces, package/distribution
+work, or public-facing claims.
 
 | Milestone | Window | Contents | Gate |
 | --- | --- | --- | --- |

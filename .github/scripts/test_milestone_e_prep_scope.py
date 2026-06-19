@@ -17,7 +17,9 @@
 
 from __future__ import annotations
 
+import json
 import re
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -26,9 +28,50 @@ from makefile_guard import target_block
 
 ROOT = Path(__file__).resolve().parents[2]
 PREP_SCOPE = ROOT / "docs/milestone-e-prep-scope.md"
+FIXTURE_CANDIDATES = ROOT / "docs/milestone-e-fixture-candidates.json"
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
+
+EXPECTED_CANDIDATES = {
+    "Native verification trust loop": [
+        "examples/verify/cases.json",
+        "examples/verify/goldens/native_grounded_report.json",
+    ],
+    "Split-quote and unsupported-claim diagnostics": [
+        "examples/verify/native_split_quote_citations.json",
+        "examples/verify/native_non_v1_claims_citations.json",
+    ],
+    "Capability downgrade diagnostics": [
+        "examples/verify/capability_downgrade_v1_contract.json",
+        "examples/verify/goldens/opendataloader_capability_limited_report.json",
+    ],
+    "OpenDataLoader-style adapter grounding": [
+        "examples/verify/opendataloader_adapter_shape_v1_contract.json",
+        "examples/verify/opendataloader.json",
+    ],
+    "Pinned real OpenDataLoader fixture path": [
+        "fixtures/foreign/opendataloader/real/manifest.json",
+        "fixtures/foreign/opendataloader/real/expected.verification_report.json",
+        "fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json",
+    ],
+    "Crop descriptor and source-bound crop shape": [
+        "examples/crop/crop_element_v1_contract.json",
+        "examples/crop/crop_element_surface_shape_v1_contract.json",
+    ],
+    "RAG chunk artifact loop": ["schemas/examples/chunks.example.jsonl"],
+    "Security-report artifact loop": ["schemas/examples/security-report.example.json"],
+    "Demo narrative index": ["docs/demos/verify-alpha.md"],
+}
+
+ALLOWED_COMMANDS = {
+    "make milestone-d-capability-downgrade-contract",
+    "make milestone-d-internal-contracts",
+    "make milestone-d-opendataloader-adapter-shape-contract",
+    "make rag-chunk-alpha",
+    "make security-report-alpha",
+    "make verify-alpha",
+}
 
 
 def read(path: Path) -> str:
@@ -39,7 +82,23 @@ def normalized(path: Path) -> str:
     return re.sub(r"\s+", " ", read(path))
 
 
+def load_fixture_inventory() -> dict:
+    return json.loads(FIXTURE_CANDIDATES.read_text(encoding="utf-8"))
+
+
 class MilestoneEPrepScopeTests(unittest.TestCase):
+    def assert_tracked_file(self, path: str) -> None:
+        self.assertTrue((ROOT / path).is_file(), path)
+        result = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", path],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(0, result.returncode, path)
+
     def test_prep_scope_keeps_internal_source_only_status(self) -> None:
         text = normalized(PREP_SCOPE)
 
@@ -56,38 +115,85 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
     def test_prep_scope_names_guarded_fixture_candidates(self) -> None:
         text = read(PREP_SCOPE)
 
-        required_paths = [
-            "examples/verify/cases.json",
-            "examples/verify/goldens/native_grounded_report.json",
-            "examples/verify/native_split_quote_citations.json",
-            "examples/verify/native_non_v1_claims_citations.json",
-            "examples/verify/capability_downgrade_v1_contract.json",
-            "examples/verify/goldens/opendataloader_capability_limited_report.json",
-            "examples/verify/opendataloader_adapter_shape_v1_contract.json",
-            "examples/verify/opendataloader.json",
-            "fixtures/foreign/opendataloader/real/manifest.json",
-            "examples/crop/crop_element_v1_contract.json",
-            "examples/crop/crop_element_surface_shape_v1_contract.json",
-            "schemas/examples/chunks.example.jsonl",
-            "schemas/examples/security-report.example.json",
-            "docs/demos/verify-alpha.md",
+        self.assertIn("`docs/milestone-e-fixture-candidates.json`", text)
+        self.assert_tracked_file("docs/milestone-e-fixture-candidates.json")
+        for label, paths in EXPECTED_CANDIDATES.items():
+            self.assertIn(label, text)
+            for path in paths:
+                self.assertIn(f"`{path}`", text)
+                self.assert_tracked_file(path)
+
+    def test_fixture_inventory_is_exact_path_backed_and_internal(self) -> None:
+        inventory = load_fixture_inventory()
+
+        self.assertEqual(1, inventory["schema_version"])
+        self.assertEqual(
+            "source-only-pre-alpha-internal-milestone-e-prep",
+            inventory["status"],
+        )
+        self.assertEqual("internal_fixture_candidate_inventory", inventory["scope"])
+        self.assertEqual(
+            "not_promoted_beyond_internal_fixture_planning",
+            inventory["promotion_status"],
+        )
+        self.assertIn("public result wording remains blocked", inventory["public_boundary"])
+        self.assertIn("hosted surfaces remain blocked", inventory["public_boundary"])
+
+        by_label = {case["label"]: case for case in inventory["fixture_candidates"]}
+        self.assertEqual(set(EXPECTED_CANDIDATES), set(by_label))
+        for label, paths in EXPECTED_CANDIDATES.items():
+            case = by_label[label]
+            self.assertEqual("source-only-pre-alpha-internal-candidate", case["status"])
+            self.assertIn(case["validated_command"], ALLOWED_COMMANDS)
+            self.assertEqual(paths, case["input_fixtures"])
+            self.assertTrue(case["expected_diagnostic_boundary"], label)
+            self.assertIn("Internal fixture candidate only", case["blocker_status"])
+            for path in paths:
+                self.assert_tracked_file(path)
+
+    def test_fixture_inventory_avoids_public_launch_posture(self) -> None:
+        text = json.dumps(load_fixture_inventory(), sort_keys=True).lower()
+
+        forbidden = [
+            "public beta is approved",
+            "release-ready",
+            "package-ready",
+            "production-ready",
+            "benchmark-validated",
+            "launch-ready",
+            "public result wording approved",
+            "hosted surface approved",
+            "broad demo approved",
         ]
-        for path in required_paths:
-            self.assertIn(f"`{path}`", text)
-            self.assertTrue((ROOT / path).exists(), path)
+        for phrase in forbidden:
+            self.assertNotIn(phrase, text)
 
     def test_status_and_roadmap_reference_prep_scope(self) -> None:
         roadmap = read(ROADMAP)
         status = read(EXECUTION_STATUS)
 
         self.assertIn("docs/milestone-e-prep-scope.md", roadmap)
+        self.assertIn("docs/milestone-e-fixture-candidates.json", roadmap)
         self.assertIn("docs/milestone-e-prep-scope.md", status)
+        self.assertIn("docs/milestone-e-fixture-candidates.json", status)
         self.assertIn("make milestone-e-prep", status)
+        self.assertIn(
+            "later public-report, project-maintained PDFium build, stable CLI/Python docs, demo, "
+            "and beta work remain blocked on explicit claim-audit and release-scope decisions",
+            roadmap,
+        )
+        self.assertIn("Still absent or not claimable:", status)
+        self.assertIn("claim-audit approval for any public result wording", status)
+        self.assertIn(
+            "intentionally excludes public-report, release, package, hosted, and broad "
+            "demo-generation workflows",
+            status,
+        )
 
     def test_make_target_is_narrow_and_guarded(self) -> None:
         block = target_block("milestone-e-prep")
 
-        required = [
+        expected = [
             "$(PYTHON) .github/scripts/test_execution_status.py",
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_public_surface_posture.py",
@@ -95,8 +201,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py",
             "git diff --check",
         ]
-        for command in required:
-            self.assertIn(command, block)
+        commands = [line.strip() for line in block.splitlines() if line.strip()]
+        self.assertEqual(expected, commands)
 
         for excluded in [
             "release-",
@@ -113,6 +219,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         text = read(CI_WORKFLOW)
 
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_scope.py", text)
+        self.assertEqual(1, text.count("python3 .github/scripts/test_milestone_e_prep_scope.py"))
 
     def test_prep_scope_avoids_public_launch_posture(self) -> None:
         text = normalized(PREP_SCOPE).lower()

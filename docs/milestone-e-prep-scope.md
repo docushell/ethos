@@ -32,7 +32,8 @@ The prep slice is not allowed to:
 ## Internal Demo Fixture Candidates
 
 The current E prep candidate set is restricted to tracked source-tree artifacts already covered by
-existing guards:
+existing guards. The machine-readable inventory is
+`docs/milestone-e-fixture-candidates.json`.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -40,7 +41,7 @@ existing guards:
 | Split-quote and unsupported-claim diagnostics | `examples/verify/native_split_quote_citations.json` and `examples/verify/native_non_v1_claims_citations.json` | `make verify-alpha` |
 | Capability downgrade diagnostics | `examples/verify/capability_downgrade_v1_contract.json` and `examples/verify/goldens/opendataloader_capability_limited_report.json` | `make milestone-d-capability-downgrade-contract` |
 | OpenDataLoader-style adapter grounding | `examples/verify/opendataloader_adapter_shape_v1_contract.json` and `examples/verify/opendataloader.json` | `make milestone-d-opendataloader-adapter-shape-contract` |
-| Pinned real OpenDataLoader fixture path | `fixtures/foreign/opendataloader/real/manifest.json` and the paired grounded/ungrounded reports | `make verify-alpha` |
+| Pinned real OpenDataLoader fixture path | `fixtures/foreign/opendataloader/real/manifest.json`, `fixtures/foreign/opendataloader/real/expected.verification_report.json`, and `fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json` | `make verify-alpha` |
 | Crop descriptor and source-bound crop shape | `examples/crop/crop_element_v1_contract.json` and `examples/crop/crop_element_surface_shape_v1_contract.json` | `make milestone-d-internal-contracts` |
 | RAG chunk artifact loop | `schemas/examples/chunks.example.jsonl` | `make rag-chunk-alpha` |
 | Security-report artifact loop | `schemas/examples/security-report.example.json` | `make security-report-alpha` |
