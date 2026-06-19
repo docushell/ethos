@@ -453,6 +453,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         block = target_block("milestone-d-crop-element-contract")
 
         required = [
+            "cargo test --locked -p ethos-core crop_element",
             "cargo test --locked -p ethos-cli --test verify "
             "native_verify_crop_dir_writes_deterministic_crop_descriptors",
             "$(PYTHON) schemas/validate_examples.py",
@@ -488,6 +489,8 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         text = normalized_contract_text()
 
         self.assertIn("source-only pre-alpha contract work", text)
+        self.assertIn("internal Rust resolver in `ethos-core::crop_element`", text)
+        self.assertIn("descriptor-only crop descriptors", text)
         self.assertIn("does not create a first-class CLI command", text)
         self.assertIn(
             "The current executable crop carrier remains `ethos verify --crop-dir` "

@@ -80,6 +80,7 @@ milestone-d-grounding-source-contract:
 	git diff --check
 
 milestone-d-crop-element-contract:
+	cargo test --locked -p ethos-core crop_element
 	cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py

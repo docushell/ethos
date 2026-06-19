@@ -161,6 +161,7 @@ CONTRACT_REGISTRY = [
         "inventory": "examples/crop/crop_element_v1_contract.json",
         "schema": "schemas/ethos-crop-element-contract.schema.json",
         "commands": [
+            "cargo test --locked -p ethos-core crop_element",
             "cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors",
         ]
         + COMMON_CONTRACT_GATES
