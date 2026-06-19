@@ -667,7 +667,7 @@ mod tests {
     #[test]
     fn rejects_json_artifact_header_invalid_json() {
         assert_json_artifact_header_rejected(
-            b"{".to_vec(),
+            vec![123],
             "pdfium worker returned an invalid JSON artifact header",
         );
     }
@@ -863,5 +863,39 @@ mod tests {
 
         assert_eq!(error.code, ErrorCode::MemoryLimitExceeded);
         assert_eq!(error.message, "parse exceeded memory limit");
+    }
+
+    #[test]
+    fn worker_error_envelope_parses_stable_error() {
+        let error = worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"input does not contain a PDF header"}}"#,
+        )
+        .expect("stable worker error envelope is parsed");
+
+        assert_eq!(error.code, ErrorCode::InvalidPdf);
+        assert_eq!(error.message, "input does not contain a PDF header");
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_invalid_json() {
+        assert!(worker_ethos_error(&[123]).is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_missing_code() {
+        assert!(worker_ethos_error(br#"{"error":{"message":"missing code"}}"#).is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_unknown_code() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"unsupported_worker_code","message":"unknown code"}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_non_string_message() {
+        assert!(worker_ethos_error(br#"{"error":{"code":"invalid_pdf","message":42}}"#).is_none());
     }
 }

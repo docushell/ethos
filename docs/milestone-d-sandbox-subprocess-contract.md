@@ -25,7 +25,8 @@ The current source-tree inventory for this contract boundary is
 exercise timeout handling, memory-limit error reporting, stable error relay, and diagnostics-gated
 stderr behavior. It also records worker JSON artifact-header integrity cases for the existing
 temporary artifact handoff and worker pipe-output limit cases for the bounded parent/child pipe
-reader. Each inventory case binds to a request envelope under
+reader. It also records worker stable error-envelope parser cases for accepted envelopes and
+malformed envelope rejection. Each inventory case binds to a request envelope under
 `schemas/examples/sandbox-subprocess-*.example.json` and records the expected process exit code,
 stable error code, stable error message, and diagnostics policy. The inventory also records the
 request identity and request-policy diagnostics that the source-tree guard exercises for this
@@ -52,6 +53,8 @@ The v1 contract boundary is fail-closed and error-envelope-first:
 - duplicate, unexpected, or trailing worker JSON artifact header fields fail closed;
 - worker pipe-output limit checks accept empty and limit-sized output and reject oversized output
   through `memory_limit_exceeded`;
+- worker stable error-envelope parser checks accept known stable worker errors and reject malformed
+  worker error envelopes;
 - non-envelope worker stderr is hidden by default;
 - non-envelope worker stderr is exposed only under explicit diagnostics;
 - request envelopes bind each failure case to the intended operation, timeout limit, diagnostics

@@ -170,6 +170,44 @@ EXPECTED_PIPE_LIMIT_CASES = [
         "error_message": "parse exceeded memory limit",
     },
 ]
+EXPECTED_ERROR_ENVELOPE_CASES = [
+    {
+        "name": "worker-error-envelope-stable-error",
+        "test_filter": "worker_error_envelope_parses_stable_error",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "accepted",
+        "error_code": "invalid_pdf",
+        "error_message": "input does not contain a PDF header",
+    },
+    {
+        "name": "worker-error-envelope-invalid-json",
+        "test_filter": "worker_error_envelope_rejects_invalid_json",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "invalid_json",
+    },
+    {
+        "name": "worker-error-envelope-missing-code",
+        "test_filter": "worker_error_envelope_rejects_missing_code",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "missing_code",
+    },
+    {
+        "name": "worker-error-envelope-unknown-code",
+        "test_filter": "worker_error_envelope_rejects_unknown_code",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "unknown_code",
+    },
+    {
+        "name": "worker-error-envelope-non-string-message",
+        "test_filter": "worker_error_envelope_rejects_non_string_message",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "non_string_message",
+    },
+]
 EXPECTED_DIAGNOSTIC_MESSAGES = [
     "request_ref is missing",
     "request_ref does not match sandbox subprocess request identity tuple",
@@ -576,6 +614,7 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         required = [
             "cargo test --locked -p ethos-cli json_artifact_header",
             "cargo test --locked -p ethos-cli worker_pipe_limit",
+            "cargo test --locked -p ethos-cli worker_error_envelope",
             "cargo test --locked -p ethos-cli --test pdf_parse worker",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
@@ -639,6 +678,7 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             "duplicate, unexpected, or trailing worker JSON artifact header fields fail closed",
             "worker pipe-output limit checks accept empty and limit-sized output",
             "`memory_limit_exceeded`",
+            "worker stable error-envelope parser checks accept known stable worker errors",
             "non-envelope worker stderr is hidden by default",
             "explicit diagnostics",
             "request envelopes bind each failure case",
@@ -712,6 +752,7 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         self.assertEqual(EXPECTED_EXPLICIT_BLOCKERS, inventory["explicit_blockers"])
         self.assertEqual(EXPECTED_ARTIFACT_HEADER_CASES, inventory["artifact_header_cases"])
         self.assertEqual(EXPECTED_PIPE_LIMIT_CASES, inventory["pipe_limit_cases"])
+        self.assertEqual(EXPECTED_ERROR_ENVELOPE_CASES, inventory["error_envelope_cases"])
 
         case_names = [case["name"] for case in inventory["cases"]]
         self.assertEqual(len(case_names), len(set(case_names)))
@@ -819,6 +860,25 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             else:
                 self.assertIn("MemoryLimitExceeded", body, case["name"])
                 self.assertIn(case["error_message"], body, case["name"])
+
+    def test_contract_inventory_matches_existing_worker_error_envelope_tests(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        worker_source = WORKER_SOURCE.read_text(encoding="utf-8")
+
+        self.assertEqual(EXPECTED_ERROR_ENVELOPE_CASES, inventory["error_envelope_cases"])
+        self.assertIn("fn worker_ethos_error", worker_source)
+
+        case_names = [case["name"] for case in inventory["error_envelope_cases"]]
+        self.assertEqual(len(case_names), len(set(case_names)))
+        for case in inventory["error_envelope_cases"]:
+            body = rust_test_body(worker_source, case["test_filter"])
+            self.assertIn("worker_ethos_error", body, case["name"])
+            if case["expected_result"] == "accepted":
+                self.assertIn(case["error_code"], body, case["name"])
+                self.assertIn(case["error_message"], body, case["name"])
+                self.assertIn("expect(", body, case["name"])
+            else:
+                self.assertIn("is_none()", body, case["name"])
 
     def test_contract_inventory_pins_fail_closed_diagnostics(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

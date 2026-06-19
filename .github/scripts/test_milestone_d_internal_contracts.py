@@ -193,6 +193,7 @@ CONTRACT_REGISTRY = [
         "commands": [
             "cargo test --locked -p ethos-cli json_artifact_header",
             "cargo test --locked -p ethos-cli worker_pipe_limit",
+            "cargo test --locked -p ethos-cli worker_error_envelope",
             "cargo test --locked -p ethos-cli --test pdf_parse worker",
         ]
         + COMMON_CONTRACT_GATES

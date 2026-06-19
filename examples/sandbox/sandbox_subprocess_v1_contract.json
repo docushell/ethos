@@ -209,6 +209,44 @@
       "error_message": "parse exceeded memory limit"
     }
   ],
+  "error_envelope_cases": [
+    {
+      "name": "worker-error-envelope-stable-error",
+      "test_filter": "worker_error_envelope_parses_stable_error",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "accepted",
+      "error_code": "invalid_pdf",
+      "error_message": "input does not contain a PDF header"
+    },
+    {
+      "name": "worker-error-envelope-invalid-json",
+      "test_filter": "worker_error_envelope_rejects_invalid_json",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "invalid_json"
+    },
+    {
+      "name": "worker-error-envelope-missing-code",
+      "test_filter": "worker_error_envelope_rejects_missing_code",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "missing_code"
+    },
+    {
+      "name": "worker-error-envelope-unknown-code",
+      "test_filter": "worker_error_envelope_rejects_unknown_code",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "unknown_code"
+    },
+    {
+      "name": "worker-error-envelope-non-string-message",
+      "test_filter": "worker_error_envelope_rejects_non_string_message",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "non_string_message"
+    }
+  ],
   "diagnostic_cases": [
     {
       "name": "request-ref-missing",
