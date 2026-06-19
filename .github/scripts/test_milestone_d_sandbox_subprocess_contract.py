@@ -76,6 +76,30 @@ EXPECTED_ARTIFACT_HEADER_CASES = [
         "error_message": "pdfium worker returned an unsupported JSON artifact header",
     },
     {
+        "name": "json-artifact-header-duplicate-field",
+        "test_filter": "rejects_json_artifact_header_duplicate_field",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker returned an invalid JSON artifact header",
+    },
+    {
+        "name": "json-artifact-header-unexpected-field",
+        "test_filter": "rejects_json_artifact_header_unexpected_field",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker returned an invalid JSON artifact header",
+    },
+    {
+        "name": "json-artifact-header-trailing-data",
+        "test_filter": "rejects_json_artifact_header_trailing_data",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker returned an invalid JSON artifact header",
+    },
+    {
         "name": "json-artifact-header-missing-output-bytes",
         "test_filter": "rejects_json_artifact_header_missing_output_bytes",
         "boundary": "json_artifact_header_integrity",
@@ -612,6 +636,7 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             "stable worker error envelopes are relayed",
             "worker JSON artifact headers bind output byte count, output hash, document "
             "fingerprint, and payload hash",
+            "duplicate, unexpected, or trailing worker JSON artifact header fields fail closed",
             "worker pipe-output limit checks accept empty and limit-sized output",
             "`memory_limit_exceeded`",
             "non-envelope worker stderr is hidden by default",

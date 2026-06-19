@@ -49,6 +49,7 @@ The v1 contract boundary is fail-closed and error-envelope-first:
 - worker JSON artifact headers bind output byte count, output hash, document fingerprint, and
   payload hash to the temporary JSON artifact before the parent process accepts it;
 - malformed, unsupported, or incomplete worker JSON artifact headers fail closed;
+- duplicate, unexpected, or trailing worker JSON artifact header fields fail closed;
 - worker pipe-output limit checks accept empty and limit-sized output and reject oversized output
   through `memory_limit_exceeded`;
 - non-envelope worker stderr is hidden by default;

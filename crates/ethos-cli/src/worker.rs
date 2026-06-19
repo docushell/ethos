@@ -35,6 +35,13 @@ pub(crate) const WORKER_JSON_ARTIFACT_SCHEMA: &str = "ethos-worker-json-artifact
 // Applied independently to stdout and stderr; if a child keeps writing after a reader rejects,
 // the existing worker timeout remains the hard stop.
 const WORKER_PIPE_MAX_BYTES: usize = 512 * 1024 * 1024;
+const WORKER_JSON_ARTIFACT_HEADER_FIELDS: &[&str] = &[
+    "schema_version",
+    "document_fingerprint",
+    "payload_sha256",
+    "output_sha256",
+    "output_bytes",
+];
 
 pub(crate) struct WorkerJsonArtifact {
     _temp_dir: TempDir,
@@ -157,20 +164,19 @@ fn worker_json_artifact_from_header(
     temp_dir: TempDir,
     path: PathBuf,
 ) -> Result<WorkerJsonArtifact, Failure> {
-    let value: serde_json::Value = serde_json::from_slice(stdout).map_err(|_| {
-        EthosError::internal("pdfium worker returned an invalid JSON artifact header")
-    })?;
-    let schema_version = required_header_string(&value, "schema_version")?;
+    let header = worker_json_artifact_header_from_stdout(stdout)?;
+    let schema_version = required_header_string(header.schema_version.as_ref(), "schema_version")?;
     if schema_version != WORKER_JSON_ARTIFACT_SCHEMA {
         return Err(EthosError::internal(
             "pdfium worker returned an unsupported JSON artifact header",
         )
         .into());
     }
-    let document_fingerprint = required_header_string(&value, "document_fingerprint")?;
-    let payload_sha256 = required_header_string(&value, "payload_sha256")?;
-    let output_sha256 = required_header_string(&value, "output_sha256")?;
-    let output_bytes = required_header_u64(&value, "output_bytes")?;
+    let document_fingerprint =
+        required_header_string(header.document_fingerprint.as_ref(), "document_fingerprint")?;
+    let payload_sha256 = required_header_string(header.payload_sha256.as_ref(), "payload_sha256")?;
+    let output_sha256 = required_header_string(header.output_sha256.as_ref(), "output_sha256")?;
+    let output_bytes = required_header_u64(header.output_bytes.as_ref(), "output_bytes")?;
 
     let (actual_sha256, actual_bytes) = file_sha256(&path)?;
     if actual_bytes != output_bytes || actual_sha256 != output_sha256 {
@@ -193,9 +199,99 @@ fn worker_json_artifact_from_header(
     })
 }
 
-fn required_header_string(value: &serde_json::Value, key: &str) -> Result<String, Failure> {
+#[derive(Default)]
+struct WorkerJsonArtifactHeaderFields {
+    schema_version: Option<serde_json::Value>,
+    document_fingerprint: Option<serde_json::Value>,
+    payload_sha256: Option<serde_json::Value>,
+    output_sha256: Option<serde_json::Value>,
+    output_bytes: Option<serde_json::Value>,
+}
+
+fn worker_json_artifact_header_from_stdout(
+    stdout: &[u8],
+) -> Result<WorkerJsonArtifactHeaderFields, Failure> {
+    let mut deserializer = serde_json::Deserializer::from_slice(stdout);
+    let header = deserializer
+        .deserialize_map(WorkerJsonArtifactHeaderVisitor)
+        .map_err(|_| {
+            Failure::Ethos(EthosError::internal(
+                "pdfium worker returned an invalid JSON artifact header",
+            ))
+        })?;
+    deserializer.end().map_err(|_| {
+        Failure::Ethos(EthosError::internal(
+            "pdfium worker returned an invalid JSON artifact header",
+        ))
+    })?;
+    Ok(header)
+}
+
+struct WorkerJsonArtifactHeaderVisitor;
+
+impl<'de> Visitor<'de> for WorkerJsonArtifactHeaderVisitor {
+    type Value = WorkerJsonArtifactHeaderFields;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a strict PDF worker JSON artifact header")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        let mut header = WorkerJsonArtifactHeaderFields::default();
+
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "schema_version" => {
+                    set_header_value(&mut header.schema_version, "schema_version", &mut map)?
+                }
+                "document_fingerprint" => set_header_value(
+                    &mut header.document_fingerprint,
+                    "document_fingerprint",
+                    &mut map,
+                )?,
+                "payload_sha256" => {
+                    set_header_value(&mut header.payload_sha256, "payload_sha256", &mut map)?
+                }
+                "output_sha256" => {
+                    set_header_value(&mut header.output_sha256, "output_sha256", &mut map)?
+                }
+                "output_bytes" => {
+                    set_header_value(&mut header.output_bytes, "output_bytes", &mut map)?
+                }
+                _ => {
+                    let _ = map.next_value::<IgnoredAny>()?;
+                    return Err(de::Error::unknown_field(
+                        &key,
+                        WORKER_JSON_ARTIFACT_HEADER_FIELDS,
+                    ));
+                }
+            }
+        }
+
+        Ok(header)
+    }
+}
+
+fn set_header_value<'de, A>(
+    slot: &mut Option<serde_json::Value>,
+    key: &'static str,
+    map: &mut A,
+) -> Result<(), A::Error>
+where
+    A: MapAccess<'de>,
+{
+    if slot.is_some() {
+        return Err(de::Error::duplicate_field(key));
+    }
+    *slot = Some(map.next_value()?);
+    Ok(())
+}
+
+fn required_header_string(value: Option<&serde_json::Value>, key: &str) -> Result<String, Failure> {
     value
-        .get(key)
         .and_then(serde_json::Value::as_str)
         .map(ToString::to_string)
         .ok_or_else(|| {
@@ -203,13 +299,10 @@ fn required_header_string(value: &serde_json::Value, key: &str) -> Result<String
         })
 }
 
-fn required_header_u64(value: &serde_json::Value, key: &str) -> Result<u64, Failure> {
-    value
-        .get(key)
-        .and_then(serde_json::Value::as_u64)
-        .ok_or_else(|| {
-            EthosError::internal(format!("pdfium worker JSON artifact header missing {key}")).into()
-        })
+fn required_header_u64(value: Option<&serde_json::Value>, key: &str) -> Result<u64, Failure> {
+    value.and_then(serde_json::Value::as_u64).ok_or_else(|| {
+        EthosError::internal(format!("pdfium worker JSON artifact header missing {key}")).into()
+    })
 }
 
 fn file_sha256(path: &Path) -> Result<(String, u64), Failure> {
@@ -588,6 +681,42 @@ mod tests {
         assert_json_artifact_header_rejected(
             header,
             "pdfium worker returned an unsupported JSON artifact header",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_duplicate_field() {
+        let header = br#"{"schema_version":"ethos-worker-json-artifact-v1","schema_version":"ethos-worker-json-artifact-v1"}"#.to_vec();
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker returned an invalid JSON artifact header",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_unexpected_field() {
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+            "unexpected": true,
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker returned an invalid JSON artifact header",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_trailing_data() {
+        let mut header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+        }));
+        header.extend_from_slice(br#"{"schema_version":"ethos-worker-json-artifact-v1"}"#);
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker returned an invalid JSON artifact header",
         );
     }
 

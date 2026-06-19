@@ -115,6 +115,30 @@
       "error_message": "pdfium worker returned an unsupported JSON artifact header"
     },
     {
+      "name": "json-artifact-header-duplicate-field",
+      "test_filter": "rejects_json_artifact_header_duplicate_field",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker returned an invalid JSON artifact header"
+    },
+    {
+      "name": "json-artifact-header-unexpected-field",
+      "test_filter": "rejects_json_artifact_header_unexpected_field",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker returned an invalid JSON artifact header"
+    },
+    {
+      "name": "json-artifact-header-trailing-data",
+      "test_filter": "rejects_json_artifact_header_trailing_data",
+      "boundary": "json_artifact_header_integrity",
+      "expected_result": "rejected",
+      "error_code": "internal_error",
+      "error_message": "pdfium worker returned an invalid JSON artifact header"
+    },
+    {
       "name": "json-artifact-header-missing-output-bytes",
       "test_filter": "rejects_json_artifact_header_missing_output_bytes",
       "boundary": "json_artifact_header_integrity",
