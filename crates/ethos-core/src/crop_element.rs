@@ -34,6 +34,7 @@ const LOGICAL_CROP_REF_VERSION: &str = "ethos.logical_crop_ref.v1";
 
 /// Source-only `crop_element` request envelope.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CropElementRequest {
     /// Request artifact type, currently `ethos.crop_element_request.v1`.
     pub artifact_type: String,
@@ -336,6 +337,18 @@ mod tests {
             crop_element_request_ref(&request).unwrap(),
             request.request_ref
         );
+    }
+
+    #[test]
+    fn crop_element_request_rejects_unknown_fields() {
+        let mut request = serde_json::to_value(fixture_request()).unwrap();
+        request
+            .as_object_mut()
+            .unwrap()
+            .insert("unexpected".to_string(), Value::Bool(true));
+
+        let error = serde_json::from_value::<CropElementRequest>(request).unwrap_err();
+        assert!(error.to_string().contains("unknown field `unexpected`"));
     }
 
     #[test]

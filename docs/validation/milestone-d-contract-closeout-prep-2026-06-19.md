@@ -74,10 +74,11 @@ git diff --check green
   contract.
 - `capability_downgrade` v1 is the capability declaration to verification-report downgrade
   contract.
-- `crop_element` v1 is the future element-to-crop-descriptor contract currently represented by
-  the existing `ethos verify --crop-dir` carrier.
-- `crop_element_surface_shape` v1 is the future callable crop surface shape over the current crop
-  request and descriptor schemas.
+- `crop_element` v1 is the element-to-crop-descriptor contract currently represented by
+  descriptor-only `ethos crop_element` and the existing `ethos verify --crop-dir` evidence
+  artifacts.
+- `crop_element_surface_shape` v1 is the callable descriptor-only CLI surface shape over the
+  current crop request and descriptor schemas.
 - `sandbox_subprocess` v1 is the future worker-boundary contract currently represented by the
   existing PDF worker process.
 - Request-envelope identity is guarded for the current `crop_element` and `sandbox_subprocess`

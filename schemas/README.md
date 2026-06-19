@@ -12,7 +12,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-citations.schema.json` | citation input consumed by `ethos verify --citations` |
 | `ethos-verification-report.schema.json` | `verification_report.json` |
 | `ethos-verification-config.schema.json` | verification config (its c14n hash stamps reports) |
-| `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos verify --crop-dir` |
+| `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos crop_element` and `ethos verify --crop-dir` |
 | `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |
 | `ethos-verify-citations-contract.schema.json` | Milestone D `verify_citations` v1 source-only contract inventory |
 | `ethos-claim-kind-boundary-contract.schema.json` | Milestone D `claim_kind_boundary` v1 source-only contract inventory |
@@ -82,21 +82,22 @@ usage diagnostics is checked by the Milestone D repository guard.
 
 Milestone D `crop_element` v1 contract work is tracked in
 `docs/milestone-d-crop-element-contract.md`. In this source-only pre-alpha slice,
-`crop_element` names the future element-to-crop-descriptor contract currently represented by the
-existing `ethos verify --crop-dir` carrier; it does not add a first-class command or binding
-surface. The request envelope example at `schemas/examples/crop-element-request.example.json` and
-contract inventory at `examples/crop/crop_element_v1_contract.json` are schema-validated here;
-their alignment with the document and crop-descriptor examples is checked by the Milestone D
-repository guard. The request envelope carries a c14n-derived `request_ref` identity guarded in
-that same source-only contract check.
+`crop_element` names the element-to-crop-descriptor contract currently carried by the
+descriptor-only `ethos crop_element` CLI command. The existing `ethos verify --crop-dir` carrier
+continues to emit verifier evidence artifacts from the same descriptor type. The request envelope
+example at `schemas/examples/crop-element-request.example.json` and contract inventory at
+`examples/crop/crop_element_v1_contract.json` are schema-validated here; their alignment with the
+document and crop-descriptor examples is checked by the Milestone D repository guard. The request
+envelope carries a c14n-derived `request_ref` identity guarded in that same source-only contract
+check.
 
 Milestone D `crop_element_surface_shape` v1 contract work is tracked in
 `docs/milestone-d-crop-element-surface-shape-contract.md`. In this source-only pre-alpha slice,
-`crop_element_surface_shape` names the future callable crop surface shape that must preserve the
-existing crop request and descriptor bindings; it does not add a first-class command or binding
-surface. The contract inventory at `examples/crop/crop_element_surface_shape_v1_contract.json` is
-schema-validated here; its alignment with the request schema, descriptor schema, and current
-surface absence is checked by the Milestone D repository guard.
+`crop_element_surface_shape` names the callable crop surface shape that must preserve the
+existing crop request and descriptor bindings. The contract inventory at
+`examples/crop/crop_element_surface_shape_v1_contract.json` is schema-validated here; its
+alignment with the request schema, descriptor schema, descriptor-only CLI command, and absent
+Python crop method is checked by the Milestone D repository guard.
 
 Milestone D `sandbox_subprocess` v1 contract work is tracked in
 `docs/milestone-d-sandbox-subprocess-contract.md`. In this source-only pre-alpha slice,

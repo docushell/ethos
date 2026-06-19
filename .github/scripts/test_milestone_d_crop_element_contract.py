@@ -41,9 +41,10 @@ EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 CLI_MAIN = ROOT / "crates/ethos-cli/src/main.rs"
 VERIFY_SOURCE = ROOT / "crates/ethos-cli/src/cmd/verify.rs"
+CLI_CROP_SOURCE = ROOT / "crates/ethos-cli/src/cmd/crop.rs"
 VERIFY_TESTS = ROOT / "crates/ethos-cli/tests/verify.rs"
 EXPECTED_EXPLICIT_BLOCKERS = [
-    "a first-class `crop_element` CLI command or binding surface",
+    "additional CLI commands beyond descriptor-only `ethos crop_element`",
     "Python, Node, MCP, or hosted crop API surfaces",
     "sandbox/subprocess backend expansion",
     "rendered-crop backend changes",
@@ -531,6 +532,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             "cargo test --locked -p ethos-core crop_element",
             "cargo test --locked -p ethos-cli --test verify "
             "native_verify_crop_dir_writes_deterministic_crop_descriptors",
+            "cargo test --locked -p ethos-cli --test verify crop_element_cli",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
@@ -560,22 +562,22 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-crop-element-contract.md", text, path)
 
-    def test_contract_defines_existing_carrier_not_new_surface(self) -> None:
+    def test_contract_defines_descriptor_cli_and_existing_verify_carrier(self) -> None:
         text = normalized_contract_text()
 
         self.assertIn("source-only pre-alpha contract work", text)
         self.assertIn("internal Rust resolver in `ethos-core::crop_element`", text)
         self.assertIn("descriptor-only crop descriptors", text)
-        self.assertIn("does not create a first-class CLI command", text)
+        self.assertIn("source-only pre-alpha `ethos crop_element` CLI command", text)
+        self.assertIn("does not create a Python binding", text)
         self.assertIn(
-            "The current executable crop carrier remains `ethos verify --crop-dir` "
-            "and optional `--crop-source-pdf`",
+            "The existing `ethos verify --crop-dir` and optional `--crop-source-pdf` "
+            "carrier remain the verifier evidence-artifact path",
             text,
         )
         self.assertIn(
-            "`crop_element` names the future first-class contract between a parsed Ethos "
-            "document, an explicit element locator, a crop descriptor, and an optional rendered "
-            "artifact",
+            "`crop_element` names the first-class descriptor contract between a parsed Ethos "
+            "document, an explicit element locator, and a crop descriptor",
             text,
         )
 
@@ -691,7 +693,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertEqual(inventory["schema_version"], 1)
         self.assertEqual(inventory["contract"], "crop_element.v1")
         self.assertEqual(inventory["status"], "source-only-pre-alpha")
-        self.assertEqual(inventory["carrier"], "ethos verify --crop-dir")
+        self.assertEqual(inventory["carrier"], "ethos crop_element")
         self.assertEqual(EXPECTED_EXPLICIT_BLOCKERS, inventory["explicit_blockers"])
 
         case_names = [case["name"] for case in inventory["cases"]]
@@ -957,7 +959,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
                 field,
             )
 
-    def test_current_cli_surface_has_no_first_class_crop_element_command(self) -> None:
+    def test_current_cli_surface_has_descriptor_only_crop_element_command(self) -> None:
         source = CLI_MAIN.read_text(encoding="utf-8")
         match = re.search(
             r"#\[derive\(Subcommand\)\]\s*enum Command \{\n(?P<body>.*?)\n\}",
@@ -967,8 +969,22 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertIsNotNone(match, "missing top-level CLI Command enum")
 
         command_enum = match.group("body")
-        for alias in ["crop-element", "crop_element", "CropElement"]:
-            self.assertNotIn(alias, command_enum)
+        self.assertIn('#[command(name = "crop_element")]', command_enum)
+        self.assertIn("CropElement(CropElementArgs)", command_enum)
+        self.assertIn("pub(crate) struct CropElementArgs", source)
+        self.assertIn("cmd::crop::crop_element(args)", source)
+
+        crop_source = CLI_CROP_SOURCE.read_text(encoding="utf-8")
+        self.assertIn("resolve_crop_element_descriptor", crop_source)
+        self.assertIn("read_crop_element_request", crop_source)
+        self.assertIn("serde_json::from_slice", crop_source)
+
+        tests = VERIFY_TESTS.read_text(encoding="utf-8")
+        for test_name in [
+            "crop_element_cli_writes_descriptor",
+            "crop_element_cli_fails_closed_on_invalid_check_id",
+        ]:
+            self.assertIn(f"fn {test_name}()", tests)
 
     def test_existing_verify_tests_cover_current_crop_carrier(self) -> None:
         text = VERIFY_TESTS.read_text(encoding="utf-8")

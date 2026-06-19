@@ -155,7 +155,7 @@ CONTRACT_REGISTRY = [
     },
     {
         "contract": "crop_element.v1",
-        "carrier": "ethos verify --crop-dir",
+        "carrier": "ethos crop_element",
         "target": "milestone-d-crop-element-contract",
         "doc": "docs/milestone-d-crop-element-contract.md",
         "inventory": "examples/crop/crop_element_v1_contract.json",
@@ -163,6 +163,7 @@ CONTRACT_REGISTRY = [
         "commands": [
             "cargo test --locked -p ethos-core crop_element",
             "cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors",
+            "cargo test --locked -p ethos-cli --test verify crop_element_cli",
         ]
         + COMMON_CONTRACT_GATES
         + [

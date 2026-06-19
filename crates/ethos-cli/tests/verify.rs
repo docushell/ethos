@@ -489,6 +489,66 @@ fn native_verify_crop_dir_writes_deterministic_crop_descriptors() {
 }
 
 #[test]
+fn crop_element_cli_writes_descriptor() {
+    let root = repo_root();
+    let descriptor = parse_success(&[
+        "crop_element",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--request",
+        root.join("schemas/examples/crop-element-request.example.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    let expected = json_file(root.join("schemas/examples/crop-descriptor.example.json"));
+
+    assert_eq!(descriptor, expected);
+
+    let out = temp_output("crop-element-descriptor");
+    let output = run_ethos(&[
+        "crop_element",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--request",
+        root.join("schemas/examples/crop-element-request.example.json")
+            .to_str()
+            .unwrap(),
+        "--out",
+        out.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(output.stdout, b"");
+    assert_eq!(output.stderr, b"");
+    assert_eq!(json_file(out), expected);
+}
+
+#[test]
+fn crop_element_cli_fails_closed_on_invalid_check_id() {
+    let root = repo_root();
+    let output = run_ethos(&[
+        "crop_element",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--request",
+        root.join("schemas/examples/crop-element-request.example.json")
+            .to_str()
+            .unwrap(),
+        "--check-id",
+        "v1",
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr).contains(
+        "crop_element request failed: descriptor must bind exactly one logical check id"
+    ));
+}
+
+#[test]
 fn crop_dir_is_native_ethos_only_for_alpha() {
     let root = repo_root();
     let crop_dir = tempfile::tempdir().expect("temp crop dir");

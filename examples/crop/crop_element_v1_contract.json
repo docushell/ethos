@@ -2,7 +2,7 @@
   "schema_version": 1,
   "contract": "crop_element.v1",
   "status": "source-only-pre-alpha",
-  "carrier": "ethos verify --crop-dir",
+  "carrier": "ethos crop_element",
   "cases": [
     {
       "name": "document-example-e000002",
@@ -145,7 +145,7 @@
     }
   ],
   "explicit_blockers": [
-    "a first-class `crop_element` CLI command or binding surface",
+    "additional CLI commands beyond descriptor-only `ethos crop_element`",
     "Python, Node, MCP, or hosted crop API surfaces",
     "sandbox/subprocess backend expansion",
     "rendered-crop backend changes",

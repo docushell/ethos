@@ -31,14 +31,14 @@ binds the parser-neutral evidence boundary to current native and foreign-source
 report grounding metadata without adding a new command or binding surface.
 The next D contract-prep slice defines the source-only
 [`crop_element` v1 contract](milestone-d-crop-element-contract.md) over the
-existing `ethos verify --crop-dir` crop descriptor carrier. It now includes an
-internal `ethos-core::crop_element` descriptor-only resolver, descriptor type, shared logical
-crop-ref identity helper, and fail-closed descriptor diagnostics, but still does not add a
-first-class crop command, binding surface, sandbox backend, Node beta, or MCP experimental scope.
+descriptor-only `ethos crop_element` CLI carrier. It now includes an internal
+`ethos-core::crop_element` descriptor-only resolver, descriptor type, shared logical crop-ref
+identity helper, fail-closed descriptor diagnostics, and focused CLI validation, while Python,
+Node, MCP, hosted, rendered-backend, and sandbox scope remain explicit blockers.
 The source-only
 [`crop_element_surface_shape` v1 contract](milestone-d-crop-element-surface-shape-contract.md)
-binds the future callable crop surface shape to the existing request and descriptor schemas
-without adding that surface.
+binds the descriptor-only CLI surface shape to the existing request and descriptor schemas while
+recording the current absent Python crop method and the remaining non-CLI blockers.
 The source-only
 [`capability_downgrade` v1 contract](milestone-d-capability-downgrade-contract.md)
 binds existing grounding-source capability declarations to verification-report
