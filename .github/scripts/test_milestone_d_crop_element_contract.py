@@ -883,6 +883,13 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertIn("ethos_core::crop_element::crop_element_crop_ref", text)
         self.assertNotIn('"version": "ethos.logical_crop_ref.v1"', text)
 
+    def test_current_crop_carrier_serializes_core_descriptor_type(self) -> None:
+        text = VERIFY_SOURCE.read_text(encoding="utf-8")
+
+        self.assertIn("BTreeMap<String, CropElementDescriptor>", text)
+        self.assertIn("serde_json::to_value(&descriptor)", text)
+        self.assertNotIn("serde_json::Map::new()", text)
+
 
 if __name__ == "__main__":
     unittest.main()

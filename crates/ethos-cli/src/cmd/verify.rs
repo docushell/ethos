@@ -18,6 +18,7 @@ use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+use ethos_core::crop_element::{CropElementDescriptor, CropElementRendering};
 use ethos_core::error::EthosError;
 use ethos_core::fingerprint::{is_fingerprint_form, source_fingerprint};
 use ethos_core::geom::QRect;
@@ -560,14 +561,6 @@ fn assign_logical_crop_refs(report: &mut VerificationReport) -> Result<(), Failu
     Ok(())
 }
 
-#[derive(Debug)]
-struct CropDescriptor {
-    page: String,
-    bbox: [i64; 4],
-    check_ids: Vec<String>,
-    text_sha256: Option<String>,
-}
-
 fn write_crop_artifacts(
     crop_dir: &Path,
     report: &VerificationReport,
@@ -580,7 +573,7 @@ fn write_crop_artifacts(
         ))
     })?;
 
-    let mut descriptors: BTreeMap<String, CropDescriptor> = BTreeMap::new();
+    let mut descriptors: BTreeMap<String, CropElementDescriptor> = BTreeMap::new();
     for check in &report.checks {
         let Some(evidence) = check.evidence.as_ref() else {
             continue;
@@ -610,12 +603,33 @@ fn write_crop_artifacts(
                 existing.check_ids.push(check.id.clone());
             }
             None => {
+                let document_fingerprint =
+                    report.document_fingerprint.clone().ok_or_else(|| {
+                        Failure::Ethos(EthosError::internal(
+                            "crop descriptor requires document fingerprint",
+                        ))
+                    })?;
                 descriptors.insert(
                     crop_ref.to_string(),
-                    CropDescriptor {
+                    CropElementDescriptor {
+                        artifact_type: "ethos.crop_descriptor.v1".to_string(),
+                        schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+                        crop_ref: crop_ref.to_string(),
+                        document_fingerprint,
                         page: page.to_string(),
                         bbox,
                         check_ids: vec![check.id.clone()],
+                        rendering_status: if source_pdf.is_some() {
+                            CropElementRendering::Rendered
+                        } else {
+                            CropElementRendering::DescriptorOnly
+                        },
+                        source_pdf_fingerprint: None,
+                        rendered_ref: None,
+                        rendered_format: None,
+                        rendered_sha256: None,
+                        rendered_width_px: None,
+                        rendered_height_px: None,
                         text_sha256,
                     },
                 );
@@ -625,48 +639,7 @@ fn write_crop_artifacts(
 
     for (crop_ref, descriptor) in descriptors {
         let path = crop_descriptor_path(crop_dir, &crop_ref)?;
-        let mut object = serde_json::Map::new();
-        object.insert(
-            "artifact_type".to_string(),
-            serde_json::Value::String("ethos.crop_descriptor.v1".to_string()),
-        );
-        object.insert("bbox".to_string(), serde_json::json!(descriptor.bbox));
-        object.insert(
-            "check_ids".to_string(),
-            serde_json::json!(descriptor.check_ids),
-        );
-        object.insert(
-            "crop_ref".to_string(),
-            serde_json::Value::String(crop_ref.clone()),
-        );
-        if let Some(document_fingerprint) = &report.document_fingerprint {
-            object.insert(
-                "document_fingerprint".to_string(),
-                serde_json::Value::String(document_fingerprint.clone()),
-            );
-        }
-        object.insert(
-            "page".to_string(),
-            serde_json::Value::String(descriptor.page.clone()),
-        );
-        object.insert(
-            "rendering_status".to_string(),
-            serde_json::Value::String(if source_pdf.is_some() {
-                "rendered".to_string()
-            } else {
-                "descriptor_only".to_string()
-            }),
-        );
-        object.insert(
-            "schema_version".to_string(),
-            serde_json::Value::String(ethos_core::SCHEMA_VERSION.to_string()),
-        );
-        if let Some(text_sha256) = &descriptor.text_sha256 {
-            object.insert(
-                "text_sha256".to_string(),
-                serde_json::Value::String(text_sha256.clone()),
-            );
-        }
+        let mut descriptor = descriptor;
         if let Some(source_pdf) = source_pdf {
             let rendered = render_crop_png(source_pdf, &descriptor)?;
             let rendered_ref = rendered_ref_for(&crop_ref)?;
@@ -677,32 +650,16 @@ fn write_crop_artifacts(
                     rendered_path.display()
                 ))
             })?;
-            object.insert(
-                "rendered_format".to_string(),
-                serde_json::Value::String("png".to_string()),
-            );
-            object.insert(
-                "rendered_height_px".to_string(),
-                serde_json::json!(rendered.height_px),
-            );
-            object.insert(
-                "rendered_ref".to_string(),
-                serde_json::Value::String(rendered_ref),
-            );
-            object.insert(
-                "rendered_sha256".to_string(),
-                serde_json::Value::String(ethos_core::c14n::sha256_hex_bytes(&rendered.bytes)),
-            );
-            object.insert(
-                "rendered_width_px".to_string(),
-                serde_json::json!(rendered.width_px),
-            );
-            object.insert(
-                "source_pdf_fingerprint".to_string(),
-                serde_json::Value::String(source_pdf.fingerprint.clone()),
-            );
+            descriptor.source_pdf_fingerprint = Some(source_pdf.fingerprint.clone());
+            descriptor.rendered_ref = Some(rendered_ref);
+            descriptor.rendered_format = Some("png".to_string());
+            descriptor.rendered_sha256 = Some(ethos_core::c14n::sha256_hex_bytes(&rendered.bytes));
+            descriptor.rendered_width_px = Some(rendered.width_px);
+            descriptor.rendered_height_px = Some(rendered.height_px);
         }
-        let mut bytes = ethos_core::c14n::c14n_bytes(&serde_json::Value::Object(object))
+        let descriptor_value =
+            serde_json::to_value(&descriptor).map_err(|e| EthosError::internal(e.to_string()))?;
+        let mut bytes = ethos_core::c14n::c14n_bytes(&descriptor_value)
             .map_err(|e| EthosError::internal(e.message))?;
         bytes.push(b'\n');
         std::fs::write(&path, bytes).map_err(|_| {
@@ -740,7 +697,7 @@ struct RenderedCrop {
 
 fn render_crop_png(
     source_pdf: &CropSourcePdf,
-    descriptor: &CropDescriptor,
+    descriptor: &CropElementDescriptor,
 ) -> Result<RenderedCrop, Failure> {
     let page_index = native_page_index(&descriptor.page)?;
     let bbox = QRect::new(
@@ -1219,5 +1176,76 @@ mod tests {
                 .and_then(|evidence| evidence.crop_ref.as_deref()),
             None
         );
+    }
+
+    #[test]
+    fn write_crop_artifacts_requires_document_fingerprint_for_descriptors() {
+        let crop_dir = tempfile::tempdir().unwrap();
+        let report = VerificationReport {
+            schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+            document_fingerprint: None,
+            verification_config_sha256: "0".repeat(64),
+            grounding: GroundingMeta {
+                parser: ParserIdentity {
+                    name: "ethos".to_string(),
+                    version: "0.1.0".to_string(),
+                    adapter: None,
+                    adapter_version: None,
+                },
+                capabilities: Capabilities {
+                    spans: true,
+                    char_offsets: true,
+                    tables: true,
+                    fingerprint: true,
+                    coordinate_origin: ethos_core::grounding::CoordinateOrigin::TopLeft,
+                    crop_support: true,
+                },
+            },
+            capability_limits: Vec::new(),
+            fingerprint_stale: false,
+            all_evidence_grounded: true,
+            checks: vec![Check {
+                id: "v0001".to_string(),
+                claim: ethos_core::verify_types::Claim {
+                    kind: ClaimKind::Quote,
+                    text: Some("Hello".to_string()),
+                    citation: ethos_core::verify_types::Citation {
+                        page: None,
+                        element_id: Some("e000001".to_string()),
+                        span_id: None,
+                        table_id: None,
+                        cell: None,
+                        bbox: None,
+                    },
+                },
+                status: CheckStatus::Grounded,
+                reason: None,
+                match_method: MatchMethod::ExactTextContains,
+                semantic_unverified: false,
+                evidence: Some(Evidence {
+                    text: Some("Hello world".to_string()),
+                    page: Some("p0001".to_string()),
+                    bbox: Some([7392, 5482, 19378, 7226]),
+                    crop_ref: Some(format!("crop-{}.json", "a".repeat(64))),
+                }),
+                warnings: Vec::new(),
+            }],
+            unsupported_claim_kinds: Vec::new(),
+            warnings: Vec::new(),
+        };
+
+        let err = write_crop_artifacts(crop_dir.path(), &report, None)
+            .expect_err("crop descriptors require document fingerprint");
+
+        match err {
+            Failure::Ethos(error) => {
+                assert_eq!(
+                    error.message,
+                    "crop descriptor requires document fingerprint"
+                );
+            }
+            _ => panic!("expected ethos failure"),
+        }
+        assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 0);
     }
 }
