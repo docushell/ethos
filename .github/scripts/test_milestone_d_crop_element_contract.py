@@ -40,6 +40,7 @@ ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 CLI_MAIN = ROOT / "crates/ethos-cli/src/main.rs"
+VERIFY_SOURCE = ROOT / "crates/ethos-cli/src/cmd/verify.rs"
 VERIFY_TESTS = ROOT / "crates/ethos-cli/tests/verify.rs"
 EXPECTED_EXPLICIT_BLOCKERS = [
     "a first-class `crop_element` CLI command or binding surface",
@@ -875,6 +876,12 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             "crop_source_pdf_writes_rendered_crop_artifacts_when_pdfium_is_configured",
         ]:
             self.assertIn(f"fn {test_name}()", text)
+
+    def test_current_crop_carrier_uses_core_crop_ref_identity(self) -> None:
+        text = VERIFY_SOURCE.read_text(encoding="utf-8")
+
+        self.assertIn("ethos_core::crop_element::crop_element_crop_ref", text)
+        self.assertNotIn('"version": "ethos.logical_crop_ref.v1"', text)
 
 
 if __name__ == "__main__":

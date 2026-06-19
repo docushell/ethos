@@ -67,7 +67,9 @@ coordinates. Cross-platform rendered crop byte identity is not part of this cont
 ## Relationship To Existing Verifier Artifacts
 
 `ethos verify --crop-dir` can already emit crop descriptors for grounded evidence checks. That path
-is evidence-artifact plumbing, not a first-class crop API. `ethos-core::crop_element` now provides
+is evidence-artifact plumbing, not a first-class crop API. The existing crop carrier now delegates
+logical crop descriptor identity to `ethos-core::crop_element` so the verifier path and the
+internal resolver share one source-only identity helper. `ethos-core::crop_element` also provides
 the internal descriptor-only resolver that a future first-class surface can wrap after its own
 surface and backend blockers are explicitly closed. That future surface must preserve the same
 audit bindings before it can replace or wrap the current carrier:

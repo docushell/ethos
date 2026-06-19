@@ -536,15 +536,8 @@ fn logical_crop_ref_for(
     check_id: &str,
     page: &str,
 ) -> Result<String, Failure> {
-    let value = serde_json::json!({
-        "check_id": check_id,
-        "document_fingerprint": document_fingerprint,
-        "page": page,
-        "version": "ethos.logical_crop_ref.v1",
-    });
-    let hash = ethos_core::c14n::sha256_hex(&value)
-        .map_err(|e| Failure::Ethos(EthosError::internal(e.message)))?;
-    Ok(format!("crop-{hash}.json"))
+    ethos_core::crop_element::crop_element_crop_ref(document_fingerprint, check_id, page)
+        .map_err(Failure::Ethos)
 }
 
 fn assign_logical_crop_refs(report: &mut VerificationReport) -> Result<(), Failure> {
