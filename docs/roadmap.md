@@ -16,11 +16,11 @@ external blockers. This closeout does not approve public benchmark reports,
 releases, packages, production positioning, or performance/quality/footprint
 claims.
 
-Milestone D source-only pre-alpha contract work has started with the narrow
-[`verify_citations` v1 contract](milestone-d-verify-citations-contract.md). The
-current executable carrier remains `ethos verify`; the first D slice is a
-contract and fixture-backed validation boundary, not a new public command,
-binding, crop API, sandbox backend, Node beta, or MCP experimental scope.
+Milestone D source-only pre-alpha work is internally closed for the current source-tree scope.
+The narrow [`verify_citations` v1 contract](milestone-d-verify-citations-contract.md) keeps the
+current executable carrier as `ethos verify`; this is a contract and fixture-backed validation
+boundary, not a new public command, binding, crop API, sandbox backend, Node beta, or MCP
+experimental scope.
 The source-only
 [`claim_kind_boundary` v1 contract](milestone-d-claim-kind-boundary-contract.md)
 binds the supported v1 claim-kind boundary to current citation/config/report
@@ -29,7 +29,7 @@ The source-only
 [`grounding_source` v1 contract](milestone-d-grounding-source-contract.md)
 binds the parser-neutral evidence boundary to current native and foreign-source
 report grounding metadata without adding a new command or binding surface.
-The next D contract-prep slice defines the source-only
+The D crop contract slice defines the source-only
 [`crop_element` v1 contract](milestone-d-crop-element-contract.md) over the
 source-bound `ethos crop_element` CLI carrier. It now includes an internal
 `ethos-core::crop_element` resolver, descriptor type, shared logical crop-ref
@@ -53,12 +53,13 @@ The source-only [`sandbox_subprocess` v1 contract](milestone-d-sandbox-subproces
 classifies the existing PDF worker-process boundary behind `ethos doc parse` and
 `ethos fingerprint`; it does not add hardened sandbox rules or a new command or
 binding surface.
-Current Milestone D source-only contract closeout is recorded in
+Current Milestone D source-only final closeout is recorded in
+[`docs/validation/milestone-d-final-closeout-validation-2026-06-19.md`](validation/milestone-d-final-closeout-validation-2026-06-19.md).
+The prior contract closeout is recorded in
 [`docs/validation/milestone-d-contract-closeout-validation-2026-06-19.md`](validation/milestone-d-contract-closeout-validation-2026-06-19.md);
-full 13-D exit still requires implementation-lane review beyond this contract boundary. The
-accepted D closeout scope keeps Node, MCP, hosted, sandbox-backed, and foreign-adapter crop
-surfaces out of Milestone D, and cross-platform rendered-crop byte identity is not required for D
-closeout.
+13-D exit is complete for the current source-only pre-alpha scope. The accepted D closeout scope
+keeps Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces out of Milestone D, and
+cross-platform rendered-crop byte identity is not required for D closeout.
 
 | Milestone | Window | Contents | Gate |
 | --- | --- | --- | --- |
@@ -66,7 +67,7 @@ closeout.
 | A | weeks 1-8 | Contracts (5 schemas, c14n, deterministic profile), trust-boundary artifacts (`GroundingSource`, verification schemas, OpenDataLoader adapter stub, `ethos verify` CLI stub), PDFium Phase 1 spike, harness + competitor adapters, CLI skeleton | **Gate Zero**: ADR-0005 is accepted as `PROCEED` for internal Milestone B continuation. This is not public benchmark, release, package, production, or claim approval. |
 | B | weeks 9-14 | **`ethos verify` alpha first**: native Ethos JSON + synthetic and pinned real OpenDataLoader verification demos, stale fingerprint checks, capability-limited reports, deterministic evidence matching including split-quote coverage, explicit unsupported non-v1 claim reporting, adapter structure diagnostics; then reading order, blocks, headings, lists, Markdown/text exporters, Python wheel scaffold, quality dashboard, Windows x64 nightly determinism | [13-B exit checklist](milestone-b-exit-checklist.md) |
 | C | weeks 15-22 | Simple/bordered tables; RAG chunker + citations; non-text region coordinates; security report + default-chunk exclusion; debug overlay; internal benchmark snapshot | Current artifact-validation checkpoint recorded in [Milestone C closeout validation](validation/milestone-c-closeout-validation-2026-06-18.md); broader debug/crop/table follow-ups remain explicit |
-| D | weeks 23-30 | [`verify_citations` v1 contract prep](milestone-d-verify-citations-contract.md); [`claim_kind_boundary` v1 contract prep](milestone-d-claim-kind-boundary-contract.md); [`grounding_source` v1 contract prep](milestone-d-grounding-source-contract.md); [`capability_downgrade` v1 contract prep](milestone-d-capability-downgrade-contract.md); [`opendataloader_adapter_shape` v1 contract prep](milestone-d-opendataloader-adapter-shape-contract.md); [`crop_element` v1 contract prep](milestone-d-crop-element-contract.md) plus internal resolver and source-bound CLI/Python descriptor/rendered carriers; [`crop_element_surface_shape` v1 contract prep](milestone-d-crop-element-surface-shape-contract.md); [`sandbox_subprocess` v1 contract prep](milestone-d-sandbox-subprocess-contract.md); [contract closeout validation](validation/milestone-d-contract-closeout-validation-2026-06-19.md); Node/MCP/hosted crop surfaces, sandbox-backed crop behavior, foreign-adapter crop coordinates, and cross-platform rendered-crop byte identity are explicit post-D blockers, not D closeout requirements | 13-D exit |
+| D | weeks 23-30 | [`verify_citations` v1 contract prep](milestone-d-verify-citations-contract.md); [`claim_kind_boundary` v1 contract prep](milestone-d-claim-kind-boundary-contract.md); [`grounding_source` v1 contract prep](milestone-d-grounding-source-contract.md); [`capability_downgrade` v1 contract prep](milestone-d-capability-downgrade-contract.md); [`opendataloader_adapter_shape` v1 contract prep](milestone-d-opendataloader-adapter-shape-contract.md); [`crop_element` v1 contract prep](milestone-d-crop-element-contract.md) plus internal resolver and source-bound CLI/Python descriptor/rendered carriers; [`crop_element_surface_shape` v1 contract prep](milestone-d-crop-element-surface-shape-contract.md); [`sandbox_subprocess` v1 contract prep](milestone-d-sandbox-subprocess-contract.md); [contract closeout validation](validation/milestone-d-contract-closeout-validation-2026-06-19.md); [final closeout validation](validation/milestone-d-final-closeout-validation-2026-06-19.md); Node/MCP/hosted crop surfaces, sandbox-backed crop behavior, foreign-adapter crop coordinates, and cross-platform rendered-crop byte identity are explicit post-D blockers, not D closeout requirements | 13-D exit complete for source-only pre-alpha scope |
 | E | weeks 31-40 | Public benchmark report (reproducible, labeled tiers); PDFium Phase 2 project-maintained builds; stable CLI/Python docs; proof-of-trust demos; **Public Beta** | Release 1 claim audit + public-beta checkpoint |
 | F / Release 2 | post-E | Complex tables, formula/LaTeX, chart classification, optional enrichment modules (never base) | Scoped after E from beta fixtures |
 
