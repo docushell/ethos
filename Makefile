@@ -131,6 +131,7 @@ milestone-d-internal-contracts:
 	$(MAKE) milestone-d-crop-element-surface-shape-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-sandbox-subprocess-contract PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/test_milestone_d_closeout_prep_record.py
+	$(PYTHON) .github/scripts/test_milestone_d_closeout_record.py
 	$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py
 	git diff --check
 
