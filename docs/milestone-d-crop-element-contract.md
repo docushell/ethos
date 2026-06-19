@@ -6,10 +6,11 @@ This note defines the narrow `crop_element` contract-prep slice for Milestone D.
 internal Rust resolver in `ethos-core::crop_element` that validates request identity, resolves one
 native document element, builds descriptor-only crop descriptors, and exposes that descriptor
 path through the source-only pre-alpha `ethos crop_element` CLI command. It does not create a
-Python binding, Node binding, MCP server method, hosted surface, rendered-crop backend change, or
-sandbox behavior. The existing `ethos verify --crop-dir` and optional `--crop-source-pdf` carrier
-remain the verifier evidence-artifact path; `crop_element` names the first-class descriptor
-contract between a parsed Ethos document, an explicit element locator, and a crop descriptor.
+Node binding, MCP server method, hosted surface, rendered-crop backend change, or sandbox
+behavior. The internal pre-alpha Python surface wraps the same descriptor-only CLI command. The
+existing `ethos verify --crop-dir` and optional `--crop-source-pdf` carrier remain the verifier
+evidence-artifact path; `crop_element` names the first-class descriptor contract between a parsed
+Ethos document, an explicit element locator, and a crop descriptor.
 
 ## Contract Surface
 
@@ -92,7 +93,7 @@ wrap this descriptor contract:
 This first `crop_element` slice does not add:
 
 - additional CLI commands beyond descriptor-only `ethos crop_element`;
-- Python, Node, MCP, or hosted crop API surfaces;
+- Node, MCP, or hosted crop API surfaces;
 - sandbox/subprocess backend expansion;
 - rendered-crop backend changes;
 - foreign-adapter crop coordinate hardening;

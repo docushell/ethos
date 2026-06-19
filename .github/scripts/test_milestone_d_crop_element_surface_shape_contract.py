@@ -35,14 +35,15 @@ CROP_ELEMENT_REQUEST_SCHEMA = ROOT / "schemas/ethos-crop-element-request.schema.
 CROP_DESCRIPTOR_SCHEMA = ROOT / "schemas/ethos-crop-descriptor.schema.json"
 CLI_MAIN = ROOT / "crates/ethos-cli/src/main.rs"
 CLI_CROP_SOURCE = ROOT / "crates/ethos-cli/src/cmd/crop.rs"
+PYTHON_INIT = ROOT / "python/ethos_pdf/__init__.py"
 PYTHON_CLI = ROOT / "python/ethos_pdf/_cli.py"
 VERIFY_TESTS = ROOT / "crates/ethos-cli/tests/verify.rs"
+PYTHON_TESTS = ROOT / "python/tests/test_cli_surface.py"
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 EXPECTED_EXPLICIT_BLOCKERS = [
     "additional CLI commands beyond descriptor-only `ethos crop_element`",
-    "a Python crop method",
     "Node, MCP, or hosted crop surfaces",
     "rendered-crop backend changes",
     "sandbox backend behavior",
@@ -107,6 +108,7 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
         block = target_block("milestone-d-crop-element-surface-shape-contract")
 
         required = [
+            "$(MAKE) python-surface-test PYTHON=$(PYTHON)",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
@@ -123,7 +125,6 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             "verify-rendered-crops",
             "compare-rendered-crops",
             "layout-evaluator-alpha",
-            "python-surface-test",
             "milestone-b-internal-checks",
             "milestone-c-internal-checks",
             "npm",
@@ -141,10 +142,11 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
 
         self.assertIn("source-only pre-alpha contract work", text)
         self.assertIn("records the descriptor-only `ethos crop_element` CLI surface", text)
-        self.assertIn("does not add a Python method", text)
-        self.assertIn("The current descriptor-only CLI carrier is `ethos crop_element`", text)
+        self.assertIn("internal pre-alpha Python wrapper over that CLI", text)
+        self.assertIn("The current descriptor-only carriers are `ethos crop_element`", text)
+        self.assertIn("`ethos_pdf.crop_element`", text)
         self.assertIn("`ethos verify --crop-dir` and optional `--crop-source-pdf` remain", text)
-        self.assertIn("does not implement those surfaces", text)
+        self.assertIn("does not implement rendered output", text)
 
     def test_contract_pins_supported_boundaries(self) -> None:
         text = normalized_contract_text()
@@ -157,7 +159,7 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             "`element_id`",
             "`source_pdf_fingerprint`",
             "current CLI has a descriptor-only `ethos crop_element` command",
-            "current Python scaffold still has no crop method",
+            "current Python scaffold has a descriptor-only `ethos_pdf.crop_element` method",
             "`make milestone-d-crop-element-surface-shape-contract PYTHON=<jsonschema-venv>/bin/python`",
         ]:
             self.assertIn(required, text)
@@ -395,11 +397,14 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
         inventory = load_json(CONTRACT_INVENTORY)
         current_surface = inventory["current_surface"]
         checked_files = [ROOT / path for path in current_surface["checked_files"]]
-        self.assertEqual([CLI_MAIN, CLI_CROP_SOURCE, VERIFY_TESTS, PYTHON_CLI], checked_files)
+        self.assertEqual(
+            [CLI_MAIN, CLI_CROP_SOURCE, VERIFY_TESTS, PYTHON_INIT, PYTHON_CLI],
+            checked_files,
+        )
         self.assertEqual("crop_element", current_surface["cli_command"])
         self.assertEqual("descriptor_only", current_surface["cli_mode"])
         self.assertEqual("crop_element", current_surface["python_method"])
-        self.assertEqual("absent", current_surface["python_status"])
+        self.assertEqual("descriptor_only", current_surface["python_status"])
         self.assertEqual(
             [
                 "crop_element_cli_writes_descriptor",
@@ -407,18 +412,32 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             ],
             current_surface["cli_tests"],
         )
+        self.assertEqual(
+            [
+                "test_crop_element_invokes_descriptor_cli_with_request_and_check_id",
+                "test_crop_element_method_uses_default_check_id",
+                "test_crop_element_rejects_empty_check_id_before_command_execution",
+                "test_crop_element_missing_request_raises_file_not_found",
+                "test_crop_element_invalid_json_stdout_raises_output_error",
+            ],
+            current_surface["python_tests"],
+        )
 
         cli_text = CLI_MAIN.read_text(encoding="utf-8")
         crop_text = CLI_CROP_SOURCE.read_text(encoding="utf-8")
-        tests_text = VERIFY_TESTS.read_text(encoding="utf-8")
+        init_text = PYTHON_INIT.read_text(encoding="utf-8")
         python_text = PYTHON_CLI.read_text(encoding="utf-8")
+        tests_text = VERIFY_TESTS.read_text(encoding="utf-8")
+        python_tests_text = PYTHON_TESTS.read_text(encoding="utf-8")
         self.assertIn("CropElement(CropElementArgs)", cli_text)
         self.assertIn('#[command(name = "crop_element")]', cli_text)
         self.assertIn("resolve_crop_element_descriptor", crop_text)
         for test_name in current_surface["cli_tests"]:
             self.assertIn(f"fn {test_name}()", tests_text)
-        self.assertNotIn("def crop", python_text)
-        self.assertNotIn("crop_element", python_text)
+        self.assertIn("def crop_element(", python_text)
+        self.assertIn('"crop_element"', init_text)
+        for test_name in current_surface["python_tests"]:
+            self.assertIn(f"def {test_name}(self) -> None:", python_tests_text)
 
 
 if __name__ == "__main__":

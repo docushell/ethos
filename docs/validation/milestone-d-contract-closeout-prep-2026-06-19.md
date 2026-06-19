@@ -20,8 +20,8 @@ D exit still pending review and a fresh validation run on `main`**.
 - Prep branch starting HEAD before this record: `1070d8f`
 - Scope: tracked source tree, Milestone D contract docs, contract inventories, schemas/examples,
   request envelopes, explicit blockers, focused validation commands, and Make/static guard wiring
-- Excluded: first-class crop API implementation, sandbox hardening, Node beta, MCP experimental
-  work, public claim wording, and final Milestone D exit approval
+- Excluded: rendered crop API behavior, sandbox hardening, Node beta, MCP experimental work,
+  public claim wording, and final Milestone D exit approval
 
 ## Commands
 
@@ -77,8 +77,8 @@ git diff --check green
 - `crop_element` v1 is the element-to-crop-descriptor contract currently represented by
   descriptor-only `ethos crop_element` and the existing `ethos verify --crop-dir` evidence
   artifacts.
-- `crop_element_surface_shape` v1 is the callable descriptor-only CLI surface shape over the
-  current crop request and descriptor schemas.
+- `crop_element_surface_shape` v1 is the callable descriptor-only CLI/Python surface shape over
+  the current crop request and descriptor schemas.
 - `sandbox_subprocess` v1 is the future worker-boundary contract currently represented by the
   existing PDF worker process.
 - Request-envelope identity is guarded for the current `crop_element` and `sandbox_subprocess`
@@ -89,7 +89,8 @@ git diff --check green
 
 - Final Milestone D exit still requires review, merge to `main`, and a fresh validation run from
   the merged source tree.
-- First-class crop API implementation remains outside this prep record.
+- Rendered, Node, MCP, hosted, and sandbox-backed crop API behavior remains outside this prep
+  record.
 - Sandbox hardening remains outside this prep record.
 - Node beta and MCP experimental work remain outside this prep record unless separately staffed or
   accepted by a release-scope ADR.

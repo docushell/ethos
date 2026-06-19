@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-"""Internal pre-alpha Python surface for local Ethos CLI parsing."""
+"""Internal pre-alpha Python surface for local Ethos CLI operations."""
 
 from ._cli import (
     EthosCli,
@@ -23,6 +23,7 @@ from ._cli import (
     EthosOutputError,
     EthosPythonSurfaceError,
     EthosTimeoutError,
+    crop_element,
     parse_pdf_json,
     parse_pdf_markdown,
     parse_pdf_text,
@@ -35,6 +36,7 @@ __all__ = [
     "EthosOutputError",
     "EthosPythonSurfaceError",
     "EthosTimeoutError",
+    "crop_element",
     "parse_pdf_json",
     "parse_pdf_markdown",
     "parse_pdf_text",

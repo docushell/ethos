@@ -90,6 +90,7 @@ milestone-d-crop-element-contract:
 	git diff --check
 
 milestone-d-crop-element-surface-shape-contract:
+	$(MAKE) python-surface-test PYTHON=$(PYTHON)
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
 	$(PYTHON) .github/scripts/test_roadmap_status.py

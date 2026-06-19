@@ -42,21 +42,28 @@
     "cli_command": "crop_element",
     "cli_mode": "descriptor_only",
     "python_method": "crop_element",
-    "python_status": "absent",
+    "python_status": "descriptor_only",
     "checked_files": [
       "crates/ethos-cli/src/main.rs",
       "crates/ethos-cli/src/cmd/crop.rs",
       "crates/ethos-cli/tests/verify.rs",
+      "python/ethos_pdf/__init__.py",
       "python/ethos_pdf/_cli.py"
     ],
     "cli_tests": [
       "crop_element_cli_writes_descriptor",
       "crop_element_cli_fails_closed_on_invalid_check_id"
+    ],
+    "python_tests": [
+      "test_crop_element_invokes_descriptor_cli_with_request_and_check_id",
+      "test_crop_element_method_uses_default_check_id",
+      "test_crop_element_rejects_empty_check_id_before_command_execution",
+      "test_crop_element_missing_request_raises_file_not_found",
+      "test_crop_element_invalid_json_stdout_raises_output_error"
     ]
   },
   "explicit_blockers": [
     "additional CLI commands beyond descriptor-only `ethos crop_element`",
-    "a Python crop method",
     "Node, MCP, or hosted crop surfaces",
     "rendered-crop backend changes",
     "sandbox backend behavior",

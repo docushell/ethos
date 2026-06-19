@@ -66,7 +66,11 @@ class MilestoneDContractCloseoutPrepRecordTests(unittest.TestCase):
 
         self.assertIn("source-only contract closeout prep", text)
         self.assertIn("final D exit still pending review and a fresh validation run on `main`", text)
-        self.assertIn("First-class crop API implementation remains outside this prep record", text)
+        self.assertIn(
+            "Rendered, Node, MCP, hosted, and sandbox-backed crop API behavior remains outside "
+            "this prep record",
+            text,
+        )
         self.assertIn("Sandbox hardening remains outside this prep record", text)
         self.assertIn("Node beta and MCP experimental work remain outside this prep record", text)
 

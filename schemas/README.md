@@ -96,8 +96,8 @@ Milestone D `crop_element_surface_shape` v1 contract work is tracked in
 `crop_element_surface_shape` names the callable crop surface shape that must preserve the
 existing crop request and descriptor bindings. The contract inventory at
 `examples/crop/crop_element_surface_shape_v1_contract.json` is schema-validated here; its
-alignment with the request schema, descriptor schema, descriptor-only CLI command, and absent
-Python crop method is checked by the Milestone D repository guard.
+alignment with the request schema, descriptor schema, descriptor-only CLI command, and
+descriptor-only Python wrapper is checked by the Milestone D repository guard.
 
 Milestone D `sandbox_subprocess` v1 contract work is tracked in
 `docs/milestone-d-sandbox-subprocess-contract.md`. In this source-only pre-alpha slice,

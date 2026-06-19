@@ -25,6 +25,7 @@ from typing import Any, Dict, Mapping, Optional, Sequence, Union
 PathLike = Union[str, os.PathLike[str]]
 
 _DOC_PARSE_FORMATS = frozenset(("json", "markdown", "text"))
+_DEFAULT_CROP_CHECK_ID = "v0001"
 
 
 class EthosPythonSurfaceError(Exception):
@@ -197,6 +198,43 @@ class EthosCli:
                 ) from exc
         return stdout
 
+    def crop_element(
+        self,
+        input_document: PathLike,
+        request: PathLike,
+        *,
+        check_id: str = _DEFAULT_CROP_CHECK_ID,
+        timeout_seconds: Optional[float] = None,
+    ) -> Any:
+        """Run descriptor-only `ethos crop_element` for one native document element."""
+
+        if not check_id:
+            raise ValueError("check_id must be non-empty")
+        if timeout_seconds is not None and timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be greater than zero when provided")
+
+        document_path = Path(input_document)
+        if not document_path.is_file():
+            raise FileNotFoundError(os.fspath(input_document))
+        request_path = Path(request)
+        if not request_path.is_file():
+            raise FileNotFoundError(os.fspath(request))
+
+        command = self._crop_element_command(
+            document_path,
+            request_path,
+            check_id=check_id,
+        )
+        stdout = self._run(command, timeout_seconds=timeout_seconds)
+        try:
+            return json.loads(stdout)
+        except json.JSONDecodeError as exc:
+            raise EthosOutputError(
+                f"ethos returned invalid JSON: {exc.msg}",
+                command,
+                stdout,
+            ) from exc
+
     def _doc_parse_command(
         self,
         pdf_path: Path,
@@ -218,6 +256,23 @@ class EthosCli:
         if diagnostics:
             command.append("--diagnostics")
         return tuple(command)
+
+    def _crop_element_command(
+        self,
+        document_path: Path,
+        request_path: Path,
+        *,
+        check_id: str,
+    ) -> Sequence[str]:
+        return (
+            self.ethos_bin,
+            "crop_element",
+            os.fspath(document_path),
+            "--request",
+            os.fspath(request_path),
+            "--check-id",
+            check_id,
+        )
 
     def _run(
         self,
@@ -306,6 +361,25 @@ def parse_pdf_text(
         input_pdf,
         pages=pages,
         diagnostics=diagnostics,
+        timeout_seconds=timeout_seconds,
+    )
+
+
+def crop_element(
+    input_document: PathLike,
+    request: PathLike,
+    *,
+    ethos_bin: PathLike = "ethos",
+    check_id: str = _DEFAULT_CROP_CHECK_ID,
+    timeout_seconds: Optional[float] = None,
+    env: Optional[Mapping[str, str]] = None,
+) -> Any:
+    """Resolve a descriptor-only crop element through a local ethos binary."""
+
+    return EthosCli(ethos_bin, env=env).crop_element(
+        input_document,
+        request,
+        check_id=check_id,
         timeout_seconds=timeout_seconds,
     )
 

@@ -178,7 +178,10 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-crop-element-surface-shape-contract.md",
         "inventory": "examples/crop/crop_element_surface_shape_v1_contract.json",
         "schema": "schemas/ethos-crop-element-surface-shape-contract.schema.json",
-        "commands": COMMON_CONTRACT_GATES
+        "commands": [
+            "$(MAKE) python-surface-test PYTHON=$(PYTHON)",
+        ]
+        + COMMON_CONTRACT_GATES
         + [
             "$(PYTHON) .github/scripts/test_milestone_d_crop_element_surface_shape_contract.py",
             "git diff --check",
@@ -546,6 +549,7 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
     def test_registered_contract_commands_stay_on_source_tree_validation_tools(self) -> None:
         allowed_prefixes = (
             "cargo test ",
+            "$(MAKE) python-surface-test ",
             "$(PYTHON) .github/scripts/",
             "$(PYTHON) schemas/",
             "git diff --check",

@@ -22,8 +22,8 @@ lanes and public blockers unchanged**.
 - Scope: tracked source tree, Milestone D contract docs, contract inventories, schemas/examples,
   request envelopes, explicit blockers, focused validation commands, CI/static guard wiring,
   diagnostics, and fixture-backed validation
-- Excluded: first-class crop API implementation, sandbox hardening, Node beta, MCP experimental
-  work, public claim wording, and full 13-D exit approval
+- Excluded: rendered crop API behavior, sandbox hardening, Node beta, MCP experimental work,
+  public claim wording, and full 13-D exit approval
 
 ## Commands
 
@@ -83,8 +83,8 @@ git diff --check green
 - `crop_element` v1 is the element-to-crop-descriptor contract currently represented by
   descriptor-only `ethos crop_element` and the existing `ethos verify --crop-dir` evidence
   artifacts.
-- `crop_element_surface_shape` v1 is the callable descriptor-only CLI surface shape over the
-  current crop request and descriptor schemas.
+- `crop_element_surface_shape` v1 is the callable descriptor-only CLI/Python surface shape over
+  the current crop request and descriptor schemas.
 - `sandbox_subprocess` v1 is the future worker-boundary contract currently represented by the
   existing PDF worker process.
 - Request-envelope identity is guarded for the current `crop_element` and `sandbox_subprocess`
@@ -96,7 +96,8 @@ git diff --check green
 ## Remaining Boundaries
 
 - Full 13-D exit still requires review of implementation lanes beyond the contract boundary.
-- First-class crop API implementation remains future work outside this closeout record.
+- Rendered, Node, MCP, hosted, and sandbox-backed crop API behavior remains future work outside
+  this closeout record.
 - Sandbox hardening remains future work outside this closeout record.
 - Node beta and MCP experimental work remain outside this closeout record unless separately
   staffed or accepted by a scoped ADR.

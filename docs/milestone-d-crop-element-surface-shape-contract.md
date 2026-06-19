@@ -3,14 +3,15 @@
 Status: source-only pre-alpha contract work for internal Milestone D continuation.
 
 This note defines the narrow `crop_element_surface_shape` contract-prep slice for Milestone D.
-It records the descriptor-only `ethos crop_element` CLI surface and does not add a Python method,
-Node binding, MCP method, hosted surface, crop renderer, or sandbox behavior.
+It records the descriptor-only `ethos crop_element` CLI surface and the internal pre-alpha Python
+wrapper over that CLI. It does not add a Node binding, MCP method, hosted surface, crop renderer,
+or sandbox behavior.
 
-The current descriptor-only CLI carrier is `ethos crop_element`; `ethos verify --crop-dir` and
-optional `--crop-source-pdf` remain the verifier evidence-artifact carrier. The
-`crop_element_surface_shape` contract names the callable surface shape that must preserve the
-existing `crop_element` request and crop descriptor audit bindings before any non-CLI surface or
-rendered backend is added.
+The current descriptor-only carriers are `ethos crop_element` and `ethos_pdf.crop_element`;
+`ethos verify --crop-dir` and optional `--crop-source-pdf` remain the verifier evidence-artifact
+carrier. The `crop_element_surface_shape` contract names the callable surface shape that must
+preserve the existing `crop_element` request and crop descriptor audit bindings before any
+Node, MCP, hosted, or rendered backend surface is added.
 
 ## Surface Shape
 
@@ -25,16 +26,16 @@ rendered backend is added.
 - rendered artifact metadata remains descriptor-owned when rendered output exists.
 
 The executable inventory is `examples/crop/crop_element_surface_shape_v1_contract.json`. It binds
-the surface fields to the existing request and descriptor schemas, records the descriptor-only CLI
-command, and records that the current Python surface intentionally does not expose a crop call.
+the surface fields to the existing request and descriptor schemas and records the descriptor-only
+CLI and Python command wrappers.
 
 ## Validation Target
 
 - `make milestone-d-crop-element-surface-shape-contract PYTHON=<jsonschema-venv>/bin/python`
 
-The target runs schema/example validation, status guards, roadmap guards, the surface-shape
-contract guard, and whitespace diff checks. It intentionally does not run rendered crop comparison
-or Python surface tests because this slice does not implement those surfaces.
+The target runs the Python surface tests, schema/example validation, status guards, roadmap
+guards, the surface-shape contract guard, and whitespace diff checks. It intentionally does not
+run rendered crop comparison because this slice does not implement rendered output.
 
 ## Boundaries Locked By This Slice
 
@@ -44,7 +45,8 @@ or Python surface tests because this slice does not implement those surfaces.
   request and descriptor schemas;
 - the current callable CLI boundary is native Ethos document plus explicit element id;
 - the current CLI has a descriptor-only `ethos crop_element` command;
-- the current Python scaffold still has no crop method;
+- the current Python scaffold has a descriptor-only `ethos_pdf.crop_element` method over the
+  caller-provided local CLI;
 - Node, MCP, and hosted crop surfaces remain explicit blockers.
 
 ## Explicit Blockers For This Slice
@@ -52,7 +54,6 @@ or Python surface tests because this slice does not implement those surfaces.
 This first `crop_element_surface_shape` slice does not add:
 
 - additional CLI commands beyond descriptor-only `ethos crop_element`;
-- a Python crop method;
 - Node, MCP, or hosted crop surfaces;
 - rendered-crop backend changes;
 - sandbox backend behavior;

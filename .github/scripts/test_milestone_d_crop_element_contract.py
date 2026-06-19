@@ -45,7 +45,7 @@ CLI_CROP_SOURCE = ROOT / "crates/ethos-cli/src/cmd/crop.rs"
 VERIFY_TESTS = ROOT / "crates/ethos-cli/tests/verify.rs"
 EXPECTED_EXPLICIT_BLOCKERS = [
     "additional CLI commands beyond descriptor-only `ethos crop_element`",
-    "Python, Node, MCP, or hosted crop API surfaces",
+    "Node, MCP, or hosted crop API surfaces",
     "sandbox/subprocess backend expansion",
     "rendered-crop backend changes",
     "foreign-adapter crop coordinate hardening",
@@ -569,7 +569,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertIn("internal Rust resolver in `ethos-core::crop_element`", text)
         self.assertIn("descriptor-only crop descriptors", text)
         self.assertIn("source-only pre-alpha `ethos crop_element` CLI command", text)
-        self.assertIn("does not create a Python binding", text)
+        self.assertIn("internal pre-alpha Python surface wraps the same descriptor-only CLI", text)
         self.assertIn(
             "The existing `ethos verify --crop-dir` and optional `--crop-source-pdf` "
             "carrier remain the verifier evidence-artifact path",
