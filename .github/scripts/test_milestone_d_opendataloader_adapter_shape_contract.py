@@ -225,6 +225,7 @@ class MilestoneDOpendataloaderAdapterShapeContractTests(unittest.TestCase):
         self.assertEqual(
             [
                 "documented-malformed-bbox",
+                "zero-area-bbox",
                 "documented-unknown-page",
                 "real-malformed-child-containers",
                 "real-malformed-table-cells",
