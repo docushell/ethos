@@ -37,6 +37,10 @@ TRUST_LOOP_WALKTHROUGH = ROOT / "docs/milestone-e-internal-trust-loop-walkthroug
 TRUST_LOOP_WALKTHROUGH_SCHEMA = (
     ROOT / "schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json"
 )
+TRUST_LOOP_USE_PROTOCOL = ROOT / "docs/milestone-e-internal-trust-loop-use-protocol.json"
+TRUST_LOOP_USE_PROTOCOL_SCHEMA = (
+    ROOT / "schemas/ethos-milestone-e-internal-trust-loop-use-protocol.schema.json"
+)
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
@@ -135,6 +139,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assert_tracked_file(
             "schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json"
         )
+        self.assertIn("`docs/milestone-e-internal-trust-loop-use-protocol.json`", text)
         for label, paths in EXPECTED_CANDIDATES.items():
             self.assertIn(label, text)
             for path in paths:
@@ -196,11 +201,17 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("docs/milestone-e-fixture-candidates.json", status)
         self.assertIn("docs/milestone-e-internal-trust-loop-walkthrough.json", roadmap)
         self.assertIn("docs/milestone-e-internal-trust-loop-walkthrough.json", status)
+        self.assertIn("docs/milestone-e-internal-trust-loop-use-protocol.json", roadmap)
+        self.assertIn("docs/milestone-e-internal-trust-loop-use-protocol.json", status)
         self.assertIn("make milestone-e-prep", status)
         self.assertIn("schemas/ethos-milestone-e-fixture-candidates.schema.json", roadmap)
         self.assertIn("schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json", roadmap)
         self.assertIn(
             "schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json",
+            roadmap,
+        )
+        self.assertIn(
+            "schemas/ethos-milestone-e-internal-trust-loop-use-protocol.schema.json",
             roadmap,
         )
         self.assertIn("schema-validated by `schemas/validate_examples.py`", status)
@@ -229,8 +240,10 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough_validation_record.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py",
             "git diff --check",
         ]
@@ -261,13 +274,20 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         criteria_schema = json.loads(FIXTURE_PROMOTION_CRITERIA_SCHEMA.read_text(encoding="utf-8"))
         walkthrough_schema = json.loads(TRUST_LOOP_WALKTHROUGH_SCHEMA.read_text(encoding="utf-8"))
         walkthrough = json.loads(TRUST_LOOP_WALKTHROUGH.read_text(encoding="utf-8"))
+        protocol_schema = json.loads(TRUST_LOOP_USE_PROTOCOL_SCHEMA.read_text(encoding="utf-8"))
+        protocol = json.loads(TRUST_LOOP_USE_PROTOCOL.read_text(encoding="utf-8"))
 
         self.assertEqual(False, candidates_schema["additionalProperties"])
         self.assertEqual(False, criteria_schema["additionalProperties"])
         self.assertEqual(False, walkthrough_schema["additionalProperties"])
+        self.assertEqual(False, protocol_schema["additionalProperties"])
         self.assertEqual(
             "internal_trust_loop_walkthrough_plan",
             walkthrough["scope"],
+        )
+        self.assertEqual(
+            "internal_trust_loop_use_protocol",
+            protocol["scope"],
         )
         self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", validate_examples)
         self.assertIn("docs\" / \"milestone-e-fixture-candidates.json", validate_examples)
@@ -287,6 +307,14 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "docs\" / \"milestone-e-internal-trust-loop-walkthrough.json",
             validate_examples,
         )
+        self.assertIn(
+            "ethos-milestone-e-internal-trust-loop-use-protocol.schema.json",
+            validate_examples,
+        )
+        self.assertIn(
+            "docs\" / \"milestone-e-internal-trust-loop-use-protocol.json",
+            validate_examples,
+        )
         self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", schemas_readme)
         self.assertIn(
             "ethos-milestone-e-fixture-promotion-criteria.schema.json",
@@ -294,6 +322,10 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         )
         self.assertIn(
             "ethos-milestone-e-internal-trust-loop-walkthrough.schema.json",
+            schemas_readme,
+        )
+        self.assertIn(
+            "ethos-milestone-e-internal-trust-loop-use-protocol.schema.json",
             schemas_readme,
         )
 

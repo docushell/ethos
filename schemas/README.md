@@ -26,6 +26,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-milestone-e-fixture-candidates.schema.json` | Milestone E source-only internal fixture-candidate inventory |
 | `ethos-milestone-e-fixture-promotion-criteria.schema.json` | Milestone E source-only internal fixture-promotion criteria |
 | `ethos-milestone-e-internal-trust-loop-walkthrough.schema.json` | Milestone E source-only internal trust-loop walkthrough plan |
+| `ethos-milestone-e-internal-trust-loop-use-protocol.schema.json` | Milestone E source-only internal trust-loop use protocol |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
 
 Conventions: snake_case keys; `additionalProperties: false` everywhere except the
@@ -116,10 +117,12 @@ check.
 
 Milestone E prep is tracked in `docs/milestone-e-prep-scope.md`. In this source-only pre-alpha
 slice, the fixture-candidate inventory at `docs/milestone-e-fixture-candidates.json`,
-fixture-promotion criteria at `docs/milestone-e-fixture-promotion-criteria.json`, and internal
-trust-loop walkthrough plan at `docs/milestone-e-internal-trust-loop-walkthrough.json` are
-schema-validated here. Their path tracking, candidate-to-criteria alignment, diagnostic-boundary
-alignment, and public-posture boundaries are checked by the Milestone E prep repository guards.
+fixture-promotion criteria at `docs/milestone-e-fixture-promotion-criteria.json`, internal
+trust-loop walkthrough plan at `docs/milestone-e-internal-trust-loop-walkthrough.json`, and
+internal trust-loop use protocol at
+`docs/milestone-e-internal-trust-loop-use-protocol.json` are schema-validated here. Their path
+tracking, candidate-to-criteria-to-walkthrough alignment, diagnostic-boundary alignment, and
+public-posture boundaries are checked by the Milestone E prep repository guards.
 
 Derived artifacts not schema'd here: `document.md` / `document.txt` (deterministic exports
 specified by the exporter config, Milestone B) and `debug.html` (Milestone C).

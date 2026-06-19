@@ -122,6 +122,9 @@ PAIRS = [
     ("ethos-milestone-e-internal-trust-loop-walkthrough.schema.json", [
         ROOT / "docs" / "milestone-e-internal-trust-loop-walkthrough.json",
     ]),
+    ("ethos-milestone-e-internal-trust-loop-use-protocol.schema.json", [
+        ROOT / "docs" / "milestone-e-internal-trust-loop-use-protocol.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

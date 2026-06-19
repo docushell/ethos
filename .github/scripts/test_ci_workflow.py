@@ -85,6 +85,24 @@ class CiWorkflowTests(unittest.TestCase):
             ),
         )
         self.assertIn(
+            "python3 .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py"
+            ),
+            text.index(
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py"
+            ),
+        )
+        self.assertIn(
             "python3 .github/scripts/"
             "test_milestone_e_internal_trust_loop_walkthrough_validation_record.py",
             text,
@@ -98,7 +116,7 @@ class CiWorkflowTests(unittest.TestCase):
         )
         self.assertLess(
             text.index(
-                "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py"
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py"
             ),
             text.index("python3 .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py"),
         )
@@ -119,6 +137,35 @@ class CiWorkflowTests(unittest.TestCase):
                 "python3 .github/scripts/"
                 "test_milestone_e_fixture_promotion_criteria_validation_record.py"
             ),
+        )
+        self.assertIn(
+            "python3 .github/scripts/"
+            "test_milestone_e_internal_trust_loop_use_protocol_validation_record.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/"
+                "test_milestone_e_internal_trust_loop_use_protocol_validation_record.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_internal_trust_loop_walkthrough_validation_record.py"
+            ),
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_internal_trust_loop_use_protocol_validation_record.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_internal_trust_loop_use_protocol_validation_record.py"
+            ),
+            text.index("python3 .github/scripts/test_milestone_e_prep_validation_record.py"),
         )
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_validation_record.py", text)
         self.assertEqual(
