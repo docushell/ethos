@@ -90,6 +90,11 @@ Records:
   `make milestone-d-opendataloader-adapter-shape-contract`, row-specific consistency checks,
   public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record covers only
   `opendataloader-adapter-grounding` and does not resolve or soften blockers.
+- `milestone-e-pinned-opendataloader-fixture-path-rehearsal-validation-2026-06-19.md` - internal
+  Milestone E pinned-opendataloader-fixture-path rehearsal validation passed through
+  `make verify-alpha`, row-specific consistency checks, public-surface posture checks,
+  `make milestone-e-prep`, and diff hygiene; the record covers only
+  `pinned-opendataloader-fixture-path` and does not resolve or soften blockers.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
