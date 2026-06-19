@@ -34,6 +34,9 @@ Records:
 - `milestone-d-contract-closeout-validation-2026-06-19.md` - internal Milestone D source-only
   contract closeout passed through `make milestone-d-internal-contracts`; implementation lanes
   and public blockers remain outside this validation record.
+- `milestone-d-final-closeout-validation-2026-06-19.md` - final internal Milestone D source-only
+  closeout passed through `make milestone-d-internal-contracts`, `cargo test --locked -p
+  ethos-cli`, clippy, formatting, and diff hygiene; Ethos remains source-only pre-alpha.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
