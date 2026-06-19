@@ -54,6 +54,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("python3 .github/scripts/test_security_report_alpha.py", text)
         self.assertIn("python3 .github/scripts/test_execution_status.py", text)
         self.assertIn("python3 .github/scripts/test_roadmap_status.py", text)
+        self.assertIn("python3 .github/scripts/test_public_surface_posture.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_d_internal_contracts.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_b_closeout_record.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_c_closeout_record.py", text)

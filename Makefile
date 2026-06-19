@@ -138,6 +138,8 @@ milestone-d-internal-contracts:
 	$(PYTHON) .github/scripts/test_milestone_d_closeout_prep_record.py
 	$(PYTHON) .github/scripts/test_milestone_d_closeout_record.py
 	$(PYTHON) .github/scripts/test_milestone_d_final_closeout_record.py
+	$(PYTHON) .github/scripts/test_public_surface_posture.py
+	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py
 	git diff --check
 
