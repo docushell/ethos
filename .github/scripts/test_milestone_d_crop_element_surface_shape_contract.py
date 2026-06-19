@@ -180,6 +180,46 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             self.assertTrue((ROOT / inventory[key]).is_file(), key)
         self.assertEqual(CROP_ELEMENT_CONTRACT_INVENTORY, ROOT / inventory["base_contract_inventory"])
 
+    def test_surface_shape_base_contract_cases_use_request_and_descriptor_fixtures(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        base_inventory = load_json(ROOT / inventory["base_contract_inventory"])
+        request_schema = load_json(ROOT / inventory["request_schema"])
+        descriptor_schema = load_json(ROOT / inventory["descriptor_schema"])
+        required_mappings = {
+            field["name"]: field["maps_to"]
+            for field in inventory["planned_surface_fields"]
+            if field.get("required") is True
+        }
+
+        self.assertEqual(
+            {
+                "document_fingerprint": "request.document_fingerprint",
+                "element_id": "request.element_id",
+                "rendering": "request.rendering",
+                "crop_descriptor": "descriptor.crop_ref",
+            },
+            required_mappings,
+        )
+        for case in base_inventory["cases"]:
+            document = load_json(ROOT / case["document"])
+            request = load_json(ROOT / case["request"])
+            descriptor = load_json(ROOT / case["descriptor"])
+
+            self.assertEqual([], schema_errors(request_schema, request), case["name"])
+            self.assertEqual([], schema_errors(descriptor_schema, descriptor), case["name"])
+            self.assertEqual(document["fingerprint"], request["document_fingerprint"], case["name"])
+            self.assertEqual(case["element_id"], request["element_id"], case["name"])
+            self.assertEqual(case["rendering_status"], request["rendering"], case["name"])
+            self.assertEqual(request["rendering"], descriptor["rendering_status"], case["name"])
+            self.assertEqual(
+                request["document_fingerprint"],
+                descriptor["document_fingerprint"],
+                case["name"],
+            )
+            self.assertIn("crop_ref", descriptor, case["name"])
+            self.assertTrue(descriptor["crop_ref"].startswith("crop-"), case["name"])
+            self.assertTrue(descriptor["crop_ref"].endswith(".json"), case["name"])
+
     def test_surface_fields_map_to_existing_request_and_descriptor_schema_fields(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
         request_schema = load_json(CROP_ELEMENT_REQUEST_SCHEMA)
@@ -198,6 +238,42 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
                 self.assertIn(name, descriptor_fields)
             else:
                 raise AssertionError(f"unexpected surface mapping prefix: {prefix}")
+
+    def test_planned_surface_fields_keep_required_and_rendered_lanes_partitioned(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        fields = inventory["planned_surface_fields"]
+        names = [field["name"] for field in fields]
+
+        self.assertEqual(
+            [
+                "document_fingerprint",
+                "element_id",
+                "rendering",
+                "source_pdf_fingerprint",
+                "crop_descriptor",
+                "rendered_artifact",
+            ],
+            names,
+        )
+        self.assertEqual(len(names), len(set(names)))
+        self.assertEqual(
+            {
+                "document_fingerprint",
+                "element_id",
+                "rendering",
+                "crop_descriptor",
+            },
+            {field["name"] for field in fields if field.get("required") is True},
+        )
+        self.assertEqual(
+            {"source_pdf_fingerprint", "rendered_artifact"},
+            {field["name"] for field in fields if "required_when" in field},
+        )
+        for field in fields:
+            if "required_when" in field:
+                self.assertNotIn("required", field)
+            else:
+                self.assertNotIn("required_when", field)
 
     def test_rendering_conditions_reuse_existing_schema_modes(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
@@ -221,6 +297,96 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             ["descriptor_only", "rendered"],
             descriptor_schema["properties"]["rendering_status"]["enum"],
         )
+
+    def test_rendered_surface_fields_match_schema_conditionals(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        request_schema = load_json(CROP_ELEMENT_REQUEST_SCHEMA)
+        descriptor_schema = load_json(CROP_DESCRIPTOR_SCHEMA)
+        conditional_fields = {
+            field["name"]: field["maps_to"]
+            for field in inventory["planned_surface_fields"]
+            if field.get("required_when") == "rendering=rendered"
+        }
+        rendered_descriptor_fields = [
+            "source_pdf_fingerprint",
+            "rendered_ref",
+            "rendered_format",
+            "rendered_sha256",
+            "rendered_width_px",
+            "rendered_height_px",
+        ]
+
+        self.assertEqual(
+            {
+                "source_pdf_fingerprint": "request.source_pdf_fingerprint",
+                "rendered_artifact": "descriptor.rendered_ref",
+            },
+            conditional_fields,
+        )
+
+        descriptor_only_request = {
+            "artifact_type": "ethos.crop_element_request.v1",
+            "schema_version": "0.1.0",
+            "request_ref": "request-" + "1" * 64,
+            "document_fingerprint": "sha256:" + "2" * 64,
+            "element_id": "e000001",
+            "rendering": "descriptor_only",
+        }
+        rendered_request = dict(
+            descriptor_only_request,
+            rendering="rendered",
+            source_pdf_fingerprint="sha256:" + "3" * 64,
+        )
+
+        self.assertEqual([], schema_errors(request_schema, descriptor_only_request))
+        self.assertEqual([], schema_errors(request_schema, rendered_request))
+        self.assertNotEqual(
+            [],
+            schema_errors(request_schema, dict(descriptor_only_request, rendering="rendered")),
+        )
+        self.assertNotEqual(
+            [],
+            schema_errors(
+                request_schema,
+                dict(descriptor_only_request, source_pdf_fingerprint="sha256:" + "3" * 64),
+            ),
+        )
+
+        descriptor_only = {
+            "artifact_type": "ethos.crop_descriptor.v1",
+            "schema_version": "0.1.0",
+            "crop_ref": "crop-" + "4" * 64 + ".json",
+            "document_fingerprint": "sha256:" + "2" * 64,
+            "page": "1",
+            "bbox": [0, 0, 100, 100],
+            "check_ids": ["v0001"],
+            "rendering_status": "descriptor_only",
+        }
+        rendered_descriptor = dict(
+            descriptor_only,
+            rendering_status="rendered",
+            source_pdf_fingerprint="sha256:" + "3" * 64,
+            rendered_ref="crop-" + "5" * 64 + ".png",
+            rendered_format="png",
+            rendered_sha256="6" * 64,
+            rendered_width_px=100,
+            rendered_height_px=100,
+        )
+
+        self.assertEqual([], schema_errors(descriptor_schema, descriptor_only))
+        self.assertEqual([], schema_errors(descriptor_schema, rendered_descriptor))
+        for field in rendered_descriptor_fields:
+            missing_field = dict(rendered_descriptor)
+            del missing_field[field]
+            self.assertNotEqual([], schema_errors(descriptor_schema, missing_field), field)
+
+            descriptor_only_with_rendered_metadata = dict(descriptor_only)
+            descriptor_only_with_rendered_metadata[field] = rendered_descriptor[field]
+            self.assertNotEqual(
+                [],
+                schema_errors(descriptor_schema, descriptor_only_with_rendered_metadata),
+                field,
+            )
 
     def test_current_cli_and_python_surface_absence_is_guarded(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
