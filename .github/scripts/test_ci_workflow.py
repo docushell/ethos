@@ -69,8 +69,32 @@ class CiWorkflowTests(unittest.TestCase):
             text.count("python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py"),
         )
         self.assertIn(
+            "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py"
+            ),
+        )
+        self.assertLess(
+            text.index("python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py"),
+            text.index(
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py"
+            ),
+        )
+        self.assertIn(
             "python3 .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py",
             text,
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py"
+            ),
+            text.index(
+                "python3 .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py"
+            ),
         )
         self.assertEqual(
             1,

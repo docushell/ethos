@@ -25,6 +25,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-sandbox-subprocess-contract.schema.json` | Milestone D `sandbox_subprocess` v1 source-only contract inventory |
 | `ethos-milestone-e-fixture-candidates.schema.json` | Milestone E source-only internal fixture-candidate inventory |
 | `ethos-milestone-e-fixture-promotion-criteria.schema.json` | Milestone E source-only internal fixture-promotion criteria |
+| `ethos-milestone-e-internal-trust-loop-walkthrough.schema.json` | Milestone E source-only internal trust-loop walkthrough plan |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
 
 Conventions: snake_case keys; `additionalProperties: false` everywhere except the
@@ -114,8 +115,9 @@ envelope carries a c14n-derived `request_ref` identity guarded in that same sour
 check.
 
 Milestone E prep is tracked in `docs/milestone-e-prep-scope.md`. In this source-only pre-alpha
-slice, the fixture-candidate inventory at `docs/milestone-e-fixture-candidates.json` and
-fixture-promotion criteria at `docs/milestone-e-fixture-promotion-criteria.json` are
+slice, the fixture-candidate inventory at `docs/milestone-e-fixture-candidates.json`,
+fixture-promotion criteria at `docs/milestone-e-fixture-promotion-criteria.json`, and internal
+trust-loop walkthrough plan at `docs/milestone-e-internal-trust-loop-walkthrough.json` are
 schema-validated here. Their path tracking, candidate-to-criteria alignment, diagnostic-boundary
 alignment, and public-posture boundaries are checked by the Milestone E prep repository guards.
 

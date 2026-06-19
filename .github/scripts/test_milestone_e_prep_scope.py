@@ -33,6 +33,10 @@ FIXTURE_CANDIDATES_SCHEMA = ROOT / "schemas/ethos-milestone-e-fixture-candidates
 FIXTURE_PROMOTION_CRITERIA_SCHEMA = (
     ROOT / "schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json"
 )
+TRUST_LOOP_WALKTHROUGH = ROOT / "docs/milestone-e-internal-trust-loop-walkthrough.json"
+TRUST_LOOP_WALKTHROUGH_SCHEMA = (
+    ROOT / "schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json"
+)
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
@@ -123,9 +127,13 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
 
         self.assertIn("`docs/milestone-e-fixture-candidates.json`", text)
         self.assert_tracked_file("docs/milestone-e-fixture-candidates.json")
+        self.assert_tracked_file("docs/milestone-e-internal-trust-loop-walkthrough.json")
         self.assert_tracked_file("schemas/ethos-milestone-e-fixture-candidates.schema.json")
         self.assert_tracked_file(
             "schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json"
+        )
+        self.assert_tracked_file(
+            "schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json"
         )
         for label, paths in EXPECTED_CANDIDATES.items():
             self.assertIn(label, text)
@@ -186,9 +194,15 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("docs/milestone-e-fixture-candidates.json", roadmap)
         self.assertIn("docs/milestone-e-prep-scope.md", status)
         self.assertIn("docs/milestone-e-fixture-candidates.json", status)
+        self.assertIn("docs/milestone-e-internal-trust-loop-walkthrough.json", roadmap)
+        self.assertIn("docs/milestone-e-internal-trust-loop-walkthrough.json", status)
         self.assertIn("make milestone-e-prep", status)
         self.assertIn("schemas/ethos-milestone-e-fixture-candidates.schema.json", roadmap)
         self.assertIn("schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json", roadmap)
+        self.assertIn(
+            "schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json",
+            roadmap,
+        )
         self.assertIn("schema-validated by `schemas/validate_examples.py`", status)
         self.assertIn(
             "later public-report, project-maintained PDFium build, stable CLI/Python docs, demo, "
@@ -214,6 +228,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py",
             "git diff --check",
@@ -243,9 +258,16 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         schemas_readme = read(SCHEMAS_README)
         candidates_schema = json.loads(FIXTURE_CANDIDATES_SCHEMA.read_text(encoding="utf-8"))
         criteria_schema = json.loads(FIXTURE_PROMOTION_CRITERIA_SCHEMA.read_text(encoding="utf-8"))
+        walkthrough_schema = json.loads(TRUST_LOOP_WALKTHROUGH_SCHEMA.read_text(encoding="utf-8"))
+        walkthrough = json.loads(TRUST_LOOP_WALKTHROUGH.read_text(encoding="utf-8"))
 
         self.assertEqual(False, candidates_schema["additionalProperties"])
         self.assertEqual(False, criteria_schema["additionalProperties"])
+        self.assertEqual(False, walkthrough_schema["additionalProperties"])
+        self.assertEqual(
+            "internal_trust_loop_walkthrough_plan",
+            walkthrough["scope"],
+        )
         self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", validate_examples)
         self.assertIn("docs\" / \"milestone-e-fixture-candidates.json", validate_examples)
         self.assertIn(
@@ -256,9 +278,21 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "docs\" / \"milestone-e-fixture-promotion-criteria.json",
             validate_examples,
         )
+        self.assertIn(
+            "ethos-milestone-e-internal-trust-loop-walkthrough.schema.json",
+            validate_examples,
+        )
+        self.assertIn(
+            "docs\" / \"milestone-e-internal-trust-loop-walkthrough.json",
+            validate_examples,
+        )
         self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", schemas_readme)
         self.assertIn(
             "ethos-milestone-e-fixture-promotion-criteria.schema.json",
+            schemas_readme,
+        )
+        self.assertIn(
+            "ethos-milestone-e-internal-trust-loop-walkthrough.schema.json",
             schemas_readme,
         )
 

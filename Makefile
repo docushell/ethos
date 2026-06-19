@@ -151,6 +151,7 @@ milestone-e-prep:
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py
 	git diff --check

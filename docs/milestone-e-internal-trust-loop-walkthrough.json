@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "status": "source-only-pre-alpha-internal-milestone-e-prep",
+  "scope": "internal_trust_loop_walkthrough_plan",
+  "applies_to_inventory": "docs/milestone-e-fixture-candidates.json",
+  "applies_to_criteria": "docs/milestone-e-fixture-promotion-criteria.json",
+  "walkthrough_boundary": "internal_source_only_walkthrough_planning",
+  "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+  "public_boundary": [
+    "public reports remain blocked",
+    "release artifacts remain blocked",
+    "package publication remains blocked",
+    "hosted surfaces remain blocked",
+    "public result wording remains blocked",
+    "performance claims remain blocked",
+    "quality claims remain blocked",
+    "footprint claims remain blocked",
+    "table-quality claims remain blocked",
+    "parser-quality claims remain blocked"
+  ],
+  "required_before_internal_use": [
+    "candidate remains listed in docs/milestone-e-fixture-candidates.json",
+    "criteria remain listed in docs/milestone-e-fixture-promotion-criteria.json",
+    "validation command is rerun in the source checkout",
+    "input fixtures remain tracked and path-backed",
+    "expected diagnostic boundary remains explicit",
+    "blocker status remains explicit",
+    "make milestone-e-prep remains green",
+    "public-surface posture and claims gates remain green"
+  ],
+  "walkthrough_steps": [
+    {
+      "step_id": "native-grounding-baseline",
+      "sequence": 1,
+      "candidate_id": "native-verification-trust-loop",
+      "walkthrough_role": "baseline source-grounded verification over checked-in native fixtures",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make verify-alpha",
+      "required_input_fixtures": [
+        "examples/verify/cases.json",
+        "examples/verify/goldens/native_grounded_report.json"
+      ],
+      "diagnostic_boundary_must_remain": "Native quote, table-cell, and presence evidence checks over checked-in document JSON.",
+      "blockers_must_remain_explicit": [
+        "public result wording",
+        "public-report blockers"
+      ]
+    },
+    {
+      "step_id": "diagnostic-boundary-check",
+      "sequence": 2,
+      "candidate_id": "split-quote-unsupported-claim-diagnostics",
+      "walkthrough_role": "diagnostic boundary check for split quote matching and unsupported claim reporting",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make verify-alpha",
+      "required_input_fixtures": [
+        "examples/verify/native_split_quote_citations.json",
+        "examples/verify/native_non_v1_claims_citations.json"
+      ],
+      "diagnostic_boundary_must_remain": "Adjacent native text evidence matching and explicit unsupported non-v1 claim diagnostics.",
+      "blockers_must_remain_explicit": [
+        "future claim-kind expansion"
+      ]
+    }
+  ]
+}

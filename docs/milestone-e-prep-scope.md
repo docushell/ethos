@@ -38,6 +38,11 @@ existing guards. The machine-readable inventory is
 live in `docs/milestone-e-fixture-promotion-criteria.json` and are schema-bound by
 `schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json`; they define what must be
 rechecked before a candidate can enter an internal demo plan, not public demo approval.
+The first internal trust-loop walkthrough plan lives in
+`docs/milestone-e-internal-trust-loop-walkthrough.json` and is schema-bound by
+`schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json`. It sequences only the
+initial native verification and diagnostic-boundary candidates for internal source-only planning,
+not public result wording.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -62,9 +67,9 @@ Focused validation command:
 - `make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python`
 
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate, this
-prep-scope guard, schema/example validation for the E prep JSON artifacts, and diff hygiene. It
-intentionally does not run release, packaging, hosted, benchmark-report, or broad demo-generation
-workflows.
+prep-scope guard, the internal trust-loop walkthrough guard, schema/example validation for the E
+prep JSON artifacts, and diff hygiene. It intentionally does not run release, packaging, hosted,
+benchmark-report, or broad demo-generation workflows.
 
 ## Exit Criteria For This Prep Slice
 
@@ -74,5 +79,6 @@ workflows.
   inventory.
 - The schema validation gate keeps the fixture-candidate inventory and fixture-promotion criteria
   closed to unreviewed fields.
+- The internal trust-loop walkthrough plan remains limited to existing candidates and criteria.
 - Public language remains source-only pre-alpha and internal-continuation scoped.
 - External blockers remain visible before any public-facing Milestone E work starts.

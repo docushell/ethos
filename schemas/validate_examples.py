@@ -119,6 +119,9 @@ PAIRS = [
     ("ethos-milestone-e-fixture-promotion-criteria.schema.json", [
         ROOT / "docs" / "milestone-e-fixture-promotion-criteria.json",
     ]),
+    ("ethos-milestone-e-internal-trust-loop-walkthrough.schema.json", [
+        ROOT / "docs" / "milestone-e-internal-trust-loop-walkthrough.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 
