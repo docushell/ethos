@@ -299,6 +299,28 @@ class CiWorkflowTests(unittest.TestCase):
                 "python3 .github/scripts/"
                 "test_milestone_e_diagnostic_boundary_check_rehearsal_validation_record.py"
             ),
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_capability_downgrade_boundary_rehearsal_validation_record.py"
+            ),
+        )
+        self.assertIn(
+            "python3 .github/scripts/"
+            "test_milestone_e_capability_downgrade_boundary_rehearsal_validation_record.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/"
+                "test_milestone_e_capability_downgrade_boundary_rehearsal_validation_record.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_capability_downgrade_boundary_rehearsal_validation_record.py"
+            ),
             text.index("python3 .github/scripts/test_milestone_e_prep_validation_record.py"),
         )
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_validation_record.py", text)
