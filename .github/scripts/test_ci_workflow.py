@@ -128,6 +128,24 @@ class CiWorkflowTests(unittest.TestCase):
                 "python3 .github/scripts/"
                 "test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix.py"
             ),
+            text.index(
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger.py"
+            ),
+        )
+        self.assertIn(
+            "python3 .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger.py"
+            ),
             text.index("python3 .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py"),
         )
         self.assertIn(
@@ -214,6 +232,28 @@ class CiWorkflowTests(unittest.TestCase):
             text.index(
                 "python3 .github/scripts/"
                 "test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix_validation_record.py"
+            ),
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_internal_trust_loop_blocker_ledger_validation_record.py"
+            ),
+        )
+        self.assertIn(
+            "python3 .github/scripts/"
+            "test_milestone_e_internal_trust_loop_blocker_ledger_validation_record.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/"
+                "test_milestone_e_internal_trust_loop_blocker_ledger_validation_record.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_internal_trust_loop_blocker_ledger_validation_record.py"
             ),
             text.index("python3 .github/scripts/test_milestone_e_prep_validation_record.py"),
         )

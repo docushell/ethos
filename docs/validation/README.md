@@ -65,6 +65,11 @@ Records:
   consistency checks, schema validation, public-surface posture checks, `make milestone-e-prep`,
   and diff hygiene; internal rehearsal planning remains source-only and not promoted beyond
   planning.
+- `milestone-e-internal-trust-loop-blocker-ledger-validation-2026-06-19.md` - internal Milestone E
+  trust-loop blocker ledger validation for
+  `docs/milestone-e-internal-trust-loop-blocker-ledger.json` passed through ledger consistency
+  checks, schema validation, public-surface posture checks, `make milestone-e-prep`, and diff
+  hygiene; internal blocker tracking remains source-only and does not resolve or soften blockers.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.

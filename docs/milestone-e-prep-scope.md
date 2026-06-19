@@ -52,6 +52,11 @@ The internal trust-loop rehearsal/evidence matrix lives in
 `schemas/ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json`. It maps
 the existing use-protocol steps to evidence grounding, diagnostics, fixture/evaluator validation,
 and explicit blockers for internal source-only rehearsal planning, not public result wording.
+The internal trust-loop blocker ledger lives in
+`docs/milestone-e-internal-trust-loop-blocker-ledger.json` and is schema-bound by
+`schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json`. It derives explicit
+blockers from the rehearsal/evidence matrix and keeps them visible for internal source-only
+planning; it does not resolve or soften blockers and is not public result wording.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -76,9 +81,10 @@ Focused validation command:
 - `make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python`
 
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate, this
-prep-scope guard, the internal trust-loop walkthrough, use-protocol, and rehearsal/evidence matrix
-guards, schema/example validation for the E prep JSON artifacts, and diff hygiene. It intentionally
-does not run release, packaging, hosted, benchmark-report, or broad demo-generation workflows.
+prep-scope guard, the internal trust-loop walkthrough, use-protocol, rehearsal/evidence matrix, and
+blocker-ledger guards, schema/example validation for the E prep JSON artifacts, and diff hygiene.
+It intentionally does not run release, packaging, hosted, benchmark-report, or broad
+demo-generation workflows.
 
 ## Exit Criteria For This Prep Slice
 
@@ -93,5 +99,7 @@ does not run release, packaging, hosted, benchmark-report, or broad demo-generat
   blockers.
 - The internal trust-loop rehearsal/evidence matrix remains limited to existing protocol steps,
   evidence grounding, diagnostics, fixture/evaluator validation, and explicit blockers.
+- The internal trust-loop blocker ledger remains limited to existing matrix rows and does not
+  resolve or soften blockers.
 - Public language remains source-only pre-alpha and internal-continuation scoped.
 - External blockers remain visible before any public-facing Milestone E work starts.

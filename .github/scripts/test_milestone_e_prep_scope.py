@@ -48,6 +48,10 @@ TRUST_LOOP_REHEARSAL_EVIDENCE_MATRIX_SCHEMA = (
     ROOT
     / "schemas/ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json"
 )
+TRUST_LOOP_BLOCKER_LEDGER = ROOT / "docs/milestone-e-internal-trust-loop-blocker-ledger.json"
+TRUST_LOOP_BLOCKER_LEDGER_SCHEMA = (
+    ROOT / "schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json"
+)
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
@@ -153,6 +157,9 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         )
         self.assertTrue(TRUST_LOOP_REHEARSAL_EVIDENCE_MATRIX.is_file())
         self.assertTrue(TRUST_LOOP_REHEARSAL_EVIDENCE_MATRIX_SCHEMA.is_file())
+        self.assertIn("`docs/milestone-e-internal-trust-loop-blocker-ledger.json`", text)
+        self.assertTrue(TRUST_LOOP_BLOCKER_LEDGER.is_file())
+        self.assertTrue(TRUST_LOOP_BLOCKER_LEDGER_SCHEMA.is_file())
         for label, paths in EXPECTED_CANDIDATES.items():
             self.assertIn(label, text)
             for path in paths:
@@ -224,6 +231,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json",
             status,
         )
+        self.assertIn("docs/milestone-e-internal-trust-loop-blocker-ledger.json", roadmap)
+        self.assertIn("docs/milestone-e-internal-trust-loop-blocker-ledger.json", status)
         self.assertIn("make milestone-e-prep", status)
         self.assertIn("schemas/ethos-milestone-e-fixture-candidates.schema.json", roadmap)
         self.assertIn("schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json", roadmap)
@@ -237,6 +246,10 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         )
         self.assertIn(
             "schemas/ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json",
+            roadmap,
+        )
+        self.assertIn(
+            "schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json",
             roadmap,
         )
         self.assertIn("schema-validated by `schemas/validate_examples.py`", status)
@@ -267,10 +280,12 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix_validation_record.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py",
             "git diff --check",
         ]
@@ -307,12 +322,15 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             TRUST_LOOP_REHEARSAL_EVIDENCE_MATRIX_SCHEMA.read_text(encoding="utf-8")
         )
         matrix = json.loads(TRUST_LOOP_REHEARSAL_EVIDENCE_MATRIX.read_text(encoding="utf-8"))
+        ledger_schema = json.loads(TRUST_LOOP_BLOCKER_LEDGER_SCHEMA.read_text(encoding="utf-8"))
+        ledger = json.loads(TRUST_LOOP_BLOCKER_LEDGER.read_text(encoding="utf-8"))
 
         self.assertEqual(False, candidates_schema["additionalProperties"])
         self.assertEqual(False, criteria_schema["additionalProperties"])
         self.assertEqual(False, walkthrough_schema["additionalProperties"])
         self.assertEqual(False, protocol_schema["additionalProperties"])
         self.assertEqual(False, matrix_schema["additionalProperties"])
+        self.assertEqual(False, ledger_schema["additionalProperties"])
         self.assertEqual(
             "internal_trust_loop_walkthrough_plan",
             walkthrough["scope"],
@@ -325,6 +343,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "internal_trust_loop_rehearsal_evidence_matrix",
             matrix["scope"],
         )
+        self.assertEqual("internal_trust_loop_blocker_ledger", ledger["scope"])
         self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", validate_examples)
         self.assertIn("docs\" / \"milestone-e-fixture-candidates.json", validate_examples)
         self.assertIn(
@@ -359,6 +378,14 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "docs\" / \"milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json",
             validate_examples,
         )
+        self.assertIn(
+            "ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json",
+            validate_examples,
+        )
+        self.assertIn(
+            "docs\" / \"milestone-e-internal-trust-loop-blocker-ledger.json",
+            validate_examples,
+        )
         self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", schemas_readme)
         self.assertIn(
             "ethos-milestone-e-fixture-promotion-criteria.schema.json",
@@ -374,6 +401,10 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         )
         self.assertIn(
             "ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json",
+            schemas_readme,
+        )
+        self.assertIn(
+            "ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json",
             schemas_readme,
         )
 

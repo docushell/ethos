@@ -82,9 +82,13 @@ The internal trust-loop rehearsal/evidence matrix is recorded in
 [`docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json`](milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json)
 and schema-bound by
 [`schemas/ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json).
+The internal trust-loop blocker ledger is recorded in
+[`docs/milestone-e-internal-trust-loop-blocker-ledger.json`](milestone-e-internal-trust-loop-blocker-ledger.json)
+and schema-bound by
+[`schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json).
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
-continuation; it does not approve public result wording, hosted surfaces, package/distribution
-work, or public-facing claims.
+continuation; it does not resolve or soften blockers, approve public result wording, hosted
+surfaces, package/distribution work, or public-facing claims.
 
 | Milestone | Window | Contents | Gate |
 | --- | --- | --- | --- |
