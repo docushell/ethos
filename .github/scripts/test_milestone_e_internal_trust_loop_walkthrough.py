@@ -42,10 +42,32 @@ CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 EXPECTED_STEP_IDS = [
     "native-grounding-baseline",
     "diagnostic-boundary-check",
+    "capability-downgrade-boundary",
+    "opendataloader-adapter-grounding",
+    "pinned-opendataloader-fixture-path",
+    "crop-descriptor-source-bound-shape",
+    "rag-chunk-artifact-loop",
+    "security-report-artifact-loop",
+    "demo-narrative-index",
 ]
 EXPECTED_CANDIDATE_IDS = [
     "native-verification-trust-loop",
     "split-quote-unsupported-claim-diagnostics",
+    "capability-downgrade-diagnostics",
+    "opendataloader-style-adapter-grounding",
+    "pinned-real-opendataloader-fixture-path",
+    "crop-descriptor-source-bound-crop-shape",
+    "rag-chunk-artifact-loop",
+    "security-report-artifact-loop",
+    "demo-narrative-index",
+]
+EXPECTED_VALIDATION_COMMANDS = [
+    "make milestone-d-capability-downgrade-contract",
+    "make milestone-d-internal-contracts",
+    "make milestone-d-opendataloader-adapter-shape-contract",
+    "make rag-chunk-alpha",
+    "make security-report-alpha",
+    "make verify-alpha",
 ]
 FORBIDDEN_WALKTHROUGH_WORDING = [
     "public beta is approved",
@@ -123,23 +145,27 @@ class MilestoneEInternalTrustLoopWalkthroughTests(unittest.TestCase):
             walkthrough["required_before_internal_use"],
         )
 
-    def test_walkthrough_steps_are_exactly_the_initial_trust_loop(self) -> None:
+    def test_walkthrough_steps_are_exactly_the_current_candidate_inventory(self) -> None:
         walkthrough = load_json(WALKTHROUGH)
         steps = walkthrough["walkthrough_steps"]
 
         self.assertEqual(EXPECTED_STEP_IDS, [step["step_id"] for step in steps])
-        self.assertEqual([1, 2], [step["sequence"] for step in steps])
+        self.assertEqual(
+            list(range(1, len(steps) + 1)),
+            [step["sequence"] for step in steps],
+        )
         self.assertEqual(EXPECTED_CANDIDATE_IDS, [step["candidate_id"] for step in steps])
         self.assertEqual(
-            len(EXPECTED_CANDIDATE_IDS),
+            len(steps),
             len({step["candidate_id"] for step in steps}),
         )
+        self.assertEqual(len(steps), len({step["step_id"] for step in steps}))
         for step in steps:
             self.assertEqual(
                 "not_promoted_beyond_internal_fixture_planning",
                 step["promotion_status"],
             )
-            self.assertEqual("make verify-alpha", step["validation_command_must_pass"])
+            self.assertIn(step["validation_command_must_pass"], EXPECTED_VALIDATION_COMMANDS)
             self.assertTrue(step["walkthrough_role"], step["step_id"])
 
     def test_walkthrough_steps_match_existing_criteria(self) -> None:
@@ -205,9 +231,20 @@ class MilestoneEInternalTrustLoopWalkthroughTests(unittest.TestCase):
 
         self.assertEqual(False, schema["additionalProperties"])
         self.assertEqual(False, step_schema["additionalProperties"])
+        self.assertEqual(9, schema["properties"]["walkthrough_steps"]["minItems"])
+        self.assertEqual(9, schema["properties"]["walkthrough_steps"]["maxItems"])
+        self.assertEqual(9, step_schema["properties"]["sequence"]["maximum"])
         self.assertEqual(
             EXPECTED_CANDIDATE_IDS,
             step_schema["properties"]["candidate_id"]["enum"],
+        )
+        self.assertEqual(
+            EXPECTED_VALIDATION_COMMANDS,
+            schema["$defs"]["validation_command"]["enum"],
+        )
+        self.assertEqual(
+            "^(?:docs/demos/|examples/|fixtures/|schemas/)[A-Za-z0-9_./-]+$",
+            schema["$defs"]["repo_path"]["pattern"],
         )
         self.assertIn(
             "ethos-milestone-e-internal-trust-loop-walkthrough.schema.json",
@@ -223,11 +260,17 @@ class MilestoneEInternalTrustLoopWalkthroughTests(unittest.TestCase):
         )
 
     def test_walkthrough_validation_command_target_exists(self) -> None:
-        declarations = [
-            line for line in makefile_text().splitlines() if line.startswith("verify-alpha:")
-        ]
+        makefile = makefile_text()
 
-        self.assertEqual(1, len(declarations))
+        for command in {
+            step["validation_command_must_pass"]
+            for step in load_json(WALKTHROUGH)["walkthrough_steps"]
+        }:
+            target = command.removeprefix("make ")
+            declarations = [
+                line for line in makefile.splitlines() if line.startswith(f"{target}:")
+            ]
+            self.assertEqual(1, len(declarations), command)
 
     def test_status_roadmap_and_scope_reference_walkthrough(self) -> None:
         prep_scope = read(PREP_SCOPE)

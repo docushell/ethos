@@ -38,11 +38,10 @@ existing guards. The machine-readable inventory is
 live in `docs/milestone-e-fixture-promotion-criteria.json` and are schema-bound by
 `schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json`; they define what must be
 rechecked before a candidate can enter an internal demo plan, not public demo approval.
-The first internal trust-loop walkthrough plan lives in
+The internal trust-loop walkthrough plan lives in
 `docs/milestone-e-internal-trust-loop-walkthrough.json` and is schema-bound by
-`schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json`. It sequences only the
-initial native verification and diagnostic-boundary candidates for internal source-only planning,
-not public result wording.
+`schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json`. It sequences the current
+fixture-candidate inventory for internal source-only planning, not public result wording.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |

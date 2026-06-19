@@ -70,7 +70,7 @@ These E prep JSON artifacts are schema-bound by
 [`schemas/ethos-milestone-e-fixture-candidates.schema.json`](../schemas/ethos-milestone-e-fixture-candidates.schema.json)
 and
 [`schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json`](../schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json).
-The first internal trust-loop walkthrough plan is recorded in
+The internal trust-loop walkthrough plan is recorded in
 [`docs/milestone-e-internal-trust-loop-walkthrough.json`](milestone-e-internal-trust-loop-walkthrough.json)
 and schema-bound by
 [`schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json).

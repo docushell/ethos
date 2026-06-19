@@ -26,7 +26,11 @@ from makefile_guard import target_block
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RECORD = ROOT / "docs/validation/milestone-e-internal-trust-loop-walkthrough-validation-2026-06-19.md"
+RECORD = (
+    ROOT
+    / "docs/validation/"
+    "milestone-e-internal-trust-loop-walkthrough-all-candidates-validation-2026-06-19.md"
+)
 WALKTHROUGH = ROOT / "docs/milestone-e-internal-trust-loop-walkthrough.json"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
@@ -46,11 +50,11 @@ class MilestoneEInternalTrustLoopWalkthroughValidationRecordTests(unittest.TestC
         normalized = re.sub(r"\s+", " ", text)
 
         self.assertIn(
-            "milestone-e-internal-trust-loop-walkthrough-validation-2026-06-19.md",
+            "milestone-e-internal-trust-loop-walkthrough-all-candidates-validation-2026-06-19.md",
             text,
         )
         self.assertIn(
-            "internal Milestone E trust-loop walkthrough validation",
+            "internal Milestone E all-candidates trust-loop walkthrough validation",
             normalized,
         )
         self.assertIn("docs/milestone-e-internal-trust-loop-walkthrough.json", text)
@@ -58,7 +62,7 @@ class MilestoneEInternalTrustLoopWalkthroughValidationRecordTests(unittest.TestC
     def test_record_names_validation_commands(self) -> None:
         text = record_text()
 
-        self.assertIn("Validated source HEAD before this record: `5be2a2c`", text)
+        self.assertIn("Validated source HEAD before this record: `9c0cfd8`", text)
         self.assertIn("python3 -m json.tool docs/milestone-e-internal-trust-loop-walkthrough.json", text)
         self.assertIn("python3 -m json.tool docs/milestone-e-fixture-candidates.json", text)
         self.assertIn("python3 -m json.tool docs/milestone-e-fixture-promotion-criteria.json", text)
@@ -71,6 +75,10 @@ class MilestoneEInternalTrustLoopWalkthroughValidationRecordTests(unittest.TestC
             "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py",
             text,
         )
+        self.assertIn(
+            "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough_validation_record.py",
+            text,
+        )
         self.assertIn("python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py", text)
         self.assertIn(
             "python3 .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py",
@@ -80,7 +88,11 @@ class MilestoneEInternalTrustLoopWalkthroughValidationRecordTests(unittest.TestC
         self.assertIn("python3 .github/scripts/test_ci_workflow.py", text)
         self.assertIn("python3 .github/scripts/test_public_surface_posture.py", text)
         self.assertIn("python3 .github/scripts/claims_gate.py", text)
-        self.assertIn("make verify-alpha PYTHON=<jsonschema-venv>/bin/python", text)
+        walkthrough = json.loads(WALKTHROUGH.read_text(encoding="utf-8"))
+        for command in sorted(
+            {step["validation_command_must_pass"] for step in walkthrough["walkthrough_steps"]}
+        ):
+            self.assertIn(f"{command} PYTHON=<jsonschema-venv>/bin/python", text)
         self.assertIn("make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python", text)
         self.assertIn("git grep <walkthrough-forbidden-wording-expression>", text)
         self.assertIn("git grep <walkthrough-record-private-path-expression>", text)
@@ -89,11 +101,12 @@ class MilestoneEInternalTrustLoopWalkthroughValidationRecordTests(unittest.TestC
     def test_record_keeps_source_only_internal_scope(self) -> None:
         text = normalized_record_text()
 
-        self.assertIn("pass for internal Milestone E trust-loop walkthrough validation", text)
+        self.assertIn("pass for internal Milestone E all-candidates walkthrough validation", text)
         self.assertIn("Ethos remains source-only pre-alpha", text)
         self.assertIn("internal Milestone E prep continuation", text)
         self.assertIn("internal source-only planning only", text)
         self.assertIn("does not move any fixture beyond internal planning", text)
+        self.assertIn("current fixture-candidate inventory", text)
         self.assertIn("evidence grounding", text)
         self.assertIn("diagnostics", text)
         self.assertIn("fixture validation", text)
@@ -129,7 +142,7 @@ class MilestoneEInternalTrustLoopWalkthroughValidationRecordTests(unittest.TestC
             self.assertIn(boundary, lowered)
 
     def test_record_covers_every_walkthrough_step(self) -> None:
-        text = record_text()
+        text = normalized_record_text()
         walkthrough = json.loads(WALKTHROUGH.read_text(encoding="utf-8"))
 
         for step in walkthrough["walkthrough_steps"]:
@@ -146,7 +159,7 @@ class MilestoneEInternalTrustLoopWalkthroughValidationRecordTests(unittest.TestC
         text = normalized_record_text()
 
         self.assertIn("The walkthrough stays source-only, internal, and non-public", text)
-        self.assertIn("The walkthrough references only existing candidate ids", text)
+        self.assertIn("The walkthrough references only current candidate ids", text)
         self.assertIn("Each walkthrough step exactly matches its criteria entry", text)
         self.assertIn("Required input fixtures are relative, tracked, and path-backed", text)
         self.assertIn("Validation commands are existing allowlisted Make targets", text)
