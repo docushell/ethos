@@ -163,6 +163,28 @@
       "error_message": "pdfium worker JSON artifact header does not match artifact"
     }
   ],
+  "pipe_limit_cases": [
+    {
+      "name": "worker-pipe-limit-empty-output",
+      "test_filter": "worker_pipe_limit_accepts_empty_output",
+      "boundary": "pipe_output_limit",
+      "expected_result": "accepted"
+    },
+    {
+      "name": "worker-pipe-limit-sized-output",
+      "test_filter": "worker_pipe_limit_accepts_limit_sized_output",
+      "boundary": "pipe_output_limit",
+      "expected_result": "accepted"
+    },
+    {
+      "name": "worker-pipe-limit-oversized-output",
+      "test_filter": "worker_pipe_limit_rejects_oversized_output",
+      "boundary": "pipe_output_limit",
+      "expected_result": "rejected",
+      "error_code": "memory_limit_exceeded",
+      "error_message": "parse exceeded memory limit"
+    }
+  ],
   "diagnostic_cases": [
     {
       "name": "request-ref-missing",

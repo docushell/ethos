@@ -124,6 +124,28 @@ EXPECTED_ARTIFACT_HEADER_CASES = [
         "error_message": "pdfium worker JSON artifact header does not match artifact",
     },
 ]
+EXPECTED_PIPE_LIMIT_CASES = [
+    {
+        "name": "worker-pipe-limit-empty-output",
+        "test_filter": "worker_pipe_limit_accepts_empty_output",
+        "boundary": "pipe_output_limit",
+        "expected_result": "accepted",
+    },
+    {
+        "name": "worker-pipe-limit-sized-output",
+        "test_filter": "worker_pipe_limit_accepts_limit_sized_output",
+        "boundary": "pipe_output_limit",
+        "expected_result": "accepted",
+    },
+    {
+        "name": "worker-pipe-limit-oversized-output",
+        "test_filter": "worker_pipe_limit_rejects_oversized_output",
+        "boundary": "pipe_output_limit",
+        "expected_result": "rejected",
+        "error_code": "memory_limit_exceeded",
+        "error_message": "parse exceeded memory limit",
+    },
+]
 EXPECTED_DIAGNOSTIC_MESSAGES = [
     "request_ref is missing",
     "request_ref does not match sandbox subprocess request identity tuple",
@@ -529,6 +551,7 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
 
         required = [
             "cargo test --locked -p ethos-cli json_artifact_header",
+            "cargo test --locked -p ethos-cli worker_pipe_limit",
             "cargo test --locked -p ethos-cli --test pdf_parse worker",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
@@ -589,6 +612,8 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             "stable worker error envelopes are relayed",
             "worker JSON artifact headers bind output byte count, output hash, document "
             "fingerprint, and payload hash",
+            "worker pipe-output limit checks accept empty and limit-sized output",
+            "`memory_limit_exceeded`",
             "non-envelope worker stderr is hidden by default",
             "explicit diagnostics",
             "request envelopes bind each failure case",
@@ -661,6 +686,7 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         self.assertEqual(inventory["carrier"], "pdfium worker process")
         self.assertEqual(EXPECTED_EXPLICIT_BLOCKERS, inventory["explicit_blockers"])
         self.assertEqual(EXPECTED_ARTIFACT_HEADER_CASES, inventory["artifact_header_cases"])
+        self.assertEqual(EXPECTED_PIPE_LIMIT_CASES, inventory["pipe_limit_cases"])
 
         case_names = [case["name"] for case in inventory["cases"]]
         self.assertEqual(len(case_names), len(set(case_names)))
@@ -749,6 +775,25 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
                     body if "temp dir is cleaned up on rejection" in body else worker_source,
                     case["name"],
                 )
+
+    def test_contract_inventory_matches_existing_worker_pipe_limit_tests(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        worker_source = WORKER_SOURCE.read_text(encoding="utf-8")
+
+        self.assertEqual(EXPECTED_PIPE_LIMIT_CASES, inventory["pipe_limit_cases"])
+        self.assertIn("const WORKER_PIPE_MAX_BYTES", worker_source)
+        self.assertIn("fn read_pipe_limited", worker_source)
+
+        case_names = [case["name"] for case in inventory["pipe_limit_cases"]]
+        self.assertEqual(len(case_names), len(set(case_names)))
+        for case in inventory["pipe_limit_cases"]:
+            body = rust_test_body(worker_source, case["test_filter"])
+            self.assertIn("read_pipe_limited", body, case["name"])
+            if case["expected_result"] == "accepted":
+                self.assertIn("expect(", body, case["name"])
+            else:
+                self.assertIn("MemoryLimitExceeded", body, case["name"])
+                self.assertIn(case["error_message"], body, case["name"])
 
     def test_contract_inventory_pins_fail_closed_diagnostics(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

@@ -710,7 +710,23 @@ mod tests {
     }
 
     #[test]
-    fn read_pipe_limited_rejects_oversized_output() {
+    fn worker_pipe_limit_accepts_empty_output() {
+        let bytes = read_pipe_limited(std::io::Cursor::new([]), 3)
+            .expect("empty worker output is within the pipe limit");
+
+        assert!(bytes.is_empty());
+    }
+
+    #[test]
+    fn worker_pipe_limit_accepts_limit_sized_output() {
+        let bytes = read_pipe_limited(std::io::Cursor::new([1_u8, 2, 3]), 3)
+            .expect("limit-sized worker output is accepted");
+
+        assert_eq!(bytes, vec![1_u8, 2, 3]);
+    }
+
+    #[test]
+    fn worker_pipe_limit_rejects_oversized_output() {
         let error = match read_pipe_limited(std::io::Cursor::new([1_u8, 2, 3, 4]), 3) {
             Ok(_) => panic!("oversized worker output was accepted"),
             Err(error) => error,
