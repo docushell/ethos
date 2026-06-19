@@ -44,9 +44,9 @@
       "additionalProperties": false,
       "properties": {
         "cli_command": { "const": "crop_element" },
-        "cli_mode": { "const": "descriptor_only" },
+        "cli_mode": { "const": "descriptor_and_rendered" },
         "python_method": { "const": "crop_element" },
-        "python_status": { "const": "descriptor_only" },
+        "python_status": { "const": "descriptor_and_rendered" },
         "checked_files": {
           "type": "array",
           "minItems": 1,
@@ -59,7 +59,10 @@
           "items": {
             "enum": [
               "crop_element_cli_writes_descriptor",
-              "crop_element_cli_fails_closed_on_invalid_check_id"
+              "crop_element_cli_fails_closed_on_invalid_check_id",
+              "crop_element_cli_rendered_request_requires_source_pdf_and_crop_dir",
+              "crop_element_cli_rendered_source_pdf_must_match_document_source",
+              "crop_element_cli_writes_rendered_artifacts_when_pdfium_is_configured"
             ]
           },
           "uniqueItems": true
@@ -73,7 +76,9 @@
               "test_crop_element_method_uses_default_check_id",
               "test_crop_element_rejects_empty_check_id_before_command_execution",
               "test_crop_element_missing_request_raises_file_not_found",
-              "test_crop_element_invalid_json_stdout_raises_output_error"
+              "test_crop_element_invalid_json_stdout_raises_output_error",
+              "test_crop_element_passes_rendered_artifact_arguments",
+              "test_crop_element_rejects_partial_rendered_arguments"
             ]
           },
           "uniqueItems": true

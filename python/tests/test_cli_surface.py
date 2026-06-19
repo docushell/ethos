@@ -105,6 +105,9 @@ class PythonSurfaceTests(unittest.TestCase):
         self.document.write_text("{}", encoding="utf-8")
         self.crop_request = self.root / "crop-request.json"
         self.crop_request.write_text("{}", encoding="utf-8")
+        self.crop_source_pdf = self.root / "source.pdf"
+        self.crop_source_pdf.write_bytes(b"%PDF-1.7\n")
+        self.crop_dir = self.root / "crops"
 
     def tearDown(self) -> None:
         self.tempdir.cleanup()
@@ -239,6 +242,32 @@ class PythonSurfaceTests(unittest.TestCase):
 
         self.assertIn("invalid JSON", str(caught.exception))
         self.assertEqual(caught.exception.stdout, "not-json\n")
+
+    def test_crop_element_passes_rendered_artifact_arguments(self) -> None:
+        result = EthosCli(self.fake_ethos).crop_element(
+            self.document,
+            self.crop_request,
+            crop_source_pdf=self.crop_source_pdf,
+            crop_dir=self.crop_dir,
+        )
+
+        self.assertEqual(
+            result["argv"][-4:],
+            [
+                "--crop-source-pdf",
+                str(self.crop_source_pdf),
+                "--crop-dir",
+                str(self.crop_dir),
+            ],
+        )
+
+    def test_crop_element_rejects_partial_rendered_arguments(self) -> None:
+        with self.assertRaises(ValueError):
+            EthosCli(self.fake_ethos).crop_element(
+                self.document,
+                self.crop_request,
+                crop_source_pdf=self.crop_source_pdf,
+            )
 
 
 if __name__ == "__main__":

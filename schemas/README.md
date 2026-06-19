@@ -83,9 +83,10 @@ usage diagnostics is checked by the Milestone D repository guard.
 Milestone D `crop_element` v1 contract work is tracked in
 `docs/milestone-d-crop-element-contract.md`. In this source-only pre-alpha slice,
 `crop_element` names the element-to-crop-descriptor contract currently carried by the
-descriptor-only `ethos crop_element` CLI command. The existing `ethos verify --crop-dir` carrier
-continues to emit verifier evidence artifacts from the same descriptor type. The request envelope
-example at `schemas/examples/crop-element-request.example.json` and contract inventory at
+source-bound `ethos crop_element` CLI command. The existing `ethos verify --crop-dir` carrier
+continues to emit verifier evidence artifacts from the same descriptor type, with optional rendered
+artifacts when caller-provided source PDF bytes are bound. The request envelope example at
+`schemas/examples/crop-element-request.example.json` and contract inventory at
 `examples/crop/crop_element_v1_contract.json` are schema-validated here; their alignment with the
 document and crop-descriptor examples is checked by the Milestone D repository guard. The request
 envelope carries a c14n-derived `request_ref` identity guarded in that same source-only contract
@@ -96,8 +97,8 @@ Milestone D `crop_element_surface_shape` v1 contract work is tracked in
 `crop_element_surface_shape` names the callable crop surface shape that must preserve the
 existing crop request and descriptor bindings. The contract inventory at
 `examples/crop/crop_element_surface_shape_v1_contract.json` is schema-validated here; its
-alignment with the request schema, descriptor schema, descriptor-only CLI command, and
-descriptor-only Python wrapper is checked by the Milestone D repository guard.
+alignment with the request schema, descriptor schema, source-bound CLI command, and
+source-bound Python wrapper is checked by the Milestone D repository guard.
 
 Milestone D `sandbox_subprocess` v1 contract work is tracked in
 `docs/milestone-d-sandbox-subprocess-contract.md`. In this source-only pre-alpha slice,

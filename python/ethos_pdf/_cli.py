@@ -204,12 +204,16 @@ class EthosCli:
         request: PathLike,
         *,
         check_id: str = _DEFAULT_CROP_CHECK_ID,
+        crop_source_pdf: Optional[PathLike] = None,
+        crop_dir: Optional[PathLike] = None,
         timeout_seconds: Optional[float] = None,
     ) -> Any:
-        """Run descriptor-only `ethos crop_element` for one native document element."""
+        """Run `ethos crop_element` for one native document element."""
 
         if not check_id:
             raise ValueError("check_id must be non-empty")
+        if (crop_source_pdf is None) != (crop_dir is None):
+            raise ValueError("crop_source_pdf and crop_dir must be provided together")
         if timeout_seconds is not None and timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be greater than zero when provided")
 
@@ -219,11 +223,19 @@ class EthosCli:
         request_path = Path(request)
         if not request_path.is_file():
             raise FileNotFoundError(os.fspath(request))
+        source_pdf_path = None
+        if crop_source_pdf is not None:
+            source_pdf_path = Path(crop_source_pdf)
+            if not source_pdf_path.is_file():
+                raise FileNotFoundError(os.fspath(crop_source_pdf))
+        crop_dir_path = None if crop_dir is None else Path(crop_dir)
 
         command = self._crop_element_command(
             document_path,
             request_path,
             check_id=check_id,
+            crop_source_pdf=source_pdf_path,
+            crop_dir=crop_dir_path,
         )
         stdout = self._run(command, timeout_seconds=timeout_seconds)
         try:
@@ -263,8 +275,10 @@ class EthosCli:
         request_path: Path,
         *,
         check_id: str,
+        crop_source_pdf: Optional[Path],
+        crop_dir: Optional[Path],
     ) -> Sequence[str]:
-        return (
+        command = [
             self.ethos_bin,
             "crop_element",
             os.fspath(document_path),
@@ -272,7 +286,17 @@ class EthosCli:
             os.fspath(request_path),
             "--check-id",
             check_id,
-        )
+        ]
+        if crop_source_pdf is not None and crop_dir is not None:
+            command.extend(
+                [
+                    "--crop-source-pdf",
+                    os.fspath(crop_source_pdf),
+                    "--crop-dir",
+                    os.fspath(crop_dir),
+                ]
+            )
+        return tuple(command)
 
     def _run(
         self,
@@ -371,15 +395,19 @@ def crop_element(
     *,
     ethos_bin: PathLike = "ethos",
     check_id: str = _DEFAULT_CROP_CHECK_ID,
+    crop_source_pdf: Optional[PathLike] = None,
+    crop_dir: Optional[PathLike] = None,
     timeout_seconds: Optional[float] = None,
     env: Optional[Mapping[str, str]] = None,
 ) -> Any:
-    """Resolve a descriptor-only crop element through a local ethos binary."""
+    """Resolve a crop element through a local ethos binary."""
 
     return EthosCli(ethos_bin, env=env).crop_element(
         input_document,
         request,
         check_id=check_id,
+        crop_source_pdf=crop_source_pdf,
+        crop_dir=crop_dir,
         timeout_seconds=timeout_seconds,
     )
 

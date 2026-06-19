@@ -18,6 +18,9 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use ethos_core::crop_element::{
+    crop_element_request_ref, CropElementRendering, CropElementRequest,
+};
 use ethos_core::fingerprint::source_fingerprint;
 use ethos_core::model::Document;
 use serde_json::Value;
@@ -71,6 +74,32 @@ fn temp_output(name: &str) -> PathBuf {
 fn json_file(path: impl AsRef<Path>) -> Value {
     let bytes = std::fs::read(path).expect("JSON fixture is readable");
     serde_json::from_slice(&bytes).expect("JSON fixture parses")
+}
+
+fn crop_element_request(
+    document: &Value,
+    element_id: &str,
+    rendering: CropElementRendering,
+) -> Value {
+    let mut request = CropElementRequest {
+        artifact_type: "ethos.crop_element_request.v1".to_string(),
+        schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+        request_ref: String::new(),
+        document_fingerprint: document["fingerprint"]
+            .as_str()
+            .expect("document fingerprint is a string")
+            .to_string(),
+        element_id: element_id.to_string(),
+        rendering,
+        source_pdf_fingerprint: (rendering == CropElementRendering::Rendered).then(|| {
+            document["source"]["fingerprint"]
+                .as_str()
+                .expect("source fingerprint is a string")
+                .to_string()
+        }),
+    };
+    request.request_ref = crop_element_request_ref(&request).unwrap();
+    serde_json::to_value(request).unwrap()
 }
 
 fn temp_split_quote_document() -> (PathBuf, String) {
@@ -546,6 +575,154 @@ fn crop_element_cli_fails_closed_on_invalid_check_id() {
     assert!(String::from_utf8_lossy(&output.stderr).contains(
         "crop_element request failed: descriptor must bind exactly one logical check id"
     ));
+}
+
+#[test]
+fn crop_element_cli_rendered_request_requires_source_pdf_and_crop_dir() {
+    let root = repo_root();
+    let document = json_file(root.join("schemas/examples/document.example.json"));
+    let request = crop_element_request(&document, "e000002", CropElementRendering::Rendered);
+    let request = temp_json(
+        "crop-element-rendered-request",
+        &serde_json::to_string(&request).unwrap(),
+    );
+
+    let missing_source = run_ethos(&[
+        "crop_element",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--request",
+        request.to_str().unwrap(),
+    ]);
+
+    assert_eq!(missing_source.status.code(), Some(2));
+    assert_eq!(missing_source.stdout, b"");
+    assert!(String::from_utf8_lossy(&missing_source.stderr)
+        .contains("rendered crop_element request requires --crop-source-pdf"));
+
+    let source_pdf = temp_json("crop-element-fake-source", "%PDF-1.7\n");
+    let missing_dir = run_ethos(&[
+        "crop_element",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--request",
+        request.to_str().unwrap(),
+        "--crop-source-pdf",
+        source_pdf.to_str().unwrap(),
+    ]);
+
+    assert_eq!(missing_dir.status.code(), Some(2));
+    assert_eq!(missing_dir.stdout, b"");
+    assert!(String::from_utf8_lossy(&missing_dir.stderr)
+        .contains("rendered crop_element request requires --crop-dir"));
+}
+
+#[test]
+fn crop_element_cli_rendered_source_pdf_must_match_document_source() {
+    let root = repo_root();
+    let document = json_file(root.join("schemas/examples/document.example.json"));
+    let request = crop_element_request(&document, "e000002", CropElementRendering::Rendered);
+    let request = temp_json(
+        "crop-element-rendered-mismatch-request",
+        &serde_json::to_string(&request).unwrap(),
+    );
+    let source_pdf = temp_json("crop-element-mismatch-source", "%PDF-1.7\n");
+    let crop_dir = tempfile::tempdir().expect("temp crop dir");
+
+    let output = run_ethos(&[
+        "crop_element",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--request",
+        request.to_str().unwrap(),
+        "--crop-source-pdf",
+        source_pdf.to_str().unwrap(),
+        "--crop-dir",
+        crop_dir.path().to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(String::from_utf8_lossy(&output.stderr)
+        .contains("crop source PDF fingerprint does not match document source fingerprint"));
+    assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 0);
+}
+
+#[test]
+fn crop_element_cli_writes_rendered_artifacts_when_pdfium_is_configured() {
+    if !pdfium_configured() {
+        return;
+    }
+
+    let root = repo_root();
+    let source_pdf = root.join("fixtures/synthetic/simple-text/document.pdf");
+    let doc_path = temp_output("crop-element-simple-text-doc");
+    let parse = run_ethos(&[
+        "doc",
+        "parse",
+        source_pdf.to_str().unwrap(),
+        "--out",
+        doc_path.to_str().unwrap(),
+    ]);
+    assert_eq!(parse.status.code(), Some(0));
+    assert_eq!(parse.stdout, b"");
+    assert_eq!(parse.stderr, b"");
+
+    let document = json_file(&doc_path);
+    let request = crop_element_request(&document, "e000001", CropElementRendering::Rendered);
+    let request = temp_json(
+        "crop-element-simple-text-rendered-request",
+        &serde_json::to_string(&request).unwrap(),
+    );
+    let out = temp_output("crop-element-simple-text-rendered-descriptor");
+    let crop_dir = tempfile::tempdir().expect("temp crop dir");
+
+    let output = run_ethos(&[
+        "crop_element",
+        doc_path.to_str().unwrap(),
+        "--request",
+        request.to_str().unwrap(),
+        "--crop-source-pdf",
+        source_pdf.to_str().unwrap(),
+        "--crop-dir",
+        crop_dir.path().to_str().unwrap(),
+        "--out",
+        out.to_str().unwrap(),
+    ]);
+
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(output.stdout, b"");
+    assert_eq!(output.stderr, b"");
+
+    let descriptor = json_file(&out);
+    assert_eq!(descriptor["rendering_status"], "rendered");
+    assert_eq!(descriptor["rendered_format"], "png");
+    let source_bytes = std::fs::read(&source_pdf).expect("source PDF fixture is readable");
+    assert_eq!(
+        descriptor["source_pdf_fingerprint"],
+        source_fingerprint(&source_bytes)
+    );
+    assert_eq!(descriptor["document_fingerprint"], document["fingerprint"]);
+    assert_eq!(descriptor["check_ids"], serde_json::json!(["v0001"]));
+    assert!(descriptor["rendered_width_px"].as_u64().unwrap() > 0);
+    assert!(descriptor["rendered_height_px"].as_u64().unwrap() > 0);
+
+    let crop_ref = descriptor["crop_ref"].as_str().unwrap();
+    assert_eq!(json_file(crop_dir.path().join(crop_ref)), descriptor);
+
+    let rendered_ref = descriptor["rendered_ref"].as_str().unwrap();
+    assert!(rendered_ref.starts_with("crop-"));
+    assert!(rendered_ref.ends_with(".png"));
+    let png = std::fs::read(crop_dir.path().join(rendered_ref)).unwrap();
+    assert!(png.starts_with(b"\x89PNG\r\n\x1a\n"));
+    assert_eq!(
+        descriptor["rendered_sha256"],
+        ethos_core::c14n::sha256_hex_bytes(&png)
+    );
+    assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 2);
 }
 
 #[test]

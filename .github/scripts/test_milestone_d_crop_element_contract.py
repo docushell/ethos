@@ -41,13 +41,13 @@ EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 CLI_MAIN = ROOT / "crates/ethos-cli/src/main.rs"
 VERIFY_SOURCE = ROOT / "crates/ethos-cli/src/cmd/verify.rs"
+CLI_CROP_ARTIFACTS_SOURCE = ROOT / "crates/ethos-cli/src/cmd/crop_artifacts.rs"
 CLI_CROP_SOURCE = ROOT / "crates/ethos-cli/src/cmd/crop.rs"
 VERIFY_TESTS = ROOT / "crates/ethos-cli/tests/verify.rs"
 EXPECTED_EXPLICIT_BLOCKERS = [
-    "additional CLI commands beyond descriptor-only `ethos crop_element`",
+    "additional CLI commands beyond source-bound `ethos crop_element`",
     "Node, MCP, or hosted crop API surfaces",
     "sandbox/subprocess backend expansion",
-    "rendered-crop backend changes",
     "foreign-adapter crop coordinate hardening",
     "cross-platform rendered-crop byte identity claims",
 ]
@@ -567,9 +567,9 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
 
         self.assertIn("source-only pre-alpha contract work", text)
         self.assertIn("internal Rust resolver in `ethos-core::crop_element`", text)
-        self.assertIn("descriptor-only crop descriptors", text)
+        self.assertIn("source-bound crop descriptors", text)
         self.assertIn("source-only pre-alpha `ethos crop_element` CLI command", text)
-        self.assertIn("internal pre-alpha Python surface wraps the same descriptor-only CLI", text)
+        self.assertIn("internal pre-alpha Python surface wraps the same source-bound CLI", text)
         self.assertIn(
             "The existing `ethos verify --crop-dir` and optional `--crop-source-pdf` "
             "carrier remain the verifier evidence-artifact path",
@@ -983,6 +983,9 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         for test_name in [
             "crop_element_cli_writes_descriptor",
             "crop_element_cli_fails_closed_on_invalid_check_id",
+            "crop_element_cli_rendered_request_requires_source_pdf_and_crop_dir",
+            "crop_element_cli_rendered_source_pdf_must_match_document_source",
+            "crop_element_cli_writes_rendered_artifacts_when_pdfium_is_configured",
         ]:
             self.assertIn(f"fn {test_name}()", tests)
 
@@ -1004,14 +1007,22 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertNotIn('"version": "ethos.logical_crop_ref.v1"', text)
 
     def test_current_crop_carrier_serializes_core_descriptor_type(self) -> None:
-        text = VERIFY_SOURCE.read_text(encoding="utf-8")
+        text = (
+            VERIFY_SOURCE.read_text(encoding="utf-8")
+            + "\n"
+            + CLI_CROP_ARTIFACTS_SOURCE.read_text(encoding="utf-8")
+        )
 
         self.assertIn("BTreeMap<String, CropElementDescriptor>", text)
-        self.assertIn("serde_json::to_value(&descriptor)", text)
+        self.assertIn("serde_json::to_value(descriptor)", text)
         self.assertNotIn("serde_json::Map::new()", text)
 
     def test_current_crop_carrier_has_fail_closed_descriptor_diagnostics(self) -> None:
-        text = VERIFY_SOURCE.read_text(encoding="utf-8")
+        text = (
+            VERIFY_SOURCE.read_text(encoding="utf-8")
+            + "\n"
+            + CLI_CROP_ARTIFACTS_SOURCE.read_text(encoding="utf-8")
+        )
 
         for test_name in [
             "write_crop_artifacts_requires_document_fingerprint_for_descriptors",

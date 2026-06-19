@@ -138,6 +138,12 @@ pub(crate) struct CropElementArgs {
     /// Logical check id to bind into the descriptor
     #[arg(long, default_value = "v0001")]
     pub(crate) check_id: String,
+    /// Directory for rendered crop descriptor and PNG artifacts
+    #[arg(long)]
+    pub(crate) crop_dir: Option<PathBuf>,
+    /// Original PDF bytes for rendered crop production
+    #[arg(long)]
+    pub(crate) crop_source_pdf: Option<PathBuf>,
     /// Output path for crop descriptor JSON (default: stdout)
     #[arg(long)]
     pub(crate) out: Option<PathBuf>,

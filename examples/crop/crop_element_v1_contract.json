@@ -145,10 +145,9 @@
     }
   ],
   "explicit_blockers": [
-    "additional CLI commands beyond descriptor-only `ethos crop_element`",
+    "additional CLI commands beyond source-bound `ethos crop_element`",
     "Node, MCP, or hosted crop API surfaces",
     "sandbox/subprocess backend expansion",
-    "rendered-crop backend changes",
     "foreign-adapter crop coordinate hardening",
     "cross-platform rendered-crop byte identity claims"
   ]

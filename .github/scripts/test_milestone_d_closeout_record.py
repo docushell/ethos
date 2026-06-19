@@ -69,8 +69,13 @@ class MilestoneDContractCloseoutRecordTests(unittest.TestCase):
         self.assertIn("source-only contract closeout", text)
         self.assertIn("Full 13-D exit still requires review of implementation lanes", text)
         self.assertIn(
-            "Rendered, Node, MCP, hosted, and sandbox-backed crop API behavior remains future "
+            "Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces remain future "
             "work outside this closeout record",
+            text,
+        )
+        self.assertIn(
+            "Cross-platform rendered-crop byte identity remains future work outside this closeout "
+            "record",
             text,
         )
         self.assertIn("Sandbox hardening remains future work outside this closeout record", text)

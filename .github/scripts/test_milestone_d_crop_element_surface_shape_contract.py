@@ -43,9 +43,8 @@ ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 EXPECTED_EXPLICIT_BLOCKERS = [
-    "additional CLI commands beyond descriptor-only `ethos crop_element`",
+    "additional CLI commands beyond source-bound `ethos crop_element`",
     "Node, MCP, or hosted crop surfaces",
-    "rendered-crop backend changes",
     "sandbox backend behavior",
     "foreign-adapter crop coordinate hardening",
 ]
@@ -141,12 +140,12 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
         text = normalized_contract_text()
 
         self.assertIn("source-only pre-alpha contract work", text)
-        self.assertIn("records the descriptor-only `ethos crop_element` CLI surface", text)
+        self.assertIn("records the source-bound `ethos crop_element` CLI surface", text)
         self.assertIn("internal pre-alpha Python wrapper over that CLI", text)
-        self.assertIn("The current descriptor-only carriers are `ethos crop_element`", text)
+        self.assertIn("The current source-bound carriers are `ethos crop_element`", text)
         self.assertIn("`ethos_pdf.crop_element`", text)
         self.assertIn("`ethos verify --crop-dir` and optional `--crop-source-pdf` remain", text)
-        self.assertIn("does not implement rendered output", text)
+        self.assertIn("does not add a Node binding, MCP method, hosted surface", text)
 
     def test_contract_pins_supported_boundaries(self) -> None:
         text = normalized_contract_text()
@@ -158,8 +157,8 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             "`document_fingerprint`",
             "`element_id`",
             "`source_pdf_fingerprint`",
-            "current CLI has a descriptor-only `ethos crop_element` command",
-            "current Python scaffold has a descriptor-only `ethos_pdf.crop_element` method",
+            "current CLI has a source-bound `ethos crop_element` command",
+            "current Python scaffold has a source-bound `ethos_pdf.crop_element` method",
             "`make milestone-d-crop-element-surface-shape-contract PYTHON=<jsonschema-venv>/bin/python`",
         ]:
             self.assertIn(required, text)
@@ -402,13 +401,16 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             checked_files,
         )
         self.assertEqual("crop_element", current_surface["cli_command"])
-        self.assertEqual("descriptor_only", current_surface["cli_mode"])
+        self.assertEqual("descriptor_and_rendered", current_surface["cli_mode"])
         self.assertEqual("crop_element", current_surface["python_method"])
-        self.assertEqual("descriptor_only", current_surface["python_status"])
+        self.assertEqual("descriptor_and_rendered", current_surface["python_status"])
         self.assertEqual(
             [
                 "crop_element_cli_writes_descriptor",
                 "crop_element_cli_fails_closed_on_invalid_check_id",
+                "crop_element_cli_rendered_request_requires_source_pdf_and_crop_dir",
+                "crop_element_cli_rendered_source_pdf_must_match_document_source",
+                "crop_element_cli_writes_rendered_artifacts_when_pdfium_is_configured",
             ],
             current_surface["cli_tests"],
         )
@@ -419,6 +421,8 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
                 "test_crop_element_rejects_empty_check_id_before_command_execution",
                 "test_crop_element_missing_request_raises_file_not_found",
                 "test_crop_element_invalid_json_stdout_raises_output_error",
+                "test_crop_element_passes_rendered_artifact_arguments",
+                "test_crop_element_rejects_partial_rendered_arguments",
             ],
             current_surface["python_tests"],
         )

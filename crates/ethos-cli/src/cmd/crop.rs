@@ -14,21 +14,56 @@
  * limitations under the License.
  */
 
-use ethos_core::crop_element::{resolve_crop_element_descriptor, CropElementRequest};
+use ethos_core::crop_element::{
+    resolve_crop_element_descriptor, CropElementRendering, CropElementRequest,
+};
 use ethos_core::error::EthosError;
 
+use crate::cmd::crop_artifacts::{
+    load_bound_crop_source_pdf, write_crop_descriptor_artifact, write_rendered_crop_artifact,
+};
 use crate::{read_document, read_file_limited, write_output, CropElementArgs, Failure};
 
 pub(crate) fn crop_element(args: CropElementArgs) -> Result<(), Failure> {
     let document = read_document(&args.input)?;
     let request = read_crop_element_request(&args.request)?;
-    let descriptor =
-        resolve_crop_element_descriptor(&document, &request, &args.check_id).map_err(|error| {
+    let mut descriptor = resolve_crop_element_descriptor(&document, &request, &args.check_id)
+        .map_err(|error| {
             Failure::Usage(format!(
                 "crop_element request failed: {}",
                 error.diagnostic()
             ))
         })?;
+
+    if descriptor.rendering_status == CropElementRendering::Rendered {
+        let source_pdf = args.crop_source_pdf.as_ref().ok_or_else(|| {
+            Failure::Usage("rendered crop_element request requires --crop-source-pdf".to_string())
+        })?;
+        let crop_dir = args.crop_dir.as_ref().ok_or_else(|| {
+            Failure::Usage("rendered crop_element request requires --crop-dir".to_string())
+        })?;
+        std::fs::create_dir_all(crop_dir).map_err(|_| {
+            Failure::Usage(format!(
+                "cannot create crop artifact directory: {}",
+                crop_dir.display()
+            ))
+        })?;
+        let source_pdf = load_bound_crop_source_pdf(&document, source_pdf)?;
+        write_rendered_crop_artifact(crop_dir, &mut descriptor, &source_pdf)?;
+        write_crop_descriptor_artifact(crop_dir, &descriptor)?;
+    } else {
+        if args.crop_source_pdf.is_some() {
+            return Err(Failure::Usage(
+                "--crop-source-pdf requires a rendered crop_element request".to_string(),
+            ));
+        }
+        if args.crop_dir.is_some() {
+            return Err(Failure::Usage(
+                "--crop-dir requires a rendered crop_element request".to_string(),
+            ));
+        }
+    }
+
     let mut bytes = ethos_core::c14n::c14n_bytes(
         &serde_json::to_value(descriptor)
             .map_err(|_| EthosError::internal("crop_element descriptor serialization failed"))?,

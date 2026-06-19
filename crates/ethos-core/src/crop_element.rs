@@ -215,15 +215,26 @@ pub fn resolve_crop_element_descriptor(
             "descriptor must bind exactly one logical check id",
         ));
     }
-    if request.rendering == CropElementRendering::Rendered {
-        return Err(CropElementError::new(
-            "rendered crop_element requests remain blocked for internal descriptor resolver",
-        ));
-    }
-    if request.source_pdf_fingerprint.is_some() {
-        return Err(CropElementError::new(
-            "descriptor_only crop_element request must not include source_pdf_fingerprint",
-        ));
+    match request.rendering {
+        CropElementRendering::DescriptorOnly => {
+            if request.source_pdf_fingerprint.is_some() {
+                return Err(CropElementError::new(
+                    "descriptor_only crop_element request must not include source_pdf_fingerprint",
+                ));
+            }
+        }
+        CropElementRendering::Rendered => {
+            let Some(source_pdf_fingerprint) = request.source_pdf_fingerprint.as_deref() else {
+                return Err(CropElementError::new(
+                    "rendered crop_element request requires source_pdf_fingerprint",
+                ));
+            };
+            if source_pdf_fingerprint != document.source.fingerprint {
+                return Err(CropElementError::new(
+                    "request source_pdf_fingerprint does not match document source fingerprint",
+                ));
+            }
+        }
     }
 
     let element = document
@@ -257,8 +268,8 @@ pub fn resolve_crop_element_descriptor(
         page: element.page.clone(),
         bbox: element.bbox.to_array(),
         check_ids: vec![check_id.to_string()],
-        rendering_status: CropElementRendering::DescriptorOnly,
-        source_pdf_fingerprint: None,
+        rendering_status: request.rendering,
+        source_pdf_fingerprint: request.source_pdf_fingerprint.clone(),
         rendered_ref: None,
         rendered_format: None,
         rendered_sha256: None,
@@ -510,18 +521,50 @@ mod tests {
     }
 
     #[test]
-    fn rendered_request_fails_closed_in_internal_resolver() {
+    fn rendered_descriptor_binds_source_fingerprint() {
         let mut request = fixture_request();
         request.rendering = CropElementRendering::Rendered;
         request.source_pdf_fingerprint = Some(fixture_document().source.fingerprint);
         request.request_ref = crop_element_request_ref(&request).unwrap();
 
+        let descriptor =
+            resolve_crop_element_descriptor(&fixture_document(), &request, "v0001").unwrap();
+
+        assert_eq!(descriptor.rendering_status, CropElementRendering::Rendered);
+        assert_eq!(
+            descriptor.source_pdf_fingerprint,
+            Some(fixture_document().source.fingerprint)
+        );
+    }
+
+    #[test]
+    fn rendered_request_requires_source_fingerprint() {
+        let mut request = fixture_request();
+        request.rendering = CropElementRendering::Rendered;
+        request.request_ref = crop_element_request_ref(&request).unwrap();
+
         let err = resolve_crop_element_descriptor(&fixture_document(), &request, "v0001")
-            .expect_err("rendered request must remain blocked");
+            .expect_err("rendered request without source fingerprint must fail");
 
         assert_eq!(
             err.diagnostic(),
-            "rendered crop_element requests remain blocked for internal descriptor resolver"
+            "rendered crop_element request requires source_pdf_fingerprint"
+        );
+    }
+
+    #[test]
+    fn rendered_request_rejects_source_fingerprint_mismatch() {
+        let mut request = fixture_request();
+        request.rendering = CropElementRendering::Rendered;
+        request.source_pdf_fingerprint = Some("sha256:".to_string() + &"0".repeat(64));
+        request.request_ref = crop_element_request_ref(&request).unwrap();
+
+        let err = resolve_crop_element_descriptor(&fixture_document(), &request, "v0001")
+            .expect_err("rendered request with mismatched source fingerprint must fail");
+
+        assert_eq!(
+            err.diagnostic(),
+            "request source_pdf_fingerprint does not match document source fingerprint"
         );
     }
 }
