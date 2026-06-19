@@ -212,7 +212,7 @@ that limitation instead of silently upgrading the claim.
 | Capability-limited reports | Alpha path exists | Reports missing source capabilities explicitly |
 | Crop descriptor JSON | Alpha path exists for native Ethos JSON | Descriptor identity is logical evidence identity |
 | Rendered crop PNG artifacts | Same-host repeatability path exists | Cross-platform PNG byte identity is not claimed |
-| Born-digital PDF parsing | Narrow parser path exists | Not benchmark-validated; parser quality claims are blocked |
+| Born-digital PDF parsing | Narrow parser path exists | Public benchmark approval and parser quality claims are blocked |
 | OCR / scanned PDFs | Not supported in base install | Stable `ocr_required` failure |
 | Complex table semantics | Alpha-only | Release 2 enrichment work |
 | Heading/list/layout quality | Alpha-only | Still fixture- and Gate-Zero-dependent |

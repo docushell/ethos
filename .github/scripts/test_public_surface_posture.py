@@ -58,6 +58,11 @@ class PublicSurfacePostureTests(unittest.TestCase):
         self.assertIn("contracts phase", text)
         self.assertIn("Gate Zero[^\\n]*has not run", text)
         self.assertIn("launch package", text)
+        self.assertIn("benchmark[- ]validated", text)
+        self.assertIn("release[- ]ready", text)
+        self.assertIn("package[- ]ready", text)
+        self.assertIn("production[- ]ready", text)
+        self.assertIn("launch[- ]ready", text)
 
 
 if __name__ == "__main__":

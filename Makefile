@@ -13,7 +13,7 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 .PHONY: milestone-d-capability-downgrade-contract
 .PHONY: milestone-d-opendataloader-adapter-shape-contract
 .PHONY: milestone-d-grounding-source-contract
@@ -141,6 +141,14 @@ milestone-d-internal-contracts:
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py
+	git diff --check
+
+milestone-e-prep:
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_public_surface_posture.py
+	$(PYTHON) .github/scripts/claims_gate.py
+	$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py
 	git diff --check
 
 verify-rendered-crops: $(ETHOS_BIN)
