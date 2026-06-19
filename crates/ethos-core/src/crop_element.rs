@@ -193,6 +193,9 @@ pub fn resolve_crop_element_descriptor(
     if request.request_ref.is_empty() {
         return Err(CropElementError::new("request_ref is missing"));
     }
+    if request.document_fingerprint.is_empty() || document.fingerprint.is_empty() {
+        return Err(CropElementError::new("document_fingerprint is missing"));
+    }
     let expected_request_ref = crop_element_request_ref(request).map_err(|_| {
         CropElementError::new("request_ref does not match crop element request identity tuple")
     })?;
@@ -373,6 +376,20 @@ mod tests {
             err.diagnostic(),
             "request document_fingerprint does not match document fingerprint"
         );
+    }
+
+    #[test]
+    fn missing_document_fingerprint_fails_closed() {
+        let mut document = fixture_document();
+        document.fingerprint.clear();
+        let mut request = fixture_request();
+        request.document_fingerprint.clear();
+        request.request_ref = crop_element_request_ref(&request).unwrap();
+
+        let err = resolve_crop_element_descriptor(&document, &request, "v0001")
+            .expect_err("missing document fingerprint must fail");
+
+        assert_eq!(err.diagnostic(), "document_fingerprint is missing");
     }
 
     #[test]

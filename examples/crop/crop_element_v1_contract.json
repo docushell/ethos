@@ -45,6 +45,13 @@
       ]
     },
     {
+      "name": "request-document-fingerprint-missing",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "document_fingerprint is missing"
+      ]
+    },
+    {
       "name": "request-element-mismatch",
       "surface": "request_binding",
       "expected_diagnostics": [

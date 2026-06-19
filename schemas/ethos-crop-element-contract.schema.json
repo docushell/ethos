@@ -89,6 +89,7 @@
         "descriptor must bind exactly one logical check id",
         "descriptor crop_ref does not match logical identity tuple",
         "descriptor text_sha256 does not match verification evidence",
+        "document_fingerprint is missing",
         "request document_fingerprint does not match document fingerprint",
         "descriptor document_fingerprint does not match request",
         "request element_id does not match contract inventory case",

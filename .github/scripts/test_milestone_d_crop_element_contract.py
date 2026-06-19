@@ -56,6 +56,7 @@ EXPECTED_DIAGNOSTIC_MESSAGES = [
     "descriptor must bind exactly one logical check id",
     "descriptor crop_ref does not match logical identity tuple",
     "descriptor text_sha256 does not match verification evidence",
+    "document_fingerprint is missing",
     "request document_fingerprint does not match document fingerprint",
     "descriptor document_fingerprint does not match request",
     "request element_id does not match contract inventory case",
@@ -97,6 +98,11 @@ EXPECTED_DIAGNOSTIC_CASES = [
             "request document_fingerprint does not match document fingerprint",
             "descriptor document_fingerprint does not match request",
         ],
+    },
+    {
+        "name": "request-document-fingerprint-missing",
+        "surface": "request_binding",
+        "expected_diagnostics": ["document_fingerprint is missing"],
     },
     {
         "name": "request-element-mismatch",
@@ -327,6 +333,8 @@ def request_case_diagnostics(
 ) -> list[str]:
     diagnostics: list[str] = []
 
+    if not request["document_fingerprint"] or not document["fingerprint"]:
+        diagnostics.append("document_fingerprint is missing")
     if request["document_fingerprint"] != document["fingerprint"]:
         diagnostics.append("request document_fingerprint does not match document fingerprint")
     if descriptor["document_fingerprint"] != request["document_fingerprint"]:
@@ -383,6 +391,9 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
     stale_request_ref = dict(request, request_ref="request-" + "0" * 64)
     unknown_element_request = dict(request, element_id="e999999")
     stale_request = dict(request, document_fingerprint="sha256:" + "0" * 64)
+    missing_fingerprint_request = dict(request, document_fingerprint="")
+    missing_fingerprint_document = dict(document, fingerprint="")
+    missing_fingerprint_descriptor = dict(descriptor, document_fingerprint="")
     mismatched_element_request = dict(request, element_id="e000001")
     mismatched_rendering_case = dict(case, rendering_status="rendered")
 
@@ -429,6 +440,12 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
             stale_request,
             document,
             descriptor,
+            case,
+        ),
+        "request-document-fingerprint-missing": request_case_diagnostics(
+            missing_fingerprint_request,
+            missing_fingerprint_document,
+            missing_fingerprint_descriptor,
             case,
         ),
         "request-element-mismatch": request_case_diagnostics(
