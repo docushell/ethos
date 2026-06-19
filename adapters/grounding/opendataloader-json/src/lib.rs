@@ -544,7 +544,7 @@ fn parse_real_content_element(
     elements: &mut Vec<GroundingElement>,
     element_ids: &mut HashSet<String>,
     next_synthetic_id: &mut u32,
-) -> Result<(), AdapterError> {
+) -> Result<Option<String>, AdapterError> {
     let children = real_child_elements(node)?;
     if !real_node_has_element_fields(node) {
         if children.is_empty() {
@@ -552,17 +552,20 @@ fn parse_real_content_element(
                 "content node has no element fields or child containers",
             ));
         }
+        let mut parts = Vec::new();
         for child in children {
-            parse_real_content_element(
+            if let Some(text) = parse_real_content_element(
                 child,
                 page_count,
                 page_extents,
                 elements,
                 element_ids,
                 next_synthetic_id,
-            )?;
+            )? {
+                parts.push(text);
+            }
         }
-        return Ok(());
+        return Ok(join_real_text(parts));
     }
 
     let kind = real_content_kind(node)?;
@@ -585,26 +588,37 @@ fn parse_real_content_element(
     if !element_ids.insert(id.clone()) {
         return Err(err("duplicate content id"));
     }
+    let element_index = elements.len();
     elements.push(GroundingElement {
         id,
         page: format!("page-{page_number}"),
         bbox,
-        kind: kind.clone(),
-        text: real_content_text(node)?,
+        kind,
+        text: None,
     });
 
+    let mut parts = Vec::new();
+    if let Some(text) = real_own_text(node)? {
+        if !text.is_empty() {
+            parts.push(text.to_string());
+        }
+    }
     for child in children {
-        parse_real_content_element(
+        if let Some(text) = parse_real_content_element(
             child,
             page_count,
             page_extents,
             elements,
             element_ids,
             next_synthetic_id,
-        )?;
+        )? {
+            parts.push(text);
+        }
     }
 
-    Ok(())
+    let text = join_real_text(parts);
+    elements[element_index].text = text.clone();
+    Ok(text)
 }
 
 fn real_node_has_element_fields(node: &Value) -> bool {
@@ -656,11 +670,23 @@ fn real_element_id(node: &Value, next_synthetic_id: &mut u32) -> Result<String, 
 fn real_content_text(node: &Value) -> Result<Option<String>, AdapterError> {
     let mut parts = Vec::new();
     collect_real_text(node, &mut parts)?;
-    Ok(if parts.is_empty() {
+    Ok(join_real_borrowed_text(parts))
+}
+
+fn join_real_text(parts: Vec<String>) -> Option<String> {
+    if parts.is_empty() {
         None
     } else {
         Some(parts.join("\n"))
-    })
+    }
+}
+
+fn join_real_borrowed_text(parts: Vec<&str>) -> Option<String> {
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join("\n"))
+    }
 }
 
 fn collect_real_text<'a>(node: &'a Value, parts: &mut Vec<&'a str>) -> Result<(), AdapterError> {
@@ -1122,6 +1148,62 @@ mod tests {
         assert_eq!(tables[0].cells[1].row, 1);
         assert_eq!(tables[0].cells[1].col, 2);
         assert_eq!(tables[0].cells[1].text, "Cell B");
+    }
+
+    #[test]
+    fn maps_deep_real_nested_subtree_text_without_revisiting_descendants() {
+        let mut node = serde_json::json!({
+            "type": "paragraph",
+            "id": "node-8",
+            "page number": 1,
+            "bounding box": [80, 80, 90, 90],
+            "content": "Node 8"
+        });
+        for level in (1..8).rev() {
+            node = serde_json::json!({
+                "type": "section",
+                "id": format!("node-{level}"),
+                "page number": 1,
+                "bounding box": [level * 10, level * 10, 200, 200],
+                "content": format!("Node {level}"),
+                "children": [node]
+            });
+        }
+        let root = serde_json::json!({
+            "file name": "deep.pdf",
+            "number of pages": 1,
+            "kids": [node]
+        });
+        let src = OdlJsonSource::from_value(&root).unwrap();
+
+        let elements = src.elements();
+        assert_eq!(elements.len(), 8);
+        let ids = elements
+            .iter()
+            .map(|element| element.id.as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            ids,
+            vec![
+                "odl-node-1",
+                "odl-node-2",
+                "odl-node-3",
+                "odl-node-4",
+                "odl-node-5",
+                "odl-node-6",
+                "odl-node-7",
+                "odl-node-8",
+            ]
+        );
+        assert_eq!(
+            elements[0].text.as_deref(),
+            Some("Node 1\nNode 2\nNode 3\nNode 4\nNode 5\nNode 6\nNode 7\nNode 8")
+        );
+        assert_eq!(
+            elements[3].text.as_deref(),
+            Some("Node 4\nNode 5\nNode 6\nNode 7\nNode 8")
+        );
+        assert_eq!(elements[7].text.as_deref(), Some("Node 8"));
     }
 
     #[test]

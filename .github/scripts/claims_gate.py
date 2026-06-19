@@ -44,6 +44,9 @@ SURFACES = [
 BANNED = [
     (re.compile(r"#1\b"), '"#1" claim'),
     (re.compile(r"best[- ]in[- ]class", re.I), '"best-in-class" claim'),
+    (re.compile(r"contracts phase", re.I), "stale pre-alpha posture"),
+    (re.compile(r"Gate Zero[^\n]*has not run", re.I), "stale Gate Zero posture"),
+    (re.compile(r"launch package", re.I), "public-surface launch/package posture"),
     (re.compile(r"pixel[- ]level proof", re.I), '"pixel-level proof" claim'),
     (re.compile(r"semantic proof", re.I), '"semantic proof" claim'),
     (re.compile(r"arithmetic proof", re.I), '"arithmetic proof" claim'),
