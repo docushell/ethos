@@ -51,6 +51,8 @@ D_CLOSEOUT_RECORD_GUARD = "$(PYTHON) .github/scripts/test_milestone_d_closeout_r
 D_FINAL_CLOSEOUT_RECORD_GUARD = (
     "$(PYTHON) .github/scripts/test_milestone_d_final_closeout_record.py"
 )
+PUBLIC_SURFACE_POSTURE_GUARD = "$(PYTHON) .github/scripts/test_public_surface_posture.py"
+CLAIMS_GATE = "$(PYTHON) .github/scripts/claims_gate.py"
 SURFACE_EXPANSION_BLOCKER_PATTERN = re.compile(r"\b(surfaces?|bindings?|methods?)\b")
 COMMAND_EXPANSION_BLOCKER_PATTERN = re.compile(r"\b(commands?|cli)\b")
 INVENTORY_REPO_PATH_KEYS = {
@@ -490,6 +492,8 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
         self.assertIn(D_CLOSEOUT_PREP_GUARD, block)
         self.assertIn(D_CLOSEOUT_RECORD_GUARD, block)
         self.assertIn(D_FINAL_CLOSEOUT_RECORD_GUARD, block)
+        self.assertIn(PUBLIC_SURFACE_POSTURE_GUARD, block)
+        self.assertIn(CLAIMS_GATE, block)
         self.assertIn("$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py", block)
         self.assertIn("git diff --check", block)
 
@@ -502,6 +506,8 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
                 D_CLOSEOUT_PREP_GUARD,
                 D_CLOSEOUT_RECORD_GUARD,
                 D_FINAL_CLOSEOUT_RECORD_GUARD,
+                PUBLIC_SURFACE_POSTURE_GUARD,
+                CLAIMS_GATE,
                 "$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py",
                 "git diff --check",
             ],

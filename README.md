@@ -7,10 +7,11 @@
 ![Rust: 1.87+](https://img.shields.io/badge/rust-1.87%2B-orange)
 ![status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-red)
 
-> **Status: pre-alpha — contracts phase.** Nothing here is released, benchmarked, or ready for
-> use. Gate Zero (the go/no-go measurement for the parser core) has not run. No performance,
-> footprint, or quality claims are made until the published, reproducible benchmark report
-> exists (Milestone E).
+> **Status: source-only pre-alpha — internal Milestone D closeout complete, Milestone E prep.**
+> Nothing here is released, benchmarked, or ready for use. ADR-0005 records an internal
+> `PROCEED` decision for continuation only; it does not approve public benchmark reports,
+> release artifacts, packages, production positioning, or claim wording. No performance,
+> footprint, quality, table-quality, or parser-quality claims are made.
 > Current execution status and blockers live in `docs/execution-status.md`; public-release
 > hygiene gates live in `docs/public-release-checklist.md`.
 
