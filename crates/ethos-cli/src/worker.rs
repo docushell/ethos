@@ -608,6 +608,46 @@ mod tests {
     }
 
     #[test]
+    fn rejects_json_artifact_header_missing_document_fingerprint() {
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker JSON artifact header missing document_fingerprint",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_missing_payload_sha256() {
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+            "document_fingerprint": TEST_FINGERPRINT,
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker JSON artifact header missing payload_sha256",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_missing_output_sha256() {
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+            "document_fingerprint": TEST_FINGERPRINT,
+            "payload_sha256": TEST_PAYLOAD_SHA256,
+            "output_bytes": 0,
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker JSON artifact header missing output_sha256",
+        );
+    }
+
+    #[test]
     fn rejects_json_artifact_header_hash_mismatch() {
         let (temp_dir, path) = test_artifact();
         let bytes = test_document_bytes(TEST_FINGERPRINT, TEST_PAYLOAD_SHA256);
