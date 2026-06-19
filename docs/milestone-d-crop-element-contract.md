@@ -47,7 +47,8 @@ intentionally stays narrower than implementation work for a first-class crop sur
 The v1 contract boundary is native, explicit, and source-bound:
 
 - crop locators resolve through one `element_id`;
-- the resolved element must carry one page id and one integer bbox;
+- the resolved element must carry one page id and one integer bbox with positive area inside the
+  resolved page bounds;
 - source-tree fixture validation binds crop element request identity to `document_fingerprint`,
   `element_id`, rendering mode, optional source PDF fingerprint, and
   `ethos.crop_element_request_ref.v1`;
@@ -58,9 +59,9 @@ The v1 contract boundary is native, explicit, and source-bound:
   text when textual evidence is present;
 - descriptor JSON remains the canonical crop audit artifact;
 - rendered PNG output is optional and must be bound to a matching source PDF fingerprint;
-- missing elements, missing pages, missing bboxes, malformed bboxes, missing document
-  fingerprints, unsafe crop artifact filenames, crop reference collisions, and source fingerprint
-  mismatch fail closed.
+- missing elements, missing pages, missing bboxes, malformed bboxes, non-positive bboxes,
+  out-of-page bboxes, missing document fingerprints, unsafe crop artifact filenames, crop reference
+  collisions, and source fingerprint mismatch fail closed.
 
 The contract does not infer missing geometry, synthesize evidence, or reinterpret foreign adapter
 coordinates. Cross-platform rendered crop byte identity is not part of this contract boundary.

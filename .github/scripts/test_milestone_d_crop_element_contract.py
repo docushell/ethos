@@ -63,6 +63,8 @@ EXPECTED_DIAGNOSTIC_MESSAGES = [
     "resolved element is missing page",
     "descriptor page does not match resolved element",
     "resolved element is missing bbox",
+    "resolved element bbox has non-positive area",
+    "resolved element bbox exceeds page bounds",
     "descriptor bbox does not match resolved element",
     "request rendering does not match contract inventory case",
     "descriptor rendering_status does not match request",
@@ -150,6 +152,16 @@ EXPECTED_DIAGNOSTIC_CASES = [
         "expected_diagnostics": ["resolved element is missing bbox"],
     },
     {
+        "name": "resolved-element-zero-area-bbox",
+        "surface": "request_binding",
+        "expected_diagnostics": ["resolved element bbox has non-positive area"],
+    },
+    {
+        "name": "resolved-element-bbox-outside-page",
+        "surface": "request_binding",
+        "expected_diagnostics": ["resolved element bbox exceeds page bounds"],
+    },
+    {
         "name": "descriptor-crop-ref-identity-drift",
         "surface": "descriptor_ref",
         "expected_diagnostics": [
@@ -203,6 +215,14 @@ def elements_by_id(document: dict) -> dict[str, dict]:
         element["id"]: element
         for element in document["payload"]["elements"]
         if "id" in element
+    }
+
+
+def pages_by_id(document: dict) -> dict[str, dict]:
+    return {
+        page["id"]: page
+        for page in document["payload"]["pages"]
+        if "id" in page
     }
 
 
@@ -319,15 +339,28 @@ def request_case_diagnostics(
         diagnostics.append("request element_id does not resolve in document")
         return diagnostics
 
+    page = None
     if "page" not in element:
         diagnostics.append("resolved element is missing page")
-    elif descriptor["page"] != element["page"]:
-        diagnostics.append("descriptor page does not match resolved element")
+    else:
+        page = pages_by_id(document).get(element["page"])
+        if page is None:
+            diagnostics.append("resolved element is missing page")
+        elif descriptor["page"] != element["page"]:
+            diagnostics.append("descriptor page does not match resolved element")
 
     if "bbox" not in element:
         diagnostics.append("resolved element is missing bbox")
-    elif descriptor["bbox"] != element["bbox"]:
-        diagnostics.append("descriptor bbox does not match resolved element")
+    else:
+        x0, y0, x1, y1 = element["bbox"]
+        if x0 >= x1 or y0 >= y1:
+            diagnostics.append("resolved element bbox has non-positive area")
+        if page is not None and (
+            x0 < 0 or y0 < 0 or x1 > page["width"] or y1 > page["height"]
+        ):
+            diagnostics.append("resolved element bbox exceeds page bounds")
+        if descriptor["bbox"] != element["bbox"]:
+            diagnostics.append("descriptor bbox does not match resolved element")
 
     if request["rendering"] != case["rendering_status"]:
         diagnostics.append("request rendering does not match contract inventory case")
@@ -366,6 +399,18 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
 
     document_without_bbox = deepcopy(document)
     del elements_by_id(document_without_bbox)[request["element_id"]]["bbox"]
+
+    zero_area_bbox = [10, 20, 10, 30]
+    document_with_zero_area_bbox = deepcopy(document)
+    elements_by_id(document_with_zero_area_bbox)[request["element_id"]]["bbox"] = zero_area_bbox
+    descriptor_with_zero_area_bbox = dict(descriptor, bbox=zero_area_bbox)
+
+    outside_page_bbox = [-1, 0, 10, 10]
+    document_with_outside_page_bbox = deepcopy(document)
+    elements_by_id(document_with_outside_page_bbox)[request["element_id"]][
+        "bbox"
+    ] = outside_page_bbox
+    descriptor_with_outside_page_bbox = dict(descriptor, bbox=outside_page_bbox)
 
     stale_crop_ref = dict(descriptor, crop_ref="crop-" + "0" * 64 + ".json")
     stale_text_sha256 = dict(descriptor, text_sha256="0" * 64)
@@ -432,6 +477,18 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
             request,
             document_without_bbox,
             descriptor,
+            case,
+        ),
+        "resolved-element-zero-area-bbox": request_case_diagnostics(
+            request,
+            document_with_zero_area_bbox,
+            descriptor_with_zero_area_bbox,
+            case,
+        ),
+        "resolved-element-bbox-outside-page": request_case_diagnostics(
+            request,
+            document_with_outside_page_bbox,
+            descriptor_with_outside_page_bbox,
             case,
         ),
         "descriptor-crop-ref-identity-drift": crop_ref_drift_diagnostics(stale_crop_ref),
@@ -722,6 +779,36 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertIn(
             "resolved element is missing bbox",
             request_case_diagnostics(request, document_without_bbox, descriptor, case),
+        )
+
+        zero_area_bbox = [10, 20, 10, 30]
+        document_with_zero_area_bbox = deepcopy(document)
+        elements_by_id(document_with_zero_area_bbox)[request["element_id"]][
+            "bbox"
+        ] = zero_area_bbox
+        self.assertIn(
+            "resolved element bbox has non-positive area",
+            request_case_diagnostics(
+                request,
+                document_with_zero_area_bbox,
+                dict(descriptor, bbox=zero_area_bbox),
+                case,
+            ),
+        )
+
+        outside_page_bbox = [-1, 0, 10, 10]
+        document_with_outside_page_bbox = deepcopy(document)
+        elements_by_id(document_with_outside_page_bbox)[request["element_id"]][
+            "bbox"
+        ] = outside_page_bbox
+        self.assertIn(
+            "resolved element bbox exceeds page bounds",
+            request_case_diagnostics(
+                request,
+                document_with_outside_page_bbox,
+                dict(descriptor, bbox=outside_page_bbox),
+                case,
+            ),
         )
 
     def test_contract_inventory_binds_descriptor_to_verification_evidence(self) -> None:

@@ -96,6 +96,8 @@
         "resolved element is missing page",
         "descriptor page does not match resolved element",
         "resolved element is missing bbox",
+        "resolved element bbox has non-positive area",
+        "resolved element bbox exceeds page bounds",
         "descriptor bbox does not match resolved element",
         "request rendering does not match contract inventory case",
         "descriptor rendering_status does not match request"

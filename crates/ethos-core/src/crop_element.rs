@@ -22,7 +22,7 @@
 
 use crate::c14n;
 use crate::error::EthosError;
-use crate::model::Document;
+use crate::model::{Document, Page};
 use crate::SCHEMA_VERSION;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -228,14 +228,13 @@ pub fn resolve_crop_element_descriptor(
         .iter()
         .find(|element| element.id == request.element_id)
         .ok_or_else(|| CropElementError::new("request element_id does not resolve in document"))?;
-    if !document
+    let page = document
         .payload
         .pages
         .iter()
-        .any(|page| page.id == element.page)
-    {
-        return Err(CropElementError::new("resolved element is missing page"));
-    }
+        .find(|page| page.id == element.page)
+        .ok_or_else(|| CropElementError::new("resolved element is missing page"))?;
+    validate_resolved_bbox(element.bbox, page)?;
 
     let text_sha256 = element
         .text
@@ -263,6 +262,21 @@ pub fn resolve_crop_element_descriptor(
         rendered_height_px: None,
         text_sha256,
     })
+}
+
+fn validate_resolved_bbox(bbox: crate::geom::QRect, page: &Page) -> Result<(), CropElementError> {
+    let [x0, y0, x1, y1] = bbox.to_array();
+    if x0 >= x1 || y0 >= y1 {
+        return Err(CropElementError::new(
+            "resolved element bbox has non-positive area",
+        ));
+    }
+    if x0 < 0 || y0 < 0 || x1 > page.width || y1 > page.height {
+        return Err(CropElementError::new(
+            "resolved element bbox exceeds page bounds",
+        ));
+    }
+    Ok(())
 }
 
 fn is_check_id(value: &str) -> bool {
@@ -385,6 +399,73 @@ mod tests {
             .expect_err("missing page must fail");
 
         assert_eq!(err.diagnostic(), "resolved element is missing page");
+    }
+
+    #[test]
+    fn zero_area_element_bbox_fails_closed() {
+        let mut document = fixture_document();
+        let element = document
+            .payload
+            .elements
+            .iter_mut()
+            .find(|element| element.id == fixture_request().element_id)
+            .expect("fixture element exists");
+        element.bbox = crate::geom::QRect::new(10, 20, 10, 30).unwrap();
+
+        let err = resolve_crop_element_descriptor(&document, &fixture_request(), "v0001")
+            .expect_err("zero-area bbox must fail");
+
+        assert_eq!(
+            err.diagnostic(),
+            "resolved element bbox has non-positive area"
+        );
+    }
+
+    #[test]
+    fn negative_element_bbox_fails_closed() {
+        let mut document = fixture_document();
+        let element = document
+            .payload
+            .elements
+            .iter_mut()
+            .find(|element| element.id == fixture_request().element_id)
+            .expect("fixture element exists");
+        element.bbox = crate::geom::QRect::new(-1, 0, 10, 10).unwrap();
+
+        let err = resolve_crop_element_descriptor(&document, &fixture_request(), "v0001")
+            .expect_err("negative bbox coordinate must fail");
+
+        assert_eq!(
+            err.diagnostic(),
+            "resolved element bbox exceeds page bounds"
+        );
+    }
+
+    #[test]
+    fn page_overflow_element_bbox_fails_closed() {
+        let mut document = fixture_document();
+        let page = document
+            .payload
+            .pages
+            .iter()
+            .find(|page| page.id == "p0001")
+            .expect("fixture page exists")
+            .clone();
+        let element = document
+            .payload
+            .elements
+            .iter_mut()
+            .find(|element| element.id == fixture_request().element_id)
+            .expect("fixture element exists");
+        element.bbox = crate::geom::QRect::new(0, 0, page.width + 1, 10).unwrap();
+
+        let err = resolve_crop_element_descriptor(&document, &fixture_request(), "v0001")
+            .expect_err("bbox beyond page width must fail");
+
+        assert_eq!(
+            err.diagnostic(),
+            "resolved element bbox exceeds page bounds"
+        );
     }
 
     #[test]

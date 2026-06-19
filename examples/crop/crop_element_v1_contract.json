@@ -102,6 +102,20 @@
       ]
     },
     {
+      "name": "resolved-element-zero-area-bbox",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "resolved element bbox has non-positive area"
+      ]
+    },
+    {
+      "name": "resolved-element-bbox-outside-page",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "resolved element bbox exceeds page bounds"
+      ]
+    },
+    {
       "name": "descriptor-crop-ref-identity-drift",
       "surface": "descriptor_ref",
       "expected_diagnostics": [
