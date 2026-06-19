@@ -614,6 +614,36 @@ fn doc_parse_memory_limit_worker_failure_is_stable() {
     assert_eq!(error["error"]["message"], "parse exceeded memory limit");
 }
 
+#[cfg(debug_assertions)]
+#[test]
+fn doc_parse_pipe_limit_worker_failure_preempts_timeout() {
+    let fixture = memory_limit_fixture_pdf();
+    let output = run_ethos_with_env(
+        &[
+            "doc",
+            "parse",
+            fixture.to_str().unwrap(),
+            "--format",
+            "json",
+            "--max-parse-ms",
+            "2000",
+        ],
+        &[
+            ("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_PIPE_MAX_BYTES", "3"),
+            ("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_STDOUT_BYTES", "4"),
+            (
+                "ETHOS_INTERNAL_TEST_PDFIUM_WORKER_AFTER_STDOUT_SLEEP_MS",
+                "5000",
+            ),
+        ],
+    );
+    assert_eq!(output.status.code(), Some(11));
+    assert!(output.stdout.is_empty());
+    let error: Value = serde_json::from_slice(&output.stderr).unwrap();
+    assert_eq!(error["error"]["code"], "memory_limit_exceeded");
+    assert_eq!(error["error"]["message"], "parse exceeded memory limit");
+}
+
 #[test]
 fn doc_parse_relays_worker_stable_error_envelope() {
     let fixture = invalid_header_fixture_pdf();

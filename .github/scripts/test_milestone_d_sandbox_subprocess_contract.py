@@ -169,6 +169,14 @@ EXPECTED_PIPE_LIMIT_CASES = [
         "error_code": "memory_limit_exceeded",
         "error_message": "parse exceeded memory limit",
     },
+    {
+        "name": "worker-pipe-limit-preempts-timeout",
+        "test_filter": "doc_parse_pipe_limit_worker_failure_preempts_timeout",
+        "boundary": "pipe_output_limit",
+        "expected_result": "rejected",
+        "error_code": "memory_limit_exceeded",
+        "error_message": "parse exceeded memory limit",
+    },
 ]
 EXPECTED_ERROR_ENVELOPE_CASES = [
     {
@@ -845,20 +853,34 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
     def test_contract_inventory_matches_existing_worker_pipe_limit_tests(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)
         worker_source = WORKER_SOURCE.read_text(encoding="utf-8")
+        pdf_parse_source = PDF_PARSE_TESTS.read_text(encoding="utf-8")
 
         self.assertEqual(EXPECTED_PIPE_LIMIT_CASES, inventory["pipe_limit_cases"])
         self.assertIn("const WORKER_PIPE_MAX_BYTES", worker_source)
         self.assertIn("fn read_pipe_limited", worker_source)
+        self.assertIn("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_PIPE_MAX_BYTES", worker_source)
 
         case_names = [case["name"] for case in inventory["pipe_limit_cases"]]
         self.assertEqual(len(case_names), len(set(case_names)))
         for case in inventory["pipe_limit_cases"]:
-            body = rust_test_body(worker_source, case["test_filter"])
-            self.assertIn("read_pipe_limited", body, case["name"])
+            source = (
+                worker_source
+                if f"fn {case['test_filter']}()" in worker_source
+                else pdf_parse_source
+            )
+            body = rust_test_body(source, case["test_filter"])
+            self.assertTrue(
+                "read_pipe_limited" in body
+                or "ETHOS_INTERNAL_TEST_PDFIUM_WORKER_PIPE_MAX_BYTES" in body,
+                case["name"],
+            )
             if case["expected_result"] == "accepted":
                 self.assertIn("expect(", body, case["name"])
             else:
-                self.assertIn("MemoryLimitExceeded", body, case["name"])
+                self.assertTrue(
+                    "MemoryLimitExceeded" in body or "memory_limit_exceeded" in body,
+                    case["name"],
+                )
                 self.assertIn(case["error_message"], body, case["name"])
 
     def test_contract_inventory_matches_existing_worker_error_envelope_tests(self) -> None:

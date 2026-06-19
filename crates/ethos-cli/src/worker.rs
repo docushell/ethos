@@ -16,7 +16,7 @@
 
 use std::fmt;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command as ProcessCommand, ExitStatus, Output, Stdio};
 use std::thread::{self, JoinHandle};
@@ -423,8 +423,8 @@ fn run_worker_with_timeout(
         .stderr
         .take()
         .ok_or_else(|| EthosError::internal("pdfium worker stderr unavailable"))?;
-    let stdout_handle = thread::spawn(move || read_pipe(stdout));
-    let stderr_handle = thread::spawn(move || read_pipe(stderr));
+    let mut stdout_reader = WorkerPipeReader::spawn(stdout);
+    let mut stderr_reader = WorkerPipeReader::spawn(stderr);
 
     let start = Instant::now();
     loop {
@@ -432,19 +432,26 @@ fn run_worker_with_timeout(
             .try_wait()
             .map_err(|_| EthosError::internal("pdfium worker wait failed"))?
         {
-            return collect_worker_output(status, stdout_handle, stderr_handle);
+            return collect_worker_output(status, stdout_reader, stderr_reader);
+        }
+        if let Err(failure) = poll_worker_readers(&mut stdout_reader, &mut stderr_reader) {
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = stdout_reader.finish();
+            let _ = stderr_reader.finish();
+            return Err(failure);
         }
         if start.elapsed() >= timeout {
             if let Some(status) = child
                 .try_wait()
                 .map_err(|_| EthosError::internal("pdfium worker wait failed"))?
             {
-                return collect_worker_output(status, stdout_handle, stderr_handle);
+                return collect_worker_output(status, stdout_reader, stderr_reader);
             }
             let _ = child.kill();
             let _ = child.wait();
-            let _ = join_reader(stdout_handle);
-            let _ = join_reader(stderr_handle);
+            let _ = stdout_reader.finish();
+            let _ = stderr_reader.finish();
             return Err(
                 EthosError::new(ErrorCode::ParseTimeout, "parse exceeded max_parse_ms").into(),
             );
@@ -456,7 +463,21 @@ fn run_worker_with_timeout(
 }
 
 fn read_pipe<R: Read>(pipe: R) -> Result<Vec<u8>, EthosError> {
-    read_pipe_limited(pipe, WORKER_PIPE_MAX_BYTES)
+    read_pipe_limited(pipe, worker_pipe_max_bytes())
+}
+
+#[cfg(debug_assertions)]
+fn worker_pipe_max_bytes() -> usize {
+    std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_PIPE_MAX_BYTES")
+        .ok()
+        .and_then(|raw| raw.parse::<usize>().ok())
+        .filter(|limit| *limit > 0)
+        .unwrap_or(WORKER_PIPE_MAX_BYTES)
+}
+
+#[cfg(not(debug_assertions))]
+fn worker_pipe_max_bytes() -> usize {
+    WORKER_PIPE_MAX_BYTES
 }
 
 fn read_pipe_limited<R: Read>(mut pipe: R, max_bytes: usize) -> Result<Vec<u8>, EthosError> {
@@ -480,23 +501,76 @@ fn read_pipe_limited<R: Read>(mut pipe: R, max_bytes: usize) -> Result<Vec<u8>, 
     Ok(bytes)
 }
 
+struct WorkerPipeReader {
+    handle: Option<JoinHandle<Result<Vec<u8>, EthosError>>>,
+    bytes: Option<Vec<u8>>,
+}
+
+impl WorkerPipeReader {
+    fn spawn<R>(pipe: R) -> Self
+    where
+        R: Read + Send + 'static,
+    {
+        WorkerPipeReader {
+            handle: Some(thread::spawn(move || read_pipe(pipe))),
+            bytes: None,
+        }
+    }
+
+    fn poll(&mut self) -> Result<(), Failure> {
+        if self.bytes.is_some() || !self.handle.as_ref().is_some_and(JoinHandle::is_finished) {
+            return Ok(());
+        }
+        let handle = self.handle.take().expect("pipe reader handle is present");
+        match join_pipe_reader(handle)? {
+            Ok(bytes) => {
+                self.bytes = Some(bytes);
+                Ok(())
+            }
+            Err(error) => {
+                self.bytes = Some(Vec::new());
+                Err(Failure::Ethos(error))
+            }
+        }
+    }
+
+    fn finish(mut self) -> Result<Vec<u8>, Failure> {
+        if let Some(bytes) = self.bytes.take() {
+            return Ok(bytes);
+        }
+        match self.handle.take() {
+            Some(handle) => join_pipe_reader(handle)?.map_err(Failure::Ethos),
+            None => Ok(Vec::new()),
+        }
+    }
+}
+
+fn poll_worker_readers(
+    stdout_reader: &mut WorkerPipeReader,
+    stderr_reader: &mut WorkerPipeReader,
+) -> Result<(), Failure> {
+    stdout_reader.poll()?;
+    stderr_reader.poll()
+}
+
 fn collect_worker_output(
     status: ExitStatus,
-    stdout_handle: JoinHandle<Result<Vec<u8>, EthosError>>,
-    stderr_handle: JoinHandle<Result<Vec<u8>, EthosError>>,
+    stdout_reader: WorkerPipeReader,
+    stderr_reader: WorkerPipeReader,
 ) -> Result<Output, Failure> {
     Ok(Output {
         status,
-        stdout: join_reader(stdout_handle)?,
-        stderr: join_reader(stderr_handle)?,
+        stdout: stdout_reader.finish()?,
+        stderr: stderr_reader.finish()?,
     })
 }
 
-fn join_reader(handle: JoinHandle<Result<Vec<u8>, EthosError>>) -> Result<Vec<u8>, Failure> {
+fn join_pipe_reader(
+    handle: JoinHandle<Result<Vec<u8>, EthosError>>,
+) -> Result<Result<Vec<u8>, EthosError>, Failure> {
     handle
         .join()
-        .map_err(|_| EthosError::internal("pdfium worker pipe reader failed"))?
-        .map_err(Failure::Ethos)
+        .map_err(|_| Failure::Ethos(EthosError::internal("pdfium worker pipe reader failed")))
 }
 
 fn worker_usage_message(stderr: &[u8]) -> String {
@@ -539,6 +613,38 @@ fn worker_failure_diagnostics(output: &Output) -> serde_json::Value {
         "pdfium_worker": serde_json::Value::Object(worker),
     })
 }
+
+#[cfg(debug_assertions)]
+pub(crate) fn maybe_emit_worker_stdout_for_pipe_limit_test() {
+    let Some(total) = std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_STDOUT_BYTES")
+        .ok()
+        .and_then(|raw| raw.parse::<usize>().ok())
+    else {
+        return;
+    };
+
+    let chunk = vec![b'x'; total.min(64 * 1024)];
+    let mut stdout = std::io::stdout().lock();
+    let mut remaining = total;
+    while remaining > 0 {
+        let n = remaining.min(chunk.len());
+        if stdout.write_all(&chunk[..n]).is_err() {
+            break;
+        }
+        remaining -= n;
+    }
+    let _ = stdout.flush();
+
+    if let Some(ms) = std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_AFTER_STDOUT_SLEEP_MS")
+        .ok()
+        .and_then(|raw| raw.parse::<u64>().ok())
+    {
+        thread::sleep(Duration::from_millis(ms));
+    }
+}
+
+#[cfg(not(debug_assertions))]
+pub(crate) fn maybe_emit_worker_stdout_for_pipe_limit_test() {}
 
 #[cfg(debug_assertions)]
 pub(crate) fn maybe_sleep_for_worker_timeout_test() {

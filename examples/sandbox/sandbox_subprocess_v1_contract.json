@@ -207,6 +207,14 @@
       "expected_result": "rejected",
       "error_code": "memory_limit_exceeded",
       "error_message": "parse exceeded memory limit"
+    },
+    {
+      "name": "worker-pipe-limit-preempts-timeout",
+      "test_filter": "doc_parse_pipe_limit_worker_failure_preempts_timeout",
+      "boundary": "pipe_output_limit",
+      "expected_result": "rejected",
+      "error_code": "memory_limit_exceeded",
+      "error_message": "parse exceeded memory limit"
     }
   ],
   "error_envelope_cases": [
