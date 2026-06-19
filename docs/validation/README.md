@@ -40,6 +40,10 @@ Records:
 - `milestone-e-prep-validation-2026-06-19.md` - internal Milestone E source-only prep validation
   passed through `make milestone-e-prep`, CI/static guard checks, fixture-candidate JSON parsing,
   public-surface posture grep, and diff hygiene; public-facing E work remains blocked.
+- `milestone-e-fixture-promotion-criteria-validation-2026-06-19.md` - internal Milestone E
+  fixture-promotion criteria validation for `docs/milestone-e-fixture-promotion-criteria.json`
+  passed through criteria consistency checks, JSON parsing, public-surface posture checks,
+  `make milestone-e-prep`, and diff hygiene; fixture promotion remains internal planning only.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
