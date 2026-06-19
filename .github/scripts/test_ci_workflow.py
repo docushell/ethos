@@ -63,6 +63,11 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("python3 .github/scripts/test_milestone_d_final_closeout_record.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_scope.py", text)
         self.assertEqual(1, text.count("python3 .github/scripts/test_milestone_e_prep_scope.py"))
+        self.assertIn("python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py", text)
+        self.assertEqual(
+            1,
+            text.count("python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py"),
+        )
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_validation_record.py", text)
         self.assertEqual(
             1,

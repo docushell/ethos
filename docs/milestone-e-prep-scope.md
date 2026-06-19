@@ -27,13 +27,15 @@ The prep slice is not allowed to:
 - add hosted surfaces, package/distribution work, or release artifacts;
 - expand Node, MCP, sandbox-backed, or foreign-adapter crop surfaces;
 - claim speed, footprint, quality, table-quality, parser-quality, or production readiness;
-- treat the E prep fixture list as a complete demo plan.
+- treat the E prep fixture list as a finished demo plan.
 
 ## Internal Demo Fixture Candidates
 
 The current E prep candidate set is restricted to tracked source-tree artifacts already covered by
 existing guards. The machine-readable inventory is
-`docs/milestone-e-fixture-candidates.json`.
+`docs/milestone-e-fixture-candidates.json`. Internal fixture-promotion criteria live in
+`docs/milestone-e-fixture-promotion-criteria.json`; they define what must be rechecked before a
+candidate can enter an internal demo plan, not public demo approval.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -65,5 +67,7 @@ benchmark-report, or broad demo-generation workflows.
 
 - `docs/roadmap.md` and `docs/execution-status.md` point to this prep boundary.
 - The source-tree guard keeps the fixture-candidate list explicit and path-backed.
+- The source-tree guard keeps internal fixture-promotion criteria aligned with the candidate
+  inventory.
 - Public language remains source-only pre-alpha and internal-continuation scoped.
 - External blockers remain visible before any public-facing Milestone E work starts.

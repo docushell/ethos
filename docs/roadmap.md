@@ -63,8 +63,10 @@ cross-platform rendered-crop byte identity is not required for D closeout.
 Milestone E prep begins with a source-only pre-alpha boundary note at
 [`docs/milestone-e-prep-scope.md`](milestone-e-prep-scope.md) and a guarded internal fixture
 candidate inventory at
-[`docs/milestone-e-fixture-candidates.json`](milestone-e-fixture-candidates.json). This first
-slice only identifies tracked trust-loop fixture candidates and guard wiring for internal
+[`docs/milestone-e-fixture-candidates.json`](milestone-e-fixture-candidates.json), with internal
+fixture-promotion criteria in
+[`docs/milestone-e-fixture-promotion-criteria.json`](milestone-e-fixture-promotion-criteria.json).
+This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; it does not approve public result wording, hosted surfaces, package/distribution
 work, or public-facing claims.
 
