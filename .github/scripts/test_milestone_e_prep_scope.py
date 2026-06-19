@@ -29,9 +29,15 @@ from makefile_guard import target_block
 ROOT = Path(__file__).resolve().parents[2]
 PREP_SCOPE = ROOT / "docs/milestone-e-prep-scope.md"
 FIXTURE_CANDIDATES = ROOT / "docs/milestone-e-fixture-candidates.json"
+FIXTURE_CANDIDATES_SCHEMA = ROOT / "schemas/ethos-milestone-e-fixture-candidates.schema.json"
+FIXTURE_PROMOTION_CRITERIA_SCHEMA = (
+    ROOT / "schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json"
+)
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
+SCHEMAS_README = ROOT / "schemas/README.md"
+VALIDATE_EXAMPLES = ROOT / "schemas/validate_examples.py"
 
 EXPECTED_CANDIDATES = {
     "Native verification trust loop": [
@@ -117,6 +123,10 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
 
         self.assertIn("`docs/milestone-e-fixture-candidates.json`", text)
         self.assert_tracked_file("docs/milestone-e-fixture-candidates.json")
+        self.assert_tracked_file("schemas/ethos-milestone-e-fixture-candidates.schema.json")
+        self.assert_tracked_file(
+            "schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json"
+        )
         for label, paths in EXPECTED_CANDIDATES.items():
             self.assertIn(label, text)
             for path in paths:
@@ -177,6 +187,9 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("docs/milestone-e-prep-scope.md", status)
         self.assertIn("docs/milestone-e-fixture-candidates.json", status)
         self.assertIn("make milestone-e-prep", status)
+        self.assertIn("schemas/ethos-milestone-e-fixture-candidates.schema.json", roadmap)
+        self.assertIn("schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json", roadmap)
+        self.assertIn("schema-validated by `schemas/validate_examples.py`", status)
         self.assertIn(
             "later public-report, project-maintained PDFium build, stable CLI/Python docs, demo, "
             "and beta work remain blocked on explicit claim-audit and release-scope decisions",
@@ -198,6 +211,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_public_surface_posture.py",
             "$(PYTHON) .github/scripts/claims_gate.py",
+            "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py",
@@ -223,6 +237,30 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
 
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_scope.py", text)
         self.assertEqual(1, text.count("python3 .github/scripts/test_milestone_e_prep_scope.py"))
+
+    def test_schema_validation_covers_e_prep_json_artifacts(self) -> None:
+        validate_examples = read(VALIDATE_EXAMPLES)
+        schemas_readme = read(SCHEMAS_README)
+        candidates_schema = json.loads(FIXTURE_CANDIDATES_SCHEMA.read_text(encoding="utf-8"))
+        criteria_schema = json.loads(FIXTURE_PROMOTION_CRITERIA_SCHEMA.read_text(encoding="utf-8"))
+
+        self.assertEqual(False, candidates_schema["additionalProperties"])
+        self.assertEqual(False, criteria_schema["additionalProperties"])
+        self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", validate_examples)
+        self.assertIn("docs\" / \"milestone-e-fixture-candidates.json", validate_examples)
+        self.assertIn(
+            "ethos-milestone-e-fixture-promotion-criteria.schema.json",
+            validate_examples,
+        )
+        self.assertIn(
+            "docs\" / \"milestone-e-fixture-promotion-criteria.json",
+            validate_examples,
+        )
+        self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", schemas_readme)
+        self.assertIn(
+            "ethos-milestone-e-fixture-promotion-criteria.schema.json",
+            schemas_readme,
+        )
 
     def test_prep_scope_avoids_public_launch_posture(self) -> None:
         text = normalized(PREP_SCOPE).lower()

@@ -66,6 +66,10 @@ candidate inventory at
 [`docs/milestone-e-fixture-candidates.json`](milestone-e-fixture-candidates.json), with internal
 fixture-promotion criteria in
 [`docs/milestone-e-fixture-promotion-criteria.json`](milestone-e-fixture-promotion-criteria.json).
+These E prep JSON artifacts are schema-bound by
+[`schemas/ethos-milestone-e-fixture-candidates.schema.json`](../schemas/ethos-milestone-e-fixture-candidates.schema.json)
+and
+[`schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json`](../schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json).
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; it does not approve public result wording, hosted surfaces, package/distribution
 work, or public-facing claims.

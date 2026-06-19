@@ -113,6 +113,12 @@ PAIRS = [
     ("ethos-sandbox-subprocess-contract.schema.json", [
         ROOT / "examples" / "sandbox" / "sandbox_subprocess_v1_contract.json",
     ]),
+    ("ethos-milestone-e-fixture-candidates.schema.json", [
+        ROOT / "docs" / "milestone-e-fixture-candidates.json",
+    ]),
+    ("ethos-milestone-e-fixture-promotion-criteria.schema.json", [
+        ROOT / "docs" / "milestone-e-fixture-promotion-criteria.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

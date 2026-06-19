@@ -148,6 +148,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/claims_gate.py
+	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py

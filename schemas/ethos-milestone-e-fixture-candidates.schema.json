@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:milestone-e-fixture-candidates:1",
+  "title": "Ethos Milestone E fixture-candidate inventory",
+  "description": "Source-only pre-alpha Milestone E prep inventory for tracked internal trust-loop fixture candidates. This validates inventory shape and vocabulary; path tracking and candidate alignment stay in the repository guard.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "scope",
+    "promotion_status",
+    "public_boundary",
+    "fixture_candidates"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "status": { "const": "source-only-pre-alpha-internal-milestone-e-prep" },
+    "scope": { "const": "internal_fixture_candidate_inventory" },
+    "promotion_status": { "const": "not_promoted_beyond_internal_fixture_planning" },
+    "public_boundary": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/public_boundary" },
+      "uniqueItems": true
+    },
+    "fixture_candidates": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": { "$ref": "#/$defs/fixture_candidate" }
+    }
+  },
+  "$defs": {
+    "fixture_candidate": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "status",
+        "validated_command",
+        "input_fixtures",
+        "expected_diagnostic_boundary",
+        "blocker_status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/candidate_id" },
+        "label": { "type": "string", "minLength": 1 },
+        "status": { "const": "source-only-pre-alpha-internal-candidate" },
+        "validated_command": { "$ref": "#/$defs/validation_command" },
+        "input_fixtures": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/repo_path" },
+          "uniqueItems": true
+        },
+        "expected_diagnostic_boundary": { "type": "string", "minLength": 1 },
+        "blocker_status": { "type": "string", "minLength": 1 }
+      }
+    },
+    "candidate_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "repo_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:docs/demos/|examples/|fixtures/|schemas/)[A-Za-z0-9_./-]+$"
+    },
+    "validation_command": {
+      "enum": [
+        "make milestone-d-capability-downgrade-contract",
+        "make milestone-d-internal-contracts",
+        "make milestone-d-opendataloader-adapter-shape-contract",
+        "make rag-chunk-alpha",
+        "make security-report-alpha",
+        "make verify-alpha"
+      ]
+    },
+    "public_boundary": {
+      "enum": [
+        "public reports remain blocked",
+        "release artifacts remain blocked",
+        "package publication remains blocked",
+        "hosted surfaces remain blocked",
+        "public result wording remains blocked",
+        "performance claims remain blocked",
+        "quality claims remain blocked",
+        "footprint claims remain blocked",
+        "table-quality claims remain blocked",
+        "parser-quality claims remain blocked"
+      ]
+    }
+  }
+}

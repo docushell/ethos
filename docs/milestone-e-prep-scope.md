@@ -33,9 +33,11 @@ The prep slice is not allowed to:
 
 The current E prep candidate set is restricted to tracked source-tree artifacts already covered by
 existing guards. The machine-readable inventory is
-`docs/milestone-e-fixture-candidates.json`. Internal fixture-promotion criteria live in
-`docs/milestone-e-fixture-promotion-criteria.json`; they define what must be rechecked before a
-candidate can enter an internal demo plan, not public demo approval.
+`docs/milestone-e-fixture-candidates.json` and is schema-bound by
+`schemas/ethos-milestone-e-fixture-candidates.schema.json`. Internal fixture-promotion criteria
+live in `docs/milestone-e-fixture-promotion-criteria.json` and are schema-bound by
+`schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json`; they define what must be
+rechecked before a candidate can enter an internal demo plan, not public demo approval.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -60,8 +62,9 @@ Focused validation command:
 - `make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python`
 
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate, this
-prep-scope guard, and diff hygiene. It intentionally does not run release, packaging, hosted,
-benchmark-report, or broad demo-generation workflows.
+prep-scope guard, schema/example validation for the E prep JSON artifacts, and diff hygiene. It
+intentionally does not run release, packaging, hosted, benchmark-report, or broad demo-generation
+workflows.
 
 ## Exit Criteria For This Prep Slice
 
@@ -69,5 +72,7 @@ benchmark-report, or broad demo-generation workflows.
 - The source-tree guard keeps the fixture-candidate list explicit and path-backed.
 - The source-tree guard keeps internal fixture-promotion criteria aligned with the candidate
   inventory.
+- The schema validation gate keeps the fixture-candidate inventory and fixture-promotion criteria
+  closed to unreviewed fields.
 - Public language remains source-only pre-alpha and internal-continuation scoped.
 - External blockers remain visible before any public-facing Milestone E work starts.
