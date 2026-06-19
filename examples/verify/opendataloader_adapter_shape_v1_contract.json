@@ -152,6 +152,19 @@
       "expected_error_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)"
     },
     {
+      "name": "zero-area-bbox",
+      "category": "documented-subset-diagnostics",
+      "source_fixture": "examples/verify/opendataloader_zero_area_bbox.json",
+      "adapter_tests": [
+        "rejects_zero_area_bboxes"
+      ],
+      "cli_verify_tests": [
+        "opendataloader_adapter_errors_are_usage_errors"
+      ],
+      "cli_usage_error_case": "opendataloader-zero-area-bbox-input",
+      "expected_error_contains": "opendataloader-json adapter: bbox must have positive area"
+    },
+    {
       "name": "documented-unknown-page",
       "category": "documented-subset-diagnostics",
       "source_fixture": "examples/verify/opendataloader_unknown_page.json",

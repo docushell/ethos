@@ -25,6 +25,7 @@ from typing import Any, Dict, Mapping, Optional, Sequence, Union
 PathLike = Union[str, os.PathLike[str]]
 
 _DOC_PARSE_FORMATS = frozenset(("json", "markdown", "text"))
+_DEFAULT_CROP_CHECK_ID = "v0001"
 
 
 class EthosPythonSurfaceError(Exception):
@@ -197,6 +198,55 @@ class EthosCli:
                 ) from exc
         return stdout
 
+    def crop_element(
+        self,
+        input_document: PathLike,
+        request: PathLike,
+        *,
+        check_id: str = _DEFAULT_CROP_CHECK_ID,
+        crop_source_pdf: Optional[PathLike] = None,
+        crop_dir: Optional[PathLike] = None,
+        timeout_seconds: Optional[float] = None,
+    ) -> Any:
+        """Run `ethos crop_element` for one native document element."""
+
+        if not check_id:
+            raise ValueError("check_id must be non-empty")
+        if (crop_source_pdf is None) != (crop_dir is None):
+            raise ValueError("crop_source_pdf and crop_dir must be provided together")
+        if timeout_seconds is not None and timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be greater than zero when provided")
+
+        document_path = Path(input_document)
+        if not document_path.is_file():
+            raise FileNotFoundError(os.fspath(input_document))
+        request_path = Path(request)
+        if not request_path.is_file():
+            raise FileNotFoundError(os.fspath(request))
+        source_pdf_path = None
+        if crop_source_pdf is not None:
+            source_pdf_path = Path(crop_source_pdf)
+            if not source_pdf_path.is_file():
+                raise FileNotFoundError(os.fspath(crop_source_pdf))
+        crop_dir_path = None if crop_dir is None else Path(crop_dir)
+
+        command = self._crop_element_command(
+            document_path,
+            request_path,
+            check_id=check_id,
+            crop_source_pdf=source_pdf_path,
+            crop_dir=crop_dir_path,
+        )
+        stdout = self._run(command, timeout_seconds=timeout_seconds)
+        try:
+            return json.loads(stdout)
+        except json.JSONDecodeError as exc:
+            raise EthosOutputError(
+                f"ethos returned invalid JSON: {exc.msg}",
+                command,
+                stdout,
+            ) from exc
+
     def _doc_parse_command(
         self,
         pdf_path: Path,
@@ -217,6 +267,35 @@ class EthosCli:
             command.extend(["--pages", pages])
         if diagnostics:
             command.append("--diagnostics")
+        return tuple(command)
+
+    def _crop_element_command(
+        self,
+        document_path: Path,
+        request_path: Path,
+        *,
+        check_id: str,
+        crop_source_pdf: Optional[Path],
+        crop_dir: Optional[Path],
+    ) -> Sequence[str]:
+        command = [
+            self.ethos_bin,
+            "crop_element",
+            os.fspath(document_path),
+            "--request",
+            os.fspath(request_path),
+            "--check-id",
+            check_id,
+        ]
+        if crop_source_pdf is not None and crop_dir is not None:
+            command.extend(
+                [
+                    "--crop-source-pdf",
+                    os.fspath(crop_source_pdf),
+                    "--crop-dir",
+                    os.fspath(crop_dir),
+                ]
+            )
         return tuple(command)
 
     def _run(
@@ -306,6 +385,29 @@ def parse_pdf_text(
         input_pdf,
         pages=pages,
         diagnostics=diagnostics,
+        timeout_seconds=timeout_seconds,
+    )
+
+
+def crop_element(
+    input_document: PathLike,
+    request: PathLike,
+    *,
+    ethos_bin: PathLike = "ethos",
+    check_id: str = _DEFAULT_CROP_CHECK_ID,
+    crop_source_pdf: Optional[PathLike] = None,
+    crop_dir: Optional[PathLike] = None,
+    timeout_seconds: Optional[float] = None,
+    env: Optional[Mapping[str, str]] = None,
+) -> Any:
+    """Resolve a crop element through a local ethos binary."""
+
+    return EthosCli(ethos_bin, env=env).crop_element(
+        input_document,
+        request,
+        check_id=check_id,
+        crop_source_pdf=crop_source_pdf,
+        crop_dir=crop_dir,
         timeout_seconds=timeout_seconds,
     )
 

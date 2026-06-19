@@ -30,7 +30,8 @@ Report cases:
 | `real-opendataloader-ungrounded` | Pinned real OpenDataLoader ungrounded fixture. |
 
 Usage-error cases: `invalid-table-cell-citation`, `invalid-bbox-citation`,
-`opendataloader-malformed-bbox-input`, and `opendataloader-unknown-page-input`.
+`opendataloader-malformed-bbox-input`, `opendataloader-zero-area-bbox-input`, and
+`opendataloader-unknown-page-input`.
 
 Summary cases: `native-ungrounded-summary`.
 

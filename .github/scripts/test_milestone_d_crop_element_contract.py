@@ -40,12 +40,14 @@ ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 CLI_MAIN = ROOT / "crates/ethos-cli/src/main.rs"
+VERIFY_SOURCE = ROOT / "crates/ethos-cli/src/cmd/verify.rs"
+CLI_CROP_ARTIFACTS_SOURCE = ROOT / "crates/ethos-cli/src/cmd/crop_artifacts.rs"
+CLI_CROP_SOURCE = ROOT / "crates/ethos-cli/src/cmd/crop.rs"
 VERIFY_TESTS = ROOT / "crates/ethos-cli/tests/verify.rs"
 EXPECTED_EXPLICIT_BLOCKERS = [
-    "a first-class `crop_element` CLI command or binding surface",
-    "Python, Node, MCP, or hosted crop API surfaces",
+    "additional CLI commands beyond source-bound `ethos crop_element`",
+    "Node, MCP, or hosted crop API surfaces",
     "sandbox/subprocess backend expansion",
-    "rendered-crop backend changes",
     "foreign-adapter crop coordinate hardening",
     "cross-platform rendered-crop byte identity claims",
 ]
@@ -55,6 +57,7 @@ EXPECTED_DIAGNOSTIC_MESSAGES = [
     "descriptor must bind exactly one logical check id",
     "descriptor crop_ref does not match logical identity tuple",
     "descriptor text_sha256 does not match verification evidence",
+    "document_fingerprint is missing",
     "request document_fingerprint does not match document fingerprint",
     "descriptor document_fingerprint does not match request",
     "request element_id does not match contract inventory case",
@@ -62,6 +65,8 @@ EXPECTED_DIAGNOSTIC_MESSAGES = [
     "resolved element is missing page",
     "descriptor page does not match resolved element",
     "resolved element is missing bbox",
+    "resolved element bbox has non-positive area",
+    "resolved element bbox exceeds page bounds",
     "descriptor bbox does not match resolved element",
     "request rendering does not match contract inventory case",
     "descriptor rendering_status does not match request",
@@ -94,6 +99,11 @@ EXPECTED_DIAGNOSTIC_CASES = [
             "request document_fingerprint does not match document fingerprint",
             "descriptor document_fingerprint does not match request",
         ],
+    },
+    {
+        "name": "request-document-fingerprint-missing",
+        "surface": "request_binding",
+        "expected_diagnostics": ["document_fingerprint is missing"],
     },
     {
         "name": "request-element-mismatch",
@@ -149,6 +159,16 @@ EXPECTED_DIAGNOSTIC_CASES = [
         "expected_diagnostics": ["resolved element is missing bbox"],
     },
     {
+        "name": "resolved-element-zero-area-bbox",
+        "surface": "request_binding",
+        "expected_diagnostics": ["resolved element bbox has non-positive area"],
+    },
+    {
+        "name": "resolved-element-bbox-outside-page",
+        "surface": "request_binding",
+        "expected_diagnostics": ["resolved element bbox exceeds page bounds"],
+    },
+    {
         "name": "descriptor-crop-ref-identity-drift",
         "surface": "descriptor_ref",
         "expected_diagnostics": [
@@ -202,6 +222,14 @@ def elements_by_id(document: dict) -> dict[str, dict]:
         element["id"]: element
         for element in document["payload"]["elements"]
         if "id" in element
+    }
+
+
+def pages_by_id(document: dict) -> dict[str, dict]:
+    return {
+        page["id"]: page
+        for page in document["payload"]["pages"]
+        if "id" in page
     }
 
 
@@ -306,6 +334,8 @@ def request_case_diagnostics(
 ) -> list[str]:
     diagnostics: list[str] = []
 
+    if not request["document_fingerprint"] or not document["fingerprint"]:
+        diagnostics.append("document_fingerprint is missing")
     if request["document_fingerprint"] != document["fingerprint"]:
         diagnostics.append("request document_fingerprint does not match document fingerprint")
     if descriptor["document_fingerprint"] != request["document_fingerprint"]:
@@ -318,15 +348,28 @@ def request_case_diagnostics(
         diagnostics.append("request element_id does not resolve in document")
         return diagnostics
 
+    page = None
     if "page" not in element:
         diagnostics.append("resolved element is missing page")
-    elif descriptor["page"] != element["page"]:
-        diagnostics.append("descriptor page does not match resolved element")
+    else:
+        page = pages_by_id(document).get(element["page"])
+        if page is None:
+            diagnostics.append("resolved element is missing page")
+        elif descriptor["page"] != element["page"]:
+            diagnostics.append("descriptor page does not match resolved element")
 
     if "bbox" not in element:
         diagnostics.append("resolved element is missing bbox")
-    elif descriptor["bbox"] != element["bbox"]:
-        diagnostics.append("descriptor bbox does not match resolved element")
+    else:
+        x0, y0, x1, y1 = element["bbox"]
+        if x0 >= x1 or y0 >= y1:
+            diagnostics.append("resolved element bbox has non-positive area")
+        if page is not None and (
+            x0 < 0 or y0 < 0 or x1 > page["width"] or y1 > page["height"]
+        ):
+            diagnostics.append("resolved element bbox exceeds page bounds")
+        if descriptor["bbox"] != element["bbox"]:
+            diagnostics.append("descriptor bbox does not match resolved element")
 
     if request["rendering"] != case["rendering_status"]:
         diagnostics.append("request rendering does not match contract inventory case")
@@ -349,6 +392,9 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
     stale_request_ref = dict(request, request_ref="request-" + "0" * 64)
     unknown_element_request = dict(request, element_id="e999999")
     stale_request = dict(request, document_fingerprint="sha256:" + "0" * 64)
+    missing_fingerprint_request = dict(request, document_fingerprint="")
+    missing_fingerprint_document = dict(document, fingerprint="")
+    missing_fingerprint_descriptor = dict(descriptor, document_fingerprint="")
     mismatched_element_request = dict(request, element_id="e000001")
     mismatched_rendering_case = dict(case, rendering_status="rendered")
 
@@ -365,6 +411,18 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
 
     document_without_bbox = deepcopy(document)
     del elements_by_id(document_without_bbox)[request["element_id"]]["bbox"]
+
+    zero_area_bbox = [10, 20, 10, 30]
+    document_with_zero_area_bbox = deepcopy(document)
+    elements_by_id(document_with_zero_area_bbox)[request["element_id"]]["bbox"] = zero_area_bbox
+    descriptor_with_zero_area_bbox = dict(descriptor, bbox=zero_area_bbox)
+
+    outside_page_bbox = [-1, 0, 10, 10]
+    document_with_outside_page_bbox = deepcopy(document)
+    elements_by_id(document_with_outside_page_bbox)[request["element_id"]][
+        "bbox"
+    ] = outside_page_bbox
+    descriptor_with_outside_page_bbox = dict(descriptor, bbox=outside_page_bbox)
 
     stale_crop_ref = dict(descriptor, crop_ref="crop-" + "0" * 64 + ".json")
     stale_text_sha256 = dict(descriptor, text_sha256="0" * 64)
@@ -383,6 +441,12 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
             stale_request,
             document,
             descriptor,
+            case,
+        ),
+        "request-document-fingerprint-missing": request_case_diagnostics(
+            missing_fingerprint_request,
+            missing_fingerprint_document,
+            missing_fingerprint_descriptor,
             case,
         ),
         "request-element-mismatch": request_case_diagnostics(
@@ -433,6 +497,18 @@ def inventory_diagnostic_outputs(inventory: dict) -> dict[str, list[str]]:
             descriptor,
             case,
         ),
+        "resolved-element-zero-area-bbox": request_case_diagnostics(
+            request,
+            document_with_zero_area_bbox,
+            descriptor_with_zero_area_bbox,
+            case,
+        ),
+        "resolved-element-bbox-outside-page": request_case_diagnostics(
+            request,
+            document_with_outside_page_bbox,
+            descriptor_with_outside_page_bbox,
+            case,
+        ),
         "descriptor-crop-ref-identity-drift": crop_ref_drift_diagnostics(stale_crop_ref),
         "descriptor-text-sha256-mismatch": descriptor_evidence_diagnostics(
             stale_text_sha256,
@@ -453,8 +529,10 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         block = target_block("milestone-d-crop-element-contract")
 
         required = [
+            "cargo test --locked -p ethos-core crop_element",
             "cargo test --locked -p ethos-cli --test verify "
             "native_verify_crop_dir_writes_deterministic_crop_descriptors",
+            "cargo test --locked -p ethos-cli --test verify crop_element_cli",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
@@ -484,20 +562,22 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-crop-element-contract.md", text, path)
 
-    def test_contract_defines_existing_carrier_not_new_surface(self) -> None:
+    def test_contract_defines_descriptor_cli_and_existing_verify_carrier(self) -> None:
         text = normalized_contract_text()
 
         self.assertIn("source-only pre-alpha contract work", text)
-        self.assertIn("does not create a first-class CLI command", text)
+        self.assertIn("internal Rust resolver in `ethos-core::crop_element`", text)
+        self.assertIn("source-bound crop descriptors", text)
+        self.assertIn("source-only pre-alpha `ethos crop_element` CLI command", text)
+        self.assertIn("internal pre-alpha Python surface wraps the same source-bound CLI", text)
         self.assertIn(
-            "The current executable crop carrier remains `ethos verify --crop-dir` "
-            "and optional `--crop-source-pdf`",
+            "The existing `ethos verify --crop-dir` and optional `--crop-source-pdf` "
+            "carrier remain the verifier evidence-artifact path",
             text,
         )
         self.assertIn(
-            "`crop_element` names the future first-class contract between a parsed Ethos "
-            "document, an explicit element locator, a crop descriptor, and an optional rendered "
-            "artifact",
+            "`crop_element` names the first-class descriptor contract between a parsed Ethos "
+            "document, an explicit element locator, and a crop descriptor",
             text,
         )
 
@@ -613,7 +693,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertEqual(inventory["schema_version"], 1)
         self.assertEqual(inventory["contract"], "crop_element.v1")
         self.assertEqual(inventory["status"], "source-only-pre-alpha")
-        self.assertEqual(inventory["carrier"], "ethos verify --crop-dir")
+        self.assertEqual(inventory["carrier"], "ethos crop_element")
         self.assertEqual(EXPECTED_EXPLICIT_BLOCKERS, inventory["explicit_blockers"])
 
         case_names = [case["name"] for case in inventory["cases"]]
@@ -718,6 +798,36 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertIn(
             "resolved element is missing bbox",
             request_case_diagnostics(request, document_without_bbox, descriptor, case),
+        )
+
+        zero_area_bbox = [10, 20, 10, 30]
+        document_with_zero_area_bbox = deepcopy(document)
+        elements_by_id(document_with_zero_area_bbox)[request["element_id"]][
+            "bbox"
+        ] = zero_area_bbox
+        self.assertIn(
+            "resolved element bbox has non-positive area",
+            request_case_diagnostics(
+                request,
+                document_with_zero_area_bbox,
+                dict(descriptor, bbox=zero_area_bbox),
+                case,
+            ),
+        )
+
+        outside_page_bbox = [-1, 0, 10, 10]
+        document_with_outside_page_bbox = deepcopy(document)
+        elements_by_id(document_with_outside_page_bbox)[request["element_id"]][
+            "bbox"
+        ] = outside_page_bbox
+        self.assertIn(
+            "resolved element bbox exceeds page bounds",
+            request_case_diagnostics(
+                request,
+                document_with_outside_page_bbox,
+                dict(descriptor, bbox=outside_page_bbox),
+                case,
+            ),
         )
 
     def test_contract_inventory_binds_descriptor_to_verification_evidence(self) -> None:
@@ -849,7 +959,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
                 field,
             )
 
-    def test_current_cli_surface_has_no_first_class_crop_element_command(self) -> None:
+    def test_current_cli_surface_has_descriptor_only_crop_element_command(self) -> None:
         source = CLI_MAIN.read_text(encoding="utf-8")
         match = re.search(
             r"#\[derive\(Subcommand\)\]\s*enum Command \{\n(?P<body>.*?)\n\}",
@@ -859,8 +969,25 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         self.assertIsNotNone(match, "missing top-level CLI Command enum")
 
         command_enum = match.group("body")
-        for alias in ["crop-element", "crop_element", "CropElement"]:
-            self.assertNotIn(alias, command_enum)
+        self.assertIn('#[command(name = "crop_element")]', command_enum)
+        self.assertIn("CropElement(CropElementArgs)", command_enum)
+        self.assertIn("pub(crate) struct CropElementArgs", source)
+        self.assertIn("cmd::crop::crop_element(args)", source)
+
+        crop_source = CLI_CROP_SOURCE.read_text(encoding="utf-8")
+        self.assertIn("resolve_crop_element_descriptor", crop_source)
+        self.assertIn("read_crop_element_request", crop_source)
+        self.assertIn("serde_json::from_slice", crop_source)
+
+        tests = VERIFY_TESTS.read_text(encoding="utf-8")
+        for test_name in [
+            "crop_element_cli_writes_descriptor",
+            "crop_element_cli_fails_closed_on_invalid_check_id",
+            "crop_element_cli_rendered_request_requires_source_pdf_and_crop_dir",
+            "crop_element_cli_rendered_source_pdf_must_match_document_source",
+            "crop_element_cli_writes_rendered_artifacts_when_pdfium_is_configured",
+        ]:
+            self.assertIn(f"fn {test_name}()", tests)
 
     def test_existing_verify_tests_cover_current_crop_carrier(self) -> None:
         text = VERIFY_TESTS.read_text(encoding="utf-8")
@@ -872,6 +999,43 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             "crop_source_pdf_writes_rendered_crop_artifacts_when_pdfium_is_configured",
         ]:
             self.assertIn(f"fn {test_name}()", text)
+
+    def test_current_crop_carrier_uses_core_crop_ref_identity(self) -> None:
+        text = VERIFY_SOURCE.read_text(encoding="utf-8")
+
+        self.assertIn("ethos_core::crop_element::crop_element_crop_ref", text)
+        self.assertNotIn('"version": "ethos.logical_crop_ref.v1"', text)
+
+    def test_current_crop_carrier_serializes_core_descriptor_type(self) -> None:
+        text = (
+            VERIFY_SOURCE.read_text(encoding="utf-8")
+            + "\n"
+            + CLI_CROP_ARTIFACTS_SOURCE.read_text(encoding="utf-8")
+        )
+
+        self.assertIn("BTreeMap<String, CropElementDescriptor>", text)
+        self.assertIn("serde_json::to_value(descriptor)", text)
+        self.assertNotIn("serde_json::Map::new()", text)
+
+    def test_current_crop_carrier_has_fail_closed_descriptor_diagnostics(self) -> None:
+        text = (
+            VERIFY_SOURCE.read_text(encoding="utf-8")
+            + "\n"
+            + CLI_CROP_ARTIFACTS_SOURCE.read_text(encoding="utf-8")
+        )
+
+        for test_name in [
+            "write_crop_artifacts_requires_document_fingerprint_for_descriptors",
+            "write_crop_artifacts_rejects_crop_ref_collisions",
+            "crop_artifact_path_rejects_unsafe_crop_refs",
+        ]:
+            self.assertIn(f"fn {test_name}()", text)
+        for message in [
+            "crop descriptor requires document fingerprint",
+            "crop_ref collision while writing crop descriptors",
+            "crop_ref is not a safe artifact filename",
+        ]:
+            self.assertIn(message, text)
 
 
 if __name__ == "__main__":

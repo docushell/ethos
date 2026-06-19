@@ -169,6 +169,9 @@ fn bbox_from(value: &Value) -> Result<[i64; 4], AdapterError> {
     if out[0] > out[2] || out[1] > out[3] {
         return Err(err("bbox is malformed (x0>x1 or y0>y1)"));
     }
+    if out[0] == out[2] || out[1] == out[3] {
+        return Err(err("bbox must have positive area"));
+    }
     Ok(out)
 }
 
@@ -1367,6 +1370,18 @@ mod tests {
         assert!(OdlJsonSource::from_json_str("not json").is_err());
         assert!(OdlJsonSource::from_json_str("{}").is_err());
         assert!(OdlJsonSource::from_json_str(r#"{"tool":{"name":"x","version":"1"},"pages":[],"elements":[{"page":1,"bbox":[5,5,1,1]}]}"#).is_err());
+    }
+
+    #[test]
+    fn rejects_zero_area_bboxes() {
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[{"page":1,"bbox":[1,1,1,2]}]}"#,
+            "bbox must have positive area",
+        );
+        assert_error_contains(
+            r#"{"file name":"zero.pdf","number of pages":1,"kids":[{"type":"paragraph","page number":1,"bounding box":[1,1,2,1],"content":"A"}]}"#,
+            "bbox must have positive area",
+        );
     }
 
     fn assert_error_contains(json: &str, expected: &str) {

@@ -64,6 +64,12 @@ EXPECTED_USAGE_DIAGNOSTIC_CASES = [
         "stderr_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)",
     },
     {
+        "name": "opendataloader-zero-area-bbox-input",
+        "exit_code": 2,
+        "stdout": "empty",
+        "stderr_contains": "opendataloader-json adapter: bbox must have positive area",
+    },
+    {
         "name": "opendataloader-unknown-page-input",
         "exit_code": 2,
         "stdout": "empty",

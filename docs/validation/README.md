@@ -31,6 +31,9 @@ Records:
 - `milestone-d-contract-closeout-prep-2026-06-19.md` - internal Milestone D source-only contract
   closeout prep passed through `make milestone-d-internal-contracts`; final D exit still requires
   review, merge to `main`, and a fresh validation run.
+- `milestone-d-contract-closeout-validation-2026-06-19.md` - internal Milestone D source-only
+  contract closeout passed through `make milestone-d-internal-contracts`; implementation lanes
+  and public blockers remain outside this validation record.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.

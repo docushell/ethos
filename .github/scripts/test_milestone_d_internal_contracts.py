@@ -47,6 +47,7 @@ OUT_OF_SCOPE_PUBLIC_CLAIM_TERMS = [
     "parser-quality",
 ]
 D_CLOSEOUT_PREP_GUARD = "$(PYTHON) .github/scripts/test_milestone_d_closeout_prep_record.py"
+D_CLOSEOUT_RECORD_GUARD = "$(PYTHON) .github/scripts/test_milestone_d_closeout_record.py"
 SURFACE_EXPANSION_BLOCKER_PATTERN = re.compile(r"\b(surfaces?|bindings?|methods?)\b")
 COMMAND_EXPANSION_BLOCKER_PATTERN = re.compile(r"\b(commands?|cli)\b")
 INVENTORY_REPO_PATH_KEYS = {
@@ -154,13 +155,15 @@ CONTRACT_REGISTRY = [
     },
     {
         "contract": "crop_element.v1",
-        "carrier": "ethos verify --crop-dir",
+        "carrier": "ethos crop_element",
         "target": "milestone-d-crop-element-contract",
         "doc": "docs/milestone-d-crop-element-contract.md",
         "inventory": "examples/crop/crop_element_v1_contract.json",
         "schema": "schemas/ethos-crop-element-contract.schema.json",
         "commands": [
+            "cargo test --locked -p ethos-core crop_element",
             "cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors",
+            "cargo test --locked -p ethos-cli --test verify crop_element_cli",
         ]
         + COMMON_CONTRACT_GATES
         + [
@@ -175,7 +178,10 @@ CONTRACT_REGISTRY = [
         "doc": "docs/milestone-d-crop-element-surface-shape-contract.md",
         "inventory": "examples/crop/crop_element_surface_shape_v1_contract.json",
         "schema": "schemas/ethos-crop-element-surface-shape-contract.schema.json",
-        "commands": COMMON_CONTRACT_GATES
+        "commands": [
+            "$(MAKE) python-surface-test PYTHON=$(PYTHON)",
+        ]
+        + COMMON_CONTRACT_GATES
         + [
             "$(PYTHON) .github/scripts/test_milestone_d_crop_element_surface_shape_contract.py",
             "git diff --check",
@@ -190,6 +196,8 @@ CONTRACT_REGISTRY = [
         "schema": "schemas/ethos-sandbox-subprocess-contract.schema.json",
         "commands": [
             "cargo test --locked -p ethos-cli json_artifact_header",
+            "cargo test --locked -p ethos-cli worker_pipe_limit",
+            "cargo test --locked -p ethos-cli worker_error_envelope",
             "cargo test --locked -p ethos-cli --test pdf_parse worker",
         ]
         + COMMON_CONTRACT_GATES
@@ -477,6 +485,7 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
         for target in registered_targets():
             self.assertIn(f"$(MAKE) {target} PYTHON=$(PYTHON)", block)
         self.assertIn(D_CLOSEOUT_PREP_GUARD, block)
+        self.assertIn(D_CLOSEOUT_RECORD_GUARD, block)
         self.assertIn("$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py", block)
         self.assertIn("git diff --check", block)
 
@@ -487,6 +496,7 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             [f"$(MAKE) {target} PYTHON=$(PYTHON)" for target in registered_targets()]
             + [
                 D_CLOSEOUT_PREP_GUARD,
+                D_CLOSEOUT_RECORD_GUARD,
                 "$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py",
                 "git diff --check",
             ],
@@ -539,6 +549,7 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
     def test_registered_contract_commands_stay_on_source_tree_validation_tools(self) -> None:
         allowed_prefixes = (
             "cargo test ",
+            "$(MAKE) python-surface-test ",
             "$(PYTHON) .github/scripts/",
             "$(PYTHON) schemas/",
             "git diff --check",

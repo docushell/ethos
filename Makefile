@@ -80,7 +80,9 @@ milestone-d-grounding-source-contract:
 	git diff --check
 
 milestone-d-crop-element-contract:
+	cargo test --locked -p ethos-core crop_element
 	cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors
+	cargo test --locked -p ethos-cli --test verify crop_element_cli
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
 	$(PYTHON) .github/scripts/test_roadmap_status.py
@@ -88,6 +90,7 @@ milestone-d-crop-element-contract:
 	git diff --check
 
 milestone-d-crop-element-surface-shape-contract:
+	$(MAKE) python-surface-test PYTHON=$(PYTHON)
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
 	$(PYTHON) .github/scripts/test_roadmap_status.py
@@ -96,6 +99,8 @@ milestone-d-crop-element-surface-shape-contract:
 
 milestone-d-sandbox-subprocess-contract:
 	cargo test --locked -p ethos-cli json_artifact_header
+	cargo test --locked -p ethos-cli worker_pipe_limit
+	cargo test --locked -p ethos-cli worker_error_envelope
 	cargo test --locked -p ethos-cli --test pdf_parse worker
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
@@ -131,6 +136,7 @@ milestone-d-internal-contracts:
 	$(MAKE) milestone-d-crop-element-surface-shape-contract PYTHON=$(PYTHON)
 	$(MAKE) milestone-d-sandbox-subprocess-contract PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/test_milestone_d_closeout_prep_record.py
+	$(PYTHON) .github/scripts/test_milestone_d_closeout_record.py
 	$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py
 	git diff --check
 

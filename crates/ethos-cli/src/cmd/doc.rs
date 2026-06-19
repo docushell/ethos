@@ -23,9 +23,10 @@ use ethos_core::traits::EthosPdfBackend as _;
 
 use crate::assembly::assemble_document;
 use crate::worker::{
-    maybe_exit_for_worker_failure_diagnostics_test, maybe_fail_for_worker_memory_limit_test,
-    maybe_sleep_for_worker_timeout_test, parse_pdf_json_artifact_with_worker,
-    parse_pdf_with_worker, sha256_hex, worker_json_artifact_header_bytes, WorkerJsonArtifact,
+    maybe_emit_worker_stdout_for_pipe_limit_test, maybe_exit_for_worker_failure_diagnostics_test,
+    maybe_fail_for_worker_memory_limit_test, maybe_sleep_for_worker_timeout_test,
+    parse_pdf_json_artifact_with_worker, parse_pdf_with_worker, sha256_hex,
+    worker_json_artifact_header_bytes, WorkerJsonArtifact,
 };
 use crate::{
     ensure_file_within_limit, read_document, read_file_limited, write_output, DocParseArgs,
@@ -77,6 +78,7 @@ fn parse_config(pages: Option<&str>, max_parse_ms: Option<u64>) -> Result<ParseC
 }
 
 pub(crate) fn pdfium_worker(args: PdfiumWorkerArgs) -> Result<(), Failure> {
+    maybe_emit_worker_stdout_for_pipe_limit_test();
     maybe_sleep_for_worker_timeout_test();
     maybe_exit_for_worker_failure_diagnostics_test();
     maybe_fail_for_worker_memory_limit_test()?;

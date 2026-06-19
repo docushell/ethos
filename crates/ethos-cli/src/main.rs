@@ -77,6 +77,9 @@ enum Command {
     Verify(VerifyArgs),
     /// Recompute and check a document fingerprint
     Fingerprint(FingerprintArgs),
+    /// Source-only pre-alpha crop descriptor for one native document element
+    #[command(name = "crop_element")]
+    CropElement(CropElementArgs),
     /// Internal killable PDFium worker. Not a public CLI surface.
     #[command(name = "__pdfium-worker", hide = true)]
     PdfiumWorker(PdfiumWorkerArgs),
@@ -123,6 +126,27 @@ pub(crate) struct FingerprintArgs {
     /// Internal/test override for the parse timeout limit.
     #[arg(long, hide = true)]
     pub(crate) max_parse_ms: Option<u64>,
+}
+
+#[derive(Args)]
+pub(crate) struct CropElementArgs {
+    /// Canonical document (`*.ethos.json`)
+    pub(crate) input: PathBuf,
+    /// Source-only crop_element request envelope
+    #[arg(long)]
+    pub(crate) request: PathBuf,
+    /// Logical check id to bind into the descriptor
+    #[arg(long, default_value = "v0001")]
+    pub(crate) check_id: String,
+    /// Directory for rendered crop descriptor and PNG artifacts
+    #[arg(long)]
+    pub(crate) crop_dir: Option<PathBuf>,
+    /// Original PDF bytes for rendered crop production
+    #[arg(long)]
+    pub(crate) crop_source_pdf: Option<PathBuf>,
+    /// Output path for crop descriptor JSON (default: stdout)
+    #[arg(long)]
+    pub(crate) out: Option<PathBuf>,
 }
 
 #[derive(Args)]
@@ -328,6 +352,7 @@ fn run(cli: Cli) -> Result<(), Failure> {
         } => cmd::security::security_report(args),
         Command::Verify(args) => cmd::verify::verify(args),
         Command::Fingerprint(args) => cmd::doc::fingerprint(args),
+        Command::CropElement(args) => cmd::crop::crop_element(args),
         Command::PdfiumWorker(args) => cmd::doc::pdfium_worker(args),
         Command::PdfiumGeometryProbe(args) => cmd::doc::pdfium_geometry_probe(args),
         Command::TableCandidateProbe(args) => cmd::doc::table_candidate_probe(args),

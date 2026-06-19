@@ -29,6 +29,7 @@ from ethos_pdf import (
     EthosNotFoundError,
     EthosOutputError,
     EthosTimeoutError,
+    crop_element,
     parse_pdf_json,
 )
 
@@ -50,6 +51,23 @@ if mode == "sleep":
     raise SystemExit(0)
 if mode == "invalid-json":
     sys.stdout.write("not-json\\n")
+    raise SystemExit(0)
+
+if sys.argv[1:2] == ["crop_element"]:
+    if "--request" not in sys.argv or "--check-id" not in sys.argv:
+        sys.stderr.write("missing crop arguments\\n")
+        raise SystemExit(2)
+    sys.stdout.write(
+        json.dumps(
+            {
+                "artifact_type": "ethos.crop_descriptor.v1",
+                "argv": sys.argv[1:],
+                "ok": True,
+            },
+            sort_keys=True,
+        )
+        + "\\n"
+    )
     raise SystemExit(0)
 
 if sys.argv[1:3] != ["doc", "parse"]:
@@ -83,6 +101,13 @@ class PythonSurfaceTests(unittest.TestCase):
         )
         self.pdf = self.root / "document.pdf"
         self.pdf.write_bytes(b"%PDF-1.7\n")
+        self.document = self.root / "document.ethos.json"
+        self.document.write_text("{}", encoding="utf-8")
+        self.crop_request = self.root / "crop-request.json"
+        self.crop_request.write_text("{}", encoding="utf-8")
+        self.crop_source_pdf = self.root / "source.pdf"
+        self.crop_source_pdf.write_bytes(b"%PDF-1.7\n")
+        self.crop_dir = self.root / "crops"
 
     def tearDown(self) -> None:
         self.tempdir.cleanup()
@@ -166,6 +191,83 @@ class PythonSurfaceTests(unittest.TestCase):
 
         self.assertIn("invalid JSON", str(caught.exception))
         self.assertEqual(caught.exception.stdout, "not-json\n")
+
+    def test_crop_element_invokes_descriptor_cli_with_request_and_check_id(self) -> None:
+        result = crop_element(
+            self.document,
+            self.crop_request,
+            ethos_bin=self.fake_ethos,
+            check_id="v0002",
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["artifact_type"], "ethos.crop_descriptor.v1")
+        self.assertEqual(
+            result["argv"],
+            [
+                "crop_element",
+                str(self.document),
+                "--request",
+                str(self.crop_request),
+                "--check-id",
+                "v0002",
+            ],
+        )
+
+    def test_crop_element_method_uses_default_check_id(self) -> None:
+        result = EthosCli(self.fake_ethos).crop_element(self.document, self.crop_request)
+
+        self.assertEqual(result["argv"][-2:], ["--check-id", "v0001"])
+
+    def test_crop_element_rejects_empty_check_id_before_command_execution(self) -> None:
+        with self.assertRaises(ValueError):
+            EthosCli(self.fake_ethos).crop_element(
+                self.document,
+                self.crop_request,
+                check_id="",
+            )
+
+    def test_crop_element_missing_request_raises_file_not_found(self) -> None:
+        with self.assertRaises(FileNotFoundError):
+            EthosCli(self.fake_ethos).crop_element(
+                self.document,
+                self.root / "missing-request.json",
+            )
+
+    def test_crop_element_invalid_json_stdout_raises_output_error(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "invalid-json"})
+
+        with self.assertRaises(EthosOutputError) as caught:
+            cli.crop_element(self.document, self.crop_request)
+
+        self.assertIn("invalid JSON", str(caught.exception))
+        self.assertEqual(caught.exception.stdout, "not-json\n")
+
+    def test_crop_element_passes_rendered_artifact_arguments(self) -> None:
+        result = EthosCli(self.fake_ethos).crop_element(
+            self.document,
+            self.crop_request,
+            crop_source_pdf=self.crop_source_pdf,
+            crop_dir=self.crop_dir,
+        )
+
+        self.assertEqual(
+            result["argv"][-4:],
+            [
+                "--crop-source-pdf",
+                str(self.crop_source_pdf),
+                "--crop-dir",
+                str(self.crop_dir),
+            ],
+        )
+
+    def test_crop_element_rejects_partial_rendered_arguments(self) -> None:
+        with self.assertRaises(ValueError):
+            EthosCli(self.fake_ethos).crop_element(
+                self.document,
+                self.crop_request,
+                crop_source_pdf=self.crop_source_pdf,
+            )
 
 
 if __name__ == "__main__":

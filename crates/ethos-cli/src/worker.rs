@@ -16,7 +16,7 @@
 
 use std::fmt;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command as ProcessCommand, ExitStatus, Output, Stdio};
 use std::thread::{self, JoinHandle};
@@ -35,6 +35,13 @@ pub(crate) const WORKER_JSON_ARTIFACT_SCHEMA: &str = "ethos-worker-json-artifact
 // Applied independently to stdout and stderr; if a child keeps writing after a reader rejects,
 // the existing worker timeout remains the hard stop.
 const WORKER_PIPE_MAX_BYTES: usize = 512 * 1024 * 1024;
+const WORKER_JSON_ARTIFACT_HEADER_FIELDS: &[&str] = &[
+    "schema_version",
+    "document_fingerprint",
+    "payload_sha256",
+    "output_sha256",
+    "output_bytes",
+];
 
 pub(crate) struct WorkerJsonArtifact {
     _temp_dir: TempDir,
@@ -157,20 +164,19 @@ fn worker_json_artifact_from_header(
     temp_dir: TempDir,
     path: PathBuf,
 ) -> Result<WorkerJsonArtifact, Failure> {
-    let value: serde_json::Value = serde_json::from_slice(stdout).map_err(|_| {
-        EthosError::internal("pdfium worker returned an invalid JSON artifact header")
-    })?;
-    let schema_version = required_header_string(&value, "schema_version")?;
+    let header = worker_json_artifact_header_from_stdout(stdout)?;
+    let schema_version = required_header_string(header.schema_version.as_ref(), "schema_version")?;
     if schema_version != WORKER_JSON_ARTIFACT_SCHEMA {
         return Err(EthosError::internal(
             "pdfium worker returned an unsupported JSON artifact header",
         )
         .into());
     }
-    let document_fingerprint = required_header_string(&value, "document_fingerprint")?;
-    let payload_sha256 = required_header_string(&value, "payload_sha256")?;
-    let output_sha256 = required_header_string(&value, "output_sha256")?;
-    let output_bytes = required_header_u64(&value, "output_bytes")?;
+    let document_fingerprint =
+        required_header_string(header.document_fingerprint.as_ref(), "document_fingerprint")?;
+    let payload_sha256 = required_header_string(header.payload_sha256.as_ref(), "payload_sha256")?;
+    let output_sha256 = required_header_string(header.output_sha256.as_ref(), "output_sha256")?;
+    let output_bytes = required_header_u64(header.output_bytes.as_ref(), "output_bytes")?;
 
     let (actual_sha256, actual_bytes) = file_sha256(&path)?;
     if actual_bytes != output_bytes || actual_sha256 != output_sha256 {
@@ -193,9 +199,99 @@ fn worker_json_artifact_from_header(
     })
 }
 
-fn required_header_string(value: &serde_json::Value, key: &str) -> Result<String, Failure> {
+#[derive(Default)]
+struct WorkerJsonArtifactHeaderFields {
+    schema_version: Option<serde_json::Value>,
+    document_fingerprint: Option<serde_json::Value>,
+    payload_sha256: Option<serde_json::Value>,
+    output_sha256: Option<serde_json::Value>,
+    output_bytes: Option<serde_json::Value>,
+}
+
+fn worker_json_artifact_header_from_stdout(
+    stdout: &[u8],
+) -> Result<WorkerJsonArtifactHeaderFields, Failure> {
+    let mut deserializer = serde_json::Deserializer::from_slice(stdout);
+    let header = deserializer
+        .deserialize_map(WorkerJsonArtifactHeaderVisitor)
+        .map_err(|_| {
+            Failure::Ethos(EthosError::internal(
+                "pdfium worker returned an invalid JSON artifact header",
+            ))
+        })?;
+    deserializer.end().map_err(|_| {
+        Failure::Ethos(EthosError::internal(
+            "pdfium worker returned an invalid JSON artifact header",
+        ))
+    })?;
+    Ok(header)
+}
+
+struct WorkerJsonArtifactHeaderVisitor;
+
+impl<'de> Visitor<'de> for WorkerJsonArtifactHeaderVisitor {
+    type Value = WorkerJsonArtifactHeaderFields;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a strict PDF worker JSON artifact header")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        let mut header = WorkerJsonArtifactHeaderFields::default();
+
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "schema_version" => {
+                    set_header_value(&mut header.schema_version, "schema_version", &mut map)?
+                }
+                "document_fingerprint" => set_header_value(
+                    &mut header.document_fingerprint,
+                    "document_fingerprint",
+                    &mut map,
+                )?,
+                "payload_sha256" => {
+                    set_header_value(&mut header.payload_sha256, "payload_sha256", &mut map)?
+                }
+                "output_sha256" => {
+                    set_header_value(&mut header.output_sha256, "output_sha256", &mut map)?
+                }
+                "output_bytes" => {
+                    set_header_value(&mut header.output_bytes, "output_bytes", &mut map)?
+                }
+                _ => {
+                    let _ = map.next_value::<IgnoredAny>()?;
+                    return Err(de::Error::unknown_field(
+                        &key,
+                        WORKER_JSON_ARTIFACT_HEADER_FIELDS,
+                    ));
+                }
+            }
+        }
+
+        Ok(header)
+    }
+}
+
+fn set_header_value<'de, A>(
+    slot: &mut Option<serde_json::Value>,
+    key: &'static str,
+    map: &mut A,
+) -> Result<(), A::Error>
+where
+    A: MapAccess<'de>,
+{
+    if slot.is_some() {
+        return Err(de::Error::duplicate_field(key));
+    }
+    *slot = Some(map.next_value()?);
+    Ok(())
+}
+
+fn required_header_string(value: Option<&serde_json::Value>, key: &str) -> Result<String, Failure> {
     value
-        .get(key)
         .and_then(serde_json::Value::as_str)
         .map(ToString::to_string)
         .ok_or_else(|| {
@@ -203,13 +299,10 @@ fn required_header_string(value: &serde_json::Value, key: &str) -> Result<String
         })
 }
 
-fn required_header_u64(value: &serde_json::Value, key: &str) -> Result<u64, Failure> {
-    value
-        .get(key)
-        .and_then(serde_json::Value::as_u64)
-        .ok_or_else(|| {
-            EthosError::internal(format!("pdfium worker JSON artifact header missing {key}")).into()
-        })
+fn required_header_u64(value: Option<&serde_json::Value>, key: &str) -> Result<u64, Failure> {
+    value.and_then(serde_json::Value::as_u64).ok_or_else(|| {
+        EthosError::internal(format!("pdfium worker JSON artifact header missing {key}")).into()
+    })
 }
 
 fn file_sha256(path: &Path) -> Result<(String, u64), Failure> {
@@ -330,8 +423,8 @@ fn run_worker_with_timeout(
         .stderr
         .take()
         .ok_or_else(|| EthosError::internal("pdfium worker stderr unavailable"))?;
-    let stdout_handle = thread::spawn(move || read_pipe(stdout));
-    let stderr_handle = thread::spawn(move || read_pipe(stderr));
+    let mut stdout_reader = WorkerPipeReader::spawn(stdout);
+    let mut stderr_reader = WorkerPipeReader::spawn(stderr);
 
     let start = Instant::now();
     loop {
@@ -339,19 +432,26 @@ fn run_worker_with_timeout(
             .try_wait()
             .map_err(|_| EthosError::internal("pdfium worker wait failed"))?
         {
-            return collect_worker_output(status, stdout_handle, stderr_handle);
+            return collect_worker_output(status, stdout_reader, stderr_reader);
+        }
+        if let Err(failure) = poll_worker_readers(&mut stdout_reader, &mut stderr_reader) {
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = stdout_reader.finish();
+            let _ = stderr_reader.finish();
+            return Err(failure);
         }
         if start.elapsed() >= timeout {
             if let Some(status) = child
                 .try_wait()
                 .map_err(|_| EthosError::internal("pdfium worker wait failed"))?
             {
-                return collect_worker_output(status, stdout_handle, stderr_handle);
+                return collect_worker_output(status, stdout_reader, stderr_reader);
             }
             let _ = child.kill();
             let _ = child.wait();
-            let _ = join_reader(stdout_handle);
-            let _ = join_reader(stderr_handle);
+            let _ = stdout_reader.finish();
+            let _ = stderr_reader.finish();
             return Err(
                 EthosError::new(ErrorCode::ParseTimeout, "parse exceeded max_parse_ms").into(),
             );
@@ -363,7 +463,21 @@ fn run_worker_with_timeout(
 }
 
 fn read_pipe<R: Read>(pipe: R) -> Result<Vec<u8>, EthosError> {
-    read_pipe_limited(pipe, WORKER_PIPE_MAX_BYTES)
+    read_pipe_limited(pipe, worker_pipe_max_bytes())
+}
+
+#[cfg(debug_assertions)]
+fn worker_pipe_max_bytes() -> usize {
+    std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_PIPE_MAX_BYTES")
+        .ok()
+        .and_then(|raw| raw.parse::<usize>().ok())
+        .filter(|limit| *limit > 0)
+        .unwrap_or(WORKER_PIPE_MAX_BYTES)
+}
+
+#[cfg(not(debug_assertions))]
+fn worker_pipe_max_bytes() -> usize {
+    WORKER_PIPE_MAX_BYTES
 }
 
 fn read_pipe_limited<R: Read>(mut pipe: R, max_bytes: usize) -> Result<Vec<u8>, EthosError> {
@@ -387,23 +501,76 @@ fn read_pipe_limited<R: Read>(mut pipe: R, max_bytes: usize) -> Result<Vec<u8>, 
     Ok(bytes)
 }
 
+struct WorkerPipeReader {
+    handle: Option<JoinHandle<Result<Vec<u8>, EthosError>>>,
+    bytes: Option<Vec<u8>>,
+}
+
+impl WorkerPipeReader {
+    fn spawn<R>(pipe: R) -> Self
+    where
+        R: Read + Send + 'static,
+    {
+        WorkerPipeReader {
+            handle: Some(thread::spawn(move || read_pipe(pipe))),
+            bytes: None,
+        }
+    }
+
+    fn poll(&mut self) -> Result<(), Failure> {
+        if self.bytes.is_some() || !self.handle.as_ref().is_some_and(JoinHandle::is_finished) {
+            return Ok(());
+        }
+        let handle = self.handle.take().expect("pipe reader handle is present");
+        match join_pipe_reader(handle)? {
+            Ok(bytes) => {
+                self.bytes = Some(bytes);
+                Ok(())
+            }
+            Err(error) => {
+                self.bytes = Some(Vec::new());
+                Err(Failure::Ethos(error))
+            }
+        }
+    }
+
+    fn finish(mut self) -> Result<Vec<u8>, Failure> {
+        if let Some(bytes) = self.bytes.take() {
+            return Ok(bytes);
+        }
+        match self.handle.take() {
+            Some(handle) => join_pipe_reader(handle)?.map_err(Failure::Ethos),
+            None => Ok(Vec::new()),
+        }
+    }
+}
+
+fn poll_worker_readers(
+    stdout_reader: &mut WorkerPipeReader,
+    stderr_reader: &mut WorkerPipeReader,
+) -> Result<(), Failure> {
+    stdout_reader.poll()?;
+    stderr_reader.poll()
+}
+
 fn collect_worker_output(
     status: ExitStatus,
-    stdout_handle: JoinHandle<Result<Vec<u8>, EthosError>>,
-    stderr_handle: JoinHandle<Result<Vec<u8>, EthosError>>,
+    stdout_reader: WorkerPipeReader,
+    stderr_reader: WorkerPipeReader,
 ) -> Result<Output, Failure> {
     Ok(Output {
         status,
-        stdout: join_reader(stdout_handle)?,
-        stderr: join_reader(stderr_handle)?,
+        stdout: stdout_reader.finish()?,
+        stderr: stderr_reader.finish()?,
     })
 }
 
-fn join_reader(handle: JoinHandle<Result<Vec<u8>, EthosError>>) -> Result<Vec<u8>, Failure> {
+fn join_pipe_reader(
+    handle: JoinHandle<Result<Vec<u8>, EthosError>>,
+) -> Result<Result<Vec<u8>, EthosError>, Failure> {
     handle
         .join()
-        .map_err(|_| EthosError::internal("pdfium worker pipe reader failed"))?
-        .map_err(Failure::Ethos)
+        .map_err(|_| Failure::Ethos(EthosError::internal("pdfium worker pipe reader failed")))
 }
 
 fn worker_usage_message(stderr: &[u8]) -> String {
@@ -415,12 +582,123 @@ fn worker_usage_message(stderr: &[u8]) -> String {
         .to_string()
 }
 
+#[derive(Default)]
+struct WorkerErrorEnvelopeFields {
+    error: Option<WorkerErrorFields>,
+}
+
+#[derive(Default)]
+struct WorkerErrorFields {
+    code: Option<ErrorCode>,
+    message: Option<String>,
+}
+
 fn worker_ethos_error(stderr: &[u8]) -> Option<EthosError> {
-    let value: serde_json::Value = serde_json::from_slice(stderr).ok()?;
-    let error = value.get("error")?;
-    let code: ErrorCode = serde_json::from_value(error.get("code")?.clone()).ok()?;
-    let message = error.get("message")?.as_str()?;
+    let mut deserializer = serde_json::Deserializer::from_slice(stderr);
+    let envelope = deserializer
+        .deserialize_map(WorkerErrorEnvelopeVisitor)
+        .ok()?;
+    deserializer.end().ok()?;
+    let error = envelope.error?;
+    let code = error.code?;
+    let message = error.message?;
+    if message.trim().is_empty() {
+        return None;
+    }
     Some(EthosError::new(code, message))
+}
+
+struct WorkerErrorEnvelopeVisitor;
+
+impl<'de> Visitor<'de> for WorkerErrorEnvelopeVisitor {
+    type Value = WorkerErrorEnvelopeFields;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a stable PDF worker error envelope")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        const FIELDS: &[&str] = &["error", "diagnostics"];
+        let mut envelope = WorkerErrorEnvelopeFields::default();
+        let mut diagnostics_seen = false;
+
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "error" => {
+                    if envelope.error.is_some() {
+                        return Err(de::Error::duplicate_field("error"));
+                    }
+                    envelope.error = Some(map.next_value()?);
+                }
+                "diagnostics" => {
+                    if diagnostics_seen {
+                        return Err(de::Error::duplicate_field("diagnostics"));
+                    }
+                    diagnostics_seen = true;
+                    let _ = map.next_value::<IgnoredAny>()?;
+                }
+                _ => {
+                    let _ = map.next_value::<IgnoredAny>()?;
+                    return Err(de::Error::unknown_field(&key, FIELDS));
+                }
+            }
+        }
+
+        Ok(envelope)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for WorkerErrorFields {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_map(WorkerErrorFieldsVisitor)
+    }
+}
+
+struct WorkerErrorFieldsVisitor;
+
+impl<'de> Visitor<'de> for WorkerErrorFieldsVisitor {
+    type Value = WorkerErrorFields;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("stable PDF worker error fields")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        const FIELDS: &[&str] = &["code", "message"];
+        let mut error = WorkerErrorFields::default();
+
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "code" => {
+                    if error.code.is_some() {
+                        return Err(de::Error::duplicate_field("code"));
+                    }
+                    error.code = Some(map.next_value()?);
+                }
+                "message" => {
+                    if error.message.is_some() {
+                        return Err(de::Error::duplicate_field("message"));
+                    }
+                    error.message = Some(map.next_value()?);
+                }
+                _ => {
+                    let _ = map.next_value::<IgnoredAny>()?;
+                    return Err(de::Error::unknown_field(&key, FIELDS));
+                }
+            }
+        }
+
+        Ok(error)
+    }
 }
 
 fn worker_failure_diagnostics(output: &Output) -> serde_json::Value {
@@ -446,6 +724,38 @@ fn worker_failure_diagnostics(output: &Output) -> serde_json::Value {
         "pdfium_worker": serde_json::Value::Object(worker),
     })
 }
+
+#[cfg(debug_assertions)]
+pub(crate) fn maybe_emit_worker_stdout_for_pipe_limit_test() {
+    let Some(total) = std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_STDOUT_BYTES")
+        .ok()
+        .and_then(|raw| raw.parse::<usize>().ok())
+    else {
+        return;
+    };
+
+    let chunk = vec![b'x'; total.min(64 * 1024)];
+    let mut stdout = std::io::stdout().lock();
+    let mut remaining = total;
+    while remaining > 0 {
+        let n = remaining.min(chunk.len());
+        if stdout.write_all(&chunk[..n]).is_err() {
+            break;
+        }
+        remaining -= n;
+    }
+    let _ = stdout.flush();
+
+    if let Some(ms) = std::env::var("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_AFTER_STDOUT_SLEEP_MS")
+        .ok()
+        .and_then(|raw| raw.parse::<u64>().ok())
+    {
+        thread::sleep(Duration::from_millis(ms));
+    }
+}
+
+#[cfg(not(debug_assertions))]
+pub(crate) fn maybe_emit_worker_stdout_for_pipe_limit_test() {}
 
 #[cfg(debug_assertions)]
 pub(crate) fn maybe_sleep_for_worker_timeout_test() {
@@ -574,7 +884,7 @@ mod tests {
     #[test]
     fn rejects_json_artifact_header_invalid_json() {
         assert_json_artifact_header_rejected(
-            b"{".to_vec(),
+            vec![123],
             "pdfium worker returned an invalid JSON artifact header",
         );
     }
@@ -592,6 +902,42 @@ mod tests {
     }
 
     #[test]
+    fn rejects_json_artifact_header_duplicate_field() {
+        let header = br#"{"schema_version":"ethos-worker-json-artifact-v1","schema_version":"ethos-worker-json-artifact-v1"}"#.to_vec();
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker returned an invalid JSON artifact header",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_unexpected_field() {
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+            "unexpected": true,
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker returned an invalid JSON artifact header",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_trailing_data() {
+        let mut header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+        }));
+        header.extend_from_slice(br#"{"schema_version":"ethos-worker-json-artifact-v1"}"#);
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker returned an invalid JSON artifact header",
+        );
+    }
+
+    #[test]
     fn rejects_json_artifact_header_missing_output_bytes() {
         let bytes = test_document_bytes(TEST_FINGERPRINT, TEST_PAYLOAD_SHA256);
         let header = test_header_bytes(serde_json::json!({
@@ -604,6 +950,46 @@ mod tests {
         assert_json_artifact_header_rejected(
             header,
             "pdfium worker JSON artifact header missing output_bytes",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_missing_document_fingerprint() {
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker JSON artifact header missing document_fingerprint",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_missing_payload_sha256() {
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+            "document_fingerprint": TEST_FINGERPRINT,
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker JSON artifact header missing payload_sha256",
+        );
+    }
+
+    #[test]
+    fn rejects_json_artifact_header_missing_output_sha256() {
+        let header = test_header_bytes(serde_json::json!({
+            "schema_version": WORKER_JSON_ARTIFACT_SCHEMA,
+            "document_fingerprint": TEST_FINGERPRINT,
+            "payload_sha256": TEST_PAYLOAD_SHA256,
+            "output_bytes": 0,
+        }));
+
+        assert_json_artifact_header_rejected(
+            header,
+            "pdfium worker JSON artifact header missing output_sha256",
         );
     }
 
@@ -670,7 +1056,23 @@ mod tests {
     }
 
     #[test]
-    fn read_pipe_limited_rejects_oversized_output() {
+    fn worker_pipe_limit_accepts_empty_output() {
+        let bytes = read_pipe_limited(std::io::Cursor::new([]), 3)
+            .expect("empty worker output is within the pipe limit");
+
+        assert!(bytes.is_empty());
+    }
+
+    #[test]
+    fn worker_pipe_limit_accepts_limit_sized_output() {
+        let bytes = read_pipe_limited(std::io::Cursor::new([1_u8, 2, 3]), 3)
+            .expect("limit-sized worker output is accepted");
+
+        assert_eq!(bytes, vec![1_u8, 2, 3]);
+    }
+
+    #[test]
+    fn worker_pipe_limit_rejects_oversized_output() {
         let error = match read_pipe_limited(std::io::Cursor::new([1_u8, 2, 3, 4]), 3) {
             Ok(_) => panic!("oversized worker output was accepted"),
             Err(error) => error,
@@ -678,5 +1080,102 @@ mod tests {
 
         assert_eq!(error.code, ErrorCode::MemoryLimitExceeded);
         assert_eq!(error.message, "parse exceeded memory limit");
+    }
+
+    #[test]
+    fn worker_error_envelope_parses_stable_error() {
+        let error = worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"input does not contain a PDF header"}}"#,
+        )
+        .expect("stable worker error envelope is parsed");
+
+        assert_eq!(error.code, ErrorCode::InvalidPdf);
+        assert_eq!(error.message, "input does not contain a PDF header");
+    }
+
+    #[test]
+    fn worker_error_envelope_allows_diagnostics_metadata() {
+        let error = worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"input does not contain a PDF header"},"diagnostics":{"pdfium_worker":{"stderr":"sentinel"}}}"#,
+        )
+        .expect("stable worker error envelope with diagnostics metadata is parsed");
+
+        assert_eq!(error.code, ErrorCode::InvalidPdf);
+        assert_eq!(error.message, "input does not contain a PDF header");
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_invalid_json() {
+        assert!(worker_ethos_error(&[123]).is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_missing_code() {
+        assert!(worker_ethos_error(br#"{"error":{"message":"missing code"}}"#).is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_missing_message() {
+        assert!(worker_ethos_error(br#"{"error":{"code":"invalid_pdf"}}"#).is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_unknown_code() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"unsupported_worker_code","message":"unknown code"}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_non_string_message() {
+        assert!(worker_ethos_error(br#"{"error":{"code":"invalid_pdf","message":42}}"#).is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_empty_message() {
+        assert!(
+            worker_ethos_error(br#"{"error":{"code":"invalid_pdf","message":"  "}}"#).is_none()
+        );
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_duplicate_error_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"first"},"error":{"code":"invalid_pdf","message":"second"}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_duplicate_code_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","code":"invalid_pdf","message":"duplicate code"}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_duplicate_message_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"first","message":"second"}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_unexpected_error_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"unexpected field","extra":true}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_unexpected_top_level_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"unexpected field"},"extra":true}"#
+        )
+        .is_none());
     }
 }
