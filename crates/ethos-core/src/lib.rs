@@ -47,6 +47,8 @@ pub mod c14n;
 #[cfg(feature = "full")]
 pub mod config;
 #[cfg(feature = "full")]
+pub mod crop_element;
+#[cfg(feature = "full")]
 pub mod error;
 #[cfg(feature = "full")]
 pub mod fingerprint;

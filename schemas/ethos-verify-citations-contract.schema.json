@@ -138,6 +138,7 @@
         "table_cell citation must include table_id and cell",
         "citation bbox requires page unless another target locator is present",
         "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)",
+        "opendataloader-json adapter: bbox must have positive area",
         "opendataloader-json adapter: element.page references unknown page"
       ]
     }

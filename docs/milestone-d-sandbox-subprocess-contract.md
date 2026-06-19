@@ -24,7 +24,9 @@ The current source-tree inventory for this contract boundary is
 `examples/sandbox/sandbox_subprocess_v1_contract.json`. It classifies existing worker tests that
 exercise timeout handling, memory-limit error reporting, stable error relay, and diagnostics-gated
 stderr behavior. It also records worker JSON artifact-header integrity cases for the existing
-temporary artifact handoff. Each inventory case binds to a request envelope under
+temporary artifact handoff and worker pipe-output limit cases for the bounded parent/child pipe
+reader. It also records worker stable error-envelope parser cases for accepted envelopes and
+malformed envelope rejection. Each inventory case binds to a request envelope under
 `schemas/examples/sandbox-subprocess-*.example.json` and records the expected process exit code,
 stable error code, stable error message, and diagnostics policy. The inventory also records the
 request identity and request-policy diagnostics that the source-tree guard exercises for this
@@ -48,6 +50,13 @@ The v1 contract boundary is fail-closed and error-envelope-first:
 - worker JSON artifact headers bind output byte count, output hash, document fingerprint, and
   payload hash to the temporary JSON artifact before the parent process accepts it;
 - malformed, unsupported, or incomplete worker JSON artifact headers fail closed;
+- duplicate, unexpected, or trailing worker JSON artifact header fields fail closed;
+- worker pipe-output limit checks accept empty and limit-sized output, reject oversized output
+  through `memory_limit_exceeded`, and let parent-side pipe-limit failures preempt timeout
+  handling;
+- worker stable error-envelope parser checks accept known stable worker errors and diagnostics
+  metadata, while rejecting malformed envelopes, duplicate fields, unexpected fields, and empty
+  messages;
 - non-envelope worker stderr is hidden by default;
 - non-envelope worker stderr is exposed only under explicit diagnostics;
 - request envelopes bind each failure case to the intended operation, timeout limit, diagnostics

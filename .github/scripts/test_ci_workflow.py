@@ -58,6 +58,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("python3 .github/scripts/test_milestone_b_closeout_record.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_c_closeout_record.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_d_closeout_prep_record.py", text)
+        self.assertIn("python3 .github/scripts/test_milestone_d_closeout_record.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_b_exit_checklist.py", text)
 
 

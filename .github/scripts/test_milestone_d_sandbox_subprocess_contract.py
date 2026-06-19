@@ -76,12 +76,60 @@ EXPECTED_ARTIFACT_HEADER_CASES = [
         "error_message": "pdfium worker returned an unsupported JSON artifact header",
     },
     {
+        "name": "json-artifact-header-duplicate-field",
+        "test_filter": "rejects_json_artifact_header_duplicate_field",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker returned an invalid JSON artifact header",
+    },
+    {
+        "name": "json-artifact-header-unexpected-field",
+        "test_filter": "rejects_json_artifact_header_unexpected_field",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker returned an invalid JSON artifact header",
+    },
+    {
+        "name": "json-artifact-header-trailing-data",
+        "test_filter": "rejects_json_artifact_header_trailing_data",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker returned an invalid JSON artifact header",
+    },
+    {
         "name": "json-artifact-header-missing-output-bytes",
         "test_filter": "rejects_json_artifact_header_missing_output_bytes",
         "boundary": "json_artifact_header_integrity",
         "expected_result": "rejected",
         "error_code": "internal_error",
         "error_message": "pdfium worker JSON artifact header missing output_bytes",
+    },
+    {
+        "name": "json-artifact-header-missing-document-fingerprint",
+        "test_filter": "rejects_json_artifact_header_missing_document_fingerprint",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker JSON artifact header missing document_fingerprint",
+    },
+    {
+        "name": "json-artifact-header-missing-payload-sha256",
+        "test_filter": "rejects_json_artifact_header_missing_payload_sha256",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker JSON artifact header missing payload_sha256",
+    },
+    {
+        "name": "json-artifact-header-missing-output-sha256",
+        "test_filter": "rejects_json_artifact_header_missing_output_sha256",
+        "boundary": "json_artifact_header_integrity",
+        "expected_result": "rejected",
+        "error_code": "internal_error",
+        "error_message": "pdfium worker JSON artifact header missing output_sha256",
     },
     {
         "name": "json-artifact-header-hash-mismatch",
@@ -98,6 +146,131 @@ EXPECTED_ARTIFACT_HEADER_CASES = [
         "expected_result": "rejected",
         "error_code": "internal_error",
         "error_message": "pdfium worker JSON artifact header does not match artifact",
+    },
+]
+EXPECTED_PIPE_LIMIT_CASES = [
+    {
+        "name": "worker-pipe-limit-empty-output",
+        "test_filter": "worker_pipe_limit_accepts_empty_output",
+        "boundary": "pipe_output_limit",
+        "expected_result": "accepted",
+    },
+    {
+        "name": "worker-pipe-limit-sized-output",
+        "test_filter": "worker_pipe_limit_accepts_limit_sized_output",
+        "boundary": "pipe_output_limit",
+        "expected_result": "accepted",
+    },
+    {
+        "name": "worker-pipe-limit-oversized-output",
+        "test_filter": "worker_pipe_limit_rejects_oversized_output",
+        "boundary": "pipe_output_limit",
+        "expected_result": "rejected",
+        "error_code": "memory_limit_exceeded",
+        "error_message": "parse exceeded memory limit",
+    },
+    {
+        "name": "worker-pipe-limit-preempts-timeout",
+        "test_filter": "doc_parse_pipe_limit_worker_failure_preempts_timeout",
+        "boundary": "pipe_output_limit",
+        "expected_result": "rejected",
+        "error_code": "memory_limit_exceeded",
+        "error_message": "parse exceeded memory limit",
+    },
+]
+EXPECTED_ERROR_ENVELOPE_CASES = [
+    {
+        "name": "worker-error-envelope-stable-error",
+        "test_filter": "worker_error_envelope_parses_stable_error",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "accepted",
+        "error_code": "invalid_pdf",
+        "error_message": "input does not contain a PDF header",
+    },
+    {
+        "name": "worker-error-envelope-diagnostics-metadata",
+        "test_filter": "worker_error_envelope_allows_diagnostics_metadata",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "accepted",
+        "error_code": "invalid_pdf",
+        "error_message": "input does not contain a PDF header",
+    },
+    {
+        "name": "worker-error-envelope-invalid-json",
+        "test_filter": "worker_error_envelope_rejects_invalid_json",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "invalid_json",
+    },
+    {
+        "name": "worker-error-envelope-missing-code",
+        "test_filter": "worker_error_envelope_rejects_missing_code",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "missing_code",
+    },
+    {
+        "name": "worker-error-envelope-missing-message",
+        "test_filter": "worker_error_envelope_rejects_missing_message",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "missing_message",
+    },
+    {
+        "name": "worker-error-envelope-unknown-code",
+        "test_filter": "worker_error_envelope_rejects_unknown_code",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "unknown_code",
+    },
+    {
+        "name": "worker-error-envelope-non-string-message",
+        "test_filter": "worker_error_envelope_rejects_non_string_message",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "non_string_message",
+    },
+    {
+        "name": "worker-error-envelope-empty-message",
+        "test_filter": "worker_error_envelope_rejects_empty_message",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "empty_message",
+    },
+    {
+        "name": "worker-error-envelope-duplicate-error-field",
+        "test_filter": "worker_error_envelope_rejects_duplicate_error_field",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "duplicate_error_field",
+    },
+    {
+        "name": "worker-error-envelope-duplicate-code-field",
+        "test_filter": "worker_error_envelope_rejects_duplicate_code_field",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "duplicate_code_field",
+    },
+    {
+        "name": "worker-error-envelope-duplicate-message-field",
+        "test_filter": "worker_error_envelope_rejects_duplicate_message_field",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "duplicate_message_field",
+    },
+    {
+        "name": "worker-error-envelope-unexpected-error-field",
+        "test_filter": "worker_error_envelope_rejects_unexpected_error_field",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "unexpected_error_field",
+    },
+    {
+        "name": "worker-error-envelope-unexpected-top-level-field",
+        "test_filter": "worker_error_envelope_rejects_unexpected_top_level_field",
+        "boundary": "stable_error_envelope_parser",
+        "expected_result": "rejected",
+        "rejection_reason": "unexpected_top_level_field",
     },
 ]
 EXPECTED_DIAGNOSTIC_MESSAGES = [
@@ -505,6 +678,8 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
 
         required = [
             "cargo test --locked -p ethos-cli json_artifact_header",
+            "cargo test --locked -p ethos-cli worker_pipe_limit",
+            "cargo test --locked -p ethos-cli worker_error_envelope",
             "cargo test --locked -p ethos-cli --test pdf_parse worker",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
@@ -565,6 +740,10 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             "stable worker error envelopes are relayed",
             "worker JSON artifact headers bind output byte count, output hash, document "
             "fingerprint, and payload hash",
+            "duplicate, unexpected, or trailing worker JSON artifact header fields fail closed",
+            "worker pipe-output limit checks accept empty and limit-sized output",
+            "`memory_limit_exceeded`",
+            "worker stable error-envelope parser checks accept known stable worker errors",
             "non-envelope worker stderr is hidden by default",
             "explicit diagnostics",
             "request envelopes bind each failure case",
@@ -637,6 +816,8 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
         self.assertEqual(inventory["carrier"], "pdfium worker process")
         self.assertEqual(EXPECTED_EXPLICIT_BLOCKERS, inventory["explicit_blockers"])
         self.assertEqual(EXPECTED_ARTIFACT_HEADER_CASES, inventory["artifact_header_cases"])
+        self.assertEqual(EXPECTED_PIPE_LIMIT_CASES, inventory["pipe_limit_cases"])
+        self.assertEqual(EXPECTED_ERROR_ENVELOPE_CASES, inventory["error_envelope_cases"])
 
         case_names = [case["name"] for case in inventory["cases"]]
         self.assertEqual(len(case_names), len(set(case_names)))
@@ -725,6 +906,58 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
                     body if "temp dir is cleaned up on rejection" in body else worker_source,
                     case["name"],
                 )
+
+    def test_contract_inventory_matches_existing_worker_pipe_limit_tests(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        worker_source = WORKER_SOURCE.read_text(encoding="utf-8")
+        pdf_parse_source = PDF_PARSE_TESTS.read_text(encoding="utf-8")
+
+        self.assertEqual(EXPECTED_PIPE_LIMIT_CASES, inventory["pipe_limit_cases"])
+        self.assertIn("const WORKER_PIPE_MAX_BYTES", worker_source)
+        self.assertIn("fn read_pipe_limited", worker_source)
+        self.assertIn("ETHOS_INTERNAL_TEST_PDFIUM_WORKER_PIPE_MAX_BYTES", worker_source)
+
+        case_names = [case["name"] for case in inventory["pipe_limit_cases"]]
+        self.assertEqual(len(case_names), len(set(case_names)))
+        for case in inventory["pipe_limit_cases"]:
+            source = (
+                worker_source
+                if f"fn {case['test_filter']}()" in worker_source
+                else pdf_parse_source
+            )
+            body = rust_test_body(source, case["test_filter"])
+            self.assertTrue(
+                "read_pipe_limited" in body
+                or "ETHOS_INTERNAL_TEST_PDFIUM_WORKER_PIPE_MAX_BYTES" in body,
+                case["name"],
+            )
+            if case["expected_result"] == "accepted":
+                self.assertIn("expect(", body, case["name"])
+            else:
+                self.assertTrue(
+                    "MemoryLimitExceeded" in body or "memory_limit_exceeded" in body,
+                    case["name"],
+                )
+                self.assertIn(case["error_message"], body, case["name"])
+
+    def test_contract_inventory_matches_existing_worker_error_envelope_tests(self) -> None:
+        inventory = load_json(CONTRACT_INVENTORY)
+        worker_source = WORKER_SOURCE.read_text(encoding="utf-8")
+
+        self.assertEqual(EXPECTED_ERROR_ENVELOPE_CASES, inventory["error_envelope_cases"])
+        self.assertIn("fn worker_ethos_error", worker_source)
+
+        case_names = [case["name"] for case in inventory["error_envelope_cases"]]
+        self.assertEqual(len(case_names), len(set(case_names)))
+        for case in inventory["error_envelope_cases"]:
+            body = rust_test_body(worker_source, case["test_filter"])
+            self.assertIn("worker_ethos_error", body, case["name"])
+            if case["expected_result"] == "accepted":
+                self.assertIn(case["error_code"], body, case["name"])
+                self.assertIn(case["error_message"], body, case["name"])
+                self.assertIn("expect(", body, case["name"])
+            else:
+                self.assertIn("is_none()", body, case["name"])
 
     def test_contract_inventory_pins_fail_closed_diagnostics(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

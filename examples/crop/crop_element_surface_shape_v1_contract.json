@@ -38,19 +38,38 @@
       "required_when": "rendering=rendered"
     }
   ],
-  "current_surface_absence": {
+  "current_surface": {
     "cli_command": "crop_element",
+    "cli_mode": "descriptor_and_rendered",
     "python_method": "crop_element",
+    "python_status": "descriptor_and_rendered",
     "checked_files": [
       "crates/ethos-cli/src/main.rs",
+      "crates/ethos-cli/src/cmd/crop.rs",
+      "crates/ethos-cli/tests/verify.rs",
+      "python/ethos_pdf/__init__.py",
       "python/ethos_pdf/_cli.py"
+    ],
+    "cli_tests": [
+      "crop_element_cli_writes_descriptor",
+      "crop_element_cli_fails_closed_on_invalid_check_id",
+      "crop_element_cli_rendered_request_requires_source_pdf_and_crop_dir",
+      "crop_element_cli_rendered_source_pdf_must_match_document_source",
+      "crop_element_cli_writes_rendered_artifacts_when_pdfium_is_configured"
+    ],
+    "python_tests": [
+      "test_crop_element_invokes_descriptor_cli_with_request_and_check_id",
+      "test_crop_element_method_uses_default_check_id",
+      "test_crop_element_rejects_empty_check_id_before_command_execution",
+      "test_crop_element_missing_request_raises_file_not_found",
+      "test_crop_element_invalid_json_stdout_raises_output_error",
+      "test_crop_element_passes_rendered_artifact_arguments",
+      "test_crop_element_rejects_partial_rendered_arguments"
     ]
   },
   "explicit_blockers": [
-    "a first-class `crop_element` CLI command",
-    "a Python crop method",
+    "additional CLI commands beyond source-bound `ethos crop_element`",
     "Node, MCP, or hosted crop surfaces",
-    "rendered-crop backend changes",
     "sandbox backend behavior",
     "foreign-adapter crop coordinate hardening"
   ]

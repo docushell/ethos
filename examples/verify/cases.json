@@ -88,6 +88,13 @@
       "stderr_contains": "opendataloader-json adapter: bbox is malformed (x0>x1 or y0>y1)"
     },
     {
+      "name": "opendataloader-zero-area-bbox-input",
+      "input": "examples/verify/opendataloader_zero_area_bbox.json",
+      "grounding": "opendataloader-json",
+      "citations": "examples/verify/opendataloader_grounded_citations.json",
+      "stderr_contains": "opendataloader-json adapter: bbox must have positive area"
+    },
+    {
       "name": "opendataloader-unknown-page-input",
       "input": "examples/verify/opendataloader_unknown_page.json",
       "grounding": "opendataloader-json",

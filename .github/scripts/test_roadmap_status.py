@@ -41,8 +41,8 @@ class RoadmapStatusTests(unittest.TestCase):
         self.assertIn("Current PM status and blockers: `docs/execution-status.md`.", text)
         self.assertIn("Milestone C has an internal source-tree artifact-validation closeout", text)
         self.assertIn("milestone-c-closeout-validation-2026-06-18.md", text)
-        self.assertIn("Milestone D contract closeout prep is recorded", text)
-        self.assertIn("milestone-d-contract-closeout-prep-2026-06-19.md", text)
+        self.assertIn("Milestone D source-only contract closeout is recorded", text)
+        self.assertIn("milestone-d-contract-closeout-validation-2026-06-19.md", text)
 
     def test_closeout_note_keeps_public_boundaries_explicit(self) -> None:
         text = normalized_roadmap_text()
@@ -50,6 +50,8 @@ class RoadmapStatusTests(unittest.TestCase):
         self.assertIn("does not approve public benchmark reports", text)
         self.assertIn("releases, packages, production positioning", text)
         self.assertIn("performance/quality/footprint claims", text)
+        self.assertIn("cross-platform rendered-crop byte identity is not required for D closeout", text)
+        self.assertIn("explicit post-D blockers, not D closeout requirements", text)
 
     def test_milestone_b_still_precedes_milestone_c(self) -> None:
         text = roadmap_text()

@@ -25,7 +25,7 @@ from makefile_guard import target_block
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RECORD = ROOT / "docs/validation/milestone-d-contract-closeout-prep-2026-06-19.md"
+RECORD = ROOT / "docs/validation/milestone-d-contract-closeout-validation-2026-06-19.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 
 
@@ -37,17 +37,19 @@ def normalized_record_text() -> str:
     return re.sub(r"\s+", " ", record_text())
 
 
-class MilestoneDContractCloseoutPrepRecordTests(unittest.TestCase):
+class MilestoneDContractCloseoutRecordTests(unittest.TestCase):
     def test_record_is_indexed(self) -> None:
         text = VALIDATION_README.read_text(encoding="utf-8")
 
-        self.assertIn("milestone-d-contract-closeout-prep-2026-06-19.md", text)
+        self.assertIn("milestone-d-contract-closeout-validation-2026-06-19.md", text)
 
     def test_record_names_internal_validation_command(self) -> None:
         text = record_text()
 
+        self.assertIn("Validated source HEAD before this record: `2514400`", text)
         self.assertIn("make milestone-d-internal-contracts PYTHON=<jsonschema-venv>/bin/python", text)
         self.assertIn(".github/scripts/test_milestone_d_closeout_prep_record.py", text)
+        self.assertIn(".github/scripts/test_milestone_d_closeout_record.py", text)
         self.assertIn(".github/scripts/test_milestone_d_internal_contracts.py", text)
         for target in [
             "make milestone-d-verify-citations-contract",
@@ -61,24 +63,24 @@ class MilestoneDContractCloseoutPrepRecordTests(unittest.TestCase):
         ]:
             self.assertIn(target, text)
 
-    def test_record_keeps_closeout_prep_scope(self) -> None:
+    def test_record_keeps_contract_closeout_scope(self) -> None:
         text = normalized_record_text()
 
-        self.assertIn("source-only contract closeout prep", text)
-        self.assertIn("final D exit still pending review and a fresh validation run on `main`", text)
+        self.assertIn("source-only contract closeout", text)
+        self.assertIn("Full 13-D exit still requires review of implementation lanes", text)
         self.assertIn(
             "Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces are explicitly "
-            "out of Milestone D closeout scope and remain outside this prep record",
+            "out of Milestone D closeout scope and remain future work outside this closeout record",
             text,
         )
         self.assertIn(
             "Cross-platform rendered-crop byte identity is not required for Milestone D closeout "
-            "and remains outside this prep record",
+            "and remains future work outside this closeout record",
             text,
         )
-        self.assertIn("Sandbox hardening remains outside this prep record", text)
+        self.assertIn("Sandbox hardening remains future work outside this closeout record", text)
         self.assertIn(
-            "Node beta and MCP experimental work remain outside this prep record and outside "
+            "Node beta and MCP experimental work remain outside this closeout record and outside "
             "Milestone D closeout scope",
             text,
         )
@@ -94,14 +96,22 @@ class MilestoneDContractCloseoutPrepRecordTests(unittest.TestCase):
             text,
         )
 
-    def test_make_target_runs_closeout_prep_guard(self) -> None:
-        block = target_block("milestone-d-internal-contracts")
+    def test_record_names_evidence_grounding_and_diagnostics_scope(self) -> None:
+        text = normalized_record_text()
 
-        self.assertIn("$(PYTHON) .github/scripts/test_milestone_d_closeout_prep_record.py", block)
-        self.assertLess(
-            block.index("$(PYTHON) .github/scripts/test_milestone_d_closeout_prep_record.py"),
-            block.index("$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py"),
-        )
+        self.assertIn("diagnostics, and fixture-backed validation", text)
+        self.assertIn("Explicit blockers remain mirrored between contract docs and inventories", text)
+        self.assertIn("Request-envelope identity is guarded", text)
+
+    def test_make_target_runs_closeout_record_guard(self) -> None:
+        block = target_block("milestone-d-internal-contracts")
+        prep_guard = "$(PYTHON) .github/scripts/test_milestone_d_closeout_prep_record.py"
+        closeout_guard = "$(PYTHON) .github/scripts/test_milestone_d_closeout_record.py"
+        registry_guard = "$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py"
+
+        self.assertIn(closeout_guard, block)
+        self.assertLess(block.index(prep_guard), block.index(closeout_guard))
+        self.assertLess(block.index(closeout_guard), block.index(registry_guard))
 
     def test_record_avoids_local_private_paths(self) -> None:
         text = record_text()

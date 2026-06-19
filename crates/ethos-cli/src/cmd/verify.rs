@@ -18,9 +18,9 @@ use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+use ethos_core::crop_element::{CropElementDescriptor, CropElementRendering};
 use ethos_core::error::EthosError;
-use ethos_core::fingerprint::{is_fingerprint_form, source_fingerprint};
-use ethos_core::geom::QRect;
+use ethos_core::fingerprint::is_fingerprint_form;
 use ethos_core::grounding::{
     Capabilities, CoordinateOrigin, GroundingElement, GroundingSource, GroundingSpan,
     GroundingTable, PageGeometry, ParserIdentity,
@@ -31,9 +31,12 @@ use ethos_core::verify_types::{
     VerificationConfig, VerificationReport,
 };
 use ethos_grounding_opendataloader_json::OdlJsonSource;
-use ethos_pdf::PdfiumBackend;
 use ethos_verify::CitationInput;
 
+use crate::cmd::crop_artifacts::{
+    load_bound_crop_source_pdf, write_crop_descriptor_artifact, write_rendered_crop_artifact,
+    CropSourcePdf,
+};
 use crate::{
     default_max_input_bytes, read_document, read_file_limited, write_output, Failure, VerifyArgs,
     VerifyOutputFormat,
@@ -451,33 +454,6 @@ fn serde_label_list<T: serde::Serialize>(values: &[T]) -> Result<String, Failure
     Ok(labels.join(","))
 }
 
-struct CropSourcePdf {
-    bytes: Vec<u8>,
-    fingerprint: String,
-}
-
-fn load_bound_crop_source_pdf(doc: &Document, source_pdf: &Path) -> Result<CropSourcePdf, Failure> {
-    let bytes = read_file_limited(source_pdf, default_max_input_bytes())?;
-    if !bytes[..bytes.len().min(1024)]
-        .windows(5)
-        .any(|window| window == b"%PDF-")
-    {
-        return Err(Failure::Usage(
-            "crop source PDF does not contain a PDF header".to_string(),
-        ));
-    }
-    let actual = source_fingerprint(&bytes);
-    if actual != doc.source.fingerprint {
-        return Err(Failure::Usage(
-            "crop source PDF fingerprint does not match document source fingerprint".to_string(),
-        ));
-    }
-    Ok(CropSourcePdf {
-        bytes,
-        fingerprint: actual,
-    })
-}
-
 struct NativeCropSource<'a> {
     document: &'a Document,
 }
@@ -536,15 +512,8 @@ fn logical_crop_ref_for(
     check_id: &str,
     page: &str,
 ) -> Result<String, Failure> {
-    let value = serde_json::json!({
-        "check_id": check_id,
-        "document_fingerprint": document_fingerprint,
-        "page": page,
-        "version": "ethos.logical_crop_ref.v1",
-    });
-    let hash = ethos_core::c14n::sha256_hex(&value)
-        .map_err(|e| Failure::Ethos(EthosError::internal(e.message)))?;
-    Ok(format!("crop-{hash}.json"))
+    ethos_core::crop_element::crop_element_crop_ref(document_fingerprint, check_id, page)
+        .map_err(Failure::Ethos)
 }
 
 fn assign_logical_crop_refs(report: &mut VerificationReport) -> Result<(), Failure> {
@@ -567,14 +536,6 @@ fn assign_logical_crop_refs(report: &mut VerificationReport) -> Result<(), Failu
     Ok(())
 }
 
-#[derive(Debug)]
-struct CropDescriptor {
-    page: String,
-    bbox: [i64; 4],
-    check_ids: Vec<String>,
-    text_sha256: Option<String>,
-}
-
 fn write_crop_artifacts(
     crop_dir: &Path,
     report: &VerificationReport,
@@ -587,7 +548,7 @@ fn write_crop_artifacts(
         ))
     })?;
 
-    let mut descriptors: BTreeMap<String, CropDescriptor> = BTreeMap::new();
+    let mut descriptors: BTreeMap<String, CropElementDescriptor> = BTreeMap::new();
     for check in &report.checks {
         let Some(evidence) = check.evidence.as_ref() else {
             continue;
@@ -617,12 +578,33 @@ fn write_crop_artifacts(
                 existing.check_ids.push(check.id.clone());
             }
             None => {
+                let document_fingerprint =
+                    report.document_fingerprint.clone().ok_or_else(|| {
+                        Failure::Ethos(EthosError::internal(
+                            "crop descriptor requires document fingerprint",
+                        ))
+                    })?;
                 descriptors.insert(
                     crop_ref.to_string(),
-                    CropDescriptor {
+                    CropElementDescriptor {
+                        artifact_type: "ethos.crop_descriptor.v1".to_string(),
+                        schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+                        crop_ref: crop_ref.to_string(),
+                        document_fingerprint,
                         page: page.to_string(),
                         bbox,
                         check_ids: vec![check.id.clone()],
+                        rendering_status: if source_pdf.is_some() {
+                            CropElementRendering::Rendered
+                        } else {
+                            CropElementRendering::DescriptorOnly
+                        },
+                        source_pdf_fingerprint: None,
+                        rendered_ref: None,
+                        rendered_format: None,
+                        rendered_sha256: None,
+                        rendered_width_px: None,
+                        rendered_height_px: None,
                         text_sha256,
                     },
                 );
@@ -630,287 +612,15 @@ fn write_crop_artifacts(
         }
     }
 
-    for (crop_ref, descriptor) in descriptors {
-        let path = crop_descriptor_path(crop_dir, &crop_ref)?;
-        let mut object = serde_json::Map::new();
-        object.insert(
-            "artifact_type".to_string(),
-            serde_json::Value::String("ethos.crop_descriptor.v1".to_string()),
-        );
-        object.insert("bbox".to_string(), serde_json::json!(descriptor.bbox));
-        object.insert(
-            "check_ids".to_string(),
-            serde_json::json!(descriptor.check_ids),
-        );
-        object.insert(
-            "crop_ref".to_string(),
-            serde_json::Value::String(crop_ref.clone()),
-        );
-        if let Some(document_fingerprint) = &report.document_fingerprint {
-            object.insert(
-                "document_fingerprint".to_string(),
-                serde_json::Value::String(document_fingerprint.clone()),
-            );
-        }
-        object.insert(
-            "page".to_string(),
-            serde_json::Value::String(descriptor.page.clone()),
-        );
-        object.insert(
-            "rendering_status".to_string(),
-            serde_json::Value::String(if source_pdf.is_some() {
-                "rendered".to_string()
-            } else {
-                "descriptor_only".to_string()
-            }),
-        );
-        object.insert(
-            "schema_version".to_string(),
-            serde_json::Value::String(ethos_core::SCHEMA_VERSION.to_string()),
-        );
-        if let Some(text_sha256) = &descriptor.text_sha256 {
-            object.insert(
-                "text_sha256".to_string(),
-                serde_json::Value::String(text_sha256.clone()),
-            );
-        }
+    for (_, descriptor) in descriptors {
+        let mut descriptor = descriptor;
         if let Some(source_pdf) = source_pdf {
-            let rendered = render_crop_png(source_pdf, &descriptor)?;
-            let rendered_ref = rendered_ref_for(&crop_ref)?;
-            let rendered_path = crop_artifact_path(crop_dir, &rendered_ref)?;
-            std::fs::write(&rendered_path, &rendered.bytes).map_err(|_| {
-                Failure::Usage(format!(
-                    "cannot write rendered crop artifact: {}",
-                    rendered_path.display()
-                ))
-            })?;
-            object.insert(
-                "rendered_format".to_string(),
-                serde_json::Value::String("png".to_string()),
-            );
-            object.insert(
-                "rendered_height_px".to_string(),
-                serde_json::json!(rendered.height_px),
-            );
-            object.insert(
-                "rendered_ref".to_string(),
-                serde_json::Value::String(rendered_ref),
-            );
-            object.insert(
-                "rendered_sha256".to_string(),
-                serde_json::Value::String(ethos_core::c14n::sha256_hex_bytes(&rendered.bytes)),
-            );
-            object.insert(
-                "rendered_width_px".to_string(),
-                serde_json::json!(rendered.width_px),
-            );
-            object.insert(
-                "source_pdf_fingerprint".to_string(),
-                serde_json::Value::String(source_pdf.fingerprint.clone()),
-            );
+            write_rendered_crop_artifact(crop_dir, &mut descriptor, source_pdf)?;
         }
-        let mut bytes = ethos_core::c14n::c14n_bytes(&serde_json::Value::Object(object))
-            .map_err(|e| EthosError::internal(e.message))?;
-        bytes.push(b'\n');
-        std::fs::write(&path, bytes).map_err(|_| {
-            Failure::Usage(format!(
-                "cannot write crop descriptor artifact: {}",
-                path.display()
-            ))
-        })?;
+        write_crop_descriptor_artifact(crop_dir, &descriptor)?;
     }
 
     Ok(())
-}
-
-fn crop_descriptor_path(crop_dir: &Path, crop_ref: &str) -> Result<PathBuf, Failure> {
-    crop_artifact_path(crop_dir, crop_ref)
-}
-
-fn crop_artifact_path(crop_dir: &Path, crop_ref: &str) -> Result<PathBuf, Failure> {
-    let path = Path::new(crop_ref);
-    if path.components().count() != 1
-        || path.file_name().and_then(|name| name.to_str()) != Some(crop_ref)
-    {
-        return Err(Failure::Ethos(EthosError::internal(
-            "crop_ref is not a safe artifact filename",
-        )));
-    }
-    Ok(crop_dir.join(path))
-}
-
-struct RenderedCrop {
-    width_px: u32,
-    height_px: u32,
-    bytes: Vec<u8>,
-}
-
-fn render_crop_png(
-    source_pdf: &CropSourcePdf,
-    descriptor: &CropDescriptor,
-) -> Result<RenderedCrop, Failure> {
-    let page_index = native_page_index(&descriptor.page)?;
-    let bbox = QRect::new(
-        descriptor.bbox[0],
-        descriptor.bbox[1],
-        descriptor.bbox[2],
-        descriptor.bbox[3],
-    )
-    .map_err(|_| Failure::Ethos(EthosError::internal("crop descriptor bbox is malformed")))?;
-    let raw = PdfiumBackend::default().render_crop_raw(&source_pdf.bytes, page_index, bbox)?;
-    let bytes = png_from_bgra(raw.width_px, raw.height_px, raw.stride, &raw.bytes)?;
-    Ok(RenderedCrop {
-        width_px: raw.width_px,
-        height_px: raw.height_px,
-        bytes,
-    })
-}
-
-fn native_page_index(page: &str) -> Result<u32, Failure> {
-    let Some(digits) = page.strip_prefix('p') else {
-        return Err(Failure::Ethos(EthosError::internal(
-            "crop descriptor page is not a native Ethos page id",
-        )));
-    };
-    if digits.len() != 4 || !digits.as_bytes().iter().all(u8::is_ascii_digit) {
-        return Err(Failure::Ethos(EthosError::internal(
-            "crop descriptor page is not a native Ethos page id",
-        )));
-    }
-    let page_index = digits
-        .parse::<u32>()
-        .map_err(|_| EthosError::internal("crop descriptor page index overflow"))?;
-    if page_index == 0 {
-        return Err(Failure::Ethos(EthosError::internal(
-            "crop descriptor page index must be positive",
-        )));
-    }
-    Ok(page_index)
-}
-
-fn rendered_ref_for(crop_ref: &str) -> Result<String, Failure> {
-    let Some(stem) = crop_ref.strip_suffix(".json") else {
-        return Err(Failure::Ethos(EthosError::internal(
-            "crop_ref is not a descriptor filename",
-        )));
-    };
-    Ok(format!("{stem}.png"))
-}
-
-fn png_from_bgra(
-    width_px: u32,
-    height_px: u32,
-    stride: u32,
-    bgra: &[u8],
-) -> Result<Vec<u8>, Failure> {
-    let width =
-        usize::try_from(width_px).map_err(|_| EthosError::internal("PNG width overflow"))?;
-    let height =
-        usize::try_from(height_px).map_err(|_| EthosError::internal("PNG height overflow"))?;
-    let stride =
-        usize::try_from(stride).map_err(|_| EthosError::internal("PNG stride overflow"))?;
-    let row_bytes = width
-        .checked_mul(4)
-        .ok_or_else(|| EthosError::internal("PNG row width overflow"))?;
-    if stride < row_bytes {
-        return Err(Failure::Ethos(EthosError::internal(
-            "rendered crop stride is smaller than row width",
-        )));
-    }
-    let expected_len = stride
-        .checked_mul(height)
-        .ok_or_else(|| EthosError::internal("rendered crop buffer length overflow"))?;
-    if bgra.len() != expected_len {
-        return Err(Failure::Ethos(EthosError::internal(
-            "rendered crop buffer length mismatch",
-        )));
-    }
-
-    let scanline_bytes = row_bytes
-        .checked_add(1)
-        .and_then(|row| row.checked_mul(height))
-        .ok_or_else(|| EthosError::internal("PNG scanline buffer length overflow"))?;
-    let mut scanlines = Vec::with_capacity(scanline_bytes);
-    for row in 0..height {
-        scanlines.push(0);
-        let row_start = row
-            .checked_mul(stride)
-            .ok_or_else(|| EthosError::internal("PNG source row offset overflow"))?;
-        for pixel in bgra[row_start..row_start + row_bytes].chunks_exact(4) {
-            scanlines.extend_from_slice(&[pixel[2], pixel[1], pixel[0], pixel[3]]);
-        }
-    }
-
-    let mut png = Vec::new();
-    png.extend_from_slice(b"\x89PNG\r\n\x1a\n");
-    let mut ihdr = Vec::with_capacity(13);
-    ihdr.extend_from_slice(&width_px.to_be_bytes());
-    ihdr.extend_from_slice(&height_px.to_be_bytes());
-    ihdr.extend_from_slice(&[8, 6, 0, 0, 0]);
-    write_png_chunk(&mut png, b"IHDR", &ihdr)?;
-    let idat = zlib_store(&scanlines)?;
-    write_png_chunk(&mut png, b"IDAT", &idat)?;
-    write_png_chunk(&mut png, b"IEND", &[])?;
-    Ok(png)
-}
-
-fn zlib_store(data: &[u8]) -> Result<Vec<u8>, Failure> {
-    let mut out = Vec::new();
-    out.extend_from_slice(&[0x78, 0x01]);
-    let mut remaining = data;
-    while !remaining.is_empty() {
-        let len = remaining.len().min(u16::MAX as usize);
-        let final_block = len == remaining.len();
-        out.push(if final_block { 0x01 } else { 0x00 });
-        let len_u16 = u16::try_from(len)
-            .map_err(|_| Failure::Ethos(EthosError::internal("PNG zlib block length overflow")))?;
-        out.extend_from_slice(&len_u16.to_le_bytes());
-        out.extend_from_slice(&(!len_u16).to_le_bytes());
-        out.extend_from_slice(&remaining[..len]);
-        remaining = &remaining[len..];
-    }
-    if data.is_empty() {
-        out.push(0x01);
-        out.extend_from_slice(&0u16.to_le_bytes());
-        out.extend_from_slice(&u16::MAX.to_le_bytes());
-    }
-    out.extend_from_slice(&adler32(data).to_be_bytes());
-    Ok(out)
-}
-
-fn write_png_chunk(out: &mut Vec<u8>, kind: &[u8; 4], data: &[u8]) -> Result<(), Failure> {
-    let len = u32::try_from(data.len()).map_err(|_| EthosError::internal("PNG chunk too large"))?;
-    out.extend_from_slice(&len.to_be_bytes());
-    out.extend_from_slice(kind);
-    out.extend_from_slice(data);
-    let mut crc_input = Vec::with_capacity(kind.len() + data.len());
-    crc_input.extend_from_slice(kind);
-    crc_input.extend_from_slice(data);
-    out.extend_from_slice(&crc32(&crc_input).to_be_bytes());
-    Ok(())
-}
-
-fn adler32(data: &[u8]) -> u32 {
-    const MOD_ADLER: u32 = 65_521;
-    let mut a = 1u32;
-    let mut b = 0u32;
-    for byte in data {
-        a = (a + u32::from(*byte)) % MOD_ADLER;
-        b = (b + a) % MOD_ADLER;
-    }
-    (b << 16) | a
-}
-
-fn crc32(data: &[u8]) -> u32 {
-    let mut crc = 0xFFFF_FFFFu32;
-    for byte in data {
-        crc ^= u32::from(*byte);
-        for _ in 0..8 {
-            let mask = 0u32.wrapping_sub(crc & 1);
-            crc = (crc >> 1) ^ (0xEDB8_8320 & mask);
-        }
-    }
-    !crc
 }
 
 fn validate_citation_input(
@@ -1044,50 +754,66 @@ mod tests {
     use super::*;
     use ethos_core::verify_types::{Check, CheckStatus, Evidence, GroundingMeta, MatchMethod};
 
-    #[test]
-    fn png_from_bgra_writes_png_signature_and_dimensions() {
-        let bgra = [
-            0, 0, 255, 255, // red, opaque
-            0, 255, 0, 128, // green, half alpha
-        ];
-        let png = match png_from_bgra(2, 1, 8, &bgra) {
-            Ok(png) => png,
-            Err(_) => panic!("PNG encoding should succeed"),
-        };
+    const TEST_DOCUMENT_FINGERPRINT: &str =
+        "sha256:7164f43f104dc248193f12ea828e0ab857eae194210114c6f6c0160fd643c87b";
 
-        assert!(png.starts_with(b"\x89PNG\r\n\x1a\n"));
-        assert_eq!(&png[12..16], b"IHDR");
-        assert_eq!(u32::from_be_bytes(png[16..20].try_into().unwrap()), 2);
-        assert_eq!(u32::from_be_bytes(png[20..24].try_into().unwrap()), 1);
-        assert_eq!(&png[png.len() - 8..png.len() - 4], b"IEND");
-    }
-
-    #[test]
-    fn png_from_bgra_rejects_mismatched_buffer_length() {
-        let err = png_from_bgra(2, 1, 8, &[0, 0, 0, 255]).unwrap_err();
-        match err {
-            Failure::Ethos(error) => {
-                assert_eq!(error.message, "rendered crop buffer length mismatch");
-            }
-            _ => panic!("expected ethos failure"),
+    fn crop_report(document_fingerprint: Option<&str>, checks: Vec<Check>) -> VerificationReport {
+        VerificationReport {
+            schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+            document_fingerprint: document_fingerprint.map(str::to_string),
+            verification_config_sha256: "0".repeat(64),
+            grounding: GroundingMeta {
+                parser: ParserIdentity {
+                    name: "ethos".to_string(),
+                    version: "0.1.0".to_string(),
+                    adapter: None,
+                    adapter_version: None,
+                },
+                capabilities: Capabilities {
+                    spans: true,
+                    char_offsets: true,
+                    tables: true,
+                    fingerprint: true,
+                    coordinate_origin: ethos_core::grounding::CoordinateOrigin::TopLeft,
+                    crop_support: true,
+                },
+            },
+            capability_limits: Vec::new(),
+            fingerprint_stale: false,
+            all_evidence_grounded: true,
+            checks,
+            unsupported_claim_kinds: Vec::new(),
+            warnings: Vec::new(),
         }
     }
 
-    #[test]
-    fn zlib_store_splits_blocks_larger_than_u16_max() {
-        let data = vec![0x41; u16::MAX as usize + 1];
-        let zlib = zlib_store(&data).unwrap_or_else(|_| panic!("zlib store should encode"));
-
-        assert_eq!(&zlib[..2], &[0x78, 0x01]);
-        assert_eq!(zlib[2], 0x00);
-        assert_eq!(u16::from_le_bytes([zlib[3], zlib[4]]), u16::MAX);
-
-        let second_block = 2 + 1 + 2 + 2 + u16::MAX as usize;
-        assert_eq!(zlib[second_block], 0x01);
-        assert_eq!(
-            u16::from_le_bytes([zlib[second_block + 1], zlib[second_block + 2]]),
-            1
-        );
+    fn crop_check(id: &str, crop_ref: &str, bbox: [i64; 4], text: Option<&str>) -> Check {
+        Check {
+            id: id.to_string(),
+            claim: ethos_core::verify_types::Claim {
+                kind: ClaimKind::Quote,
+                text: Some("Hello".to_string()),
+                citation: ethos_core::verify_types::Citation {
+                    page: None,
+                    element_id: Some("e000001".to_string()),
+                    span_id: None,
+                    table_id: None,
+                    cell: None,
+                    bbox: None,
+                },
+            },
+            status: CheckStatus::Grounded,
+            reason: None,
+            match_method: MatchMethod::ExactTextContains,
+            semantic_unverified: false,
+            evidence: Some(Evidence {
+                text: text.map(str::to_string),
+                page: Some("p0001".to_string()),
+                bbox: Some(bbox),
+                crop_ref: Some(crop_ref.to_string()),
+            }),
+            warnings: Vec::new(),
+        }
     }
 
     #[test]
@@ -1226,5 +952,70 @@ mod tests {
                 .and_then(|evidence| evidence.crop_ref.as_deref()),
             None
         );
+    }
+
+    #[test]
+    fn write_crop_artifacts_requires_document_fingerprint_for_descriptors() {
+        let crop_dir = tempfile::tempdir().unwrap();
+        let report = crop_report(
+            None,
+            vec![crop_check(
+                "v0001",
+                &format!("crop-{}.json", "a".repeat(64)),
+                [7392, 5482, 19378, 7226],
+                Some("Hello world"),
+            )],
+        );
+
+        let err = write_crop_artifacts(crop_dir.path(), &report, None)
+            .expect_err("crop descriptors require document fingerprint");
+
+        match err {
+            Failure::Ethos(error) => {
+                assert_eq!(
+                    error.message,
+                    "crop descriptor requires document fingerprint"
+                );
+            }
+            _ => panic!("expected ethos failure"),
+        }
+        assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn write_crop_artifacts_rejects_crop_ref_collisions() {
+        let crop_dir = tempfile::tempdir().unwrap();
+        let crop_ref = format!("crop-{}.json", "b".repeat(64));
+        let report = crop_report(
+            Some(TEST_DOCUMENT_FINGERPRINT),
+            vec![
+                crop_check(
+                    "v0001",
+                    &crop_ref,
+                    [7392, 5482, 19378, 7226],
+                    Some("Hello world"),
+                ),
+                crop_check(
+                    "v0002",
+                    &crop_ref,
+                    [7392, 5482, 19378, 8000],
+                    Some("Hello world"),
+                ),
+            ],
+        );
+
+        let err = write_crop_artifacts(crop_dir.path(), &report, None)
+            .expect_err("colliding crop refs must fail");
+
+        match err {
+            Failure::Ethos(error) => {
+                assert_eq!(
+                    error.message,
+                    "crop_ref collision while writing crop descriptors"
+                );
+            }
+            _ => panic!("expected ethos failure"),
+        }
+        assert_eq!(std::fs::read_dir(crop_dir.path()).unwrap().count(), 0);
     }
 }

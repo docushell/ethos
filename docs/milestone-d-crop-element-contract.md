@@ -2,11 +2,17 @@
 
 Status: source-only pre-alpha contract work for internal Milestone D continuation.
 
-This note defines the narrow `crop_element` contract-prep slice for Milestone D. It does not
-create a first-class CLI command, Python binding, Node binding, MCP server method, or hosted
-surface. The current executable crop carrier remains `ethos verify --crop-dir` and optional
-`--crop-source-pdf`; `crop_element` names the future first-class contract between a parsed Ethos
-document, an explicit element locator, a crop descriptor, and an optional rendered artifact.
+This note defines the narrow `crop_element` contract-prep slice for Milestone D. It includes an
+internal Rust resolver in `ethos-core::crop_element` that validates request identity, resolves one
+native document element, builds source-bound crop descriptors, and exposes that descriptor
+path through the source-only pre-alpha `ethos crop_element` CLI command. For rendered requests,
+that CLI can bind caller-provided source PDF bytes and emit the descriptor plus PNG artifact. It
+does not create a Node binding, MCP server method, hosted surface, sandbox behavior, or foreign
+adapter crop coordinate interpretation. The internal pre-alpha Python surface wraps the same
+source-bound CLI command. The
+existing `ethos verify --crop-dir` and optional `--crop-source-pdf` carrier remain the verifier
+evidence-artifact path; `crop_element` names the first-class descriptor contract between a parsed
+Ethos document, an explicit element locator, and a crop descriptor.
 
 ## Contract Surface
 
@@ -33,18 +39,22 @@ The current source-tree fixture for this contract boundary is
 
 Focused validation command:
 
+- `cargo test --locked -p ethos-core crop_element`
+- `cargo test --locked -p ethos-cli --test verify crop_element_cli`
 - `make milestone-d-crop-element-contract PYTHON=<jsonschema-venv>/bin/python`
 
-The target runs current verifier crop coverage, schema/example validation, status/roadmap guards,
-this contract guard, and diff hygiene. It intentionally stays narrower than implementation work for
-a first-class crop surface.
+The target runs the internal Rust resolver fixture tests, current verifier crop coverage,
+the source-bound CLI fixture tests, schema/example validation, status/roadmap guards, this
+contract guard, and diff hygiene. It intentionally stays narrower than Node, MCP, hosted,
+sandbox-backed, foreign-adapter, or cross-platform rendered-byte-identity work.
 
 ## Supported v1 Boundaries
 
 The v1 contract boundary is native, explicit, and source-bound:
 
 - crop locators resolve through one `element_id`;
-- the resolved element must carry one page id and one integer bbox;
+- the resolved element must carry one page id and one integer bbox with positive area inside the
+  resolved page bounds;
 - source-tree fixture validation binds crop element request identity to `document_fingerprint`,
   `element_id`, rendering mode, optional source PDF fingerprint, and
   `ethos.crop_element_request_ref.v1`;
@@ -55,17 +65,23 @@ The v1 contract boundary is native, explicit, and source-bound:
   text when textual evidence is present;
 - descriptor JSON remains the canonical crop audit artifact;
 - rendered PNG output is optional and must be bound to a matching source PDF fingerprint;
-- missing elements, missing pages, missing bboxes, malformed bboxes, and source fingerprint
-  mismatch fail closed.
+- missing elements, missing pages, missing bboxes, malformed bboxes, non-positive bboxes,
+  out-of-page bboxes, missing document fingerprints, unsafe crop artifact filenames, crop reference
+  collisions, and source fingerprint mismatch fail closed.
 
 The contract does not infer missing geometry, synthesize evidence, or reinterpret foreign adapter
-coordinates. Cross-platform rendered crop byte identity is not part of this contract boundary.
+coordinates. Cross-platform rendered crop byte identity is not part of this contract boundary and
+is not required for Milestone D closeout.
 
 ## Relationship To Existing Verifier Artifacts
 
 `ethos verify --crop-dir` can already emit crop descriptors for grounded evidence checks. That path
-is evidence-artifact plumbing, not a first-class crop API. The future `crop_element` surface must
-preserve the same audit bindings before it can replace or wrap the current carrier:
+is evidence-artifact plumbing for verification reports. The `ethos crop_element` command is the
+source-only descriptor carrier for one explicit native element request. Both paths delegate logical
+crop descriptor identity and descriptor JSON shape to `ethos-core::crop_element` so verifier
+artifacts and the `crop_element` command share source-only identity and descriptor types. Any
+future non-CLI surface or sandbox-backed renderer must preserve the same audit bindings before it
+can wrap this descriptor contract:
 
 - document fingerprint;
 - element id;
@@ -79,10 +95,9 @@ preserve the same audit bindings before it can replace or wrap the current carri
 
 This first `crop_element` slice does not add:
 
-- a first-class `crop_element` CLI command or binding surface;
-- Python, Node, MCP, or hosted crop API surfaces;
+- additional CLI commands beyond source-bound `ethos crop_element`;
+- Node, MCP, or hosted crop API surfaces;
 - sandbox/subprocess backend expansion;
-- rendered-crop backend changes;
 - foreign-adapter crop coordinate hardening;
 - cross-platform rendered-crop byte identity claims.
 

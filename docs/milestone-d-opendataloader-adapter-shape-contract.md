@@ -43,8 +43,8 @@ diff checks.
   explicit capability downgrades;
 - real OpenDataLoader-style table nodes map only when row/cell page, bbox, and text fields are
   explicit enough to produce deterministic cells;
-- malformed bbox, unknown page references, malformed child containers, malformed table cells,
-  and unrecognized roots fail closed with deterministic diagnostics.
+- malformed bbox, zero-area bbox, unknown page references, malformed child containers, malformed
+  table cells, and unrecognized roots fail closed with deterministic diagnostics.
 
 ## Explicit Blockers For This Slice
 

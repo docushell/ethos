@@ -2,7 +2,7 @@
   "schema_version": 1,
   "contract": "crop_element.v1",
   "status": "source-only-pre-alpha",
-  "carrier": "ethos verify --crop-dir",
+  "carrier": "ethos crop_element",
   "cases": [
     {
       "name": "document-example-e000002",
@@ -42,6 +42,13 @@
       "expected_diagnostics": [
         "request document_fingerprint does not match document fingerprint",
         "descriptor document_fingerprint does not match request"
+      ]
+    },
+    {
+      "name": "request-document-fingerprint-missing",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "document_fingerprint is missing"
       ]
     },
     {
@@ -102,6 +109,20 @@
       ]
     },
     {
+      "name": "resolved-element-zero-area-bbox",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "resolved element bbox has non-positive area"
+      ]
+    },
+    {
+      "name": "resolved-element-bbox-outside-page",
+      "surface": "request_binding",
+      "expected_diagnostics": [
+        "resolved element bbox exceeds page bounds"
+      ]
+    },
+    {
       "name": "descriptor-crop-ref-identity-drift",
       "surface": "descriptor_ref",
       "expected_diagnostics": [
@@ -124,10 +145,9 @@
     }
   ],
   "explicit_blockers": [
-    "a first-class `crop_element` CLI command or binding surface",
-    "Python, Node, MCP, or hosted crop API surfaces",
+    "additional CLI commands beyond source-bound `ethos crop_element`",
+    "Node, MCP, or hosted crop API surfaces",
     "sandbox/subprocess backend expansion",
-    "rendered-crop backend changes",
     "foreign-adapter crop coordinate hardening",
     "cross-platform rendered-crop byte identity claims"
   ]

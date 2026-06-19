@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+pub(crate) mod crop;
+pub(crate) mod crop_artifacts;
 pub(crate) mod doc;
 pub(crate) mod rag;
 pub(crate) mod security;

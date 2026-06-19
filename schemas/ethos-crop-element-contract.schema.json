@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:crop-element-contract:1",
   "title": "Ethos crop_element v1 contract inventory",
-  "description": "Source-only pre-alpha Milestone D inventory for the future crop_element v1 contract. This validates inventory shape and vocabulary; executable behavior remains on the existing verifier crop carrier until a first-class surface is explicitly added.",
+  "description": "Source-only pre-alpha Milestone D inventory for the crop_element v1 source-bound CLI/Python contract. This validates inventory shape and vocabulary; Node, MCP, hosted, sandbox-backed, and foreign-adapter crop behavior remain explicitly blocked.",
   "type": "object",
   "required": [
     "schema_version",
@@ -18,7 +18,7 @@
     "schema_version": { "const": 1 },
     "contract": { "const": "crop_element.v1" },
     "status": { "const": "source-only-pre-alpha" },
-    "carrier": { "const": "ethos verify --crop-dir" },
+    "carrier": { "const": "ethos crop_element" },
     "cases": {
       "type": "array",
       "minItems": 1,
@@ -89,6 +89,7 @@
         "descriptor must bind exactly one logical check id",
         "descriptor crop_ref does not match logical identity tuple",
         "descriptor text_sha256 does not match verification evidence",
+        "document_fingerprint is missing",
         "request document_fingerprint does not match document fingerprint",
         "descriptor document_fingerprint does not match request",
         "request element_id does not match contract inventory case",
@@ -96,6 +97,8 @@
         "resolved element is missing page",
         "descriptor page does not match resolved element",
         "resolved element is missing bbox",
+        "resolved element bbox has non-positive area",
+        "resolved element bbox exceeds page bounds",
         "descriptor bbox does not match resolved element",
         "request rendering does not match contract inventory case",
         "descriptor rendering_status does not match request"
