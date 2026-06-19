@@ -54,8 +54,9 @@ The v1 contract boundary is fail-closed and error-envelope-first:
 - worker pipe-output limit checks accept empty and limit-sized output, reject oversized output
   through `memory_limit_exceeded`, and let parent-side pipe-limit failures preempt timeout
   handling;
-- worker stable error-envelope parser checks accept known stable worker errors and reject malformed
-  worker error envelopes;
+- worker stable error-envelope parser checks accept known stable worker errors and diagnostics
+  metadata, while rejecting malformed envelopes, duplicate fields, unexpected fields, and empty
+  messages;
 - non-envelope worker stderr is hidden by default;
 - non-envelope worker stderr is exposed only under explicit diagnostics;
 - request envelopes bind each failure case to the intended operation, timeout limit, diagnostics

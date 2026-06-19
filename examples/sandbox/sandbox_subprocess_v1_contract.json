@@ -227,6 +227,14 @@
       "error_message": "input does not contain a PDF header"
     },
     {
+      "name": "worker-error-envelope-diagnostics-metadata",
+      "test_filter": "worker_error_envelope_allows_diagnostics_metadata",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "accepted",
+      "error_code": "invalid_pdf",
+      "error_message": "input does not contain a PDF header"
+    },
+    {
       "name": "worker-error-envelope-invalid-json",
       "test_filter": "worker_error_envelope_rejects_invalid_json",
       "boundary": "stable_error_envelope_parser",
@@ -241,6 +249,13 @@
       "rejection_reason": "missing_code"
     },
     {
+      "name": "worker-error-envelope-missing-message",
+      "test_filter": "worker_error_envelope_rejects_missing_message",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "missing_message"
+    },
+    {
       "name": "worker-error-envelope-unknown-code",
       "test_filter": "worker_error_envelope_rejects_unknown_code",
       "boundary": "stable_error_envelope_parser",
@@ -253,6 +268,48 @@
       "boundary": "stable_error_envelope_parser",
       "expected_result": "rejected",
       "rejection_reason": "non_string_message"
+    },
+    {
+      "name": "worker-error-envelope-empty-message",
+      "test_filter": "worker_error_envelope_rejects_empty_message",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "empty_message"
+    },
+    {
+      "name": "worker-error-envelope-duplicate-error-field",
+      "test_filter": "worker_error_envelope_rejects_duplicate_error_field",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "duplicate_error_field"
+    },
+    {
+      "name": "worker-error-envelope-duplicate-code-field",
+      "test_filter": "worker_error_envelope_rejects_duplicate_code_field",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "duplicate_code_field"
+    },
+    {
+      "name": "worker-error-envelope-duplicate-message-field",
+      "test_filter": "worker_error_envelope_rejects_duplicate_message_field",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "duplicate_message_field"
+    },
+    {
+      "name": "worker-error-envelope-unexpected-error-field",
+      "test_filter": "worker_error_envelope_rejects_unexpected_error_field",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "unexpected_error_field"
+    },
+    {
+      "name": "worker-error-envelope-unexpected-top-level-field",
+      "test_filter": "worker_error_envelope_rejects_unexpected_top_level_field",
+      "boundary": "stable_error_envelope_parser",
+      "expected_result": "rejected",
+      "rejection_reason": "unexpected_top_level_field"
     }
   ],
   "diagnostic_cases": [

@@ -223,8 +223,15 @@
             "enum": [
               "invalid_json",
               "missing_code",
+              "missing_message",
               "unknown_code",
-              "non_string_message"
+              "non_string_message",
+              "empty_message",
+              "duplicate_error_field",
+              "duplicate_code_field",
+              "duplicate_message_field",
+              "unexpected_error_field",
+              "unexpected_top_level_field"
             ]
           }
         },

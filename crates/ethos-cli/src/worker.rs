@@ -582,12 +582,123 @@ fn worker_usage_message(stderr: &[u8]) -> String {
         .to_string()
 }
 
+#[derive(Default)]
+struct WorkerErrorEnvelopeFields {
+    error: Option<WorkerErrorFields>,
+}
+
+#[derive(Default)]
+struct WorkerErrorFields {
+    code: Option<ErrorCode>,
+    message: Option<String>,
+}
+
 fn worker_ethos_error(stderr: &[u8]) -> Option<EthosError> {
-    let value: serde_json::Value = serde_json::from_slice(stderr).ok()?;
-    let error = value.get("error")?;
-    let code: ErrorCode = serde_json::from_value(error.get("code")?.clone()).ok()?;
-    let message = error.get("message")?.as_str()?;
+    let mut deserializer = serde_json::Deserializer::from_slice(stderr);
+    let envelope = deserializer
+        .deserialize_map(WorkerErrorEnvelopeVisitor)
+        .ok()?;
+    deserializer.end().ok()?;
+    let error = envelope.error?;
+    let code = error.code?;
+    let message = error.message?;
+    if message.trim().is_empty() {
+        return None;
+    }
     Some(EthosError::new(code, message))
+}
+
+struct WorkerErrorEnvelopeVisitor;
+
+impl<'de> Visitor<'de> for WorkerErrorEnvelopeVisitor {
+    type Value = WorkerErrorEnvelopeFields;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a stable PDF worker error envelope")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        const FIELDS: &[&str] = &["error", "diagnostics"];
+        let mut envelope = WorkerErrorEnvelopeFields::default();
+        let mut diagnostics_seen = false;
+
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "error" => {
+                    if envelope.error.is_some() {
+                        return Err(de::Error::duplicate_field("error"));
+                    }
+                    envelope.error = Some(map.next_value()?);
+                }
+                "diagnostics" => {
+                    if diagnostics_seen {
+                        return Err(de::Error::duplicate_field("diagnostics"));
+                    }
+                    diagnostics_seen = true;
+                    let _ = map.next_value::<IgnoredAny>()?;
+                }
+                _ => {
+                    let _ = map.next_value::<IgnoredAny>()?;
+                    return Err(de::Error::unknown_field(&key, FIELDS));
+                }
+            }
+        }
+
+        Ok(envelope)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for WorkerErrorFields {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_map(WorkerErrorFieldsVisitor)
+    }
+}
+
+struct WorkerErrorFieldsVisitor;
+
+impl<'de> Visitor<'de> for WorkerErrorFieldsVisitor {
+    type Value = WorkerErrorFields;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("stable PDF worker error fields")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        const FIELDS: &[&str] = &["code", "message"];
+        let mut error = WorkerErrorFields::default();
+
+        while let Some(key) = map.next_key::<String>()? {
+            match key.as_str() {
+                "code" => {
+                    if error.code.is_some() {
+                        return Err(de::Error::duplicate_field("code"));
+                    }
+                    error.code = Some(map.next_value()?);
+                }
+                "message" => {
+                    if error.message.is_some() {
+                        return Err(de::Error::duplicate_field("message"));
+                    }
+                    error.message = Some(map.next_value()?);
+                }
+                _ => {
+                    let _ = map.next_value::<IgnoredAny>()?;
+                    return Err(de::Error::unknown_field(&key, FIELDS));
+                }
+            }
+        }
+
+        Ok(error)
+    }
 }
 
 fn worker_failure_diagnostics(output: &Output) -> serde_json::Value {
@@ -983,6 +1094,17 @@ mod tests {
     }
 
     #[test]
+    fn worker_error_envelope_allows_diagnostics_metadata() {
+        let error = worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"input does not contain a PDF header"},"diagnostics":{"pdfium_worker":{"stderr":"sentinel"}}}"#,
+        )
+        .expect("stable worker error envelope with diagnostics metadata is parsed");
+
+        assert_eq!(error.code, ErrorCode::InvalidPdf);
+        assert_eq!(error.message, "input does not contain a PDF header");
+    }
+
+    #[test]
     fn worker_error_envelope_rejects_invalid_json() {
         assert!(worker_ethos_error(&[123]).is_none());
     }
@@ -990,6 +1112,11 @@ mod tests {
     #[test]
     fn worker_error_envelope_rejects_missing_code() {
         assert!(worker_ethos_error(br#"{"error":{"message":"missing code"}}"#).is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_missing_message() {
+        assert!(worker_ethos_error(br#"{"error":{"code":"invalid_pdf"}}"#).is_none());
     }
 
     #[test]
@@ -1003,5 +1130,52 @@ mod tests {
     #[test]
     fn worker_error_envelope_rejects_non_string_message() {
         assert!(worker_ethos_error(br#"{"error":{"code":"invalid_pdf","message":42}}"#).is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_empty_message() {
+        assert!(
+            worker_ethos_error(br#"{"error":{"code":"invalid_pdf","message":"  "}}"#).is_none()
+        );
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_duplicate_error_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"first"},"error":{"code":"invalid_pdf","message":"second"}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_duplicate_code_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","code":"invalid_pdf","message":"duplicate code"}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_duplicate_message_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"first","message":"second"}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_unexpected_error_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"unexpected field","extra":true}}"#
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn worker_error_envelope_rejects_unexpected_top_level_field() {
+        assert!(worker_ethos_error(
+            br#"{"error":{"code":"invalid_pdf","message":"unexpected field"},"extra":true}"#
+        )
+        .is_none());
     }
 }
