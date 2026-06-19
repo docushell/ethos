@@ -88,12 +88,16 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py
       - name: Milestone E internal trust-loop use protocol tests
         run: python3 .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py
+      - name: Milestone E internal trust-loop rehearsal evidence matrix tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix.py
       - name: Milestone E fixture promotion criteria validation record tests
         run: python3 .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py
       - name: Milestone E internal trust-loop walkthrough validation record tests
         run: python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough_validation_record.py
       - name: Milestone E internal trust-loop use protocol validation record tests
         run: python3 .github/scripts/test_milestone_e_internal_trust_loop_use_protocol_validation_record.py
+      - name: Milestone E internal trust-loop rehearsal evidence matrix validation record tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix_validation_record.py
       - name: Milestone E prep validation record tests
         run: python3 .github/scripts/test_milestone_e_prep_validation_record.py
       - name: Milestone B exit checklist tests

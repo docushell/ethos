@@ -1,0 +1,266 @@
+{
+  "schema_version": 1,
+  "status": "source-only-pre-alpha-internal-milestone-e-prep",
+  "scope": "internal_trust_loop_rehearsal_evidence_matrix",
+  "applies_to_inventory": "docs/milestone-e-fixture-candidates.json",
+  "applies_to_criteria": "docs/milestone-e-fixture-promotion-criteria.json",
+  "applies_to_walkthrough": "docs/milestone-e-internal-trust-loop-walkthrough.json",
+  "applies_to_protocol": "docs/milestone-e-internal-trust-loop-use-protocol.json",
+  "matrix_boundary": "internal_source_only_rehearsal_evidence_matrix",
+  "matrix_status": "internal_source_only_rehearsal_evidence_matrix_defined_not_executed",
+  "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+  "public_boundary": [
+    "public reports remain blocked",
+    "release artifacts remain blocked",
+    "package publication remains blocked",
+    "hosted surfaces remain blocked",
+    "public result wording remains blocked",
+    "performance claims remain blocked",
+    "quality claims remain blocked",
+    "footprint claims remain blocked",
+    "table-quality claims remain blocked",
+    "parser-quality claims remain blocked"
+  ],
+  "blocked_outputs": [
+    "public reports",
+    "public result wording",
+    "hosted surfaces",
+    "release artifacts",
+    "package publication",
+    "production positioning",
+    "benchmark publication",
+    "performance claims",
+    "quality claims",
+    "footprint claims",
+    "table-quality claims",
+    "parser-quality claims",
+    "broad demo-generation workflows"
+  ],
+  "evidence_matrix_lanes": [
+    "evidence grounding",
+    "diagnostics",
+    "fixture/evaluator validation",
+    "explicit blockers"
+  ],
+  "required_before_internal_rehearsal": [
+    "candidate remains listed in docs/milestone-e-fixture-candidates.json",
+    "criteria remain listed in docs/milestone-e-fixture-promotion-criteria.json",
+    "walkthrough remains listed in docs/milestone-e-internal-trust-loop-walkthrough.json",
+    "protocol remains listed in docs/milestone-e-internal-trust-loop-use-protocol.json",
+    "validation command is rerun in the source checkout",
+    "input fixtures remain tracked and path-backed",
+    "expected diagnostic boundary remains explicit",
+    "blocker status remains explicit",
+    "make milestone-e-prep remains green",
+    "public-surface posture and claims gates remain green"
+  ],
+  "matrix_rows": [
+    {
+      "step_id": "native-grounding-baseline",
+      "sequence": 1,
+      "candidate_id": "native-verification-trust-loop",
+      "rehearsal_status": "internal_source_only_rehearsal_defined_not_promoted",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make verify-alpha",
+      "required_input_fixtures": [
+        "examples/verify/cases.json",
+        "examples/verify/goldens/native_grounded_report.json"
+      ],
+      "diagnostic_boundary_must_remain": "Native quote, table-cell, and presence evidence checks over checked-in document JSON.",
+      "blockers_must_remain_explicit": [
+        "public result wording",
+        "public-report blockers"
+      ],
+      "evidence_matrix_lanes": [
+        "evidence grounding",
+        "diagnostics",
+        "fixture/evaluator validation",
+        "explicit blockers"
+      ]
+    },
+    {
+      "step_id": "diagnostic-boundary-check",
+      "sequence": 2,
+      "candidate_id": "split-quote-unsupported-claim-diagnostics",
+      "rehearsal_status": "internal_source_only_rehearsal_defined_not_promoted",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make verify-alpha",
+      "required_input_fixtures": [
+        "examples/verify/native_split_quote_citations.json",
+        "examples/verify/native_non_v1_claims_citations.json"
+      ],
+      "diagnostic_boundary_must_remain": "Adjacent native text evidence matching and explicit unsupported non-v1 claim diagnostics.",
+      "blockers_must_remain_explicit": [
+        "future claim-kind expansion"
+      ],
+      "evidence_matrix_lanes": [
+        "evidence grounding",
+        "diagnostics",
+        "fixture/evaluator validation",
+        "explicit blockers"
+      ]
+    },
+    {
+      "step_id": "capability-downgrade-boundary",
+      "sequence": 3,
+      "candidate_id": "capability-downgrade-diagnostics",
+      "rehearsal_status": "internal_source_only_rehearsal_defined_not_promoted",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make milestone-d-capability-downgrade-contract",
+      "required_input_fixtures": [
+        "examples/verify/capability_downgrade_v1_contract.json",
+        "examples/verify/goldens/opendataloader_capability_limited_report.json"
+      ],
+      "diagnostic_boundary_must_remain": "Grounding-source capability limits surface as warnings and capability-blocked checks.",
+      "blockers_must_remain_explicit": [
+        "missing source capabilities"
+      ],
+      "evidence_matrix_lanes": [
+        "evidence grounding",
+        "diagnostics",
+        "fixture/evaluator validation",
+        "explicit blockers"
+      ]
+    },
+    {
+      "step_id": "opendataloader-adapter-grounding",
+      "sequence": 4,
+      "candidate_id": "opendataloader-style-adapter-grounding",
+      "rehearsal_status": "internal_source_only_rehearsal_defined_not_promoted",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make milestone-d-opendataloader-adapter-shape-contract",
+      "required_input_fixtures": [
+        "examples/verify/opendataloader_adapter_shape_v1_contract.json",
+        "examples/verify/opendataloader.json"
+      ],
+      "diagnostic_boundary_must_remain": "OpenDataLoader-style input shape maps to parser-neutral grounding metadata with deterministic adapter diagnostics.",
+      "blockers_must_remain_explicit": [
+        "broader foreign-adapter hardening"
+      ],
+      "evidence_matrix_lanes": [
+        "evidence grounding",
+        "diagnostics",
+        "fixture/evaluator validation",
+        "explicit blockers"
+      ]
+    },
+    {
+      "step_id": "pinned-opendataloader-fixture-path",
+      "sequence": 5,
+      "candidate_id": "pinned-real-opendataloader-fixture-path",
+      "rehearsal_status": "internal_source_only_rehearsal_defined_not_promoted",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make verify-alpha",
+      "required_input_fixtures": [
+        "fixtures/foreign/opendataloader/real/manifest.json",
+        "fixtures/foreign/opendataloader/real/expected.verification_report.json",
+        "fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json"
+      ],
+      "diagnostic_boundary_must_remain": "Pinned foreign output exercises grounded and ungrounded verification paths without public comparison wording.",
+      "blockers_must_remain_explicit": [
+        "public comparison reports",
+        "claim wording"
+      ],
+      "evidence_matrix_lanes": [
+        "evidence grounding",
+        "diagnostics",
+        "fixture/evaluator validation",
+        "explicit blockers"
+      ]
+    },
+    {
+      "step_id": "crop-descriptor-source-bound-shape",
+      "sequence": 6,
+      "candidate_id": "crop-descriptor-source-bound-crop-shape",
+      "rehearsal_status": "internal_source_only_rehearsal_defined_not_promoted",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make milestone-d-internal-contracts",
+      "required_input_fixtures": [
+        "examples/crop/crop_element_v1_contract.json",
+        "examples/crop/crop_element_surface_shape_v1_contract.json"
+      ],
+      "diagnostic_boundary_must_remain": "Source-bound crop descriptor identity and callable CLI/Python surface shape remain tied to current request and descriptor schemas.",
+      "blockers_must_remain_explicit": [
+        "Node crop surfaces",
+        "MCP crop surfaces",
+        "hosted crop surfaces",
+        "sandbox-backed crop surfaces",
+        "foreign-adapter crop surfaces"
+      ],
+      "evidence_matrix_lanes": [
+        "evidence grounding",
+        "diagnostics",
+        "fixture/evaluator validation",
+        "explicit blockers"
+      ]
+    },
+    {
+      "step_id": "rag-chunk-artifact-loop",
+      "sequence": 7,
+      "candidate_id": "rag-chunk-artifact-loop",
+      "rehearsal_status": "internal_source_only_rehearsal_defined_not_promoted",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make rag-chunk-alpha",
+      "required_input_fixtures": [
+        "schemas/examples/chunks.example.jsonl"
+      ],
+      "diagnostic_boundary_must_remain": "RAG chunk output stays fixture-backed with stale-reference and warning-reference validation.",
+      "blockers_must_remain_explicit": [
+        "broader provenance integration",
+        "broader citation integration",
+        "parser integration",
+        "table integration"
+      ],
+      "evidence_matrix_lanes": [
+        "evidence grounding",
+        "diagnostics",
+        "fixture/evaluator validation",
+        "explicit blockers"
+      ]
+    },
+    {
+      "step_id": "security-report-artifact-loop",
+      "sequence": 8,
+      "candidate_id": "security-report-artifact-loop",
+      "rehearsal_status": "internal_source_only_rehearsal_defined_not_promoted",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make security-report-alpha",
+      "required_input_fixtures": [
+        "schemas/examples/security-report.example.json"
+      ],
+      "diagnostic_boundary_must_remain": "Security-report output stays source-grounded with locator, warning-lane, and summary diagnostics.",
+      "blockers_must_remain_explicit": [
+        "broader security-report generation semantics",
+        "artifact UX"
+      ],
+      "evidence_matrix_lanes": [
+        "evidence grounding",
+        "diagnostics",
+        "fixture/evaluator validation",
+        "explicit blockers"
+      ]
+    },
+    {
+      "step_id": "demo-narrative-index",
+      "sequence": 9,
+      "candidate_id": "demo-narrative-index",
+      "rehearsal_status": "internal_source_only_rehearsal_defined_not_promoted",
+      "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+      "validation_command_must_pass": "make verify-alpha",
+      "required_input_fixtures": [
+        "docs/demos/verify-alpha.md"
+      ],
+      "diagnostic_boundary_must_remain": "Existing narrative index remains tied to checked-in alpha verification fixtures and posture guards.",
+      "blockers_must_remain_explicit": [
+        "broad demo-generation",
+        "public result wording"
+      ],
+      "evidence_matrix_lanes": [
+        "evidence grounding",
+        "diagnostics",
+        "fixture/evaluator validation",
+        "explicit blockers"
+      ]
+    }
+  ]
+}

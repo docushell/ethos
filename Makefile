@@ -153,9 +153,11 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py
 	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py
 	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix.py
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py
 	git diff --check
 

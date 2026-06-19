@@ -78,6 +78,10 @@ The internal trust-loop use protocol is recorded in
 [`docs/milestone-e-internal-trust-loop-use-protocol.json`](milestone-e-internal-trust-loop-use-protocol.json)
 and schema-bound by
 [`schemas/ethos-milestone-e-internal-trust-loop-use-protocol.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-use-protocol.schema.json).
+The internal trust-loop rehearsal/evidence matrix is recorded in
+[`docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json`](milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json)
+and schema-bound by
+[`schemas/ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json).
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; it does not approve public result wording, hosted surfaces, package/distribution
 work, or public-facing claims.

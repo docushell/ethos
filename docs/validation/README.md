@@ -59,6 +59,12 @@ Records:
   `docs/milestone-e-internal-trust-loop-use-protocol.json` passed through protocol consistency
   checks, schema validation, public-surface posture checks, `make milestone-e-prep`, and diff
   hygiene; internal walkthrough use remains source-only and not promoted beyond planning.
+- `milestone-e-internal-trust-loop-rehearsal-evidence-matrix-validation-2026-06-19.md` -
+  internal Milestone E trust-loop rehearsal/evidence matrix validation for
+  `docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json` passed through matrix
+  consistency checks, schema validation, public-surface posture checks, `make milestone-e-prep`,
+  and diff hygiene; internal rehearsal planning remains source-only and not promoted beyond
+  planning.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
