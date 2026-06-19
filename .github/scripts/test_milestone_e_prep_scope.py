@@ -286,6 +286,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger_validation_record.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_native_grounding_baseline_rehearsal_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py",
             "git diff --check",
         ]
