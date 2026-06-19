@@ -75,6 +75,11 @@ Records:
   row-specific consistency checks, public-surface posture checks, `make milestone-e-prep`, and diff
   hygiene; the record covers only `native-grounding-baseline` and does not resolve or soften
   blockers.
+- `milestone-e-diagnostic-boundary-check-rehearsal-validation-2026-06-19.md` - internal Milestone E
+  diagnostic-boundary-check rehearsal validation passed through `make verify-alpha`,
+  row-specific consistency checks, public-surface posture checks, `make milestone-e-prep`, and diff
+  hygiene; the record covers only `diagnostic-boundary-check` and does not resolve or soften
+  blockers.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.

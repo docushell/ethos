@@ -104,6 +104,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger_validation_record.py
       - name: Milestone E native grounding baseline rehearsal validation record tests
         run: python3 .github/scripts/test_milestone_e_native_grounding_baseline_rehearsal_validation_record.py
+      - name: Milestone E diagnostic boundary check rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_diagnostic_boundary_check_rehearsal_validation_record.py
       - name: Milestone E prep validation record tests
         run: python3 .github/scripts/test_milestone_e_prep_validation_record.py
       - name: Milestone B exit checklist tests
