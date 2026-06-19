@@ -34,10 +34,11 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            "Status: Pre-alpha / internal transition from Milestone C artifact-validation "
-            "closeout to Milestone D source-only contract work.",
+            "Status: Pre-alpha / internal Milestone D source-only closeout complete, "
+            "transitioning to Milestone E prep.",
             text,
         )
+        self.assertIn("docs/validation/milestone-d-final-closeout-validation-2026-06-19.md", text)
         self.assertIn("docs/milestone-d-verify-citations-contract.md", text)
         self.assertIn("docs/milestone-d-claim-kind-boundary-contract.md", text)
         self.assertIn("docs/milestone-d-grounding-source-contract.md", text)
@@ -47,6 +48,7 @@ class ExecutionStatusTests(unittest.TestCase):
         self.assertIn("docs/milestone-d-crop-element-surface-shape-contract.md", text)
         self.assertIn("docs/milestone-d-sandbox-subprocess-contract.md", text)
         self.assertNotIn("Status: Pre-alpha / Milestone B entry.", text)
+        self.assertNotIn("v1 contract prep has started", text)
 
     def test_internal_check_command_is_documented(self) -> None:
         text = status_text()
@@ -63,15 +65,16 @@ class ExecutionStatusTests(unittest.TestCase):
         self.assertIn("make milestone-d-sandbox-subprocess-contract", text)
         self.assertIn("make milestone-d-internal-contracts", text)
         self.assertIn("docs/validation/milestone-d-contract-closeout-validation-2026-06-19.md", text)
-        self.assertIn("Full 13-D exit still requires implementation-lane review", text)
+        self.assertIn("docs/validation/milestone-d-final-closeout-validation-2026-06-19.md", text)
+        self.assertIn("Full 13-D exit is complete for the current source-only pre-alpha scope", text)
         self.assertIn("CI has a static guard for that target's command wiring", text)
 
     def test_public_posture_boundary_remains_explicit(self) -> None:
         text = status_text()
 
         self.assertIn(
-            'Public language stays at "source-only pre-alpha / internal Milestone C closeout '
-            'and Milestone D contract continuation"',
+            'Public language stays at "source-only pre-alpha / internal Milestone D closeout '
+            'and Milestone E prep"',
             text,
         )
         self.assertIn("claim audit approves specific wording", text)
