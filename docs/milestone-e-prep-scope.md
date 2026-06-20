@@ -96,6 +96,9 @@ The metadata-readiness follow-up record under `docs/validation/` covers README, 
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
 package publication remains blocked.
+The dry-run/smoke follow-up record under `docs/validation/` covers local package assembly for
+`ethos-core` and source-tree checks for `ethos-verify` and `ethos-pdf` only. Dependent package
+assembly, public installation, and package publication remain blocked.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
@@ -166,6 +169,7 @@ package publication approval prep guard,
 package publication prep approval validation guard,
 package publication evidence records guard,
 package publication metadata-readiness guard,
+package publication dry-run/smoke guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -208,6 +212,10 @@ or broad demo-generation workflows.
   metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf`, while
   `ethos-doc`, `ethos-rag`, dry-run/smoke, version/tag policy, PDFium follow-through, and package
   publication remain blocked.
+- The package publication dry-run/smoke follow-up remains limited to local package assembly for
+  `ethos-core` and source-tree checks for `ethos-verify` and `ethos-pdf`; dependent package
+  assembly, public installation, version/tag policy, PDFium follow-through, and package publication
+  remain blocked.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,

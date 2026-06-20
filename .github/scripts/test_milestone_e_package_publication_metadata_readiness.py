@@ -157,13 +157,9 @@ class MilestoneEPackagePublicationMetadataReadinessTests(unittest.TestCase):
         prep = load_json(PREP)
 
         self.assertEqual(
-            {
-                "package_metadata_readiness": (
-                    "docs/validation/"
-                    "milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md"
-                )
-            },
-            prep["follow_up_records"],
+            "docs/validation/"
+            "milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md",
+            prep["follow_up_records"]["package_metadata_readiness"],
         )
         self.assertEqual(
             "metadata/readiness follow-up recorded for in-tree priority candidates; "
