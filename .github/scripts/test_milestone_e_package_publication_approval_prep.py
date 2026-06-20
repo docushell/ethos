@@ -78,6 +78,9 @@ EXPECTED_EVIDENCE_RECORDS = {
     "version_tag_policy": "docs/validation/milestone-e-package-publication-version-tag-policy-validation-2026-06-20.md",
     "pdfium_boundary": "docs/validation/milestone-e-package-publication-pdfium-boundary-validation-2026-06-20.md",
 }
+EXPECTED_FOLLOW_UP_RECORDS = {
+    "package_metadata_readiness": "docs/validation/milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md",
+}
 
 FORBIDDEN_PREP_WORDING = [
     "public beta is approved",
@@ -242,8 +245,8 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
 
         self.assertIn("evidence recorded", status["package_inventory"])
         self.assertIn("publication remains blocked", status["package_inventory"])
-        self.assertIn("evidence recorded as incomplete", status["package_metadata_license_readme_review"])
-        self.assertIn("remain blockers", status["package_metadata_license_readme_review"])
+        self.assertIn("metadata/readiness follow-up recorded", status["package_metadata_license_readme_review"])
+        self.assertIn("publication remains blocked", status["package_metadata_license_readme_review"])
         self.assertIn("evidence recorded as plan only", status["install_build_smoke_path"])
         self.assertIn("remain unrun blockers", status["install_build_smoke_path"])
         self.assertIn("evidence recorded as draft policy", status["version_tag_policy"])
@@ -263,6 +266,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             status["decider_signoff"],
         )
         self.assertEqual(EXPECTED_EVIDENCE_RECORDS, load_json(PREP)["evidence_records"])
+        self.assertEqual(EXPECTED_FOLLOW_UP_RECORDS, load_json(PREP)["follow_up_records"])
 
     def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
         approved = load_json(PREP)["approved_package_publication_prep"]

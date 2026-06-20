@@ -19,6 +19,7 @@
     "approved_package_publication_prep",
     "evidence_review_status",
     "evidence_records",
+    "follow_up_records",
     "public_boundary",
     "approval_scope",
     "required_evidence",
@@ -50,6 +51,7 @@
     },
     "evidence_review_status": { "$ref": "#/$defs/evidence_review_status" },
     "evidence_records": { "$ref": "#/$defs/evidence_records" },
+    "follow_up_records": { "$ref": "#/$defs/follow_up_records" },
     "public_boundary": {
       "type": "array",
       "minItems": 10,
@@ -192,7 +194,7 @@
           "const": "evidence recorded; ADR-0006 reserved names and current workspace mapping are reconciled for prep, while publication remains blocked"
         },
         "package_metadata_license_readme_review": {
-          "const": "evidence recorded as incomplete; per-crate package metadata, crate READMEs, license bundle, and NOTICE packaging remain blockers"
+          "const": "metadata/readiness follow-up recorded for in-tree priority candidates; ethos-doc and ethos-rag remain reserved placeholders without in-tree manifests, and publication remains blocked"
         },
         "install_build_smoke_path": {
           "const": "evidence recorded as plan only; source cargo build --locked is green, but cargo publish --dry-run and registry-install smoke remain unrun blockers"
@@ -239,6 +241,16 @@
         },
         "pdfium_boundary": {
           "const": "docs/validation/milestone-e-package-publication-pdfium-boundary-validation-2026-06-20.md"
+        }
+      }
+    },
+    "follow_up_records": {
+      "type": "object",
+      "required": ["package_metadata_readiness"],
+      "additionalProperties": false,
+      "properties": {
+        "package_metadata_readiness": {
+          "const": "docs/validation/milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md"
         }
       }
     },
@@ -326,7 +338,7 @@
         "public benchmark reports remain blocked",
         "public benchmark claims remain blocked",
         "project-maintained PDFium builds remain blocked",
-        "per-crate metadata, README, license, NOTICE, dry-run, version/tag, and PDFium-boundary evidence remains incomplete",
+        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; dry-run, version/tag, and PDFium-boundary evidence remains incomplete",
         "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication"
       ]
     },

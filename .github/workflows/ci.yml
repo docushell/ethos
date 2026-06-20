@@ -198,6 +198,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_package_publication_prep_approval_validation_record.py
       - name: Milestone E package publication evidence record tests
         run: python3 .github/scripts/test_milestone_e_package_publication_evidence_records.py
+      - name: Milestone E package publication metadata readiness tests
+        run: python3 .github/scripts/test_milestone_e_package_publication_metadata_readiness.py
       - name: Milestone E validation-command index tests
         run: python3 .github/scripts/test_milestone_e_validation_command_index.py
       - name: Milestone E validation-command index validation record tests

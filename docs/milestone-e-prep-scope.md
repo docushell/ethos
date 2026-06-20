@@ -92,6 +92,10 @@ positioning, public benchmark reports, or public benchmark claims.
 The package publication evidence records under `docs/validation/` record reserved-name inventory
 reconciliation, metadata/license/README readiness, dry-run/smoke planning, version/tag policy, and
 PDFium packaging boundary evidence for that prep lane. They keep package publication blocked.
+The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
+metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
+`ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
+package publication remains blocked.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
@@ -161,6 +165,7 @@ public beta source-only approval guard,
 package publication approval prep guard,
 package publication prep approval validation guard,
 package publication evidence records guard,
+package publication metadata-readiness guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -199,6 +204,10 @@ or broad demo-generation workflows.
 - The package publication evidence records remain indexed, source-bound, and limited to current
   prep blockers for reserved-name inventory, metadata/license/README readiness, dry-run/smoke
   planning, version/tag policy, and PDFium packaging boundary review.
+- The package publication metadata-readiness follow-up remains limited to README, NOTICE, manifest
+  metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf`, while
+  `ethos-doc`, `ethos-rag`, dry-run/smoke, version/tag policy, PDFium follow-through, and package
+  publication remain blocked.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,
