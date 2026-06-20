@@ -138,7 +138,11 @@ class MilestoneEFixturePromotionCriteriaTests(unittest.TestCase):
                 candidate["expected_diagnostic_boundary"],
                 case["diagnostic_boundary_must_remain"],
             )
-            self.assertTrue(case["blockers_must_remain_explicit"], candidate_id)
+            self.assertEqual(
+                candidate["blockers_must_remain_explicit"],
+                case["blockers_must_remain_explicit"],
+            )
+            self.assertTrue(candidate["blockers_must_remain_explicit"], candidate_id)
             self.assertIn(case["validation_command_must_pass"], ALLOWED_COMMANDS)
             assert_make_target_declared(
                 self,

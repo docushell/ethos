@@ -44,6 +44,10 @@ Records:
   fixture-promotion criteria validation for `docs/milestone-e-fixture-promotion-criteria.json`
   passed through criteria consistency checks, JSON parsing, public-surface posture checks,
   `make milestone-e-prep`, and diff hygiene; fixture promotion remains internal planning only.
+- `milestone-e-fixture-candidate-blocker-alignment-validation-2026-06-20.md` - internal
+  Milestone E fixture-candidate blocker alignment validation passed through fixture-candidate
+  schema checks, criteria alignment checks, public-surface posture checks, `make
+  milestone-e-prep`, and diff hygiene; fixture blockers remain explicit and unresolved.
 - `milestone-e-internal-trust-loop-walkthrough-validation-2026-06-19.md` - internal Milestone E
   trust-loop walkthrough validation for `docs/milestone-e-internal-trust-loop-walkthrough.json`
   passed through walkthrough consistency checks, schema validation, `make verify-alpha`,
