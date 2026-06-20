@@ -118,6 +118,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_rag_chunk_artifact_loop_rehearsal_validation_record.py
       - name: Milestone E security report artifact loop rehearsal validation record tests
         run: python3 .github/scripts/test_milestone_e_security_report_artifact_loop_rehearsal_validation_record.py
+      - name: Milestone E demo narrative index rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_demo_narrative_index_rehearsal_validation_record.py
       - name: Milestone E prep validation record tests
         run: python3 .github/scripts/test_milestone_e_prep_validation_record.py
       - name: Milestone B exit checklist tests

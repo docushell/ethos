@@ -431,6 +431,28 @@ class CiWorkflowTests(unittest.TestCase):
                 "python3 .github/scripts/"
                 "test_milestone_e_security_report_artifact_loop_rehearsal_validation_record.py"
             ),
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_demo_narrative_index_rehearsal_validation_record.py"
+            ),
+        )
+        self.assertIn(
+            "python3 .github/scripts/"
+            "test_milestone_e_demo_narrative_index_rehearsal_validation_record.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/"
+                "test_milestone_e_demo_narrative_index_rehearsal_validation_record.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_demo_narrative_index_rehearsal_validation_record.py"
+            ),
             text.index("python3 .github/scripts/test_milestone_e_prep_validation_record.py"),
         )
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_validation_record.py", text)

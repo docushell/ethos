@@ -110,6 +110,10 @@ Records:
   `make security-report-alpha`, row-specific consistency checks, public-surface posture checks,
   `make milestone-e-prep`, and diff hygiene; the record covers only
   `security-report-artifact-loop` and does not resolve or soften blockers.
+- `milestone-e-demo-narrative-index-rehearsal-validation-2026-06-20.md` - internal Milestone E
+  demo-narrative-index rehearsal validation passed through `make verify-alpha`, row-specific
+  consistency checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene;
+  the record covers only `demo-narrative-index` and does not resolve or soften blockers.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
