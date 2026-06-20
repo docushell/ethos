@@ -213,6 +213,12 @@ Records:
   milestone-e-prep`, and diff hygiene; the record covers only blocker prep for public beta,
   package publication, hosted surface, production positioning, and public benchmark report lanes,
   and does not approve any lane.
+- `milestone-e-public-beta-approval-prep-validation-2026-06-20.md` - internal Milestone E
+  public beta approval prep validation for `docs/milestone-e-public-beta-approval-prep.json`
+  passed through public beta approval prep checks, schema validation, validation-record checks,
+  public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record starts
+  required-evidence and blocker prep only, keeps public beta blocked, and does not approve public
+  beta.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

@@ -65,6 +65,11 @@ The public approval lane blocker ledger lives in
 beta, package publication, hosted surface, production positioning, and public benchmark report
 approval lanes as blocked pending dedicated evidence, owners, wording, gate scripts, validation
 records, and decider review; it does not approve any lane and is not public result wording.
+The public beta approval prep lane lives in
+`docs/milestone-e-public-beta-approval-prep.json` and is schema-bound by
+`schemas/ethos-milestone-e-public-beta-approval-prep.schema.json`. It starts public beta approval
+prep as a blocked internal source-tree lane, records required evidence, exact blockers, and
+allowed/forbidden wording, and does not approve public beta or broaden public wording.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
@@ -73,7 +78,7 @@ blocked.
 The rehearsal/evidence matrix and blocker ledger must also keep the same evidence-lane alignment so
 evidence grounding, diagnostics, fixture/evaluator validation, and explicit blockers remain the
 only current internal rehearsal lanes.
-All seven current E prep JSON artifacts and their row validation records must keep the same
+All eight current E prep JSON artifacts and their row validation records must keep the same
 diagnostic-boundary alignment so expected diagnostic boundaries remain tied to source-only
 evidence grounding, diagnostics, fixture/evaluator validation, and explicit blockers.
 All current E prep artifacts and rows that carry promotion status must also keep
@@ -129,6 +134,7 @@ required-before alignment, validation-record source-head alignment, this prep-sc
 fixture-candidate blocker-alignment validation,
 the internal trust-loop walkthrough, use-protocol,
 rehearsal/evidence matrix, blocker-ledger guards, and public approval lane blocker guard,
+public beta approval prep guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -142,7 +148,7 @@ or broad demo-generation workflows.
   inventory.
 - The schema validation gate keeps the fixture-candidate inventory and fixture-promotion criteria
   closed to unreviewed fields.
-- The schema-registry alignment guard keeps the seven E prep JSON artifacts and their seven schemas in
+- The schema-registry alignment guard keeps the eight E prep JSON artifacts and their eight schemas in
   one-to-one sync across schema validation and source-tree status docs.
 - Fixture-candidate blocker lists remain structured, nonempty, and visible before any internal
   fixture-planning use.
@@ -156,6 +162,8 @@ or broad demo-generation workflows.
 - The public approval lane blocker ledger remains limited to public beta, package publication,
   hosted surface, production positioning, and public benchmark report blocker prep, and does not
   approve any lane.
+- The public beta approval prep lane remains limited to required-evidence and blocker prep, remains
+  `not_approved`, and does not approve public beta.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,

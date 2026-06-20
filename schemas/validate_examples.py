@@ -134,6 +134,9 @@ PAIRS = [
     ("ethos-milestone-e-public-approval-lane-blockers.schema.json", [
         ROOT / "docs" / "milestone-e-public-approval-lane-blockers.json",
     ]),
+    ("ethos-milestone-e-public-beta-approval-prep.schema.json", [
+        ROOT / "docs" / "milestone-e-public-beta-approval-prep.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

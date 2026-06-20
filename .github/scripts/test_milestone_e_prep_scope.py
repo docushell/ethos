@@ -56,6 +56,10 @@ PUBLIC_APPROVAL_LANE_BLOCKERS = ROOT / "docs/milestone-e-public-approval-lane-bl
 PUBLIC_APPROVAL_LANE_BLOCKERS_SCHEMA = (
     ROOT / "schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json"
 )
+PUBLIC_BETA_APPROVAL_PREP = ROOT / "docs/milestone-e-public-beta-approval-prep.json"
+PUBLIC_BETA_APPROVAL_PREP_SCHEMA = (
+    ROOT / "schemas/ethos-milestone-e-public-beta-approval-prep.schema.json"
+)
 ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
@@ -251,6 +255,14 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         )
         self.assertIn("docs/milestone-e-internal-trust-loop-blocker-ledger.json", roadmap)
         self.assertIn("docs/milestone-e-internal-trust-loop-blocker-ledger.json", status)
+        self.assertIn("docs/milestone-e-public-approval-lane-blockers.json", roadmap)
+        self.assertIn("docs/milestone-e-public-approval-lane-blockers.json", status)
+        self.assertIn("docs/milestone-e-public-beta-approval-prep.json", roadmap)
+        self.assertIn("docs/milestone-e-public-beta-approval-prep.json", status)
+        self.assertIn("public beta approval prep", normalized_roadmap)
+        self.assertIn("public beta approval prep", normalized_status)
+        self.assertIn("does not approve public beta", normalized_roadmap)
+        self.assertIn("does not approve public beta", normalized_status)
         self.assertIn("make milestone-e-prep", status)
         self.assertIn("blocked-output alignment", normalized_roadmap)
         self.assertIn("blocked-output alignment", normalized_status)
@@ -360,6 +372,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_required_before_alignment_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_public_approval_lane_blockers.py",
             "$(PYTHON) .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_public_beta_approval_prep.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",
@@ -409,6 +423,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         ledger = json.loads(TRUST_LOOP_BLOCKER_LEDGER.read_text(encoding="utf-8"))
         lane_schema = json.loads(PUBLIC_APPROVAL_LANE_BLOCKERS_SCHEMA.read_text(encoding="utf-8"))
         lane_ledger = json.loads(PUBLIC_APPROVAL_LANE_BLOCKERS.read_text(encoding="utf-8"))
+        beta_schema = json.loads(PUBLIC_BETA_APPROVAL_PREP_SCHEMA.read_text(encoding="utf-8"))
+        beta_prep = json.loads(PUBLIC_BETA_APPROVAL_PREP.read_text(encoding="utf-8"))
 
         self.assertEqual(False, candidates_schema["additionalProperties"])
         self.assertEqual(False, criteria_schema["additionalProperties"])
@@ -417,6 +433,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertEqual(False, matrix_schema["additionalProperties"])
         self.assertEqual(False, ledger_schema["additionalProperties"])
         self.assertEqual(False, lane_schema["additionalProperties"])
+        self.assertEqual(False, beta_schema["additionalProperties"])
         self.assertEqual(
             "internal_trust_loop_walkthrough_plan",
             walkthrough["scope"],
@@ -431,6 +448,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         )
         self.assertEqual("internal_trust_loop_blocker_ledger", ledger["scope"])
         self.assertEqual("public_approval_lane_blocker_ledger", lane_ledger["scope"])
+        self.assertEqual("public_beta_approval_prep", beta_prep["scope"])
         self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", validate_examples)
         self.assertIn("docs\" / \"milestone-e-fixture-candidates.json", validate_examples)
         self.assertIn(
@@ -481,6 +499,14 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "docs\" / \"milestone-e-public-approval-lane-blockers.json",
             validate_examples,
         )
+        self.assertIn(
+            "ethos-milestone-e-public-beta-approval-prep.schema.json",
+            validate_examples,
+        )
+        self.assertIn(
+            "docs\" / \"milestone-e-public-beta-approval-prep.json",
+            validate_examples,
+        )
         self.assertIn("ethos-milestone-e-fixture-candidates.schema.json", schemas_readme)
         self.assertIn(
             "ethos-milestone-e-fixture-promotion-criteria.schema.json",
@@ -504,6 +530,10 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         )
         self.assertIn(
             "ethos-milestone-e-public-approval-lane-blockers.schema.json",
+            schemas_readme,
+        )
+        self.assertIn(
+            "ethos-milestone-e-public-beta-approval-prep.schema.json",
             schemas_readme,
         )
 

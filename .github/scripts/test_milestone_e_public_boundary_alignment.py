@@ -77,6 +77,10 @@ BOUNDARY_ARTIFACTS = (
         "docs/milestone-e-public-approval-lane-blockers.json",
         "schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json",
     ),
+    BoundaryArtifact(
+        "docs/milestone-e-public-beta-approval-prep.json",
+        "schemas/ethos-milestone-e-public-beta-approval-prep.schema.json",
+    ),
 )
 
 
