@@ -83,11 +83,12 @@ Focused validation command:
 - `make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python`
 
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate,
-schema/example validation, schema-registry alignment for the E prep JSON artifacts, this prep-scope
-guard, fixture-candidate blocker-alignment validation, the internal trust-loop walkthrough,
-use-protocol, rehearsal/evidence matrix, and blocker-ledger guards, validation-record guards, and
-diff hygiene. It intentionally does not run release, packaging, hosted, benchmark-report, or broad
-demo-generation workflows.
+schema/example validation, schema-registry alignment for the E prep JSON artifacts,
+public-boundary alignment, this prep-scope guard, fixture-candidate blocker-alignment validation,
+the internal trust-loop walkthrough, use-protocol, rehearsal/evidence matrix, and blocker-ledger
+guards, validation-command index checks, validation-record index checks, the prep guard-sequence
+index, validation-record guards, and diff hygiene. It intentionally does not run public-report,
+release, package, hosted, benchmark-report, or broad demo-generation workflows.
 
 ## Exit Criteria For This Prep Slice
 

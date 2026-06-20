@@ -142,6 +142,10 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_validation_record_index.py
       - name: Milestone E validation-record index validation record tests
         run: python3 .github/scripts/test_milestone_e_validation_record_index_validation_record.py
+      - name: Milestone E prep guard-sequence index tests
+        run: python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py
+      - name: Milestone E prep guard-sequence index validation record tests
+        run: python3 .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py
       - name: Milestone E prep validation record tests
         run: python3 .github/scripts/test_milestone_e_prep_validation_record.py
       - name: Milestone B exit checklist tests
