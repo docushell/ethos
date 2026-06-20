@@ -173,12 +173,9 @@ class EthosCli:
             raise ValueError(f"output_format must be one of: {allowed}")
         if pages is not None and not pages:
             raise ValueError("pages must be non-empty when provided")
-        if timeout_seconds is not None and timeout_seconds <= 0:
-            raise ValueError("timeout_seconds must be greater than zero when provided")
+        _validate_timeout_seconds(timeout_seconds)
 
-        pdf_path = Path(input_pdf)
-        if not pdf_path.is_file():
-            raise FileNotFoundError(os.fspath(input_pdf))
+        pdf_path = _existing_file_path(input_pdf)
 
         command = self._doc_parse_command(
             pdf_path,
@@ -188,14 +185,7 @@ class EthosCli:
         )
         stdout = self._run(command, timeout_seconds=timeout_seconds)
         if output_format == "json":
-            try:
-                return json.loads(stdout)
-            except json.JSONDecodeError as exc:
-                raise EthosOutputError(
-                    f"ethos returned invalid JSON: {exc.msg}",
-                    command,
-                    stdout,
-                ) from exc
+            return _load_json_stdout(stdout, command)
         return stdout
 
     def crop_element(
@@ -214,20 +204,13 @@ class EthosCli:
             raise ValueError("check_id must be non-empty")
         if (crop_source_pdf is None) != (crop_dir is None):
             raise ValueError("crop_source_pdf and crop_dir must be provided together")
-        if timeout_seconds is not None and timeout_seconds <= 0:
-            raise ValueError("timeout_seconds must be greater than zero when provided")
+        _validate_timeout_seconds(timeout_seconds)
 
-        document_path = Path(input_document)
-        if not document_path.is_file():
-            raise FileNotFoundError(os.fspath(input_document))
-        request_path = Path(request)
-        if not request_path.is_file():
-            raise FileNotFoundError(os.fspath(request))
-        source_pdf_path = None
-        if crop_source_pdf is not None:
-            source_pdf_path = Path(crop_source_pdf)
-            if not source_pdf_path.is_file():
-                raise FileNotFoundError(os.fspath(crop_source_pdf))
+        document_path = _existing_file_path(input_document)
+        request_path = _existing_file_path(request)
+        source_pdf_path = (
+            None if crop_source_pdf is None else _existing_file_path(crop_source_pdf)
+        )
         crop_dir_path = None if crop_dir is None else Path(crop_dir)
 
         command = self._crop_element_command(
@@ -238,14 +221,7 @@ class EthosCli:
             crop_dir=crop_dir_path,
         )
         stdout = self._run(command, timeout_seconds=timeout_seconds)
-        try:
-            return json.loads(stdout)
-        except json.JSONDecodeError as exc:
-            raise EthosOutputError(
-                f"ethos returned invalid JSON: {exc.msg}",
-                command,
-                stdout,
-            ) from exc
+        return _load_json_stdout(stdout, command)
 
     def _doc_parse_command(
         self,
@@ -410,6 +386,29 @@ def crop_element(
         crop_dir=crop_dir,
         timeout_seconds=timeout_seconds,
     )
+
+
+def _validate_timeout_seconds(timeout_seconds: Optional[float]) -> None:
+    if timeout_seconds is not None and timeout_seconds <= 0:
+        raise ValueError("timeout_seconds must be greater than zero when provided")
+
+
+def _existing_file_path(path: PathLike) -> Path:
+    file_path = Path(path)
+    if not file_path.is_file():
+        raise FileNotFoundError(os.fspath(path))
+    return file_path
+
+
+def _load_json_stdout(stdout: str, command: Sequence[str]) -> Any:
+    try:
+        return json.loads(stdout)
+    except json.JSONDecodeError as exc:
+        raise EthosOutputError(
+            f"ethos returned invalid JSON: {exc.msg}",
+            command,
+            stdout,
+        ) from exc
 
 
 def _decode_utf8(data: bytes, command: Sequence[str], stream: str) -> str:
