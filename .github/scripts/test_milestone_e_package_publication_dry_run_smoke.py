@@ -123,7 +123,7 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
         self.assertIn("dependent package assembly remains blocked", blocker_text)
         self.assertIn("real package version selection", blocker_text)
         self.assertIn("package tag creation", blocker_text)
-        self.assertIn("PDFium-boundary", blocker_text)
+        self.assertIn("project-maintained PDFium builds remain blocked", blocker_text)
 
     def test_validation_record_is_indexed_and_names_smoke_results(self) -> None:
         readme = read(VALIDATION_README)

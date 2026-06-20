@@ -82,6 +82,7 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_metadata_readiness": "docs/validation/milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md",
     "package_dry_run_smoke": "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md",
     "package_version_tag_policy": "docs/validation/milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md",
+    "package_pdfium_boundary": "docs/validation/milestone-e-package-publication-pdfium-boundary-closeout-validation-2026-06-21.md",
 }
 
 FORBIDDEN_PREP_WORDING = [
@@ -256,8 +257,11 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("workspace 0.1.0 remains source-tree only", status["version_tag_policy"])
         self.assertIn("reserved 0.0.0-reserved.0 names remain placeholders", status["version_tag_policy"])
         self.assertIn("real-version publication remains blocked", status["version_tag_policy"])
-        self.assertIn("evidence recorded", status["pdfium_packaging_boundary"])
-        self.assertIn("caller-provided PDFium only", status["pdfium_packaging_boundary"])
+        self.assertIn("PDFium boundary follow-up recorded", status["pdfium_packaging_boundary"])
+        self.assertIn("no bundled PDFium binary", status["pdfium_packaging_boundary"])
+        self.assertIn("caller-provided ETHOS_PDFIUM_LIBRARY_PATH", status["pdfium_packaging_boundary"])
+        self.assertIn("no raw PDFium types across public schemas/APIs", status["pdfium_packaging_boundary"])
+        self.assertIn("publication remains blocked", status["pdfium_packaging_boundary"])
         self.assertEqual(
             "run after exact wording changes by the package evidence guard path",
             status["public_surface_posture_check"],

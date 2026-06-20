@@ -282,6 +282,10 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
   publication version/tag policy validation for the current source-tree candidate path; the record
   keeps package publication and public installation blocked while recording source-tree version,
   reserved placeholder version, source snapshot tag, and future package tag namespace separation.
+- `milestone-e-package-publication-pdfium-boundary-closeout-validation-2026-06-21.md` - package
+  publication PDFium boundary validation for the current source-tree `ethos-pdf` path; the record
+  keeps package publication and public installation blocked while recording no bundled PDFium
+  binary, caller-provided PDFium loading, and no raw PDFium FFI types across public schemas/APIs.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
