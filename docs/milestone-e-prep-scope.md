@@ -83,6 +83,9 @@ across `docs/milestone-e-fixture-candidates.json`,
 `docs/milestone-e-internal-trust-loop-use-protocol.json`,
 `docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json`, and
 `docs/milestone-e-internal-trust-loop-blocker-ledger.json`.
+The current E prep artifacts with `required_before_*` fields must keep required-before alignment
+so `make milestone-e-prep remains green`, public-surface posture checks, claims gates, diagnostic
+boundaries, and explicit blockers remain required before any internal planning use advances.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -110,7 +113,8 @@ The target runs status/roadmap posture checks, public-surface posture checks, th
 schema/example validation, schema-registry alignment for the E prep JSON artifacts,
 public-boundary alignment, blocked-output alignment, evidence-lane alignment,
 diagnostic-boundary alignment, promotion-status alignment, source-status alignment, applies-to
-binding alignment, this prep-scope guard, fixture-candidate blocker-alignment validation,
+binding alignment, required-before alignment, this prep-scope guard,
+fixture-candidate blocker-alignment validation,
 the internal trust-loop walkthrough, use-protocol,
 rehearsal/evidence matrix, and blocker-ledger guards, validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
@@ -150,5 +154,7 @@ or broad demo-generation workflows.
 - Applies-to binding alignment remains exact across current fixture-candidate inventory,
   fixture-promotion criteria, walkthrough, use protocol, rehearsal/evidence matrix, blocker ledger,
   and matching schemas.
+- Required-before alignment remains exact across fixture-promotion criteria, walkthrough, use
+  protocol, rehearsal/evidence matrix, blocker ledger, and matching schemas.
 - Public language remains source-only pre-alpha and internal-continuation scoped.
 - External blockers remain visible before any public-facing Milestone E work starts.

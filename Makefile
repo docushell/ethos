@@ -157,6 +157,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_promotion_status_alignment.py
 	$(PYTHON) .github/scripts/test_milestone_e_source_status_alignment.py
 	$(PYTHON) .github/scripts/test_milestone_e_applies_to_binding_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_required_before_alignment.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py
@@ -188,6 +189,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_promotion_status_alignment_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_source_status_alignment_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_applies_to_binding_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_required_before_alignment_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py
