@@ -83,6 +83,7 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_dry_run_smoke": "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md",
     "package_version_tag_policy": "docs/validation/milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md",
     "package_pdfium_boundary": "docs/validation/milestone-e-package-publication-pdfium-boundary-closeout-validation-2026-06-21.md",
+    "package_dependency_ordering": "docs/validation/milestone-e-package-publication-dependency-ordering-closeout-validation-2026-06-21.md",
 }
 
 FORBIDDEN_PREP_WORDING = [
@@ -250,8 +251,9 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("publication remains blocked", status["package_inventory"])
         self.assertIn("metadata/readiness follow-up recorded", status["package_metadata_license_readme_review"])
         self.assertIn("publication remains blocked", status["package_metadata_license_readme_review"])
-        self.assertIn("local source-tree smoke recorded", status["install_build_smoke_path"])
-        self.assertIn("dependent package assembly remains blocked", status["install_build_smoke_path"])
+        self.assertIn("local source-tree smoke", status["install_build_smoke_path"])
+        self.assertIn("dependency-ordering follow-up recorded", status["install_build_smoke_path"])
+        self.assertIn("ethos-doc-core before ethos-verify and ethos-pdf", status["install_build_smoke_path"])
         self.assertIn("publication remains blocked", status["install_build_smoke_path"])
         self.assertIn("version/tag policy follow-up recorded", status["version_tag_policy"])
         self.assertIn("workspace 0.1.0 remains source-tree only", status["version_tag_policy"])
