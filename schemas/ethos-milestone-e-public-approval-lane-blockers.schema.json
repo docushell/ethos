@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:milestone-e-public-approval-lane-blockers:1",
+  "title": "Ethos Milestone E public approval lane blocker ledger",
+  "description": "Source-only pre-alpha Milestone E prep ledger for keeping later public approval lanes blocked until each lane has dedicated evidence, owner approval, wording, and gate coverage.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "scope",
+    "ledger_boundary",
+    "ledger_status",
+    "exact_approved_public_sentence",
+    "approved_source_snapshot",
+    "public_boundary",
+    "lane_gate_script",
+    "lane_validation_record",
+    "approval_lanes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "status": { "const": "source-only-pre-alpha-internal-milestone-e-prep" },
+    "scope": { "const": "public_approval_lane_blocker_ledger" },
+    "ledger_boundary": { "const": "internal_public_approval_lane_blocker_prep" },
+    "ledger_status": { "const": "all_public_approval_lanes_blocked_pending_dedicated_gate" },
+    "exact_approved_public_sentence": {
+      "const": "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs."
+    },
+    "approved_source_snapshot": { "$ref": "#/$defs/approved_source_snapshot" },
+    "public_boundary": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/public_boundary" },
+      "uniqueItems": true
+    },
+    "lane_gate_script": {
+      "const": ".github/scripts/test_milestone_e_public_approval_lane_blockers.py"
+    },
+    "lane_validation_record": {
+      "const": "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md"
+    },
+    "approval_lanes": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/approval_lane" }
+    }
+  },
+  "$defs": {
+    "approved_source_snapshot": {
+      "type": "object",
+      "required": [
+        "source_head",
+        "tag",
+        "archive",
+        "sha256",
+        "boundary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_head": {
+          "const": "660f268df400351347d5185ad36584faa0481c7f"
+        },
+        "tag": { "const": "ethos-source-snapshot-660f268" },
+        "archive": { "const": "ethos-source-snapshot-660f268.tar.gz" },
+        "sha256": {
+          "const": "58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87"
+        },
+        "boundary": {
+          "const": "source-snapshot-only; no public beta, package, hosted, production, or public-report approval"
+        }
+      }
+    },
+    "approval_lane": {
+      "type": "object",
+      "required": [
+        "sequence",
+        "lane_id",
+        "lane_name",
+        "approval_status",
+        "explicit_scope",
+        "required_evidence",
+        "explicit_blockers",
+        "allowed_wording",
+        "forbidden_wording",
+        "approval_owner",
+        "gate_script",
+        "validation_record"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "lane_id": {
+          "enum": [
+            "public-beta-approval",
+            "package-publication",
+            "hosted-surface",
+            "production-positioning",
+            "public-benchmark-report"
+          ]
+        },
+        "lane_name": {
+          "enum": [
+            "Public beta approval",
+            "Package publication",
+            "Hosted surface",
+            "Production positioning",
+            "Public benchmark report"
+          ]
+        },
+        "approval_status": { "const": "blocked_pending_dedicated_approval" },
+        "explicit_scope": { "type": "string", "minLength": 1 },
+        "required_evidence": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "explicit_blockers": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "allowed_wording": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "forbidden_wording": {
+          "type": "array",
+          "minItems": 4,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "approval_owner": {
+          "enum": [
+            "benchmark owner / decider",
+            "decider",
+            "devrel / decider"
+          ]
+        },
+        "gate_script": {
+          "const": ".github/scripts/test_milestone_e_public_approval_lane_blockers.py"
+        },
+        "validation_record": {
+          "const": "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md"
+        }
+      }
+    },
+    "public_boundary": {
+      "enum": [
+        "public reports remain blocked",
+        "release artifacts remain blocked",
+        "package publication remains blocked",
+        "hosted surfaces remain blocked",
+        "public result wording remains blocked",
+        "performance claims remain blocked",
+        "quality claims remain blocked",
+        "footprint claims remain blocked",
+        "table-quality claims remain blocked",
+        "parser-quality claims remain blocked"
+      ]
+    }
+  }
+}

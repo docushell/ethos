@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:milestone-e-package-publication-approval-prep:1",
+  "title": "Ethos Milestone E package publication approval prep",
+  "description": "Source-only pre-alpha Milestone E prep artifact for starting the package publication approval lane while keeping package publication blocked pending dedicated evidence and signoff.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "scope",
+    "lane_id",
+    "lane_name",
+    "approval_status",
+    "decision_status",
+    "approval_owner",
+    "exact_approved_public_sentence",
+    "approved_source_snapshot",
+    "public_boundary",
+    "approval_scope",
+    "required_evidence",
+    "explicit_blockers",
+    "allowed_wording",
+    "forbidden_wording",
+    "gate_script",
+    "validation_record"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "status": { "const": "source-only-pre-alpha-internal-milestone-e-prep" },
+    "scope": { "const": "package_publication_approval_prep" },
+    "lane_id": { "const": "package-publication" },
+    "lane_name": { "const": "Package publication" },
+    "approval_status": { "const": "started_blocked_pending_dedicated_approval" },
+    "decision_status": { "const": "not_approved" },
+    "approval_owner": { "const": "devrel / decider" },
+    "exact_approved_public_sentence": {
+      "const": "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs."
+    },
+    "approved_source_snapshot": { "$ref": "#/$defs/approved_source_snapshot" },
+    "public_boundary": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/public_boundary" },
+      "uniqueItems": true
+    },
+    "approval_scope": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/approval_scope" },
+      "uniqueItems": true
+    },
+    "required_evidence": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "$ref": "#/$defs/required_evidence" },
+      "uniqueItems": true
+    },
+    "explicit_blockers": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": { "$ref": "#/$defs/explicit_blocker" },
+      "uniqueItems": true
+    },
+    "allowed_wording": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/allowed_wording" },
+      "uniqueItems": true
+    },
+    "forbidden_wording": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/forbidden_wording" },
+      "uniqueItems": true
+    },
+    "gate_script": {
+      "const": ".github/scripts/test_milestone_e_package_publication_approval_prep.py"
+    },
+    "validation_record": {
+      "const": "docs/validation/milestone-e-package-publication-approval-prep-validation-2026-06-20.md"
+    }
+  },
+  "$defs": {
+    "approved_source_snapshot": {
+      "type": "object",
+      "required": [
+        "source_head",
+        "tag",
+        "archive",
+        "sha256",
+        "boundary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_head": {
+          "const": "660f268df400351347d5185ad36584faa0481c7f"
+        },
+        "tag": { "const": "ethos-source-snapshot-660f268" },
+        "archive": { "const": "ethos-source-snapshot-660f268.tar.gz" },
+        "sha256": {
+          "const": "58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87"
+        },
+        "boundary": { "const": "source-snapshot-only; no package publication approval" }
+      }
+    },
+    "public_boundary": {
+      "enum": [
+        "public reports remain blocked",
+        "release artifacts remain blocked",
+        "package publication remains blocked",
+        "hosted surfaces remain blocked",
+        "public result wording remains blocked",
+        "performance claims remain blocked",
+        "quality claims remain blocked",
+        "footprint claims remain blocked",
+        "table-quality claims remain blocked",
+        "parser-quality claims remain blocked"
+      ]
+    },
+    "approval_scope": {
+      "enum": [
+        "prepare package publication approval evidence requirements",
+        "keep package publication blocked until a dedicated approval decision",
+        "keep the approved source snapshot limited to source-snapshot-only use",
+        "keep public wording limited to the exact approved pre-alpha sentence",
+        "require devrel and decider signoff before any package registry or installable artifact surface"
+      ]
+    },
+    "required_evidence": {
+      "enum": [
+        "dedicated package publication approval decision record",
+        "artifact-specific license and notice bundle review",
+        "package registry metadata review",
+        "source-to-artifact provenance review",
+        "installation and rollback validation for each artifact family",
+        "public-surface posture check for exact changed surfaces",
+        "decider signoff on exact artifact names and surfaces"
+      ]
+    },
+    "explicit_blocker": {
+      "enum": [
+        "package publication remains blocked",
+        "binaries remain blocked",
+        "wheels remain blocked",
+        "npm packages remain blocked",
+        "crate publication remains blocked",
+        "registry metadata remains unapproved",
+        "installation and rollback validation remains absent",
+        "ADR-0005 and H2 source-snapshot closeout do not approve package publication"
+      ]
+    },
+    "allowed_wording": {
+      "enum": [
+        "Package publication remains blocked pending dedicated approval.",
+        "The approved surface is source snapshot only.",
+        "Package-related work may be described only as internal blocker preparation."
+      ]
+    },
+    "forbidden_wording": {
+      "enum": [
+        "any statement that presents installable artifacts as published or available",
+        "any statement that treats the approved source snapshot as a package",
+        "any statement that invites public installation from package registries",
+        "any statement that expands beyond the exact approved pre-alpha sentence",
+        "any statement that implies beta, hosted, or production approval"
+      ]
+    }
+  }
+}
