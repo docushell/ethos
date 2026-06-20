@@ -88,9 +88,10 @@ and schema-bound by
 [`schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json).
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
-matrix, blocker ledger, and matching schemas on the same explicit blockers. This prep does not
-resolve or soften blockers, approve public result wording, hosted surfaces, package/distribution
-work, or public-facing claims.
+matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
+alignment keeps the current rehearsal/evidence matrix, blocker ledger, and matching schemas on the
+same internal evidence lanes. This prep does not resolve or soften blockers, approve public result
+wording, hosted surfaces, package/distribution work, or public-facing claims.
 
 | Milestone | Window | Contents | Gate |
 | --- | --- | --- | --- |

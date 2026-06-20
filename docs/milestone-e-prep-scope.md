@@ -64,6 +64,9 @@ alignment so public reports, public result wording, hosted surfaces, release art
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
 all performance, quality, footprint, table-quality, and parser-quality claims remain explicitly
 blocked.
+The rehearsal/evidence matrix and blocker ledger must also keep the same evidence-lane alignment so
+evidence grounding, diagnostics, fixture/evaluator validation, and explicit blockers remain the
+only current internal rehearsal lanes.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -89,8 +92,8 @@ Focused validation command:
 
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate,
 schema/example validation, schema-registry alignment for the E prep JSON artifacts,
-public-boundary alignment, blocked-output alignment, this prep-scope guard, fixture-candidate
-blocker-alignment validation, the internal trust-loop walkthrough, use-protocol,
+public-boundary alignment, blocked-output alignment, evidence-lane alignment, this prep-scope
+guard, fixture-candidate blocker-alignment validation, the internal trust-loop walkthrough, use-protocol,
 rehearsal/evidence matrix, and blocker-ledger guards, validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -117,5 +120,7 @@ or broad demo-generation workflows.
   resolve or soften blockers.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
+- Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,
+  and matching schemas.
 - Public language remains source-only pre-alpha and internal-continuation scoped.
 - External blockers remain visible before any public-facing Milestone E work starts.

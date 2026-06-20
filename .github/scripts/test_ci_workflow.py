@@ -71,6 +71,16 @@ class CiWorkflowTests(unittest.TestCase):
             1,
             text.count("python3 .github/scripts/test_milestone_e_public_boundary_alignment.py"),
         )
+        self.assertIn("python3 .github/scripts/test_milestone_e_blocked_output_alignment.py", text)
+        self.assertEqual(
+            1,
+            text.count("python3 .github/scripts/test_milestone_e_blocked_output_alignment.py"),
+        )
+        self.assertIn("python3 .github/scripts/test_milestone_e_evidence_lane_alignment.py", text)
+        self.assertEqual(
+            1,
+            text.count("python3 .github/scripts/test_milestone_e_evidence_lane_alignment.py"),
+        )
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_scope.py", text)
         self.assertEqual(1, text.count("python3 .github/scripts/test_milestone_e_prep_scope.py"))
         self.assertLess(
@@ -79,6 +89,14 @@ class CiWorkflowTests(unittest.TestCase):
         )
         self.assertLess(
             text.index("python3 .github/scripts/test_milestone_e_public_boundary_alignment.py"),
+            text.index("python3 .github/scripts/test_milestone_e_blocked_output_alignment.py"),
+        )
+        self.assertLess(
+            text.index("python3 .github/scripts/test_milestone_e_blocked_output_alignment.py"),
+            text.index("python3 .github/scripts/test_milestone_e_evidence_lane_alignment.py"),
+        )
+        self.assertLess(
+            text.index("python3 .github/scripts/test_milestone_e_evidence_lane_alignment.py"),
             text.index("python3 .github/scripts/test_milestone_e_prep_scope.py"),
         )
         self.assertIn("python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py", text)
@@ -580,6 +598,50 @@ class CiWorkflowTests(unittest.TestCase):
             text.index(
                 "python3 .github/scripts/"
                 "test_milestone_e_public_boundary_alignment_validation_record.py"
+            ),
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_blocked_output_alignment_validation_record.py"
+            ),
+        )
+        self.assertIn(
+            "python3 .github/scripts/"
+            "test_milestone_e_blocked_output_alignment_validation_record.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/"
+                "test_milestone_e_blocked_output_alignment_validation_record.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_blocked_output_alignment_validation_record.py"
+            ),
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_evidence_lane_alignment_validation_record.py"
+            ),
+        )
+        self.assertIn(
+            "python3 .github/scripts/"
+            "test_milestone_e_evidence_lane_alignment_validation_record.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/"
+                "test_milestone_e_evidence_lane_alignment_validation_record.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_evidence_lane_alignment_validation_record.py"
             ),
             text.index("python3 .github/scripts/test_milestone_e_validation_command_index.py"),
         )
