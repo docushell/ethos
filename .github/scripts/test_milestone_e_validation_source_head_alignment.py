@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 import re
 import subprocess
 import unittest
@@ -82,16 +83,58 @@ def source_heads(record: Path) -> list[str]:
     return SOURCE_HEAD_RE.findall(record.read_text(encoding="utf-8"))
 
 
+@lru_cache(maxsize=None)
 def resolve_commit(revision: str) -> str:
     return git("rev-parse", "--verify", f"{revision}^{{commit}}")
 
 
+@lru_cache(maxsize=None)
+def try_resolve_commit(revision: str) -> str | None:
+    try:
+        return resolve_commit(revision)
+    except subprocess.CalledProcessError:
+        return None
+
+
+@lru_cache(maxsize=None)
 def introducing_commit(record: Path) -> str | None:
     relative = str(record.relative_to(ROOT))
-    commits = git("log", "--all", "--diff-filter=A", "--format=%H", "--", relative)
+    commits = git("log", "--diff-filter=A", "--format=%H", "--", relative)
     if not commits:
         return None
     return commits.splitlines()[-1]
+
+
+@lru_cache(maxsize=None)
+def milestone_e_records_added_by(commit: str) -> tuple[str, ...]:
+    records = git(
+        "show",
+        "--diff-filter=A",
+        "--format=",
+        "--name-only",
+        commit,
+        "--",
+        str(VALIDATION_DIR.relative_to(ROOT)),
+    )
+
+    return tuple(
+        name
+        for name in records.splitlines()
+        if Path(name).name.startswith("milestone-e-")
+        and Path(name).name.endswith(".md")
+    )
+
+
+def has_single_milestone_e_record_add(added_records: tuple[str, ...]) -> bool:
+    return len(added_records) == 1
+
+
+def can_infer_source_head_from_add_parent(record: Path) -> bool:
+    add_commit = introducing_commit(record)
+    if add_commit is None:
+        return True
+
+    return has_single_milestone_e_record_add(milestone_e_records_added_by(add_commit))
 
 
 class MilestoneEValidationSourceHeadAlignmentTests(unittest.TestCase):
@@ -102,31 +145,59 @@ class MilestoneEValidationSourceHeadAlignmentTests(unittest.TestCase):
         for record in records:
             self.assertEqual(1, len(source_heads(record)), str(record.relative_to(ROOT)))
 
-    def test_source_head_lines_resolve_to_commits(self) -> None:
+    def test_source_head_lines_resolve_when_history_contains_source_commits(self) -> None:
         for record in validation_records():
             [source_head] = source_heads(record)
 
             self.assertRegex(source_head, r"^[0-9a-f]{7,40}$", str(record.relative_to(ROOT)))
-            self.assertEqual(40, len(resolve_commit(source_head)), str(record.relative_to(ROOT)))
+            resolved_source_head = try_resolve_commit(source_head)
+            if resolved_source_head is None:
+                self.assertFalse(
+                    can_infer_source_head_from_add_parent(record),
+                    str(record.relative_to(ROOT)),
+                )
+            else:
+                self.assertEqual(40, len(resolved_source_head), str(record.relative_to(ROOT)))
 
-    def test_source_head_matches_parent_of_record_introducing_commit(self) -> None:
+    def test_source_head_matches_parent_when_checked_out_history_preserves_record_add(self) -> None:
         current_head = resolve_commit("HEAD")
 
         for record in validation_records():
             [source_head] = source_heads(record)
-            resolved_source_head = resolve_commit(source_head)
             add_commit = introducing_commit(record)
 
             if add_commit is None:
                 expected_source_head = current_head
-            else:
+            elif can_infer_source_head_from_add_parent(record):
                 expected_source_head = resolve_commit(f"{add_commit}^")
+            else:
+                continue
 
+            resolved_source_head = try_resolve_commit(source_head)
+            self.assertIsNotNone(resolved_source_head, str(record.relative_to(ROOT)))
             self.assertEqual(
                 expected_source_head,
                 resolved_source_head,
                 str(record.relative_to(ROOT)),
             )
+
+    def test_squash_added_record_batches_do_not_infer_source_head_from_merge_parent(self) -> None:
+        self.assertTrue(
+            has_single_milestone_e_record_add(
+                ("docs/validation/milestone-e-example-validation-2026-06-20.md",)
+            ),
+            "single-record additions preserve a specific parent source-head relationship",
+        )
+
+        self.assertFalse(
+            has_single_milestone_e_record_add(
+                (
+                    "docs/validation/milestone-e-example-one-validation-2026-06-20.md",
+                    "docs/validation/milestone-e-example-two-validation-2026-06-20.md",
+                )
+            ),
+            "batch-added records model a squash/import shape where parent inference is unavailable",
+        )
 
     def test_scope_status_and_roadmap_name_validation_source_head_alignment(self) -> None:
         for path in (PREP_SCOPE, EXECUTION_STATUS, ROADMAP):

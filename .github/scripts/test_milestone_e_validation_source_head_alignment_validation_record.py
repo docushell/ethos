@@ -106,6 +106,7 @@ class MilestoneEValidationSourceHeadAlignmentValidationRecordTests(unittest.Test
         self.assertIn("does not resolve or soften blockers", text)
         self.assertIn("does not promote any fixture", text)
         self.assertIn("Validated source HEAD before this record", text)
+        self.assertIn("Squash/import commits that add multiple Milestone E validation records", text)
         self.assertIn("ADR-0005 remains an internal continuation decision only", text)
 
     def test_record_keeps_public_boundaries_explicit(self) -> None:
