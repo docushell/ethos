@@ -141,6 +141,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         text = read(PREP_SCOPE)
 
         self.assertIn("`docs/milestone-e-fixture-candidates.json`", text)
+        self.assertIn("`blockers_must_remain_explicit`", text)
+        self.assertIn("structured blocker", text)
         self.assert_tracked_file("docs/milestone-e-fixture-candidates.json")
         self.assert_tracked_file("docs/milestone-e-internal-trust-loop-walkthrough.json")
         self.assert_tracked_file("schemas/ethos-milestone-e-fixture-candidates.schema.json")
@@ -191,6 +193,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             self.assertEqual(paths, case["input_fixtures"])
             self.assertTrue(case["expected_diagnostic_boundary"], label)
             self.assertIn("Internal fixture candidate only", case["blocker_status"])
+            self.assertIn("blockers_must_remain_explicit", case)
+            self.assertTrue(case["blockers_must_remain_explicit"], label)
             for path in paths:
                 self.assert_tracked_file(path)
 
@@ -278,6 +282,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_prep_scope_structured_blocker_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py",
             "$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix.py",

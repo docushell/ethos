@@ -48,6 +48,11 @@ Records:
   Milestone E fixture-candidate blocker alignment validation passed through fixture-candidate
   schema checks, criteria alignment checks, public-surface posture checks, `make
   milestone-e-prep`, and diff hygiene; fixture blockers remain explicit and unresolved.
+- `milestone-e-prep-scope-structured-blocker-validation-2026-06-20.md` - internal Milestone E
+  prep-scope structured blocker validation passed through prep-scope checks, fixture-promotion
+  criteria checks, fixture-candidate blocker-alignment checks, public-surface posture checks,
+  `make milestone-e-prep`, and diff hygiene; fixture blockers remain structured, explicit, and
+  unresolved.
 - `milestone-e-internal-trust-loop-walkthrough-validation-2026-06-19.md` - internal Milestone E
   trust-loop walkthrough validation for `docs/milestone-e-internal-trust-loop-walkthrough.json`
   passed through walkthrough consistency checks, schema validation, `make verify-alpha`,

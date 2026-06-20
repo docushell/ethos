@@ -37,7 +37,9 @@ existing guards. The machine-readable inventory is
 `schemas/ethos-milestone-e-fixture-candidates.schema.json`. Internal fixture-promotion criteria
 live in `docs/milestone-e-fixture-promotion-criteria.json` and are schema-bound by
 `schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json`; they define what must be
-rechecked before a candidate can enter an internal demo plan, not public demo approval.
+rechecked before a candidate can enter an internal demo plan, not public demo approval. Each
+candidate row must keep a structured `blockers_must_remain_explicit` list that matches the
+promotion criteria row before any internal fixture-planning use.
 The internal trust-loop walkthrough plan lives in
 `docs/milestone-e-internal-trust-loop-walkthrough.json` and is schema-bound by
 `schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json`. It sequences the current
@@ -71,8 +73,8 @@ planning; it does not resolve or soften blockers and is not public result wordin
 | Demo narrative index | `docs/demos/verify-alpha.md` | `make verify-alpha` and posture guards |
 
 These are internal fixture candidates, not public proof points. Any future demo plan must still
-state the validated command, input fixture, expected diagnostic boundary, and blocker status before
-the fixture can be promoted beyond source-only pre-alpha planning.
+state the validated command, input fixture, expected diagnostic boundary, blocker status, and every
+structured blocker before the fixture can be promoted beyond source-only pre-alpha planning.
 
 ## Prep Guard
 
@@ -81,9 +83,10 @@ Focused validation command:
 - `make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python`
 
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate, this
-prep-scope guard, the internal trust-loop walkthrough, use-protocol, rehearsal/evidence matrix, and
-blocker-ledger guards, schema/example validation for the E prep JSON artifacts, and diff hygiene.
-It intentionally does not run release, packaging, hosted, benchmark-report, or broad
+prep-scope guard, fixture-candidate blocker-alignment validation, the internal trust-loop
+walkthrough, use-protocol, rehearsal/evidence matrix, and blocker-ledger guards, schema/example
+validation for the E prep JSON artifacts, and diff hygiene. It intentionally does not run release,
+packaging, hosted, benchmark-report, or broad
 demo-generation workflows.
 
 ## Exit Criteria For This Prep Slice
@@ -94,6 +97,8 @@ demo-generation workflows.
   inventory.
 - The schema validation gate keeps the fixture-candidate inventory and fixture-promotion criteria
   closed to unreviewed fields.
+- Fixture-candidate blocker lists remain structured, nonempty, and visible before any internal
+  fixture-planning use.
 - The internal trust-loop walkthrough plan remains limited to existing candidates and criteria.
 - The internal trust-loop use protocol remains limited to existing walkthrough steps and explicit
   blockers.

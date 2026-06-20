@@ -86,6 +86,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py
       - name: Milestone E fixture-candidate blocker alignment validation record tests
         run: python3 .github/scripts/test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py
+      - name: Milestone E prep-scope structured blocker validation record tests
+        run: python3 .github/scripts/test_milestone_e_prep_scope_structured_blocker_validation_record.py
       - name: Milestone E internal trust-loop walkthrough tests
         run: python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py
       - name: Milestone E internal trust-loop use protocol tests

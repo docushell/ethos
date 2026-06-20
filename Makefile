@@ -152,6 +152,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py
 	$(PYTHON) .github/scripts/test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_prep_scope_structured_blocker_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py
 	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py
 	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix.py
