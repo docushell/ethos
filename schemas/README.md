@@ -23,6 +23,12 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-crop-element-surface-shape-contract.schema.json` | Milestone D `crop_element_surface_shape` v1 source-only contract inventory |
 | `ethos-sandbox-subprocess-request.schema.json` | source-only request envelope for Milestone D `sandbox_subprocess` v1 contract work |
 | `ethos-sandbox-subprocess-contract.schema.json` | Milestone D `sandbox_subprocess` v1 source-only contract inventory |
+| `ethos-milestone-e-fixture-candidates.schema.json` | Milestone E source-only internal fixture-candidate inventory |
+| `ethos-milestone-e-fixture-promotion-criteria.schema.json` | Milestone E source-only internal fixture-promotion criteria |
+| `ethos-milestone-e-internal-trust-loop-walkthrough.schema.json` | Milestone E source-only internal trust-loop walkthrough plan |
+| `ethos-milestone-e-internal-trust-loop-use-protocol.schema.json` | Milestone E source-only internal trust-loop use protocol |
+| `ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json` | Milestone E source-only internal trust-loop rehearsal/evidence matrix |
+| `ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json` | Milestone E source-only internal trust-loop blocker ledger |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
 
 Conventions: snake_case keys; `additionalProperties: false` everywhere except the
@@ -110,6 +116,19 @@ hardened sandbox or a new command/binding surface. The request envelope examples
 with the executable worker tests is checked by the Milestone D repository guard. Each request
 envelope carries a c14n-derived `request_ref` identity guarded in that same source-only contract
 check.
+
+Milestone E prep is tracked in `docs/milestone-e-prep-scope.md`. In this source-only pre-alpha
+slice, the fixture-candidate inventory at `docs/milestone-e-fixture-candidates.json`,
+fixture-promotion criteria at `docs/milestone-e-fixture-promotion-criteria.json`, internal
+trust-loop walkthrough plan at `docs/milestone-e-internal-trust-loop-walkthrough.json`, and
+internal trust-loop use protocol at
+`docs/milestone-e-internal-trust-loop-use-protocol.json`, and internal trust-loop
+rehearsal/evidence matrix at
+`docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json`, and internal trust-loop
+blocker ledger at `docs/milestone-e-internal-trust-loop-blocker-ledger.json` are schema-validated
+here. Their path tracking, candidate-to-criteria-to-walkthrough alignment, diagnostic-boundary
+alignment, evidence-lane alignment, explicit blocker alignment, and public-posture boundaries are
+checked by the Milestone E prep repository guards.
 
 Derived artifacts not schema'd here: `document.md` / `document.txt` (deterministic exports
 specified by the exporter config, Milestone B) and `debug.html` (Milestone C).

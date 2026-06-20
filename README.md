@@ -10,8 +10,9 @@
 > **Status: source-only pre-alpha — internal Milestone D closeout complete, Milestone E prep.**
 > Nothing here is released, benchmarked, or ready for use. ADR-0005 records an internal
 > `PROCEED` decision for continuation only; it does not approve public benchmark reports,
-> release artifacts, packages, production positioning, or claim wording. No performance,
-> footprint, quality, table-quality, or parser-quality claims are made.
+> release artifacts, packages, production positioning, or wording beyond the approved pre-alpha
+> sentence. No performance, footprint, quality, table-quality, or parser-quality claims are made.
+> Approved public pre-alpha sentence: "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs."
 > Current execution status and blockers live in `docs/execution-status.md`; public-release
 > hygiene gates live in `docs/public-release-checklist.md`.
 
@@ -212,7 +213,7 @@ that limitation instead of silently upgrading the claim.
 | Capability-limited reports | Alpha path exists | Reports missing source capabilities explicitly |
 | Crop descriptor JSON | Alpha path exists for native Ethos JSON | Descriptor identity is logical evidence identity |
 | Rendered crop PNG artifacts | Same-host repeatability path exists | Cross-platform PNG byte identity is not claimed |
-| Born-digital PDF parsing | Narrow parser path exists | Not benchmark-validated; parser quality claims are blocked |
+| Born-digital PDF parsing | Narrow parser path exists | Public benchmark approval and parser quality claims are blocked |
 | OCR / scanned PDFs | Not supported in base install | Stable `ocr_required` failure |
 | Complex table semantics | Alpha-only | Release 2 enrichment work |
 | Heading/list/layout quality | Alpha-only | Still fixture- and Gate-Zero-dependent |

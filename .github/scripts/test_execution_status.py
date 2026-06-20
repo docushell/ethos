@@ -35,7 +35,12 @@ class ExecutionStatusTests(unittest.TestCase):
 
         self.assertIn(
             "Status: Pre-alpha / internal Milestone D source-only closeout complete, "
-            "transitioning to Milestone E prep.",
+            "with Milestone E prep source-only closeout recorded for the current internal prep boundary.",
+            text,
+        )
+        self.assertIn(
+            "Ethos is pre-alpha. It verifies whether AI citations are grounded in document "
+            "evidence across native Ethos JSON and supported foreign parser outputs.",
             text,
         )
         self.assertIn("docs/validation/milestone-d-final-closeout-validation-2026-06-19.md", text)
@@ -64,8 +69,10 @@ class ExecutionStatusTests(unittest.TestCase):
         self.assertIn("make milestone-d-crop-element-surface-shape-contract", text)
         self.assertIn("make milestone-d-sandbox-subprocess-contract", text)
         self.assertIn("make milestone-d-internal-contracts", text)
+        self.assertIn("make milestone-e-prep", text)
         self.assertIn("docs/validation/milestone-d-contract-closeout-validation-2026-06-19.md", text)
         self.assertIn("docs/validation/milestone-d-final-closeout-validation-2026-06-19.md", text)
+        self.assertIn("docs/validation/milestone-e-final-closeout-validation-2026-06-20.md", text)
         self.assertIn("Full 13-D exit is complete for the current source-only pre-alpha scope", text)
         self.assertIn("CI has a static guard for that target's command wiring", text)
 
@@ -73,11 +80,18 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            'Public language stays at "source-only pre-alpha / internal Milestone D closeout '
-            'and Milestone E prep"',
+            "Public language may use this exact approved sentence on current source-repository surfaces",
             text,
         )
-        self.assertIn("claim audit approves specific wording", text)
+        self.assertIn("All wording beyond that sentence still requires claim-audit", text)
+        self.assertIn("Closed for the exact approved pre-alpha sentence only", text)
+        self.assertIn("Approved Next-Step Sequence", text)
+        self.assertIn("Close H1: closed for public-safe evidence acceptance only", text)
+        self.assertIn("H1 is closed for public-safe evidence acceptance only", text)
+        self.assertIn("Close H2: closed for the exact source-snapshot candidate", text)
+        self.assertIn("docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md", text)
+        self.assertIn("Run release-candidate validation gates", text)
+        self.assertIn("does not approve public benchmark claims", text)
         self.assertIn("Post-D blockers/future work", text)
         self.assertIn("these are not D closeout requirements", text)
         self.assertIn("product-differentiating path remains verification and grounding first", text)

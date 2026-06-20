@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "status": "source-only-pre-alpha-internal-milestone-e-prep",
+  "scope": "internal_fixture_candidate_inventory",
+  "promotion_status": "not_promoted_beyond_internal_fixture_planning",
+  "public_boundary": [
+    "public reports remain blocked",
+    "release artifacts remain blocked",
+    "package publication remains blocked",
+    "hosted surfaces remain blocked",
+    "public result wording remains blocked",
+    "performance claims remain blocked",
+    "quality claims remain blocked",
+    "footprint claims remain blocked",
+    "table-quality claims remain blocked",
+    "parser-quality claims remain blocked"
+  ],
+  "fixture_candidates": [
+    {
+      "id": "native-verification-trust-loop",
+      "label": "Native verification trust loop",
+      "status": "source-only-pre-alpha-internal-candidate",
+      "validated_command": "make verify-alpha",
+      "input_fixtures": [
+        "examples/verify/cases.json",
+        "examples/verify/goldens/native_grounded_report.json"
+      ],
+      "expected_diagnostic_boundary": "Native quote, table-cell, and presence evidence checks over checked-in document JSON.",
+      "blocker_status": "Internal fixture candidate only; public result wording and public-report blockers remain open.",
+      "blockers_must_remain_explicit": [
+        "public result wording",
+        "public-report blockers"
+      ]
+    },
+    {
+      "id": "split-quote-unsupported-claim-diagnostics",
+      "label": "Split-quote and unsupported-claim diagnostics",
+      "status": "source-only-pre-alpha-internal-candidate",
+      "validated_command": "make verify-alpha",
+      "input_fixtures": [
+        "examples/verify/native_split_quote_citations.json",
+        "examples/verify/native_non_v1_claims_citations.json"
+      ],
+      "expected_diagnostic_boundary": "Adjacent native text evidence matching and explicit unsupported non-v1 claim diagnostics.",
+      "blocker_status": "Internal fixture candidate only; future claim-kind expansion remains blocked until explicitly scoped.",
+      "blockers_must_remain_explicit": [
+        "future claim-kind expansion"
+      ]
+    },
+    {
+      "id": "capability-downgrade-diagnostics",
+      "label": "Capability downgrade diagnostics",
+      "status": "source-only-pre-alpha-internal-candidate",
+      "validated_command": "make milestone-d-capability-downgrade-contract",
+      "input_fixtures": [
+        "examples/verify/capability_downgrade_v1_contract.json",
+        "examples/verify/goldens/opendataloader_capability_limited_report.json"
+      ],
+      "expected_diagnostic_boundary": "Grounding-source capability limits surface as warnings and capability-blocked checks.",
+      "blocker_status": "Internal fixture candidate only; missing source capabilities must remain explicit diagnostics.",
+      "blockers_must_remain_explicit": [
+        "missing source capabilities"
+      ]
+    },
+    {
+      "id": "opendataloader-style-adapter-grounding",
+      "label": "OpenDataLoader-style adapter grounding",
+      "status": "source-only-pre-alpha-internal-candidate",
+      "validated_command": "make milestone-d-opendataloader-adapter-shape-contract",
+      "input_fixtures": [
+        "examples/verify/opendataloader_adapter_shape_v1_contract.json",
+        "examples/verify/opendataloader.json"
+      ],
+      "expected_diagnostic_boundary": "OpenDataLoader-style input shape maps to parser-neutral grounding metadata with deterministic adapter diagnostics.",
+      "blocker_status": "Internal fixture candidate only; broader foreign-adapter hardening remains blocked until explicitly scoped.",
+      "blockers_must_remain_explicit": [
+        "broader foreign-adapter hardening"
+      ]
+    },
+    {
+      "id": "pinned-real-opendataloader-fixture-path",
+      "label": "Pinned real OpenDataLoader fixture path",
+      "status": "source-only-pre-alpha-internal-candidate",
+      "validated_command": "make verify-alpha",
+      "input_fixtures": [
+        "fixtures/foreign/opendataloader/real/manifest.json",
+        "fixtures/foreign/opendataloader/real/expected.verification_report.json",
+        "fixtures/foreign/opendataloader/real/expected.ungrounded.verification_report.json"
+      ],
+      "expected_diagnostic_boundary": "Pinned foreign output exercises grounded and ungrounded verification paths without public comparison wording.",
+      "blocker_status": "Internal fixture candidate only; public comparison reports and claim wording remain blocked.",
+      "blockers_must_remain_explicit": [
+        "public comparison reports",
+        "claim wording"
+      ]
+    },
+    {
+      "id": "crop-descriptor-source-bound-crop-shape",
+      "label": "Crop descriptor and source-bound crop shape",
+      "status": "source-only-pre-alpha-internal-candidate",
+      "validated_command": "make milestone-d-internal-contracts",
+      "input_fixtures": [
+        "examples/crop/crop_element_v1_contract.json",
+        "examples/crop/crop_element_surface_shape_v1_contract.json"
+      ],
+      "expected_diagnostic_boundary": "Source-bound crop descriptor identity and callable CLI/Python surface shape remain tied to current request and descriptor schemas.",
+      "blocker_status": "Internal fixture candidate only; Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces remain blocked.",
+      "blockers_must_remain_explicit": [
+        "Node crop surfaces",
+        "MCP crop surfaces",
+        "hosted crop surfaces",
+        "sandbox-backed crop surfaces",
+        "foreign-adapter crop surfaces"
+      ]
+    },
+    {
+      "id": "rag-chunk-artifact-loop",
+      "label": "RAG chunk artifact loop",
+      "status": "source-only-pre-alpha-internal-candidate",
+      "validated_command": "make rag-chunk-alpha",
+      "input_fixtures": [
+        "schemas/examples/chunks.example.jsonl"
+      ],
+      "expected_diagnostic_boundary": "RAG chunk output stays fixture-backed with stale-reference and warning-reference validation.",
+      "blocker_status": "Internal fixture candidate only; broader provenance, citation, parser, and table integration remain future work.",
+      "blockers_must_remain_explicit": [
+        "broader provenance integration",
+        "broader citation integration",
+        "parser integration",
+        "table integration"
+      ]
+    },
+    {
+      "id": "security-report-artifact-loop",
+      "label": "Security-report artifact loop",
+      "status": "source-only-pre-alpha-internal-candidate",
+      "validated_command": "make security-report-alpha",
+      "input_fixtures": [
+        "schemas/examples/security-report.example.json"
+      ],
+      "expected_diagnostic_boundary": "Security-report output stays source-grounded with locator, warning-lane, and summary diagnostics.",
+      "blocker_status": "Internal fixture candidate only; broader security-report generation semantics and artifact UX remain future work.",
+      "blockers_must_remain_explicit": [
+        "broader security-report generation semantics",
+        "artifact UX"
+      ]
+    },
+    {
+      "id": "demo-narrative-index",
+      "label": "Demo narrative index",
+      "status": "source-only-pre-alpha-internal-candidate",
+      "validated_command": "make verify-alpha",
+      "input_fixtures": [
+        "docs/demos/verify-alpha.md"
+      ],
+      "expected_diagnostic_boundary": "Existing narrative index remains tied to checked-in alpha verification fixtures and posture guards.",
+      "blocker_status": "Internal fixture candidate only; broad demo-generation and public result wording remain blocked.",
+      "blockers_must_remain_explicit": [
+        "broad demo-generation",
+        "public result wording"
+      ]
+    }
+  ]
+}

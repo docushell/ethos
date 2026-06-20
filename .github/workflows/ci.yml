@@ -40,6 +40,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - run: rustup show
       - run: cargo test --locked --workspace --all-features
       - name: fixture manifest validation
@@ -68,6 +70,20 @@ jobs:
         run: python3 .github/scripts/test_roadmap_status.py
       - name: public surface posture tests
         run: python3 .github/scripts/test_public_surface_posture.py
+      - name: public pre-alpha wording approval tests
+        run: python3 .github/scripts/test_public_prealpha_wording_approval.py
+      - name: release readiness next-step approval tests
+        run: python3 .github/scripts/test_release_readiness_next_steps_approval.py
+      - name: H1 public-safe comparison closeout tests
+        run: python3 .github/scripts/test_h1_public_safe_comparison_closeout.py
+      - name: H2 source-snapshot scope approval tests
+        run: python3 .github/scripts/test_h2_source_snapshot_scope_approval.py
+      - name: Milestone E source-snapshot candidate audit tests
+        run: python3 .github/scripts/test_milestone_e_source_snapshot_candidate_audit.py
+      - name: H2 source-snapshot candidate evidence tests
+        run: python3 .github/scripts/test_h2_source_snapshot_candidate_evidence.py
+      - name: H2 source-snapshot closeout tests
+        run: python3 .github/scripts/test_h2_source_snapshot_closeout.py
       - name: Milestone D internal contract target tests
         run: python3 .github/scripts/test_milestone_d_internal_contracts.py
       - name: Milestone B closeout validation record tests
@@ -80,6 +96,108 @@ jobs:
         run: python3 .github/scripts/test_milestone_d_closeout_record.py
       - name: Milestone D final closeout validation record tests
         run: python3 .github/scripts/test_milestone_d_final_closeout_record.py
+      - name: Milestone E schema registry alignment tests
+        run: python3 .github/scripts/test_milestone_e_schema_registry_alignment.py
+      - name: Milestone E public-boundary alignment tests
+        run: python3 .github/scripts/test_milestone_e_public_boundary_alignment.py
+      - name: Milestone E blocked-output alignment tests
+        run: python3 .github/scripts/test_milestone_e_blocked_output_alignment.py
+      - name: Milestone E evidence-lane alignment tests
+        run: python3 .github/scripts/test_milestone_e_evidence_lane_alignment.py
+      - name: Milestone E diagnostic-boundary alignment tests
+        run: python3 .github/scripts/test_milestone_e_diagnostic_boundary_alignment.py
+      - name: Milestone E promotion-status alignment tests
+        run: python3 .github/scripts/test_milestone_e_promotion_status_alignment.py
+      - name: Milestone E source-status alignment tests
+        run: python3 .github/scripts/test_milestone_e_source_status_alignment.py
+      - name: Milestone E applies-to binding alignment tests
+        run: python3 .github/scripts/test_milestone_e_applies_to_binding_alignment.py
+      - name: Milestone E required-before alignment tests
+        run: python3 .github/scripts/test_milestone_e_required_before_alignment.py
+      - name: Milestone E prep scope tests
+        run: python3 .github/scripts/test_milestone_e_prep_scope.py
+      - name: Milestone E fixture promotion criteria tests
+        run: python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py
+      - name: Milestone E fixture-candidate blocker alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py
+      - name: Milestone E prep-scope structured blocker validation record tests
+        run: python3 .github/scripts/test_milestone_e_prep_scope_structured_blocker_validation_record.py
+      - name: Milestone E internal trust-loop walkthrough tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py
+      - name: Milestone E internal trust-loop use protocol tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py
+      - name: Milestone E internal trust-loop rehearsal evidence matrix tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix.py
+      - name: Milestone E internal trust-loop blocker ledger tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger.py
+      - name: Milestone E fixture promotion criteria validation record tests
+        run: python3 .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py
+      - name: Milestone E internal trust-loop walkthrough validation record tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough_validation_record.py
+      - name: Milestone E internal trust-loop use protocol validation record tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_use_protocol_validation_record.py
+      - name: Milestone E internal trust-loop rehearsal evidence matrix validation record tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix_validation_record.py
+      - name: Milestone E internal trust-loop blocker ledger validation record tests
+        run: python3 .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger_validation_record.py
+      - name: Milestone E native grounding baseline rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_native_grounding_baseline_rehearsal_validation_record.py
+      - name: Milestone E diagnostic boundary check rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_diagnostic_boundary_check_rehearsal_validation_record.py
+      - name: Milestone E capability downgrade boundary rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_capability_downgrade_boundary_rehearsal_validation_record.py
+      - name: Milestone E OpenDataLoader adapter grounding rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_opendataloader_adapter_grounding_rehearsal_validation_record.py
+      - name: Milestone E pinned OpenDataLoader fixture path rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_pinned_opendataloader_fixture_path_rehearsal_validation_record.py
+      - name: Milestone E crop descriptor source-bound shape rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_crop_descriptor_source_bound_shape_rehearsal_validation_record.py
+      - name: Milestone E RAG chunk artifact loop rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_rag_chunk_artifact_loop_rehearsal_validation_record.py
+      - name: Milestone E security report artifact loop rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_security_report_artifact_loop_rehearsal_validation_record.py
+      - name: Milestone E demo narrative index rehearsal validation record tests
+        run: python3 .github/scripts/test_milestone_e_demo_narrative_index_rehearsal_validation_record.py
+      - name: Milestone E rehearsal row-record coverage validation tests
+        run: python3 .github/scripts/test_milestone_e_rehearsal_row_record_coverage_validation.py
+      - name: Milestone E schema registry alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_schema_registry_alignment_validation_record.py
+      - name: Milestone E public-boundary alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_public_boundary_alignment_validation_record.py
+      - name: Milestone E blocked-output alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_blocked_output_alignment_validation_record.py
+      - name: Milestone E evidence-lane alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_evidence_lane_alignment_validation_record.py
+      - name: Milestone E diagnostic-boundary alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_diagnostic_boundary_alignment_validation_record.py
+      - name: Milestone E promotion-status alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_promotion_status_alignment_validation_record.py
+      - name: Milestone E source-status alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_source_status_alignment_validation_record.py
+      - name: Milestone E applies-to binding alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_applies_to_binding_alignment_validation_record.py
+      - name: Milestone E required-before alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_required_before_alignment_validation_record.py
+      - name: Milestone E validation-command index tests
+        run: python3 .github/scripts/test_milestone_e_validation_command_index.py
+      - name: Milestone E validation-command index validation record tests
+        run: python3 .github/scripts/test_milestone_e_validation_command_index_validation_record.py
+      - name: Milestone E validation-record index tests
+        run: python3 .github/scripts/test_milestone_e_validation_record_index.py
+      - name: Milestone E validation-record index validation record tests
+        run: python3 .github/scripts/test_milestone_e_validation_record_index_validation_record.py
+      - name: Milestone E validation-record source-head alignment tests
+        run: python3 .github/scripts/test_milestone_e_validation_source_head_alignment.py
+      - name: Milestone E validation-record source-head alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_validation_source_head_alignment_validation_record.py
+      - name: Milestone E prep guard-sequence index tests
+        run: python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py
+      - name: Milestone E prep guard-sequence index validation record tests
+        run: python3 .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py
+      - name: Milestone E prep validation record tests
+        run: python3 .github/scripts/test_milestone_e_prep_validation_record.py
+      - name: Milestone E final prep closeout validation record tests
+        run: python3 .github/scripts/test_milestone_e_final_closeout_record.py
       - name: Milestone B exit checklist tests
         run: python3 .github/scripts/test_milestone_b_exit_checklist.py
       - name: Gate Zero harness tests

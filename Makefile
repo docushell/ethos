@@ -13,7 +13,7 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 .PHONY: milestone-d-capability-downgrade-contract
 .PHONY: milestone-d-opendataloader-adapter-shape-contract
 .PHONY: milestone-d-grounding-source-contract
@@ -141,6 +141,72 @@ milestone-d-internal-contracts:
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py
+	git diff --check
+
+milestone-e-prep:
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_roadmap_status.py
+	$(PYTHON) .github/scripts/test_public_surface_posture.py
+	$(PYTHON) .github/scripts/claims_gate.py
+	$(PYTHON) .github/scripts/test_public_prealpha_wording_approval.py
+	$(PYTHON) .github/scripts/test_release_readiness_next_steps_approval.py
+	$(PYTHON) .github/scripts/test_h1_public_safe_comparison_closeout.py
+	$(PYTHON) .github/scripts/test_h2_source_snapshot_scope_approval.py
+	$(PYTHON) .github/scripts/test_milestone_e_source_snapshot_candidate_audit.py
+	$(PYTHON) .github/scripts/test_h2_source_snapshot_candidate_evidence.py
+	$(PYTHON) .github/scripts/test_h2_source_snapshot_closeout.py
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_milestone_e_schema_registry_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_blocked_output_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_evidence_lane_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_diagnostic_boundary_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_promotion_status_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_source_status_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_applies_to_binding_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_required_before_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py
+	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py
+	$(PYTHON) .github/scripts/test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_prep_scope_structured_blocker_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger.py
+	$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_walkthrough_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_use_protocol_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_native_grounding_baseline_rehearsal_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_diagnostic_boundary_check_rehearsal_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_capability_downgrade_boundary_rehearsal_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_opendataloader_adapter_grounding_rehearsal_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_pinned_opendataloader_fixture_path_rehearsal_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_crop_descriptor_source_bound_shape_rehearsal_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_rag_chunk_artifact_loop_rehearsal_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_security_report_artifact_loop_rehearsal_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_demo_narrative_index_rehearsal_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_rehearsal_row_record_coverage_validation.py
+	$(PYTHON) .github/scripts/test_milestone_e_schema_registry_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_blocked_output_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_evidence_lane_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_diagnostic_boundary_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_promotion_status_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_source_status_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_applies_to_binding_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_required_before_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_source_head_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_source_head_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index.py
+	$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_final_closeout_record.py
 	git diff --check
 
 verify-rendered-crops: $(ETHOS_BIN)

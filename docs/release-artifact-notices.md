@@ -55,6 +55,11 @@ The draft bundle is intentionally marked `draft_not_release_ready`.
 
 ## Release Gate
 
+Approved H2 artifact scope as of 2026-06-20 is `source-snapshot` only. This scope does not approve
+GitHub release binaries, wheels, npm packages, crate publication, hosted surfaces, public benchmark
+reports, or wording beyond the exact approved pre-alpha sentence. The approval record is
+`docs/validation/h2-source-snapshot-scope-approval-2026-06-20.md`.
+
 Before any public release artifact:
 
 - replace the draft artifact identifier with the concrete artifact name and platform;

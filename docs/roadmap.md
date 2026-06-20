@@ -60,6 +60,53 @@ The prior contract closeout is recorded in
 13-D exit is complete for the current source-only pre-alpha scope. The accepted D closeout scope
 keeps Node, MCP, hosted, sandbox-backed, and foreign-adapter crop surfaces out of Milestone D, and
 cross-platform rendered-crop byte identity is not required for D closeout.
+Milestone E prep begins with a source-only pre-alpha boundary note at
+[`docs/milestone-e-prep-scope.md`](milestone-e-prep-scope.md) and a guarded internal fixture
+candidate inventory at
+[`docs/milestone-e-fixture-candidates.json`](milestone-e-fixture-candidates.json), with internal
+fixture-promotion criteria in
+[`docs/milestone-e-fixture-promotion-criteria.json`](milestone-e-fixture-promotion-criteria.json).
+These E prep JSON artifacts are schema-bound by
+[`schemas/ethos-milestone-e-fixture-candidates.schema.json`](../schemas/ethos-milestone-e-fixture-candidates.schema.json)
+and
+[`schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json`](../schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json).
+The internal trust-loop walkthrough plan is recorded in
+[`docs/milestone-e-internal-trust-loop-walkthrough.json`](milestone-e-internal-trust-loop-walkthrough.json)
+and schema-bound by
+[`schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-walkthrough.schema.json).
+The internal trust-loop use protocol is recorded in
+[`docs/milestone-e-internal-trust-loop-use-protocol.json`](milestone-e-internal-trust-loop-use-protocol.json)
+and schema-bound by
+[`schemas/ethos-milestone-e-internal-trust-loop-use-protocol.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-use-protocol.schema.json).
+The internal trust-loop rehearsal/evidence matrix is recorded in
+[`docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json`](milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json)
+and schema-bound by
+[`schemas/ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json).
+The internal trust-loop blocker ledger is recorded in
+[`docs/milestone-e-internal-trust-loop-blocker-ledger.json`](milestone-e-internal-trust-loop-blocker-ledger.json)
+and schema-bound by
+[`schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json).
+This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
+continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
+matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
+alignment keeps the current rehearsal/evidence matrix, blocker ledger, and matching schemas on the
+same internal evidence lanes. The diagnostic-boundary alignment guard keeps the current fixture
+candidates, promotion criteria, walkthrough, use protocol, rehearsal/evidence matrix, blocker
+ledger, matching schemas, and row validation records on the same source-only diagnostic
+boundaries. The promotion-status alignment guard keeps current artifacts and rows at
+`not_promoted_beyond_internal_fixture_planning`. The source-status alignment guard keeps current
+artifacts at `source-only-pre-alpha-internal-milestone-e-prep`. The applies-to binding alignment
+guard keeps the current E artifacts bound from `docs/milestone-e-fixture-candidates.json` through
+`docs/milestone-e-internal-trust-loop-blocker-ledger.json`. The required-before alignment guard
+keeps current readiness gates tied to `make milestone-e-prep remains green`, posture checks,
+claims gates, diagnostic boundaries, and explicit blockers. The validation-record source-head
+alignment guard keeps each `Validated source HEAD before this record` line source-bound. The
+Milestone E prep source-only closeout is recorded in
+[`docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`](validation/milestone-e-final-closeout-validation-2026-06-20.md)
+for the current internal prep boundary only. This prep does not resolve or soften blockers, approve
+public result wording, hosted surfaces,
+package/distribution work, or
+public-facing claims.
 
 | Milestone | Window | Contents | Gate |
 | --- | --- | --- | --- |
@@ -68,7 +115,7 @@ cross-platform rendered-crop byte identity is not required for D closeout.
 | B | weeks 9-14 | **`ethos verify` alpha first**: native Ethos JSON + synthetic and pinned real OpenDataLoader verification demos, stale fingerprint checks, capability-limited reports, deterministic evidence matching including split-quote coverage, explicit unsupported non-v1 claim reporting, adapter structure diagnostics; then reading order, blocks, headings, lists, Markdown/text exporters, Python wheel scaffold, quality dashboard, Windows x64 nightly determinism | [13-B exit checklist](milestone-b-exit-checklist.md) |
 | C | weeks 15-22 | Simple/bordered tables; RAG chunker + citations; non-text region coordinates; security report + default-chunk exclusion; debug overlay; internal benchmark snapshot | Current artifact-validation checkpoint recorded in [Milestone C closeout validation](validation/milestone-c-closeout-validation-2026-06-18.md); broader debug/crop/table follow-ups remain explicit |
 | D | weeks 23-30 | [`verify_citations` v1 contract prep](milestone-d-verify-citations-contract.md); [`claim_kind_boundary` v1 contract prep](milestone-d-claim-kind-boundary-contract.md); [`grounding_source` v1 contract prep](milestone-d-grounding-source-contract.md); [`capability_downgrade` v1 contract prep](milestone-d-capability-downgrade-contract.md); [`opendataloader_adapter_shape` v1 contract prep](milestone-d-opendataloader-adapter-shape-contract.md); [`crop_element` v1 contract prep](milestone-d-crop-element-contract.md) plus internal resolver and source-bound CLI/Python descriptor/rendered carriers; [`crop_element_surface_shape` v1 contract prep](milestone-d-crop-element-surface-shape-contract.md); [`sandbox_subprocess` v1 contract prep](milestone-d-sandbox-subprocess-contract.md); [contract closeout validation](validation/milestone-d-contract-closeout-validation-2026-06-19.md); [final closeout validation](validation/milestone-d-final-closeout-validation-2026-06-19.md); Node/MCP/hosted crop surfaces, sandbox-backed crop behavior, foreign-adapter crop coordinates, and cross-platform rendered-crop byte identity are explicit post-D blockers, not D closeout requirements | 13-D exit complete for source-only pre-alpha scope |
-| E | weeks 31-40 | Public benchmark report (reproducible, labeled tiers); PDFium Phase 2 project-maintained builds; stable CLI/Python docs; proof-of-trust demos; **Public Beta** | Release 1 claim audit + public-beta checkpoint |
+| E | weeks 31-40 | Initial source-only prep scope in [`docs/milestone-e-prep-scope.md`](milestone-e-prep-scope.md), with current internal prep closeout recorded in [`docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`](validation/milestone-e-final-closeout-validation-2026-06-20.md); later public-report, project-maintained PDFium build, stable CLI/Python docs, demo, and beta work remain blocked on explicit claim-audit and release-scope decisions | Release 1 claim audit + public-beta checkpoint |
 | F / Release 2 | post-E | Complex tables, formula/LaTeX, chart classification, optional enrichment modules (never base) | Scoped after E from beta fixtures |
 
 Fallback charter: ADR-0005 selected `PROCEED`. If a future Gate Zero successor decision rejects

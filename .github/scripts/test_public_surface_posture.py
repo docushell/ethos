@@ -40,6 +40,11 @@ class PublicSurfacePostureTests(unittest.TestCase):
         self.assertIn("ADR-0005 records an internal", text)
         self.assertIn("continuation only", text)
         self.assertIn("does not approve public benchmark reports", text)
+        self.assertIn(
+            "Ethos is pre-alpha. It verifies whether AI citations are grounded in document "
+            "evidence across native Ethos JSON and supported foreign parser outputs.",
+            text,
+        )
         self.assertIn("No performance,", text)
         self.assertIn("table-quality, or parser-quality claims are made", text)
         self.assertNotIn("contracts phase", text)
@@ -58,6 +63,12 @@ class PublicSurfacePostureTests(unittest.TestCase):
         self.assertIn("contracts phase", text)
         self.assertIn("Gate Zero[^\\n]*has not run", text)
         self.assertIn("launch package", text)
+        self.assertIn('"docs/milestone-e-prep-scope.md"', text)
+        self.assertIn("benchmark[- ]validated", text)
+        self.assertIn("release[- ]ready", text)
+        self.assertIn("package[- ]ready", text)
+        self.assertIn("production[- ]ready", text)
+        self.assertIn("launch[- ]ready", text)
 
 
 if __name__ == "__main__":
