@@ -207,6 +207,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_package_publication_evidence_records.py",
     ),
     RecordCoverage(
+        "milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md",
+        "test_milestone_e_package_publication_metadata_readiness.py",
+    ),
+    RecordCoverage(
         "milestone-e-validation-command-index-validation-2026-06-20.md",
         "test_milestone_e_validation_command_index_validation_record.py",
     ),
