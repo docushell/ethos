@@ -90,7 +90,7 @@ class MilestoneEPackagePublicationVersionTagPolicyTests(unittest.TestCase):
         self.assertIn("real-version publication remains blocked", status)
         self.assertIn("real package version selection", blocker_text)
         self.assertIn("package tag creation", blocker_text)
-        self.assertIn("PDFium-boundary evidence remain blocked", blocker_text)
+        self.assertIn("project-maintained PDFium builds remain blocked", blocker_text)
 
     def test_workspace_and_reserved_versions_stay_separate(self) -> None:
         root_manifest = read(ROOT / "Cargo.toml")

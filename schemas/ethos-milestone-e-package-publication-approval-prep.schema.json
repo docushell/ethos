@@ -203,7 +203,7 @@
           "const": "version/tag policy follow-up recorded; workspace 0.1.0 remains source-tree only, reserved 0.0.0-reserved.0 names remain placeholders, and real-version publication remains blocked"
         },
         "pdfium_packaging_boundary": {
-          "const": "evidence recorded; caller-provided PDFium only, no bundled binary, and no PDFium types in public API remain required before ethos-pdf can proceed"
+          "const": "PDFium boundary follow-up recorded for current source-tree ethos-pdf; no bundled PDFium binary, caller-provided ETHOS_PDFIUM_LIBRARY_PATH, and no raw PDFium types across public schemas/APIs are confirmed while publication remains blocked"
         },
         "public_surface_posture_check": {
           "const": "run after exact wording changes by the package evidence guard path"
@@ -249,7 +249,8 @@
       "required": [
         "package_metadata_readiness",
         "package_dry_run_smoke",
-        "package_version_tag_policy"
+        "package_version_tag_policy",
+        "package_pdfium_boundary"
       ],
       "additionalProperties": false,
       "properties": {
@@ -261,6 +262,9 @@
         },
         "package_version_tag_policy": {
           "const": "docs/validation/milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md"
+        },
+        "package_pdfium_boundary": {
+          "const": "docs/validation/milestone-e-package-publication-pdfium-boundary-closeout-validation-2026-06-21.md"
         }
       }
     },
@@ -348,7 +352,7 @@
         "public benchmark reports remain blocked",
         "public benchmark claims remain blocked",
         "project-maintained PDFium builds remain blocked",
-        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; dependent package assembly remains blocked until package dependency naming and ordering are resolved; real package version selection, package tag creation, and PDFium-boundary evidence remain blocked",
+        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; dependent package assembly remains blocked until package dependency naming and ordering are resolved; real package version selection and package tag creation remain blocked until later dedicated publication approval",
         "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication"
       ]
     },
