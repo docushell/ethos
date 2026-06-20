@@ -130,6 +130,10 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_rehearsal_row_record_coverage_validation.py
       - name: Milestone E schema registry alignment validation record tests
         run: python3 .github/scripts/test_milestone_e_schema_registry_alignment_validation_record.py
+      - name: Milestone E validation-record index tests
+        run: python3 .github/scripts/test_milestone_e_validation_record_index.py
+      - name: Milestone E validation-record index validation record tests
+        run: python3 .github/scripts/test_milestone_e_validation_record_index_validation_record.py
       - name: Milestone E prep validation record tests
         run: python3 .github/scripts/test_milestone_e_prep_validation_record.py
       - name: Milestone B exit checklist tests

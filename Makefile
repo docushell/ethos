@@ -174,6 +174,8 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_demo_narrative_index_rehearsal_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_rehearsal_row_record_coverage_validation.py
 	$(PYTHON) .github/scripts/test_milestone_e_schema_registry_alignment_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py
 	git diff --check
 
