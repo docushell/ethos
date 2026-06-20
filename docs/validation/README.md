@@ -157,6 +157,11 @@ Records:
   and row-level schema const checks, row-record checks, public-surface posture checks, `make
   milestone-e-prep`, and diff hygiene; the record covers only current E prep promotion-status
   alignment and does not resolve or soften blockers.
+- `milestone-e-source-status-alignment-validation-2026-06-20.md` - internal Milestone E
+  source-status alignment validation passed through source-status vocabulary checks, top-level and
+  row-level schema const checks, validation-record checks, public-surface posture checks, `make
+  milestone-e-prep`, and diff hygiene; the record covers only current E prep source-status
+  alignment and does not resolve or soften blockers.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

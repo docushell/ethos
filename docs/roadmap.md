@@ -94,8 +94,10 @@ same internal evidence lanes. The diagnostic-boundary alignment guard keeps the 
 candidates, promotion criteria, walkthrough, use protocol, rehearsal/evidence matrix, blocker
 ledger, matching schemas, and row validation records on the same source-only diagnostic
 boundaries. The promotion-status alignment guard keeps current artifacts and rows at
-`not_promoted_beyond_internal_fixture_planning`. This prep does not resolve or soften blockers,
-approve public result wording, hosted surfaces, package/distribution work, or public-facing claims.
+`not_promoted_beyond_internal_fixture_planning`. The source-status alignment guard keeps current
+artifacts at `source-only-pre-alpha-internal-milestone-e-prep`. This prep does not resolve or
+soften blockers, approve public result wording, hosted surfaces, package/distribution work, or
+public-facing claims.
 
 | Milestone | Window | Contents | Gate |
 | --- | --- | --- | --- |

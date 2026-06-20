@@ -73,6 +73,9 @@ evidence grounding, diagnostics, fixture/evaluator validation, and explicit bloc
 All current E prep artifacts and rows that carry promotion status must also keep
 promotion-status alignment at `not_promoted_beyond_internal_fixture_planning` until a later
 source-only decision changes that state.
+All current E prep artifacts must keep source-status alignment at
+`source-only-pre-alpha-internal-milestone-e-prep`, and fixture-candidate rows must remain
+`source-only-pre-alpha-internal-candidate`.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -99,7 +102,7 @@ Focused validation command:
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate,
 schema/example validation, schema-registry alignment for the E prep JSON artifacts,
 public-boundary alignment, blocked-output alignment, evidence-lane alignment,
-diagnostic-boundary alignment, promotion-status alignment, this prep-scope
+diagnostic-boundary alignment, promotion-status alignment, source-status alignment, this prep-scope
 guard, fixture-candidate blocker-alignment validation, the internal trust-loop walkthrough, use-protocol,
 rehearsal/evidence matrix, and blocker-ledger guards, validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
@@ -134,5 +137,7 @@ or broad demo-generation workflows.
   and row validation records.
 - Promotion-status alignment remains `not_promoted_beyond_internal_fixture_planning` across
   current artifacts, rows, matching schemas, and row validation records.
+- Source-status alignment remains `source-only-pre-alpha-internal-milestone-e-prep` across current
+  artifacts and `source-only-pre-alpha-internal-candidate` across fixture-candidate rows.
 - Public language remains source-only pre-alpha and internal-continuation scoped.
 - External blockers remain visible before any public-facing Milestone E work starts.
