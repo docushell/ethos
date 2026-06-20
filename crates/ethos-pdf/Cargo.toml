@@ -2,12 +2,26 @@
 name = "ethos-pdf"
 publish = false
 description = "PDFium backend behind EthosPdfBackend — quantize-at-extraction lives here (WS-ENGINE, Milestone A)"
+readme = "README.md"
+keywords = ["ethos", "pdf", "evidence"]
+include = [
+    "Cargo.toml",
+    "README.md",
+    "NOTICE.md",
+    "assets/**",
+    "src/**",
+]
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 authors.workspace = true
+
+[package.metadata.ethos_publication]
+reserved_crates_io_name = "ethos-pdf"
+reserved_crates_io_version = "0.0.0-reserved.0"
+publication_status = "blocked"
 
 [dependencies]
 ethos-core = { workspace = true, features = ["full"] }

@@ -152,9 +152,9 @@ class MilestoneEPackagePublicationEvidenceRecordTests(unittest.TestCase):
         self.assertIn("license.workspace = true", read(ROOT / "crates/ethos-core/Cargo.toml"))
         self.assertIn("license.workspace = true", read(ROOT / "crates/ethos-verify/Cargo.toml"))
         self.assertIn("license.workspace = true", read(ROOT / "crates/ethos-pdf/Cargo.toml"))
-        self.assertFalse((ROOT / "crates/ethos-core/README.md").exists())
-        self.assertFalse((ROOT / "crates/ethos-verify/README.md").exists())
-        self.assertFalse((ROOT / "crates/ethos-pdf/README.md").exists())
+        self.assertIn("`crates/ethos-core` has no crate README ready", record)
+        self.assertIn("`crates/ethos-verify` has no crate README ready", record)
+        self.assertIn("`crates/ethos-pdf` has no crate README ready", record)
         self.assertIn("Per-crate README content remains incomplete", record)
         self.assertIn("Per-crate NOTICE packaging remains undefined", record)
 

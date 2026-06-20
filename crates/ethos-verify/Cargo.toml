@@ -2,12 +2,25 @@
 name = "ethos-verify"
 publish = false
 description = "Parser-agnostic citation evidence verification over GroundingSource (alpha lands Milestone B)"
+readme = "README.md"
+keywords = ["ethos", "citations", "evidence"]
+include = [
+    "Cargo.toml",
+    "README.md",
+    "NOTICE.md",
+    "src/**",
+]
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 authors.workspace = true
+
+[package.metadata.ethos_publication]
+reserved_crates_io_name = "ethos-verify"
+reserved_crates_io_version = "0.0.0-reserved.0"
+publication_status = "blocked"
 
 [dependencies]
 # INVARIANT 4 (enforced by CI no-parser-internals job): ethos-verify sees ONLY the

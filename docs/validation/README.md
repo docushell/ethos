@@ -269,6 +269,10 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
   publication evidence validation for the `ethos-pdf` PDFium boundary; the record keeps
   `ethos-pdf` held out unless no bundled PDFium binary and no public PDFium types can be
   guaranteed.
+- `milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md` - package
+  publication metadata readiness validation for the current in-tree priority candidate crates; the
+  record keeps package publication and public installation blocked while recording README, NOTICE,
+  manifest metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf`.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
