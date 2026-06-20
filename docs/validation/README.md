@@ -206,6 +206,38 @@ Records:
   validation-record checks, public-surface posture checks, `make milestone-e-prep`, and diff
   hygiene; the record covers only current E prep readiness-gate alignment and does not resolve or
   soften blockers.
+- `milestone-e-public-approval-lane-blockers-validation-2026-06-20.md` - internal Milestone E
+  public approval lane blocker validation for
+  `docs/milestone-e-public-approval-lane-blockers.json` passed through approval-lane ledger checks,
+  schema validation, validation-record checks, public-surface posture checks, `make
+  milestone-e-prep`, and diff hygiene; the record covers only blocker prep for public beta,
+  package publication, hosted surface, production positioning, and public benchmark report lanes,
+  and does not approve any lane.
+- `milestone-e-public-beta-approval-prep-validation-2026-06-20.md` - internal Milestone E
+  public beta approval prep validation for `docs/milestone-e-public-beta-approval-prep.json`
+  passed through public beta approval prep checks, schema validation, validation-record checks,
+  public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record starts
+  required-evidence and blocker prep only, keeps public beta blocked, and does not approve public
+  beta.
+- `milestone-e-public-beta-approval-decision-validation-2026-06-20.md` - internal Milestone E
+  public beta required-evidence validation for the dedicated public beta approval decision review;
+  the record keeps public beta blocked, does not approve public beta, and records that exact
+  wording and surface signoff are not granted.
+- `milestone-e-public-beta-release-scope-engineering-blocker-review-validation-2026-06-20.md` -
+  internal Milestone E public beta required-evidence validation for release-scope engineering
+  blocker review; the record keeps public beta blocked and does not approve public beta.
+- `milestone-e-public-beta-public-setup-path-review-validation-2026-06-20.md` - internal Milestone E
+  public beta required-evidence validation for public setup path review; the record keeps public
+  beta blocked and does not approve public beta.
+- `milestone-e-public-beta-pdfium-build-path-review-validation-2026-06-20.md` - internal Milestone E
+  public beta required-evidence validation for Phase 2 PDFium build-path review; the record keeps
+  public beta blocked and does not approve public beta.
+- `milestone-e-package-publication-approval-prep-validation-2026-06-20.md` - internal Milestone E
+  package publication approval prep validation for
+  `docs/milestone-e-package-publication-approval-prep.json` passed through package publication
+  approval prep checks, schema validation, validation-record checks, public-surface posture checks,
+  `make milestone-e-prep`, and diff hygiene; the record starts required-evidence and blocker prep
+  only, keeps package publication blocked, and does not approve package publication.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

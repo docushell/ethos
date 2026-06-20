@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "status": "source-only-pre-alpha-internal-milestone-e-prep",
+  "scope": "public_beta_approval_prep",
+  "lane_id": "public-beta-approval",
+  "lane_name": "Public beta approval",
+  "approval_status": "started_blocked_pending_dedicated_approval",
+  "decision_status": "not_approved",
+  "approval_owner": "decider",
+  "exact_approved_public_sentence": "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs.",
+  "approved_source_snapshot": {
+    "source_head": "660f268df400351347d5185ad36584faa0481c7f",
+    "tag": "ethos-source-snapshot-660f268",
+    "archive": "ethos-source-snapshot-660f268.tar.gz",
+    "sha256": "58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87",
+    "boundary": "source-snapshot-only; no public beta approval"
+  },
+  "public_boundary": [
+    "public reports remain blocked",
+    "release artifacts remain blocked",
+    "package publication remains blocked",
+    "hosted surfaces remain blocked",
+    "public result wording remains blocked",
+    "performance claims remain blocked",
+    "quality claims remain blocked",
+    "footprint claims remain blocked",
+    "table-quality claims remain blocked",
+    "parser-quality claims remain blocked"
+  ],
+  "approval_scope": [
+    "prepare public beta approval evidence requirements",
+    "keep public beta blocked until a dedicated approval decision",
+    "keep the approved source snapshot limited to source-snapshot-only use",
+    "keep public wording limited to the exact approved pre-alpha sentence",
+    "require decider signoff before any public beta wording or operation"
+  ],
+  "required_evidence": [
+    "dedicated public beta approval decision record",
+    "release-scope engineering blocker review",
+    "public setup path review",
+    "Phase 2 project-maintained PDFium build-path decision or explicit rescope",
+    "public-surface posture check for exact changed surfaces",
+    "claims gate run after exact wording changes",
+    "decider signoff on exact wording and surface"
+  ],
+  "explicit_blockers": [
+    "public beta remains blocked",
+    "release-scope engineering blocker review did not clear public beta",
+    "public setup path remains unresolved",
+    "Phase 2 project-maintained PDFium build path remains unresolved or explicitly unrescoped",
+    "only the exact approved pre-alpha sentence is approved",
+    "ADR-0005 does not approve public beta",
+    "H2 source-snapshot closeout does not approve public beta"
+  ],
+  "allowed_wording": [
+    "Ethos remains source-only pre-alpha for this lane.",
+    "Public beta remains blocked pending dedicated approval.",
+    "The exact approved pre-alpha sentence may be used on current source-repository surfaces."
+  ],
+  "forbidden_wording": [
+    "any statement that treats a beta as open for public use",
+    "any statement that recasts the source snapshot as a beta",
+    "any statement that expands beyond the exact approved pre-alpha sentence",
+    "any statement that implies package, hosted, or production approval"
+  ],
+  "gate_script": ".github/scripts/test_milestone_e_public_beta_approval_prep.py",
+  "validation_record": "docs/validation/milestone-e-public-beta-approval-prep-validation-2026-06-20.md"
+}

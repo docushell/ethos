@@ -73,6 +73,18 @@ BOUNDARY_ARTIFACTS = (
         "docs/milestone-e-internal-trust-loop-blocker-ledger.json",
         "schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json",
     ),
+    BoundaryArtifact(
+        "docs/milestone-e-public-approval-lane-blockers.json",
+        "schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json",
+    ),
+    BoundaryArtifact(
+        "docs/milestone-e-public-beta-approval-prep.json",
+        "schemas/ethos-milestone-e-public-beta-approval-prep.schema.json",
+    ),
+    BoundaryArtifact(
+        "docs/milestone-e-package-publication-approval-prep.json",
+        "schemas/ethos-milestone-e-package-publication-approval-prep.schema.json",
+    ),
 )
 
 
