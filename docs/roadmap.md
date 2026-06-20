@@ -90,8 +90,11 @@ This prep only identifies tracked trust-loop fixture candidates and guard wiring
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
 alignment keeps the current rehearsal/evidence matrix, blocker ledger, and matching schemas on the
-same internal evidence lanes. This prep does not resolve or soften blockers, approve public result
-wording, hosted surfaces, package/distribution work, or public-facing claims.
+same internal evidence lanes. The diagnostic-boundary alignment guard keeps the current fixture
+candidates, promotion criteria, walkthrough, use protocol, rehearsal/evidence matrix, blocker
+ledger, matching schemas, and row validation records on the same source-only diagnostic
+boundaries. This prep does not resolve or soften blockers, approve public result wording, hosted surfaces,
+package/distribution work, or public-facing claims.
 
 | Milestone | Window | Contents | Gate |
 | --- | --- | --- | --- |

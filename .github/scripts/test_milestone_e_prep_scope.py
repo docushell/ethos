@@ -162,6 +162,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("`docs/milestone-e-internal-trust-loop-blocker-ledger.json`", text)
         self.assertIn("blocked-output alignment", text)
         self.assertIn("evidence-lane alignment", text)
+        self.assertIn("diagnostic-boundary alignment", text)
         self.assertTrue(TRUST_LOOP_BLOCKER_LEDGER.is_file())
         self.assertTrue(TRUST_LOOP_BLOCKER_LEDGER_SCHEMA.is_file())
         for label, paths in EXPECTED_CANDIDATES.items():
@@ -246,6 +247,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("blocked-output alignment", normalized_status)
         self.assertIn("evidence-lane alignment", normalized_roadmap)
         self.assertIn("evidence-lane alignment", normalized_status)
+        self.assertIn("diagnostic-boundary alignment", normalized_roadmap)
+        self.assertIn("diagnostic-boundary alignment", normalized_status)
         self.assertIn("schemas/ethos-milestone-e-fixture-candidates.schema.json", roadmap)
         self.assertIn("schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json", roadmap)
         self.assertIn(
@@ -291,6 +294,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment.py",
             "$(PYTHON) .github/scripts/test_milestone_e_blocked_output_alignment.py",
             "$(PYTHON) .github/scripts/test_milestone_e_evidence_lane_alignment.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_diagnostic_boundary_alignment.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py",
@@ -318,6 +322,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_blocked_output_alignment_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_evidence_lane_alignment_validation_record.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_diagnostic_boundary_alignment_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",
