@@ -82,11 +82,11 @@ Focused validation command:
 
 - `make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python`
 
-The target runs status/roadmap posture checks, public-surface posture checks, the claims gate, this
-prep-scope guard, fixture-candidate blocker-alignment validation, the internal trust-loop
-walkthrough, use-protocol, rehearsal/evidence matrix, and blocker-ledger guards, schema/example
-validation for the E prep JSON artifacts, and diff hygiene. It intentionally does not run release,
-packaging, hosted, benchmark-report, or broad
+The target runs status/roadmap posture checks, public-surface posture checks, the claims gate,
+schema/example validation, schema-registry alignment for the E prep JSON artifacts, this prep-scope
+guard, fixture-candidate blocker-alignment validation, the internal trust-loop walkthrough,
+use-protocol, rehearsal/evidence matrix, and blocker-ledger guards, validation-record guards, and
+diff hygiene. It intentionally does not run release, packaging, hosted, benchmark-report, or broad
 demo-generation workflows.
 
 ## Exit Criteria For This Prep Slice
@@ -97,6 +97,8 @@ demo-generation workflows.
   inventory.
 - The schema validation gate keeps the fixture-candidate inventory and fixture-promotion criteria
   closed to unreviewed fields.
+- The schema-registry alignment guard keeps the six E prep JSON artifacts and their six schemas in
+  one-to-one sync across schema validation and source-tree status docs.
 - Fixture-candidate blocker lists remain structured, nonempty, and visible before any internal
   fixture-planning use.
 - The internal trust-loop walkthrough plan remains limited to existing candidates and criteria.

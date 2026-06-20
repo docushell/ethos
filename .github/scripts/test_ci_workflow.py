@@ -61,8 +61,17 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("python3 .github/scripts/test_milestone_d_closeout_prep_record.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_d_closeout_record.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_d_final_closeout_record.py", text)
+        self.assertIn("python3 .github/scripts/test_milestone_e_schema_registry_alignment.py", text)
+        self.assertEqual(
+            1,
+            text.count("python3 .github/scripts/test_milestone_e_schema_registry_alignment.py"),
+        )
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_scope.py", text)
         self.assertEqual(1, text.count("python3 .github/scripts/test_milestone_e_prep_scope.py"))
+        self.assertLess(
+            text.index("python3 .github/scripts/test_milestone_e_schema_registry_alignment.py"),
+            text.index("python3 .github/scripts/test_milestone_e_prep_scope.py"),
+        )
         self.assertIn("python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py", text)
         self.assertEqual(
             1,
@@ -518,6 +527,28 @@ class CiWorkflowTests(unittest.TestCase):
             text.index(
                 "python3 .github/scripts/"
                 "test_milestone_e_rehearsal_row_record_coverage_validation.py"
+            ),
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_schema_registry_alignment_validation_record.py"
+            ),
+        )
+        self.assertIn(
+            "python3 .github/scripts/"
+            "test_milestone_e_schema_registry_alignment_validation_record.py",
+            text,
+        )
+        self.assertEqual(
+            1,
+            text.count(
+                "python3 .github/scripts/"
+                "test_milestone_e_schema_registry_alignment_validation_record.py"
+            ),
+        )
+        self.assertLess(
+            text.index(
+                "python3 .github/scripts/"
+                "test_milestone_e_schema_registry_alignment_validation_record.py"
             ),
             text.index("python3 .github/scripts/test_milestone_e_prep_validation_record.py"),
         )
