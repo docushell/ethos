@@ -41,12 +41,17 @@ rendered-crop byte-identity claims remain blocked.
 
 ## Claim Rules
 
-Allowed until the checklist is complete:
+Approved exact public source wording until the checklist is complete:
 
 ```text
 Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across
 native Ethos JSON and supported foreign parser outputs.
 ```
+
+This approval is limited to the exact sentence above on current source-repository public surfaces.
+It does not approve public benchmark reports, does not approve release artifacts, does not approve
+package publication, does not approve production positioning, does not approve hosted surfaces, and
+does not approve altered public wording.
 
 Not allowed:
 

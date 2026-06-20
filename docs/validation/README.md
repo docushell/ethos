@@ -201,6 +201,11 @@ Records:
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
+- `public-prealpha-wording-approval-2026-06-20.md` - product approval for the exact source-only
+  pre-alpha public sentence passed through manual `ethos-bench` evidence-hygiene review, source
+  public-surface posture checks, claims gate, and diff hygiene; the record does not approve public
+  benchmark reports, release artifacts, package publication, production positioning, hosted
+  surfaces, or altered public wording.
 - `public-source-push-preflight-2026-06-15.md` - final public GitHub source-push preflight
   passed for a pre-alpha source repository, with package releases, binary artifacts, public
   benchmark reports, and launch claims still blocked.

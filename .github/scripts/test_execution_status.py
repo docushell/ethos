@@ -38,6 +38,11 @@ class ExecutionStatusTests(unittest.TestCase):
             "with Milestone E prep source-only closeout recorded for the current internal prep boundary.",
             text,
         )
+        self.assertIn(
+            "Ethos is pre-alpha. It verifies whether AI citations are grounded in document "
+            "evidence across native Ethos JSON and supported foreign parser outputs.",
+            text,
+        )
         self.assertIn("docs/validation/milestone-d-final-closeout-validation-2026-06-19.md", text)
         self.assertIn("docs/milestone-d-verify-citations-contract.md", text)
         self.assertIn("docs/milestone-d-claim-kind-boundary-contract.md", text)
@@ -75,11 +80,11 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            'Public language stays at "source-only pre-alpha / internal Milestone D closeout '
-            'and Milestone E prep source-only closeout"',
+            "Public language may use this exact approved sentence on current source-repository surfaces",
             text,
         )
-        self.assertIn("claim audit approves specific wording", text)
+        self.assertIn("All wording beyond that sentence still requires claim-audit", text)
+        self.assertIn("Closed for the exact approved pre-alpha sentence only", text)
         self.assertIn("Post-D blockers/future work", text)
         self.assertIn("these are not D closeout requirements", text)
         self.assertIn("product-differentiating path remains verification and grounding first", text)

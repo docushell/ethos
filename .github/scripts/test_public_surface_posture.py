@@ -40,6 +40,11 @@ class PublicSurfacePostureTests(unittest.TestCase):
         self.assertIn("ADR-0005 records an internal", text)
         self.assertIn("continuation only", text)
         self.assertIn("does not approve public benchmark reports", text)
+        self.assertIn(
+            "Ethos is pre-alpha. It verifies whether AI citations are grounded in document "
+            "evidence across native Ethos JSON and supported foreign parser outputs.",
+            text,
+        )
         self.assertIn("No performance,", text)
         self.assertIn("table-quality, or parser-quality claims are made", text)
         self.assertNotIn("contracts phase", text)

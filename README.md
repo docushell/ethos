@@ -10,8 +10,9 @@
 > **Status: source-only pre-alpha — internal Milestone D closeout complete, Milestone E prep.**
 > Nothing here is released, benchmarked, or ready for use. ADR-0005 records an internal
 > `PROCEED` decision for continuation only; it does not approve public benchmark reports,
-> release artifacts, packages, production positioning, or claim wording. No performance,
-> footprint, quality, table-quality, or parser-quality claims are made.
+> release artifacts, packages, production positioning, or wording beyond the approved pre-alpha
+> sentence. No performance, footprint, quality, table-quality, or parser-quality claims are made.
+> Approved public pre-alpha sentence: "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs."
 > Current execution status and blockers live in `docs/execution-status.md`; public-release
 > hygiene gates live in `docs/public-release-checklist.md`.
 

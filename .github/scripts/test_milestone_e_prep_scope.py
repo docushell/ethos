@@ -289,7 +289,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             roadmap,
         )
         self.assertIn("Still absent or not claimable:", status)
-        self.assertIn("claim-audit approval for any public result wording", status)
+        self.assertIn("exact approved pre-alpha sentence", status)
+        self.assertIn("Broader public result language remains blocked", status)
         self.assertIn(
             "intentionally excludes public-report, release, package, hosted, and broad "
             "demo-generation workflows",
@@ -304,6 +305,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_public_surface_posture.py",
             "$(PYTHON) .github/scripts/claims_gate.py",
+            "$(PYTHON) .github/scripts/test_public_prealpha_wording_approval.py",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_milestone_e_schema_registry_alignment.py",
             "$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment.py",
