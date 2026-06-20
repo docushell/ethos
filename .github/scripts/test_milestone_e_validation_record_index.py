@@ -170,6 +170,10 @@ EXPECTED_RECORDS = (
         "milestone-e-prep-current-guard-validation-2026-06-20.md",
         "test_milestone_e_prep_validation_record.py",
     ),
+    RecordCoverage(
+        "milestone-e-final-closeout-validation-2026-06-20.md",
+        "test_milestone_e_final_closeout_record.py",
+    ),
 )
 
 
@@ -226,6 +230,7 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         source_head_record_guard = "test_milestone_e_validation_source_head_alignment_validation_record.py"
         sequence_guard = "test_milestone_e_prep_guard_sequence_index_validation_record.py"
         prep_record_guard = "test_milestone_e_prep_validation_record.py"
+        final_guard = "test_milestone_e_final_closeout_record.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertLess(text.index(prefix + row_guard), text.index(prefix + index_guard))
@@ -243,6 +248,7 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             self.assertLess(text.index(prefix + source_head_guard), text.index(prefix + source_head_record_guard))
             self.assertLess(text.index(prefix + source_head_record_guard), text.index(prefix + sequence_guard))
             self.assertLess(text.index(prefix + sequence_guard), text.index(prefix + prep_record_guard))
+            self.assertLess(text.index(prefix + prep_record_guard), text.index(prefix + final_guard))
 
     def test_records_keep_source_only_public_boundaries(self) -> None:
         for entry in EXPECTED_RECORDS:

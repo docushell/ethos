@@ -355,6 +355,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_final_closeout_record.py",
             "git diff --check",
         ]
         commands = [line.strip() for line in block.splitlines() if line.strip()]

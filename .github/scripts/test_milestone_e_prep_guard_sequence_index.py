@@ -85,6 +85,7 @@ EXPECTED_MILESTONE_E_PREP_COMMANDS = (
     "$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index.py",
     "$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_final_closeout_record.py",
     "git diff --check",
 )
 
@@ -133,11 +134,13 @@ class MilestoneEPrepGuardSequenceIndexTests(unittest.TestCase):
         sequence_guard = "test_milestone_e_prep_guard_sequence_index.py"
         sequence_record_guard = "test_milestone_e_prep_guard_sequence_index_validation_record.py"
         prep_record_guard = "test_milestone_e_prep_validation_record.py"
+        final_guard = "test_milestone_e_final_closeout_record.py"
 
         for text, prefix in ((block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertLess(text.index(prefix + index_record_guard), text.index(prefix + sequence_guard))
             self.assertLess(text.index(prefix + sequence_guard), text.index(prefix + sequence_record_guard))
             self.assertLess(text.index(prefix + sequence_record_guard), text.index(prefix + prep_record_guard))
+            self.assertLess(text.index(prefix + prep_record_guard), text.index(prefix + final_guard))
 
     def test_docs_name_guard_sequence_index_without_scope_expansion(self) -> None:
         prep_scope = read(PREP_SCOPE)

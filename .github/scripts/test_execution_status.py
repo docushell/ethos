@@ -35,7 +35,7 @@ class ExecutionStatusTests(unittest.TestCase):
 
         self.assertIn(
             "Status: Pre-alpha / internal Milestone D source-only closeout complete, "
-            "transitioning to Milestone E prep.",
+            "with Milestone E prep source-only closeout recorded for the current internal prep boundary.",
             text,
         )
         self.assertIn("docs/validation/milestone-d-final-closeout-validation-2026-06-19.md", text)
@@ -64,8 +64,10 @@ class ExecutionStatusTests(unittest.TestCase):
         self.assertIn("make milestone-d-crop-element-surface-shape-contract", text)
         self.assertIn("make milestone-d-sandbox-subprocess-contract", text)
         self.assertIn("make milestone-d-internal-contracts", text)
+        self.assertIn("make milestone-e-prep", text)
         self.assertIn("docs/validation/milestone-d-contract-closeout-validation-2026-06-19.md", text)
         self.assertIn("docs/validation/milestone-d-final-closeout-validation-2026-06-19.md", text)
+        self.assertIn("docs/validation/milestone-e-final-closeout-validation-2026-06-20.md", text)
         self.assertIn("Full 13-D exit is complete for the current source-only pre-alpha scope", text)
         self.assertIn("CI has a static guard for that target's command wiring", text)
 
@@ -74,7 +76,7 @@ class ExecutionStatusTests(unittest.TestCase):
 
         self.assertIn(
             'Public language stays at "source-only pre-alpha / internal Milestone D closeout '
-            'and Milestone E prep"',
+            'and Milestone E prep source-only closeout"',
             text,
         )
         self.assertIn("claim audit approves specific wording", text)
