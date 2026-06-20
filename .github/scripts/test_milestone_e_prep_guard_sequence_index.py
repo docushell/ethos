@@ -98,6 +98,7 @@ EXPECTED_MILESTONE_E_PREP_COMMANDS = (
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_version_tag_policy.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_pdfium_boundary.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_dependency_ordering.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_package_publication_manifest_migration_prep.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",

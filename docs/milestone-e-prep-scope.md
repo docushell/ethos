@@ -111,6 +111,11 @@ The dependency-ordering follow-up record under `docs/validation/` covers the fut
 candidate order only: `ethos-doc-core` before `ethos-verify` and `ethos-pdf`. Registry-backed
 dependent package assembly, package dependency manifest migration, public installation, and package
 publication remain blocked.
+The manifest-migration prep follow-up record under `docs/validation/` covers future Cargo manifest
+shape only: core package-name migration to `ethos-doc-core`, a workspace dependency alias, and
+stable source dependency keys for `ethos-verify` and `ethos-pdf`. Current Cargo manifests remain
+unchanged; registry-backed dependent package assembly, package dependency manifest activation,
+public installation, and package publication remain blocked.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
@@ -242,6 +247,10 @@ or broad demo-generation workflows.
 - The package publication dependency-ordering follow-up remains limited to future dependent
   candidate order; registry-backed dependent package assembly, package dependency manifest
   migration, public installation, and package publication remain blocked.
+- The package publication manifest-migration prep follow-up remains limited to future Cargo
+  manifest shape; current Cargo manifests remain unchanged, and registry-backed dependent package
+  assembly, package dependency manifest activation, public installation, and package publication
+  remain blocked.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,

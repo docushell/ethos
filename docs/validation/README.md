@@ -291,6 +291,10 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
   record keeps package publication and public installation blocked while recording that
   `ethos-doc-core` must precede `ethos-verify` and `ethos-pdf` in any later dedicated publication
   approval.
+- `milestone-e-package-publication-manifest-migration-prep-validation-2026-06-21.md` - package
+  publication manifest-migration prep validation for a future core package-name migration and
+  workspace dependency alias; the record keeps package publication and public installation blocked
+  while recording that current Cargo manifests remain unchanged.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

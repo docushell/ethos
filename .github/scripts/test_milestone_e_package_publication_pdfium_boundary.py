@@ -114,7 +114,7 @@ class MilestoneEPackagePublicationPdfiumBoundaryTests(unittest.TestCase):
         self.assertIn("package tag creation", blocker_text)
         self.assertIn("project-maintained PDFium builds remain blocked", lane_blocker_text)
         self.assertIn("registry-backed dependent package assembly", lane_blocker_text)
-        self.assertIn("package dependency manifest migration", lane_blocker_text)
+        self.assertIn("package dependency manifest activation", lane_blocker_text)
         self.assertIn("real package version selection", lane_blocker_text)
         self.assertIn("package tag creation", lane_blocker_text)
         self.assertNotIn("PDFium-boundary evidence remains incomplete", lane_blocker_text)
