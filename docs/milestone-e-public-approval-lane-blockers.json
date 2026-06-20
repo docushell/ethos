@@ -104,7 +104,7 @@
         "public benchmark reports remain blocked",
         "public benchmark claims remain blocked",
         "project-maintained PDFium builds remain blocked",
-        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; registry-backed dependent package assembly, package dependency manifest migration, real package version selection, and package tag creation remain blocked until later dedicated publication approval",
+        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; registry-backed dependent package assembly, package dependency manifest activation, real package version selection, and package tag creation remain blocked until later dedicated publication approval",
         "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication"
       ],
       "allowed_wording": [
