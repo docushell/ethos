@@ -114,9 +114,9 @@ Focused validation command:
 
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate,
 public pre-alpha wording approval, release-readiness next-step approval, H1 public-safe comparison
-closeout validation, schema/example validation, schema-registry alignment for the E prep JSON
-artifacts, public-boundary alignment, blocked-output alignment, evidence-lane alignment,
-diagnostic-boundary alignment,
+closeout validation, H2 source-snapshot scope approval, schema/example validation,
+schema-registry alignment for the E prep JSON artifacts, public-boundary alignment,
+blocked-output alignment, evidence-lane alignment, diagnostic-boundary alignment,
 promotion-status alignment, source-status alignment, applies-to binding alignment,
 required-before alignment, validation-record source-head alignment, this prep-scope guard,
 fixture-candidate blocker-alignment validation,

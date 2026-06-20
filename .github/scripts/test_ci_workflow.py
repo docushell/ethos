@@ -58,6 +58,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("python3 .github/scripts/test_public_prealpha_wording_approval.py", text)
         self.assertIn("python3 .github/scripts/test_release_readiness_next_steps_approval.py", text)
         self.assertIn("python3 .github/scripts/test_h1_public_safe_comparison_closeout.py", text)
+        self.assertIn("python3 .github/scripts/test_h2_source_snapshot_scope_approval.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_d_internal_contracts.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_b_closeout_record.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_c_closeout_record.py", text)

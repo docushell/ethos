@@ -24,6 +24,10 @@ Records:
   benchmark-owner approval; the record closes only H1 evidence review and does not approve public
   benchmark claims, public benchmark reports, release artifacts, package publication, production
   positioning, hosted surfaces, or wording beyond the exact approved pre-alpha sentence.
+- `h2-source-snapshot-scope-approval-2026-06-20.md` - H2 artifact scope approval is limited to
+  `source-snapshot` only after review of the release notice draft; the record does not approve
+  binaries, wheels, npm packages, crate publication, hosted surfaces, public benchmark reports, or
+  wording beyond the exact approved pre-alpha sentence.
 - `license-notice-check-2026-06-15.md` - source license metadata, NOTICE boundaries, and
   non-advisory `cargo-deny` policy checks pass; the follow-up advisory scan is recorded in
   `advisory-scan-2026-06-16.md`, and release artifacts still need artifact-specific
