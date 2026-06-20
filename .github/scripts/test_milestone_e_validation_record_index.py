@@ -119,6 +119,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_schema_registry_alignment_validation_record.py",
     ),
     RecordCoverage(
+        "milestone-e-public-boundary-alignment-validation-2026-06-20.md",
+        "test_milestone_e_public_boundary_alignment_validation_record.py",
+    ),
+    RecordCoverage(
         "milestone-e-validation-record-index-validation-2026-06-20.md",
         "test_milestone_e_validation_record_index_validation_record.py",
     ),

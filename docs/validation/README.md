@@ -133,6 +133,10 @@ Records:
   roadmap/status references, public-surface posture checks, `make milestone-e-prep`, and diff
   hygiene; the record covers only current E prep schema-artifact alignment and does not resolve or
   soften blockers.
+- `milestone-e-public-boundary-alignment-validation-2026-06-20.md` - internal Milestone E
+  public-boundary alignment validation passed through public-boundary checks, schema-registry
+  checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record
+  covers only current E prep public-boundary alignment and does not resolve or soften blockers.
 - `milestone-e-validation-record-index-validation-2026-06-20.md` - internal Milestone E
   validation-record index validation passed through validation-record index checks, guard wiring
   checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record
