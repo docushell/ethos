@@ -56,6 +56,9 @@ rendered-crop byte-identity claims remain blocked.
   crate publication, and hosted surfaces remain blocked; public benchmark reports remain blocked;
   public beta, production positioning, and wording beyond the exact approved pre-alpha sentence
   remain blocked.
+- Refreshed H2 source-snapshot candidate evidence is recorded in
+  `docs/validation/h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md` for current
+  source HEAD `660f268`; H2 closeout remains pending for this candidate.
 
 ## Approved Execution Sequence
 

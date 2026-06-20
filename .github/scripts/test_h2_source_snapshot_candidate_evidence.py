@@ -28,14 +28,14 @@ from test_milestone_e_source_snapshot_candidate_audit import PRIVATE_MARKERS
 ROOT = Path(__file__).resolve().parents[2]
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 PUBLIC_RELEASE_CHECKLIST = ROOT / "docs/public-release-checklist.md"
-RECORD = ROOT / "docs/validation/h2-source-snapshot-candidate-evidence-2026-06-20.md"
+RECORD = ROOT / "docs/validation/h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 
-EXPECTED_SHA256 = "9ae9f40e8385035101bae1b947a6894bcdaf4c7ffb852faef73cb0755452ac51"
+EXPECTED_SHA256 = "58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87"
 
 BOUNDARY_PHRASES = (
-    "does not close H2",
+    "does not close H2 for this candidate",
     "does not approve public beta",
     "does not approve binaries",
     "does not approve wheels",
@@ -47,7 +47,7 @@ BOUNDARY_PHRASES = (
 )
 
 FORBIDDEN_SCOPE_EXPANSION = (
-    "h2 closed",
+    "h2 closed for this candidate",
     "public beta approved",
     "binaries approved",
     "wheels approved",
@@ -71,17 +71,20 @@ class H2SourceSnapshotCandidateEvidenceTests(unittest.TestCase):
     def test_candidate_evidence_is_recorded_on_current_surfaces(self) -> None:
         for path in (EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST, VALIDATION_README):
             text = normalized(path)
-            self.assertIn("h2-source-snapshot-candidate-evidence-2026-06-20.md", text)
+            self.assertIn("h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md", text)
 
     def test_record_captures_candidate_identity_and_hash(self) -> None:
         text = normalized(RECORD)
 
-        self.assertIn("Status: **source-snapshot candidate evidence recorded; H2 remains open**", text)
-        self.assertIn("Candidate source HEAD: `60abfd4`", text)
-        self.assertIn("Candidate archive: `ethos-source-snapshot-60abfd4.tar.gz`", text)
+        self.assertIn(
+            "Status: **refreshed source-snapshot candidate evidence recorded; H2 closeout remains pending for this candidate**",
+            text,
+        )
+        self.assertIn("Candidate source HEAD: `660f268`", text)
+        self.assertIn("Candidate archive: `ethos-source-snapshot-660f268.tar.gz`", text)
         self.assertIn(EXPECTED_SHA256, text)
-        self.assertIn("Candidate archive prefix: `ethos-source-snapshot-60abfd4/`", text)
-        self.assertIn("Extracted file count: `497`", text)
+        self.assertIn("Candidate archive prefix: `ethos-source-snapshot-660f268/`", text)
+        self.assertIn("Extracted file count: `501`", text)
         self.assertIn("Approved artifact class: `source-snapshot`", text)
 
     def test_record_captures_required_files_and_manual_validation(self) -> None:
@@ -97,6 +100,7 @@ class H2SourceSnapshotCandidateEvidenceTests(unittest.TestCase):
             "SOURCE_SNAPSHOT_EXTRACT_OK",
             "source-snapshot candidate audit: pass",
             "BLOCKED_ARTIFACT_SCAN_PASS",
+            "UNTRACKED_OR_BUILD_PATH_SCAN_PASS",
             "public surface posture tests: pass",
             "public pre-alpha wording approval tests: pass",
             "claims gate green",
@@ -108,7 +112,8 @@ class H2SourceSnapshotCandidateEvidenceTests(unittest.TestCase):
         text = normalized(RECORD)
 
         self.assertIn("Ethos remains source-only pre-alpha", text)
-        self.assertIn("H2 remains open", text)
+        self.assertIn("H2 closeout remains pending for this candidate", text)
+        self.assertIn("source HEAD `60abfd4`", text)
         for phrase in BOUNDARY_PHRASES:
             self.assertIn(phrase, text, phrase)
 
@@ -116,13 +121,14 @@ class H2SourceSnapshotCandidateEvidenceTests(unittest.TestCase):
         docs = "\n".join(normalized(path) for path in (EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST))
 
         self.assertIn("source-snapshot candidate evidence", docs)
+        self.assertIn("H2 closeout remains pending for this candidate", docs)
         self.assertIn("h2-source-snapshot-closeout-2026-06-20.md", docs)
         self.assertIn("binaries, wheels, npm packages, crate publication, hosted surfaces", docs)
 
     def test_candidate_record_is_indexed_once(self) -> None:
         self.assertEqual(
             1,
-            read(VALIDATION_README).count("h2-source-snapshot-candidate-evidence-2026-06-20.md"),
+            read(VALIDATION_README).count("h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md"),
         )
 
     def test_make_target_runs_candidate_guard_after_snapshot_audit(self) -> None:
