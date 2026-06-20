@@ -186,6 +186,10 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_public_beta_approval_prep.py
       - name: Milestone E public beta approval prep validation record tests
         run: python3 .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py
+      - name: Milestone E package publication approval prep tests
+        run: python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py
+      - name: Milestone E package publication approval prep validation record tests
+        run: python3 .github/scripts/test_milestone_e_package_publication_approval_prep_validation_record.py
       - name: Milestone E validation-command index tests
         run: python3 .github/scripts/test_milestone_e_validation_command_index.py
       - name: Milestone E validation-command index validation record tests

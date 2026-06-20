@@ -96,6 +96,12 @@ and schema-bound by
 [`schemas/ethos-milestone-e-public-beta-approval-prep.schema.json`](../schemas/ethos-milestone-e-public-beta-approval-prep.schema.json);
 public beta approval prep has started as required-evidence and blocker prep only, and does not
 approve public beta.
+The package publication approval prep lane is recorded in
+[`docs/milestone-e-package-publication-approval-prep.json`](milestone-e-package-publication-approval-prep.json)
+and schema-bound by
+[`schemas/ethos-milestone-e-package-publication-approval-prep.schema.json`](../schemas/ethos-milestone-e-package-publication-approval-prep.schema.json);
+package publication approval prep has started as required-evidence and blocker prep only, and does
+not approve package publication.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
@@ -115,7 +121,8 @@ approval lane blocker ledger keeps public beta, package publication, hosted surf
 positioning, and public benchmark report lanes blocked pending dedicated approval records,
 evidence, owners, wording, gate scripts, validation records, and decider review. The public beta
 approval prep lane remains `not_approved`, does not approve public beta, and does not broaden public
-wording. The
+wording. The package publication approval prep lane remains `not_approved`, does not approve package
+publication, and does not broaden public wording. The
 Milestone E prep source-only closeout is recorded in
 [`docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`](validation/milestone-e-final-closeout-validation-2026-06-20.md)
 for the current internal prep boundary only. This prep does not resolve or soften blockers, approve
@@ -130,7 +137,7 @@ public-facing claims.
 | B | weeks 9-14 | **`ethos verify` alpha first**: native Ethos JSON + synthetic and pinned real OpenDataLoader verification demos, stale fingerprint checks, capability-limited reports, deterministic evidence matching including split-quote coverage, explicit unsupported non-v1 claim reporting, adapter structure diagnostics; then reading order, blocks, headings, lists, Markdown/text exporters, Python wheel scaffold, quality dashboard, Windows x64 nightly determinism | [13-B exit checklist](milestone-b-exit-checklist.md) |
 | C | weeks 15-22 | Simple/bordered tables; RAG chunker + citations; non-text region coordinates; security report + default-chunk exclusion; debug overlay; internal benchmark snapshot | Current artifact-validation checkpoint recorded in [Milestone C closeout validation](validation/milestone-c-closeout-validation-2026-06-18.md); broader debug/crop/table follow-ups remain explicit |
 | D | weeks 23-30 | [`verify_citations` v1 contract prep](milestone-d-verify-citations-contract.md); [`claim_kind_boundary` v1 contract prep](milestone-d-claim-kind-boundary-contract.md); [`grounding_source` v1 contract prep](milestone-d-grounding-source-contract.md); [`capability_downgrade` v1 contract prep](milestone-d-capability-downgrade-contract.md); [`opendataloader_adapter_shape` v1 contract prep](milestone-d-opendataloader-adapter-shape-contract.md); [`crop_element` v1 contract prep](milestone-d-crop-element-contract.md) plus internal resolver and source-bound CLI/Python descriptor/rendered carriers; [`crop_element_surface_shape` v1 contract prep](milestone-d-crop-element-surface-shape-contract.md); [`sandbox_subprocess` v1 contract prep](milestone-d-sandbox-subprocess-contract.md); [contract closeout validation](validation/milestone-d-contract-closeout-validation-2026-06-19.md); [final closeout validation](validation/milestone-d-final-closeout-validation-2026-06-19.md); Node/MCP/hosted crop surfaces, sandbox-backed crop behavior, foreign-adapter crop coordinates, and cross-platform rendered-crop byte identity are explicit post-D blockers, not D closeout requirements | 13-D exit complete for source-only pre-alpha scope |
-| E | weeks 31-40 | Initial source-only prep scope in [`docs/milestone-e-prep-scope.md`](milestone-e-prep-scope.md), with current internal prep closeout recorded in [`docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`](validation/milestone-e-final-closeout-validation-2026-06-20.md); public beta approval prep is tracked in [`docs/milestone-e-public-beta-approval-prep.json`](milestone-e-public-beta-approval-prep.json) as blocked required-evidence prep only; later public-report, project-maintained PDFium build, stable CLI/Python docs, demo, and beta work remain blocked on explicit claim-audit and release-scope decisions | Release 1 claim audit + public-beta checkpoint |
+| E | weeks 31-40 | Initial source-only prep scope in [`docs/milestone-e-prep-scope.md`](milestone-e-prep-scope.md), with current internal prep closeout recorded in [`docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`](validation/milestone-e-final-closeout-validation-2026-06-20.md); public beta approval prep is tracked in [`docs/milestone-e-public-beta-approval-prep.json`](milestone-e-public-beta-approval-prep.json) as blocked required-evidence prep only; package publication approval prep is tracked in [`docs/milestone-e-package-publication-approval-prep.json`](milestone-e-package-publication-approval-prep.json) as blocked required-evidence prep only; later public-report, project-maintained PDFium build, stable CLI/Python docs, demo, and beta work remain blocked on explicit claim-audit and release-scope decisions | Release 1 claim audit + public-beta checkpoint |
 | F / Release 2 | post-E | Complex tables, formula/LaTeX, chart classification, optional enrichment modules (never base) | Scoped after E from beta fixtures |
 
 Fallback charter: ADR-0005 selected `PROCEED`. If a future Gate Zero successor decision rejects

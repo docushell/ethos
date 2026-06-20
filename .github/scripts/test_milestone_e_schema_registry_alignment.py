@@ -89,6 +89,11 @@ EXPECTED_REGISTRY = (
         "docs/milestone-e-public-beta-approval-prep.json",
         "public_beta_approval_prep",
     ),
+    RegistryEntry(
+        "schemas/ethos-milestone-e-package-publication-approval-prep.schema.json",
+        "docs/milestone-e-package-publication-approval-prep.json",
+        "package_publication_approval_prep",
+    ),
 )
 
 
@@ -150,7 +155,7 @@ class MilestoneESchemaRegistryAlignmentTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, path)
 
     def test_registry_has_exact_tracked_schema_artifact_pairs(self) -> None:
-        self.assertEqual(8, len(EXPECTED_REGISTRY))
+        self.assertEqual(9, len(EXPECTED_REGISTRY))
         self.assertEqual(
             len(EXPECTED_REGISTRY),
             len({(entry.schema, entry.artifact) for entry in EXPECTED_REGISTRY}),

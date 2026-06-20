@@ -201,6 +201,8 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_beta_approval_prep.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_prep.py
+	$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_prep_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py
