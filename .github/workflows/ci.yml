@@ -204,6 +204,8 @@ jobs:
         run: make package-publication-dry-run-smoke
       - name: Milestone E package publication dry-run smoke tests
         run: python3 .github/scripts/test_milestone_e_package_publication_dry_run_smoke.py
+      - name: Milestone E package publication version/tag policy tests
+        run: python3 .github/scripts/test_milestone_e_package_publication_version_tag_policy.py
       - name: Milestone E validation-command index tests
         run: python3 .github/scripts/test_milestone_e_validation_command_index.py
       - name: Milestone E validation-command index validation record tests
