@@ -149,6 +149,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/test_public_prealpha_wording_approval.py
+	$(PYTHON) .github/scripts/test_release_readiness_next_steps_approval.py
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_milestone_e_schema_registry_alignment.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment.py

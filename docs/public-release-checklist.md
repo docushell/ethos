@@ -39,6 +39,27 @@ rendered-crop byte-identity claims remain blocked.
 - Current public-source preflight:
   `docs/validation/public-source-push-preflight-2026-06-15.md`.
 
+## Approved Execution Sequence
+
+Manual product approval on 2026-06-20 approves the following next-step sequence. This sequence is
+not a public-release approval, does not close H1 or H2, does not approve public benchmark reports,
+does not approve release artifacts, does not approve package publication, does not approve
+production positioning, does not approve hosted surfaces, and does not approve wording beyond the
+exact approved pre-alpha sentence.
+
+1. Close H1 by executing and reviewing the public-safe competitor comparison flow in `ethos-bench`,
+   then recording reviewable comparison rows without unsupported wording.
+2. Close H2 by completing this checklist, including explicit release/package artifact approval and
+   passing claim-language gates.
+3. Approve any wording beyond the exact pre-alpha sentence only after the benchmark owner maps each
+   exact sentence to accepted evidence and the decider approves the exact wording and surface.
+4. Harden release-scope engineering blockers: release packaging/operator setup, stable CLI/Python
+   docs, public setup path, Phase 2 project-maintained PDFium builds, broader corpus/failure
+   fixtures, and cross-platform runtime provisioning.
+5. Run release-candidate validation gates: source gates plus `ethos-bench` publication preflight,
+   readiness, smoke, and test gates, then rerun posture and claims gates after any public-facing
+   text changes.
+
 ## Claim Rules
 
 Approved exact public source wording until the checklist is complete:

@@ -35,7 +35,7 @@ The committed implementation now includes:
 - Milestone D `crop_element_surface_shape` v1 contract is closed with `docs/milestone-d-crop-element-surface-shape-contract.md`. It defines `crop_element_surface_shape` as the callable source-bound CLI/Python surface shape over the existing crop request and descriptor schemas; schema/example validation checks the inventory at `examples/crop/crop_element_surface_shape_v1_contract.json`, and the repository guard checks that it stays coherent with the request schema, descriptor schema, source-bound CLI command, and source-bound Python wrapper. Focused validation is `make milestone-d-crop-element-surface-shape-contract PYTHON=<jsonschema-venv>/bin/python`.
 - Milestone D `sandbox_subprocess` v1 contract is closed with `docs/milestone-d-sandbox-subprocess-contract.md`. It defines `sandbox_subprocess` as the future worker-boundary contract currently represented by the existing PDF worker process behind `ethos doc parse` and `ethos fingerprint`; schema/example validation checks the request envelopes under `schemas/examples/sandbox-subprocess-*.example.json` and inventory at `examples/sandbox/sandbox_subprocess_v1_contract.json`, and the repository guard checks that they stay coherent with the worker test slice. Focused validation is `make milestone-d-sandbox-subprocess-contract PYTHON=<jsonschema-venv>/bin/python`.
 - `make milestone-d-internal-contracts PYTHON=<jsonschema-venv>/bin/python` composes the current Milestone D source-only contract gates and has a static guard for that target's command wiring and contract registry, plus the Milestone D contract closeout validation record in `docs/validation/milestone-d-contract-closeout-validation-2026-06-19.md` and final closeout validation record in `docs/validation/milestone-d-final-closeout-validation-2026-06-19.md`. Full 13-D exit is complete for the current source-only pre-alpha scope.
-- `make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python` composes the Milestone E prep guard over `docs/milestone-e-prep-scope.md`, `docs/milestone-e-fixture-candidates.json`, `docs/milestone-e-fixture-promotion-criteria.json`, `docs/milestone-e-internal-trust-loop-walkthrough.json`, `docs/milestone-e-internal-trust-loop-use-protocol.json`, `docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json`, `docs/milestone-e-internal-trust-loop-blocker-ledger.json`, status/roadmap posture checks, public-surface posture checks, the claims gate, schema validation, schema-registry alignment, public-boundary alignment, blocked-output alignment, evidence-lane alignment, diagnostic-boundary alignment, promotion-status alignment, source-status alignment, applies-to binding alignment, required-before alignment, validation-command indexing, validation-record indexing, validation-record source-head alignment, the prep guard-sequence index, current prep guard validation, the Milestone E prep source-only closeout record in `docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`, and diff hygiene. This target is source-only and intentionally excludes public-report, release, package, hosted, and broad demo-generation workflows.
+- `make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python` composes the Milestone E prep guard over `docs/milestone-e-prep-scope.md`, `docs/milestone-e-fixture-candidates.json`, `docs/milestone-e-fixture-promotion-criteria.json`, `docs/milestone-e-internal-trust-loop-walkthrough.json`, `docs/milestone-e-internal-trust-loop-use-protocol.json`, `docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json`, `docs/milestone-e-internal-trust-loop-blocker-ledger.json`, status/roadmap posture checks, public-surface posture checks, the claims gate, public pre-alpha wording approval guard, release-readiness next-step approval guard, schema validation, schema-registry alignment, public-boundary alignment, blocked-output alignment, evidence-lane alignment, diagnostic-boundary alignment, promotion-status alignment, source-status alignment, applies-to binding alignment, required-before alignment, validation-command indexing, validation-record indexing, validation-record source-head alignment, the prep guard-sequence index, current prep guard validation, the Milestone E prep source-only closeout record in `docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`, and diff hygiene. This target is source-only and intentionally excludes public-report, release, package, hosted, and broad demo-generation workflows.
 
 Still absent or not claimable: public benchmark reports, public competitor-comparison claims, public speed/quality/footprint claims, OCR/image-only support, real table extraction, mature list/heading/layout semantics beyond current fixture-backed alpha paths, semantic/arithmetic verification beyond deterministic evidence lookup, Phase 2 project-maintained PDFium builds, release packaging, and any public wording beyond the exact approved pre-alpha sentence.
 
@@ -55,6 +55,27 @@ positioning, or wording beyond the exact approved pre-alpha sentence.
 | H3 | Approve exact pre-alpha public sentence | Closed for the exact approved pre-alpha sentence only: "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs." Broader public result language remains blocked. | Benchmark owner / decider | Public text beyond the approved sentence |
 
 The corpus/hardware freeze and direct competitor pins are recorded in `benchmarks/gate-zero/manifest.json` and `benchmarks/competitors.lock.json`. The remaining blockers are public-report, public-release, and broader wording blockers, not manifest/pin placeholders.
+
+## Approved Next-Step Sequence
+
+Manual product approval on 2026-06-20 approves this execution sequence for the next
+release-readiness work. It does not close H1 or H2, does not approve public beta, does not approve
+public benchmark reports, does not approve release artifacts, does not approve package
+publication, does not approve production positioning, does not approve hosted surfaces, and does
+not approve wording beyond the exact approved pre-alpha sentence.
+
+1. Close H1: execute and review the public-safe competitor comparison flow in `ethos-bench`, then
+   record reviewable comparison rows without unsupported wording.
+2. Close H2: complete `docs/public-release-checklist.md`, including explicit release/package
+   artifact approval and passing claim-language gates.
+3. Approve any wording beyond the exact pre-alpha sentence: benchmark owner maps each exact
+   sentence to accepted evidence, and the decider approves the exact wording and surface.
+4. Harden release-scope engineering blockers: release packaging/operator setup, stable CLI/Python
+   docs, public setup path, Phase 2 project-maintained PDFium builds, broader corpus/failure
+   fixtures, and cross-platform runtime provisioning.
+5. Run release-candidate validation gates: source gates plus `ethos-bench` publication preflight,
+   readiness, smoke, and test gates, then rerun posture and claims gates after any public-facing
+   text changes.
 
 ## Current Milestone Posture
 
