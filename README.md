@@ -14,6 +14,10 @@
 > include published crates, wheels, npm packages, binaries, release artifacts, hosted demos or APIs,
 > project-maintained PDFium builds, public benchmark reports, and performance, footprint, quality,
 > table-quality, or parser-quality claims.
+> Ethos crate publication is in internal preparation only and remains blocked for public
+> installation. No Ethos crates are published; the reserved crates.io names remain
+> 0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, hosted
+> surfaces, production positioning, and public benchmark claims remain blocked.
 > Current execution status and blockers live in `docs/execution-status.md`; public-release
 > hygiene gates live in `docs/public-release-checklist.md`.
 

@@ -12,6 +12,7 @@
     "ledger_status",
     "exact_approved_public_sentence",
     "exact_approved_public_beta_wording",
+    "exact_approved_package_publication_prep_wording",
     "approved_source_snapshot",
     "approved_public_beta_source",
     "public_boundary",
@@ -25,12 +26,17 @@
     "status": { "const": "source-only-pre-alpha-internal-milestone-e-prep" },
     "scope": { "const": "public_approval_lane_blocker_ledger" },
     "ledger_boundary": { "const": "internal_public_approval_lane_blocker_prep" },
-    "ledger_status": { "const": "public_beta_source_only_approved_other_lanes_blocked" },
+    "ledger_status": {
+      "const": "public_beta_source_only_and_package_prep_approved_other_lanes_blocked"
+    },
     "exact_approved_public_sentence": {
       "const": "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs."
     },
     "exact_approved_public_beta_wording": {
       "const": "Ethos is public beta for source-only evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Package publication, hosted surfaces, production positioning, and public benchmark claims remain blocked."
+    },
+    "exact_approved_package_publication_prep_wording": {
+      "const": "Ethos crate publication is in internal preparation only and remains blocked for public installation. No Ethos crates are published; the reserved crates.io names remain 0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, hosted surfaces, production positioning, and public benchmark claims remain blocked."
     },
     "approved_source_snapshot": { "$ref": "#/$defs/approved_source_snapshot" },
     "approved_public_beta_source": { "$ref": "#/$defs/approved_public_beta_source" },
@@ -139,6 +145,7 @@
         "approval_status": {
           "enum": [
             "approved_source_only_public_beta",
+            "prep_approved_publication_blocked",
             "blocked_pending_dedicated_approval"
           ]
         },
@@ -171,6 +178,7 @@
           "enum": [
             "benchmark owner / decider",
             "decider",
+            "docushell-admin",
             "devrel / decider"
           ]
         },

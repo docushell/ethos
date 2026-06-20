@@ -60,6 +60,12 @@ EXPECTED_PUBLIC_BETA_WORDING = (
     "Package publication, hosted surfaces, production positioning, and public benchmark claims "
     "remain blocked."
 )
+EXPECTED_PACKAGE_PREP_WORDING = (
+    "Ethos crate publication is in internal preparation only and remains blocked for public "
+    "installation. No Ethos crates are published; the reserved crates.io names remain "
+    "0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, hosted "
+    "surfaces, production positioning, and public benchmark claims remain blocked."
+)
 EXPECTED_GATE_SCRIPT = ".github/scripts/test_milestone_e_public_approval_lane_blockers.py"
 EXPECTED_VALIDATION_RECORD = (
     "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md"
@@ -134,9 +140,9 @@ EXPECTED_LANES = (
         2,
         "package-publication",
         "Package publication",
-        "blocked_pending_dedicated_approval",
-        "devrel / decider",
-        "ADR-0005 and H2 source-snapshot closeout do not approve package publication",
+        "prep_approved_publication_blocked",
+        "docushell-admin",
+        "real-version cargo publish remains blocked",
     ),
     ApprovalLane(
         3,
@@ -174,7 +180,7 @@ def read(path: Path) -> str:
 
 
 class MilestoneEPublicApprovalLaneBlockerTests(unittest.TestCase):
-    def test_ledger_records_source_only_public_beta_and_blocked_lanes(self) -> None:
+    def test_ledger_records_source_only_public_beta_package_prep_and_blocked_lanes(self) -> None:
         ledger = load_json(LEDGER)
 
         self.assertEqual(1, ledger["schema_version"])
@@ -182,11 +188,15 @@ class MilestoneEPublicApprovalLaneBlockerTests(unittest.TestCase):
         self.assertEqual("public_approval_lane_blocker_ledger", ledger["scope"])
         self.assertEqual("internal_public_approval_lane_blocker_prep", ledger["ledger_boundary"])
         self.assertEqual(
-            "public_beta_source_only_approved_other_lanes_blocked",
+            "public_beta_source_only_and_package_prep_approved_other_lanes_blocked",
             ledger["ledger_status"],
         )
         self.assertEqual(EXPECTED_APPROVED_SENTENCE, ledger["exact_approved_public_sentence"])
         self.assertEqual(EXPECTED_PUBLIC_BETA_WORDING, ledger["exact_approved_public_beta_wording"])
+        self.assertEqual(
+            EXPECTED_PACKAGE_PREP_WORDING,
+            ledger["exact_approved_package_publication_prep_wording"],
+        )
         self.assertEqual(EXPECTED_SOURCE_SNAPSHOT, ledger["approved_source_snapshot"])
         self.assertEqual(EXPECTED_PUBLIC_BETA_SOURCE, ledger["approved_public_beta_source"])
         self.assertEqual(EXPECTED_PUBLIC_BOUNDARY, ledger["public_boundary"])
@@ -217,7 +227,7 @@ class MilestoneEPublicApprovalLaneBlockerTests(unittest.TestCase):
 
     def test_lane_rows_keep_required_approval_contract_fields(self) -> None:
         for row in load_json(LEDGER)["approval_lanes"]:
-            self.assertIn("Approval to", row["explicit_scope"])
+            self.assertIn("Approval", row["explicit_scope"])
             self.assertTrue(
                 any(
                     "dedicated" in item and "approval" in item and "record" in item
@@ -235,6 +245,10 @@ class MilestoneEPublicApprovalLaneBlockerTests(unittest.TestCase):
             if row["lane_id"] == "public-beta-approval":
                 self.assertIn("source-only evaluation", allowed_text)
                 self.assertIn(EXPECTED_PUBLIC_BETA_WORDING.lower(), allowed_text)
+                self.assertIn("package publication remains blocked", blocker_text)
+            elif row["lane_id"] == "package-publication":
+                self.assertIn(EXPECTED_PACKAGE_PREP_WORDING.lower(), allowed_text)
+                self.assertIn("real-version cargo publish remains blocked", blocker_text)
                 self.assertIn("package publication remains blocked", blocker_text)
             else:
                 self.assertIn("blocked pending dedicated approval", allowed_text, row["lane_id"])
