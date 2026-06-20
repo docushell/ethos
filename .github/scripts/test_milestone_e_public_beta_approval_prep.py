@@ -54,6 +54,19 @@ EXPECTED_APPROVED_SENTENCE = (
     "Ethos is pre-alpha. It verifies whether AI citations are grounded in document "
     "evidence across native Ethos JSON and supported foreign parser outputs."
 )
+EXPECTED_PUBLIC_BETA_WORDING = (
+    "Ethos is public beta for source-only evaluation. It verifies whether AI citations are "
+    "grounded in document evidence across native Ethos JSON and supported foreign parser outputs. "
+    "Package publication, hosted surfaces, production positioning, and public benchmark claims "
+    "remain blocked."
+)
+EXPECTED_PUBLIC_BETA_SOURCE = {
+    "surface": "GitHub source repository docushell/ethos source-only evaluation",
+    "reviewed_commit": "d755e7c",
+    "merged_main_commit": "3f9e1c4",
+    "tree": "a9e913b0ba7ecd1567479b2ec773342868cba126",
+    "boundary": "source-only clone, build, and validation commands only",
+}
 EXPECTED_GATE = ".github/scripts/test_milestone_e_public_beta_approval_prep.py"
 EXPECTED_RECORD = "docs/validation/milestone-e-public-beta-approval-prep-validation-2026-06-20.md"
 
@@ -95,7 +108,7 @@ def read(path: Path) -> str:
 
 
 class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
-    def test_prep_is_started_but_not_approved(self) -> None:
+    def test_prep_records_source_only_public_beta_approval(self) -> None:
         prep = load_json(PREP)
 
         self.assertEqual(1, prep["schema_version"])
@@ -103,10 +116,12 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
         self.assertEqual("public_beta_approval_prep", prep["scope"])
         self.assertEqual("public-beta-approval", prep["lane_id"])
         self.assertEqual("Public beta approval", prep["lane_name"])
-        self.assertEqual("started_blocked_pending_dedicated_approval", prep["approval_status"])
-        self.assertEqual("not_approved", prep["decision_status"])
+        self.assertEqual("approved_source_only_public_beta", prep["approval_status"])
+        self.assertEqual("approved_source_only_public_beta", prep["decision_status"])
         self.assertEqual("decider", prep["approval_owner"])
         self.assertEqual(EXPECTED_APPROVED_SENTENCE, prep["exact_approved_public_sentence"])
+        self.assertEqual(EXPECTED_PUBLIC_BETA_WORDING, prep["exact_approved_public_beta_wording"])
+        self.assertEqual(EXPECTED_PUBLIC_BETA_SOURCE, prep["approved_public_beta_source"])
         self.assertEqual(EXPECTED_BOUNDARY, prep["public_boundary"])
         self.assertEqual(EXPECTED_GATE, prep["gate_script"])
         self.assertEqual(EXPECTED_RECORD, prep["validation_record"])
@@ -121,7 +136,10 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
             "58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87",
             snapshot["sha256"],
         )
-        self.assertEqual("source-snapshot-only; no public beta approval", snapshot["boundary"])
+        self.assertEqual(
+            "source-snapshot-only; source-only public beta evaluation approved separately for the reviewed GitHub source tree",
+            snapshot["boundary"],
+        )
 
     def test_public_beta_lane_stays_aligned_with_global_lane_blocker(self) -> None:
         prep = load_json(PREP)
@@ -132,11 +150,12 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
 
         self.assertEqual(public_beta_lane["lane_name"], prep["lane_name"])
         self.assertEqual(public_beta_lane["approval_owner"], prep["approval_owner"])
-        self.assertEqual("blocked_pending_dedicated_approval", public_beta_lane["approval_status"])
-        self.assertIn("public beta remains blocked", public_beta_lane["explicit_blockers"])
-        self.assertIn("ADR-0005 does not approve public beta", public_beta_lane["explicit_blockers"])
-        self.assertIn("public beta remains blocked", prep["explicit_blockers"])
-        self.assertIn("ADR-0005 does not approve public beta", prep["explicit_blockers"])
+        self.assertEqual("approved_source_only_public_beta", public_beta_lane["approval_status"])
+        self.assertEqual(EXPECTED_PUBLIC_BETA_WORDING, public_beta_lane["allowed_wording"][0])
+        self.assertIn("package publication remains blocked", public_beta_lane["explicit_blockers"])
+        self.assertIn("hosted surfaces remain blocked", public_beta_lane["explicit_blockers"])
+        self.assertIn("package publication remains blocked", prep["explicit_blockers"])
+        self.assertIn("hosted surfaces remain blocked", prep["explicit_blockers"])
 
     def test_required_evidence_and_blockers_are_explicit(self) -> None:
         prep = load_json(PREP)
@@ -144,30 +163,33 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
         self.assertEqual(5, len(prep["approval_scope"]))
         self.assertEqual(7, len(prep["required_evidence"]))
         self.assertEqual(7, len(prep["explicit_blockers"]))
-        self.assertIn("dedicated public beta approval decision record", prep["required_evidence"])
-        self.assertIn("release-scope engineering blocker review", prep["required_evidence"])
-        self.assertIn("public setup path review", prep["required_evidence"])
+        self.assertIn("dedicated source-only public beta approval decision record", prep["required_evidence"])
+        self.assertIn("release-scope engineering blocker rescope", prep["required_evidence"])
+        self.assertIn(
+            "public setup path review for source checkout build and validation commands",
+            prep["required_evidence"],
+        )
         self.assertIn("decider signoff on exact wording and surface", prep["required_evidence"])
-        self.assertIn("public beta remains blocked", prep["explicit_blockers"])
-        self.assertIn("H2 source-snapshot closeout does not approve public beta", prep["explicit_blockers"])
+        self.assertIn("public benchmark reports remain blocked", prep["explicit_blockers"])
+        self.assertIn("public benchmark claims remain blocked", prep["explicit_blockers"])
 
     def test_allowed_and_forbidden_wording_stay_narrow(self) -> None:
         prep = load_json(PREP)
 
         self.assertEqual(
             [
-                "Ethos remains source-only pre-alpha for this lane.",
-                "Public beta remains blocked pending dedicated approval.",
-                "The exact approved pre-alpha sentence may be used on current source-repository surfaces.",
+                EXPECTED_PUBLIC_BETA_WORDING,
+                "Public beta is limited to source-only evaluation from the GitHub source repository.",
+                "PDFium-backed paths require caller-provided local PDFium through ETHOS_PDFIUM_LIBRARY_PATH.",
             ],
             prep["allowed_wording"],
         )
         self.assertIn(
-            "any statement that expands beyond the exact approved pre-alpha sentence",
+            "any statement that expands public beta beyond source-only evaluation",
             prep["forbidden_wording"],
         )
         self.assertIn(
-            "any statement that treats a beta as open for public use",
+            "any statement that implies package, hosted, or production approval",
             prep["forbidden_wording"],
         )
 
@@ -178,6 +200,7 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
 
         self.assertEqual(False, schema["additionalProperties"])
         self.assertEqual(False, schema["$defs"]["approved_source_snapshot"]["additionalProperties"])
+        self.assertIn("approved_public_beta_source", schema["required"])
         self.assertEqual(7, schema["properties"]["required_evidence"]["minItems"])
         self.assertEqual(7, schema["properties"]["explicit_blockers"]["minItems"])
         self.assertIn("ethos-milestone-e-public-beta-approval-prep.schema.json", validate_examples)
@@ -191,7 +214,7 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
 
             self.assertIn("docs/milestone-e-public-beta-approval-prep.json", normalized, str(path))
             self.assertIn("public beta approval prep", normalized, str(path))
-            self.assertIn("does not approve public beta", normalized, str(path))
+            self.assertIn("source-only public beta", normalized, str(path))
 
     def test_make_target_runs_public_beta_prep_after_lane_blocker(self) -> None:
         block = target_block("milestone-e-prep")

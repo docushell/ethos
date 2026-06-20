@@ -36,6 +36,12 @@ APPROVED_SENTENCE = (
     "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence "
     "across native Ethos JSON and supported foreign parser outputs."
 )
+APPROVED_PUBLIC_BETA_SENTENCE = (
+    "Ethos is public beta for source-only evaluation. It verifies whether AI citations are "
+    "grounded in document evidence across native Ethos JSON and supported foreign parser outputs. "
+    "Package publication, hosted surfaces, production positioning, and public benchmark claims "
+    "remain blocked."
+)
 
 FORBIDDEN_APPROVAL_WORDING = [
     "public beta is approved",
@@ -75,7 +81,9 @@ def normalized(path: Path) -> str:
 
 class PublicPreAlphaWordingApprovalTests(unittest.TestCase):
     def test_exact_approved_sentence_is_present_on_controlled_surfaces(self) -> None:
-        for path in (README, EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST, RECORD):
+        self.assertIn(APPROVED_PUBLIC_BETA_SENTENCE, normalized(README))
+
+        for path in (EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST, RECORD):
             self.assertIn(APPROVED_SENTENCE, normalized(path), str(path))
 
     def test_approval_record_is_indexed(self) -> None:

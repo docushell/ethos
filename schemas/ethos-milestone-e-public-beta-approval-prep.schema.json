@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:milestone-e-public-beta-approval-prep:1",
   "title": "Ethos Milestone E public beta approval prep",
-  "description": "Source-only pre-alpha Milestone E prep artifact for starting the public beta approval lane while keeping public beta blocked pending dedicated evidence and decider approval.",
+  "description": "Source-only Milestone E prep artifact for approving the narrow GitHub source-repository public beta evaluation lane while keeping package, hosted, production, and public benchmark lanes blocked.",
   "type": "object",
   "required": [
     "schema_version",
@@ -14,7 +14,9 @@
     "decision_status",
     "approval_owner",
     "exact_approved_public_sentence",
+    "exact_approved_public_beta_wording",
     "approved_source_snapshot",
+    "approved_public_beta_source",
     "public_boundary",
     "approval_scope",
     "required_evidence",
@@ -31,13 +33,17 @@
     "scope": { "const": "public_beta_approval_prep" },
     "lane_id": { "const": "public-beta-approval" },
     "lane_name": { "const": "Public beta approval" },
-    "approval_status": { "const": "started_blocked_pending_dedicated_approval" },
-    "decision_status": { "const": "not_approved" },
+    "approval_status": { "const": "approved_source_only_public_beta" },
+    "decision_status": { "const": "approved_source_only_public_beta" },
     "approval_owner": { "const": "decider" },
     "exact_approved_public_sentence": {
       "const": "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs."
     },
+    "exact_approved_public_beta_wording": {
+      "const": "Ethos is public beta for source-only evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Package publication, hosted surfaces, production positioning, and public benchmark claims remain blocked."
+    },
     "approved_source_snapshot": { "$ref": "#/$defs/approved_source_snapshot" },
+    "approved_public_beta_source": { "$ref": "#/$defs/approved_public_beta_source" },
     "public_boundary": {
       "type": "array",
       "minItems": 10,
@@ -107,7 +113,29 @@
         "sha256": {
           "const": "58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87"
         },
-        "boundary": { "const": "source-snapshot-only; no public beta approval" }
+        "boundary": {
+          "const": "source-snapshot-only; source-only public beta evaluation approved separately for the reviewed GitHub source tree"
+        }
+      }
+    },
+    "approved_public_beta_source": {
+      "type": "object",
+      "required": [
+        "surface",
+        "reviewed_commit",
+        "merged_main_commit",
+        "tree",
+        "boundary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "const": "GitHub source repository docushell/ethos source-only evaluation"
+        },
+        "reviewed_commit": { "const": "d755e7c" },
+        "merged_main_commit": { "const": "3f9e1c4" },
+        "tree": { "const": "a9e913b0ba7ecd1567479b2ec773342868cba126" },
+        "boundary": { "const": "source-only clone, build, and validation commands only" }
       }
     },
     "public_boundary": {
@@ -126,19 +154,19 @@
     },
     "approval_scope": {
       "enum": [
-        "prepare public beta approval evidence requirements",
-        "keep public beta blocked until a dedicated approval decision",
-        "keep the approved source snapshot limited to source-snapshot-only use",
-        "keep public wording limited to the exact approved pre-alpha sentence",
-        "require decider signoff before any public beta wording or operation"
+        "approve source-only public beta evaluation for the GitHub source repository",
+        "pin public beta approval to reviewed commit d755e7c and merged main commit 3f9e1c4 with matching tree a9e913b0ba7ecd1567479b2ec773342868cba126",
+        "limit public beta operation to source checkout, local build, and source-tree validation commands",
+        "keep package publication, hosted surfaces, production positioning, public benchmark reports, and public benchmark claims blocked",
+        "exclude release artifacts, binaries, wheels, npm packages, crate publication, and project-maintained PDFium builds"
       ]
     },
     "required_evidence": {
       "enum": [
-        "dedicated public beta approval decision record",
-        "release-scope engineering blocker review",
-        "public setup path review",
-        "Phase 2 project-maintained PDFium build-path decision or explicit rescope",
+        "dedicated source-only public beta approval decision record",
+        "release-scope engineering blocker rescope",
+        "public setup path review for source checkout build and validation commands",
+        "Phase 2 project-maintained PDFium build-path explicit exclusion",
         "public-surface posture check for exact changed surfaces",
         "claims gate run after exact wording changes",
         "decider signoff on exact wording and surface"
@@ -146,28 +174,28 @@
     },
     "explicit_blocker": {
       "enum": [
-        "public beta remains blocked",
-        "release-scope engineering blocker review did not clear public beta",
-        "public setup path remains unresolved",
-        "Phase 2 project-maintained PDFium build path remains unresolved or explicitly unrescoped",
-        "only the exact approved pre-alpha sentence is approved",
-        "ADR-0005 does not approve public beta",
-        "H2 source-snapshot closeout does not approve public beta"
+        "package publication remains blocked",
+        "hosted surfaces remain blocked",
+        "production positioning remains blocked",
+        "public benchmark reports remain blocked",
+        "public benchmark claims remain blocked",
+        "release artifacts remain blocked",
+        "binaries, wheels, npm packages, crate publication, and project-maintained PDFium builds remain blocked"
       ]
     },
     "allowed_wording": {
       "enum": [
-        "Ethos remains source-only pre-alpha for this lane.",
-        "Public beta remains blocked pending dedicated approval.",
-        "The exact approved pre-alpha sentence may be used on current source-repository surfaces."
+        "Ethos is public beta for source-only evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Package publication, hosted surfaces, production positioning, and public benchmark claims remain blocked.",
+        "Public beta is limited to source-only evaluation from the GitHub source repository.",
+        "PDFium-backed paths require caller-provided local PDFium through ETHOS_PDFIUM_LIBRARY_PATH."
       ]
     },
     "forbidden_wording": {
       "enum": [
-        "any statement that treats a beta as open for public use",
-        "any statement that recasts the source snapshot as a beta",
-        "any statement that expands beyond the exact approved pre-alpha sentence",
-        "any statement that implies package, hosted, or production approval"
+        "any statement that expands public beta beyond source-only evaluation",
+        "any statement that implies package, hosted, or production approval",
+        "any statement that claims public benchmark validation or performance, quality, footprint, table-quality, or parser-quality results",
+        "any statement that claims project-maintained PDFium builds, binaries, wheels, npm packages, crate publication, or release artifacts are approved"
       ]
     }
   }

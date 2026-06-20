@@ -269,8 +269,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("docs/milestone-e-package-publication-approval-prep.json", status)
         self.assertIn("public beta approval prep", normalized_roadmap)
         self.assertIn("public beta approval prep", normalized_status)
-        self.assertIn("does not approve public beta", normalized_roadmap)
-        self.assertIn("does not approve public beta", normalized_status)
+        self.assertIn("source-only public beta", normalized_roadmap)
+        self.assertIn("source-only public beta", normalized_status)
         self.assertIn("package publication approval prep", normalized_roadmap)
         self.assertIn("package publication approval prep", normalized_status)
         self.assertIn("does not approve package publication", normalized_roadmap)
@@ -312,12 +312,12 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         )
         self.assertIn("schema-validated by `schemas/validate_examples.py`", status)
         self.assertIn(
-            "later public-report, project-maintained PDFium build, stable CLI/Python docs, demo, "
-            "and beta work remain blocked on explicit claim-audit and release-scope decisions",
+            "later public-report, project-maintained PDFium build, stable CLI/Python docs, and "
+            "hosted demo work remain blocked on explicit claim-audit and release-scope decisions",
             roadmap,
         )
         self.assertIn("Still absent or not claimable:", status)
-        self.assertIn("exact approved pre-alpha sentence", status)
+        self.assertIn("exact approved source-only public beta wording", status)
         self.assertIn("Broader public result language remains blocked", status)
         self.assertIn(
             "intentionally excludes public-report, release, package, hosted, and broad "
@@ -387,6 +387,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_public_beta_approval_prep.py",
             "$(PYTHON) .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_public_beta_required_evidence_records.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_public_beta_source_only_approval.py",
             "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_prep.py",
             "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_prep_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",
