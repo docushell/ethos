@@ -71,6 +71,13 @@ EXPECTED_GATE = ".github/scripts/test_milestone_e_package_publication_approval_p
 EXPECTED_RECORD = (
     "docs/validation/milestone-e-package-publication-prep-approval-validation-2026-06-20.md"
 )
+EXPECTED_EVIDENCE_RECORDS = {
+    "package_inventory": "docs/validation/milestone-e-package-publication-inventory-reconciliation-validation-2026-06-20.md",
+    "package_metadata_license_readme": "docs/validation/milestone-e-package-publication-metadata-readiness-validation-2026-06-20.md",
+    "dry_run_smoke_path": "docs/validation/milestone-e-package-publication-dry-run-smoke-plan-validation-2026-06-20.md",
+    "version_tag_policy": "docs/validation/milestone-e-package-publication-version-tag-policy-validation-2026-06-20.md",
+    "pdfium_boundary": "docs/validation/milestone-e-package-publication-pdfium-boundary-validation-2026-06-20.md",
+}
 
 FORBIDDEN_PREP_WORDING = [
     "public beta is approved",
@@ -233,17 +240,29 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
     def test_evidence_status_matches_decider_input(self) -> None:
         status = load_json(PREP)["evidence_review_status"]
 
-        self.assertIn("reviewed", status["package_inventory"])
-        self.assertIn("not reviewed", status["package_metadata_license_readme_review"])
-        self.assertIn("not reviewed for packaged publication", status["install_build_smoke_path"])
-        self.assertIn("not ratified", status["version_tag_policy"])
+        self.assertIn("evidence recorded", status["package_inventory"])
+        self.assertIn("publication remains blocked", status["package_inventory"])
+        self.assertIn("evidence recorded as incomplete", status["package_metadata_license_readme_review"])
+        self.assertIn("remain blockers", status["package_metadata_license_readme_review"])
+        self.assertIn("evidence recorded as plan only", status["install_build_smoke_path"])
+        self.assertIn("remain unrun blockers", status["install_build_smoke_path"])
+        self.assertIn("evidence recorded as draft policy", status["version_tag_policy"])
+        self.assertIn("not reconciled for publication", status["version_tag_policy"])
+        self.assertIn("evidence recorded", status["pdfium_packaging_boundary"])
         self.assertIn("caller-provided PDFium only", status["pdfium_packaging_boundary"])
-        self.assertEqual("required after exact wording changes", status["public_surface_posture_check"])
-        self.assertEqual("required after exact wording changes", status["claims_gate_after_wording_changes"])
+        self.assertEqual(
+            "run after exact wording changes by the package evidence guard path",
+            status["public_surface_posture_check"],
+        )
+        self.assertEqual(
+            "run after exact wording changes by the package evidence guard path",
+            status["claims_gate_after_wording_changes"],
+        )
         self.assertEqual(
             "docushell-admin approved prep wording and prep surface on 2026-06-20",
             status["decider_signoff"],
         )
+        self.assertEqual(EXPECTED_EVIDENCE_RECORDS, load_json(PREP)["evidence_records"])
 
     def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
         approved = load_json(PREP)["approved_package_publication_prep"]
@@ -289,6 +308,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertEqual(False, schema["$defs"]["approved_source_snapshot"]["additionalProperties"])
         self.assertEqual(False, schema["$defs"]["approved_package_publication_prep"]["additionalProperties"])
         self.assertEqual(False, schema["$defs"]["evidence_review_status"]["additionalProperties"])
+        self.assertEqual(False, schema["$defs"]["evidence_records"]["additionalProperties"])
         self.assertEqual(9, schema["properties"]["required_evidence"]["minItems"])
         self.assertEqual(13, schema["properties"]["explicit_blockers"]["minItems"])
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", validate_examples)
