@@ -170,6 +170,21 @@ class MilestoneEValidationSourceHeadAlignmentTests(unittest.TestCase):
         self.assertLess(text.index(source_head_guard), text.index(source_head_record_guard))
         self.assertLess(text.index(source_head_record_guard), text.index(sequence_guard))
 
+    def test_ci_source_head_guard_has_full_history_checkout(self) -> None:
+        text = CI_WORKFLOW.read_text(encoding="utf-8")
+        test_job_start = text.index("  test:\n")
+        next_job_start = text.index("\n  verify-portability:", test_job_start)
+        test_job = text[test_job_start:next_job_start]
+        source_head_guard = "python3 .github/scripts/test_milestone_e_validation_source_head_alignment.py"
+        full_history_checkout = (
+            "- uses: actions/checkout@v4\n"
+            "        with:\n"
+            "          fetch-depth: 0"
+        )
+
+        self.assertIn(full_history_checkout, test_job)
+        self.assertLess(test_job.index("fetch-depth: 0"), test_job.index(source_head_guard))
+
     def test_validation_records_avoid_scope_expansion_language(self) -> None:
         text = "\n".join(
             record.read_text(encoding="utf-8").lower()

@@ -40,6 +40,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - run: rustup show
       - run: cargo test --locked --workspace --all-features
       - name: fixture manifest validation
