@@ -107,6 +107,10 @@ The PDFium boundary follow-up record under `docs/validation/` covers the current
 `ethos-pdf` packaging boundary only: no bundled PDFium binary, caller-provided PDFium through
 `ETHOS_PDFIUM_LIBRARY_PATH`, and no raw PDFium FFI types across public schemas/APIs.
 Project-maintained PDFium builds, public installation, and package publication remain blocked.
+The dependency-ordering follow-up record under `docs/validation/` covers the future dependent
+candidate order only: `ethos-doc-core` before `ethos-verify` and `ethos-pdf`. Registry-backed
+dependent package assembly, package dependency manifest migration, public installation, and package
+publication remain blocked.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
@@ -180,6 +184,7 @@ package publication metadata-readiness guard,
 package publication dry-run/smoke guard,
 package publication version/tag policy guard,
 package publication PDFium boundary guard,
+package publication dependency-ordering guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -234,6 +239,9 @@ or broad demo-generation workflows.
 - The package publication PDFium boundary follow-up remains limited to the current source-tree
   `ethos-pdf` packaging boundary; project-maintained PDFium builds, public installation, and
   package publication remain blocked.
+- The package publication dependency-ordering follow-up remains limited to future dependent
+  candidate order; registry-backed dependent package assembly, package dependency manifest
+  migration, public installation, and package publication remain blocked.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,
