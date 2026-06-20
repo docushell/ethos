@@ -50,14 +50,21 @@
     "publish_boundary": "no real-version cargo publish is approved; reservations stay at placeholder versions"
   },
   "evidence_review_status": {
-    "package_inventory": "reviewed; ADR-0006 reserved names and Cargo.toml members are identified, with reserved-to-in-tree reconciliation kept as a prep task",
-    "package_metadata_license_readme_review": "not reviewed; prep deliverable",
-    "install_build_smoke_path": "not reviewed for packaged publication; source cargo build --locked is green, but cargo publish --dry-run and registry-install smoke remain prep deliverables",
-    "version_tag_policy": "not ratified; prep must reconcile workspace 0.1.0 with 0.0.0-reserved.0 reservations",
-    "pdfium_packaging_boundary": "reviewed as caller-provided PDFium only, with no bundled binary and no PDFium types in public API required before ethos-pdf can proceed",
-    "public_surface_posture_check": "required after exact wording changes",
-    "claims_gate_after_wording_changes": "required after exact wording changes",
+    "package_inventory": "evidence recorded; ADR-0006 reserved names and current workspace mapping are reconciled for prep, while publication remains blocked",
+    "package_metadata_license_readme_review": "evidence recorded as incomplete; per-crate package metadata, crate READMEs, license bundle, and NOTICE packaging remain blockers",
+    "install_build_smoke_path": "evidence recorded as plan only; source cargo build --locked is green, but cargo publish --dry-run and registry-install smoke remain unrun blockers",
+    "version_tag_policy": "evidence recorded as draft policy; workspace 0.1.0 and 0.0.0-reserved.0 reservations are not reconciled for publication",
+    "pdfium_packaging_boundary": "evidence recorded; caller-provided PDFium only, no bundled binary, and no PDFium types in public API remain required before ethos-pdf can proceed",
+    "public_surface_posture_check": "run after exact wording changes by the package evidence guard path",
+    "claims_gate_after_wording_changes": "run after exact wording changes by the package evidence guard path",
     "decider_signoff": "docushell-admin approved prep wording and prep surface on 2026-06-20"
+  },
+  "evidence_records": {
+    "package_inventory": "docs/validation/milestone-e-package-publication-inventory-reconciliation-validation-2026-06-20.md",
+    "package_metadata_license_readme": "docs/validation/milestone-e-package-publication-metadata-readiness-validation-2026-06-20.md",
+    "dry_run_smoke_path": "docs/validation/milestone-e-package-publication-dry-run-smoke-plan-validation-2026-06-20.md",
+    "version_tag_policy": "docs/validation/milestone-e-package-publication-version-tag-policy-validation-2026-06-20.md",
+    "pdfium_boundary": "docs/validation/milestone-e-package-publication-pdfium-boundary-validation-2026-06-20.md"
   },
   "public_boundary": [
     "public reports remain blocked",
