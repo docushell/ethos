@@ -93,8 +93,9 @@ alignment keeps the current rehearsal/evidence matrix, blocker ledger, and match
 same internal evidence lanes. The diagnostic-boundary alignment guard keeps the current fixture
 candidates, promotion criteria, walkthrough, use protocol, rehearsal/evidence matrix, blocker
 ledger, matching schemas, and row validation records on the same source-only diagnostic
-boundaries. This prep does not resolve or soften blockers, approve public result wording, hosted surfaces,
-package/distribution work, or public-facing claims.
+boundaries. The promotion-status alignment guard keeps current artifacts and rows at
+`not_promoted_beyond_internal_fixture_planning`. This prep does not resolve or soften blockers,
+approve public result wording, hosted surfaces, package/distribution work, or public-facing claims.
 
 | Milestone | Window | Contents | Gate |
 | --- | --- | --- | --- |
