@@ -149,6 +149,10 @@ Records:
   guard-sequence index validation passed through exact Makefile sequence checks, CI ordering checks,
   public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record covers only
   current E prep guard ordering and does not resolve or soften blockers.
+- `milestone-e-prep-current-guard-validation-2026-06-20.md` - internal Milestone E current prep
+  guard validation passed through guard-sequence index checks, validation-record index checks,
+  public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record covers only
+  current E prep guard state and does not resolve or soften blockers.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.

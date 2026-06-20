@@ -134,6 +134,10 @@ EXPECTED_RECORDS = (
         "milestone-e-prep-guard-sequence-index-validation-2026-06-20.md",
         "test_milestone_e_prep_guard_sequence_index_validation_record.py",
     ),
+    RecordCoverage(
+        "milestone-e-prep-current-guard-validation-2026-06-20.md",
+        "test_milestone_e_prep_validation_record.py",
+    ),
 )
 
 
