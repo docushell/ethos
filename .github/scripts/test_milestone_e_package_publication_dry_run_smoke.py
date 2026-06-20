@@ -117,10 +117,12 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
             "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md",
             follow_ups["package_dry_run_smoke"],
         )
-        self.assertIn("local source-tree smoke recorded", status)
-        self.assertIn("dependent package assembly", status)
+        self.assertIn("local source-tree smoke", status)
+        self.assertIn("dependency-ordering follow-up recorded", status)
+        self.assertIn("future dependent candidate ordering", status)
         self.assertIn("publication remains blocked", status)
-        self.assertIn("dependent package assembly remains blocked", blocker_text)
+        self.assertIn("registry-backed dependent package assembly", blocker_text)
+        self.assertIn("package dependency manifest migration", blocker_text)
         self.assertIn("real package version selection", blocker_text)
         self.assertIn("package tag creation", blocker_text)
         self.assertIn("project-maintained PDFium builds remain blocked", blocker_text)

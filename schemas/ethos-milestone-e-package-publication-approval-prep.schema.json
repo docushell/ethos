@@ -197,7 +197,7 @@
           "const": "metadata/readiness follow-up recorded for in-tree priority candidates; ethos-doc and ethos-rag remain reserved placeholders without in-tree manifests, and publication remains blocked"
         },
         "install_build_smoke_path": {
-          "const": "local source-tree smoke recorded; ethos-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, dependent package assembly remains blocked, and publication remains blocked"
+          "const": "local source-tree smoke and dependency-ordering follow-up recorded; ethos-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, future dependent candidate ordering requires ethos-doc-core before ethos-verify and ethos-pdf, and publication remains blocked"
         },
         "version_tag_policy": {
           "const": "version/tag policy follow-up recorded; workspace 0.1.0 remains source-tree only, reserved 0.0.0-reserved.0 names remain placeholders, and real-version publication remains blocked"
@@ -250,7 +250,8 @@
         "package_metadata_readiness",
         "package_dry_run_smoke",
         "package_version_tag_policy",
-        "package_pdfium_boundary"
+        "package_pdfium_boundary",
+        "package_dependency_ordering"
       ],
       "additionalProperties": false,
       "properties": {
@@ -265,6 +266,9 @@
         },
         "package_pdfium_boundary": {
           "const": "docs/validation/milestone-e-package-publication-pdfium-boundary-closeout-validation-2026-06-21.md"
+        },
+        "package_dependency_ordering": {
+          "const": "docs/validation/milestone-e-package-publication-dependency-ordering-closeout-validation-2026-06-21.md"
         }
       }
     },
@@ -352,7 +356,7 @@
         "public benchmark reports remain blocked",
         "public benchmark claims remain blocked",
         "project-maintained PDFium builds remain blocked",
-        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; dependent package assembly remains blocked until package dependency naming and ordering are resolved; real package version selection and package tag creation remain blocked until later dedicated publication approval",
+        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; registry-backed dependent package assembly, real package version selection, package dependency manifest migration, and package tag creation remain blocked until later dedicated publication approval",
         "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication"
       ]
     },
