@@ -232,6 +232,12 @@ Records:
 - `milestone-e-public-beta-pdfium-build-path-review-validation-2026-06-20.md` - internal Milestone E
   public beta required-evidence validation for Phase 2 PDFium build-path review; the record keeps
   public beta blocked and does not approve public beta.
+- `milestone-e-public-beta-source-only-approval-validation-2026-06-20.md` - source-only public beta
+  approval validation for the GitHub source repository surface; the record approves only
+  source-only evaluation for reviewed commit `d755e7c` and merged main commit `3f9e1c4`, while
+  keeping package publication, hosted surfaces, production positioning, public benchmark reports,
+  public benchmark claims, release artifacts, binaries, wheels, npm packages, crate publication,
+  project-maintained PDFium builds, public reports, and public result wording blocked.
 - `milestone-e-package-publication-approval-prep-validation-2026-06-20.md` - internal Milestone E
   package publication approval prep validation for
   `docs/milestone-e-package-publication-approval-prep.json` passed through package publication

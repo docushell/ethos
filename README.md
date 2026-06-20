@@ -5,14 +5,15 @@
 [![bench](https://github.com/docushell/ethos/actions/workflows/bench.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/bench.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 ![Rust: 1.87+](https://img.shields.io/badge/rust-1.87%2B-orange)
-![status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-red)
+![status: public beta](https://img.shields.io/badge/status-public--beta-blue)
 
-> **Status: source-only pre-alpha — internal Milestone D closeout complete, Milestone E prep.**
-> Nothing here is released, benchmarked, or ready for use. ADR-0005 records an internal
-> `PROCEED` decision for continuation only; it does not approve public benchmark reports,
-> release artifacts, packages, production positioning, or wording beyond the approved pre-alpha
-> sentence. No performance, footprint, quality, table-quality, or parser-quality claims are made.
-> Approved public pre-alpha sentence: "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs."
+> **Status: source-only public beta evaluation.**
+> Ethos is public beta for source-only evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Package publication, hosted surfaces, production positioning, and public benchmark claims remain blocked.
+> The approved public beta surface is this GitHub source repository only, pinned to reviewed commit
+> `d755e7c` and merged main commit `3f9e1c4`, which have matching source trees. Excluded surfaces
+> include published crates, wheels, npm packages, binaries, release artifacts, hosted demos or APIs,
+> project-maintained PDFium builds, public benchmark reports, and performance, footprint, quality,
+> table-quality, or parser-quality claims.
 > Current execution status and blockers live in `docs/execution-status.md`; public-release
 > hygiene gates live in `docs/public-release-checklist.md`.
 
@@ -28,8 +29,8 @@ Same input, same pinned profile, same stable payload projection and fingerprint.
 
 ## Install / Build from source
 
-Ethos is source-only pre-alpha. There are no published crates, wheels, npm packages, binaries,
-or GitHub release artifacts yet.
+Ethos is public beta for source-only evaluation. There are no published crates, wheels, npm
+packages, binaries, or GitHub release artifacts yet.
 
 Prerequisites:
 
@@ -37,6 +38,7 @@ Prerequisites:
 - `make`
 - Python 3 for demo and schema-validation targets
 - `jsonschema>=4.18` in the Python environment used for `make verify-alpha`
+- caller-provided local PDFium through `ETHOS_PDFIUM_LIBRARY_PATH` only for PDFium-backed paths
 
 From a source checkout:
 
@@ -48,7 +50,7 @@ cargo build --locked -p ethos-cli
 ./target/debug/ethos --help
 ```
 
-To install the pre-alpha CLI from the checkout into your local Cargo bin:
+To install the source-built CLI from the checkout into your local Cargo bin:
 
 ```bash
 cargo install --locked --path crates/ethos-cli
@@ -94,8 +96,8 @@ The command exits `0` and writes a verification report shaped like this:
 
 ## Try the alpha verification loop
 
-Ethos is source-only pre-alpha. There are no release artifacts or package installs yet. From a
-source checkout, the current verification loop is:
+The source-only public beta path has no release artifacts or package installs. From a source
+checkout, the current verification loop is:
 
 ```bash
 make verify-alpha
@@ -278,7 +280,7 @@ Report vulnerabilities through GitHub private vulnerability reporting. See `SECU
 | `ethos verify --fail-on-ungrounded` exits `1` | The command wrote a report, but at least one requested evidence check was stale, missing, mismatched, unsupported, or capability-blocked. Inspect `all_evidence_grounded`, `checks[].status`, `warnings`, and `capability_limits`. |
 | Scanned or image-only PDFs do not parse | Base Ethos does not include OCR. These inputs should fail with `ocr_required` until OCR support is explicitly added. |
 | Rendered crop PNGs are missing or skipped | Logical crop descriptor JSON works in the alpha path; rendered PNG crop artifacts require the source PDF path and a configured PDFium runtime. |
-| Release/tag workflow fails | This is intentional during pre-alpha. Public releases, binaries, wheels, npm packages, and crates are blocked until `docs/public-release-checklist.md` is complete. |
+| Release/tag workflow fails | Public releases, binaries, wheels, npm packages, and crates are blocked until they have separate approval. |
 
 ## FAQ
 
@@ -304,13 +306,13 @@ Not in the base install. Scanned or image-only pages fail with `ocr_required`.
 
 ### Can I use Ethos in CI?
 
-The alpha CLI supports `--fail-on-ungrounded`, which exits `1` when verification completes but
-evidence is not fully grounded. Treat the current repo as source-only pre-alpha, not a stable
-package or release artifact.
+The source-built CLI supports `--fail-on-ungrounded`, which exits `1` when verification completes
+but evidence is not fully grounded. Treat the current repo as source-only public beta evaluation,
+not a stable package or release artifact.
 
 ### Where are benchmark results?
 
-Public benchmark reports are not ready. Generated public-safe Gate Zero evidence belongs in the
+Public benchmark reports are not approved. Generated public-safe Gate Zero evidence belongs in the
 separate `docushell/ethos-bench` repository, not in this main source repo.
 
 ## Repository map

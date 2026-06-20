@@ -80,11 +80,19 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            "Public language may use this exact approved sentence on current source-repository surfaces",
+            "Public language may use this exact approved sentence on the GitHub source-repository public beta surface",
+            text,
+        )
+        self.assertIn(
+            "Ethos is public beta for source-only evaluation. It verifies whether AI citations "
+            "are grounded in document evidence across native Ethos JSON and supported foreign "
+            "parser outputs. Package publication, hosted surfaces, production positioning, and "
+            "public benchmark claims remain blocked.",
             text,
         )
         self.assertIn("All wording beyond that sentence still requires claim-audit", text)
         self.assertIn("Closed for the exact approved pre-alpha sentence only", text)
+        self.assertIn("milestone-e-public-beta-source-only-approval-validation-2026-06-20.md", text)
         self.assertIn("Approved Next-Step Sequence", text)
         self.assertIn("Close H1: closed for public-safe evidence acceptance only", text)
         self.assertIn("H1 is closed for public-safe evidence acceptance only", text)

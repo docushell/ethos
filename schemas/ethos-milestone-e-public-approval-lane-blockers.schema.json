@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:milestone-e-public-approval-lane-blockers:1",
   "title": "Ethos Milestone E public approval lane blocker ledger",
-  "description": "Source-only pre-alpha Milestone E prep ledger for keeping later public approval lanes blocked until each lane has dedicated evidence, owner approval, wording, and gate coverage.",
+  "description": "Source-only Milestone E ledger for recording the narrow GitHub source-repository public beta evaluation approval while keeping package, hosted, production, and public benchmark lanes blocked until each lane has dedicated evidence, owner approval, wording, and gate coverage.",
   "type": "object",
   "required": [
     "schema_version",
@@ -11,7 +11,9 @@
     "ledger_boundary",
     "ledger_status",
     "exact_approved_public_sentence",
+    "exact_approved_public_beta_wording",
     "approved_source_snapshot",
+    "approved_public_beta_source",
     "public_boundary",
     "lane_gate_script",
     "lane_validation_record",
@@ -23,11 +25,15 @@
     "status": { "const": "source-only-pre-alpha-internal-milestone-e-prep" },
     "scope": { "const": "public_approval_lane_blocker_ledger" },
     "ledger_boundary": { "const": "internal_public_approval_lane_blocker_prep" },
-    "ledger_status": { "const": "all_public_approval_lanes_blocked_pending_dedicated_gate" },
+    "ledger_status": { "const": "public_beta_source_only_approved_other_lanes_blocked" },
     "exact_approved_public_sentence": {
       "const": "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs."
     },
+    "exact_approved_public_beta_wording": {
+      "const": "Ethos is public beta for source-only evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Package publication, hosted surfaces, production positioning, and public benchmark claims remain blocked."
+    },
     "approved_source_snapshot": { "$ref": "#/$defs/approved_source_snapshot" },
+    "approved_public_beta_source": { "$ref": "#/$defs/approved_public_beta_source" },
     "public_boundary": {
       "type": "array",
       "minItems": 10,
@@ -69,8 +75,28 @@
           "const": "58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87"
         },
         "boundary": {
-          "const": "source-snapshot-only; no public beta, package, hosted, production, or public-report approval"
+          "const": "source-snapshot-only; source-only public beta evaluation approved separately for the reviewed GitHub source tree; no package, hosted, production, or public-report approval"
         }
+      }
+    },
+    "approved_public_beta_source": {
+      "type": "object",
+      "required": [
+        "surface",
+        "reviewed_commit",
+        "merged_main_commit",
+        "tree",
+        "boundary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "const": "GitHub source repository docushell/ethos source-only evaluation"
+        },
+        "reviewed_commit": { "const": "d755e7c" },
+        "merged_main_commit": { "const": "3f9e1c4" },
+        "tree": { "const": "a9e913b0ba7ecd1567479b2ec773342868cba126" },
+        "boundary": { "const": "source-only clone, build, and validation commands only" }
       }
     },
     "approval_lane": {
@@ -110,7 +136,12 @@
             "Public benchmark report"
           ]
         },
-        "approval_status": { "const": "blocked_pending_dedicated_approval" },
+        "approval_status": {
+          "enum": [
+            "approved_source_only_public_beta",
+            "blocked_pending_dedicated_approval"
+          ]
+        },
         "explicit_scope": { "type": "string", "minLength": 1 },
         "required_evidence": {
           "type": "array",

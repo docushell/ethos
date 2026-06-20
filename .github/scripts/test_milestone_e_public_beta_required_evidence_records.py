@@ -110,13 +110,15 @@ class MilestoneEPublicBetaRequiredEvidenceRecordTests(unittest.TestCase):
             self.assertIn("make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python", text, record)
             self.assertIn("git diff --check", text, record)
 
-    def test_prep_and_lane_blockers_reflect_reviewed_but_blocked_state(self) -> None:
+    def test_prep_and_lane_blockers_reflect_later_source_only_approval(self) -> None:
         prep = read(PREP)
         ledger = read(LEDGER)
-        expected = "release-scope engineering blocker review did not clear public beta"
+        expected = "approved_source_only_public_beta"
 
         self.assertIn(expected, prep)
         self.assertIn(expected, ledger)
+        self.assertIn("release-scope engineering blocker rescope", prep)
+        self.assertIn("source-only public beta", ledger)
         self.assertNotIn("release-scope validation record remains absent", prep)
         self.assertNotIn("release-scope validation record remains absent", ledger)
 

@@ -175,6 +175,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_public_beta_required_evidence_records.py",
     ),
     RecordCoverage(
+        "milestone-e-public-beta-source-only-approval-validation-2026-06-20.md",
+        "test_milestone_e_public_beta_source_only_approval.py",
+    ),
+    RecordCoverage(
         "milestone-e-package-publication-approval-prep-validation-2026-06-20.md",
         "test_milestone_e_package_publication_approval_prep_validation_record.py",
     ),
@@ -254,6 +258,7 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         approval_lane_guard = "test_milestone_e_public_approval_lane_blockers_validation_record.py"
         beta_prep_guard = "test_milestone_e_public_beta_approval_prep_validation_record.py"
         beta_evidence_guard = "test_milestone_e_public_beta_required_evidence_records.py"
+        beta_approval_guard = "test_milestone_e_public_beta_source_only_approval.py"
         package_prep_guard = "test_milestone_e_package_publication_approval_prep_validation_record.py"
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
         index_guard = "test_milestone_e_validation_record_index.py"
@@ -280,6 +285,10 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             self.assertLess(text.index(prefix + beta_prep_guard), text.index(prefix + package_prep_guard))
             self.assertLess(text.index(prefix + beta_prep_guard), text.index(prefix + beta_evidence_guard))
             self.assertLess(text.index(prefix + beta_evidence_guard), text.index(prefix + package_prep_guard))
+            self.assertLess(text.index(prefix + beta_evidence_guard), text.index(prefix + beta_approval_guard))
+            self.assertLess(text.index(prefix + beta_approval_guard), text.index(prefix + package_prep_guard))
+            self.assertLess(text.index(prefix + beta_approval_guard), text.index(prefix + command_guard))
+            self.assertLess(text.index(prefix + beta_approval_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + beta_evidence_guard), text.index(prefix + command_guard))
             self.assertLess(text.index(prefix + beta_evidence_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + package_prep_guard), text.index(prefix + command_guard))
