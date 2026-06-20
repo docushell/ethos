@@ -37,6 +37,7 @@ EXPECTED_MILESTONE_E_PREP_COMMANDS = (
     "$(PYTHON) schemas/validate_examples.py",
     "$(PYTHON) .github/scripts/test_milestone_e_schema_registry_alignment.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_blocked_output_alignment.py",
     "$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py",
     "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py",
     "$(PYTHON) .github/scripts/test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py",
@@ -62,6 +63,7 @@ EXPECTED_MILESTONE_E_PREP_COMMANDS = (
     "$(PYTHON) .github/scripts/test_milestone_e_rehearsal_row_record_coverage_validation.py",
     "$(PYTHON) .github/scripts/test_milestone_e_schema_registry_alignment_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment_validation_record.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_blocked_output_alignment_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",
@@ -130,6 +132,7 @@ class MilestoneEPrepGuardSequenceIndexTests(unittest.TestCase):
         for text in (prep_scope, execution_status):
             normalized = re.sub(r"\s+", " ", text)
             self.assertIn("prep guard-sequence index", normalized)
+            self.assertIn("blocked-output alignment", normalized)
             self.assertIn("source-only", normalized)
             self.assertIn("public-report, release, package, hosted", normalized)
             self.assertNotIn("public result wording approved", normalized.lower())

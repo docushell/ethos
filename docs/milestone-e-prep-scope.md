@@ -59,6 +59,11 @@ The internal trust-loop blocker ledger lives in
 `schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json`. It derives explicit
 blockers from the rehearsal/evidence matrix and keeps them visible for internal source-only
 planning; it does not resolve or soften blockers and is not public result wording.
+The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
+alignment so public reports, public result wording, hosted surfaces, release artifacts, package
+publication, production positioning, broad demo-generation workflows, benchmark publication, and
+all performance, quality, footprint, table-quality, and parser-quality claims remain explicitly
+blocked.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -84,11 +89,12 @@ Focused validation command:
 
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate,
 schema/example validation, schema-registry alignment for the E prep JSON artifacts,
-public-boundary alignment, this prep-scope guard, fixture-candidate blocker-alignment validation,
-the internal trust-loop walkthrough, use-protocol, rehearsal/evidence matrix, and blocker-ledger
-guards, validation-command index checks, validation-record index checks, the prep guard-sequence
-index, validation-record guards, and diff hygiene. It intentionally does not run public-report,
-release, package, hosted, benchmark-report, or broad demo-generation workflows.
+public-boundary alignment, blocked-output alignment, this prep-scope guard, fixture-candidate
+blocker-alignment validation, the internal trust-loop walkthrough, use-protocol,
+rehearsal/evidence matrix, and blocker-ledger guards, validation-command index checks,
+validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
+hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
+or broad demo-generation workflows.
 
 ## Exit Criteria For This Prep Slice
 
@@ -109,5 +115,7 @@ release, package, hosted, benchmark-report, or broad demo-generation workflows.
   evidence grounding, diagnostics, fixture/evaluator validation, and explicit blockers.
 - The internal trust-loop blocker ledger remains limited to existing matrix rows and does not
   resolve or soften blockers.
+- Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
+  blocker ledger, and matching schemas.
 - Public language remains source-only pre-alpha and internal-continuation scoped.
 - External blockers remain visible before any public-facing Milestone E work starts.

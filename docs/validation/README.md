@@ -137,6 +137,11 @@ Records:
   public-boundary alignment validation passed through public-boundary checks, schema-registry
   checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record
   covers only current E prep public-boundary alignment and does not resolve or soften blockers.
+- `milestone-e-blocked-output-alignment-validation-2026-06-20.md` - internal Milestone E
+  blocked-output alignment validation passed through blocked-output vocabulary checks, schema enum
+  checks, ledger row-copy checks, public-surface posture checks, `make milestone-e-prep`, and diff
+  hygiene; the record covers only current E prep blocked-output alignment and does not resolve or
+  soften blockers.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

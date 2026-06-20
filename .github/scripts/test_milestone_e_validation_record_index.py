@@ -123,6 +123,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_public_boundary_alignment_validation_record.py",
     ),
     RecordCoverage(
+        "milestone-e-blocked-output-alignment-validation-2026-06-20.md",
+        "test_milestone_e_blocked_output_alignment_validation_record.py",
+    ),
+    RecordCoverage(
         "milestone-e-validation-command-index-validation-2026-06-20.md",
         "test_milestone_e_validation_command_index_validation_record.py",
     ),
@@ -180,6 +184,7 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
 
         row_guard = "test_milestone_e_rehearsal_row_record_coverage_validation.py"
         schema_guard = "test_milestone_e_schema_registry_alignment_validation_record.py"
+        blocked_output_guard = "test_milestone_e_blocked_output_alignment_validation_record.py"
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
         index_guard = "test_milestone_e_validation_record_index.py"
         index_record_guard = "test_milestone_e_validation_record_index_validation_record.py"
@@ -189,6 +194,7 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertLess(text.index(prefix + row_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + schema_guard), text.index(prefix + index_guard))
+            self.assertLess(text.index(prefix + blocked_output_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + command_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + index_guard), text.index(prefix + index_record_guard))
             self.assertLess(text.index(prefix + index_record_guard), text.index(prefix + sequence_guard))
