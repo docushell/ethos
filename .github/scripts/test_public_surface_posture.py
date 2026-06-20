@@ -32,28 +32,30 @@ def read(path: Path) -> str:
 
 
 class PublicSurfacePostureTests(unittest.TestCase):
-    def test_readme_status_matches_internal_closeout_scope(self) -> None:
+    def test_readme_status_matches_source_only_public_beta_scope(self) -> None:
         text = read(README)
 
-        self.assertIn("source-only pre-alpha", text)
-        self.assertIn("internal Milestone D closeout complete, Milestone E prep", text)
-        self.assertIn("ADR-0005 records an internal", text)
-        self.assertIn("continuation only", text)
-        self.assertIn("does not approve public benchmark reports", text)
+        self.assertIn("source-only public beta evaluation", text)
         self.assertIn(
-            "Ethos is pre-alpha. It verifies whether AI citations are grounded in document "
-            "evidence across native Ethos JSON and supported foreign parser outputs.",
+            "Ethos is public beta for source-only evaluation. It verifies whether AI citations "
+            "are grounded in document evidence across native Ethos JSON and supported foreign "
+            "parser outputs. Package publication, hosted surfaces, production positioning, and "
+            "public benchmark claims remain blocked.",
             text,
         )
-        self.assertIn("No performance,", text)
-        self.assertIn("table-quality, or parser-quality claims are made", text)
+        self.assertIn("d755e7c", text)
+        self.assertIn("3f9e1c4", text)
+        self.assertIn("published crates, wheels, npm packages, binaries, release artifacts", text)
+        self.assertIn("project-maintained PDFium builds", text)
+        self.assertIn("performance, footprint, quality", text)
+        self.assertIn("table-quality, or parser-quality claims", text)
         self.assertNotIn("contracts phase", text)
         self.assertNotIn("has not run", text)
 
     def test_examples_readme_stays_fixture_scoped(self) -> None:
         text = read(EXAMPLES_README)
 
-        self.assertIn("source-only pre-alpha demo fixture set", text)
+        self.assertIn("source-only public beta fixture set", text)
         self.assertIn("Pinned fixtures only", text)
         self.assertNotIn("launch package", text.lower())
 

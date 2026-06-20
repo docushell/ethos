@@ -61,22 +61,26 @@ blockers from the rehearsal/evidence matrix and keeps them visible for internal 
 planning; it does not resolve or soften blockers and is not public result wording.
 The public approval lane blocker ledger lives in
 `docs/milestone-e-public-approval-lane-blockers.json` and is schema-bound by
-`schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. It records the later public
-beta, package publication, hosted surface, production positioning, and public benchmark report
-approval lanes as blocked pending dedicated evidence, owners, wording, gate scripts, validation
-records, and decider review; it does not approve any lane and is not public result wording.
+`schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. It records source-only
+public beta evaluation as approved for the GitHub source repository while keeping package
+publication, hosted surface, production positioning, public benchmark report, public benchmark
+claim, release-artifact, binary, wheel, npm package, crate publication, and project-maintained
+PDFium build lanes blocked; it is not public result wording.
 The public beta approval prep lane lives in
 `docs/milestone-e-public-beta-approval-prep.json` and is schema-bound by
-`schemas/ethos-milestone-e-public-beta-approval-prep.schema.json`. It starts public beta approval
-prep as a blocked internal source-tree lane, records required evidence, exact blockers, and
-allowed/forbidden wording, and does not approve public beta or broaden public wording.
+`schemas/ethos-milestone-e-public-beta-approval-prep.schema.json`. It records the source-only
+public beta approval for reviewed commit `d755e7c` and merged main commit `3f9e1c4`, whose source
+trees match, and records the exact allowed wording, setup boundary, and exclusions.
 The public beta required-evidence records live in
 `docs/validation/milestone-e-public-beta-approval-decision-validation-2026-06-20.md`,
 `docs/validation/milestone-e-public-beta-release-scope-engineering-blocker-review-validation-2026-06-20.md`,
 `docs/validation/milestone-e-public-beta-public-setup-path-review-validation-2026-06-20.md`,
 and `docs/validation/milestone-e-public-beta-pdfium-build-path-review-validation-2026-06-20.md`.
-They complete the current evidence-record set for review, keep public beta blocked, and do not
-resolve or soften blockers.
+They complete the evidence-record set that was later rescoped by
+`docs/validation/milestone-e-public-beta-source-only-approval-validation-2026-06-20.md`; the
+source-only approval record does not approve package publication, hosted surfaces, production
+positioning, public benchmark reports, public benchmark claims, release artifacts, binaries, wheels,
+npm packages, crate publication, or project-maintained PDFium builds.
 The package publication approval prep lane lives in
 `docs/milestone-e-package-publication-approval-prep.json` and is schema-bound by
 `schemas/ethos-milestone-e-package-publication-approval-prep.schema.json`. It starts package
@@ -148,6 +152,7 @@ fixture-candidate blocker-alignment validation,
 the internal trust-loop walkthrough, use-protocol,
 rehearsal/evidence matrix, blocker-ledger guards, and public approval lane blocker guard,
 public beta approval prep guard, public beta required-evidence record guard,
+public beta source-only approval guard,
 package publication approval prep guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
@@ -173,13 +178,14 @@ or broad demo-generation workflows.
   evidence grounding, diagnostics, fixture/evaluator validation, and explicit blockers.
 - The internal trust-loop blocker ledger remains limited to existing matrix rows and does not
   resolve or soften blockers.
-- The public approval lane blocker ledger remains limited to public beta, package publication,
-  hosted surface, production positioning, and public benchmark report blocker prep, and does not
-  approve any lane.
-- The public beta approval prep lane remains limited to required-evidence and blocker prep, remains
-  `not_approved`, and does not approve public beta.
-- The public beta required-evidence records remain limited to internal evidence review, keep public
-  beta blocked, and do not approve public beta.
+- The public approval lane blocker ledger records source-only public beta evaluation approval and
+  keeps package publication, hosted surfaces, production positioning, public benchmark reports,
+  public benchmark claims, release artifacts, binaries, wheels, npm packages, crate publication, and
+  project-maintained PDFium builds blocked.
+- The public beta approval prep lane remains limited to source-only public beta evaluation for the
+  GitHub source repository and records the exact approved wording and exclusions.
+- The public beta required-evidence records remain historical evidence for the blocker reviews
+  rescoped by the source-only public beta approval record.
 - The package publication approval prep lane remains limited to required-evidence and blocker prep,
   remains `not_approved`, and does not approve package publication.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
@@ -199,5 +205,6 @@ or broad demo-generation workflows.
 - Required-before alignment remains exact across fixture-promotion criteria, walkthrough, use
   protocol, rehearsal/evidence matrix, blocker ledger, and matching schemas.
 - Validation-record source-head alignment remains exact across Milestone E validation records.
-- Public language remains source-only pre-alpha and internal-continuation scoped.
+- Public language remains limited to the exact source-only public beta wording for the approved
+  GitHub source repository surface and internal-continuation scoped outside that surface.
 - External blockers remain visible before any public-facing Milestone E work starts.

@@ -188,6 +188,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py
       - name: Milestone E public beta required evidence record tests
         run: python3 .github/scripts/test_milestone_e_public_beta_required_evidence_records.py
+      - name: Milestone E public beta source-only approval tests
+        run: python3 .github/scripts/test_milestone_e_public_beta_source_only_approval.py
       - name: Milestone E package publication approval prep tests
         run: python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py
       - name: Milestone E package publication approval prep validation record tests
