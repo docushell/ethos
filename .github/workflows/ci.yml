@@ -134,6 +134,10 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_schema_registry_alignment_validation_record.py
       - name: Milestone E public-boundary alignment validation record tests
         run: python3 .github/scripts/test_milestone_e_public_boundary_alignment_validation_record.py
+      - name: Milestone E validation-command index tests
+        run: python3 .github/scripts/test_milestone_e_validation_command_index.py
+      - name: Milestone E validation-command index validation record tests
+        run: python3 .github/scripts/test_milestone_e_validation_command_index_validation_record.py
       - name: Milestone E validation-record index tests
         run: python3 .github/scripts/test_milestone_e_validation_record_index.py
       - name: Milestone E validation-record index validation record tests

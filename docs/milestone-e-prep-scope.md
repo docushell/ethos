@@ -70,7 +70,7 @@ planning; it does not resolve or soften blockers and is not public result wordin
 | Crop descriptor and source-bound crop shape | `examples/crop/crop_element_v1_contract.json` and `examples/crop/crop_element_surface_shape_v1_contract.json` | `make milestone-d-internal-contracts` |
 | RAG chunk artifact loop | `schemas/examples/chunks.example.jsonl` | `make rag-chunk-alpha` |
 | Security-report artifact loop | `schemas/examples/security-report.example.json` | `make security-report-alpha` |
-| Demo narrative index | `docs/demos/verify-alpha.md` | `make verify-alpha` and posture guards |
+| Demo narrative index | `docs/demos/verify-alpha.md` | `make verify-alpha` |
 
 These are internal fixture candidates, not public proof points. Any future demo plan must still
 state the validated command, input fixture, expected diagnostic boundary, blocker status, and every
