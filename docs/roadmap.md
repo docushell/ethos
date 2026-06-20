@@ -96,6 +96,9 @@ and schema-bound by
 [`schemas/ethos-milestone-e-public-beta-approval-prep.schema.json`](../schemas/ethos-milestone-e-public-beta-approval-prep.schema.json);
 public beta approval prep has started as required-evidence and blocker prep only, and does not
 approve public beta.
+The current public beta required-evidence records are indexed under `docs/validation/` for approval
+decision review, engineering blocker review, public setup path review, and PDFium build-path review;
+they keep public beta blocked and do not resolve or soften blockers.
 The package publication approval prep lane is recorded in
 [`docs/milestone-e-package-publication-approval-prep.json`](milestone-e-package-publication-approval-prep.json)
 and schema-bound by
@@ -120,8 +123,9 @@ alignment guard keeps each `Validated source HEAD before this record` line sourc
 approval lane blocker ledger keeps public beta, package publication, hosted surface, production
 positioning, and public benchmark report lanes blocked pending dedicated approval records,
 evidence, owners, wording, gate scripts, validation records, and decider review. The public beta
-approval prep lane remains `not_approved`, does not approve public beta, and does not broaden public
-wording. The package publication approval prep lane remains `not_approved`, does not approve package
+approval prep lane remains `not_approved`, the public beta required-evidence records do not approve
+public beta, and neither broadens public wording. The package publication approval prep lane remains
+`not_approved`, does not approve package
 publication, and does not broaden public wording. The
 Milestone E prep source-only closeout is recorded in
 [`docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`](validation/milestone-e-final-closeout-validation-2026-06-20.md)

@@ -44,7 +44,7 @@
         "public beta remains blocked",
         "Phase 2 project-maintained PDFium build path remains unresolved",
         "public setup path remains unresolved",
-        "release-scope validation record remains absent",
+        "release-scope engineering blocker review did not clear public beta",
         "only the exact approved pre-alpha sentence is approved",
         "ADR-0005 does not approve public beta"
       ],

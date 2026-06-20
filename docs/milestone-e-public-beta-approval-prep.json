@@ -45,7 +45,7 @@
   ],
   "explicit_blockers": [
     "public beta remains blocked",
-    "release-scope validation record remains absent",
+    "release-scope engineering blocker review did not clear public beta",
     "public setup path remains unresolved",
     "Phase 2 project-maintained PDFium build path remains unresolved or explicitly unrescoped",
     "only the exact approved pre-alpha sentence is approved",

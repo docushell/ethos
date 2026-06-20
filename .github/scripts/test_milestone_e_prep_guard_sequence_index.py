@@ -87,6 +87,7 @@ EXPECTED_MILESTONE_E_PREP_COMMANDS = (
     "$(PYTHON) .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_beta_approval_prep.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_public_beta_required_evidence_records.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_prep.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_prep_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",

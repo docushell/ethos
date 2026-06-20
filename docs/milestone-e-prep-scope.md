@@ -70,6 +70,13 @@ The public beta approval prep lane lives in
 `schemas/ethos-milestone-e-public-beta-approval-prep.schema.json`. It starts public beta approval
 prep as a blocked internal source-tree lane, records required evidence, exact blockers, and
 allowed/forbidden wording, and does not approve public beta or broaden public wording.
+The public beta required-evidence records live in
+`docs/validation/milestone-e-public-beta-approval-decision-validation-2026-06-20.md`,
+`docs/validation/milestone-e-public-beta-release-scope-engineering-blocker-review-validation-2026-06-20.md`,
+`docs/validation/milestone-e-public-beta-public-setup-path-review-validation-2026-06-20.md`,
+and `docs/validation/milestone-e-public-beta-pdfium-build-path-review-validation-2026-06-20.md`.
+They complete the current evidence-record set for review, keep public beta blocked, and do not
+resolve or soften blockers.
 The package publication approval prep lane lives in
 `docs/milestone-e-package-publication-approval-prep.json` and is schema-bound by
 `schemas/ethos-milestone-e-package-publication-approval-prep.schema.json`. It starts package
@@ -140,7 +147,8 @@ required-before alignment, validation-record source-head alignment, this prep-sc
 fixture-candidate blocker-alignment validation,
 the internal trust-loop walkthrough, use-protocol,
 rehearsal/evidence matrix, blocker-ledger guards, and public approval lane blocker guard,
-public beta approval prep guard, package publication approval prep guard,
+public beta approval prep guard, public beta required-evidence record guard,
+package publication approval prep guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -170,6 +178,8 @@ or broad demo-generation workflows.
   approve any lane.
 - The public beta approval prep lane remains limited to required-evidence and blocker prep, remains
   `not_approved`, and does not approve public beta.
+- The public beta required-evidence records remain limited to internal evidence review, keep public
+  beta blocked, and do not approve public beta.
 - The package publication approval prep lane remains limited to required-evidence and blocker prep,
   remains `not_approved`, and does not approve package publication.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,

@@ -219,6 +219,19 @@ Records:
   public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record starts
   required-evidence and blocker prep only, keeps public beta blocked, and does not approve public
   beta.
+- `milestone-e-public-beta-approval-decision-validation-2026-06-20.md` - internal Milestone E
+  public beta required-evidence validation for the dedicated public beta approval decision review;
+  the record keeps public beta blocked, does not approve public beta, and records that exact
+  wording and surface signoff are not granted.
+- `milestone-e-public-beta-release-scope-engineering-blocker-review-validation-2026-06-20.md` -
+  internal Milestone E public beta required-evidence validation for release-scope engineering
+  blocker review; the record keeps public beta blocked and does not approve public beta.
+- `milestone-e-public-beta-public-setup-path-review-validation-2026-06-20.md` - internal Milestone E
+  public beta required-evidence validation for public setup path review; the record keeps public
+  beta blocked and does not approve public beta.
+- `milestone-e-public-beta-pdfium-build-path-review-validation-2026-06-20.md` - internal Milestone E
+  public beta required-evidence validation for Phase 2 PDFium build-path review; the record keeps
+  public beta blocked and does not approve public beta.
 - `milestone-e-package-publication-approval-prep-validation-2026-06-20.md` - internal Milestone E
   package publication approval prep validation for
   `docs/milestone-e-package-publication-approval-prep.json` passed through package publication
