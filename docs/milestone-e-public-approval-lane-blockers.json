@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "status": "source-only-pre-alpha-internal-milestone-e-prep",
+  "scope": "public_approval_lane_blocker_ledger",
+  "ledger_boundary": "internal_public_approval_lane_blocker_prep",
+  "ledger_status": "all_public_approval_lanes_blocked_pending_dedicated_gate",
+  "exact_approved_public_sentence": "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs.",
+  "approved_source_snapshot": {
+    "source_head": "660f268df400351347d5185ad36584faa0481c7f",
+    "tag": "ethos-source-snapshot-660f268",
+    "archive": "ethos-source-snapshot-660f268.tar.gz",
+    "sha256": "58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87",
+    "boundary": "source-snapshot-only; no public beta, package, hosted, production, or public-report approval"
+  },
+  "public_boundary": [
+    "public reports remain blocked",
+    "release artifacts remain blocked",
+    "package publication remains blocked",
+    "hosted surfaces remain blocked",
+    "public result wording remains blocked",
+    "performance claims remain blocked",
+    "quality claims remain blocked",
+    "footprint claims remain blocked",
+    "table-quality claims remain blocked",
+    "parser-quality claims remain blocked"
+  ],
+  "lane_gate_script": ".github/scripts/test_milestone_e_public_approval_lane_blockers.py",
+  "lane_validation_record": "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md",
+  "approval_lanes": [
+    {
+      "sequence": 1,
+      "lane_id": "public-beta-approval",
+      "lane_name": "Public beta approval",
+      "approval_status": "blocked_pending_dedicated_approval",
+      "explicit_scope": "Approval to move any surface from source-only pre-alpha wording into public beta wording or operation.",
+      "required_evidence": [
+        "dedicated public beta approval record",
+        "release-scope engineering blocker review",
+        "public-surface posture check for exact changed surfaces",
+        "claims gate run after exact wording changes",
+        "decider signoff on exact wording and surface"
+      ],
+      "explicit_blockers": [
+        "public beta remains blocked",
+        "Phase 2 project-maintained PDFium build path remains unresolved",
+        "public setup path remains unresolved",
+        "release-scope validation record remains absent",
+        "only the exact approved pre-alpha sentence is approved",
+        "ADR-0005 does not approve public beta"
+      ],
+      "allowed_wording": [
+        "Ethos remains source-only pre-alpha for this lane.",
+        "Public beta remains blocked pending dedicated approval.",
+        "The exact approved pre-alpha sentence may be used on current source-repository surfaces."
+      ],
+      "forbidden_wording": [
+        "any statement that treats a beta as open for public use",
+        "any statement that recasts the source snapshot as a beta",
+        "any statement that expands beyond the exact approved pre-alpha sentence",
+        "any statement that implies release, package, hosted, or production approval"
+      ],
+      "approval_owner": "decider",
+      "gate_script": ".github/scripts/test_milestone_e_public_approval_lane_blockers.py",
+      "validation_record": "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md"
+    },
+    {
+      "sequence": 2,
+      "lane_id": "package-publication",
+      "lane_name": "Package publication",
+      "approval_status": "blocked_pending_dedicated_approval",
+      "explicit_scope": "Approval to publish or update installable artifacts such as binaries, wheels, npm packages, or crate artifacts.",
+      "required_evidence": [
+        "dedicated package publication approval record",
+        "artifact-specific license and notice bundle review",
+        "package registry metadata review",
+        "installation and rollback validation for each artifact family",
+        "decider signoff on exact artifact names and surfaces"
+      ],
+      "explicit_blockers": [
+        "package publication remains blocked",
+        "binaries remain blocked",
+        "wheels remain blocked",
+        "npm packages remain blocked",
+        "crate publication remains blocked",
+        "ADR-0005 and H2 source-snapshot closeout do not approve package publication"
+      ],
+      "allowed_wording": [
+        "Package publication remains blocked pending dedicated approval.",
+        "The approved surface is source snapshot only.",
+        "Package-related work may be described only as internal blocker preparation."
+      ],
+      "forbidden_wording": [
+        "any statement that presents installable artifacts as published or available",
+        "any statement that treats the approved source snapshot as a package",
+        "any statement that invites public installation from package registries",
+        "any statement that expands beyond the exact approved pre-alpha sentence",
+        "any statement that implies release, beta, hosted, or production approval"
+      ],
+      "approval_owner": "devrel / decider",
+      "gate_script": ".github/scripts/test_milestone_e_public_approval_lane_blockers.py",
+      "validation_record": "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md"
+    },
+    {
+      "sequence": 3,
+      "lane_id": "hosted-surface",
+      "lane_name": "Hosted surface",
+      "approval_status": "blocked_pending_dedicated_approval",
+      "explicit_scope": "Approval to expose hosted product, hosted demo, API, or interactive documentation surfaces beyond source-repository text.",
+      "required_evidence": [
+        "dedicated hosted surface approval record",
+        "surface inventory with owners and access boundary",
+        "security and privacy review for hosted operation",
+        "public-surface posture check for exact hosted copy",
+        "decider signoff on exact URL and wording"
+      ],
+      "explicit_blockers": [
+        "hosted surfaces remain blocked",
+        "hosted operation has no dedicated validation record",
+        "public result wording remains blocked",
+        "package and release lanes remain blocked",
+        "ADR-0005 and H2 source-snapshot closeout do not approve hosted surfaces"
+      ],
+      "allowed_wording": [
+        "Hosted surfaces remain blocked pending dedicated approval.",
+        "Source-repository surfaces may use only the exact approved pre-alpha sentence.",
+        "Hosted-surface work may be described only as internal blocker preparation."
+      ],
+      "forbidden_wording": [
+        "any statement that presents a hosted surface as available for public use",
+        "any statement that presents generated results as public proof points",
+        "any statement that expands beyond the exact approved pre-alpha sentence",
+        "any statement that implies beta, package, release, or production approval"
+      ],
+      "approval_owner": "decider",
+      "gate_script": ".github/scripts/test_milestone_e_public_approval_lane_blockers.py",
+      "validation_record": "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md"
+    },
+    {
+      "sequence": 4,
+      "lane_id": "production-positioning",
+      "lane_name": "Production positioning",
+      "approval_status": "blocked_pending_dedicated_approval",
+      "explicit_scope": "Approval to describe Ethos as suitable for production use, operational reliance, or mature deployment.",
+      "required_evidence": [
+        "dedicated production positioning approval record",
+        "operator setup and failure-mode review",
+        "support and maintenance boundary review",
+        "claim audit for exact production-facing language",
+        "decider signoff on exact wording and surface"
+      ],
+      "explicit_blockers": [
+        "production positioning remains blocked",
+        "public beta remains blocked",
+        "release and package lanes remain blocked",
+        "broader corpus and failure fixtures remain future work",
+        "ADR-0005 does not approve production positioning"
+      ],
+      "allowed_wording": [
+        "Production positioning remains blocked pending dedicated approval.",
+        "Ethos remains source-only pre-alpha.",
+        "Operational-readiness work may be described only as internal blocker preparation."
+      ],
+      "forbidden_wording": [
+        "any statement that presents Ethos as suitable for production use",
+        "any statement that presents operational reliance as approved",
+        "any statement that expands beyond the exact approved pre-alpha sentence",
+        "any statement that implies beta, release, package, or hosted approval"
+      ],
+      "approval_owner": "decider",
+      "gate_script": ".github/scripts/test_milestone_e_public_approval_lane_blockers.py",
+      "validation_record": "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md"
+    },
+    {
+      "sequence": 5,
+      "lane_id": "public-benchmark-report",
+      "lane_name": "Public benchmark report",
+      "approval_status": "blocked_pending_dedicated_approval",
+      "explicit_scope": "Approval to publish public benchmark or comparison report language beyond H1 public-safe evidence acceptance.",
+      "required_evidence": [
+        "dedicated public benchmark report approval record",
+        "ethos-bench publication preflight for exact report material",
+        "benchmark owner acceptance for exact public wording",
+        "claim audit for every public comparison sentence",
+        "decider signoff on exact report surface"
+      ],
+      "explicit_blockers": [
+        "public benchmark reports remain blocked",
+        "public benchmark claims remain blocked",
+        "comparison-report wording remains blocked",
+        "H1 accepted evidence for closeout only",
+        "ADR-0005 does not approve public benchmark reports"
+      ],
+      "allowed_wording": [
+        "Public benchmark reports remain blocked pending dedicated approval.",
+        "H1 accepted public-safe evidence for closeout only.",
+        "The exact approved pre-alpha sentence may be used on current source-repository surfaces."
+      ],
+      "forbidden_wording": [
+        "any statement that presents public benchmark claims as approved",
+        "any statement that presents comparison-report wording as approved",
+        "any statement that makes speed, quality, footprint, table-quality, or parser-quality claims",
+        "any statement that expands beyond the exact approved pre-alpha sentence"
+      ],
+      "approval_owner": "benchmark owner / decider",
+      "gate_script": ".github/scripts/test_milestone_e_public_approval_lane_blockers.py",
+      "validation_record": "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md"
+    }
+  ]
+}

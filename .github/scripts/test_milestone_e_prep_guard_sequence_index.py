@@ -83,6 +83,8 @@ EXPECTED_MILESTONE_E_PREP_COMMANDS = (
     "$(PYTHON) .github/scripts/test_milestone_e_source_status_alignment_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_applies_to_binding_alignment_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_required_before_alignment_validation_record.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_public_approval_lane_blockers.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",

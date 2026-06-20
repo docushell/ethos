@@ -131,6 +131,9 @@ PAIRS = [
     ("ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json", [
         ROOT / "docs" / "milestone-e-internal-trust-loop-blocker-ledger.json",
     ]),
+    ("ethos-milestone-e-public-approval-lane-blockers.schema.json", [
+        ROOT / "docs" / "milestone-e-public-approval-lane-blockers.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

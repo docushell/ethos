@@ -86,6 +86,10 @@ The internal trust-loop blocker ledger is recorded in
 [`docs/milestone-e-internal-trust-loop-blocker-ledger.json`](milestone-e-internal-trust-loop-blocker-ledger.json)
 and schema-bound by
 [`schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json`](../schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json).
+The public approval lane blocker ledger is recorded in
+[`docs/milestone-e-public-approval-lane-blockers.json`](milestone-e-public-approval-lane-blockers.json)
+and schema-bound by
+[`schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`](../schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json).
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
@@ -100,7 +104,10 @@ guard keeps the current E artifacts bound from `docs/milestone-e-fixture-candida
 `docs/milestone-e-internal-trust-loop-blocker-ledger.json`. The required-before alignment guard
 keeps current readiness gates tied to `make milestone-e-prep remains green`, posture checks,
 claims gates, diagnostic boundaries, and explicit blockers. The validation-record source-head
-alignment guard keeps each `Validated source HEAD before this record` line source-bound. The
+alignment guard keeps each `Validated source HEAD before this record` line source-bound. The public
+approval lane blocker ledger keeps public beta, package publication, hosted surface, production
+positioning, and public benchmark report lanes blocked pending dedicated approval records,
+evidence, owners, wording, gate scripts, validation records, and decider review. The
 Milestone E prep source-only closeout is recorded in
 [`docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`](validation/milestone-e-final-closeout-validation-2026-06-20.md)
 for the current internal prep boundary only. This prep does not resolve or soften blockers, approve

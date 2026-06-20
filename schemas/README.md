@@ -29,6 +29,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-milestone-e-internal-trust-loop-use-protocol.schema.json` | Milestone E source-only internal trust-loop use protocol |
 | `ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json` | Milestone E source-only internal trust-loop rehearsal/evidence matrix |
 | `ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json` | Milestone E source-only internal trust-loop blocker ledger |
+| `ethos-milestone-e-public-approval-lane-blockers.schema.json` | Milestone E source-only public approval lane blocker ledger |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
 
 Conventions: snake_case keys; `additionalProperties: false` everywhere except the
@@ -125,10 +126,11 @@ internal trust-loop use protocol at
 `docs/milestone-e-internal-trust-loop-use-protocol.json`, and internal trust-loop
 rehearsal/evidence matrix at
 `docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json`, and internal trust-loop
-blocker ledger at `docs/milestone-e-internal-trust-loop-blocker-ledger.json` are schema-validated
+blocker ledger at `docs/milestone-e-internal-trust-loop-blocker-ledger.json`, and public approval
+lane blocker ledger at `docs/milestone-e-public-approval-lane-blockers.json` are schema-validated
 here. Their path tracking, candidate-to-criteria-to-walkthrough alignment, diagnostic-boundary
-alignment, evidence-lane alignment, explicit blocker alignment, and public-posture boundaries are
-checked by the Milestone E prep repository guards.
+alignment, evidence-lane alignment, explicit blocker alignment, public approval lane blockers,
+and public-posture boundaries are checked by the Milestone E prep repository guards.
 
 Derived artifacts not schema'd here: `document.md` / `document.txt` (deterministic exports
 specified by the exporter config, Milestone B) and `debug.html` (Milestone C).

@@ -99,6 +99,10 @@ SOURCE_STATUS_ARTIFACTS = (
         "docs/milestone-e-internal-trust-loop-blocker-ledger.json",
         "schemas/ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json",
     ),
+    SourceStatusArtifact(
+        "docs/milestone-e-public-approval-lane-blockers.json",
+        "schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json",
+    ),
 )
 
 STATUS_VALIDATION_RECORDS = (
