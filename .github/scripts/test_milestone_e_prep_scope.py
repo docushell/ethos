@@ -167,6 +167,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("source-status alignment", text)
         self.assertIn("applies-to binding alignment", text)
         self.assertIn("required-before alignment", text)
+        self.assertIn("validation-record source-head alignment", text)
         self.assertTrue(TRUST_LOOP_BLOCKER_LEDGER.is_file())
         self.assertTrue(TRUST_LOOP_BLOCKER_LEDGER_SCHEMA.is_file())
         for label, paths in EXPECTED_CANDIDATES.items():
@@ -261,6 +262,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("applies-to binding alignment", normalized_status)
         self.assertIn("required-before alignment", normalized_roadmap)
         self.assertIn("required-before alignment", normalized_status)
+        self.assertIn("validation-record source-head alignment", normalized_roadmap)
+        self.assertIn("validation-record source-head alignment", normalized_status)
         self.assertIn("schemas/ethos-milestone-e-fixture-candidates.schema.json", roadmap)
         self.assertIn("schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json", roadmap)
         self.assertIn(
@@ -347,6 +350,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index_validation_record.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_validation_source_head_alignment.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_validation_source_head_alignment_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py",

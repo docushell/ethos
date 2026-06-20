@@ -99,8 +99,10 @@ artifacts at `source-only-pre-alpha-internal-milestone-e-prep`. The applies-to b
 guard keeps the current E artifacts bound from `docs/milestone-e-fixture-candidates.json` through
 `docs/milestone-e-internal-trust-loop-blocker-ledger.json`. The required-before alignment guard
 keeps current readiness gates tied to `make milestone-e-prep remains green`, posture checks,
-claims gates, diagnostic boundaries, and explicit blockers. This prep does not resolve or soften
-blockers, approve public result wording, hosted surfaces, package/distribution work, or
+claims gates, diagnostic boundaries, and explicit blockers. The validation-record source-head
+alignment guard keeps each `Validated source HEAD before this record` line source-bound. This prep
+does not resolve or soften blockers, approve public result wording, hosted surfaces,
+package/distribution work, or
 public-facing claims.
 
 | Milestone | Window | Contents | Gate |

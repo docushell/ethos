@@ -170,6 +170,10 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_validation_record_index.py
       - name: Milestone E validation-record index validation record tests
         run: python3 .github/scripts/test_milestone_e_validation_record_index_validation_record.py
+      - name: Milestone E validation-record source-head alignment tests
+        run: python3 .github/scripts/test_milestone_e_validation_source_head_alignment.py
+      - name: Milestone E validation-record source-head alignment validation record tests
+        run: python3 .github/scripts/test_milestone_e_validation_source_head_alignment_validation_record.py
       - name: Milestone E prep guard-sequence index tests
         run: python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py
       - name: Milestone E prep guard-sequence index validation record tests

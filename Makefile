@@ -194,6 +194,8 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_source_head_alignment.py
+	$(PYTHON) .github/scripts/test_milestone_e_validation_source_head_alignment_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py

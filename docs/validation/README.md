@@ -180,6 +180,11 @@ Records:
   validation-record index validation passed through validation-record index checks, guard wiring
   checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record
   covers only current E validation-record index coverage and does not resolve or soften blockers.
+- `milestone-e-validation-source-head-alignment-validation-2026-06-20.md` - internal Milestone E
+  validation-record source-head alignment validation passed through source-head provenance checks,
+  validation-record checks, public-surface posture checks, `make milestone-e-prep`, and diff
+  hygiene; the record covers only validation-record source-head alignment and does not resolve or
+  soften blockers.
 - `milestone-e-prep-guard-sequence-index-validation-2026-06-20.md` - internal Milestone E prep
   guard-sequence index validation passed through exact Makefile sequence checks, CI ordering checks,
   public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the record covers only

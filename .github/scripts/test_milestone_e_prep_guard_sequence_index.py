@@ -80,6 +80,8 @@ EXPECTED_MILESTONE_E_PREP_COMMANDS = (
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index_validation_record.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_validation_source_head_alignment.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_validation_source_head_alignment_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index.py",
     "$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py",
@@ -152,6 +154,7 @@ class MilestoneEPrepGuardSequenceIndexTests(unittest.TestCase):
             self.assertIn("applies-to binding alignment", normalized)
             self.assertIn("required-before alignment", normalized)
             self.assertIn("source-only", normalized)
+            self.assertIn("validation-record source-head alignment", normalized)
             self.assertIn("public-report, release, package, hosted", normalized)
             self.assertNotIn("public result wording approved", normalized.lower())
             self.assertNotIn("release-ready", normalized.lower())

@@ -159,6 +159,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_validation_record_index_validation_record.py",
     ),
     RecordCoverage(
+        "milestone-e-validation-source-head-alignment-validation-2026-06-20.md",
+        "test_milestone_e_validation_source_head_alignment_validation_record.py",
+    ),
+    RecordCoverage(
         "milestone-e-prep-guard-sequence-index-validation-2026-06-20.md",
         "test_milestone_e_prep_guard_sequence_index_validation_record.py",
     ),
@@ -218,6 +222,8 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
         index_guard = "test_milestone_e_validation_record_index.py"
         index_record_guard = "test_milestone_e_validation_record_index_validation_record.py"
+        source_head_guard = "test_milestone_e_validation_source_head_alignment.py"
+        source_head_record_guard = "test_milestone_e_validation_source_head_alignment_validation_record.py"
         sequence_guard = "test_milestone_e_prep_guard_sequence_index_validation_record.py"
         prep_record_guard = "test_milestone_e_prep_validation_record.py"
 
@@ -233,7 +239,9 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             self.assertLess(text.index(prefix + required_before_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + command_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + index_guard), text.index(prefix + index_record_guard))
-            self.assertLess(text.index(prefix + index_record_guard), text.index(prefix + sequence_guard))
+            self.assertLess(text.index(prefix + index_record_guard), text.index(prefix + source_head_guard))
+            self.assertLess(text.index(prefix + source_head_guard), text.index(prefix + source_head_record_guard))
+            self.assertLess(text.index(prefix + source_head_record_guard), text.index(prefix + sequence_guard))
             self.assertLess(text.index(prefix + sequence_guard), text.index(prefix + prep_record_guard))
 
     def test_records_keep_source_only_public_boundaries(self) -> None:
