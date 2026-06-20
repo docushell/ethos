@@ -273,6 +273,11 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
   publication metadata readiness validation for the current in-tree priority candidate crates; the
   record keeps package publication and public installation blocked while recording README, NOTICE,
   manifest metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf`.
+- `milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md` - package
+  publication dry-run/smoke validation for the current source-tree candidate path; the record keeps
+  package publication and public installation blocked while recording local package assembly for
+  `ethos-core`, source-tree checks for `ethos-verify` and `ethos-pdf`, and retained dependent
+  package assembly blockers.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
