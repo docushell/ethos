@@ -10,6 +10,9 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+Current package publication evidence records keep publication blocked while tracking reserved-name
+inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium boundary blockers.
+
 - `advisory-scan-2026-06-16.md` - full `cargo-deny` advisory, ban, license, and source scan
   passed with a sidecar Rust 1.94 toolchain and `cargo-deny 0.19.9`; release artifacts still
   need artifact-specific license/NOTICE bundles and package-specific readiness work.
@@ -250,6 +253,22 @@ Records:
   blocked, and keeps wheels, npm packages, binaries, hosted surfaces, production positioning,
   public benchmark reports, public benchmark claims, release artifacts, and project-maintained
   PDFium builds blocked.
+- `milestone-e-package-publication-inventory-reconciliation-validation-2026-06-20.md` - package
+  publication evidence validation for ADR-0006 reserved-name to source-tree workspace
+  reconciliation; the record keeps package publication and public installation blocked.
+- `milestone-e-package-publication-metadata-readiness-validation-2026-06-20.md` - package
+  publication evidence validation for metadata, license, NOTICE, and README readiness; the record
+  keeps per-crate README, package metadata, and NOTICE packaging blockers explicit.
+- `milestone-e-package-publication-dry-run-smoke-plan-validation-2026-06-20.md` - package
+  publication evidence validation for the future dry-run and smoke-build path; the record does not
+  run or approve real-version `cargo publish`.
+- `milestone-e-package-publication-version-tag-policy-validation-2026-06-20.md` - package
+  publication evidence validation for version and tag policy; the record keeps workspace `0.1.0`
+  and crates.io `0.0.0-reserved.0` reservations unreconciled for publication.
+- `milestone-e-package-publication-pdfium-boundary-validation-2026-06-20.md` - package
+  publication evidence validation for the `ethos-pdf` PDFium boundary; the record keeps
+  `ethos-pdf` held out unless no bundled PDFium binary and no public PDFium types can be
+  guaranteed.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

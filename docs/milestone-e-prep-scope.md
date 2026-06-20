@@ -89,6 +89,9 @@ identifiers, records required evidence, exact blockers, allowed/forbidden wordin
 packaging boundary, and does not approve package publication, real-version `cargo publish`, public
 installation, release artifacts, binaries, wheels, npm packages, hosted surfaces, production
 positioning, public benchmark reports, or public benchmark claims.
+The package publication evidence records under `docs/validation/` record reserved-name inventory
+reconciliation, metadata/license/README readiness, dry-run/smoke planning, version/tag policy, and
+PDFium packaging boundary evidence for that prep lane. They keep package publication blocked.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
@@ -157,6 +160,7 @@ public beta approval prep guard, public beta required-evidence record guard,
 public beta source-only approval guard,
 package publication approval prep guard,
 package publication prep approval validation guard,
+package publication evidence records guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -192,6 +196,9 @@ or broad demo-generation workflows.
 - The package publication approval prep lane remains limited to internal Rust crate publication
   preparation for the five ADR-0006 reserved priority crates.io identifiers, remains
   `prep_approved_publication_blocked`, and does not approve package publication.
+- The package publication evidence records remain indexed, source-bound, and limited to current
+  prep blockers for reserved-name inventory, metadata/license/README readiness, dry-run/smoke
+  planning, version/tag policy, and PDFium packaging boundary review.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,
