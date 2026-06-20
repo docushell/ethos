@@ -54,9 +54,22 @@ EXPECTED_APPROVED_SENTENCE = (
     "Ethos is pre-alpha. It verifies whether AI citations are grounded in document "
     "evidence across native Ethos JSON and supported foreign parser outputs."
 )
+EXPECTED_PACKAGE_PREP_WORDING = (
+    "Ethos crate publication is in internal preparation only and remains blocked for public "
+    "installation. No Ethos crates are published; the reserved crates.io names remain "
+    "0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, hosted "
+    "surfaces, production positioning, and public benchmark claims remain blocked."
+)
+EXPECTED_RESERVED_CRATES = [
+    "ethos-doc-core",
+    "ethos-doc",
+    "ethos-verify",
+    "ethos-rag",
+    "ethos-pdf",
+]
 EXPECTED_GATE = ".github/scripts/test_milestone_e_package_publication_approval_prep.py"
 EXPECTED_RECORD = (
-    "docs/validation/milestone-e-package-publication-approval-prep-validation-2026-06-20.md"
+    "docs/validation/milestone-e-package-publication-prep-approval-validation-2026-06-20.md"
 )
 
 FORBIDDEN_PREP_WORDING = [
@@ -100,7 +113,7 @@ def read(path: Path) -> str:
 
 
 class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
-    def test_prep_is_started_but_not_approved(self) -> None:
+    def test_prep_is_approved_but_publication_stays_blocked(self) -> None:
         prep = load_json(PREP)
 
         self.assertEqual(1, prep["schema_version"])
@@ -108,10 +121,14 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertEqual("package_publication_approval_prep", prep["scope"])
         self.assertEqual("package-publication", prep["lane_id"])
         self.assertEqual("Package publication", prep["lane_name"])
-        self.assertEqual("started_blocked_pending_dedicated_approval", prep["approval_status"])
-        self.assertEqual("not_approved", prep["decision_status"])
-        self.assertEqual("devrel / decider", prep["approval_owner"])
+        self.assertEqual("prep_approved_publication_blocked", prep["approval_status"])
+        self.assertEqual("approve_prep", prep["decision_status"])
+        self.assertEqual("docushell-admin", prep["approval_owner"])
         self.assertEqual(EXPECTED_APPROVED_SENTENCE, prep["exact_approved_public_sentence"])
+        self.assertEqual(
+            EXPECTED_PACKAGE_PREP_WORDING,
+            prep["exact_approved_package_publication_prep_wording"],
+        )
         self.assertEqual(EXPECTED_BOUNDARY, prep["public_boundary"])
         self.assertEqual(EXPECTED_GATE, prep["gate_script"])
         self.assertEqual(EXPECTED_RECORD, prep["validation_record"])
@@ -137,15 +154,16 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
 
         self.assertEqual(package_lane["lane_name"], prep["lane_name"])
         self.assertEqual(package_lane["approval_owner"], prep["approval_owner"])
-        self.assertEqual("blocked_pending_dedicated_approval", package_lane["approval_status"])
+        self.assertEqual("prep_approved_publication_blocked", package_lane["approval_status"])
+        self.assertEqual(EXPECTED_PACKAGE_PREP_WORDING, package_lane["allowed_wording"][0])
         self.assertIn("package publication remains blocked", package_lane["explicit_blockers"])
         self.assertIn(
-            "ADR-0005 and H2 source-snapshot closeout do not approve package publication",
+            "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication",
             package_lane["explicit_blockers"],
         )
         self.assertIn("package publication remains blocked", prep["explicit_blockers"])
         self.assertIn(
-            "ADR-0005 and H2 source-snapshot closeout do not approve package publication",
+            "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication",
             prep["explicit_blockers"],
         )
 
@@ -153,32 +171,108 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         prep = load_json(PREP)
 
         self.assertEqual(5, len(prep["approval_scope"]))
-        self.assertEqual(7, len(prep["required_evidence"]))
-        self.assertEqual(8, len(prep["explicit_blockers"]))
-        self.assertIn("dedicated package publication approval decision record", prep["required_evidence"])
-        self.assertIn("artifact-specific license and notice bundle review", prep["required_evidence"])
-        self.assertIn("package registry metadata review", prep["required_evidence"])
-        self.assertIn("installation and rollback validation for each artifact family", prep["required_evidence"])
-        self.assertIn("decider signoff on exact artifact names and surfaces", prep["required_evidence"])
+        self.assertEqual(9, len(prep["required_evidence"]))
+        self.assertEqual(13, len(prep["explicit_blockers"]))
+        self.assertIn("dedicated package publication prep approval decision record", prep["required_evidence"])
+        self.assertIn(
+            "package inventory reconciliation for the five ADR-0006 reserved crates.io identifiers",
+            prep["required_evidence"],
+        )
+        self.assertIn("per-crate metadata, license, NOTICE, and README readiness review", prep["required_evidence"])
+        self.assertIn("cargo publish --dry-run and smoke build path for each candidate crate", prep["required_evidence"])
+        self.assertIn("publish version and tag policy reconciliation", prep["required_evidence"])
+        self.assertIn("PDFium packaging boundary confirmation for ethos-pdf", prep["required_evidence"])
+        self.assertIn("claims gate after exact wording changes", prep["required_evidence"])
         self.assertIn("package publication remains blocked", prep["explicit_blockers"])
+        self.assertIn("real-version cargo publish remains blocked", prep["explicit_blockers"])
         self.assertIn("binaries remain blocked", prep["explicit_blockers"])
         self.assertIn("wheels remain blocked", prep["explicit_blockers"])
         self.assertIn("npm packages remain blocked", prep["explicit_blockers"])
         self.assertIn("crate publication remains blocked", prep["explicit_blockers"])
+        self.assertIn("project-maintained PDFium builds remain blocked", prep["explicit_blockers"])
+
+    def test_approved_prep_names_reserved_crates_and_current_workspace_mapping(self) -> None:
+        prep = load_json(PREP)
+        approved = prep["approved_package_publication_prep"]
+        cargo = read(ROOT / "Cargo.toml")
+        adr = read(ROOT / "docs/decisions/ADR-0006-package-identifiers.md")
+
+        self.assertEqual(
+            "Rust crate publication preparation only for the five ADR-0006 reserved priority crates.io identifiers",
+            approved["surface"],
+        )
+        self.assertEqual("crates.io", approved["registry"])
+        self.assertEqual("0.0.0-reserved.0", approved["reserved_version"])
+        self.assertEqual(EXPECTED_RESERVED_CRATES, approved["reserved_identifiers"])
+        for crate in EXPECTED_RESERVED_CRATES:
+            self.assertIn(f"`{crate}`", adr)
+            self.assertIn("`0.0.0-reserved.0`", adr)
+
+        self.assertIn('"crates/ethos-core"', cargo)
+        self.assertIn('"crates/ethos-pdf"', cargo)
+        self.assertIn('"crates/ethos-verify"', cargo)
+        self.assertNotIn('"crates/ethos-doc"', cargo)
+        self.assertNotIn('"crates/ethos-rag"', cargo)
+        self.assertIn("ethos-doc-core maps to the in-tree ethos-core crate", " ".join(approved["in_tree_reconciliation"]))
+        self.assertIn("ethos-doc has no in-tree workspace member yet", " ".join(approved["in_tree_reconciliation"]))
+        self.assertIn("ethos-rag has no in-tree workspace member yet", " ".join(approved["in_tree_reconciliation"]))
+
+    def test_candidate_crates_remain_publish_false_until_later_approval(self) -> None:
+        core = read(ROOT / "crates/ethos-core/Cargo.toml")
+        verify = read(ROOT / "crates/ethos-verify/Cargo.toml")
+        pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
+
+        self.assertIn('name = "ethos-core"', core)
+        self.assertIn("publish = false", core)
+        self.assertIn('name = "ethos-verify"', verify)
+        self.assertIn("publish = false", verify)
+        self.assertIn('name = "ethos-pdf"', pdf)
+        self.assertIn("publish = false", pdf)
+        self.assertIn('version = "0.1.0"', read(ROOT / "Cargo.toml"))
+
+    def test_evidence_status_matches_decider_input(self) -> None:
+        status = load_json(PREP)["evidence_review_status"]
+
+        self.assertIn("reviewed", status["package_inventory"])
+        self.assertIn("not reviewed", status["package_metadata_license_readme_review"])
+        self.assertIn("not reviewed for packaged publication", status["install_build_smoke_path"])
+        self.assertIn("not ratified", status["version_tag_policy"])
+        self.assertIn("caller-provided PDFium only", status["pdfium_packaging_boundary"])
+        self.assertEqual("required after exact wording changes", status["public_surface_posture_check"])
+        self.assertEqual("required after exact wording changes", status["claims_gate_after_wording_changes"])
+        self.assertEqual(
+            "docushell-admin approved prep wording and prep surface on 2026-06-20",
+            status["decider_signoff"],
+        )
+
+    def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
+        approved = load_json(PREP)["approved_package_publication_prep"]
+        pdfium_boundary = " ".join(approved["pdfium_boundary"])
+        traits = read(ROOT / "crates/ethos-core/src/traits.rs")
+        pdf_manifest = read(ROOT / "crates/ethos-pdf/Cargo.toml")
+
+        self.assertIn("ethos-pdf prep must bundle no PDFium binary", pdfium_boundary)
+        self.assertIn("ethos-pdf prep must expose no PDFium types in public API", pdfium_boundary)
+        self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", pdfium_boundary)
+        self.assertIn("held out of the first crate surface", pdfium_boundary)
+        self.assertIn("public schemas and", traits)
+        self.assertIn("APIs never expose PDFium types", traits)
+        self.assertNotIn("pdfium-render", pdf_manifest)
 
     def test_allowed_and_forbidden_wording_stay_narrow(self) -> None:
         prep = load_json(PREP)
 
         self.assertEqual(
             [
-                "Package publication remains blocked pending dedicated approval.",
-                "The approved surface is source snapshot only.",
-                "Package-related work may be described only as internal blocker preparation.",
+                EXPECTED_PACKAGE_PREP_WORDING,
+                "Package publication prep is limited to the five ADR-0006 reserved priority crates.io identifiers.",
+                "No real-version cargo publish is approved; reservations stay at placeholder versions.",
+                "ethos-pdf is held out of a first crate surface if the PDFium packaging boundary cannot be guaranteed.",
             ],
             prep["allowed_wording"],
         )
         self.assertIn(
-            "any statement that expands beyond the exact approved pre-alpha sentence",
+            "any statement that presents real-version cargo publication as approved",
             prep["forbidden_wording"],
         )
         self.assertIn(
@@ -193,8 +287,10 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
 
         self.assertEqual(False, schema["additionalProperties"])
         self.assertEqual(False, schema["$defs"]["approved_source_snapshot"]["additionalProperties"])
-        self.assertEqual(7, schema["properties"]["required_evidence"]["minItems"])
-        self.assertEqual(8, schema["properties"]["explicit_blockers"]["minItems"])
+        self.assertEqual(False, schema["$defs"]["approved_package_publication_prep"]["additionalProperties"])
+        self.assertEqual(False, schema["$defs"]["evidence_review_status"]["additionalProperties"])
+        self.assertEqual(9, schema["properties"]["required_evidence"]["minItems"])
+        self.assertEqual(13, schema["properties"]["explicit_blockers"]["minItems"])
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", validate_examples)
         self.assertIn("docs\" / \"milestone-e-package-publication-approval-prep.json", validate_examples)
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", schemas_readme)
@@ -222,14 +318,19 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         package_record = (
             "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_prep_validation_record.py"
         )
+        package_prep_approval_record = (
+            "$(PYTHON) .github/scripts/test_milestone_e_package_publication_prep_approval_validation_record.py"
+        )
         index_guard = "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(package_guard, block)
         self.assertIn(package_record, block)
+        self.assertIn(package_prep_approval_record, block)
         self.assertLess(block.index(beta_record), block.index(package_guard))
         self.assertLess(block.index(package_guard), block.index(package_record))
-        self.assertLess(block.index(package_record), block.index(index_guard))
-        self.assertLess(block.index(package_record), block.index("git diff --check"))
+        self.assertLess(block.index(package_record), block.index(package_prep_approval_record))
+        self.assertLess(block.index(package_prep_approval_record), block.index(index_guard))
+        self.assertLess(block.index(package_prep_approval_record), block.index("git diff --check"))
 
     def test_ci_runs_package_prep_once_in_order(self) -> None:
         text = read(CI_WORKFLOW)
@@ -240,15 +341,21 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         package_record = (
             "python3 .github/scripts/test_milestone_e_package_publication_approval_prep_validation_record.py"
         )
+        package_prep_approval_record = (
+            "python3 .github/scripts/test_milestone_e_package_publication_prep_approval_validation_record.py"
+        )
         index_guard = "python3 .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(package_guard, text)
         self.assertIn(package_record, text)
+        self.assertIn(package_prep_approval_record, text)
         self.assertEqual(1, text.count(package_guard))
         self.assertEqual(1, text.count(package_record))
+        self.assertEqual(1, text.count(package_prep_approval_record))
         self.assertLess(text.index(beta_record), text.index(package_guard))
         self.assertLess(text.index(package_guard), text.index(package_record))
-        self.assertLess(text.index(package_record), text.index(index_guard))
+        self.assertLess(text.index(package_record), text.index(package_prep_approval_record))
+        self.assertLess(text.index(package_prep_approval_record), text.index(index_guard))
 
     def test_prep_avoids_scope_expansion_language(self) -> None:
         text = json.dumps(load_json(PREP), sort_keys=True).lower()

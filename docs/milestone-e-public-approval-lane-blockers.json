@@ -3,9 +3,10 @@
   "status": "source-only-pre-alpha-internal-milestone-e-prep",
   "scope": "public_approval_lane_blocker_ledger",
   "ledger_boundary": "internal_public_approval_lane_blocker_prep",
-  "ledger_status": "public_beta_source_only_approved_other_lanes_blocked",
+  "ledger_status": "public_beta_source_only_and_package_prep_approved_other_lanes_blocked",
   "exact_approved_public_sentence": "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs.",
   "exact_approved_public_beta_wording": "Ethos is public beta for source-only evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Package publication, hosted surfaces, production positioning, and public benchmark claims remain blocked.",
+  "exact_approved_package_publication_prep_wording": "Ethos crate publication is in internal preparation only and remains blocked for public installation. No Ethos crates are published; the reserved crates.io names remain 0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, hosted surfaces, production positioning, and public benchmark claims remain blocked.",
   "approved_source_snapshot": {
     "source_head": "660f268df400351347d5185ad36584faa0481c7f",
     "tag": "ethos-source-snapshot-660f268",
@@ -78,36 +79,49 @@
       "sequence": 2,
       "lane_id": "package-publication",
       "lane_name": "Package publication",
-      "approval_status": "blocked_pending_dedicated_approval",
-      "explicit_scope": "Approval to publish or update installable artifacts such as binaries, wheels, npm packages, or crate artifacts.",
+      "approval_status": "prep_approved_publication_blocked",
+      "explicit_scope": "Approval for internal Rust crate publication preparation only, scoped to the five ADR-0006 reserved priority crates.io identifiers: ethos-doc-core, ethos-doc, ethos-verify, ethos-rag, and ethos-pdf. Real-version cargo publish and public installation remain blocked.",
       "required_evidence": [
-        "dedicated package publication approval record",
-        "artifact-specific license and notice bundle review",
-        "package registry metadata review",
-        "installation and rollback validation for each artifact family",
-        "decider signoff on exact artifact names and surfaces"
+        "dedicated package publication prep approval decision record",
+        "package inventory reconciliation for reserved names and in-tree workspace members",
+        "per-crate metadata, license, NOTICE, and README readiness review",
+        "cargo publish --dry-run and smoke build path for each candidate crate",
+        "publish version and tag policy reconciliation",
+        "PDFium packaging boundary confirmation for ethos-pdf",
+        "public-surface posture check for exact changed surfaces",
+        "claims gate after exact wording changes",
+        "decider signoff on exact prep wording and surface"
       ],
       "explicit_blockers": [
         "package publication remains blocked",
+        "real-version cargo publish remains blocked",
         "binaries remain blocked",
         "wheels remain blocked",
         "npm packages remain blocked",
         "crate publication remains blocked",
-        "ADR-0005 and H2 source-snapshot closeout do not approve package publication"
+        "hosted surfaces remain blocked",
+        "production positioning remains blocked",
+        "public benchmark reports remain blocked",
+        "public benchmark claims remain blocked",
+        "project-maintained PDFium builds remain blocked",
+        "per-crate metadata, README, license, NOTICE, dry-run, version/tag, and PDFium-boundary evidence remains incomplete",
+        "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication"
       ],
       "allowed_wording": [
-        "Package publication remains blocked pending dedicated approval.",
-        "The approved surface is source snapshot only.",
-        "Package-related work may be described only as internal blocker preparation."
+        "Ethos crate publication is in internal preparation only and remains blocked for public installation. No Ethos crates are published; the reserved crates.io names remain 0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, hosted surfaces, production positioning, and public benchmark claims remain blocked.",
+        "Package publication prep is limited to the five ADR-0006 reserved priority crates.io identifiers.",
+        "No real-version cargo publish is approved; reservations stay at placeholder versions.",
+        "ethos-pdf is held out of a first crate surface if the PDFium packaging boundary cannot be guaranteed."
       ],
       "forbidden_wording": [
         "any statement that presents installable artifacts as published or available",
         "any statement that treats the approved source snapshot as a package",
         "any statement that invites public installation from package registries",
-        "any statement that expands beyond the exact approved pre-alpha sentence",
-        "any statement that implies release, beta, hosted, or production approval"
+        "any statement that presents real-version cargo publication as approved",
+        "any statement that implies wheels, npm packages, binaries, hosted surfaces, production positioning, public benchmark reports, or public benchmark claims are approved",
+        "any statement that implies ethos-pdf may bundle PDFium or expose PDFium types in public API"
       ],
-      "approval_owner": "devrel / decider",
+      "approval_owner": "docushell-admin",
       "gate_script": ".github/scripts/test_milestone_e_public_approval_lane_blockers.py",
       "validation_record": "docs/validation/milestone-e-public-approval-lane-blockers-validation-2026-06-20.md"
     },

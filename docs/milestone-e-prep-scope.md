@@ -83,10 +83,12 @@ positioning, public benchmark reports, public benchmark claims, release artifact
 npm packages, crate publication, or project-maintained PDFium builds.
 The package publication approval prep lane lives in
 `docs/milestone-e-package-publication-approval-prep.json` and is schema-bound by
-`schemas/ethos-milestone-e-package-publication-approval-prep.schema.json`. It starts package
-publication approval prep as a blocked internal source-tree lane, records required evidence, exact
-blockers, and allowed/forbidden wording, and does not approve package publication or broaden public
-wording.
+`schemas/ethos-milestone-e-package-publication-approval-prep.schema.json`. It approves internal
+Rust crate publication preparation only for the five ADR-0006 reserved priority crates.io
+identifiers, records required evidence, exact blockers, allowed/forbidden wording, and the PDFium
+packaging boundary, and does not approve package publication, real-version `cargo publish`, public
+installation, release artifacts, binaries, wheels, npm packages, hosted surfaces, production
+positioning, public benchmark reports, or public benchmark claims.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
@@ -154,6 +156,7 @@ rehearsal/evidence matrix, blocker-ledger guards, and public approval lane block
 public beta approval prep guard, public beta required-evidence record guard,
 public beta source-only approval guard,
 package publication approval prep guard,
+package publication prep approval validation guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -186,8 +189,9 @@ or broad demo-generation workflows.
   GitHub source repository and records the exact approved wording and exclusions.
 - The public beta required-evidence records remain historical evidence for the blocker reviews
   rescoped by the source-only public beta approval record.
-- The package publication approval prep lane remains limited to required-evidence and blocker prep,
-  remains `not_approved`, and does not approve package publication.
+- The package publication approval prep lane remains limited to internal Rust crate publication
+  preparation for the five ADR-0006 reserved priority crates.io identifiers, remains
+  `prep_approved_publication_blocked`, and does not approve package publication.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,

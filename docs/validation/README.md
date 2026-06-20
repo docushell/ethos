@@ -244,6 +244,12 @@ Records:
   approval prep checks, schema validation, validation-record checks, public-surface posture checks,
   `make milestone-e-prep`, and diff hygiene; the record starts required-evidence and blocker prep
   only, keeps package publication blocked, and does not approve package publication.
+- `milestone-e-package-publication-prep-approval-validation-2026-06-20.md` - package publication
+  prep approval validation for the five ADR-0006 reserved priority crates.io identifiers; the
+  record approves internal prep only, keeps real-version cargo publish and public installation
+  blocked, and keeps wheels, npm packages, binaries, hosted surfaces, production positioning,
+  public benchmark reports, public benchmark claims, release artifacts, and project-maintained
+  PDFium builds blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

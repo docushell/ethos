@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:milestone-e-package-publication-approval-prep:1",
   "title": "Ethos Milestone E package publication approval prep",
-  "description": "Source-only pre-alpha Milestone E prep artifact for starting the package publication approval lane while keeping package publication blocked pending dedicated evidence and signoff.",
+  "description": "Source-only Milestone E prep artifact for approving internal Rust crate publication preparation while keeping real-version package publication and public installation blocked.",
   "type": "object",
   "required": [
     "schema_version",
@@ -14,7 +14,10 @@
     "decision_status",
     "approval_owner",
     "exact_approved_public_sentence",
+    "exact_approved_package_publication_prep_wording",
     "approved_source_snapshot",
+    "approved_package_publication_prep",
+    "evidence_review_status",
     "public_boundary",
     "approval_scope",
     "required_evidence",
@@ -31,13 +34,20 @@
     "scope": { "const": "package_publication_approval_prep" },
     "lane_id": { "const": "package-publication" },
     "lane_name": { "const": "Package publication" },
-    "approval_status": { "const": "started_blocked_pending_dedicated_approval" },
-    "decision_status": { "const": "not_approved" },
-    "approval_owner": { "const": "devrel / decider" },
+    "approval_status": { "const": "prep_approved_publication_blocked" },
+    "decision_status": { "const": "approve_prep" },
+    "approval_owner": { "const": "docushell-admin" },
     "exact_approved_public_sentence": {
       "const": "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs."
     },
+    "exact_approved_package_publication_prep_wording": {
+      "const": "Ethos crate publication is in internal preparation only and remains blocked for public installation. No Ethos crates are published; the reserved crates.io names remain 0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, hosted surfaces, production positioning, and public benchmark claims remain blocked."
+    },
     "approved_source_snapshot": { "$ref": "#/$defs/approved_source_snapshot" },
+    "approved_package_publication_prep": {
+      "$ref": "#/$defs/approved_package_publication_prep"
+    },
+    "evidence_review_status": { "$ref": "#/$defs/evidence_review_status" },
     "public_boundary": {
       "type": "array",
       "minItems": 10,
@@ -54,29 +64,29 @@
     },
     "required_evidence": {
       "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
+      "minItems": 9,
+      "maxItems": 9,
       "items": { "$ref": "#/$defs/required_evidence" },
       "uniqueItems": true
     },
     "explicit_blockers": {
       "type": "array",
-      "minItems": 8,
-      "maxItems": 8,
+      "minItems": 13,
+      "maxItems": 13,
       "items": { "$ref": "#/$defs/explicit_blocker" },
       "uniqueItems": true
     },
     "allowed_wording": {
       "type": "array",
-      "minItems": 3,
-      "maxItems": 3,
+      "minItems": 4,
+      "maxItems": 4,
       "items": { "$ref": "#/$defs/allowed_wording" },
       "uniqueItems": true
     },
     "forbidden_wording": {
       "type": "array",
-      "minItems": 5,
-      "maxItems": 5,
+      "minItems": 6,
+      "maxItems": 6,
       "items": { "$ref": "#/$defs/forbidden_wording" },
       "uniqueItems": true
     },
@@ -84,7 +94,7 @@
       "const": ".github/scripts/test_milestone_e_package_publication_approval_prep.py"
     },
     "validation_record": {
-      "const": "docs/validation/milestone-e-package-publication-approval-prep-validation-2026-06-20.md"
+      "const": "docs/validation/milestone-e-package-publication-prep-approval-validation-2026-06-20.md"
     }
   },
   "$defs": {
@@ -110,6 +120,133 @@
         "boundary": { "const": "source-snapshot-only; no package publication approval" }
       }
     },
+    "approved_package_publication_prep": {
+      "type": "object",
+      "required": [
+        "surface",
+        "registry",
+        "reserved_version",
+        "reserved_identifiers",
+        "in_tree_reconciliation",
+        "prep_tasks",
+        "pdfium_boundary",
+        "publish_boundary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "const": "Rust crate publication preparation only for the five ADR-0006 reserved priority crates.io identifiers"
+        },
+        "registry": { "const": "crates.io" },
+        "reserved_version": { "const": "0.0.0-reserved.0" },
+        "reserved_identifiers": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/reserved_identifier" },
+          "uniqueItems": true
+        },
+        "in_tree_reconciliation": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/in_tree_reconciliation" },
+          "uniqueItems": true
+        },
+        "prep_tasks": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/prep_task" },
+          "uniqueItems": true
+        },
+        "pdfium_boundary": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/pdfium_boundary" },
+          "uniqueItems": true
+        },
+        "publish_boundary": {
+          "const": "no real-version cargo publish is approved; reservations stay at placeholder versions"
+        }
+      }
+    },
+    "evidence_review_status": {
+      "type": "object",
+      "required": [
+        "package_inventory",
+        "package_metadata_license_readme_review",
+        "install_build_smoke_path",
+        "version_tag_policy",
+        "pdfium_packaging_boundary",
+        "public_surface_posture_check",
+        "claims_gate_after_wording_changes",
+        "decider_signoff"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "package_inventory": {
+          "const": "reviewed; ADR-0006 reserved names and Cargo.toml members are identified, with reserved-to-in-tree reconciliation kept as a prep task"
+        },
+        "package_metadata_license_readme_review": {
+          "const": "not reviewed; prep deliverable"
+        },
+        "install_build_smoke_path": {
+          "const": "not reviewed for packaged publication; source cargo build --locked is green, but cargo publish --dry-run and registry-install smoke remain prep deliverables"
+        },
+        "version_tag_policy": {
+          "const": "not ratified; prep must reconcile workspace 0.1.0 with 0.0.0-reserved.0 reservations"
+        },
+        "pdfium_packaging_boundary": {
+          "const": "reviewed as caller-provided PDFium only, with no bundled binary and no PDFium types in public API required before ethos-pdf can proceed"
+        },
+        "public_surface_posture_check": {
+          "const": "required after exact wording changes"
+        },
+        "claims_gate_after_wording_changes": {
+          "const": "required after exact wording changes"
+        },
+        "decider_signoff": {
+          "const": "docushell-admin approved prep wording and prep surface on 2026-06-20"
+        }
+      }
+    },
+    "reserved_identifier": {
+      "enum": [
+        "ethos-doc-core",
+        "ethos-doc",
+        "ethos-verify",
+        "ethos-rag",
+        "ethos-pdf"
+      ]
+    },
+    "in_tree_reconciliation": {
+      "enum": [
+        "ethos-doc-core maps to the in-tree ethos-core crate before any future publish prep can advance",
+        "ethos-doc has no in-tree workspace member yet and remains a reserved placeholder until a package owner, README, and metadata are prepared",
+        "ethos-verify maps to crates/ethos-verify and currently remains publish=false",
+        "ethos-rag has no in-tree workspace member yet and remains a reserved placeholder until a package owner, README, and metadata are prepared",
+        "ethos-pdf maps to crates/ethos-pdf and currently remains publish=false"
+      ]
+    },
+    "prep_task": {
+      "enum": [
+        "package inventory reconciliation for reserved names and in-tree workspace members",
+        "per-crate metadata, license, NOTICE, and README readiness review",
+        "cargo publish --dry-run and smoke build path definition without real-version publish",
+        "publish version and tag policy reconciliation between workspace 0.1.0 and 0.0.0-reserved.0 placeholders",
+        "PDFium packaging boundary confirmation before ethos-pdf can enter a first crate surface"
+      ]
+    },
+    "pdfium_boundary": {
+      "enum": [
+        "ethos-pdf prep must bundle no PDFium binary",
+        "ethos-pdf prep must expose no PDFium types in public API",
+        "PDFium must remain caller-provided through ETHOS_PDFIUM_LIBRARY_PATH",
+        "if the boundary cannot be guaranteed, ethos-pdf remains held out of the first crate surface"
+      ]
+    },
     "public_boundary": {
       "enum": [
         "public reports remain blocked",
@@ -126,41 +263,49 @@
     },
     "approval_scope": {
       "enum": [
-        "prepare package publication approval evidence requirements",
-        "keep package publication blocked until a dedicated approval decision",
-        "keep the approved source snapshot limited to source-snapshot-only use",
-        "keep public wording limited to the exact approved pre-alpha sentence",
-        "require devrel and decider signoff before any package registry or installable artifact surface"
+        "approve internal Rust crate publication preparation for the five ADR-0006 reserved priority crates.io identifiers",
+        "keep real-version cargo publish and public installation blocked until a later dedicated publication approval",
+        "reconcile reserved crates.io identifiers with in-tree workspace members before any package surface advances",
+        "keep the approved source snapshot and source-only public beta separate from package publication",
+        "require per-crate metadata, license, NOTICE, README, dry-run, version/tag, and PDFium-boundary evidence before publication approval"
       ]
     },
     "required_evidence": {
       "enum": [
-        "dedicated package publication approval decision record",
-        "artifact-specific license and notice bundle review",
-        "package registry metadata review",
-        "source-to-artifact provenance review",
-        "installation and rollback validation for each artifact family",
+        "dedicated package publication prep approval decision record",
+        "package inventory reconciliation for the five ADR-0006 reserved crates.io identifiers",
+        "per-crate metadata, license, NOTICE, and README readiness review",
+        "cargo publish --dry-run and smoke build path for each candidate crate",
+        "publish version and tag policy reconciliation",
+        "PDFium packaging boundary confirmation for ethos-pdf",
         "public-surface posture check for exact changed surfaces",
-        "decider signoff on exact artifact names and surfaces"
+        "claims gate after exact wording changes",
+        "decider signoff on exact prep wording and surface"
       ]
     },
     "explicit_blocker": {
       "enum": [
         "package publication remains blocked",
+        "real-version cargo publish remains blocked",
         "binaries remain blocked",
         "wheels remain blocked",
         "npm packages remain blocked",
         "crate publication remains blocked",
-        "registry metadata remains unapproved",
-        "installation and rollback validation remains absent",
-        "ADR-0005 and H2 source-snapshot closeout do not approve package publication"
+        "hosted surfaces remain blocked",
+        "production positioning remains blocked",
+        "public benchmark reports remain blocked",
+        "public benchmark claims remain blocked",
+        "project-maintained PDFium builds remain blocked",
+        "per-crate metadata, README, license, NOTICE, dry-run, version/tag, and PDFium-boundary evidence remains incomplete",
+        "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication"
       ]
     },
     "allowed_wording": {
       "enum": [
-        "Package publication remains blocked pending dedicated approval.",
-        "The approved surface is source snapshot only.",
-        "Package-related work may be described only as internal blocker preparation."
+        "Ethos crate publication is in internal preparation only and remains blocked for public installation. No Ethos crates are published; the reserved crates.io names remain 0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, hosted surfaces, production positioning, and public benchmark claims remain blocked.",
+        "Package publication prep is limited to the five ADR-0006 reserved priority crates.io identifiers.",
+        "No real-version cargo publish is approved; reservations stay at placeholder versions.",
+        "ethos-pdf is held out of a first crate surface if the PDFium packaging boundary cannot be guaranteed."
       ]
     },
     "forbidden_wording": {
@@ -168,8 +313,9 @@
         "any statement that presents installable artifacts as published or available",
         "any statement that treats the approved source snapshot as a package",
         "any statement that invites public installation from package registries",
-        "any statement that expands beyond the exact approved pre-alpha sentence",
-        "any statement that implies beta, hosted, or production approval"
+        "any statement that presents real-version cargo publication as approved",
+        "any statement that implies wheels, npm packages, binaries, hosted surfaces, production positioning, public benchmark reports, or public benchmark claims are approved",
+        "any statement that implies ethos-pdf may bundle PDFium or expose PDFium types in public API"
       ]
     }
   }

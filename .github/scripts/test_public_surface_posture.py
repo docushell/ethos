@@ -34,6 +34,7 @@ def read(path: Path) -> str:
 class PublicSurfacePostureTests(unittest.TestCase):
     def test_readme_status_matches_source_only_public_beta_scope(self) -> None:
         text = read(README)
+        normalized = " ".join(line.removeprefix("> ").strip() for line in text.splitlines())
 
         self.assertIn("source-only public beta evaluation", text)
         self.assertIn(
@@ -49,6 +50,13 @@ class PublicSurfacePostureTests(unittest.TestCase):
         self.assertIn("project-maintained PDFium builds", text)
         self.assertIn("performance, footprint, quality", text)
         self.assertIn("table-quality, or parser-quality claims", text)
+        self.assertIn(
+            "Ethos crate publication is in internal preparation only and remains blocked for public "
+            "installation. No Ethos crates are published; the reserved crates.io names remain "
+            "0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, "
+            "hosted surfaces, production positioning, and public benchmark claims remain blocked.",
+            normalized,
+        )
         self.assertNotIn("contracts phase", text)
         self.assertNotIn("has not run", text)
 
