@@ -95,6 +95,11 @@ Records:
   `make verify-alpha`, row-specific consistency checks, public-surface posture checks,
   `make milestone-e-prep`, and diff hygiene; the record covers only
   `pinned-opendataloader-fixture-path` and does not resolve or soften blockers.
+- `milestone-e-crop-descriptor-source-bound-shape-rehearsal-validation-2026-06-20.md` -
+  internal Milestone E crop-descriptor-source-bound-shape rehearsal validation passed through
+  `make milestone-d-internal-contracts`, row-specific consistency checks, public-surface posture
+  checks, `make milestone-e-prep`, and diff hygiene; the record covers only
+  `crop-descriptor-source-bound-shape` and does not resolve or soften blockers.
 - `public-evidence-scan-2026-06-15.md` - tracked evidence and benchmark-result locations were
   scanned for private paths, hostnames, and generated Gate Zero output that belongs in
   `ethos-bench`.
