@@ -122,6 +122,9 @@ project-maintained PDFium build, public installation, or package publication is 
 The dependency-ordering follow-up records that any later dependent-candidate review must stage
 `ethos-doc-core` before `ethos-verify` and `ethos-pdf`; registry-backed dependent package assembly,
 package dependency manifest migration, public installation, and package publication remain blocked.
+The manifest-migration prep follow-up records future Cargo manifest shape while current Cargo
+manifests remain unchanged; registry-backed dependent package assembly, package dependency manifest
+activation, public installation, and package publication remain blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
