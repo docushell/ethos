@@ -41,7 +41,7 @@ Run from the Ethos checkout:
 ```bash
 git switch main
 git pull --ff-only
-make verify-alpha PYTHON=/private/tmp/ethos-jsonschema-venv/bin/python
+make verify-alpha PYTHON=<jsonschema-venv>/bin/python
 python3 .github/scripts/readiness_gate.py gate-zero
 python3 .github/scripts/gate_zero_evidence_preflight.py prepare --ethos-bench ../ethos-bench
 make -C benchmarks/harness smoke

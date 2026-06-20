@@ -38,15 +38,74 @@ rendered-crop byte-identity claims remain blocked.
   public release.
 - Current public-source preflight:
   `docs/validation/public-source-push-preflight-2026-06-15.md`.
+- H1 public-safe competitor comparison evidence is accepted for closeout in
+  `docs/validation/h1-public-safe-comparison-closeout-2026-06-20.md`. This closes only the
+  evidence-review blocker and does not approve public benchmark reports, does not approve public
+  benchmark claims, does not approve release artifacts, does not approve package publication, does
+  not approve production positioning, does not approve hosted surfaces, or wording beyond the exact
+  approved pre-alpha sentence.
+- H2 artifact scope is approved for `source-snapshot` only in
+  `docs/validation/h2-source-snapshot-scope-approval-2026-06-20.md`. This does not approve
+  binaries, wheels, npm packages, crate publication, hosted surfaces, public benchmark reports, or
+  wording beyond the exact approved pre-alpha sentence.
+- H2 source-snapshot candidate evidence is recorded in
+  `docs/validation/h2-source-snapshot-candidate-evidence-2026-06-20.md` for source HEAD
+  `60abfd4`; closeout is recorded separately for the exact source-snapshot candidate and surface.
+- H2 is closed for the exact source-snapshot candidate and source-snapshot-only surface in
+  `docs/validation/h2-source-snapshot-closeout-2026-06-20.md`. Binaries, wheels, npm packages,
+  crate publication, and hosted surfaces remain blocked; public benchmark reports remain blocked;
+  public beta, production positioning, and wording beyond the exact approved pre-alpha sentence
+  remain blocked.
+- Refreshed H2 source-snapshot candidate evidence is recorded in
+  `docs/validation/h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md` for approved
+  candidate source HEAD `660f268`.
+- H2 is closed for the exact source-snapshot candidate at source HEAD `660f268` and
+  source-snapshot-only surface in
+  `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`. Binaries, wheels, npm
+  packages, crate publication, and hosted surfaces remain blocked; public benchmark reports remain
+  blocked; public beta, production positioning, and wording beyond the exact approved pre-alpha
+  sentence remain blocked.
+
+## Approved Execution Sequence
+
+Manual product approval on 2026-06-20 approved the following next-step sequence. That sequence
+approval was not a public-release approval and did not itself close H1 or H2. It does not approve
+public benchmark reports, does not approve release artifacts, does not approve package
+publication, does not approve production positioning, does not approve hosted surfaces, and does
+not approve wording beyond the exact approved pre-alpha sentence. Subsequent records close H1 and
+H2 only within their stated boundaries.
+
+1. Close H1: closed for public-safe evidence acceptance only in
+   `docs/validation/h1-public-safe-comparison-closeout-2026-06-20.md`; public benchmark claims and
+   comparison-report wording remain blocked.
+2. Close H2: closed for the exact source-snapshot candidate at source HEAD `660f268` and
+   source-snapshot-only surface in
+   `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`. The approved artifact scope is
+   `source-snapshot` only; binaries, wheels, npm packages, crate publication, hosted surfaces,
+   public benchmark reports, public beta, production positioning, and wording beyond the exact
+   approved pre-alpha sentence remain blocked.
+3. Approve any wording beyond the exact pre-alpha sentence only after the benchmark owner maps each
+   exact sentence to accepted evidence and the decider approves the exact wording and surface.
+4. Harden release-scope engineering blockers: release packaging/operator setup, stable CLI/Python
+   docs, public setup path, Phase 2 project-maintained PDFium builds, broader corpus/failure
+   fixtures, and cross-platform runtime provisioning.
+5. Run release-candidate validation gates: source gates plus `ethos-bench` publication preflight,
+   readiness, smoke, and test gates, then rerun posture and claims gates after any public-facing
+   text changes.
 
 ## Claim Rules
 
-Allowed until the checklist is complete:
+Approved exact public source wording until the checklist is complete:
 
 ```text
 Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across
 native Ethos JSON and supported foreign parser outputs.
 ```
+
+This approval is limited to the exact sentence above on current source-repository public surfaces.
+It does not approve public benchmark reports, does not approve release artifacts, does not approve
+package publication, does not approve production positioning, does not approve hosted surfaces, and
+does not approve altered public wording.
 
 Not allowed:
 
