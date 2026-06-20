@@ -165,6 +165,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("diagnostic-boundary alignment", text)
         self.assertIn("promotion-status alignment", text)
         self.assertIn("source-status alignment", text)
+        self.assertIn("applies-to binding alignment", text)
         self.assertTrue(TRUST_LOOP_BLOCKER_LEDGER.is_file())
         self.assertTrue(TRUST_LOOP_BLOCKER_LEDGER_SCHEMA.is_file())
         for label, paths in EXPECTED_CANDIDATES.items():
@@ -255,6 +256,8 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         self.assertIn("promotion-status alignment", normalized_status)
         self.assertIn("source-status alignment", normalized_roadmap)
         self.assertIn("source-status alignment", normalized_status)
+        self.assertIn("applies-to binding alignment", normalized_roadmap)
+        self.assertIn("applies-to binding alignment", normalized_status)
         self.assertIn("schemas/ethos-milestone-e-fixture-candidates.schema.json", roadmap)
         self.assertIn("schemas/ethos-milestone-e-fixture-promotion-criteria.schema.json", roadmap)
         self.assertIn(
@@ -303,6 +306,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_diagnostic_boundary_alignment.py",
             "$(PYTHON) .github/scripts/test_milestone_e_promotion_status_alignment.py",
             "$(PYTHON) .github/scripts/test_milestone_e_source_status_alignment.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_applies_to_binding_alignment.py",
             "$(PYTHON) .github/scripts/test_milestone_e_prep_scope.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_promotion_criteria.py",
             "$(PYTHON) .github/scripts/test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py",
@@ -333,6 +337,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_milestone_e_diagnostic_boundary_alignment_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_promotion_status_alignment_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_source_status_alignment_validation_record.py",
+            "$(PYTHON) .github/scripts/test_milestone_e_applies_to_binding_alignment_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",

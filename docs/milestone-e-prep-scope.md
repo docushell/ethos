@@ -76,6 +76,13 @@ source-only decision changes that state.
 All current E prep artifacts must keep source-status alignment at
 `source-only-pre-alpha-internal-milestone-e-prep`, and fixture-candidate rows must remain
 `source-only-pre-alpha-internal-candidate`.
+The current E prep artifacts with `applies_to_*` fields must keep applies-to binding alignment
+across `docs/milestone-e-fixture-candidates.json`,
+`docs/milestone-e-fixture-promotion-criteria.json`,
+`docs/milestone-e-internal-trust-loop-walkthrough.json`,
+`docs/milestone-e-internal-trust-loop-use-protocol.json`,
+`docs/milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json`, and
+`docs/milestone-e-internal-trust-loop-blocker-ledger.json`.
 
 | Candidate | Existing artifact | Current guard |
 | --- | --- | --- |
@@ -102,8 +109,9 @@ Focused validation command:
 The target runs status/roadmap posture checks, public-surface posture checks, the claims gate,
 schema/example validation, schema-registry alignment for the E prep JSON artifacts,
 public-boundary alignment, blocked-output alignment, evidence-lane alignment,
-diagnostic-boundary alignment, promotion-status alignment, source-status alignment, this prep-scope
-guard, fixture-candidate blocker-alignment validation, the internal trust-loop walkthrough, use-protocol,
+diagnostic-boundary alignment, promotion-status alignment, source-status alignment, applies-to
+binding alignment, this prep-scope guard, fixture-candidate blocker-alignment validation,
+the internal trust-loop walkthrough, use-protocol,
 rehearsal/evidence matrix, and blocker-ledger guards, validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -139,5 +147,8 @@ or broad demo-generation workflows.
   current artifacts, rows, matching schemas, and row validation records.
 - Source-status alignment remains `source-only-pre-alpha-internal-milestone-e-prep` across current
   artifacts and `source-only-pre-alpha-internal-candidate` across fixture-candidate rows.
+- Applies-to binding alignment remains exact across current fixture-candidate inventory,
+  fixture-promotion criteria, walkthrough, use protocol, rehearsal/evidence matrix, blocker ledger,
+  and matching schemas.
 - Public language remains source-only pre-alpha and internal-continuation scoped.
 - External blockers remain visible before any public-facing Milestone E work starts.

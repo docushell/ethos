@@ -143,6 +143,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_source_status_alignment_validation_record.py",
     ),
     RecordCoverage(
+        "milestone-e-applies-to-binding-alignment-validation-2026-06-20.md",
+        "test_milestone_e_applies_to_binding_alignment_validation_record.py",
+    ),
+    RecordCoverage(
         "milestone-e-validation-command-index-validation-2026-06-20.md",
         "test_milestone_e_validation_command_index_validation_record.py",
     ),
@@ -205,6 +209,7 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         diagnostic_boundary_guard = "test_milestone_e_diagnostic_boundary_alignment_validation_record.py"
         promotion_status_guard = "test_milestone_e_promotion_status_alignment_validation_record.py"
         source_status_guard = "test_milestone_e_source_status_alignment_validation_record.py"
+        applies_to_guard = "test_milestone_e_applies_to_binding_alignment_validation_record.py"
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
         index_guard = "test_milestone_e_validation_record_index.py"
         index_record_guard = "test_milestone_e_validation_record_index_validation_record.py"
@@ -219,6 +224,7 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             self.assertLess(text.index(prefix + diagnostic_boundary_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + promotion_status_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + source_status_guard), text.index(prefix + index_guard))
+            self.assertLess(text.index(prefix + applies_to_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + command_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + index_guard), text.index(prefix + index_record_guard))
             self.assertLess(text.index(prefix + index_record_guard), text.index(prefix + sequence_guard))
