@@ -183,6 +183,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_package_publication_approval_prep_validation_record.py",
     ),
     RecordCoverage(
+        "milestone-e-package-publication-prep-approval-validation-2026-06-20.md",
+        "test_milestone_e_package_publication_prep_approval_validation_record.py",
+    ),
+    RecordCoverage(
         "milestone-e-validation-command-index-validation-2026-06-20.md",
         "test_milestone_e_validation_command_index_validation_record.py",
     ),
@@ -260,6 +264,9 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         beta_evidence_guard = "test_milestone_e_public_beta_required_evidence_records.py"
         beta_approval_guard = "test_milestone_e_public_beta_source_only_approval.py"
         package_prep_guard = "test_milestone_e_package_publication_approval_prep_validation_record.py"
+        package_prep_approval_guard = (
+            "test_milestone_e_package_publication_prep_approval_validation_record.py"
+        )
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
         index_guard = "test_milestone_e_validation_record_index.py"
         index_record_guard = "test_milestone_e_validation_record_index_validation_record.py"
@@ -291,6 +298,9 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             self.assertLess(text.index(prefix + beta_approval_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + beta_evidence_guard), text.index(prefix + command_guard))
             self.assertLess(text.index(prefix + beta_evidence_guard), text.index(prefix + index_guard))
+            self.assertLess(text.index(prefix + package_prep_guard), text.index(prefix + package_prep_approval_guard))
+            self.assertLess(text.index(prefix + package_prep_approval_guard), text.index(prefix + command_guard))
+            self.assertLess(text.index(prefix + package_prep_approval_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + package_prep_guard), text.index(prefix + command_guard))
             self.assertLess(text.index(prefix + package_prep_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + command_guard), text.index(prefix + index_guard))
