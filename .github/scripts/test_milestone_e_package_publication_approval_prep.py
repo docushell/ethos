@@ -80,6 +80,7 @@ EXPECTED_EVIDENCE_RECORDS = {
 }
 EXPECTED_FOLLOW_UP_RECORDS = {
     "package_metadata_readiness": "docs/validation/milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md",
+    "package_dry_run_smoke": "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md",
 }
 
 FORBIDDEN_PREP_WORDING = [
@@ -247,8 +248,9 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("publication remains blocked", status["package_inventory"])
         self.assertIn("metadata/readiness follow-up recorded", status["package_metadata_license_readme_review"])
         self.assertIn("publication remains blocked", status["package_metadata_license_readme_review"])
-        self.assertIn("evidence recorded as plan only", status["install_build_smoke_path"])
-        self.assertIn("remain unrun blockers", status["install_build_smoke_path"])
+        self.assertIn("local source-tree smoke recorded", status["install_build_smoke_path"])
+        self.assertIn("dependent package assembly remains blocked", status["install_build_smoke_path"])
+        self.assertIn("publication remains blocked", status["install_build_smoke_path"])
         self.assertIn("evidence recorded as draft policy", status["version_tag_policy"])
         self.assertIn("not reconciled for publication", status["version_tag_policy"])
         self.assertIn("evidence recorded", status["pdfium_packaging_boundary"])

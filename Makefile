@@ -13,7 +13,7 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep package-publication-dry-run-smoke verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 .PHONY: milestone-d-capability-downgrade-contract
 .PHONY: milestone-d-opendataloader-adapter-shape-contract
 .PHONY: milestone-d-grounding-source-contract
@@ -208,6 +208,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_prep_approval_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_evidence_records.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_metadata_readiness.py
+	$(PYTHON) .github/scripts/test_milestone_e_package_publication_dry_run_smoke.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py
@@ -218,6 +219,14 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_final_closeout_record.py
+	git diff --check
+
+package-publication-dry-run-smoke:
+	cargo package --locked --offline -p ethos-core --allow-dirty --no-verify
+	cargo package --list --locked --offline -p ethos-core --allow-dirty
+	cargo check --locked --offline -p ethos-verify
+	cargo check --locked --offline -p ethos-pdf
+	$(PYTHON) .github/scripts/test_milestone_e_package_publication_dry_run_smoke.py
 	git diff --check
 
 verify-rendered-crops: $(ETHOS_BIN)
