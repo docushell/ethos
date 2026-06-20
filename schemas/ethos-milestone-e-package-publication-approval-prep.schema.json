@@ -200,7 +200,7 @@
           "const": "local source-tree smoke recorded; ethos-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, dependent package assembly remains blocked, and publication remains blocked"
         },
         "version_tag_policy": {
-          "const": "evidence recorded as draft policy; workspace 0.1.0 and 0.0.0-reserved.0 reservations are not reconciled for publication"
+          "const": "version/tag policy follow-up recorded; workspace 0.1.0 remains source-tree only, reserved 0.0.0-reserved.0 names remain placeholders, and real-version publication remains blocked"
         },
         "pdfium_packaging_boundary": {
           "const": "evidence recorded; caller-provided PDFium only, no bundled binary, and no PDFium types in public API remain required before ethos-pdf can proceed"
@@ -246,7 +246,11 @@
     },
     "follow_up_records": {
       "type": "object",
-      "required": ["package_metadata_readiness", "package_dry_run_smoke"],
+      "required": [
+        "package_metadata_readiness",
+        "package_dry_run_smoke",
+        "package_version_tag_policy"
+      ],
       "additionalProperties": false,
       "properties": {
         "package_metadata_readiness": {
@@ -254,6 +258,9 @@
         },
         "package_dry_run_smoke": {
           "const": "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md"
+        },
+        "package_version_tag_policy": {
+          "const": "docs/validation/milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md"
         }
       }
     },
@@ -341,7 +348,7 @@
         "public benchmark reports remain blocked",
         "public benchmark claims remain blocked",
         "project-maintained PDFium builds remain blocked",
-        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; dependent package assembly remains blocked until package dependency naming and ordering are resolved; version/tag and PDFium-boundary evidence remains incomplete",
+        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; dependent package assembly remains blocked until package dependency naming and ordering are resolved; real package version selection, package tag creation, and PDFium-boundary evidence remain blocked",
         "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication"
       ]
     },

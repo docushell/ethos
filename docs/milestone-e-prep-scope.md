@@ -99,6 +99,10 @@ package publication remains blocked.
 The dry-run/smoke follow-up record under `docs/validation/` covers local package assembly for
 `ethos-core` and source-tree checks for `ethos-verify` and `ethos-pdf` only. Dependent package
 assembly, public installation, and package publication remain blocked.
+The version/tag policy follow-up record under `docs/validation/` covers source-tree version,
+reserved placeholder version, source snapshot tag, and future package tag namespace separation
+only. Real package version selection, package tag creation, public installation, and package
+publication remain blocked.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
@@ -170,6 +174,7 @@ package publication prep approval validation guard,
 package publication evidence records guard,
 package publication metadata-readiness guard,
 package publication dry-run/smoke guard,
+package publication version/tag policy guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -214,7 +219,12 @@ or broad demo-generation workflows.
   publication remain blocked.
 - The package publication dry-run/smoke follow-up remains limited to local package assembly for
   `ethos-core` and source-tree checks for `ethos-verify` and `ethos-pdf`; dependent package
-  assembly, public installation, version/tag policy, PDFium follow-through, and package publication
+  assembly, public installation, real package version selection, package tag creation,
+  PDFium follow-through, and package publication
+  remain blocked.
+- The package publication version/tag policy follow-up remains limited to source-tree version,
+  reserved placeholder version, source snapshot tag, and future package tag namespace separation;
+  real package version selection, package tag creation, public installation, and package publication
   remain blocked.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.

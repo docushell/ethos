@@ -278,6 +278,10 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
   package publication and public installation blocked while recording local package assembly for
   `ethos-core`, source-tree checks for `ethos-verify` and `ethos-pdf`, and retained dependent
   package assembly blockers.
+- `milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md` - package
+  publication version/tag policy validation for the current source-tree candidate path; the record
+  keeps package publication and public installation blocked while recording source-tree version,
+  reserved placeholder version, source snapshot tag, and future package tag namespace separation.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
