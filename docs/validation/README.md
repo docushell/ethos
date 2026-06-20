@@ -28,6 +28,12 @@ Records:
   `source-snapshot` only after review of the release notice draft; the record does not approve
   binaries, wheels, npm packages, crate publication, hosted surfaces, public benchmark reports, or
   wording beyond the exact approved pre-alpha sentence.
+- `h2-source-snapshot-candidate-evidence-2026-06-20.md` - H2 source-snapshot candidate evidence
+  is recorded for source HEAD `60abfd4`, archive SHA256
+  `9ae9f40e8385035101bae1b947a6894bcdaf4c7ffb852faef73cb0755452ac51`, extracted file count
+  `497`, source-snapshot candidate audit, blocked-artifact scan, public-surface posture checks,
+  public pre-alpha wording approval checks, claims gate, and diff hygiene; H2 remains open pending
+  explicit decider closeout for the exact source-snapshot candidate and surface.
 - `license-notice-check-2026-06-15.md` - source license metadata, NOTICE boundaries, and
   non-advisory `cargo-deny` policy checks pass; the follow-up advisory scan is recorded in
   `advisory-scan-2026-06-16.md`, and release artifacts still need artifact-specific

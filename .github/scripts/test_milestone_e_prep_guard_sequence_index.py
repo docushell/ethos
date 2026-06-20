@@ -39,6 +39,7 @@ EXPECTED_MILESTONE_E_PREP_COMMANDS = (
     "$(PYTHON) .github/scripts/test_h1_public_safe_comparison_closeout.py",
     "$(PYTHON) .github/scripts/test_h2_source_snapshot_scope_approval.py",
     "$(PYTHON) .github/scripts/test_milestone_e_source_snapshot_candidate_audit.py",
+    "$(PYTHON) .github/scripts/test_h2_source_snapshot_candidate_evidence.py",
     "$(PYTHON) schemas/validate_examples.py",
     "$(PYTHON) .github/scripts/test_milestone_e_schema_registry_alignment.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment.py",

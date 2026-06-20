@@ -48,6 +48,10 @@ rendered-crop byte-identity claims remain blocked.
   `docs/validation/h2-source-snapshot-scope-approval-2026-06-20.md`. This does not approve
   binaries, wheels, npm packages, crate publication, hosted surfaces, public benchmark reports, or
   wording beyond the exact approved pre-alpha sentence.
+- H2 source-snapshot candidate evidence is recorded in
+  `docs/validation/h2-source-snapshot-candidate-evidence-2026-06-20.md` for source HEAD
+  `60abfd4`. H2 remains open pending explicit decider closeout for the exact source-snapshot
+  candidate and surface.
 
 ## Approved Execution Sequence
 
@@ -60,10 +64,10 @@ exact approved pre-alpha sentence.
 1. Close H1: closed for public-safe evidence acceptance only in
    `docs/validation/h1-public-safe-comparison-closeout-2026-06-20.md`; public benchmark claims and
    comparison-report wording remain blocked.
-2. Close H2 by completing this checklist, including explicit release/package artifact approval and
-   passing claim-language gates. The approved artifact scope is `source-snapshot` only; binaries,
-   wheels, npm packages, crate publication, hosted surfaces, and public benchmark reports remain
-   blocked.
+2. Close H2 by completing this checklist, including explicit decider closeout for the exact
+   source-snapshot candidate and surface after passing claim-language gates. The approved artifact
+   scope is `source-snapshot` only; binaries, wheels, npm packages, crate publication, hosted
+   surfaces, and public benchmark reports remain blocked.
 3. Approve any wording beyond the exact pre-alpha sentence only after the benchmark owner maps each
    exact sentence to accepted evidence and the decider approves the exact wording and surface.
 4. Harden release-scope engineering blockers: release packaging/operator setup, stable CLI/Python
