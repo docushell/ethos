@@ -64,6 +64,7 @@ class CiWorkflowTests(unittest.TestCase):
             text,
         )
         self.assertIn("python3 .github/scripts/test_h2_source_snapshot_candidate_evidence.py", text)
+        self.assertIn("python3 .github/scripts/test_h2_source_snapshot_closeout.py", text)
         self.assertEqual(
             1,
             text.count(
@@ -74,6 +75,7 @@ class CiWorkflowTests(unittest.TestCase):
             1,
             text.count("python3 .github/scripts/test_h2_source_snapshot_candidate_evidence.py"),
         )
+        self.assertEqual(1, text.count("python3 .github/scripts/test_h2_source_snapshot_closeout.py"))
         self.assertLess(
             text.index("python3 .github/scripts/test_h2_source_snapshot_scope_approval.py"),
             text.index(
@@ -88,6 +90,10 @@ class CiWorkflowTests(unittest.TestCase):
         )
         self.assertLess(
             text.index("python3 .github/scripts/test_h2_source_snapshot_candidate_evidence.py"),
+            text.index("python3 .github/scripts/test_h2_source_snapshot_closeout.py"),
+        )
+        self.assertLess(
+            text.index("python3 .github/scripts/test_h2_source_snapshot_closeout.py"),
             text.index("python3 .github/scripts/test_milestone_d_internal_contracts.py"),
         )
         self.assertIn("python3 .github/scripts/test_milestone_d_internal_contracts.py", text)
