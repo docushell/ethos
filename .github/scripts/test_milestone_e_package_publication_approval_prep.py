@@ -81,6 +81,7 @@ EXPECTED_EVIDENCE_RECORDS = {
 EXPECTED_FOLLOW_UP_RECORDS = {
     "package_metadata_readiness": "docs/validation/milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md",
     "package_dry_run_smoke": "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md",
+    "package_version_tag_policy": "docs/validation/milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md",
 }
 
 FORBIDDEN_PREP_WORDING = [
@@ -251,8 +252,10 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("local source-tree smoke recorded", status["install_build_smoke_path"])
         self.assertIn("dependent package assembly remains blocked", status["install_build_smoke_path"])
         self.assertIn("publication remains blocked", status["install_build_smoke_path"])
-        self.assertIn("evidence recorded as draft policy", status["version_tag_policy"])
-        self.assertIn("not reconciled for publication", status["version_tag_policy"])
+        self.assertIn("version/tag policy follow-up recorded", status["version_tag_policy"])
+        self.assertIn("workspace 0.1.0 remains source-tree only", status["version_tag_policy"])
+        self.assertIn("reserved 0.0.0-reserved.0 names remain placeholders", status["version_tag_policy"])
+        self.assertIn("real-version publication remains blocked", status["version_tag_policy"])
         self.assertIn("evidence recorded", status["pdfium_packaging_boundary"])
         self.assertIn("caller-provided PDFium only", status["pdfium_packaging_boundary"])
         self.assertEqual(
