@@ -77,7 +77,7 @@ class H2SourceSnapshotCandidateEvidenceTests(unittest.TestCase):
         text = normalized(RECORD)
 
         self.assertIn(
-            "Status: **refreshed source-snapshot candidate evidence recorded; H2 closeout remains pending for this candidate**",
+            "Status: **refreshed source-snapshot candidate evidence recorded; closeout recorded separately for this candidate**",
             text,
         )
         self.assertIn("Candidate source HEAD: `660f268`", text)
@@ -112,8 +112,9 @@ class H2SourceSnapshotCandidateEvidenceTests(unittest.TestCase):
         text = normalized(RECORD)
 
         self.assertIn("Ethos remains source-only pre-alpha", text)
-        self.assertIn("H2 closeout remains pending for this candidate", text)
+        self.assertIn("H2 closeout is recorded separately for this candidate", text)
         self.assertIn("source HEAD `60abfd4`", text)
+        self.assertIn("h2-source-snapshot-closeout-660f268-2026-06-20.md", text)
         for phrase in BOUNDARY_PHRASES:
             self.assertIn(phrase, text, phrase)
 
@@ -121,8 +122,7 @@ class H2SourceSnapshotCandidateEvidenceTests(unittest.TestCase):
         docs = "\n".join(normalized(path) for path in (EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST))
 
         self.assertIn("source-snapshot candidate evidence", docs)
-        self.assertIn("H2 closeout remains pending for this candidate", docs)
-        self.assertIn("h2-source-snapshot-closeout-2026-06-20.md", docs)
+        self.assertIn("h2-source-snapshot-closeout-660f268-2026-06-20.md", docs)
         self.assertIn("binaries, wheels, npm packages, crate publication, hosted surfaces", docs)
 
     def test_candidate_record_is_indexed_once(self) -> None:

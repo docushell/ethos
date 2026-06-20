@@ -89,7 +89,7 @@ class ExecutionStatusTests(unittest.TestCase):
         self.assertIn("Close H1: closed for public-safe evidence acceptance only", text)
         self.assertIn("H1 is closed for public-safe evidence acceptance only", text)
         self.assertIn("Close H2: closed for the exact source-snapshot candidate", text)
-        self.assertIn("docs/validation/h2-source-snapshot-closeout-2026-06-20.md", text)
+        self.assertIn("docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md", text)
         self.assertIn("Run release-candidate validation gates", text)
         self.assertIn("does not approve public benchmark claims", text)
         self.assertIn("Post-D blockers/future work", text)

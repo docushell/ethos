@@ -57,8 +57,14 @@ rendered-crop byte-identity claims remain blocked.
   public beta, production positioning, and wording beyond the exact approved pre-alpha sentence
   remain blocked.
 - Refreshed H2 source-snapshot candidate evidence is recorded in
-  `docs/validation/h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md` for current
-  source HEAD `660f268`; H2 closeout remains pending for this candidate.
+  `docs/validation/h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md` for approved
+  candidate source HEAD `660f268`.
+- H2 is closed for the exact source-snapshot candidate at source HEAD `660f268` and
+  source-snapshot-only surface in
+  `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`. Binaries, wheels, npm
+  packages, crate publication, and hosted surfaces remain blocked; public benchmark reports remain
+  blocked; public beta, production positioning, and wording beyond the exact approved pre-alpha
+  sentence remain blocked.
 
 ## Approved Execution Sequence
 
@@ -72,8 +78,9 @@ H2 only within their stated boundaries.
 1. Close H1: closed for public-safe evidence acceptance only in
    `docs/validation/h1-public-safe-comparison-closeout-2026-06-20.md`; public benchmark claims and
    comparison-report wording remain blocked.
-2. Close H2: closed for the exact source-snapshot candidate and source-snapshot-only surface in
-   `docs/validation/h2-source-snapshot-closeout-2026-06-20.md`. The approved artifact scope is
+2. Close H2: closed for the exact source-snapshot candidate at source HEAD `660f268` and
+   source-snapshot-only surface in
+   `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`. The approved artifact scope is
    `source-snapshot` only; binaries, wheels, npm packages, crate publication, hosted surfaces,
    public benchmark reports, public beta, production positioning, and wording beyond the exact
    approved pre-alpha sentence remain blocked.

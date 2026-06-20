@@ -41,11 +41,17 @@ Records:
   surfaces, public benchmark reports, public beta, production positioning, and wording beyond the
   exact approved pre-alpha sentence remain blocked.
 - `h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md` - refreshed H2 source-snapshot
-  candidate evidence is recorded for current source HEAD `660f268`, archive SHA256
+  candidate evidence is recorded for approved candidate source HEAD `660f268`, archive SHA256
   `58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87`, extracted file count
   `501`, source-snapshot candidate audit, blocked-artifact scan, untracked/build-path scan,
   public-surface posture checks, public pre-alpha wording approval checks, claims gate, and diff
-  hygiene; H2 closeout remains pending for this candidate.
+  hygiene; closeout is recorded separately for the exact source-snapshot candidate and surface.
+- `h2-source-snapshot-closeout-660f268-2026-06-20.md` - H2 is closed for the exact
+  source-snapshot candidate at source HEAD `660f268`, archive SHA256
+  `58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87`, and
+  source-snapshot-only surface; binaries, wheels, npm packages, crate publication, hosted
+  surfaces, public benchmark reports, public beta, production positioning, and wording beyond the
+  exact approved pre-alpha sentence remain blocked.
 - `license-notice-check-2026-06-15.md` - source license metadata, NOTICE boundaries, and
   non-advisory `cargo-deny` policy checks pass; the follow-up advisory scan is recorded in
   `advisory-scan-2026-06-16.md`, and release artifacts still need artifact-specific

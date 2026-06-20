@@ -54,7 +54,7 @@ H1 is closed for public-safe evidence acceptance only in
 | ID | Blocker | Required output | Owner | Blocks |
 | --- | --- | --- | --- | --- |
 | H1 | Execute and review public-safe competitor comparison flow | Closed for public-safe evidence acceptance only in `docs/validation/h1-public-safe-comparison-closeout-2026-06-20.md`; benchmark owner accepted the public-safe competitor comparison evidence for closeout without approving public benchmark claims | Benchmark owner | Public competitor-comparison report remains blocked until exact wording and surface approval |
-| H2 | Complete public release/package checklist | Source-snapshot scope is approved in `docs/validation/h2-source-snapshot-scope-approval-2026-06-20.md`; candidate evidence is recorded in `docs/validation/h2-source-snapshot-candidate-evidence-2026-06-20.md`; H2 is closed for the exact source-snapshot candidate and source-snapshot-only surface in `docs/validation/h2-source-snapshot-closeout-2026-06-20.md`; refreshed candidate evidence for current source HEAD `660f268` is recorded in `docs/validation/h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md`, and H2 closeout remains pending for this candidate; binaries, wheels, npm packages, crate publication, and hosted surfaces remain blocked; public benchmark reports remain blocked; public beta, production positioning, and wording beyond the exact approved pre-alpha sentence remain blocked | Devrel / decider | Public releases, packages, and production positioning |
+| H2 | Complete public release/package checklist | Source-snapshot scope is approved in `docs/validation/h2-source-snapshot-scope-approval-2026-06-20.md`; candidate evidence is recorded in `docs/validation/h2-source-snapshot-candidate-evidence-2026-06-20.md`; historical closeout for source HEAD `60abfd4` is recorded in `docs/validation/h2-source-snapshot-closeout-2026-06-20.md`; refreshed candidate evidence for approved candidate source HEAD `660f268` is recorded in `docs/validation/h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md`; H2 is closed for the exact source-snapshot candidate at source HEAD `660f268` and source-snapshot-only surface in `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`; binaries, wheels, npm packages, crate publication, and hosted surfaces remain blocked; public benchmark reports remain blocked; public beta, production positioning, and wording beyond the exact approved pre-alpha sentence remain blocked | Devrel / decider | Public releases, packages, and production positioning |
 | H3 | Approve exact pre-alpha public sentence | Closed for the exact approved pre-alpha sentence only: "Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs." Broader public result language remains blocked. | Benchmark owner / decider | Public text beyond the approved sentence |
 
 The corpus/hardware freeze and direct competitor pins are recorded in `benchmarks/gate-zero/manifest.json` and `benchmarks/competitors.lock.json`. The remaining blockers are public-report, public-release, and broader wording blockers, not manifest/pin placeholders.
@@ -71,8 +71,9 @@ records close H1 and H2 only within their stated boundaries.
 1. Close H1: closed for public-safe evidence acceptance only in
    `docs/validation/h1-public-safe-comparison-closeout-2026-06-20.md`; public benchmark claims and
    comparison-report wording remain blocked.
-2. Close H2: closed for the exact source-snapshot candidate and source-snapshot-only surface in
-   `docs/validation/h2-source-snapshot-closeout-2026-06-20.md`. The approved artifact scope is
+2. Close H2: closed for the exact source-snapshot candidate at source HEAD `660f268` and
+   source-snapshot-only surface in
+   `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`. The approved artifact scope is
    `source-snapshot` only; binaries, wheels, npm packages, crate publication, hosted surfaces,
    public benchmark reports, public beta, production positioning, and wording beyond the exact
    approved pre-alpha sentence remain blocked.

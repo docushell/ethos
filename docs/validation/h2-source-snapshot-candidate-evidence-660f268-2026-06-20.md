@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Record refreshed source-snapshot candidate evidence for current source HEAD `660f268` after H2
-artifact scope was approved for `source-snapshot` only.
+Record refreshed source-snapshot candidate evidence for approved candidate source HEAD `660f268`
+after H2 artifact scope was approved for `source-snapshot` only.
 
 This record does not close H2 for this candidate, does not approve public beta, does not approve
 binaries, does not approve wheels, does not approve npm packages, does not approve crate
@@ -12,11 +12,11 @@ not approve wording beyond the exact approved pre-alpha sentence.
 
 ## Status
 
-Status: **refreshed source-snapshot candidate evidence recorded; H2 closeout remains pending for this candidate**.
+Status: **refreshed source-snapshot candidate evidence recorded; closeout recorded separately for this candidate**.
 
 Ethos remains source-only pre-alpha. The prior H2 closeout remains limited to the exact
-source-snapshot candidate at source HEAD `60abfd4`. The current `660f268` candidate requires
-explicit decider closeout for the exact candidate and surface after final gates pass.
+source-snapshot candidate at source HEAD `60abfd4`. Closeout for the exact `660f268` candidate and
+surface is recorded in `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`.
 
 ## Subject
 
@@ -66,16 +66,16 @@ diff hygiene: pass
 ## Boundaries
 
 - This record captures refreshed candidate evidence only.
-- H2 closeout remains pending for this candidate.
+- H2 closeout is recorded separately for this candidate.
 - The candidate is source-snapshot-only; binaries, wheels, npm packages, crate publication, hosted
   surfaces, and public benchmark reports remain blocked.
 - Public wording remains limited to the exact approved pre-alpha sentence.
 
-## Required Before H2 Closeout
+## Closeout Record
 
-- Decider reviews this exact candidate evidence.
-- Decider approves or rejects H2 closeout for source HEAD `660f268`, archive
+- Decider approval for source HEAD `660f268`, archive
   `ethos-source-snapshot-660f268.tar.gz`, SHA256
   `58ec6fc1ec47a4c16f1294673ba9520b2fe9c2497e15ec96d78679db8517dd87`, and the
-  source-snapshot-only surface.
+  source-snapshot-only surface is recorded in
+  `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`.
 - Final release-candidate gates run after any additional public-facing text or source changes.
