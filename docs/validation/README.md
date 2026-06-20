@@ -18,6 +18,12 @@ Records:
   footprint, table, and heading overclaims.
 - `ethos-bench-hygiene-2026-06-15.md` - sibling `ethos-bench` repo hygiene files were verified
   and its local unit/smoke checks passed.
+- `h1-public-safe-comparison-closeout-2026-06-20.md` - H1 public-safe competitor comparison
+  evidence was accepted for closeout after `ethos-bench` publication preflight, tests, smoke,
+  readiness, public-safety audit, claim audit, attestation audit, evidence-tree review, and
+  benchmark-owner approval; the record closes only H1 evidence review and does not approve public
+  benchmark claims, public benchmark reports, release artifacts, package publication, production
+  positioning, hosted surfaces, or wording beyond the exact approved pre-alpha sentence.
 - `license-notice-check-2026-06-15.md` - source license metadata, NOTICE boundaries, and
   non-advisory `cargo-deny` policy checks pass; the follow-up advisory scan is recorded in
   `advisory-scan-2026-06-16.md`, and release artifacts still need artifact-specific

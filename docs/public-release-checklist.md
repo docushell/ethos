@@ -38,6 +38,12 @@ rendered-crop byte-identity claims remain blocked.
   public release.
 - Current public-source preflight:
   `docs/validation/public-source-push-preflight-2026-06-15.md`.
+- H1 public-safe competitor comparison evidence is accepted for closeout in
+  `docs/validation/h1-public-safe-comparison-closeout-2026-06-20.md`. This closes only the
+  evidence-review blocker and does not approve public benchmark reports, does not approve public
+  benchmark claims, does not approve release artifacts, does not approve package publication, does
+  not approve production positioning, does not approve hosted surfaces, or wording beyond the exact
+  approved pre-alpha sentence.
 
 ## Approved Execution Sequence
 
@@ -47,8 +53,9 @@ does not approve release artifacts, does not approve package publication, does n
 production positioning, does not approve hosted surfaces, and does not approve wording beyond the
 exact approved pre-alpha sentence.
 
-1. Close H1 by executing and reviewing the public-safe competitor comparison flow in `ethos-bench`,
-   then recording reviewable comparison rows without unsupported wording.
+1. Close H1: closed for public-safe evidence acceptance only in
+   `docs/validation/h1-public-safe-comparison-closeout-2026-06-20.md`; public benchmark claims and
+   comparison-report wording remain blocked.
 2. Close H2 by completing this checklist, including explicit release/package artifact approval and
    passing claim-language gates.
 3. Approve any wording beyond the exact pre-alpha sentence only after the benchmark owner maps each

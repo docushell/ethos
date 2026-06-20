@@ -40,7 +40,6 @@ APPROVED_STEPS = [
 ]
 
 BOUNDARY_PHRASES = [
-    "does not close H1 or H2",
     "does not approve public benchmark reports",
     "does not approve release artifacts",
     "does not approve package publication",
@@ -85,6 +84,14 @@ class ReleaseReadinessNextStepsApprovalTests(unittest.TestCase):
             text = normalized(path)
             for phrase in BOUNDARY_PHRASES:
                 self.assertIn(phrase, text, f"{phrase} missing from {path}")
+
+    def test_h1_current_status_can_close_without_expanding_release_scope(self) -> None:
+        current_docs = "\n".join(normalized(path) for path in (EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST))
+        historical_record = normalized(RECORD)
+
+        self.assertIn("does not close H1 or H2", historical_record)
+        self.assertIn("closed for public-safe evidence acceptance only", current_docs)
+        self.assertIn("H2 | Complete public release/package checklist", normalized(EXECUTION_STATUS))
 
     def test_record_preserves_pre_alpha_status_and_required_before_status_change(self) -> None:
         text = normalized(RECORD)
