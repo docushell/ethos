@@ -35,10 +35,15 @@ blockers. Internal fixture candidates remain non-public planning inputs.
 ## Current Source-Head Rule
 
 Each current Milestone E validation record must include exactly one
-`Validated source HEAD before this record` line. For committed records, that source HEAD must
-resolve to the parent commit of the commit that first introduced the validation record. For an
-in-progress record that has not yet been committed, that source HEAD must resolve to the current
-source checkout HEAD.
+`Validated source HEAD before this record` line. That source HEAD must be a 7-to-40 character
+hexadecimal commit identifier. It must resolve when the checked-out repository contains the source
+commit. When the checked-out history preserves a single-record introduction commit, the source HEAD
+must resolve to the parent commit of the commit that first introduced the validation record. When a
+squash/import commit added multiple Milestone E validation records at once and the original
+per-record source commits are not present in a main-only checkout, parent inference is unavailable;
+in that topology, the guard keeps source-head syntax validation and does not infer source-head
+provenance from the squash/import parent. For an in-progress record that has not yet been committed,
+that source HEAD must resolve to the current source checkout HEAD.
 
 ## Commands
 
@@ -80,8 +85,13 @@ git diff --check green
 ## Validated Current Prep Guard State
 
 - Every current Milestone E validation record has exactly one source-head line.
-- Every source-head value resolves to a commit in the current git history.
-- Committed validation records name the parent of the commit that introduced the record.
+- Every source-head value is a 7-to-40 character hexadecimal commit identifier.
+- Every source-head value resolves when the checked-out history contains the source commit.
+- Committed validation records name the parent of the commit that introduced the record when the
+  checked-out history preserves a single-record introduction commit.
+- Squash/import commits that add multiple Milestone E validation records keep resolvable source-head
+  validation when the source commits are present, and keep syntax validation without inferring
+  source-head provenance from the squash/import parent in main-only checkouts.
 - In-progress validation records name the current source checkout HEAD until committed.
 - The source-head guard runs after validation-record indexing and before guard-sequence indexing.
 - The record does not change fixture JSON artifacts.
@@ -107,4 +117,7 @@ git diff --check green
 ## Follow-up
 
 Future Milestone E validation records must keep the source-head line aligned with the source commit
-that was validated before the record was added.
+that was validated before the record was added. If a future squash/import workflow batches multiple
+records into one commit, source-head validation remains resolution-based when the source commits are
+available and syntax-based when a main-only checkout does not contain the original per-record source
+commits.
