@@ -303,6 +303,10 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
   publication registry-assembly prep validation for future non-public dependent candidate assembly
   rehearsal; the record keeps package publication and public installation blocked while recording
   that no registry is created and current Cargo manifests remain unchanged.
+- `milestone-e-package-publication-registry-assembly-activation-prep-validation-2026-06-21.md` -
+  package publication registry-assembly activation prep validation for future dependent package
+  assembly activation review; the record keeps package publication and public installation blocked
+  while recording that no registry-backed assembly is activated.
 - `milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md` -
   package publication real-version-selection prep validation for future SemVer candidate review;
   the record keeps package publication and public installation blocked while recording that no

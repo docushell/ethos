@@ -124,6 +124,10 @@ The registry-assembly prep follow-up record under `docs/validation/` covers futu
 dependent candidate assembly rehearsal only. No registry is created, current Cargo manifests remain
 unchanged, and registry-backed dependent package assembly activation, package dependency manifest
 activation, public installation, and package publication remain blocked.
+The registry-assembly activation prep follow-up record under `docs/validation/` covers future
+registry-backed dependent package assembly activation review only. No registry is created and no
+registry-backed assembly is activated; registry-backed dependent package assembly activation,
+public installation, and package publication remain blocked.
 The real-version-selection prep follow-up record under `docs/validation/` covers future SemVer
 candidate review only. No package publication version is selected; real package version selection
 approval, package tag creation, public installation, and package publication remain blocked.

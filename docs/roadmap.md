@@ -133,6 +133,10 @@ The registry-assembly prep follow-up records future non-public dependent candida
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,
 public installation, and package publication remain blocked.
+The registry-assembly activation prep follow-up records future registry-backed dependent package
+assembly activation review while no registry is created and no registry-backed assembly is
+activated; registry-backed dependent package assembly activation, public installation, and package
+publication remain blocked.
 The real-version-selection prep follow-up records future SemVer candidate review while selecting no
 package publication version; real package version selection approval, package tag creation, public
 installation, and package publication remain blocked.
