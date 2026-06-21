@@ -140,6 +140,9 @@ PAIRS = [
     ("ethos-milestone-e-package-publication-approval-prep.schema.json", [
         ROOT / "docs" / "milestone-e-package-publication-approval-prep.json",
     ]),
+    ("ethos-milestone-e-public-facing-readiness-ledger.schema.json", [
+        ROOT / "docs" / "milestone-e-public-facing-readiness-ledger.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

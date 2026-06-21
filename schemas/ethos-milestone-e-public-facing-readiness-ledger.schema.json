@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:milestone-e-public-facing-readiness-ledger:1",
+  "title": "Ethos Milestone E public-facing readiness ledger",
+  "description": "Source-only Milestone E ledger for recording current-main public-facing readiness without approving a refreshed source-only public beta source state, package publication, public installation, hosted surfaces, production positioning, or public benchmark surfaces.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "scope",
+    "ledger_state",
+    "validated_current_main",
+    "approved_public_beta_source",
+    "current_main_refresh_candidate",
+    "package_publication_resolution_criteria",
+    "cross_lane_blockers",
+    "non_approvals",
+    "public_boundary",
+    "required_gates",
+    "gate_script",
+    "validation_record"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "status": { "const": "source-only-pre-alpha-internal-milestone-e-prep" },
+    "scope": { "const": "public_facing_readiness_current_main_ledger" },
+    "ledger_state": { "const": "current_main_readiness_recorded_without_new_approval" },
+    "validated_current_main": { "$ref": "#/$defs/validated_current_main" },
+    "approved_public_beta_source": { "$ref": "#/$defs/approved_public_beta_source" },
+    "current_main_refresh_candidate": { "$ref": "#/$defs/current_main_refresh_candidate" },
+    "package_publication_resolution_criteria": {
+      "$ref": "#/$defs/package_publication_resolution_criteria"
+    },
+    "cross_lane_blockers": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": { "$ref": "#/$defs/cross_lane_blocker" },
+      "uniqueItems": true
+    },
+    "non_approvals": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": { "$ref": "#/$defs/non_approval" },
+      "uniqueItems": true
+    },
+    "public_boundary": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/public_boundary" },
+      "uniqueItems": true
+    },
+    "required_gates": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": { "$ref": "#/$defs/required_gate" },
+      "uniqueItems": true
+    },
+    "gate_script": {
+      "const": ".github/scripts/test_milestone_e_public_facing_readiness_ledger.py"
+    },
+    "validation_record": {
+      "const": "docs/validation/milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md"
+    }
+  },
+  "$defs": {
+    "validated_current_main": {
+      "type": "object",
+      "required": ["commit", "tree", "candidate_status"],
+      "additionalProperties": false,
+      "properties": {
+        "commit": { "const": "847e12db42d4519665b1486ccb35c85fe01f00b0" },
+        "tree": { "const": "9d3701aa14d98017626583c2a0a0ef45ac0df79f" },
+        "candidate_status": {
+          "const": "current main is recorded as a refresh candidate only; no new source-only public beta approval is granted by this ledger"
+        }
+      }
+    },
+    "approved_public_beta_source": {
+      "type": "object",
+      "required": ["surface", "reviewed_commit", "merged_main_commit", "tree", "boundary"],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "const": "GitHub source repository docushell/ethos source-only evaluation"
+        },
+        "reviewed_commit": { "const": "d755e7c" },
+        "merged_main_commit": { "const": "3f9e1c4" },
+        "tree": { "const": "a9e913b0ba7ecd1567479b2ec773342868cba126" },
+        "boundary": { "const": "source-only clone, build, and validation commands only" }
+      }
+    },
+    "current_main_refresh_candidate": {
+      "type": "object",
+      "required": [
+        "surface",
+        "candidate_commit",
+        "candidate_tree",
+        "refresh_status",
+        "required_refresh_inputs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "const": "GitHub source repository docushell/ethos source-only evaluation"
+        },
+        "candidate_commit": { "const": "847e12db42d4519665b1486ccb35c85fe01f00b0" },
+        "candidate_tree": { "const": "9d3701aa14d98017626583c2a0a0ef45ac0df79f" },
+        "refresh_status": {
+          "const": "requires dedicated source-only public beta refresh approval before current main is treated as the reviewed public beta source state"
+        },
+        "required_refresh_inputs": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/required_refresh_input" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "package_publication_resolution_criteria": {
+      "type": "object",
+      "required": ["criteria_state", "required_resolution_inputs", "retained_blockers"],
+      "additionalProperties": false,
+      "properties": {
+        "criteria_state": { "const": "pre_approval_gaps_remain_unresolved" },
+        "required_resolution_inputs": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "items": { "$ref": "#/$defs/package_required_resolution_input" },
+          "uniqueItems": true
+        },
+        "retained_blockers": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": { "$ref": "#/$defs/package_retained_blocker" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "required_refresh_input": {
+      "enum": [
+        "dedicated source-only public beta refresh decision record",
+        "exact refreshed source commit and tree",
+        "public-surface posture check for exact changed surfaces",
+        "claims gate after exact wording or surface changes",
+        "make milestone-e-prep after the refreshed source binding",
+        "decider signoff on exact refreshed source surface and wording"
+      ]
+    },
+    "package_required_resolution_input": {
+      "enum": [
+        "exact package publication approval decision record",
+        "exact candidate crate list",
+        "exact SemVer package version or per-crate version map",
+        "exact package tag name",
+        "exact package_tag_source_commit and package source tree",
+        "exact package-name migration diff for ethos-doc-core",
+        "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+        "exact registry-backed dependent package assembly evidence",
+        "exact public installation wording and explicit exclusions",
+        "posture and claims gates after exact public installation wording changes"
+      ]
+    },
+    "package_retained_blocker": {
+      "enum": [
+        "no package publication version is selected",
+        "no package tag is created",
+        "no package dependency manifest activation is approved",
+        "no registry-backed dependent package assembly activation is approved",
+        "public installation remains blocked",
+        "package publication remains blocked",
+        "real-version cargo publish remains blocked"
+      ]
+    },
+    "cross_lane_blocker": {
+      "enum": [
+        "package publication remains blocked",
+        "public installation remains blocked",
+        "real-version cargo publish remains blocked",
+        "hosted surfaces remain blocked",
+        "production positioning remains blocked",
+        "public benchmark reports remain blocked",
+        "public benchmark claims remain blocked",
+        "release artifacts remain blocked",
+        "binaries remain blocked",
+        "wheels remain blocked",
+        "npm packages remain blocked",
+        "crate publication remains blocked",
+        "project-maintained PDFium builds remain blocked",
+        "broader public wording remains blocked"
+      ]
+    },
+    "non_approval": {
+      "enum": [
+        "this ledger does not refresh the reviewed public beta source state",
+        "this ledger does not approve package publication",
+        "this ledger does not approve public installation",
+        "this ledger does not select a package publication version",
+        "this ledger does not create a package tag",
+        "this ledger does not change Cargo manifests",
+        "this ledger does not activate package dependency manifests",
+        "this ledger does not create a registry",
+        "this ledger does not approve hosted surfaces",
+        "this ledger does not approve production positioning",
+        "this ledger does not approve public benchmark reports or public benchmark claims",
+        "this ledger does not approve release artifacts, binaries, wheels, npm packages, crate publication, or project-maintained PDFium builds"
+      ]
+    },
+    "public_boundary": {
+      "enum": [
+        "public reports remain blocked",
+        "release artifacts remain blocked",
+        "package publication remains blocked",
+        "hosted surfaces remain blocked",
+        "public result wording remains blocked",
+        "performance claims remain blocked",
+        "quality claims remain blocked",
+        "footprint claims remain blocked",
+        "table-quality claims remain blocked",
+        "parser-quality claims remain blocked"
+      ]
+    },
+    "required_gate": {
+      "enum": [
+        "python3 .github/scripts/test_milestone_e_public_facing_readiness_ledger.py",
+        "python3 .github/scripts/test_milestone_e_public_beta_approval_prep.py",
+        "python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py",
+        "python3 .github/scripts/test_milestone_e_package_publication_pre_approval_gap_ledger.py",
+        "python3 schemas/validate_examples.py",
+        "python3 .github/scripts/test_public_surface_posture.py",
+        "python3 .github/scripts/claims_gate.py",
+        "make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python",
+        "git diff --check"
+      ]
+    }
+  }
+}
