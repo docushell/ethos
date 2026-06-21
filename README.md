@@ -10,7 +10,7 @@
 > **Status: source-only public beta evaluation.**
 > Ethos is public beta for source-only evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Package publication, hosted surfaces, production positioning, and public benchmark claims remain blocked.
 > The approved public beta surface is this GitHub source repository only, pinned to reviewed commit
-> `d755e7c` and merged main commit `3f9e1c4`, which have matching source trees. Excluded surfaces
+> `902c423` and merged main commit `6019a97`, which have matching source trees. Excluded surfaces
 > include published crates, wheels, npm packages, binaries, release artifacts, hosted demos or APIs,
 > project-maintained PDFium builds, public benchmark reports, and performance, footprint, quality,
 > table-quality, or parser-quality claims.

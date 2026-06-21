@@ -69,7 +69,7 @@ PDFium build lanes blocked; it is not public result wording.
 The public beta approval prep lane lives in
 `docs/milestone-e-public-beta-approval-prep.json` and is schema-bound by
 `schemas/ethos-milestone-e-public-beta-approval-prep.schema.json`. It records the source-only
-public beta approval for reviewed commit `d755e7c` and merged main commit `3f9e1c4`, whose source
+public beta approval for reviewed commit `902c423` and merged main commit `6019a97`, whose source
 trees match, and records the exact allowed wording, setup boundary, and exclusions.
 The public beta required-evidence records live in
 `docs/validation/milestone-e-public-beta-approval-decision-validation-2026-06-20.md`,
@@ -95,14 +95,18 @@ PDFium packaging boundary evidence for that prep lane. They keep package publica
 The public-facing readiness ledger lives in
 `docs/milestone-e-public-facing-readiness-ledger.json` and is schema-bound by
 `schemas/ethos-milestone-e-public-facing-readiness-ledger.schema.json`. It records current main
-`847e12d` / tree `9d3701aa14d98017626583c2a0a0ef45ac0df79f` as a current-main refresh candidate
-only, keeps the reviewed source-only public beta binding at `d755e7c` / `3f9e1c4`, and retains
+`6019a97` / tree `f56fde854f6f6e4c4070209329f8c7b12310aa51` as the current-main source-only
+public beta source binding, keeps the exact public beta wording unchanged, and retains
 package-publication resolution gaps while package publication remains blocked.
 The public beta current-main refresh prep lane lives in
 `docs/milestone-e-public-beta-current-main-refresh-prep.json` and is schema-bound by
 `schemas/ethos-milestone-e-public-beta-current-main-refresh-prep.schema.json`. It records current
 main `9262b28` / tree `9f18f9e40c57551aef9b0cb2a53641c87207546b` as a current-main refresh
 candidate only and does not refresh the reviewed source-only public beta source state.
+The current-main source-only public beta approval is recorded in
+`docs/validation/milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md`.
+It pins reviewed commit `902c423`, merged main commit `6019a97`, and tree
+`f56fde854f6f6e4c4070209329f8c7b12310aa51` for the same source-only GitHub repository surface.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -287,9 +291,9 @@ or broad demo-generation workflows.
 - The package publication real-version-selection prep follow-up remains limited to future SemVer
   candidate review; no package publication version is selected, and real package version selection
   approval, package tag creation, public installation, and package publication remain blocked.
-- The public-facing readiness ledger remains limited to current-main refresh candidate tracking and
-  package-publication gap retention; it does not refresh the reviewed source-only public beta source
-  state, approve package publication, approve public installation, or soften any current
+- The public-facing readiness ledger records the current-main source-only public beta source binding
+  and package-publication gap retention; it does not approve package publication, approve public
+  installation, or soften any current
   public-facing blocker.
 - The public beta current-main refresh prep remains limited to refresh evidence preparation for
   current main `9262b28`; it does not change the approved public beta wording, refresh the reviewed

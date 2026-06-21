@@ -230,6 +230,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_public_facing_readiness_ledger.py
       - name: Milestone E public beta current-main refresh prep tests
         run: python3 .github/scripts/test_milestone_e_public_beta_current_main_refresh_prep.py
+      - name: Milestone E public beta current-main source-only approval tests
+        run: python3 .github/scripts/test_milestone_e_public_beta_current_main_source_only_approval.py
       - name: Milestone E validation-command index tests
         run: python3 .github/scripts/test_milestone_e_validation_command_index.py
       - name: Milestone E validation-command index validation record tests

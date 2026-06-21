@@ -49,6 +49,13 @@ EXPECTED_SOURCE = {
     "tree": "a9e913b0ba7ecd1567479b2ec773342868cba126",
     "boundary": "source-only clone, build, and validation commands only",
 }
+CURRENT_SOURCE = {
+    "surface": "GitHub source repository docushell/ethos source-only evaluation",
+    "reviewed_commit": "902c423",
+    "merged_main_commit": "6019a97",
+    "tree": "f56fde854f6f6e4c4070209329f8c7b12310aa51",
+    "boundary": "source-only clone, build, and validation commands only",
+}
 FORBIDDEN_SCOPE_WORDING = [
     "public reports are approved",
     "public result wording approved",
@@ -116,7 +123,7 @@ class MilestoneEPublicBetaSourceOnlyApprovalTests(unittest.TestCase):
         for artifact in (prep, ledger):
             self.assertEqual("approved_source_only_public_beta", artifact.get("approval_status", public_beta_lane["approval_status"]))
             self.assertEqual(EXPECTED_WORDING, artifact["exact_approved_public_beta_wording"])
-            self.assertEqual(EXPECTED_SOURCE, artifact["approved_public_beta_source"])
+            self.assertEqual(CURRENT_SOURCE, artifact["approved_public_beta_source"])
 
         self.assertEqual("approved_source_only_public_beta", prep["decision_status"])
         self.assertEqual("approved_source_only_public_beta", public_beta_lane["approval_status"])

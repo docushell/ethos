@@ -94,8 +94,8 @@ The public beta approval prep lane is recorded in
 [`docs/milestone-e-public-beta-approval-prep.json`](milestone-e-public-beta-approval-prep.json)
 and schema-bound by
 [`schemas/ethos-milestone-e-public-beta-approval-prep.schema.json`](../schemas/ethos-milestone-e-public-beta-approval-prep.schema.json);
-source-only public beta evaluation is approved for reviewed commit `d755e7c` and merged main
-commit `3f9e1c4`, whose source trees match.
+source-only public beta evaluation is approved for reviewed commit `902c423` and merged main
+commit `6019a97`, whose source trees match.
 The current public beta required-evidence records are indexed under `docs/validation/` for approval
 decision review, engineering blocker review, public setup path review, and PDFium build-path review;
 they are superseded by the source-only public beta approval record and remain evidence for the
@@ -146,10 +146,9 @@ The public-facing readiness ledger is recorded in
 [`docs/milestone-e-public-facing-readiness-ledger.json`](milestone-e-public-facing-readiness-ledger.json)
 and schema-bound by
 [`schemas/ethos-milestone-e-public-facing-readiness-ledger.schema.json`](../schemas/ethos-milestone-e-public-facing-readiness-ledger.schema.json);
-it records current main `847e12d` / tree `9d3701aa14d98017626583c2a0a0ef45ac0df79f` as a
-current-main refresh candidate only, keeps the reviewed source-only public beta binding at
-`d755e7c` / `3f9e1c4`, and retains package-publication resolution gaps while package publication
-remains blocked.
+it records current main `6019a97` / tree `f56fde854f6f6e4c4070209329f8c7b12310aa51` as the
+current-main source-only public beta source binding, keeps the exact public beta wording unchanged,
+and retains package-publication resolution gaps while package publication remains blocked.
 The public beta current-main refresh prep lane is recorded in
 [`docs/milestone-e-public-beta-current-main-refresh-prep.json`](milestone-e-public-beta-current-main-refresh-prep.json)
 and schema-bound by
@@ -157,6 +156,10 @@ and schema-bound by
 it records current main `9262b28` / tree `9f18f9e40c57551aef9b0cb2a53641c87207546b` as a
 current-main refresh candidate only and does not refresh the reviewed source-only public beta source
 state.
+The current-main source-only public beta approval is recorded in
+[`docs/validation/milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md`](validation/milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md)
+for reviewed commit `902c423`, merged main commit `6019a97`, and tree
+`f56fde854f6f6e4c4070209329f8c7b12310aa51`.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
@@ -199,7 +202,7 @@ public-facing claims.
 | B | weeks 9-14 | **`ethos verify` alpha first**: native Ethos JSON + synthetic and pinned real OpenDataLoader verification demos, stale fingerprint checks, capability-limited reports, deterministic evidence matching including split-quote coverage, explicit unsupported non-v1 claim reporting, adapter structure diagnostics; then reading order, blocks, headings, lists, Markdown/text exporters, Python wheel scaffold, quality dashboard, Windows x64 nightly determinism | [13-B exit checklist](milestone-b-exit-checklist.md) |
 | C | weeks 15-22 | Simple/bordered tables; RAG chunker + citations; non-text region coordinates; security report + default-chunk exclusion; debug overlay; internal benchmark snapshot | Current artifact-validation checkpoint recorded in [Milestone C closeout validation](validation/milestone-c-closeout-validation-2026-06-18.md); broader debug/crop/table follow-ups remain explicit |
 | D | weeks 23-30 | [`verify_citations` v1 contract prep](milestone-d-verify-citations-contract.md); [`claim_kind_boundary` v1 contract prep](milestone-d-claim-kind-boundary-contract.md); [`grounding_source` v1 contract prep](milestone-d-grounding-source-contract.md); [`capability_downgrade` v1 contract prep](milestone-d-capability-downgrade-contract.md); [`opendataloader_adapter_shape` v1 contract prep](milestone-d-opendataloader-adapter-shape-contract.md); [`crop_element` v1 contract prep](milestone-d-crop-element-contract.md) plus internal resolver and source-bound CLI/Python descriptor/rendered carriers; [`crop_element_surface_shape` v1 contract prep](milestone-d-crop-element-surface-shape-contract.md); [`sandbox_subprocess` v1 contract prep](milestone-d-sandbox-subprocess-contract.md); [contract closeout validation](validation/milestone-d-contract-closeout-validation-2026-06-19.md); [final closeout validation](validation/milestone-d-final-closeout-validation-2026-06-19.md); Node/MCP/hosted crop surfaces, sandbox-backed crop behavior, foreign-adapter crop coordinates, and cross-platform rendered-crop byte identity are explicit post-D blockers, not D closeout requirements | 13-D exit complete for source-only pre-alpha scope |
-| E | weeks 31-40 | Initial source-only prep scope in [`docs/milestone-e-prep-scope.md`](milestone-e-prep-scope.md), with current internal prep closeout recorded in [`docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`](validation/milestone-e-final-closeout-validation-2026-06-20.md); source-only public beta evaluation is tracked in [`docs/milestone-e-public-beta-approval-prep.json`](milestone-e-public-beta-approval-prep.json) with exact wording and exclusions; package publication approval prep is tracked in [`docs/milestone-e-package-publication-approval-prep.json`](milestone-e-package-publication-approval-prep.json) as internal Rust crate publication prep only, with evidence, metadata-readiness, dry-run/smoke, version/tag policy, PDFium boundary, and dependency-ordering records under `docs/validation/`; current-main public-facing readiness is tracked in [`docs/milestone-e-public-facing-readiness-ledger.json`](milestone-e-public-facing-readiness-ledger.json) without approving a refreshed source-only public beta source state or package publication; current-main source-only public beta refresh prep is tracked in [`docs/milestone-e-public-beta-current-main-refresh-prep.json`](milestone-e-public-beta-current-main-refresh-prep.json) without changing approved wording or approving package publication; actual package publication, later public-report, project-maintained PDFium build, stable CLI/Python docs, and hosted demo work remain blocked on explicit claim-audit and release-scope decisions | Release 1 claim audit + source-only public-beta checkpoint |
+| E | weeks 31-40 | Initial source-only prep scope in [`docs/milestone-e-prep-scope.md`](milestone-e-prep-scope.md), with current internal prep closeout recorded in [`docs/validation/milestone-e-final-closeout-validation-2026-06-20.md`](validation/milestone-e-final-closeout-validation-2026-06-20.md); source-only public beta evaluation is tracked in [`docs/milestone-e-public-beta-approval-prep.json`](milestone-e-public-beta-approval-prep.json) with exact wording and exclusions; current-main source-only public beta approval is recorded in [`docs/validation/milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md`](validation/milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md); package publication approval prep is tracked in [`docs/milestone-e-package-publication-approval-prep.json`](milestone-e-package-publication-approval-prep.json) as internal Rust crate publication prep only, with evidence, metadata-readiness, dry-run/smoke, version/tag policy, PDFium boundary, and dependency-ordering records under `docs/validation/`; current-main public-facing readiness is tracked in [`docs/milestone-e-public-facing-readiness-ledger.json`](milestone-e-public-facing-readiness-ledger.json) without approving package publication; current-main source-only public beta refresh prep is tracked in [`docs/milestone-e-public-beta-current-main-refresh-prep.json`](milestone-e-public-beta-current-main-refresh-prep.json) without changing approved wording or approving package publication; actual package publication, later public-report, project-maintained PDFium build, stable CLI/Python docs, and hosted demo work remain blocked on explicit claim-audit and release-scope decisions | Release 1 claim audit + source-only public-beta checkpoint |
 | F / Release 2 | post-E | Complex tables, formula/LaTeX, chart classification, optional enrichment modules (never base) | Scoped after E from beta fixtures |
 
 Fallback charter: ADR-0005 selected `PROCEED`. If a future Gate Zero successor decision rejects

@@ -267,6 +267,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_public_beta_current_main_refresh_prep.py",
     ),
     RecordCoverage(
+        "milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md",
+        "test_milestone_e_public_beta_current_main_source_only_approval.py",
+    ),
+    RecordCoverage(
         "milestone-e-validation-command-index-validation-2026-06-20.md",
         "test_milestone_e_validation_command_index_validation_record.py",
     ),
