@@ -271,6 +271,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_package_publication_approval_readiness_review.py",
     ),
     RecordCoverage(
+        "milestone-e-package-publication-manifest-activation-diff-review-validation-2026-06-21.md",
+        "test_milestone_e_package_publication_manifest_activation_diff_review.py",
+    ),
+    RecordCoverage(
         "milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md",
         "test_milestone_e_public_facing_readiness_ledger.py",
     ),
@@ -381,6 +385,18 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             "test_milestone_e_package_publication_decision_bundle_validation_record.py"
         )
         package_gap_ledger_guard = "test_milestone_e_package_publication_pre_approval_gap_ledger.py"
+        package_resolution_plan_guard = (
+            "test_milestone_e_package_publication_approval_resolution_plan.py"
+        )
+        package_decision_input_guard = (
+            "test_milestone_e_package_publication_decision_input_packet.py"
+        )
+        package_approval_readiness_guard = (
+            "test_milestone_e_package_publication_approval_readiness_review.py"
+        )
+        package_manifest_diff_review_guard = (
+            "test_milestone_e_package_publication_manifest_activation_diff_review.py"
+        )
         readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
         beta_refresh_guard = "test_milestone_e_public_beta_current_main_refresh_prep.py"
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
@@ -439,10 +455,37 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
                 text.index(prefix + package_decision_bundle_guard),
                 text.index(prefix + package_gap_ledger_guard),
             )
-            self.assertLess(text.index(prefix + package_gap_ledger_guard), text.index(prefix + readiness_guard))
+            self.assertLess(
+                text.index(prefix + package_gap_ledger_guard),
+                text.index(prefix + package_resolution_plan_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_resolution_plan_guard),
+                text.index(prefix + package_decision_input_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_decision_input_guard),
+                text.index(prefix + package_approval_readiness_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_approval_readiness_guard),
+                text.index(prefix + package_manifest_diff_review_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_manifest_diff_review_guard),
+                text.index(prefix + readiness_guard),
+            )
             self.assertLess(text.index(prefix + readiness_guard), text.index(prefix + beta_refresh_guard))
             self.assertLess(text.index(prefix + beta_refresh_guard), text.index(prefix + command_guard))
             self.assertLess(text.index(prefix + beta_refresh_guard), text.index(prefix + index_guard))
+            self.assertLess(
+                text.index(prefix + package_manifest_diff_review_guard),
+                text.index(prefix + command_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_manifest_diff_review_guard),
+                text.index(prefix + index_guard),
+            )
             self.assertLess(text.index(prefix + package_manifest_activation_guard), text.index(prefix + command_guard))
             self.assertLess(text.index(prefix + package_manifest_activation_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + package_tag_guard), text.index(prefix + command_guard))

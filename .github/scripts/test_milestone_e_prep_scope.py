@@ -408,6 +408,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_resolution_plan.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_decision_input_packet.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_readiness_review.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_package_publication_manifest_activation_diff_review.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_facing_readiness_ledger.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_refresh_prep.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_source_only_approval.py",
