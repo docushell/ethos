@@ -174,6 +174,11 @@ The package publication approval readiness review is recorded in
 for source commit `9054f1c` / tree `3f8cb66249826d67ab6030032c7784a2a4ff411b`. Exact approval
 decision, signoff, manifest review, assembly evidence, and post-wording gates remain required
 while package publication remains blocked and public installation remains blocked.
+The package publication manifest-activation diff review is recorded in
+[`docs/validation/milestone-e-package-publication-manifest-activation-diff-review-validation-2026-06-21.md`](validation/milestone-e-package-publication-manifest-activation-diff-review-validation-2026-06-21.md)
+for source commit `89d24c8` / tree `21b263dca908ef7cc977e7669e40206096eef93e`. The candidate
+manifest activation diff is reviewed while current Cargo manifests remain unchanged, package
+publication remains blocked, and public installation remains blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
