@@ -123,6 +123,34 @@ EXPECTED_PUBLICATION_DECISION_INPUTS = {
         "package publication remains blocked",
     ],
 }
+EXPECTED_CANDIDATE_CRATE_SURFACE_REVIEW = {
+    "review_state": "candidate_surface_review_recorded_publication_blocked",
+    "included_candidate_crates": [
+        "ethos-doc-core from crates/ethos-core; current manifest name ethos-core; publish=false; package-name migration remains pending",
+        "ethos-verify from crates/ethos-verify; current manifest name ethos-verify; publish=false; dependency manifest activation remains pending",
+        "ethos-pdf from crates/ethos-pdf; current manifest name ethos-pdf; publish=false; dependency manifest activation and PDFium boundary confirmation must remain current",
+    ],
+    "excluded_reserved_crates": [
+        "ethos-doc remains excluded because no in-tree workspace member or package manifest exists",
+        "ethos-rag remains excluded because no in-tree package manifest exists",
+    ],
+    "required_before_publication": [
+        "exact SemVer package version selection",
+        "exact package tag name and source commit",
+        "exact package-name migration diff for ethos-doc-core",
+        "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+        "exact registry-backed dependent package assembly evidence",
+        "exact public installation wording and explicit exclusions",
+    ],
+    "retained_blockers": [
+        "candidate surface review does not approve package publication",
+        "candidate surface review does not select a package publication version",
+        "candidate surface review does not create a package tag",
+        "candidate surface review does not change Cargo manifests",
+        "candidate surface review does not approve public installation",
+        "candidate surface review does not approve registry-backed dependent package assembly activation",
+    ],
+}
 
 FORBIDDEN_PREP_WORDING = [
     "public beta is approved",
@@ -347,6 +375,40 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("public installation remains blocked", inputs["retained_blockers"])
         self.assertIn("package publication remains blocked", inputs["retained_blockers"])
 
+    def test_candidate_crate_surface_review_keeps_publication_blocked(self) -> None:
+        review = load_json(PREP)["candidate_crate_surface_review"]
+        cargo = read(ROOT / "Cargo.toml")
+        core_manifest = read(ROOT / "crates/ethos-core/Cargo.toml")
+        verify_manifest = read(ROOT / "crates/ethos-verify/Cargo.toml")
+        pdf_manifest = read(ROOT / "crates/ethos-pdf/Cargo.toml")
+
+        self.assertEqual(EXPECTED_CANDIDATE_CRATE_SURFACE_REVIEW, review)
+        self.assertIn("candidate_surface_review_recorded_publication_blocked", review["review_state"])
+        self.assertEqual(3, len(review["included_candidate_crates"]))
+        self.assertEqual(2, len(review["excluded_reserved_crates"]))
+        self.assertIn('"crates/ethos-core"', cargo)
+        self.assertIn('"crates/ethos-verify"', cargo)
+        self.assertIn('"crates/ethos-pdf"', cargo)
+        self.assertNotIn('"crates/ethos-doc"', cargo)
+        self.assertNotIn('"crates/ethos-rag"', cargo)
+        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('reserved_crates_io_name = "ethos-doc-core"', core_manifest)
+        self.assertIn("publish = false", core_manifest)
+        self.assertIn('name = "ethos-verify"', verify_manifest)
+        self.assertIn('reserved_crates_io_name = "ethos-verify"', verify_manifest)
+        self.assertIn("publish = false", verify_manifest)
+        self.assertIn('name = "ethos-pdf"', pdf_manifest)
+        self.assertIn('reserved_crates_io_name = "ethos-pdf"', pdf_manifest)
+        self.assertIn("publish = false", pdf_manifest)
+        self.assertIn(
+            "candidate surface review does not approve package publication",
+            review["retained_blockers"],
+        )
+        self.assertIn(
+            "candidate surface review does not approve public installation",
+            review["retained_blockers"],
+        )
+
     def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
         approved = load_json(PREP)["approved_package_publication_prep"]
         pdfium_boundary = " ".join(approved["pdfium_boundary"])
@@ -396,12 +458,22 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             False,
             schema["$defs"]["publication_approval_decision_inputs"]["additionalProperties"],
         )
+        self.assertEqual(
+            False,
+            schema["$defs"]["candidate_crate_surface_review"]["additionalProperties"],
+        )
         self.assertEqual(9, schema["properties"]["required_evidence"]["minItems"])
         self.assertEqual(13, schema["properties"]["explicit_blockers"]["minItems"])
         self.assertEqual(
             7,
             schema["$defs"]["publication_approval_decision_inputs"]["properties"][
                 "required_exact_decision_fields"
+            ]["minItems"],
+        )
+        self.assertEqual(
+            3,
+            schema["$defs"]["candidate_crate_surface_review"]["properties"][
+                "included_candidate_crates"
             ]["minItems"],
         )
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", validate_examples)
