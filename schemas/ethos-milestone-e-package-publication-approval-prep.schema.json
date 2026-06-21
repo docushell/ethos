@@ -20,6 +20,7 @@
     "evidence_review_status",
     "evidence_records",
     "follow_up_records",
+    "publication_approval_decision_inputs",
     "public_boundary",
     "approval_scope",
     "required_evidence",
@@ -52,6 +53,9 @@
     "evidence_review_status": { "$ref": "#/$defs/evidence_review_status" },
     "evidence_records": { "$ref": "#/$defs/evidence_records" },
     "follow_up_records": { "$ref": "#/$defs/follow_up_records" },
+    "publication_approval_decision_inputs": {
+      "$ref": "#/$defs/publication_approval_decision_inputs"
+    },
     "public_boundary": {
       "type": "array",
       "minItems": 10,
@@ -296,6 +300,48 @@
         }
       }
     },
+    "publication_approval_decision_inputs": {
+      "type": "object",
+      "required": [
+        "decision_status",
+        "candidate_surface",
+        "required_exact_decision_fields",
+        "required_pre_approval_commands",
+        "retained_blockers"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "decision_status": { "const": "not_approved_pending_exact_decision" },
+        "candidate_surface": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/publication_candidate_surface" },
+          "uniqueItems": true
+        },
+        "required_exact_decision_fields": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": { "$ref": "#/$defs/publication_required_exact_decision_field" },
+          "uniqueItems": true
+        },
+        "required_pre_approval_commands": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/publication_required_pre_approval_command" },
+          "uniqueItems": true
+        },
+        "retained_blockers": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/publication_retained_blocker" },
+          "uniqueItems": true
+        }
+      }
+    },
     "reserved_identifier": {
       "enum": [
         "ethos-doc-core",
@@ -303,6 +349,43 @@
         "ethos-verify",
         "ethos-rag",
         "ethos-pdf"
+      ]
+    },
+    "publication_candidate_surface": {
+      "enum": [
+        "first candidate surface may include only ethos-doc-core, ethos-verify, and ethos-pdf after exact artifact evidence is reviewed",
+        "ethos-doc and ethos-rag remain excluded until in-tree manifests, owners, metadata, README files, and support expectations exist"
+      ]
+    },
+    "publication_required_exact_decision_field": {
+      "enum": [
+        "exact candidate crate list",
+        "exact SemVer package version",
+        "exact package tag name and source commit",
+        "exact package dependency manifest activation diff",
+        "exact registry-backed dependent package assembly evidence",
+        "exact public installation wording",
+        "exact exclusion list for wheels, npm packages, binaries, hosted surfaces, production positioning, public benchmark reports, public benchmark claims, and project-maintained PDFium builds"
+      ]
+    },
+    "publication_required_pre_approval_command": {
+      "enum": [
+        "python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py",
+        "python3 .github/scripts/test_public_surface_posture.py",
+        "python3 .github/scripts/claims_gate.py",
+        "cargo build --locked -p ethos-cli",
+        "make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python",
+        "git diff --check"
+      ]
+    },
+    "publication_retained_blocker": {
+      "enum": [
+        "no package publication version is selected",
+        "no package tag is created",
+        "no package dependency manifest activation is approved",
+        "no registry-backed dependent package assembly activation is approved",
+        "public installation remains blocked",
+        "package publication remains blocked"
       ]
     },
     "in_tree_reconciliation": {
