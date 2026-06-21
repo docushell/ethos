@@ -23,6 +23,7 @@
     "publication_approval_decision_inputs",
     "candidate_crate_surface_review",
     "semver_package_version_decision_prep",
+    "package_publication_decision_prep_bundle",
     "public_boundary",
     "approval_scope",
     "required_evidence",
@@ -63,6 +64,9 @@
     },
     "semver_package_version_decision_prep": {
       "$ref": "#/$defs/semver_package_version_decision_prep"
+    },
+    "package_publication_decision_prep_bundle": {
+      "$ref": "#/$defs/package_publication_decision_prep_bundle"
     },
     "public_boundary": {
       "type": "array",
@@ -428,6 +432,48 @@
         }
       }
     },
+    "package_publication_decision_prep_bundle": {
+      "type": "object",
+      "required": [
+        "decision_state",
+        "review_boundary",
+        "required_decision_inputs",
+        "non_approvals",
+        "retained_blockers"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "decision_state": { "const": "combined_decision_inputs_recorded_actions_blocked" },
+        "review_boundary": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/bundle_review_boundary" },
+          "uniqueItems": true
+        },
+        "required_decision_inputs": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/bundle_required_decision_input" },
+          "uniqueItems": true
+        },
+        "non_approvals": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/bundle_non_approval" },
+          "uniqueItems": true
+        },
+        "retained_blockers": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/bundle_retained_blocker" },
+          "uniqueItems": true
+        }
+      }
+    },
     "reserved_identifier": {
       "enum": [
         "ethos-doc-core",
@@ -530,6 +576,48 @@
         "workspace version 0.1.0 is not approved as a package publication version",
         "reserved placeholder version 0.0.0-reserved.0 remains a reservation only",
         "no package tag is created",
+        "public installation remains blocked",
+        "package publication remains blocked"
+      ]
+    },
+    "bundle_review_boundary": {
+      "enum": [
+        "package tag and source-commit decision inputs are recorded while creating no package tag",
+        "package dependency manifest activation inputs are recorded while changing no Cargo manifest",
+        "registry-backed dependent package assembly inputs are recorded while creating no registry and activating no assembly",
+        "public installation wording and exclusion inputs are recorded while inviting no public installation"
+      ]
+    },
+    "bundle_required_decision_input": {
+      "enum": [
+        "exact package tag name",
+        "exact source commit for package tag binding",
+        "exact package-name migration diff for ethos-doc-core",
+        "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+        "exact registry-backed dependent package assembly evidence for ethos-doc-core before ethos-verify and ethos-pdf",
+        "exact public installation wording limited to a later approved package surface",
+        "exact exclusion list for wheels, npm packages, binaries, hosted surfaces, production positioning, public benchmark reports, public benchmark claims, and project-maintained PDFium builds",
+        "posture and claims gates after exact public installation wording changes"
+      ]
+    },
+    "bundle_non_approval": {
+      "enum": [
+        "this bundle does not select a package publication version",
+        "this bundle does not create a package tag",
+        "this bundle does not change Cargo manifests",
+        "this bundle does not activate package dependency manifests",
+        "this bundle does not create a registry",
+        "this bundle does not activate registry-backed dependent package assembly",
+        "this bundle does not invite public installation",
+        "this bundle does not approve package publication"
+      ]
+    },
+    "bundle_retained_blocker": {
+      "enum": [
+        "no package publication version is selected",
+        "no package tag is created",
+        "no package dependency manifest activation is approved",
+        "no registry-backed dependent package assembly activation is approved",
         "public installation remains blocked",
         "package publication remains blocked"
       ]
