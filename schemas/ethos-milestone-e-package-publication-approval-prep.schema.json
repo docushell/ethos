@@ -288,7 +288,8 @@
         "package_tag_creation_prep",
         "package_decision_bundle_validation",
         "package_pre_approval_gap_ledger",
-        "package_decision_input_packet"
+        "package_decision_input_packet",
+        "package_approval_readiness_review"
       ],
       "additionalProperties": false,
       "properties": {
@@ -333,6 +334,9 @@
         },
         "package_decision_input_packet": {
           "const": "docs/validation/milestone-e-package-publication-decision-input-packet-validation-2026-06-21.md"
+        },
+        "package_approval_readiness_review": {
+          "const": "docs/validation/milestone-e-package-publication-approval-readiness-review-validation-2026-06-21.md"
         }
       }
     },
