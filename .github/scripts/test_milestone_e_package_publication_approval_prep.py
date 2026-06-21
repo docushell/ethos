@@ -90,6 +90,7 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_registry_assembly_activation_prep": "docs/validation/milestone-e-package-publication-registry-assembly-activation-prep-validation-2026-06-21.md",
     "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
     "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md",
+    "package_decision_bundle_validation": "docs/validation/milestone-e-package-publication-decision-bundle-validation-2026-06-21.md",
 }
 EXPECTED_PUBLICATION_DECISION_INPUTS = {
     "decision_status": "not_approved_pending_exact_decision",
@@ -210,6 +211,65 @@ EXPECTED_PACKAGE_PUBLICATION_DECISION_PREP_BUNDLE = {
         "no registry-backed dependent package assembly activation is approved",
         "public installation remains blocked",
         "package publication remains blocked",
+    ],
+}
+EXPECTED_PACKAGE_PUBLICATION_APPROVAL_REQUEST_PACKET = {
+    "packet_state": "approval_request_packet_recorded_publication_blocked",
+    "candidate_crates": [
+        "ethos-doc-core mapped from crates/ethos-core; package-name migration remains pending",
+        "ethos-verify mapped from crates/ethos-verify; dependency manifest activation remains pending",
+        "ethos-pdf mapped from crates/ethos-pdf; dependency manifest activation and PDFium boundary confirmation must remain current",
+    ],
+    "package_version_map": [
+        "ethos-doc-core has no selected package publication version",
+        "ethos-verify has no selected package publication version",
+        "ethos-pdf has no selected package publication version",
+    ],
+    "package_tag_name": "not selected; package tag creation remains blocked",
+    "package_tag_source_commit": "not selected; package tag binding remains blocked",
+    "package_tag_source_tree": "not selected; package source tree binding remains blocked",
+    "manifest_activation_diff": "not prepared; current Cargo manifests remain unchanged",
+    "registry_assembly_evidence": "not activated; registry-backed dependent package assembly remains blocked",
+    "public_installation_wording": "No public installation wording is approved; public installation remains blocked.",
+    "explicit_exclusions": [
+        "wheels",
+        "npm packages",
+        "binaries",
+        "hosted surfaces",
+        "production positioning",
+        "public benchmark reports",
+        "public benchmark claims",
+        "release artifacts",
+        "project-maintained PDFium builds",
+    ],
+    "required_before_approval": [
+        "exact package publication approval decision record",
+        "exact candidate crate list",
+        "exact SemVer package version or per-crate version map",
+        "exact package tag name and package_tag_source_commit",
+        "exact package-name migration diff for ethos-doc-core",
+        "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+        "exact registry-backed dependent package assembly evidence",
+        "posture and claims gates after exact public installation wording changes",
+    ],
+    "non_approvals": [
+        "this packet does not select a package publication version",
+        "this packet does not create a package tag",
+        "this packet does not change Cargo manifests",
+        "this packet does not activate package dependency manifests",
+        "this packet does not create a registry",
+        "this packet does not activate registry-backed dependent package assembly",
+        "this packet does not invite public installation",
+        "this packet does not approve package publication",
+    ],
+    "retained_blockers": [
+        "no package publication version is selected",
+        "no package tag is created",
+        "no package dependency manifest activation is approved",
+        "no registry-backed dependent package assembly activation is approved",
+        "public installation remains blocked",
+        "package publication remains blocked",
+        "real-version cargo publish remains blocked",
     ],
 }
 
@@ -541,6 +601,48 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn('name = "ethos-pdf"', pdf_manifest)
         self.assertIn('version = "0.1.0"', cargo)
 
+    def test_package_publication_approval_request_packet_keeps_all_actions_blocked(self) -> None:
+        packet = load_json(PREP)["package_publication_approval_request_packet"]
+        cargo = read(ROOT / "Cargo.toml")
+        core_manifest = read(ROOT / "crates/ethos-core/Cargo.toml")
+        verify_manifest = read(ROOT / "crates/ethos-verify/Cargo.toml")
+        pdf_manifest = read(ROOT / "crates/ethos-pdf/Cargo.toml")
+
+        self.assertEqual(EXPECTED_PACKAGE_PUBLICATION_APPROVAL_REQUEST_PACKET, packet)
+        self.assertEqual("approval_request_packet_recorded_publication_blocked", packet["packet_state"])
+        self.assertEqual(3, len(packet["candidate_crates"]))
+        self.assertIn("ethos-doc-core has no selected package publication version", packet["package_version_map"])
+        self.assertEqual(
+            "not selected; package tag creation remains blocked",
+            packet["package_tag_name"],
+        )
+        self.assertEqual(
+            "not selected; package tag binding remains blocked",
+            packet["package_tag_source_commit"],
+        )
+        self.assertEqual(
+            "not prepared; current Cargo manifests remain unchanged",
+            packet["manifest_activation_diff"],
+        )
+        self.assertIn("public installation remains blocked", packet["public_installation_wording"])
+        self.assertIn("release artifacts", packet["explicit_exclusions"])
+        self.assertIn("project-maintained PDFium builds", packet["explicit_exclusions"])
+        self.assertIn("exact package tag name and package_tag_source_commit", packet["required_before_approval"])
+        self.assertIn("posture and claims gates after exact public installation wording changes", packet["required_before_approval"])
+        self.assertIn("this packet does not change Cargo manifests", packet["non_approvals"])
+        self.assertIn("this packet does not invite public installation", packet["non_approvals"])
+        self.assertIn("this packet does not approve package publication", packet["non_approvals"])
+        self.assertIn("real-version cargo publish remains blocked", packet["retained_blockers"])
+        self.assertIn('"crates/ethos-core"', cargo)
+        self.assertIn('"crates/ethos-verify"', cargo)
+        self.assertIn('"crates/ethos-pdf"', cargo)
+        self.assertIn("publish = false", core_manifest)
+        self.assertIn("publish = false", verify_manifest)
+        self.assertIn("publish = false", pdf_manifest)
+        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-verify"', verify_manifest)
+        self.assertIn('name = "ethos-pdf"', pdf_manifest)
+
     def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
         approved = load_json(PREP)["approved_package_publication_prep"]
         pdfium_boundary = " ".join(approved["pdfium_boundary"])
@@ -602,6 +704,10 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             False,
             schema["$defs"]["package_publication_decision_prep_bundle"]["additionalProperties"],
         )
+        self.assertEqual(
+            False,
+            schema["$defs"]["package_publication_approval_request_packet"]["additionalProperties"],
+        )
         self.assertEqual(9, schema["properties"]["required_evidence"]["minItems"])
         self.assertEqual(13, schema["properties"]["explicit_blockers"]["minItems"])
         self.assertEqual(
@@ -626,6 +732,18 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             8,
             schema["$defs"]["package_publication_decision_prep_bundle"]["properties"][
                 "required_decision_inputs"
+            ]["minItems"],
+        )
+        self.assertEqual(
+            8,
+            schema["$defs"]["package_publication_approval_request_packet"]["properties"][
+                "required_before_approval"
+            ]["minItems"],
+        )
+        self.assertEqual(
+            9,
+            schema["$defs"]["package_publication_approval_request_packet"]["properties"][
+                "explicit_exclusions"
             ]["minItems"],
         )
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", validate_examples)
