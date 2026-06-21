@@ -195,6 +195,8 @@ The public beta current-main refresh prep in `docs/milestone-e-public-beta-curre
 
 The current-main source-only public beta approval in `docs/validation/milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md` records reviewed commit `902c423`, merged main commit `6019a97`, and tree `f56fde854f6f6e4c4070209329f8c7b12310aa51` as the refreshed GitHub source-repository public beta source binding. Package publication remains blocked, public installation remains blocked, hosted surfaces remain blocked, production positioning remains blocked, public benchmark reports remain blocked, public benchmark claims remain blocked, release artifacts remain blocked, and public result wording remains blocked.
 
+The package publication approval resolution plan in `docs/validation/milestone-e-package-publication-approval-resolution-plan-validation-2026-06-21.md` records current source commit `524535a` / tree `0785ffca8423c42e2c4105df7752e290cc88e5c2` as the source state for later exact package-publication decision review. It orders the remaining version, tag, manifest activation, registry-backed assembly, public installation wording, and posture/claims inputs while package publication remains blocked and public installation remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
