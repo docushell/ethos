@@ -351,6 +351,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   activation diff; the record binds the reviewed diff inputs to source commit `89d24c8` / tree
   `21b263dca908ef7cc977e7669e40206096eef93e` while package publication remains blocked and
   public installation remains blocked.
+- `milestone-e-package-publication-registry-assembly-evidence-review-validation-2026-06-21.md` -
+  package publication registry-assembly evidence review validation for the registry-backed
+  dependent package assembly evidence requirements; the record binds the requirements to source
+  commit `3f0f3ed` / tree `6c748cd6f4a8de7789e42666697d1f25aa99f6f9` while package publication
+  remains blocked and public installation remains blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main
