@@ -128,10 +128,12 @@ class MilestoneEPackagePublicationCandidateActivationEvidenceTests(unittest.Test
         self.assertFalse(result["package_publication_approved"])
         self.assertFalse(result["public_installation_approved"])
         self.assertNotIn("cargo generate-lockfile --offline", commands)
-        self.assertIn("cargo vendor --locked --offline target/package-candidate-vendor", commands)
+        self.assertNotIn("cargo vendor --locked --offline target/package-candidate-vendor", commands)
         self.assertIn("cargo package --locked --offline -p ethos-doc-core --allow-dirty --no-verify", commands)
-        self.assertIn("cargo package --locked --offline -p ethos-verify --allow-dirty --no-verify", commands)
-        self.assertIn("cargo package --locked --offline -p ethos-pdf --allow-dirty --no-verify", commands)
+        self.assertIn("cargo package --list --locked --offline -p ethos-verify --allow-dirty", commands)
+        self.assertIn("cargo package --list --locked --offline -p ethos-pdf --allow-dirty", commands)
+        self.assertIn("assemble candidate package artifact -p ethos-verify", commands)
+        self.assertIn("assemble candidate package artifact -p ethos-pdf", commands)
         self.assertIn("cargo check --locked --offline", commands)
 
     def test_candidate_activation_preserves_import_and_dependency_shape(self) -> None:

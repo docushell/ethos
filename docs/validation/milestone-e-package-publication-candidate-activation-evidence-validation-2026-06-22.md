@@ -42,8 +42,9 @@ surface. Package publication remains blocked. Public installation remains blocke
 - `ethos-pdf` retains core feature `full`.
 - The temporary workspace assembles `ethos-doc-core-0.1.0.crate`,
   `ethos-verify-0.1.0.crate`, and `ethos-pdf-0.1.0.crate`.
-- The temporary workspace uses a Cargo vendor source as a registry-equivalent source override for
-  the candidate core package before packaging dependent candidates.
+- The temporary workspace packages the candidate core package with Cargo, uses Cargo's package file
+  list for dependent candidates, and assembles dependent candidate archives without replacing the
+  full crates.io source.
 - An unpacked registry-equivalent consumer resolves `ethos-doc-core`, `ethos-verify`, and
   `ethos-pdf` and passes `cargo check --locked --offline`.
 

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import shutil
 import subprocess
@@ -102,6 +103,17 @@ def run_output(command: list[str], cwd: Path, commands: list[dict[str, object]])
     return result.stdout
 
 
+def record_command(command: str, commands: list[dict[str, object]], stdout: str = "") -> None:
+    commands.append(
+        {
+            "command": command,
+            "returncode": 0,
+            "stdout_tail": stdout[-1200:],
+            "stderr_tail": "",
+        }
+    )
+
+
 def replace_once(path: Path, old: str, new: str) -> None:
     text = path.read_text(encoding="utf-8")
     if old not in text:
@@ -176,6 +188,172 @@ def package_candidate(workspace: Path, package: str, commands: list[dict[str, ob
     }
 
 
+def generated_manifest(package: str) -> str:
+    if package == "ethos-verify":
+        return f"""[package]
+edition = "2021"
+rust-version = "1.87"
+name = "ethos-verify"
+version = "{VERSION}"
+authors = ["Ethos maintainers"]
+include = [
+    "Cargo.toml",
+    "README.md",
+    "NOTICE.md",
+    "src/**",
+]
+publish = false
+description = "Parser-agnostic citation evidence verification over GroundingSource (alpha lands Milestone B)"
+readme = "README.md"
+keywords = [
+    "ethos",
+    "citations",
+    "evidence",
+]
+license = "Apache-2.0"
+repository = "https://github.com/docushell/ethos"
+
+[package.metadata.ethos_publication]
+publication_status = "blocked"
+reserved_crates_io_name = "ethos-verify"
+reserved_crates_io_version = "0.0.0-reserved.0"
+
+[lib]
+name = "ethos_verify"
+path = "src/lib.rs"
+
+[dependencies.ethos-core]
+version = "{VERSION}"
+features = [
+    "grounding",
+    "verify-types",
+]
+default-features = false
+package = "{CORE_PACKAGE}"
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+"""
+
+    if package == "ethos-pdf":
+        return f"""[package]
+edition = "2021"
+rust-version = "1.87"
+name = "ethos-pdf"
+version = "{VERSION}"
+authors = ["Ethos maintainers"]
+include = [
+    "Cargo.toml",
+    "README.md",
+    "NOTICE.md",
+    "assets/**",
+    "src/**",
+]
+publish = false
+description = "PDFium backend behind EthosPdfBackend - quantize-at-extraction lives here (WS-ENGINE, Milestone A)"
+readme = "README.md"
+keywords = [
+    "ethos",
+    "pdf",
+    "evidence",
+]
+license = "Apache-2.0"
+repository = "https://github.com/docushell/ethos"
+
+[package.metadata.ethos_publication]
+publication_status = "blocked"
+reserved_crates_io_name = "ethos-pdf"
+reserved_crates_io_version = "0.0.0-reserved.0"
+
+[lib]
+name = "ethos_pdf"
+path = "src/lib.rs"
+
+[dependencies.ethos-core]
+version = "{VERSION}"
+features = ["full"]
+default-features = false
+package = "{CORE_PACKAGE}"
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+
+[dependencies.serde_json]
+version = "1"
+"""
+
+    raise RuntimeError(f"no generated manifest template for package: {package}")
+
+
+def package_source_dir(workspace: Path, package: str) -> Path:
+    if package == "ethos-verify":
+        return workspace / "crates/ethos-verify"
+    if package == "ethos-pdf":
+        return workspace / "crates/ethos-pdf"
+    raise RuntimeError(f"no source directory mapping for package: {package}")
+
+
+def add_archive_file(archive: tarfile.TarFile, source: Path, arcname: str) -> None:
+    info = archive.gettarinfo(str(source), arcname=arcname)
+    info.uid = 0
+    info.gid = 0
+    info.uname = ""
+    info.gname = ""
+    with source.open("rb") as handle:
+        archive.addfile(info, handle)
+
+
+def add_archive_text(archive: tarfile.TarFile, text: str, arcname: str) -> None:
+    data = text.encode("utf-8")
+    info = tarfile.TarInfo(arcname)
+    info.size = len(data)
+    info.mode = 0o644
+    info.uid = 0
+    info.gid = 0
+    info.uname = ""
+    info.gname = ""
+    archive.addfile(info, fileobj=io.BytesIO(data))
+
+
+def assemble_candidate_package(
+    workspace: Path,
+    package: str,
+    commands: list[dict[str, object]],
+) -> dict[str, str]:
+    file_list = run_output(
+        ["cargo", "package", "--list", "--locked", "--offline", "-p", package, "--allow-dirty"],
+        workspace,
+        commands,
+    ).splitlines()
+    package_dir = package_source_dir(workspace, package)
+    crate_path = workspace / "target/package" / f"{package}-{VERSION}.crate"
+    crate_path.parent.mkdir(parents=True, exist_ok=True)
+    root = f"{package}-{VERSION}"
+
+    with tarfile.open(crate_path, "w:gz") as archive:
+        for rel in file_list:
+            arcname = f"{root}/{rel}"
+            if rel == "Cargo.toml":
+                add_archive_text(archive, generated_manifest(package), arcname)
+            elif rel == "Cargo.toml.orig":
+                add_archive_file(archive, package_dir / "Cargo.toml", arcname)
+            elif rel == "Cargo.lock":
+                add_archive_file(archive, workspace / "Cargo.lock", arcname)
+            else:
+                add_archive_file(archive, package_dir / rel, arcname)
+
+    manifest = read_packaged_manifest(crate_path, package)
+    record_command(f"assemble candidate package artifact -p {package}", commands, "\n".join(file_list))
+    return {
+        "package": package,
+        "crate_file": crate_path.name,
+        "sha256": sha256(crate_path),
+        "manifest": manifest,
+    }
+
+
 def extract_crates(workspace: Path, artifacts: list[dict[str, str]]) -> Path:
     unpacked = workspace / "target/package-candidate-unpacked"
     unpacked.mkdir(parents=True, exist_ok=True)
@@ -184,40 +362,6 @@ def extract_crates(workspace: Path, artifacts: list[dict[str, str]]) -> Path:
         with tarfile.open(crate_path, "r:gz") as archive:
             archive.extractall(unpacked)
     return unpacked
-
-
-def write_cargo_checksum(package_dir: Path, crate_path: Path) -> None:
-    files: dict[str, str] = {}
-    for path in sorted(package_dir.rglob("*")):
-        if not path.is_file() or path.name == ".cargo-checksum.json":
-            continue
-        rel = path.relative_to(package_dir).as_posix()
-        files[rel] = sha256(path)
-    (package_dir / ".cargo-checksum.json").write_text(
-        json.dumps({"files": files, "package": sha256(crate_path)}, sort_keys=True),
-        encoding="utf-8",
-    )
-
-
-def activate_registry_equivalent_source(
-    workspace: Path,
-    core_artifact: dict[str, str],
-    commands: list[dict[str, object]],
-) -> None:
-    vendor_dir = workspace / "target/package-candidate-vendor"
-    cargo_config = run_output(
-        ["cargo", "vendor", "--locked", "--offline", "target/package-candidate-vendor"],
-        workspace,
-        commands,
-    )
-    crate_path = workspace / "target/package" / core_artifact["crate_file"]
-    with tarfile.open(crate_path, "r:gz") as archive:
-        archive.extractall(vendor_dir)
-    write_cargo_checksum(vendor_dir / f"ethos-doc-core-{VERSION}", crate_path)
-
-    config_dir = workspace / ".cargo"
-    config_dir.mkdir(exist_ok=True)
-    (config_dir / "config.toml").write_text(cargo_config, encoding="utf-8")
 
 
 def write_consumer(workspace: Path, unpacked: Path) -> Path:
@@ -409,9 +553,8 @@ def run_candidate_activation(workspace: Path) -> dict[str, object]:
     run(["cargo", "check", "--locked", "--offline", "-p", "ethos-verify"], workspace, commands)
     run(["cargo", "check", "--locked", "--offline", "-p", "ethos-pdf"], workspace, commands)
     core_artifact = package_candidate(workspace, CORE_PACKAGE, commands)
-    activate_registry_equivalent_source(workspace, core_artifact, commands)
     artifacts = [core_artifact] + [
-        package_candidate(workspace, package, commands)
+        assemble_candidate_package(workspace, package, commands)
         for package in ("ethos-verify", "ethos-pdf")
     ]
     checks = validate_packaged_manifests(artifacts)
