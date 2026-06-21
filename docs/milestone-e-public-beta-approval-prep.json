@@ -18,9 +18,9 @@
   },
   "approved_public_beta_source": {
     "surface": "GitHub source repository docushell/ethos source-only evaluation",
-    "reviewed_commit": "d755e7c",
-    "merged_main_commit": "3f9e1c4",
-    "tree": "a9e913b0ba7ecd1567479b2ec773342868cba126",
+    "reviewed_commit": "902c423",
+    "merged_main_commit": "6019a97",
+    "tree": "f56fde854f6f6e4c4070209329f8c7b12310aa51",
     "boundary": "source-only clone, build, and validation commands only"
   },
   "public_boundary": [
@@ -37,7 +37,7 @@
   ],
   "approval_scope": [
     "approve source-only public beta evaluation for the GitHub source repository",
-    "pin public beta approval to reviewed commit d755e7c and merged main commit 3f9e1c4 with matching tree a9e913b0ba7ecd1567479b2ec773342868cba126",
+    "pin public beta approval to reviewed commit 902c423 and merged main commit 6019a97 with matching tree f56fde854f6f6e4c4070209329f8c7b12310aa51",
     "limit public beta operation to source checkout, local build, and source-tree validation commands",
     "keep package publication, hosted surfaces, production positioning, public benchmark reports, and public benchmark claims blocked",
     "exclude release artifacts, binaries, wheels, npm packages, crate publication, and project-maintained PDFium builds"

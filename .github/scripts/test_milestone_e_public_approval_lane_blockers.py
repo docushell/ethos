@@ -82,9 +82,9 @@ EXPECTED_SOURCE_SNAPSHOT = {
 }
 EXPECTED_PUBLIC_BETA_SOURCE = {
     "surface": "GitHub source repository docushell/ethos source-only evaluation",
-    "reviewed_commit": "d755e7c",
-    "merged_main_commit": "3f9e1c4",
-    "tree": "a9e913b0ba7ecd1567479b2ec773342868cba126",
+    "reviewed_commit": "902c423",
+    "merged_main_commit": "6019a97",
+    "tree": "f56fde854f6f6e4c4070209329f8c7b12310aa51",
     "boundary": "source-only clone, build, and validation commands only",
 }
 

@@ -2,24 +2,24 @@
   "schema_version": 1,
   "status": "source-only-pre-alpha-internal-milestone-e-prep",
   "scope": "public_facing_readiness_current_main_ledger",
-  "ledger_state": "current_main_readiness_recorded_without_new_approval",
+  "ledger_state": "current_main_source_only_public_beta_refresh_approved",
   "validated_current_main": {
-    "commit": "847e12db42d4519665b1486ccb35c85fe01f00b0",
-    "tree": "9d3701aa14d98017626583c2a0a0ef45ac0df79f",
-    "candidate_status": "current main is recorded as a refresh candidate only; no new source-only public beta approval is granted by this ledger"
+    "commit": "6019a97651190182730453988dd4c75e828639fc",
+    "tree": "f56fde854f6f6e4c4070209329f8c7b12310aa51",
+    "candidate_status": "current main is recorded as the refreshed source-only public beta source state; no package, hosted, production, public-report, or public-benchmark approval is granted"
   },
   "approved_public_beta_source": {
     "surface": "GitHub source repository docushell/ethos source-only evaluation",
-    "reviewed_commit": "d755e7c",
-    "merged_main_commit": "3f9e1c4",
-    "tree": "a9e913b0ba7ecd1567479b2ec773342868cba126",
+    "reviewed_commit": "902c423",
+    "merged_main_commit": "6019a97",
+    "tree": "f56fde854f6f6e4c4070209329f8c7b12310aa51",
     "boundary": "source-only clone, build, and validation commands only"
   },
   "current_main_refresh_candidate": {
     "surface": "GitHub source repository docushell/ethos source-only evaluation",
-    "candidate_commit": "847e12db42d4519665b1486ccb35c85fe01f00b0",
-    "candidate_tree": "9d3701aa14d98017626583c2a0a0ef45ac0df79f",
-    "refresh_status": "requires dedicated source-only public beta refresh approval before current main is treated as the reviewed public beta source state",
+    "candidate_commit": "6019a97651190182730453988dd4c75e828639fc",
+    "candidate_tree": "f56fde854f6f6e4c4070209329f8c7b12310aa51",
+    "refresh_status": "dedicated source-only public beta refresh approval recorded for current main; package publication, public installation, hosted surfaces, production positioning, and public benchmark lanes remain blocked",
     "required_refresh_inputs": [
       "dedicated source-only public beta refresh decision record",
       "exact refreshed source commit and tree",
@@ -70,7 +70,7 @@
     "broader public wording remains blocked"
   ],
   "non_approvals": [
-    "this ledger does not refresh the reviewed public beta source state",
+    "this ledger does not change the approved public beta wording",
     "this ledger does not approve package publication",
     "this ledger does not approve public installation",
     "this ledger does not select a package publication version",
@@ -100,6 +100,7 @@
     "python3 .github/scripts/test_milestone_e_public_beta_approval_prep.py",
     "python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py",
     "python3 .github/scripts/test_milestone_e_package_publication_pre_approval_gap_ledger.py",
+    "python3 .github/scripts/test_milestone_e_public_beta_current_main_source_only_approval.py",
     "python3 schemas/validate_examples.py",
     "python3 .github/scripts/test_public_surface_posture.py",
     "python3 .github/scripts/claims_gate.py",
@@ -107,5 +108,5 @@
     "git diff --check"
   ],
   "gate_script": ".github/scripts/test_milestone_e_public_facing_readiness_ledger.py",
-  "validation_record": "docs/validation/milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md"
+  "validation_record": "docs/validation/milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md"
 }

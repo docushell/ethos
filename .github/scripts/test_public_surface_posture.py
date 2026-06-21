@@ -44,8 +44,8 @@ class PublicSurfacePostureTests(unittest.TestCase):
             "public benchmark claims remain blocked.",
             text,
         )
-        self.assertIn("d755e7c", text)
-        self.assertIn("3f9e1c4", text)
+        self.assertIn("902c423", text)
+        self.assertIn("6019a97", text)
         self.assertIn("published crates, wheels, npm packages, binaries, release artifacts", text)
         self.assertIn("project-maintained PDFium builds", text)
         self.assertIn("performance, footprint, quality", text)

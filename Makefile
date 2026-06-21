@@ -222,6 +222,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_pre_approval_gap_ledger.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_facing_readiness_ledger.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_refresh_prep.py
+	$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_source_only_approval.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py

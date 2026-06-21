@@ -46,6 +46,16 @@ CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 
 REFRESH_COMMIT = "9262b281ee2cfb7fb0c9adf9f70afafe624e6878"
 REFRESH_TREE = "9f18f9e40c57551aef9b0cb2a53641c87207546b"
+PRIOR_READINESS_COMMIT = "847e12db42d4519665b1486ccb35c85fe01f00b0"
+PRIOR_READINESS_TREE = "9d3701aa14d98017626583c2a0a0ef45ac0df79f"
+CURRENT_APPROVED_MAIN = "6019a97651190182730453988dd4c75e828639fc"
+PRE_REFRESH_SOURCE = {
+    "surface": "GitHub source repository docushell/ethos source-only evaluation",
+    "reviewed_commit": "d755e7c",
+    "merged_main_commit": "3f9e1c4",
+    "tree": "a9e913b0ba7ecd1567479b2ec773342868cba126",
+    "boundary": "source-only clone, build, and validation commands only",
+}
 EXPECTED_BOUNDARY = [
     "public reports remain blocked",
     "release artifacts remain blocked",
@@ -140,11 +150,11 @@ class MilestoneEPublicBetaCurrentMainRefreshPrepTests(unittest.TestCase):
         public_beta = load_json(PUBLIC_BETA_PREP)
         readiness = load_json(READINESS_LEDGER)
 
-        self.assertEqual(public_beta["approved_public_beta_source"], prep["existing_public_beta_source"])
-        self.assertEqual(
-            readiness["current_main_refresh_candidate"]["candidate_commit"],
-            prep["prior_readiness_ledger_candidate"]["candidate_commit"],
-        )
+        self.assertEqual(PRE_REFRESH_SOURCE, prep["existing_public_beta_source"])
+        self.assertNotEqual(public_beta["approved_public_beta_source"], prep["existing_public_beta_source"])
+        self.assertEqual(PRIOR_READINESS_COMMIT, prep["prior_readiness_ledger_candidate"]["candidate_commit"])
+        self.assertEqual(PRIOR_READINESS_TREE, prep["prior_readiness_ledger_candidate"]["candidate_tree"])
+        self.assertEqual(CURRENT_APPROVED_MAIN, readiness["current_main_refresh_candidate"]["candidate_commit"])
         self.assertNotEqual(
             prep["existing_public_beta_source"]["tree"],
             prep["refresh_candidate"]["candidate_tree"],
