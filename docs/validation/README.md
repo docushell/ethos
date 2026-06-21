@@ -314,6 +314,11 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
 - `milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md` - package
   publication tag-creation prep validation for future package tag review; the record keeps package
   publication and public installation blocked while recording that no package tag is created.
+- `milestone-e-package-publication-decision-bundle-validation-2026-06-21.md` - package
+  publication decision-bundle validation for the combined decision inputs; the record keeps
+  package publication and public installation blocked while recording that no package publication
+  version is selected, no package tag is created, no Cargo manifest is changed, no registry is
+  created, no registry-backed assembly is activated, and no public installation is invited.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

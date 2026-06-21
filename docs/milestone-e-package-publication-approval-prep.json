@@ -77,7 +77,8 @@
     "package_registry_assembly_prep": "docs/validation/milestone-e-package-publication-registry-assembly-prep-validation-2026-06-21.md",
     "package_registry_assembly_activation_prep": "docs/validation/milestone-e-package-publication-registry-assembly-activation-prep-validation-2026-06-21.md",
     "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
-    "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md"
+    "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md",
+    "package_decision_bundle_validation": "docs/validation/milestone-e-package-publication-decision-bundle-validation-2026-06-21.md"
   },
   "publication_approval_decision_inputs": {
     "decision_status": "not_approved_pending_exact_decision",
@@ -198,6 +199,65 @@
       "no registry-backed dependent package assembly activation is approved",
       "public installation remains blocked",
       "package publication remains blocked"
+    ]
+  },
+  "package_publication_approval_request_packet": {
+    "packet_state": "approval_request_packet_recorded_publication_blocked",
+    "candidate_crates": [
+      "ethos-doc-core mapped from crates/ethos-core; package-name migration remains pending",
+      "ethos-verify mapped from crates/ethos-verify; dependency manifest activation remains pending",
+      "ethos-pdf mapped from crates/ethos-pdf; dependency manifest activation and PDFium boundary confirmation must remain current"
+    ],
+    "package_version_map": [
+      "ethos-doc-core has no selected package publication version",
+      "ethos-verify has no selected package publication version",
+      "ethos-pdf has no selected package publication version"
+    ],
+    "package_tag_name": "not selected; package tag creation remains blocked",
+    "package_tag_source_commit": "not selected; package tag binding remains blocked",
+    "package_tag_source_tree": "not selected; package source tree binding remains blocked",
+    "manifest_activation_diff": "not prepared; current Cargo manifests remain unchanged",
+    "registry_assembly_evidence": "not activated; registry-backed dependent package assembly remains blocked",
+    "public_installation_wording": "No public installation wording is approved; public installation remains blocked.",
+    "explicit_exclusions": [
+      "wheels",
+      "npm packages",
+      "binaries",
+      "hosted surfaces",
+      "production positioning",
+      "public benchmark reports",
+      "public benchmark claims",
+      "release artifacts",
+      "project-maintained PDFium builds"
+    ],
+    "required_before_approval": [
+      "exact package publication approval decision record",
+      "exact candidate crate list",
+      "exact SemVer package version or per-crate version map",
+      "exact package tag name and package_tag_source_commit",
+      "exact package-name migration diff for ethos-doc-core",
+      "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+      "exact registry-backed dependent package assembly evidence",
+      "posture and claims gates after exact public installation wording changes"
+    ],
+    "non_approvals": [
+      "this packet does not select a package publication version",
+      "this packet does not create a package tag",
+      "this packet does not change Cargo manifests",
+      "this packet does not activate package dependency manifests",
+      "this packet does not create a registry",
+      "this packet does not activate registry-backed dependent package assembly",
+      "this packet does not invite public installation",
+      "this packet does not approve package publication"
+    ],
+    "retained_blockers": [
+      "no package publication version is selected",
+      "no package tag is created",
+      "no package dependency manifest activation is approved",
+      "no registry-backed dependent package assembly activation is approved",
+      "public installation remains blocked",
+      "package publication remains blocked",
+      "real-version cargo publish remains blocked"
     ]
   },
   "public_boundary": [
