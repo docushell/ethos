@@ -26,6 +26,7 @@ from makefile_guard import target_block
 
 ROOT = Path(__file__).resolve().parents[2]
 RECORD = ROOT / "docs/validation/milestone-e-validation-source-head-alignment-validation-2026-06-20.md"
+SOURCE_HEAD_GUARD = ROOT / ".github/scripts/test_milestone_e_validation_source_head_alignment.py"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 
@@ -106,8 +107,14 @@ class MilestoneEValidationSourceHeadAlignmentValidationRecordTests(unittest.Test
         self.assertIn("does not resolve or soften blockers", text)
         self.assertIn("does not promote any fixture", text)
         self.assertIn("Validated source HEAD before this record", text)
+        self.assertIn("all local refs", text)
         self.assertIn("Squash/import commits that add multiple Milestone E validation records", text)
         self.assertIn("ADR-0005 remains an internal continuation decision only", text)
+
+    def test_guard_searches_all_refs_for_record_introductions(self) -> None:
+        text = SOURCE_HEAD_GUARD.read_text(encoding="utf-8")
+
+        self.assertIn('git("log", "--all", "--diff-filter=A", "--format=%H", "--", relative)', text)
 
     def test_record_keeps_public_boundaries_explicit(self) -> None:
         text = normalized_record_text()
