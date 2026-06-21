@@ -125,6 +125,10 @@ package dependency manifest migration, public installation, and package publicat
 The manifest-migration prep follow-up records future Cargo manifest shape while current Cargo
 manifests remain unchanged; registry-backed dependent package assembly, package dependency manifest
 activation, public installation, and package publication remain blocked.
+The registry-assembly prep follow-up records future non-public dependent candidate assembly
+rehearsal while no registry is created and current Cargo manifests remain unchanged;
+registry-backed dependent package assembly activation, package dependency manifest activation,
+public installation, and package publication remain blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane

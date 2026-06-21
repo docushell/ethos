@@ -197,7 +197,7 @@
           "const": "metadata/readiness follow-up recorded for in-tree priority candidates; ethos-doc and ethos-rag remain reserved placeholders without in-tree manifests, and publication remains blocked"
         },
         "install_build_smoke_path": {
-          "const": "local source-tree smoke, dependency-ordering follow-up recorded, and manifest-migration prep recorded; ethos-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, current source-tree manifests remain unchanged, and publication remains blocked"
+          "const": "local source-tree smoke, dependency-ordering follow-up recorded, manifest-migration prep recorded, and registry-assembly prep recorded; ethos-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, current source-tree manifests remain unchanged, and publication remains blocked"
         },
         "version_tag_policy": {
           "const": "version/tag policy follow-up recorded; workspace 0.1.0 remains source-tree only, reserved 0.0.0-reserved.0 names remain placeholders, and real-version publication remains blocked"
@@ -252,7 +252,8 @@
         "package_version_tag_policy",
         "package_pdfium_boundary",
         "package_dependency_ordering",
-        "package_manifest_migration_prep"
+        "package_manifest_migration_prep",
+        "package_registry_assembly_prep"
       ],
       "additionalProperties": false,
       "properties": {
@@ -273,6 +274,9 @@
         },
         "package_manifest_migration_prep": {
           "const": "docs/validation/milestone-e-package-publication-manifest-migration-prep-validation-2026-06-21.md"
+        },
+        "package_registry_assembly_prep": {
+          "const": "docs/validation/milestone-e-package-publication-registry-assembly-prep-validation-2026-06-21.md"
         }
       }
     },
@@ -360,7 +364,7 @@
         "public benchmark reports remain blocked",
         "public benchmark claims remain blocked",
         "project-maintained PDFium builds remain blocked",
-        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; registry-backed dependent package assembly, real package version selection, package dependency manifest activation, and package tag creation remain blocked until later dedicated publication approval",
+        "ethos-doc and ethos-rag package metadata remain blocked until in-tree manifests exist; registry-backed dependent package assembly activation, real package version selection, package dependency manifest activation, and package tag creation remain blocked until later dedicated publication approval",
         "ADR-0005, H2 source-snapshot closeout, and source-only public beta approval do not approve package publication"
       ]
     },
