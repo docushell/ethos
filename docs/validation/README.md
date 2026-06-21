@@ -361,6 +361,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   explicit exclusions; the record binds the wording review to source commit `8b446e3` / tree
   `385dd7799cf898fc850555ce13d6d74e8ee15196` while package publication remains blocked and
   public installation remains blocked.
+- `milestone-e-package-publication-approval-decision-template-validation-2026-06-21.md` -
+  package publication approval decision template validation for exact future decider inputs; the
+  record binds the not-approved template to source commit `66979cc` / tree
+  `58ef15e1cac8ce7df35a7e88da2044e57eb66c10` while package publication remains blocked and
+  public installation remains blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main

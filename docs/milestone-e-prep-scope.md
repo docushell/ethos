@@ -138,6 +138,11 @@ The package publication public installation wording review is recorded in
 It records candidate public installation wording and explicit exclusions for source commit
 `8b446e3` / tree `385dd7799cf898fc850555ce13d6d74e8ee15196` while the wording is not approved,
 package publication remains blocked, and public installation remains blocked.
+The package publication approval decision template is recorded in
+`docs/validation/milestone-e-package-publication-approval-decision-template-validation-2026-06-21.md`.
+It records the exact future decider inputs required after the wording review for source commit
+`66979cc` / tree `58ef15e1cac8ce7df35a7e88da2044e57eb66c10` while no decision is approved,
+package publication remains blocked, and public installation remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and

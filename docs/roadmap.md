@@ -190,6 +190,11 @@ The package publication public installation wording review is recorded in
 for source commit `8b446e3` / tree `385dd7799cf898fc850555ce13d6d74e8ee15196`. Candidate
 wording and explicit exclusions are recorded for later approval review only while package
 publication remains blocked and public installation remains blocked.
+The package publication approval decision template is recorded in
+[`docs/validation/milestone-e-package-publication-approval-decision-template-validation-2026-06-21.md`](validation/milestone-e-package-publication-approval-decision-template-validation-2026-06-21.md)
+for source commit `66979cc` / tree `58ef15e1cac8ce7df35a7e88da2044e57eb66c10`. The template
+lists the exact future decider inputs required after the wording review while package publication
+remains blocked and public installation remains blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane

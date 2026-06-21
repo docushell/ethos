@@ -207,6 +207,8 @@ The package publication registry-assembly evidence review in `docs/validation/mi
 
 The package publication public installation wording review in `docs/validation/milestone-e-package-publication-public-installation-wording-review-validation-2026-06-21.md` records candidate wording and explicit exclusions against source commit `8b446e3` / tree `385dd7799cf898fc850555ce13d6d74e8ee15196`. The wording is not approved, package publication remains blocked, and public installation remains blocked.
 
+The package publication approval decision template in `docs/validation/milestone-e-package-publication-approval-decision-template-validation-2026-06-21.md` records exact future decider inputs against source commit `66979cc` / tree `58ef15e1cac8ce7df35a7e88da2044e57eb66c10`. No decision is approved, package publication remains blocked, and public installation remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
