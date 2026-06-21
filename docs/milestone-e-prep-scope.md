@@ -107,6 +107,11 @@ The current-main source-only public beta approval is recorded in
 `docs/validation/milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md`.
 It pins reviewed commit `902c423`, merged main commit `6019a97`, and tree
 `f56fde854f6f6e4c4070209329f8c7b12310aa51` for the same source-only GitHub repository surface.
+The package publication approval resolution plan is recorded in
+`docs/validation/milestone-e-package-publication-approval-resolution-plan-validation-2026-06-21.md`.
+It binds the future exact decision review to current source commit `524535a` / tree
+`0785ffca8423c42e2c4105df7752e290cc88e5c2` while package publication remains blocked and public
+installation remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and

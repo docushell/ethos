@@ -328,6 +328,13 @@ recording the exact current-main source candidate and required follow-up evidenc
   inputs; the record keeps package publication and public installation blocked while recording the
   missing version map, package tag, source binding, manifest activation diff, registry-backed
   assembly evidence, public installation wording, and posture/claims rerun requirements.
+- `milestone-e-package-publication-approval-resolution-plan-validation-2026-06-21.md` - package
+  publication approval resolution-plan validation for the package publication approval resolution
+  plan and current gap ledger; the resolution plan record binds the future exact decision review
+  to current source commit `524535a` / tree
+  `0785ffca8423c42e2c4105df7752e290cc88e5c2`, orders the remaining version, tag, manifest,
+  registry-backed assembly, public installation wording, and posture/claims inputs, and records
+  that package publication remains blocked and public installation remains blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main
