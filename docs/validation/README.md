@@ -14,6 +14,8 @@ Current package publication evidence records keep publication blocked while trac
 inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium boundary blockers.
 The public-facing readiness ledger keeps the current-main refresh candidate and package publication
 resolution gaps explicit without approving package publication or public installation.
+The public beta current-main refresh prep record keeps refreshed source approval blocked while
+recording the exact current-main source candidate and required follow-up evidence.
 
 - `advisory-scan-2026-06-16.md` - full `cargo-deny` advisory, ban, license, and source scan
   passed with a sidecar Rust 1.94 toolchain and `cargo-deny 0.19.9`; release artifacts still
@@ -331,6 +333,12 @@ resolution gaps explicit without approving package publication or public install
   current-main refresh candidate and package-publication gap-retention artifact; current main
   `847e12d` / tree `9d3701aa14d98017626583c2a0a0ef45ac0df79f` is not treated as a refreshed
   reviewed source-only public beta source state, and package publication remains blocked.
+- `milestone-e-public-beta-current-main-refresh-prep-validation-2026-06-21.md` - public beta
+  current-main refresh prep validation recorded
+  `docs/milestone-e-public-beta-current-main-refresh-prep.json` as a current-main refresh
+  candidate artifact for commit `9262b28` / tree `9f18f9e40c57551aef9b0cb2a53641c87207546b`;
+  refreshed reviewed source-only public beta state, public installation, and package publication
+  remain blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

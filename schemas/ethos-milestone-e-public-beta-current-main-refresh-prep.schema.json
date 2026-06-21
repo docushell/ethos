@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:milestone-e-public-beta-current-main-refresh-prep:1",
+  "title": "Ethos Milestone E public beta current-main refresh prep",
+  "description": "Source-only Milestone E prep artifact for preparing a later exact source-only public beta current-main refresh review while keeping package publication, public installation, hosted surfaces, production positioning, public benchmark surfaces, and broader public wording blocked.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "status",
+    "scope",
+    "lane_id",
+    "lane_name",
+    "decision_state",
+    "refresh_candidate",
+    "existing_public_beta_source",
+    "prior_readiness_ledger_candidate",
+    "refresh_required_evidence",
+    "refresh_non_approvals",
+    "retained_blockers",
+    "public_boundary",
+    "required_gates",
+    "gate_script",
+    "validation_record"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "status": { "const": "source-only-pre-alpha-internal-milestone-e-prep" },
+    "scope": { "const": "public_beta_current_main_refresh_prep" },
+    "lane_id": { "const": "public-beta-approval" },
+    "lane_name": { "const": "Public beta approval" },
+    "decision_state": { "const": "current_main_refresh_prepared_approval_blocked" },
+    "refresh_candidate": { "$ref": "#/$defs/refresh_candidate" },
+    "existing_public_beta_source": { "$ref": "#/$defs/existing_public_beta_source" },
+    "prior_readiness_ledger_candidate": { "$ref": "#/$defs/prior_readiness_ledger_candidate" },
+    "refresh_required_evidence": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "$ref": "#/$defs/refresh_required_evidence" },
+      "uniqueItems": true
+    },
+    "refresh_non_approvals": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": { "$ref": "#/$defs/refresh_non_approval" },
+      "uniqueItems": true
+    },
+    "retained_blockers": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": { "$ref": "#/$defs/retained_blocker" },
+      "uniqueItems": true
+    },
+    "public_boundary": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/public_boundary" },
+      "uniqueItems": true
+    },
+    "required_gates": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": { "$ref": "#/$defs/required_gate" },
+      "uniqueItems": true
+    },
+    "gate_script": {
+      "const": ".github/scripts/test_milestone_e_public_beta_current_main_refresh_prep.py"
+    },
+    "validation_record": {
+      "const": "docs/validation/milestone-e-public-beta-current-main-refresh-prep-validation-2026-06-21.md"
+    }
+  },
+  "$defs": {
+    "refresh_candidate": {
+      "type": "object",
+      "required": [
+        "surface",
+        "candidate_commit",
+        "candidate_tree",
+        "candidate_boundary",
+        "candidate_state"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "const": "GitHub source repository docushell/ethos source-only evaluation"
+        },
+        "candidate_commit": { "const": "9262b281ee2cfb7fb0c9adf9f70afafe624e6878" },
+        "candidate_tree": { "const": "9f18f9e40c57551aef9b0cb2a53641c87207546b" },
+        "candidate_boundary": { "const": "source-only clone, build, and validation commands only" },
+        "candidate_state": {
+          "const": "prepared for later exact source-only public beta refresh review; no refreshed source approval is granted by this prep"
+        }
+      }
+    },
+    "existing_public_beta_source": {
+      "type": "object",
+      "required": ["surface", "reviewed_commit", "merged_main_commit", "tree", "boundary"],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {
+          "const": "GitHub source repository docushell/ethos source-only evaluation"
+        },
+        "reviewed_commit": { "const": "d755e7c" },
+        "merged_main_commit": { "const": "3f9e1c4" },
+        "tree": { "const": "a9e913b0ba7ecd1567479b2ec773342868cba126" },
+        "boundary": { "const": "source-only clone, build, and validation commands only" }
+      }
+    },
+    "prior_readiness_ledger_candidate": {
+      "type": "object",
+      "required": ["candidate_commit", "candidate_tree", "ledger_record", "boundary"],
+      "additionalProperties": false,
+      "properties": {
+        "candidate_commit": { "const": "847e12db42d4519665b1486ccb35c85fe01f00b0" },
+        "candidate_tree": { "const": "9d3701aa14d98017626583c2a0a0ef45ac0df79f" },
+        "ledger_record": { "const": "docs/milestone-e-public-facing-readiness-ledger.json" },
+        "boundary": {
+          "const": "readiness ledger candidate only; not a refreshed reviewed public beta source state"
+        }
+      }
+    },
+    "refresh_required_evidence": {
+      "enum": [
+        "dedicated source-only public beta refresh decision record",
+        "exact refreshed source commit and tree",
+        "public-surface posture check for exact changed surfaces",
+        "claims gate after exact wording or surface changes",
+        "make milestone-e-prep after the refreshed source binding",
+        "cargo build --locked -p ethos-cli for the source checkout path",
+        "decider signoff on exact refreshed source surface and wording"
+      ]
+    },
+    "refresh_non_approval": {
+      "enum": [
+        "this prep does not refresh the reviewed public beta source state",
+        "this prep does not change the approved public beta wording",
+        "this prep does not approve package publication",
+        "this prep does not approve public installation",
+        "this prep does not approve hosted surfaces",
+        "this prep does not approve production positioning",
+        "this prep does not approve public benchmark reports or public benchmark claims",
+        "this prep does not approve release artifacts, binaries, wheels, npm packages, crate publication, or project-maintained PDFium builds"
+      ]
+    },
+    "retained_blocker": {
+      "enum": [
+        "package publication remains blocked",
+        "public installation remains blocked",
+        "real-version cargo publish remains blocked",
+        "hosted surfaces remain blocked",
+        "production positioning remains blocked",
+        "public benchmark reports remain blocked",
+        "public benchmark claims remain blocked",
+        "release artifacts remain blocked",
+        "binaries remain blocked",
+        "wheels remain blocked",
+        "npm packages remain blocked",
+        "crate publication remains blocked",
+        "project-maintained PDFium builds remain blocked",
+        "broader public wording remains blocked"
+      ]
+    },
+    "public_boundary": {
+      "enum": [
+        "public reports remain blocked",
+        "release artifacts remain blocked",
+        "package publication remains blocked",
+        "hosted surfaces remain blocked",
+        "public result wording remains blocked",
+        "performance claims remain blocked",
+        "quality claims remain blocked",
+        "footprint claims remain blocked",
+        "table-quality claims remain blocked",
+        "parser-quality claims remain blocked"
+      ]
+    },
+    "required_gate": {
+      "enum": [
+        "python3 .github/scripts/test_milestone_e_public_beta_current_main_refresh_prep.py",
+        "python3 .github/scripts/test_milestone_e_public_facing_readiness_ledger.py",
+        "python3 .github/scripts/test_milestone_e_public_beta_approval_prep.py",
+        "python3 schemas/validate_examples.py",
+        "python3 .github/scripts/test_public_surface_posture.py",
+        "python3 .github/scripts/claims_gate.py",
+        "cargo build --locked -p ethos-cli",
+        "make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python",
+        "git diff --check"
+      ]
+    }
+  }
+}

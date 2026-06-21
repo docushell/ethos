@@ -33,6 +33,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-milestone-e-public-beta-approval-prep.schema.json` | Milestone E source-only public beta approval prep |
 | `ethos-milestone-e-package-publication-approval-prep.schema.json` | Milestone E source-only package publication approval prep |
 | `ethos-milestone-e-public-facing-readiness-ledger.schema.json` | Milestone E source-only public-facing readiness current-main ledger |
+| `ethos-milestone-e-public-beta-current-main-refresh-prep.schema.json` | Milestone E source-only public beta current-main refresh prep |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
 
 Conventions: snake_case keys; `additionalProperties: false` everywhere except the
@@ -133,12 +134,13 @@ blocker ledger at `docs/milestone-e-internal-trust-loop-blocker-ledger.json`, an
 lane blocker ledger at `docs/milestone-e-public-approval-lane-blockers.json`, public beta approval
 prep at `docs/milestone-e-public-beta-approval-prep.json`, and package publication approval prep at
 `docs/milestone-e-package-publication-approval-prep.json`, and public-facing readiness ledger at
-`docs/milestone-e-public-facing-readiness-ledger.json` are schema-validated here.
+`docs/milestone-e-public-facing-readiness-ledger.json`, and public beta current-main refresh prep at
+`docs/milestone-e-public-beta-current-main-refresh-prep.json` are schema-validated here.
 Their path tracking, candidate-to-criteria-to-walkthrough alignment, diagnostic-boundary
 alignment, evidence-lane alignment, explicit blocker alignment, public approval lane blockers,
 public beta approval prep blockers, package publication approval prep blockers, current-main
-refresh candidate binding, package-publication gap retention, and public-posture boundaries are
-checked by the Milestone E prep repository guards.
+refresh candidate binding, package-publication gap retention, public beta current-main refresh prep
+boundaries, and public-posture boundaries are checked by the Milestone E prep repository guards.
 
 Derived artifacts not schema'd here: `document.md` / `document.txt` (deterministic exports
 specified by the exporter config, Milestone B) and `debug.html` (Milestone C).
