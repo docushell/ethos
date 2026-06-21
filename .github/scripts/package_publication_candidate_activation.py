@@ -39,7 +39,6 @@ IGNORE_NAMES = {
     ".mypy_cache",
     "web",
     ".roadmap.md.swp",
-    "docs/.roadmap.md.swp",
 }
 
 
