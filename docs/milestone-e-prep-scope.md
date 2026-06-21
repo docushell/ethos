@@ -148,6 +148,11 @@ The package publication approval decision is recorded in
 It rejects the current package-publication request for source commit `fdbd5b7` / tree
 `4a7bf5cda2c779e41a04c3feb691a12fec1e5c8d` because required activation evidence is absent;
 package publication remains blocked, and public installation remains blocked.
+The package publication candidate activation evidence is recorded in
+`docs/validation/milestone-e-package-publication-candidate-activation-evidence-validation-2026-06-22.md`.
+It validates a temporary non-public package activation workspace for source commit `6cf211c` /
+tree `ae76bc588b64dc1e8087d9096d52545a3560c2c0`; source Cargo manifests remain blocked, package
+publication remains blocked, and public installation remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and

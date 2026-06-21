@@ -200,6 +200,12 @@ The package publication approval decision is recorded in
 for source commit `fdbd5b7` / tree `4a7bf5cda2c779e41a04c3feb691a12fec1e5c8d`. The current
 package-publication request is rejected because required activation evidence is absent; package
 publication remains blocked and public installation remains blocked.
+The package publication candidate activation evidence is recorded in
+[`docs/validation/milestone-e-package-publication-candidate-activation-evidence-validation-2026-06-22.md`](validation/milestone-e-package-publication-candidate-activation-evidence-validation-2026-06-22.md)
+for source commit `6cf211c` / tree `ae76bc588b64dc1e8087d9096d52545a3560c2c0`. A temporary
+non-public package activation workspace validates the candidate package-name and dependency shape
+while source Cargo manifests remain blocked, package publication remains blocked, and public
+installation remains blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane

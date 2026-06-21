@@ -211,6 +211,8 @@ The package publication approval decision template in `docs/validation/milestone
 
 The package publication approval decision in `docs/validation/milestone-e-package-publication-approval-decision-validation-2026-06-21.md` rejects the current package-publication request against source commit `fdbd5b7` / tree `4a7bf5cda2c779e41a04c3feb691a12fec1e5c8d` because required activation evidence is absent. Package publication remains blocked, and public installation remains blocked.
 
+The package publication candidate activation evidence in `docs/validation/milestone-e-package-publication-candidate-activation-evidence-validation-2026-06-22.md` validates a temporary non-public package activation workspace against source commit `6cf211c` / tree `ae76bc588b64dc1e8087d9096d52545a3560c2c0`. Source Cargo manifests remain blocked, package publication remains blocked, and public installation remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
