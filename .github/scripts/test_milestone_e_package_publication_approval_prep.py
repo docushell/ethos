@@ -91,6 +91,7 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
     "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md",
     "package_decision_bundle_validation": "docs/validation/milestone-e-package-publication-decision-bundle-validation-2026-06-21.md",
+    "package_pre_approval_gap_ledger": "docs/validation/milestone-e-package-publication-pre-approval-gap-ledger-validation-2026-06-21.md",
 }
 EXPECTED_PUBLICATION_DECISION_INPUTS = {
     "decision_status": "not_approved_pending_exact_decision",
@@ -261,6 +262,59 @@ EXPECTED_PACKAGE_PUBLICATION_APPROVAL_REQUEST_PACKET = {
         "this packet does not activate registry-backed dependent package assembly",
         "this packet does not invite public installation",
         "this packet does not approve package publication",
+    ],
+    "retained_blockers": [
+        "no package publication version is selected",
+        "no package tag is created",
+        "no package dependency manifest activation is approved",
+        "no registry-backed dependent package assembly activation is approved",
+        "public installation remains blocked",
+        "package publication remains blocked",
+        "real-version cargo publish remains blocked",
+    ],
+}
+EXPECTED_PACKAGE_PUBLICATION_PRE_APPROVAL_GAP_LEDGER = {
+    "ledger_state": "pre_approval_gaps_recorded_publication_blocked",
+    "gap_rows": [
+        "version map gap: no package publication version is selected; requires exact SemVer package version or per-crate version map",
+        "tag name gap: no package tag is created; requires exact package tag name",
+        "tag binding gap: no package_tag_source_commit or source tree is selected; requires exact source commit and tree binding",
+        "manifest activation gap: current Cargo manifests remain unchanged; requires exact package-name migration and dependency activation diff",
+        "registry assembly gap: no registry-backed dependent package assembly is activated; requires exact non-public assembly evidence",
+        "public installation wording gap: no public installation wording is approved; requires exact wording and exclusions",
+        "posture and claims gate gap: gates must rerun after exact public installation wording changes",
+    ],
+    "blocked_actions": [
+        "selecting a package publication version remains blocked",
+        "creating a package tag remains blocked",
+        "changing Cargo manifests remains blocked",
+        "activating package dependency manifests remains blocked",
+        "creating a registry remains blocked",
+        "activating registry-backed dependent package assembly remains blocked",
+        "inviting public installation remains blocked",
+        "approving package publication remains blocked",
+    ],
+    "required_resolution_inputs": [
+        "exact package publication approval decision record",
+        "exact candidate crate list",
+        "exact SemVer package version or per-crate version map",
+        "exact package tag name",
+        "exact package_tag_source_commit and package source tree",
+        "exact package-name migration diff for ethos-doc-core",
+        "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+        "exact registry-backed dependent package assembly evidence",
+        "exact public installation wording and explicit exclusions",
+        "posture and claims gates after exact public installation wording changes",
+    ],
+    "non_approvals": [
+        "this ledger does not select a package publication version",
+        "this ledger does not create a package tag",
+        "this ledger does not change Cargo manifests",
+        "this ledger does not activate package dependency manifests",
+        "this ledger does not create a registry",
+        "this ledger does not activate registry-backed dependent package assembly",
+        "this ledger does not invite public installation",
+        "this ledger does not approve package publication",
     ],
     "retained_blockers": [
         "no package publication version is selected",
@@ -643,6 +697,38 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn('name = "ethos-verify"', verify_manifest)
         self.assertIn('name = "ethos-pdf"', pdf_manifest)
 
+    def test_package_publication_pre_approval_gap_ledger_keeps_resolution_inputs_explicit(self) -> None:
+        ledger = load_json(PREP)["package_publication_pre_approval_gap_ledger"]
+        cargo = read(ROOT / "Cargo.toml")
+        core_manifest = read(ROOT / "crates/ethos-core/Cargo.toml")
+        verify_manifest = read(ROOT / "crates/ethos-verify/Cargo.toml")
+        pdf_manifest = read(ROOT / "crates/ethos-pdf/Cargo.toml")
+
+        self.assertEqual(EXPECTED_PACKAGE_PUBLICATION_PRE_APPROVAL_GAP_LEDGER, ledger)
+        self.assertEqual("pre_approval_gaps_recorded_publication_blocked", ledger["ledger_state"])
+        self.assertEqual(7, len(ledger["gap_rows"]))
+        self.assertEqual(8, len(ledger["blocked_actions"]))
+        self.assertIn("creating a package tag remains blocked", ledger["blocked_actions"])
+        self.assertIn("changing Cargo manifests remains blocked", ledger["blocked_actions"])
+        self.assertIn("inviting public installation remains blocked", ledger["blocked_actions"])
+        self.assertIn(
+            "exact package_tag_source_commit and package source tree",
+            ledger["required_resolution_inputs"],
+        )
+        self.assertIn(
+            "exact public installation wording and explicit exclusions",
+            ledger["required_resolution_inputs"],
+        )
+        self.assertIn("this ledger does not approve package publication", ledger["non_approvals"])
+        self.assertIn("real-version cargo publish remains blocked", ledger["retained_blockers"])
+        self.assertIn("publish = false", core_manifest)
+        self.assertIn("publish = false", verify_manifest)
+        self.assertIn("publish = false", pdf_manifest)
+        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-verify"', verify_manifest)
+        self.assertIn('name = "ethos-pdf"', pdf_manifest)
+        self.assertIn('version = "0.1.0"', cargo)
+
     def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
         approved = load_json(PREP)["approved_package_publication_prep"]
         pdfium_boundary = " ".join(approved["pdfium_boundary"])
@@ -708,6 +794,10 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             False,
             schema["$defs"]["package_publication_approval_request_packet"]["additionalProperties"],
         )
+        self.assertEqual(
+            False,
+            schema["$defs"]["package_publication_pre_approval_gap_ledger"]["additionalProperties"],
+        )
         self.assertEqual(9, schema["properties"]["required_evidence"]["minItems"])
         self.assertEqual(13, schema["properties"]["explicit_blockers"]["minItems"])
         self.assertEqual(
@@ -744,6 +834,18 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             9,
             schema["$defs"]["package_publication_approval_request_packet"]["properties"][
                 "explicit_exclusions"
+            ]["minItems"],
+        )
+        self.assertEqual(
+            7,
+            schema["$defs"]["package_publication_pre_approval_gap_ledger"]["properties"][
+                "gap_rows"
+            ]["minItems"],
+        )
+        self.assertEqual(
+            10,
+            schema["$defs"]["package_publication_pre_approval_gap_ledger"]["properties"][
+                "required_resolution_inputs"
             ]["minItems"],
         )
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", validate_examples)

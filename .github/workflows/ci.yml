@@ -224,6 +224,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_package_publication_registry_assembly_activation_prep.py
       - name: Milestone E package publication decision-bundle validation record tests
         run: python3 .github/scripts/test_milestone_e_package_publication_decision_bundle_validation_record.py
+      - name: Milestone E package publication pre-approval gap ledger tests
+        run: python3 .github/scripts/test_milestone_e_package_publication_pre_approval_gap_ledger.py
       - name: Milestone E validation-command index tests
         run: python3 .github/scripts/test_milestone_e_validation_command_index.py
       - name: Milestone E validation-command index validation record tests
