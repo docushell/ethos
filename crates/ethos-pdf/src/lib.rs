@@ -57,10 +57,7 @@ pub const PDFIUM_ARTIFACT_PATH_ENV: &str = "ETHOS_PDFIUM_ARTIFACT_PATH";
 pub const QUANTUM_PER_POINT: u32 = 100;
 const ORIGIN_LOCATOR_POLICY: &str = "origin-run-locator-v1";
 
-const DETERMINISTIC_PROFILE_JSON: &str = include_str!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/../../profiles/ethos-deterministic-v1.json"
-));
+const DETERMINISTIC_PROFILE_JSON: &str = include_str!("../assets/ethos-deterministic-v1.json");
 const FONT_SUBSTITUTION_TABLE_JSON: &str = include_str!("../assets/font-substitution-table.json");
 
 /// PDFium has process-global library state; serialize init/load/destroy for now.
