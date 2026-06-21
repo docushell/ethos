@@ -116,6 +116,10 @@ shape only: core package-name migration to `ethos-doc-core`, a workspace depende
 stable source dependency keys for `ethos-verify` and `ethos-pdf`. Current Cargo manifests remain
 unchanged; registry-backed dependent package assembly, package dependency manifest activation,
 public installation, and package publication remain blocked.
+The manifest-activation prep follow-up record under `docs/validation/` covers future package
+dependency manifest activation review only. Current Cargo manifests remain unchanged; package
+dependency manifest activation, registry-backed dependent package assembly activation, public
+installation, and package publication remain blocked.
 The registry-assembly prep follow-up record under `docs/validation/` covers future non-public
 dependent candidate assembly rehearsal only. No registry is created, current Cargo manifests remain
 unchanged, and registry-backed dependent package assembly activation, package dependency manifest

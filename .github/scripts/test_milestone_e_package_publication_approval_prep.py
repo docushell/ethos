@@ -85,6 +85,7 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_pdfium_boundary": "docs/validation/milestone-e-package-publication-pdfium-boundary-closeout-validation-2026-06-21.md",
     "package_dependency_ordering": "docs/validation/milestone-e-package-publication-dependency-ordering-closeout-validation-2026-06-21.md",
     "package_manifest_migration_prep": "docs/validation/milestone-e-package-publication-manifest-migration-prep-validation-2026-06-21.md",
+    "package_manifest_activation_prep": "docs/validation/milestone-e-package-publication-manifest-activation-prep-validation-2026-06-21.md",
     "package_registry_assembly_prep": "docs/validation/milestone-e-package-publication-registry-assembly-prep-validation-2026-06-21.md",
     "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
     "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md",
@@ -258,6 +259,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("local source-tree smoke", status["install_build_smoke_path"])
         self.assertIn("dependency-ordering follow-up recorded", status["install_build_smoke_path"])
         self.assertIn("manifest-migration prep recorded", status["install_build_smoke_path"])
+        self.assertIn("manifest-activation prep recorded", status["install_build_smoke_path"])
         self.assertIn("registry-assembly prep recorded", status["install_build_smoke_path"])
         self.assertIn("current source-tree manifests remain unchanged", status["install_build_smoke_path"])
         self.assertIn("publication remains blocked", status["install_build_smoke_path"])

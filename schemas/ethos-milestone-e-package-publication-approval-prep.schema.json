@@ -197,7 +197,7 @@
           "const": "metadata/readiness follow-up recorded for in-tree priority candidates; ethos-doc and ethos-rag remain reserved placeholders without in-tree manifests, and publication remains blocked"
         },
         "install_build_smoke_path": {
-          "const": "local source-tree smoke, dependency-ordering follow-up recorded, manifest-migration prep recorded, and registry-assembly prep recorded; ethos-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, current source-tree manifests remain unchanged, and publication remains blocked"
+          "const": "local source-tree smoke, dependency-ordering follow-up recorded, manifest-migration prep recorded, manifest-activation prep recorded, and registry-assembly prep recorded; ethos-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, current source-tree manifests remain unchanged, and publication remains blocked"
         },
         "version_tag_policy": {
           "const": "version/tag policy follow-up, real-version-selection prep recorded, and package tag-creation prep recorded; workspace 0.1.0 remains source-tree only, reserved 0.0.0-reserved.0 names remain placeholders, no package publication version is selected, no package tag is created, and real-version publication remains blocked"
@@ -253,6 +253,7 @@
         "package_pdfium_boundary",
         "package_dependency_ordering",
         "package_manifest_migration_prep",
+        "package_manifest_activation_prep",
         "package_registry_assembly_prep",
         "package_real_version_selection_prep",
         "package_tag_creation_prep"
@@ -276,6 +277,9 @@
         },
         "package_manifest_migration_prep": {
           "const": "docs/validation/milestone-e-package-publication-manifest-migration-prep-validation-2026-06-21.md"
+        },
+        "package_manifest_activation_prep": {
+          "const": "docs/validation/milestone-e-package-publication-manifest-activation-prep-validation-2026-06-21.md"
         },
         "package_registry_assembly_prep": {
           "const": "docs/validation/milestone-e-package-publication-registry-assembly-prep-validation-2026-06-21.md"
