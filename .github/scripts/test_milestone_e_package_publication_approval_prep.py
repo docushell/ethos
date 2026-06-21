@@ -87,6 +87,7 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_manifest_migration_prep": "docs/validation/milestone-e-package-publication-manifest-migration-prep-validation-2026-06-21.md",
     "package_registry_assembly_prep": "docs/validation/milestone-e-package-publication-registry-assembly-prep-validation-2026-06-21.md",
     "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
+    "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md",
 }
 
 FORBIDDEN_PREP_WORDING = [
@@ -262,9 +263,11 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("publication remains blocked", status["install_build_smoke_path"])
         self.assertIn("version/tag policy follow-up", status["version_tag_policy"])
         self.assertIn("real-version-selection prep recorded", status["version_tag_policy"])
+        self.assertIn("package tag-creation prep recorded", status["version_tag_policy"])
         self.assertIn("workspace 0.1.0 remains source-tree only", status["version_tag_policy"])
         self.assertIn("reserved 0.0.0-reserved.0 names remain placeholders", status["version_tag_policy"])
         self.assertIn("no package publication version is selected", status["version_tag_policy"])
+        self.assertIn("no package tag is created", status["version_tag_policy"])
         self.assertIn("real-version publication remains blocked", status["version_tag_policy"])
         self.assertIn("PDFium boundary follow-up recorded", status["pdfium_packaging_boundary"])
         self.assertIn("no bundled PDFium binary", status["pdfium_packaging_boundary"])
