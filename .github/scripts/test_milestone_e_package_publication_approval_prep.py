@@ -175,6 +175,43 @@ EXPECTED_SEMVER_PACKAGE_VERSION_DECISION_PREP = {
         "package publication remains blocked",
     ],
 }
+EXPECTED_PACKAGE_PUBLICATION_DECISION_PREP_BUNDLE = {
+    "decision_state": "combined_decision_inputs_recorded_actions_blocked",
+    "review_boundary": [
+        "package tag and source-commit decision inputs are recorded while creating no package tag",
+        "package dependency manifest activation inputs are recorded while changing no Cargo manifest",
+        "registry-backed dependent package assembly inputs are recorded while creating no registry and activating no assembly",
+        "public installation wording and exclusion inputs are recorded while inviting no public installation",
+    ],
+    "required_decision_inputs": [
+        "exact package tag name",
+        "exact source commit for package tag binding",
+        "exact package-name migration diff for ethos-doc-core",
+        "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+        "exact registry-backed dependent package assembly evidence for ethos-doc-core before ethos-verify and ethos-pdf",
+        "exact public installation wording limited to a later approved package surface",
+        "exact exclusion list for wheels, npm packages, binaries, hosted surfaces, production positioning, public benchmark reports, public benchmark claims, and project-maintained PDFium builds",
+        "posture and claims gates after exact public installation wording changes",
+    ],
+    "non_approvals": [
+        "this bundle does not select a package publication version",
+        "this bundle does not create a package tag",
+        "this bundle does not change Cargo manifests",
+        "this bundle does not activate package dependency manifests",
+        "this bundle does not create a registry",
+        "this bundle does not activate registry-backed dependent package assembly",
+        "this bundle does not invite public installation",
+        "this bundle does not approve package publication",
+    ],
+    "retained_blockers": [
+        "no package publication version is selected",
+        "no package tag is created",
+        "no package dependency manifest activation is approved",
+        "no registry-backed dependent package assembly activation is approved",
+        "public installation remains blocked",
+        "package publication remains blocked",
+    ],
+}
 
 FORBIDDEN_PREP_WORDING = [
     "public beta is approved",
@@ -465,6 +502,45 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("public installation remains blocked", review["retained_blockers"])
         self.assertIn("package publication remains blocked", review["retained_blockers"])
 
+    def test_combined_package_publication_decision_prep_bundle_blocks_all_actions(self) -> None:
+        bundle = load_json(PREP)["package_publication_decision_prep_bundle"]
+        cargo = read(ROOT / "Cargo.toml")
+        core_manifest = read(ROOT / "crates/ethos-core/Cargo.toml")
+        verify_manifest = read(ROOT / "crates/ethos-verify/Cargo.toml")
+        pdf_manifest = read(ROOT / "crates/ethos-pdf/Cargo.toml")
+
+        self.assertEqual(EXPECTED_PACKAGE_PUBLICATION_DECISION_PREP_BUNDLE, bundle)
+        self.assertEqual("combined_decision_inputs_recorded_actions_blocked", bundle["decision_state"])
+        self.assertIn("exact package tag name", bundle["required_decision_inputs"])
+        self.assertIn("exact source commit for package tag binding", bundle["required_decision_inputs"])
+        self.assertIn(
+            "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+            bundle["required_decision_inputs"],
+        )
+        self.assertIn(
+            "exact registry-backed dependent package assembly evidence for ethos-doc-core before ethos-verify and ethos-pdf",
+            bundle["required_decision_inputs"],
+        )
+        self.assertIn(
+            "posture and claims gates after exact public installation wording changes",
+            bundle["required_decision_inputs"],
+        )
+        self.assertIn("this bundle does not create a package tag", bundle["non_approvals"])
+        self.assertIn("this bundle does not change Cargo manifests", bundle["non_approvals"])
+        self.assertIn("this bundle does not create a registry", bundle["non_approvals"])
+        self.assertIn("this bundle does not invite public installation", bundle["non_approvals"])
+        self.assertIn("this bundle does not approve package publication", bundle["non_approvals"])
+        self.assertIn("no package tag is created", bundle["retained_blockers"])
+        self.assertIn("public installation remains blocked", bundle["retained_blockers"])
+        self.assertIn("package publication remains blocked", bundle["retained_blockers"])
+        self.assertIn("publish = false", core_manifest)
+        self.assertIn("publish = false", verify_manifest)
+        self.assertIn("publish = false", pdf_manifest)
+        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-verify"', verify_manifest)
+        self.assertIn('name = "ethos-pdf"', pdf_manifest)
+        self.assertIn('version = "0.1.0"', cargo)
+
     def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
         approved = load_json(PREP)["approved_package_publication_prep"]
         pdfium_boundary = " ".join(approved["pdfium_boundary"])
@@ -522,6 +598,10 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             False,
             schema["$defs"]["semver_package_version_decision_prep"]["additionalProperties"],
         )
+        self.assertEqual(
+            False,
+            schema["$defs"]["package_publication_decision_prep_bundle"]["additionalProperties"],
+        )
         self.assertEqual(9, schema["properties"]["required_evidence"]["minItems"])
         self.assertEqual(13, schema["properties"]["explicit_blockers"]["minItems"])
         self.assertEqual(
@@ -540,6 +620,12 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             6,
             schema["$defs"]["semver_package_version_decision_prep"]["properties"][
                 "required_exact_decision_fields"
+            ]["minItems"],
+        )
+        self.assertEqual(
+            8,
+            schema["$defs"]["package_publication_decision_prep_bundle"]["properties"][
+                "required_decision_inputs"
             ]["minItems"],
         )
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", validate_examples)
