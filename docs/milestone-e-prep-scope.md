@@ -143,6 +143,11 @@ The package publication approval decision template is recorded in
 It records the exact future decider inputs required after the wording review for source commit
 `66979cc` / tree `58ef15e1cac8ce7df35a7e88da2044e57eb66c10` while no decision is approved,
 package publication remains blocked, and public installation remains blocked.
+The package publication approval decision is recorded in
+`docs/validation/milestone-e-package-publication-approval-decision-validation-2026-06-21.md`.
+It rejects the current package-publication request for source commit `fdbd5b7` / tree
+`4a7bf5cda2c779e41a04c3feb691a12fec1e5c8d` because required activation evidence is absent;
+package publication remains blocked, and public installation remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
