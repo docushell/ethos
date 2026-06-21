@@ -243,6 +243,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_package_publication_tag_creation_prep.py",
     ),
     RecordCoverage(
+        "milestone-e-package-publication-manifest-activation-prep-validation-2026-06-21.md",
+        "test_milestone_e_package_publication_manifest_activation_prep.py",
+    ),
+    RecordCoverage(
         "milestone-e-validation-command-index-validation-2026-06-20.md",
         "test_milestone_e_validation_command_index_validation_record.py",
     ),
@@ -331,6 +335,9 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         package_registry_guard = "test_milestone_e_package_publication_registry_assembly_prep.py"
         package_real_version_guard = "test_milestone_e_package_publication_real_version_selection_prep.py"
         package_tag_guard = "test_milestone_e_package_publication_tag_creation_prep.py"
+        package_manifest_activation_guard = (
+            "test_milestone_e_package_publication_manifest_activation_prep.py"
+        )
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
         index_guard = "test_milestone_e_validation_record_index.py"
         index_record_guard = "test_milestone_e_validation_record_index_validation_record.py"
@@ -371,6 +378,12 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             self.assertLess(text.index(prefix + package_manifest_guard), text.index(prefix + package_registry_guard))
             self.assertLess(text.index(prefix + package_registry_guard), text.index(prefix + package_real_version_guard))
             self.assertLess(text.index(prefix + package_real_version_guard), text.index(prefix + package_tag_guard))
+            self.assertLess(
+                text.index(prefix + package_tag_guard),
+                text.index(prefix + package_manifest_activation_guard),
+            )
+            self.assertLess(text.index(prefix + package_manifest_activation_guard), text.index(prefix + command_guard))
+            self.assertLess(text.index(prefix + package_manifest_activation_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + package_tag_guard), text.index(prefix + command_guard))
             self.assertLess(text.index(prefix + package_tag_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + package_real_version_guard), text.index(prefix + command_guard))

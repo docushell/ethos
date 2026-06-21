@@ -401,6 +401,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_registry_assembly_prep.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_real_version_selection_prep.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_tag_creation_prep.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_package_publication_manifest_activation_prep.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",
