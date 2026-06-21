@@ -214,6 +214,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_dependency_ordering.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_manifest_migration_prep.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_registry_assembly_prep.py
+	$(PYTHON) .github/scripts/test_milestone_e_package_publication_real_version_selection_prep.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py
