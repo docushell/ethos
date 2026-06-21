@@ -145,6 +145,7 @@ class MilestoneEPackagePublicationPdfiumBoundaryTests(unittest.TestCase):
                 "NOTICE.md",
                 "README.md",
                 "assets/README.md",
+                "assets/ethos-deterministic-v1.json",
                 "assets/font-substitution-table.json",
                 "src/lib.rs",
             ],
