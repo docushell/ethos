@@ -79,6 +79,38 @@
     "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
     "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md"
   },
+  "publication_approval_decision_inputs": {
+    "decision_status": "not_approved_pending_exact_decision",
+    "candidate_surface": [
+      "first candidate surface may include only ethos-doc-core, ethos-verify, and ethos-pdf after exact artifact evidence is reviewed",
+      "ethos-doc and ethos-rag remain excluded until in-tree manifests, owners, metadata, README files, and support expectations exist"
+    ],
+    "required_exact_decision_fields": [
+      "exact candidate crate list",
+      "exact SemVer package version",
+      "exact package tag name and source commit",
+      "exact package dependency manifest activation diff",
+      "exact registry-backed dependent package assembly evidence",
+      "exact public installation wording",
+      "exact exclusion list for wheels, npm packages, binaries, hosted surfaces, production positioning, public benchmark reports, public benchmark claims, and project-maintained PDFium builds"
+    ],
+    "required_pre_approval_commands": [
+      "python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py",
+      "python3 .github/scripts/test_public_surface_posture.py",
+      "python3 .github/scripts/claims_gate.py",
+      "cargo build --locked -p ethos-cli",
+      "make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python",
+      "git diff --check"
+    ],
+    "retained_blockers": [
+      "no package publication version is selected",
+      "no package tag is created",
+      "no package dependency manifest activation is approved",
+      "no registry-backed dependent package assembly activation is approved",
+      "public installation remains blocked",
+      "package publication remains blocked"
+    ]
+  },
   "public_boundary": [
     "public reports remain blocked",
     "release artifacts remain blocked",

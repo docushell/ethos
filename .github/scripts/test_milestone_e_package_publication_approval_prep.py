@@ -91,6 +91,38 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
     "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md",
 }
+EXPECTED_PUBLICATION_DECISION_INPUTS = {
+    "decision_status": "not_approved_pending_exact_decision",
+    "candidate_surface": [
+        "first candidate surface may include only ethos-doc-core, ethos-verify, and ethos-pdf after exact artifact evidence is reviewed",
+        "ethos-doc and ethos-rag remain excluded until in-tree manifests, owners, metadata, README files, and support expectations exist",
+    ],
+    "required_exact_decision_fields": [
+        "exact candidate crate list",
+        "exact SemVer package version",
+        "exact package tag name and source commit",
+        "exact package dependency manifest activation diff",
+        "exact registry-backed dependent package assembly evidence",
+        "exact public installation wording",
+        "exact exclusion list for wheels, npm packages, binaries, hosted surfaces, production positioning, public benchmark reports, public benchmark claims, and project-maintained PDFium builds",
+    ],
+    "required_pre_approval_commands": [
+        "python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py",
+        "python3 .github/scripts/test_public_surface_posture.py",
+        "python3 .github/scripts/claims_gate.py",
+        "cargo build --locked -p ethos-cli",
+        "make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python",
+        "git diff --check",
+    ],
+    "retained_blockers": [
+        "no package publication version is selected",
+        "no package tag is created",
+        "no package dependency manifest activation is approved",
+        "no registry-backed dependent package assembly activation is approved",
+        "public installation remains blocked",
+        "package publication remains blocked",
+    ],
+}
 
 FORBIDDEN_PREP_WORDING = [
     "public beta is approved",
@@ -293,6 +325,28 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertEqual(EXPECTED_EVIDENCE_RECORDS, load_json(PREP)["evidence_records"])
         self.assertEqual(EXPECTED_FOLLOW_UP_RECORDS, load_json(PREP)["follow_up_records"])
 
+    def test_publication_approval_decision_inputs_keep_next_decision_exact(self) -> None:
+        inputs = load_json(PREP)["publication_approval_decision_inputs"]
+
+        self.assertEqual(EXPECTED_PUBLICATION_DECISION_INPUTS, inputs)
+        self.assertIn("not_approved_pending_exact_decision", inputs["decision_status"])
+        self.assertIn("exact candidate crate list", inputs["required_exact_decision_fields"])
+        self.assertIn("exact SemVer package version", inputs["required_exact_decision_fields"])
+        self.assertIn("exact package tag name and source commit", inputs["required_exact_decision_fields"])
+        self.assertIn(
+            "exact package dependency manifest activation diff",
+            inputs["required_exact_decision_fields"],
+        )
+        self.assertIn(
+            "exact registry-backed dependent package assembly evidence",
+            inputs["required_exact_decision_fields"],
+        )
+        self.assertIn("exact public installation wording", inputs["required_exact_decision_fields"])
+        self.assertIn("no package publication version is selected", inputs["retained_blockers"])
+        self.assertIn("no package tag is created", inputs["retained_blockers"])
+        self.assertIn("public installation remains blocked", inputs["retained_blockers"])
+        self.assertIn("package publication remains blocked", inputs["retained_blockers"])
+
     def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
         approved = load_json(PREP)["approved_package_publication_prep"]
         pdfium_boundary = " ".join(approved["pdfium_boundary"])
@@ -338,8 +392,18 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertEqual(False, schema["$defs"]["approved_package_publication_prep"]["additionalProperties"])
         self.assertEqual(False, schema["$defs"]["evidence_review_status"]["additionalProperties"])
         self.assertEqual(False, schema["$defs"]["evidence_records"]["additionalProperties"])
+        self.assertEqual(
+            False,
+            schema["$defs"]["publication_approval_decision_inputs"]["additionalProperties"],
+        )
         self.assertEqual(9, schema["properties"]["required_evidence"]["minItems"])
         self.assertEqual(13, schema["properties"]["explicit_blockers"]["minItems"])
+        self.assertEqual(
+            7,
+            schema["$defs"]["publication_approval_decision_inputs"]["properties"][
+                "required_exact_decision_fields"
+            ]["minItems"],
+        )
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", validate_examples)
         self.assertIn("docs\" / \"milestone-e-package-publication-approval-prep.json", validate_examples)
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", schemas_readme)
