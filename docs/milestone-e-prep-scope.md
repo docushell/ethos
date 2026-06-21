@@ -98,6 +98,11 @@ The public-facing readiness ledger lives in
 `847e12d` / tree `9d3701aa14d98017626583c2a0a0ef45ac0df79f` as a current-main refresh candidate
 only, keeps the reviewed source-only public beta binding at `d755e7c` / `3f9e1c4`, and retains
 package-publication resolution gaps while package publication remains blocked.
+The public beta current-main refresh prep lane lives in
+`docs/milestone-e-public-beta-current-main-refresh-prep.json` and is schema-bound by
+`schemas/ethos-milestone-e-public-beta-current-main-refresh-prep.schema.json`. It records current
+main `9262b28` / tree `9f18f9e40c57551aef9b0cb2a53641c87207546b` as a current-main refresh
+candidate only and does not refresh the reviewed source-only public beta source state.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -286,6 +291,10 @@ or broad demo-generation workflows.
   package-publication gap retention; it does not refresh the reviewed source-only public beta source
   state, approve package publication, approve public installation, or soften any current
   public-facing blocker.
+- The public beta current-main refresh prep remains limited to refresh evidence preparation for
+  current main `9262b28`; it does not change the approved public beta wording, refresh the reviewed
+  source-only public beta source state, approve package publication, approve public installation, or
+  soften any current public-facing blocker.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,

@@ -143,6 +143,9 @@ PAIRS = [
     ("ethos-milestone-e-public-facing-readiness-ledger.schema.json", [
         ROOT / "docs" / "milestone-e-public-facing-readiness-ledger.json",
     ]),
+    ("ethos-milestone-e-public-beta-current-main-refresh-prep.schema.json", [
+        ROOT / "docs" / "milestone-e-public-beta-current-main-refresh-prep.json",
+    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 
