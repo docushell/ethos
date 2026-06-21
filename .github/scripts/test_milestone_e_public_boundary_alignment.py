@@ -85,6 +85,10 @@ BOUNDARY_ARTIFACTS = (
         "docs/milestone-e-package-publication-approval-prep.json",
         "schemas/ethos-milestone-e-package-publication-approval-prep.schema.json",
     ),
+    BoundaryArtifact(
+        "docs/milestone-e-public-facing-readiness-ledger.json",
+        "schemas/ethos-milestone-e-public-facing-readiness-ledger.schema.json",
+    ),
 )
 
 
