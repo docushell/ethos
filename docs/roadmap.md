@@ -164,6 +164,11 @@ The package publication approval resolution plan is recorded in
 [`docs/validation/milestone-e-package-publication-approval-resolution-plan-validation-2026-06-21.md`](validation/milestone-e-package-publication-approval-resolution-plan-validation-2026-06-21.md)
 for current source commit `524535a` / tree `0785ffca8423c42e2c4105df7752e290cc88e5c2`, with
 package publication remains blocked and public installation remains blocked.
+The package publication decision input packet is recorded in
+[`docs/validation/milestone-e-package-publication-decision-input-packet-validation-2026-06-21.md`](validation/milestone-e-package-publication-decision-input-packet-validation-2026-06-21.md)
+for source commit `54bf70f` / tree `5a197bee718e3b31399563340169e9efd4f1317c`. Candidate version,
+tag, manifest, assembly, and wording inputs are recorded while package publication remains blocked
+and public installation remains blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane

@@ -335,6 +335,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   `0785ffca8423c42e2c4105df7752e290cc88e5c2`, orders the remaining version, tag, manifest,
   registry-backed assembly, public installation wording, and posture/claims inputs, and records
   that package publication remains blocked and public installation remains blocked.
+- `milestone-e-package-publication-decision-input-packet-validation-2026-06-21.md` - package
+  publication decision-input packet validation for the package publication decision input packet;
+  the record binds candidate
+  version, tag, source, manifest, assembly, and wording inputs to source commit `54bf70f` / tree
+  `5a197bee718e3b31399563340169e9efd4f1317c` while package publication remains blocked and
+  public installation remains blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main
