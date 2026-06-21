@@ -195,6 +195,11 @@ The package publication approval decision template is recorded in
 for source commit `66979cc` / tree `58ef15e1cac8ce7df35a7e88da2044e57eb66c10`. The template
 lists the exact future decider inputs required after the wording review while package publication
 remains blocked and public installation remains blocked.
+The package publication approval decision is recorded in
+[`docs/validation/milestone-e-package-publication-approval-decision-validation-2026-06-21.md`](validation/milestone-e-package-publication-approval-decision-validation-2026-06-21.md)
+for source commit `fdbd5b7` / tree `4a7bf5cda2c779e41a04c3feb691a12fec1e5c8d`. The current
+package-publication request is rejected because required activation evidence is absent; package
+publication remains blocked and public installation remains blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
