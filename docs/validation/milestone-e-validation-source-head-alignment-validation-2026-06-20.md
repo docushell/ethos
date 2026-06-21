@@ -38,12 +38,14 @@ Each current Milestone E validation record must include exactly one
 `Validated source HEAD before this record` line. That source HEAD must be a 7-to-40 character
 hexadecimal commit identifier. It must resolve when the checked-out repository contains the source
 commit. When the checked-out history preserves a single-record introduction commit, the source HEAD
-must resolve to the parent commit of the commit that first introduced the validation record. When a
-squash/import commit added multiple Milestone E validation records at once and the original
-per-record source commits are not present in a main-only checkout, parent inference is unavailable;
-in that topology, the guard keeps source-head syntax validation and does not infer source-head
-provenance from the squash/import parent. For an in-progress record that has not yet been committed,
-that source HEAD must resolve to the current source checkout HEAD.
+must resolve to the parent commit of the commit that first introduced the validation record. The
+introduction lookup searches all local refs so a preserved branch record is checked against its
+branch-add parent when that ref is available. When a squash/import commit added multiple Milestone E
+validation records at once and the original per-record source commits are not present in a
+main-only checkout, parent inference is unavailable; in that topology, the guard keeps source-head
+syntax validation and does not infer source-head provenance from the squash/import parent. For an
+in-progress record that has not yet been committed, that source HEAD must resolve to the current
+source checkout HEAD.
 
 ## Commands
 
@@ -89,6 +91,8 @@ git diff --check green
 - Every source-head value resolves when the checked-out history contains the source commit.
 - Committed validation records name the parent of the commit that introduced the record when the
   checked-out history preserves a single-record introduction commit.
+- Record-introduction lookup searches all local refs before applying main-only squash/import
+  fallback behavior.
 - Squash/import commits that add multiple Milestone E validation records keep resolvable source-head
   validation when the source commits are present, and keep syntax validation without inferring
   source-head provenance from the squash/import parent in main-only checkouts.

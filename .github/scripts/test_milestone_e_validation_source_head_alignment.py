@@ -99,7 +99,7 @@ def try_resolve_commit(revision: str) -> str | None:
 @lru_cache(maxsize=None)
 def introducing_commit(record: Path) -> str | None:
     relative = str(record.relative_to(ROOT))
-    commits = git("log", "--diff-filter=A", "--format=%H", "--", relative)
+    commits = git("log", "--all", "--diff-filter=A", "--format=%H", "--", relative)
     if not commits:
         return None
     return commits.splitlines()[-1]
