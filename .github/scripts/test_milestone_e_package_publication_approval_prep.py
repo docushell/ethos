@@ -151,6 +151,30 @@ EXPECTED_CANDIDATE_CRATE_SURFACE_REVIEW = {
         "candidate surface review does not approve registry-backed dependent package assembly activation",
     ],
 }
+EXPECTED_SEMVER_PACKAGE_VERSION_DECISION_PREP = {
+    "review_state": "semver_decision_inputs_recorded_version_unselected_publication_blocked",
+    "current_version_context": [
+        "workspace package version is 0.1.0 and remains source-tree only",
+        "reserved crates.io placeholders remain 0.0.0-reserved.0",
+        "candidate surface review includes ethos-doc-core, ethos-verify, and ethos-pdf only",
+    ],
+    "required_exact_decision_fields": [
+        "exact SemVer package version for each included candidate crate",
+        "exact confirmation that all included candidate crates share the same SemVer package version or an explicit per-crate version map",
+        "exact source commit for the version decision",
+        "exact package tag name that binds the selected version and source commit",
+        "exact manifest diff showing package-name migration and dependency activation",
+        "exact pre-publication dry-run and local install evidence for the selected version",
+    ],
+    "retained_blockers": [
+        "no SemVer package version is selected",
+        "workspace version 0.1.0 is not approved as a package publication version",
+        "reserved placeholder version 0.0.0-reserved.0 remains a reservation only",
+        "no package tag is created",
+        "public installation remains blocked",
+        "package publication remains blocked",
+    ],
+}
 
 FORBIDDEN_PREP_WORDING = [
     "public beta is approved",
@@ -409,6 +433,38 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             review["retained_blockers"],
         )
 
+    def test_semver_package_version_decision_prep_keeps_version_unselected(self) -> None:
+        prep = load_json(PREP)
+        review = prep["semver_package_version_decision_prep"]
+        cargo = read(ROOT / "Cargo.toml")
+        core_manifest = read(ROOT / "crates/ethos-core/Cargo.toml")
+        verify_manifest = read(ROOT / "crates/ethos-verify/Cargo.toml")
+        pdf_manifest = read(ROOT / "crates/ethos-pdf/Cargo.toml")
+
+        self.assertEqual(EXPECTED_SEMVER_PACKAGE_VERSION_DECISION_PREP, review)
+        self.assertIn(
+            "semver_decision_inputs_recorded_version_unselected_publication_blocked",
+            review["review_state"],
+        )
+        self.assertIn('version = "0.1.0"', cargo)
+        self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', core_manifest)
+        self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', verify_manifest)
+        self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', pdf_manifest)
+        self.assertIn(
+            "no SemVer package version is selected",
+            review["retained_blockers"],
+        )
+        self.assertIn(
+            "workspace version 0.1.0 is not approved as a package publication version",
+            review["retained_blockers"],
+        )
+        self.assertIn(
+            "reserved placeholder version 0.0.0-reserved.0 remains a reservation only",
+            review["retained_blockers"],
+        )
+        self.assertIn("public installation remains blocked", review["retained_blockers"])
+        self.assertIn("package publication remains blocked", review["retained_blockers"])
+
     def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
         approved = load_json(PREP)["approved_package_publication_prep"]
         pdfium_boundary = " ".join(approved["pdfium_boundary"])
@@ -462,6 +518,10 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             False,
             schema["$defs"]["candidate_crate_surface_review"]["additionalProperties"],
         )
+        self.assertEqual(
+            False,
+            schema["$defs"]["semver_package_version_decision_prep"]["additionalProperties"],
+        )
         self.assertEqual(9, schema["properties"]["required_evidence"]["minItems"])
         self.assertEqual(13, schema["properties"]["explicit_blockers"]["minItems"])
         self.assertEqual(
@@ -474,6 +534,12 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             3,
             schema["$defs"]["candidate_crate_surface_review"]["properties"][
                 "included_candidate_crates"
+            ]["minItems"],
+        )
+        self.assertEqual(
+            6,
+            schema["$defs"]["semver_package_version_decision_prep"]["properties"][
+                "required_exact_decision_fields"
             ]["minItems"],
         )
         self.assertIn("ethos-milestone-e-package-publication-approval-prep.schema.json", validate_examples)
