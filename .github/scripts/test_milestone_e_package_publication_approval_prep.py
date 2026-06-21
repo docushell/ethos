@@ -98,6 +98,7 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_registry_assembly_evidence_review": "docs/validation/milestone-e-package-publication-registry-assembly-evidence-review-validation-2026-06-21.md",
     "package_public_installation_wording_review": "docs/validation/milestone-e-package-publication-public-installation-wording-review-validation-2026-06-21.md",
     "package_approval_decision_template": "docs/validation/milestone-e-package-publication-approval-decision-template-validation-2026-06-21.md",
+    "package_approval_decision_record": "docs/validation/milestone-e-package-publication-approval-decision-validation-2026-06-21.md",
 }
 EXPECTED_PUBLICATION_DECISION_INPUTS = {
     "decision_status": "not_approved_pending_exact_decision",
