@@ -291,7 +291,8 @@
         "package_decision_input_packet",
         "package_approval_readiness_review",
         "package_manifest_activation_diff_review",
-        "package_registry_assembly_evidence_review"
+        "package_registry_assembly_evidence_review",
+        "package_public_installation_wording_review"
       ],
       "additionalProperties": false,
       "properties": {
@@ -345,6 +346,9 @@
         },
         "package_registry_assembly_evidence_review": {
           "const": "docs/validation/milestone-e-package-publication-registry-assembly-evidence-review-validation-2026-06-21.md"
+        },
+        "package_public_installation_wording_review": {
+          "const": "docs/validation/milestone-e-package-publication-public-installation-wording-review-validation-2026-06-21.md"
         }
       }
     },
