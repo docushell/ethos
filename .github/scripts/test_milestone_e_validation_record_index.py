@@ -259,6 +259,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_package_publication_pre_approval_gap_ledger.py",
     ),
     RecordCoverage(
+        "milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md",
+        "test_milestone_e_public_facing_readiness_ledger.py",
+    ),
+    RecordCoverage(
         "milestone-e-validation-command-index-validation-2026-06-20.md",
         "test_milestone_e_validation_command_index_validation_record.py",
     ),
@@ -357,6 +361,7 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             "test_milestone_e_package_publication_decision_bundle_validation_record.py"
         )
         package_gap_ledger_guard = "test_milestone_e_package_publication_pre_approval_gap_ledger.py"
+        readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
         index_guard = "test_milestone_e_validation_record_index.py"
         index_record_guard = "test_milestone_e_validation_record_index_validation_record.py"
@@ -413,8 +418,9 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
                 text.index(prefix + package_decision_bundle_guard),
                 text.index(prefix + package_gap_ledger_guard),
             )
-            self.assertLess(text.index(prefix + package_gap_ledger_guard), text.index(prefix + command_guard))
-            self.assertLess(text.index(prefix + package_gap_ledger_guard), text.index(prefix + index_guard))
+            self.assertLess(text.index(prefix + package_gap_ledger_guard), text.index(prefix + readiness_guard))
+            self.assertLess(text.index(prefix + readiness_guard), text.index(prefix + command_guard))
+            self.assertLess(text.index(prefix + readiness_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + package_manifest_activation_guard), text.index(prefix + command_guard))
             self.assertLess(text.index(prefix + package_manifest_activation_guard), text.index(prefix + index_guard))
             self.assertLess(text.index(prefix + package_tag_guard), text.index(prefix + command_guard))

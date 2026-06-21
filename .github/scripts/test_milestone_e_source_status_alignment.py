@@ -111,6 +111,10 @@ SOURCE_STATUS_ARTIFACTS = (
         "docs/milestone-e-package-publication-approval-prep.json",
         "schemas/ethos-milestone-e-package-publication-approval-prep.schema.json",
     ),
+    SourceStatusArtifact(
+        "docs/milestone-e-public-facing-readiness-ledger.json",
+        "schemas/ethos-milestone-e-public-facing-readiness-ledger.schema.json",
+    ),
 )
 
 STATUS_VALIDATION_RECORDS = (

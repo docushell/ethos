@@ -92,6 +92,12 @@ positioning, public benchmark reports, or public benchmark claims.
 The package publication evidence records under `docs/validation/` record reserved-name inventory
 reconciliation, metadata/license/README readiness, dry-run/smoke planning, version/tag policy, and
 PDFium packaging boundary evidence for that prep lane. They keep package publication blocked.
+The public-facing readiness ledger lives in
+`docs/milestone-e-public-facing-readiness-ledger.json` and is schema-bound by
+`schemas/ethos-milestone-e-public-facing-readiness-ledger.schema.json`. It records current main
+`847e12d` / tree `9d3701aa14d98017626583c2a0a0ef45ac0df79f` as a current-main refresh candidate
+only, keeps the reviewed source-only public beta binding at `d755e7c` / `3f9e1c4`, and retains
+package-publication resolution gaps while package publication remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -276,6 +282,10 @@ or broad demo-generation workflows.
 - The package publication real-version-selection prep follow-up remains limited to future SemVer
   candidate review; no package publication version is selected, and real package version selection
   approval, package tag creation, public installation, and package publication remain blocked.
+- The public-facing readiness ledger remains limited to current-main refresh candidate tracking and
+  package-publication gap retention; it does not refresh the reviewed source-only public beta source
+  state, approve package publication, approve public installation, or soften any current
+  public-facing blocker.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,
