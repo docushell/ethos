@@ -21,6 +21,7 @@
     "evidence_records",
     "follow_up_records",
     "publication_approval_decision_inputs",
+    "candidate_crate_surface_review",
     "public_boundary",
     "approval_scope",
     "required_evidence",
@@ -55,6 +56,9 @@
     "follow_up_records": { "$ref": "#/$defs/follow_up_records" },
     "publication_approval_decision_inputs": {
       "$ref": "#/$defs/publication_approval_decision_inputs"
+    },
+    "candidate_crate_surface_review": {
+      "$ref": "#/$defs/candidate_crate_surface_review"
     },
     "public_boundary": {
       "type": "array",
@@ -342,6 +346,48 @@
         }
       }
     },
+    "candidate_crate_surface_review": {
+      "type": "object",
+      "required": [
+        "review_state",
+        "included_candidate_crates",
+        "excluded_reserved_crates",
+        "required_before_publication",
+        "retained_blockers"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "review_state": { "const": "candidate_surface_review_recorded_publication_blocked" },
+        "included_candidate_crates": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "$ref": "#/$defs/candidate_included_crate" },
+          "uniqueItems": true
+        },
+        "excluded_reserved_crates": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/candidate_excluded_crate" },
+          "uniqueItems": true
+        },
+        "required_before_publication": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/candidate_required_before_publication" },
+          "uniqueItems": true
+        },
+        "retained_blockers": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/candidate_surface_retained_blocker" },
+          "uniqueItems": true
+        }
+      }
+    },
     "reserved_identifier": {
       "enum": [
         "ethos-doc-core",
@@ -386,6 +432,39 @@
         "no registry-backed dependent package assembly activation is approved",
         "public installation remains blocked",
         "package publication remains blocked"
+      ]
+    },
+    "candidate_included_crate": {
+      "enum": [
+        "ethos-doc-core from crates/ethos-core; current manifest name ethos-core; publish=false; package-name migration remains pending",
+        "ethos-verify from crates/ethos-verify; current manifest name ethos-verify; publish=false; dependency manifest activation remains pending",
+        "ethos-pdf from crates/ethos-pdf; current manifest name ethos-pdf; publish=false; dependency manifest activation and PDFium boundary confirmation must remain current"
+      ]
+    },
+    "candidate_excluded_crate": {
+      "enum": [
+        "ethos-doc remains excluded because no in-tree workspace member or package manifest exists",
+        "ethos-rag remains excluded because no in-tree package manifest exists"
+      ]
+    },
+    "candidate_required_before_publication": {
+      "enum": [
+        "exact SemVer package version selection",
+        "exact package tag name and source commit",
+        "exact package-name migration diff for ethos-doc-core",
+        "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+        "exact registry-backed dependent package assembly evidence",
+        "exact public installation wording and explicit exclusions"
+      ]
+    },
+    "candidate_surface_retained_blocker": {
+      "enum": [
+        "candidate surface review does not approve package publication",
+        "candidate surface review does not select a package publication version",
+        "candidate surface review does not create a package tag",
+        "candidate surface review does not change Cargo manifests",
+        "candidate surface review does not approve public installation",
+        "candidate surface review does not approve registry-backed dependent package assembly activation"
       ]
     },
     "in_tree_reconciliation": {

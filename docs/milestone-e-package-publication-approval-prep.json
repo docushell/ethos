@@ -111,6 +111,34 @@
       "package publication remains blocked"
     ]
   },
+  "candidate_crate_surface_review": {
+    "review_state": "candidate_surface_review_recorded_publication_blocked",
+    "included_candidate_crates": [
+      "ethos-doc-core from crates/ethos-core; current manifest name ethos-core; publish=false; package-name migration remains pending",
+      "ethos-verify from crates/ethos-verify; current manifest name ethos-verify; publish=false; dependency manifest activation remains pending",
+      "ethos-pdf from crates/ethos-pdf; current manifest name ethos-pdf; publish=false; dependency manifest activation and PDFium boundary confirmation must remain current"
+    ],
+    "excluded_reserved_crates": [
+      "ethos-doc remains excluded because no in-tree workspace member or package manifest exists",
+      "ethos-rag remains excluded because no in-tree package manifest exists"
+    ],
+    "required_before_publication": [
+      "exact SemVer package version selection",
+      "exact package tag name and source commit",
+      "exact package-name migration diff for ethos-doc-core",
+      "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+      "exact registry-backed dependent package assembly evidence",
+      "exact public installation wording and explicit exclusions"
+    ],
+    "retained_blockers": [
+      "candidate surface review does not approve package publication",
+      "candidate surface review does not select a package publication version",
+      "candidate surface review does not create a package tag",
+      "candidate surface review does not change Cargo manifests",
+      "candidate surface review does not approve public installation",
+      "candidate surface review does not approve registry-backed dependent package assembly activation"
+    ]
+  },
   "public_boundary": [
     "public reports remain blocked",
     "release artifacts remain blocked",
