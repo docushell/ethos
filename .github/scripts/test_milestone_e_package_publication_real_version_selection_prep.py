@@ -27,11 +27,12 @@ from makefile_guard import target_block
 
 ROOT = Path(__file__).resolve().parents[2]
 PREP = ROOT / "docs/milestone-e-package-publication-approval-prep.json"
+LANE_BLOCKERS = ROOT / "docs/milestone-e-public-approval-lane-blockers.json"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 RECORD = (
     ROOT
-    / "docs/validation/milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md"
+    / "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md"
 )
 
 FORBIDDEN_SCOPE_EXPANSION = [
@@ -73,58 +74,71 @@ def load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-class MilestoneEPackagePublicationVersionTagPolicyTests(unittest.TestCase):
-    def test_package_prep_artifact_records_version_tag_follow_up(self) -> None:
+class MilestoneEPackagePublicationRealVersionSelectionPrepTests(unittest.TestCase):
+    def test_package_prep_artifact_records_real_version_selection_prep(self) -> None:
         prep = load_json(PREP)
+        lane_blockers = load_json(LANE_BLOCKERS)
         status = prep["evidence_review_status"]["version_tag_policy"]
         blocker_text = " ".join(prep["explicit_blockers"])
+        [package_lane] = [
+            lane for lane in lane_blockers["approval_lanes"] if lane["lane_id"] == "package-publication"
+        ]
+        lane_blocker_text = " ".join(package_lane["explicit_blockers"])
 
         self.assertEqual(
             "docs/validation/"
-            "milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md",
-            prep["follow_up_records"]["package_version_tag_policy"],
+            "milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
+            prep["follow_up_records"]["package_real_version_selection_prep"],
         )
-        self.assertIn("version/tag policy follow-up", status)
         self.assertIn("real-version-selection prep recorded", status)
         self.assertIn("workspace 0.1.0 remains source-tree only", status)
         self.assertIn("reserved 0.0.0-reserved.0 names remain placeholders", status)
         self.assertIn("no package publication version is selected", status)
         self.assertIn("real-version publication remains blocked", status)
-        self.assertIn("real package version selection", blocker_text)
+        self.assertIn("real package version selection approval", blocker_text)
         self.assertIn("package tag creation", blocker_text)
-        self.assertIn("project-maintained PDFium builds remain blocked", blocker_text)
+        self.assertIn("real package version selection approval", lane_blocker_text)
+        self.assertIn("package tag creation", lane_blocker_text)
 
-    def test_workspace_and_reserved_versions_stay_separate(self) -> None:
-        root_manifest = read(ROOT / "Cargo.toml")
-        adr = normalized(ROOT / "docs/decisions/ADR-0006-package-identifiers.md")
+    def test_current_versions_and_manifests_stay_source_tree_only(self) -> None:
+        workspace = read(ROOT / "Cargo.toml")
+        core = read(ROOT / "crates/ethos-core/Cargo.toml")
+        verify = read(ROOT / "crates/ethos-verify/Cargo.toml")
+        pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
+
+        self.assertIn('version = "0.1.0"', workspace)
+        self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', core)
+        self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', verify)
+        self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', pdf)
+        self.assertIn("publish = false", core)
+        self.assertIn("publish = false", verify)
+        self.assertIn("publish = false", pdf)
+
+    def test_real_version_selection_record_names_future_review_boundary(self) -> None:
         record = normalized(RECORD)
 
-        self.assertIn('version = "0.1.0"', root_manifest)
-        self.assertIn("0.0.0-reserved.0", adr)
-        self.assertIn("Workspace package version `0.1.0` remains a source-tree version", record)
-        self.assertIn("ADR-0006 crates.io reservations remain `0.0.0-reserved.0` placeholders", record)
-        self.assertIn("Placeholder reservations are not installable packages", record)
-        self.assertIn("No package tag is created by this record", record)
+        self.assertIn("Validated source HEAD before this record: `57e3782`", record)
+        self.assertIn(
+            "Status: **pass for package real-version-selection prep with publication blocked**",
+            record,
+        )
+        self.assertIn("No package publication version is selected by this record", record)
+        self.assertIn("workspace `0.1.0` remains source-tree only", record)
+        self.assertIn("reserved `0.0.0-reserved.0` placeholders remain placeholders", record)
+        self.assertIn("future real-version selection review", record)
+        self.assertIn("SemVer candidate", record)
+        self.assertIn("package tag namespace", record)
+        self.assertIn("Real package version selection approval remains blocked", record)
+        self.assertIn("Package tag creation remains blocked", record)
+        self.assertIn("Package publication remains blocked", record)
 
-    def test_validation_record_is_indexed_and_keeps_publication_blocked(self) -> None:
+    def test_validation_record_is_indexed_and_names_commands(self) -> None:
         readme = read(VALIDATION_README)
         record = normalized(RECORD)
 
         self.assertIn(RECORD.name, readme)
-        self.assertIn("Validated source HEAD before this record: `fb869c6`", record)
         self.assertIn(
-            "Status: **pass for version/tag policy follow-up with publication blocked**",
-            record,
-        )
-        self.assertIn("Package publication remains blocked", record)
-        self.assertIn("Public installation from crates.io remains blocked", record)
-        self.assertIn("Real-version cargo publish remains blocked", record)
-        self.assertIn("Real package version selection remains blocked", record)
-        self.assertIn("Package tag creation remains blocked", record)
-        self.assertIn("ethos-source-snapshot-660f268", record)
-        self.assertIn("ethos-package-<crate-name>-<version>", record)
-        self.assertIn(
-            "python3 .github/scripts/test_milestone_e_package_publication_version_tag_policy.py",
+            "python3 .github/scripts/test_milestone_e_package_publication_real_version_selection_prep.py",
             record,
         )
         self.assertIn("python3 .github/scripts/test_public_surface_posture.py", record)
@@ -133,17 +147,17 @@ class MilestoneEPackagePublicationVersionTagPolicyTests(unittest.TestCase):
         self.assertIn("make milestone-e-prep PYTHON=<jsonschema-venv>/bin/python", record)
         self.assertIn("git diff --check", record)
 
-    def test_make_and_ci_run_guard_after_dry_run_smoke(self) -> None:
+    def test_make_and_ci_run_guard_after_registry_assembly_prep(self) -> None:
         make_block = target_block("milestone-e-prep")
         ci = read(CI_WORKFLOW)
-        dry_run_guard = "test_milestone_e_package_publication_dry_run_smoke.py"
-        version_tag_guard = "test_milestone_e_package_publication_version_tag_policy.py"
+        registry_guard = "test_milestone_e_package_publication_registry_assembly_prep.py"
+        version_guard = "test_milestone_e_package_publication_real_version_selection_prep.py"
         command_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
-            self.assertIn(prefix + version_tag_guard, text)
-            self.assertLess(text.index(prefix + dry_run_guard), text.index(prefix + version_tag_guard))
-            self.assertLess(text.index(prefix + version_tag_guard), text.index(prefix + command_guard))
+            self.assertIn(prefix + version_guard, text)
+            self.assertLess(text.index(prefix + registry_guard), text.index(prefix + version_guard))
+            self.assertLess(text.index(prefix + version_guard), text.index(prefix + command_guard))
 
     def test_no_scope_expansion_language_or_private_paths(self) -> None:
         for path in (RECORD, ROOT / "docs/milestone-e-package-publication-approval-prep.json"):
