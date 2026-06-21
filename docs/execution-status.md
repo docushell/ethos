@@ -197,6 +197,8 @@ The current-main source-only public beta approval in `docs/validation/milestone-
 
 The package publication approval resolution plan in `docs/validation/milestone-e-package-publication-approval-resolution-plan-validation-2026-06-21.md` records current source commit `524535a` / tree `0785ffca8423c42e2c4105df7752e290cc88e5c2` as the source state for later exact package-publication decision review. It orders the remaining version, tag, manifest activation, registry-backed assembly, public installation wording, and posture/claims inputs while package publication remains blocked and public installation remains blocked.
 
+The package publication decision input packet in `docs/validation/milestone-e-package-publication-decision-input-packet-validation-2026-06-21.md` records candidate version, tag, source binding, manifest activation, registry-backed assembly, and public installation wording inputs for later review against source commit `54bf70f` / tree `5a197bee718e3b31399563340169e9efd4f1317c`. Package publication remains blocked and public installation remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
