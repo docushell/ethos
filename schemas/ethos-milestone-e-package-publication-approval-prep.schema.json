@@ -25,6 +25,7 @@
     "semver_package_version_decision_prep",
     "package_publication_decision_prep_bundle",
     "package_publication_approval_request_packet",
+    "package_publication_pre_approval_gap_ledger",
     "public_boundary",
     "approval_scope",
     "required_evidence",
@@ -71,6 +72,9 @@
     },
     "package_publication_approval_request_packet": {
       "$ref": "#/$defs/package_publication_approval_request_packet"
+    },
+    "package_publication_pre_approval_gap_ledger": {
+      "$ref": "#/$defs/package_publication_pre_approval_gap_ledger"
     },
     "public_boundary": {
       "type": "array",
@@ -278,7 +282,8 @@
         "package_registry_assembly_activation_prep",
         "package_real_version_selection_prep",
         "package_tag_creation_prep",
-        "package_decision_bundle_validation"
+        "package_decision_bundle_validation",
+        "package_pre_approval_gap_ledger"
       ],
       "additionalProperties": false,
       "properties": {
@@ -317,6 +322,9 @@
         },
         "package_decision_bundle_validation": {
           "const": "docs/validation/milestone-e-package-publication-decision-bundle-validation-2026-06-21.md"
+        },
+        "package_pre_approval_gap_ledger": {
+          "const": "docs/validation/milestone-e-package-publication-pre-approval-gap-ledger-validation-2026-06-21.md"
         }
       }
     },
@@ -560,6 +568,56 @@
         }
       }
     },
+    "package_publication_pre_approval_gap_ledger": {
+      "type": "object",
+      "required": [
+        "ledger_state",
+        "gap_rows",
+        "blocked_actions",
+        "required_resolution_inputs",
+        "non_approvals",
+        "retained_blockers"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "ledger_state": { "const": "pre_approval_gaps_recorded_publication_blocked" },
+        "gap_rows": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": { "$ref": "#/$defs/pre_approval_gap_row" },
+          "uniqueItems": true
+        },
+        "blocked_actions": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/pre_approval_blocked_action" },
+          "uniqueItems": true
+        },
+        "required_resolution_inputs": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "items": { "$ref": "#/$defs/pre_approval_required_resolution_input" },
+          "uniqueItems": true
+        },
+        "non_approvals": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/pre_approval_non_approval" },
+          "uniqueItems": true
+        },
+        "retained_blockers": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": { "$ref": "#/$defs/packet_retained_blocker" },
+          "uniqueItems": true
+        }
+      }
+    },
     "reserved_identifier": {
       "enum": [
         "ethos-doc-core",
@@ -768,6 +826,55 @@
         "public installation remains blocked",
         "package publication remains blocked",
         "real-version cargo publish remains blocked"
+      ]
+    },
+    "pre_approval_gap_row": {
+      "enum": [
+        "version map gap: no package publication version is selected; requires exact SemVer package version or per-crate version map",
+        "tag name gap: no package tag is created; requires exact package tag name",
+        "tag binding gap: no package_tag_source_commit or source tree is selected; requires exact source commit and tree binding",
+        "manifest activation gap: current Cargo manifests remain unchanged; requires exact package-name migration and dependency activation diff",
+        "registry assembly gap: no registry-backed dependent package assembly is activated; requires exact non-public assembly evidence",
+        "public installation wording gap: no public installation wording is approved; requires exact wording and exclusions",
+        "posture and claims gate gap: gates must rerun after exact public installation wording changes"
+      ]
+    },
+    "pre_approval_blocked_action": {
+      "enum": [
+        "selecting a package publication version remains blocked",
+        "creating a package tag remains blocked",
+        "changing Cargo manifests remains blocked",
+        "activating package dependency manifests remains blocked",
+        "creating a registry remains blocked",
+        "activating registry-backed dependent package assembly remains blocked",
+        "inviting public installation remains blocked",
+        "approving package publication remains blocked"
+      ]
+    },
+    "pre_approval_required_resolution_input": {
+      "enum": [
+        "exact package publication approval decision record",
+        "exact candidate crate list",
+        "exact SemVer package version or per-crate version map",
+        "exact package tag name",
+        "exact package_tag_source_commit and package source tree",
+        "exact package-name migration diff for ethos-doc-core",
+        "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+        "exact registry-backed dependent package assembly evidence",
+        "exact public installation wording and explicit exclusions",
+        "posture and claims gates after exact public installation wording changes"
+      ]
+    },
+    "pre_approval_non_approval": {
+      "enum": [
+        "this ledger does not select a package publication version",
+        "this ledger does not create a package tag",
+        "this ledger does not change Cargo manifests",
+        "this ledger does not activate package dependency manifests",
+        "this ledger does not create a registry",
+        "this ledger does not activate registry-backed dependent package assembly",
+        "this ledger does not invite public installation",
+        "this ledger does not approve package publication"
       ]
     },
     "in_tree_reconciliation": {

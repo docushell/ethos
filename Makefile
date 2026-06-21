@@ -219,6 +219,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_manifest_activation_prep.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_registry_assembly_activation_prep.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_decision_bundle_validation_record.py
+	$(PYTHON) .github/scripts/test_milestone_e_package_publication_pre_approval_gap_ledger.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py

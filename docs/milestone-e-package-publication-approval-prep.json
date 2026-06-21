@@ -78,7 +78,8 @@
     "package_registry_assembly_activation_prep": "docs/validation/milestone-e-package-publication-registry-assembly-activation-prep-validation-2026-06-21.md",
     "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
     "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md",
-    "package_decision_bundle_validation": "docs/validation/milestone-e-package-publication-decision-bundle-validation-2026-06-21.md"
+    "package_decision_bundle_validation": "docs/validation/milestone-e-package-publication-decision-bundle-validation-2026-06-21.md",
+    "package_pre_approval_gap_ledger": "docs/validation/milestone-e-package-publication-pre-approval-gap-ledger-validation-2026-06-21.md"
   },
   "publication_approval_decision_inputs": {
     "decision_status": "not_approved_pending_exact_decision",
@@ -249,6 +250,59 @@
       "this packet does not activate registry-backed dependent package assembly",
       "this packet does not invite public installation",
       "this packet does not approve package publication"
+    ],
+    "retained_blockers": [
+      "no package publication version is selected",
+      "no package tag is created",
+      "no package dependency manifest activation is approved",
+      "no registry-backed dependent package assembly activation is approved",
+      "public installation remains blocked",
+      "package publication remains blocked",
+      "real-version cargo publish remains blocked"
+    ]
+  },
+  "package_publication_pre_approval_gap_ledger": {
+    "ledger_state": "pre_approval_gaps_recorded_publication_blocked",
+    "gap_rows": [
+      "version map gap: no package publication version is selected; requires exact SemVer package version or per-crate version map",
+      "tag name gap: no package tag is created; requires exact package tag name",
+      "tag binding gap: no package_tag_source_commit or source tree is selected; requires exact source commit and tree binding",
+      "manifest activation gap: current Cargo manifests remain unchanged; requires exact package-name migration and dependency activation diff",
+      "registry assembly gap: no registry-backed dependent package assembly is activated; requires exact non-public assembly evidence",
+      "public installation wording gap: no public installation wording is approved; requires exact wording and exclusions",
+      "posture and claims gate gap: gates must rerun after exact public installation wording changes"
+    ],
+    "blocked_actions": [
+      "selecting a package publication version remains blocked",
+      "creating a package tag remains blocked",
+      "changing Cargo manifests remains blocked",
+      "activating package dependency manifests remains blocked",
+      "creating a registry remains blocked",
+      "activating registry-backed dependent package assembly remains blocked",
+      "inviting public installation remains blocked",
+      "approving package publication remains blocked"
+    ],
+    "required_resolution_inputs": [
+      "exact package publication approval decision record",
+      "exact candidate crate list",
+      "exact SemVer package version or per-crate version map",
+      "exact package tag name",
+      "exact package_tag_source_commit and package source tree",
+      "exact package-name migration diff for ethos-doc-core",
+      "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+      "exact registry-backed dependent package assembly evidence",
+      "exact public installation wording and explicit exclusions",
+      "posture and claims gates after exact public installation wording changes"
+    ],
+    "non_approvals": [
+      "this ledger does not select a package publication version",
+      "this ledger does not create a package tag",
+      "this ledger does not change Cargo manifests",
+      "this ledger does not activate package dependency manifests",
+      "this ledger does not create a registry",
+      "this ledger does not activate registry-backed dependent package assembly",
+      "this ledger does not invite public installation",
+      "this ledger does not approve package publication"
     ],
     "retained_blockers": [
       "no package publication version is selected",

@@ -319,6 +319,11 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
   package publication and public installation blocked while recording that no package publication
   version is selected, no package tag is created, no Cargo manifest is changed, no registry is
   created, no registry-backed assembly is activated, and no public installation is invited.
+- `milestone-e-package-publication-pre-approval-gap-ledger-validation-2026-06-21.md` - package
+  publication pre-approval gap-ledger validation for the unresolved package publication approval
+  inputs; the record keeps package publication and public installation blocked while recording the
+  missing version map, package tag, source binding, manifest activation diff, registry-backed
+  assembly evidence, public installation wording, and posture/claims rerun requirements.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
