@@ -129,6 +129,9 @@ The registry-assembly prep follow-up records future non-public dependent candida
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,
 public installation, and package publication remain blocked.
+The real-version-selection prep follow-up records future SemVer candidate review while selecting no
+package publication version; real package version selection approval, package tag creation, public
+installation, and package publication remain blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane

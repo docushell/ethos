@@ -120,6 +120,9 @@ The registry-assembly prep follow-up record under `docs/validation/` covers futu
 dependent candidate assembly rehearsal only. No registry is created, current Cargo manifests remain
 unchanged, and registry-backed dependent package assembly activation, package dependency manifest
 activation, public installation, and package publication remain blocked.
+The real-version-selection prep follow-up record under `docs/validation/` covers future SemVer
+candidate review only. No package publication version is selected; real package version selection
+approval, package tag creation, public installation, and package publication remain blocked.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
@@ -259,6 +262,9 @@ or broad demo-generation workflows.
   dependent candidate assembly rehearsal; no registry is created, current Cargo manifests remain
   unchanged, and registry-backed dependent package assembly activation, package dependency manifest
   activation, public installation, and package publication remain blocked.
+- The package publication real-version-selection prep follow-up remains limited to future SemVer
+  candidate review; no package publication version is selected, and real package version selection
+  approval, package tag creation, public installation, and package publication remain blocked.
 - Blocked-output alignment remains identical across the use protocol, rehearsal/evidence matrix,
   blocker ledger, and matching schemas.
 - Evidence-lane alignment remains identical across the rehearsal/evidence matrix, blocker ledger,
