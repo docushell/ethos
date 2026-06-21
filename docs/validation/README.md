@@ -295,6 +295,10 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
   publication manifest-migration prep validation for a future core package-name migration and
   workspace dependency alias; the record keeps package publication and public installation blocked
   while recording that current Cargo manifests remain unchanged.
+- `milestone-e-package-publication-registry-assembly-prep-validation-2026-06-21.md` - package
+  publication registry-assembly prep validation for future non-public dependent candidate assembly
+  rehearsal; the record keeps package publication and public installation blocked while recording
+  that no registry is created and current Cargo manifests remain unchanged.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

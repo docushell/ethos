@@ -120,6 +120,7 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
         self.assertIn("local source-tree smoke", status)
         self.assertIn("dependency-ordering follow-up recorded", status)
         self.assertIn("manifest-migration prep recorded", status)
+        self.assertIn("registry-assembly prep recorded", status)
         self.assertIn("current source-tree manifests remain unchanged", status)
         self.assertIn("publication remains blocked", status)
         self.assertIn("registry-backed dependent package assembly", blocker_text)
