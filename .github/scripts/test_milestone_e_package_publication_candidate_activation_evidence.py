@@ -95,13 +95,20 @@ def git(*args: str) -> str:
 
 
 def run_candidate_activation() -> dict:
-    output = subprocess.check_output(
+    result = subprocess.run(
         ["python3", str(SCRIPT), "--json"],
         cwd=ROOT,
-        encoding="utf-8",
+        stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        encoding="utf-8",
     )
-    return json.loads(output)
+    if result.returncode != 0:
+        raise AssertionError(
+            "candidate activation script failed\n"
+            f"stdout:\n{result.stdout}\n"
+            f"stderr:\n{result.stderr}"
+        )
+    return json.loads(result.stdout)
 
 
 class MilestoneEPackagePublicationCandidateActivationEvidenceTests(unittest.TestCase):
@@ -120,6 +127,7 @@ class MilestoneEPackagePublicationCandidateActivationEvidenceTests(unittest.Test
         self.assertTrue(result["source_manifests_remain_blocked"])
         self.assertFalse(result["package_publication_approved"])
         self.assertFalse(result["public_installation_approved"])
+        self.assertNotIn("cargo generate-lockfile --offline", commands)
         self.assertIn("cargo vendor --locked --offline target/package-candidate-vendor", commands)
         self.assertIn("cargo package --locked --offline -p ethos-doc-core --allow-dirty --no-verify", commands)
         self.assertIn("cargo package --locked --offline -p ethos-verify --allow-dirty --no-verify", commands)

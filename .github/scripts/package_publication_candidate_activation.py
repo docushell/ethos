@@ -31,6 +31,13 @@ ROOT = Path(__file__).resolve().parents[2]
 VERSION = "0.1.0"
 CORE_PACKAGE = "ethos-doc-core"
 CANDIDATE_PACKAGES = (CORE_PACKAGE, "ethos-verify", "ethos-pdf")
+CONSUMER_PACKAGE = "ethos-package-candidate-consumer"
+CANDIDATE_NORMAL_DEPENDENCIES = {
+    CORE_PACKAGE: ["serde", "serde_json", "sha2", "thiserror"],
+    "ethos-pdf": [CORE_PACKAGE, "serde", "serde_json"],
+    "ethos-verify": [CORE_PACKAGE, "serde"],
+    CONSUMER_PACKAGE: [CORE_PACKAGE, "ethos-pdf", "ethos-verify"],
+}
 IGNORE_NAMES = {
     ".git",
     "target",
@@ -102,6 +109,14 @@ def replace_once(path: Path, old: str, new: str) -> None:
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
+def rewrite_candidate_lockfile(workspace: Path) -> None:
+    lockfile = workspace / "Cargo.lock"
+    text = lockfile.read_text(encoding="utf-8")
+    if 'name = "ethos-core"' not in text:
+        raise RuntimeError("expected ethos-core package entry in candidate Cargo.lock")
+    lockfile.write_text(text.replace("ethos-core", CORE_PACKAGE), encoding="utf-8")
+
+
 def materialize_candidate_workspace(workspace: Path) -> None:
     shutil.copytree(ROOT, workspace, ignore=should_ignore)
 
@@ -123,6 +138,7 @@ def materialize_candidate_workspace(workspace: Path) -> None:
         "authors.workspace = true\n\n[package.metadata.ethos_publication]",
         'authors.workspace = true\n\n[lib]\nname = "ethos_core"\n\n[package.metadata.ethos_publication]',
     )
+    rewrite_candidate_lockfile(workspace)
 
 
 def sha256(path: Path) -> str:
@@ -209,7 +225,7 @@ def write_consumer(workspace: Path, unpacked: Path) -> Path:
     (consumer / "src").mkdir(parents=True, exist_ok=True)
     (consumer / "Cargo.toml").write_text(
         f"""[package]
-name = "ethos-package-candidate-consumer"
+name = "{CONSUMER_PACKAGE}"
 version = "0.0.0"
 edition = "2021"
 publish = false
@@ -241,6 +257,112 @@ pub fn candidate_surface_links() -> &'static str {
         encoding="utf-8",
     )
     return consumer
+
+
+def dependency_name(dependency: str) -> str:
+    return dependency.split(" ", 1)[0]
+
+
+def lock_dependency_list(dependencies: list[str]) -> str:
+    lines = ["dependencies = ["]
+    lines.extend(f" {json.dumps(dependency)}," for dependency in dependencies)
+    lines.append("]")
+    return "\n".join(lines)
+
+
+def lock_package_entry(package: dict[str, object]) -> str:
+    lines = [
+        "[[package]]",
+        f"name = {json.dumps(package['name'])}",
+        f"version = {json.dumps(package['version'])}",
+    ]
+    if "source" in package:
+        lines.append(f"source = {json.dumps(package['source'])}")
+    if "checksum" in package:
+        lines.append(f"checksum = {json.dumps(package['checksum'])}")
+    dependencies = package.get("dependencies")
+    if dependencies:
+        lines.append(lock_dependency_list(dependencies))
+    return "\n".join(lines)
+
+
+def parse_lock_packages(lockfile: Path) -> list[dict[str, object]]:
+    packages: list[dict[str, object]] = []
+    for block in lockfile.read_text(encoding="utf-8").split("[[package]]\n")[1:]:
+        package: dict[str, object] = {}
+        dependencies: list[str] = []
+        in_dependencies = False
+        for raw_line in block.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+            if in_dependencies:
+                if line == "]":
+                    in_dependencies = False
+                else:
+                    dependencies.append(json.loads(line.rstrip(",")))
+                continue
+            if line == "dependencies = [":
+                in_dependencies = True
+                continue
+            if " = " not in line:
+                continue
+            key, value = line.split(" = ", 1)
+            if key in {"name", "version", "source", "checksum"}:
+                package[key] = json.loads(value)
+        if dependencies:
+            package["dependencies"] = dependencies
+        if package:
+            packages.append(package)
+    return packages
+
+
+def write_consumer_lockfile(workspace: Path, consumer: Path) -> None:
+    packages = parse_lock_packages(workspace / "Cargo.lock")
+    by_name = {package["name"]: package for package in packages}
+
+    selected: set[str] = set()
+    stack = [CONSUMER_PACKAGE]
+    while stack:
+        package_name = stack.pop()
+        if package_name in selected:
+            continue
+        selected.add(package_name)
+        if package_name in CANDIDATE_NORMAL_DEPENDENCIES:
+            dependencies = CANDIDATE_NORMAL_DEPENDENCIES[package_name]
+        else:
+            if package_name not in by_name:
+                raise RuntimeError(f"missing locked package for consumer dependency: {package_name}")
+            dependencies = by_name[package_name].get("dependencies", [])
+        stack.extend(dependency_name(dependency) for dependency in dependencies)
+
+    entries: list[dict[str, object]] = []
+    for package_name in sorted(selected):
+        if package_name == CONSUMER_PACKAGE:
+            entries.append(
+                {
+                    "name": CONSUMER_PACKAGE,
+                    "version": "0.0.0",
+                    "dependencies": CANDIDATE_NORMAL_DEPENDENCIES[CONSUMER_PACKAGE],
+                }
+            )
+        elif package_name in CANDIDATE_NORMAL_DEPENDENCIES:
+            entries.append(
+                {
+                    "name": package_name,
+                    "version": VERSION,
+                    "dependencies": CANDIDATE_NORMAL_DEPENDENCIES[package_name],
+                }
+            )
+        else:
+            entries.append(by_name[package_name])
+
+    text = "# This file is automatically @generated by Cargo.\n"
+    text += "# It is not intended for manual editing.\n"
+    text += "version = 4\n\n"
+    text += "\n\n".join(lock_package_entry(package) for package in entries)
+    text += "\n"
+    (consumer / "Cargo.lock").write_text(text, encoding="utf-8")
 
 
 def validate_packaged_manifests(artifacts: list[dict[str, str]]) -> dict[str, object]:
@@ -284,7 +406,6 @@ def source_manifests_are_still_blocked() -> bool:
 def run_candidate_activation(workspace: Path) -> dict[str, object]:
     commands: list[dict[str, object]] = []
     materialize_candidate_workspace(workspace)
-    run(["cargo", "generate-lockfile", "--offline"], workspace, commands)
     run(["cargo", "check", "--locked", "--offline", "-p", "ethos-verify"], workspace, commands)
     run(["cargo", "check", "--locked", "--offline", "-p", "ethos-pdf"], workspace, commands)
     core_artifact = package_candidate(workspace, CORE_PACKAGE, commands)
@@ -296,7 +417,7 @@ def run_candidate_activation(workspace: Path) -> dict[str, object]:
     checks = validate_packaged_manifests(artifacts)
     unpacked = extract_crates(workspace, artifacts)
     consumer = write_consumer(workspace, unpacked)
-    run(["cargo", "generate-lockfile", "--offline"], consumer, commands)
+    write_consumer_lockfile(workspace, consumer)
     run(["cargo", "check", "--locked", "--offline"], consumer, commands)
 
     return {
