@@ -376,6 +376,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   activation workspace; the record binds the evidence to source commit `6cf211c` / tree
   `ae76bc588b64dc1e8087d9096d52545a3560c2c0` while package publication remains blocked and
   public installation remains blocked.
+- `milestone-e-package-publication-approval-decision-refresh-validation-2026-06-22.md` -
+  package publication approval decision refresh validation after candidate activation evidence is
+  present; the record binds the refresh to source commit `6a91511` / tree
+  `8b150d9aebdc282c358e4552a4d709c3140f41b4`, records that manual exact approval remains
+  required, and keeps package publication and public installation blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main

@@ -206,6 +206,11 @@ for source commit `6cf211c` / tree `ae76bc588b64dc1e8087d9096d52545a3560c2c0`. A
 non-public package activation workspace validates the candidate package-name and dependency shape
 while source Cargo manifests remain blocked, package publication remains blocked, and public
 installation remains blocked.
+The package publication approval decision refresh is recorded in
+[`docs/validation/milestone-e-package-publication-approval-decision-refresh-validation-2026-06-22.md`](validation/milestone-e-package-publication-approval-decision-refresh-validation-2026-06-22.md)
+for source commit `6a91511` / tree `8b150d9aebdc282c358e4552a4d709c3140f41b4`. Activation
+evidence is present, but manual exact approval remains required; source Cargo manifests remain
+unchanged, package publication remains blocked, and public installation remains blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane

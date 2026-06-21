@@ -295,7 +295,8 @@
         "package_public_installation_wording_review",
         "package_approval_decision_template",
         "package_approval_decision_record",
-        "package_candidate_activation_evidence"
+        "package_candidate_activation_evidence",
+        "package_approval_decision_refresh"
       ],
       "additionalProperties": false,
       "properties": {
@@ -361,6 +362,9 @@
         },
         "package_candidate_activation_evidence": {
           "const": "docs/validation/milestone-e-package-publication-candidate-activation-evidence-validation-2026-06-22.md"
+        },
+        "package_approval_decision_refresh": {
+          "const": "docs/validation/milestone-e-package-publication-approval-decision-refresh-validation-2026-06-22.md"
         }
       }
     },
