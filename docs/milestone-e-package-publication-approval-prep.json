@@ -163,6 +163,43 @@
       "package publication remains blocked"
     ]
   },
+  "package_publication_decision_prep_bundle": {
+    "decision_state": "combined_decision_inputs_recorded_actions_blocked",
+    "review_boundary": [
+      "package tag and source-commit decision inputs are recorded while creating no package tag",
+      "package dependency manifest activation inputs are recorded while changing no Cargo manifest",
+      "registry-backed dependent package assembly inputs are recorded while creating no registry and activating no assembly",
+      "public installation wording and exclusion inputs are recorded while inviting no public installation"
+    ],
+    "required_decision_inputs": [
+      "exact package tag name",
+      "exact source commit for package tag binding",
+      "exact package-name migration diff for ethos-doc-core",
+      "exact dependency manifest activation diff for ethos-verify and ethos-pdf",
+      "exact registry-backed dependent package assembly evidence for ethos-doc-core before ethos-verify and ethos-pdf",
+      "exact public installation wording limited to a later approved package surface",
+      "exact exclusion list for wheels, npm packages, binaries, hosted surfaces, production positioning, public benchmark reports, public benchmark claims, and project-maintained PDFium builds",
+      "posture and claims gates after exact public installation wording changes"
+    ],
+    "non_approvals": [
+      "this bundle does not select a package publication version",
+      "this bundle does not create a package tag",
+      "this bundle does not change Cargo manifests",
+      "this bundle does not activate package dependency manifests",
+      "this bundle does not create a registry",
+      "this bundle does not activate registry-backed dependent package assembly",
+      "this bundle does not invite public installation",
+      "this bundle does not approve package publication"
+    ],
+    "retained_blockers": [
+      "no package publication version is selected",
+      "no package tag is created",
+      "no package dependency manifest activation is approved",
+      "no registry-backed dependent package assembly activation is approved",
+      "public installation remains blocked",
+      "package publication remains blocked"
+    ]
+  },
   "public_boundary": [
     "public reports remain blocked",
     "release artifacts remain blocked",
