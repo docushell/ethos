@@ -99,9 +99,9 @@
         "surface": {
           "const": "GitHub source repository docushell/ethos source-only evaluation"
         },
-        "reviewed_commit": { "const": "d755e7c" },
-        "merged_main_commit": { "const": "3f9e1c4" },
-        "tree": { "const": "a9e913b0ba7ecd1567479b2ec773342868cba126" },
+        "reviewed_commit": { "const": "902c423" },
+        "merged_main_commit": { "const": "6019a97" },
+        "tree": { "const": "f56fde854f6f6e4c4070209329f8c7b12310aa51" },
         "boundary": { "const": "source-only clone, build, and validation commands only" }
       }
     },

@@ -34,7 +34,7 @@ PACKAGE_PREP = ROOT / "docs/milestone-e-package-publication-approval-prep.json"
 RECORD = (
     ROOT
     / "docs/validation/"
-    "milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md"
+    "milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md"
 )
 VALIDATION_README = ROOT / "docs/validation/README.md"
 PREP_SCOPE = ROOT / "docs/milestone-e-prep-scope.md"
@@ -44,8 +44,8 @@ SCHEMAS_README = ROOT / "schemas/README.md"
 VALIDATE_EXAMPLES = ROOT / "schemas/validate_examples.py"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 
-CURRENT_MAIN_COMMIT = "847e12db42d4519665b1486ccb35c85fe01f00b0"
-CURRENT_MAIN_TREE = "9d3701aa14d98017626583c2a0a0ef45ac0df79f"
+CURRENT_MAIN_COMMIT = "6019a97651190182730453988dd4c75e828639fc"
+CURRENT_MAIN_TREE = "f56fde854f6f6e4c4070209329f8c7b12310aa51"
 EXPECTED_BOUNDARY = [
     "public reports remain blocked",
     "release artifacts remain blocked",
@@ -108,19 +108,22 @@ def git(*args: str) -> str:
 
 
 class MilestoneEPublicFacingReadinessLedgerTests(unittest.TestCase):
-    def test_ledger_records_current_main_without_new_approval(self) -> None:
+    def test_ledger_records_current_main_source_only_refresh_approval(self) -> None:
         ledger = load_json(LEDGER)
 
         self.assertEqual(1, ledger["schema_version"])
         self.assertEqual("source-only-pre-alpha-internal-milestone-e-prep", ledger["status"])
         self.assertEqual("public_facing_readiness_current_main_ledger", ledger["scope"])
         self.assertEqual(
-            "current_main_readiness_recorded_without_new_approval",
+            "current_main_source_only_public_beta_refresh_approved",
             ledger["ledger_state"],
         )
         self.assertEqual(CURRENT_MAIN_COMMIT, ledger["validated_current_main"]["commit"])
         self.assertEqual(CURRENT_MAIN_TREE, ledger["validated_current_main"]["tree"])
-        self.assertIn("refresh candidate only", ledger["validated_current_main"]["candidate_status"])
+        self.assertIn(
+            "refreshed source-only public beta source state",
+            ledger["validated_current_main"]["candidate_status"],
+        )
         self.assertEqual(EXPECTED_BOUNDARY, ledger["public_boundary"])
 
     def test_current_main_binding_resolves_in_repository_history(self) -> None:
@@ -140,7 +143,7 @@ class MilestoneEPublicFacingReadinessLedgerTests(unittest.TestCase):
             ledger["current_main_refresh_candidate"]["candidate_tree"],
         )
 
-    def test_existing_public_beta_binding_stays_separate(self) -> None:
+    def test_public_beta_binding_refreshes_to_current_main(self) -> None:
         ledger = load_json(LEDGER)
         public_beta = load_json(PUBLIC_BETA_PREP)
 
@@ -148,14 +151,14 @@ class MilestoneEPublicFacingReadinessLedgerTests(unittest.TestCase):
             public_beta["approved_public_beta_source"],
             ledger["approved_public_beta_source"],
         )
-        self.assertEqual("d755e7c", ledger["approved_public_beta_source"]["reviewed_commit"])
-        self.assertEqual("3f9e1c4", ledger["approved_public_beta_source"]["merged_main_commit"])
-        self.assertNotEqual(
+        self.assertEqual("902c423", ledger["approved_public_beta_source"]["reviewed_commit"])
+        self.assertEqual("6019a97", ledger["approved_public_beta_source"]["merged_main_commit"])
+        self.assertEqual(
             ledger["approved_public_beta_source"]["tree"],
             ledger["current_main_refresh_candidate"]["candidate_tree"],
         )
         self.assertIn(
-            "requires dedicated source-only public beta refresh approval",
+            "dedicated source-only public beta refresh approval recorded",
             ledger["current_main_refresh_candidate"]["refresh_status"],
         )
 
@@ -182,10 +185,7 @@ class MilestoneEPublicFacingReadinessLedgerTests(unittest.TestCase):
         self.assertIn("hosted surfaces remain blocked", ledger["cross_lane_blockers"])
         self.assertIn("production positioning remains blocked", ledger["cross_lane_blockers"])
         self.assertIn("public benchmark claims remain blocked", ledger["cross_lane_blockers"])
-        self.assertIn(
-            "this ledger does not refresh the reviewed public beta source state",
-            ledger["non_approvals"],
-        )
+        self.assertIn("this ledger does not change the approved public beta wording", ledger["non_approvals"])
         self.assertIn("this ledger does not approve package publication", ledger["non_approvals"])
         self.assertIn("this ledger does not approve public installation", ledger["non_approvals"])
 
@@ -199,6 +199,7 @@ class MilestoneEPublicFacingReadinessLedgerTests(unittest.TestCase):
         self.assertIn("package_publication_resolution_criteria", schema["required"])
         self.assertEqual(14, schema["properties"]["cross_lane_blockers"]["minItems"])
         self.assertEqual(12, schema["properties"]["non_approvals"]["minItems"])
+        self.assertEqual(10, schema["properties"]["required_gates"]["maxItems"])
         self.assertIn("ethos-milestone-e-public-facing-readiness-ledger.schema.json", validate_examples)
         self.assertIn("docs\" / \"milestone-e-public-facing-readiness-ledger.json", validate_examples)
         self.assertIn("ethos-milestone-e-public-facing-readiness-ledger.schema.json", schemas_readme)
@@ -210,12 +211,15 @@ class MilestoneEPublicFacingReadinessLedgerTests(unittest.TestCase):
         ledger = load_json(LEDGER)
 
         self.assertIn(RECORD.name, readme)
-        self.assertIn("public-facing readiness ledger validation", re.sub(r"\s+", " ", readme))
-        self.assertIn("Validated source HEAD before this record: `847e12d`", read(RECORD))
+        self.assertIn(
+            "current-main source-only public beta approval validation",
+            re.sub(r"\s+", " ", readme),
+        )
+        self.assertIn("Validated source HEAD before this record: `6019a97`", read(RECORD))
         for gate in ledger["required_gates"]:
             self.assertIn(gate, record)
         for blocker in ledger["cross_lane_blockers"]:
-            self.assertIn(blocker, record)
+            self.assertIn(blocker.lower(), record.lower())
         self.assertIn("Ethos remains source-only pre-alpha", record)
         self.assertIn("Public reports remain blocked", record)
         self.assertIn("Public result wording remains blocked", record)
@@ -226,7 +230,7 @@ class MilestoneEPublicFacingReadinessLedgerTests(unittest.TestCase):
 
             self.assertIn("docs/milestone-e-public-facing-readiness-ledger.json", doc, str(path))
             self.assertIn("public-facing readiness ledger", doc, str(path))
-            self.assertIn("current-main refresh candidate", doc, str(path))
+            self.assertIn("current-main source-only public beta", doc, str(path))
             self.assertIn("package publication remains blocked", doc, str(path))
 
     def test_make_and_ci_run_readiness_ledger_after_package_gap_ledger(self) -> None:

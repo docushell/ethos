@@ -339,6 +339,13 @@ recording the exact current-main source candidate and required follow-up evidenc
   candidate artifact for commit `9262b28` / tree `9f18f9e40c57551aef9b0cb2a53641c87207546b`;
   refreshed reviewed source-only public beta state, public installation, and package publication
   remain blocked.
+- `milestone-e-public-beta-current-main-source-only-approval-validation-2026-06-21.md` -
+  current-main source-only public beta approval validation recorded reviewed commit `902c423`,
+  merged main commit `6019a97`, and tree `f56fde854f6f6e4c4070209329f8c7b12310aa51` as the
+  refreshed GitHub source-repository public beta source binding; package publication, public
+  installation, hosted surfaces, production positioning, public benchmark reports, public
+  benchmark claims, release artifacts, binaries, wheels, npm packages, crate publication,
+  project-maintained PDFium builds, public reports, and public result wording remain blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
