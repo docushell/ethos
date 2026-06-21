@@ -139,6 +139,30 @@
       "candidate surface review does not approve registry-backed dependent package assembly activation"
     ]
   },
+  "semver_package_version_decision_prep": {
+    "review_state": "semver_decision_inputs_recorded_version_unselected_publication_blocked",
+    "current_version_context": [
+      "workspace package version is 0.1.0 and remains source-tree only",
+      "reserved crates.io placeholders remain 0.0.0-reserved.0",
+      "candidate surface review includes ethos-doc-core, ethos-verify, and ethos-pdf only"
+    ],
+    "required_exact_decision_fields": [
+      "exact SemVer package version for each included candidate crate",
+      "exact confirmation that all included candidate crates share the same SemVer package version or an explicit per-crate version map",
+      "exact source commit for the version decision",
+      "exact package tag name that binds the selected version and source commit",
+      "exact manifest diff showing package-name migration and dependency activation",
+      "exact pre-publication dry-run and local install evidence for the selected version"
+    ],
+    "retained_blockers": [
+      "no SemVer package version is selected",
+      "workspace version 0.1.0 is not approved as a package publication version",
+      "reserved placeholder version 0.0.0-reserved.0 remains a reservation only",
+      "no package tag is created",
+      "public installation remains blocked",
+      "package publication remains blocked"
+    ]
+  },
   "public_boundary": [
     "public reports remain blocked",
     "release artifacts remain blocked",
