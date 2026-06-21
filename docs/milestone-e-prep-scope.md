@@ -117,6 +117,11 @@ The package publication decision input packet is recorded in
 It binds candidate review inputs to source commit `54bf70f` / tree
 `5a197bee718e3b31399563340169e9efd4f1317c` while package publication remains blocked and public
 installation remains blocked.
+The package publication approval readiness review is recorded in
+`docs/validation/milestone-e-package-publication-approval-readiness-review-validation-2026-06-21.md`.
+It records readiness status for source commit `9054f1c` / tree
+`3f8cb66249826d67ab6030032c7784a2a4ff411b` while package publication remains blocked and public
+installation remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and

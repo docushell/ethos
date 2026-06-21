@@ -267,6 +267,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_package_publication_decision_input_packet.py",
     ),
     RecordCoverage(
+        "milestone-e-package-publication-approval-readiness-review-validation-2026-06-21.md",
+        "test_milestone_e_package_publication_approval_readiness_review.py",
+    ),
+    RecordCoverage(
         "milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md",
         "test_milestone_e_public_facing_readiness_ledger.py",
     ),

@@ -93,6 +93,7 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_decision_bundle_validation": "docs/validation/milestone-e-package-publication-decision-bundle-validation-2026-06-21.md",
     "package_pre_approval_gap_ledger": "docs/validation/milestone-e-package-publication-pre-approval-gap-ledger-validation-2026-06-21.md",
     "package_decision_input_packet": "docs/validation/milestone-e-package-publication-decision-input-packet-validation-2026-06-21.md",
+    "package_approval_readiness_review": "docs/validation/milestone-e-package-publication-approval-readiness-review-validation-2026-06-21.md",
 }
 EXPECTED_PUBLICATION_DECISION_INPUTS = {
     "decision_status": "not_approved_pending_exact_decision",
