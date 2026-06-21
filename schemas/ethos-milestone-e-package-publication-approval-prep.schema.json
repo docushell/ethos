@@ -22,6 +22,7 @@
     "follow_up_records",
     "publication_approval_decision_inputs",
     "candidate_crate_surface_review",
+    "semver_package_version_decision_prep",
     "public_boundary",
     "approval_scope",
     "required_evidence",
@@ -59,6 +60,9 @@
     },
     "candidate_crate_surface_review": {
       "$ref": "#/$defs/candidate_crate_surface_review"
+    },
+    "semver_package_version_decision_prep": {
+      "$ref": "#/$defs/semver_package_version_decision_prep"
     },
     "public_boundary": {
       "type": "array",
@@ -388,6 +392,42 @@
         }
       }
     },
+    "semver_package_version_decision_prep": {
+      "type": "object",
+      "required": [
+        "review_state",
+        "current_version_context",
+        "required_exact_decision_fields",
+        "retained_blockers"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "review_state": {
+          "const": "semver_decision_inputs_recorded_version_unselected_publication_blocked"
+        },
+        "current_version_context": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "$ref": "#/$defs/semver_current_version_context" },
+          "uniqueItems": true
+        },
+        "required_exact_decision_fields": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/semver_required_exact_decision_field" },
+          "uniqueItems": true
+        },
+        "retained_blockers": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/semver_retained_blocker" },
+          "uniqueItems": true
+        }
+      }
+    },
     "reserved_identifier": {
       "enum": [
         "ethos-doc-core",
@@ -465,6 +505,33 @@
         "candidate surface review does not change Cargo manifests",
         "candidate surface review does not approve public installation",
         "candidate surface review does not approve registry-backed dependent package assembly activation"
+      ]
+    },
+    "semver_current_version_context": {
+      "enum": [
+        "workspace package version is 0.1.0 and remains source-tree only",
+        "reserved crates.io placeholders remain 0.0.0-reserved.0",
+        "candidate surface review includes ethos-doc-core, ethos-verify, and ethos-pdf only"
+      ]
+    },
+    "semver_required_exact_decision_field": {
+      "enum": [
+        "exact SemVer package version for each included candidate crate",
+        "exact confirmation that all included candidate crates share the same SemVer package version or an explicit per-crate version map",
+        "exact source commit for the version decision",
+        "exact package tag name that binds the selected version and source commit",
+        "exact manifest diff showing package-name migration and dependency activation",
+        "exact pre-publication dry-run and local install evidence for the selected version"
+      ]
+    },
+    "semver_retained_blocker": {
+      "enum": [
+        "no SemVer package version is selected",
+        "workspace version 0.1.0 is not approved as a package publication version",
+        "reserved placeholder version 0.0.0-reserved.0 remains a reservation only",
+        "no package tag is created",
+        "public installation remains blocked",
+        "package publication remains blocked"
       ]
     },
     "in_tree_reconciliation": {
