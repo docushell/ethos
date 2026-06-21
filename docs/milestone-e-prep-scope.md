@@ -127,6 +127,12 @@ The package publication manifest-activation diff review is recorded in
 It records the candidate manifest activation diff for source commit `89d24c8` / tree
 `21b263dca908ef7cc977e7669e40206096eef93e` while current Cargo manifests remain unchanged,
 package publication remains blocked, and public installation remains blocked.
+The package publication registry-assembly evidence review is recorded in
+`docs/validation/milestone-e-package-publication-registry-assembly-evidence-review-validation-2026-06-21.md`.
+It records registry-backed dependent package assembly evidence requirements for source commit
+`3f0f3ed` / tree `6c748cd6f4a8de7789e42666697d1f25aa99f6f9` while no registry is created,
+registry-backed assembly is not activated, package publication remains blocked, and public
+installation remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and

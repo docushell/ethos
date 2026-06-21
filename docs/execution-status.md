@@ -203,6 +203,8 @@ The package publication approval readiness review in `docs/validation/milestone-
 
 The package publication manifest-activation diff review in `docs/validation/milestone-e-package-publication-manifest-activation-diff-review-validation-2026-06-21.md` records the candidate manifest activation diff against source commit `89d24c8` / tree `21b263dca908ef7cc977e7669e40206096eef93e`. Current Cargo manifests remain unchanged, package publication remains blocked, and public installation remains blocked.
 
+The package publication registry-assembly evidence review in `docs/validation/milestone-e-package-publication-registry-assembly-evidence-review-validation-2026-06-21.md` records registry-backed dependent package assembly evidence requirements against source commit `3f0f3ed` / tree `6c748cd6f4a8de7789e42666697d1f25aa99f6f9`. No registry is created, registry-backed assembly is not activated, package publication remains blocked, and public installation remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |

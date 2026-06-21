@@ -179,6 +179,12 @@ The package publication manifest-activation diff review is recorded in
 for source commit `89d24c8` / tree `21b263dca908ef7cc977e7669e40206096eef93e`. The candidate
 manifest activation diff is reviewed while current Cargo manifests remain unchanged, package
 publication remains blocked, and public installation remains blocked.
+The package publication registry-assembly evidence review is recorded in
+[`docs/validation/milestone-e-package-publication-registry-assembly-evidence-review-validation-2026-06-21.md`](validation/milestone-e-package-publication-registry-assembly-evidence-review-validation-2026-06-21.md)
+for source commit `3f0f3ed` / tree `6c748cd6f4a8de7789e42666697d1f25aa99f6f9`. Registry-backed
+dependent package assembly evidence requirements are recorded while no registry is created,
+registry-backed assembly is not activated, package publication remains blocked, and public
+installation remains blocked.
 This prep only identifies tracked trust-loop fixture candidates and guard wiring for internal
 continuation; blocked-output alignment keeps the current trust-loop protocol, rehearsal/evidence
 matrix, blocker ledger, and matching schemas on the same explicit blockers, while evidence-lane
