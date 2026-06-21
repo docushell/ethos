@@ -153,6 +153,12 @@ The package publication candidate activation evidence is recorded in
 It validates a temporary non-public package activation workspace for source commit `6cf211c` /
 tree `ae76bc588b64dc1e8087d9096d52545a3560c2c0`; source Cargo manifests remain blocked, package
 publication remains blocked, and public installation remains blocked.
+The package publication approval decision refresh is recorded in
+`docs/validation/milestone-e-package-publication-approval-decision-refresh-validation-2026-06-22.md`.
+It records that activation evidence is present for source commit `6a91511` / tree
+`8b150d9aebdc282c358e4552a4d709c3140f41b4`, while manual exact approval remains required,
+source Cargo manifests remain unchanged, package publication remains blocked, and public
+installation remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -269,6 +275,7 @@ package publication dry-run/smoke guard,
 package publication version/tag policy guard,
 package publication PDFium boundary guard,
 package publication dependency-ordering guard,
+package publication approval decision refresh guard,
 validation-command index checks,
 validation-record index checks, the prep guard-sequence index, validation-record guards, and diff
 hygiene. It intentionally does not run public-report, release, package, hosted, benchmark-report,
@@ -337,6 +344,9 @@ or broad demo-generation workflows.
 - The package publication real-version-selection prep follow-up remains limited to future SemVer
   candidate review; no package publication version is selected, and real package version selection
   approval, package tag creation, public installation, and package publication remain blocked.
+- The package publication approval decision refresh records that activation evidence is present;
+  manual exact approval remains required, source Cargo manifests remain unchanged, public
+  installation remains blocked, and package publication remains blocked.
 - The public-facing readiness ledger records the current-main source-only public beta source binding
   and package-publication gap retention; it does not approve package publication, approve public
   installation, or soften any current
