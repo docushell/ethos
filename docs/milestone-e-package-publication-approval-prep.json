@@ -53,7 +53,7 @@
     "package_inventory": "evidence recorded; ADR-0006 reserved names and current workspace mapping are reconciled for prep, while publication remains blocked",
     "package_metadata_license_readme_review": "metadata/readiness follow-up recorded for in-tree priority candidates; ethos-doc and ethos-rag remain reserved placeholders without in-tree manifests, and publication remains blocked",
     "install_build_smoke_path": "local source-tree smoke, dependency-ordering follow-up recorded, manifest-migration prep recorded, and registry-assembly prep recorded; ethos-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, current source-tree manifests remain unchanged, and publication remains blocked",
-    "version_tag_policy": "version/tag policy follow-up and real-version-selection prep recorded; workspace 0.1.0 remains source-tree only, reserved 0.0.0-reserved.0 names remain placeholders, no package publication version is selected, and real-version publication remains blocked",
+    "version_tag_policy": "version/tag policy follow-up, real-version-selection prep recorded, and package tag-creation prep recorded; workspace 0.1.0 remains source-tree only, reserved 0.0.0-reserved.0 names remain placeholders, no package publication version is selected, no package tag is created, and real-version publication remains blocked",
     "pdfium_packaging_boundary": "PDFium boundary follow-up recorded for current source-tree ethos-pdf; no bundled PDFium binary, caller-provided ETHOS_PDFIUM_LIBRARY_PATH, and no raw PDFium types across public schemas/APIs are confirmed while publication remains blocked",
     "public_surface_posture_check": "run after exact wording changes by the package evidence guard path",
     "claims_gate_after_wording_changes": "run after exact wording changes by the package evidence guard path",
@@ -74,7 +74,8 @@
     "package_dependency_ordering": "docs/validation/milestone-e-package-publication-dependency-ordering-closeout-validation-2026-06-21.md",
     "package_manifest_migration_prep": "docs/validation/milestone-e-package-publication-manifest-migration-prep-validation-2026-06-21.md",
     "package_registry_assembly_prep": "docs/validation/milestone-e-package-publication-registry-assembly-prep-validation-2026-06-21.md",
-    "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md"
+    "package_real_version_selection_prep": "docs/validation/milestone-e-package-publication-real-version-selection-prep-validation-2026-06-21.md",
+    "package_tag_creation_prep": "docs/validation/milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md"
   },
   "public_boundary": [
     "public reports remain blocked",

@@ -303,6 +303,9 @@ inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium 
   package publication real-version-selection prep validation for future SemVer candidate review;
   the record keeps package publication and public installation blocked while recording that no
   package publication version is selected.
+- `milestone-e-package-publication-tag-creation-prep-validation-2026-06-21.md` - package
+  publication tag-creation prep validation for future package tag review; the record keeps package
+  publication and public installation blocked while recording that no package tag is created.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

@@ -123,6 +123,9 @@ activation, public installation, and package publication remain blocked.
 The real-version-selection prep follow-up record under `docs/validation/` covers future SemVer
 candidate review only. No package publication version is selected; real package version selection
 approval, package tag creation, public installation, and package publication remain blocked.
+The tag-creation prep follow-up record under `docs/validation/` covers future package tag creation
+review only. No package tag is created; package tag creation, public installation, and package
+publication remain blocked.
 The use protocol, rehearsal/evidence matrix, and blocker ledger must keep the same blocked-output
 alignment so public reports, public result wording, hosted surfaces, release artifacts, package
 publication, production positioning, broad demo-generation workflows, benchmark publication, and
