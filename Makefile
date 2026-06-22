@@ -236,6 +236,8 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_final_approval_decision.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_activation_request.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_activation_applied.py
+	$(PYTHON) .github/scripts/test_milestone_e_package_publication_tag_binding_refresh.py
+	$(PYTHON) .github/scripts/test_milestone_e_package_publication_operator_preflight.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_facing_readiness_ledger.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_refresh_prep.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_source_only_approval.py

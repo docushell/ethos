@@ -160,6 +160,17 @@ The package publication activation applied follow-up is recorded in
 and binds the activated candidate manifests to source commit `f50f294` / tree
 `00c3e4df7a7b3b368659650601a2df76b63a2ce8`; package tag source binding must be refreshed, public
 installation remains blocked, and real-version cargo publish remains blocked.
+The package publication tag binding refresh is recorded in
+[`docs/validation/milestone-e-package-publication-tag-binding-refresh-validation-2026-06-22.md`](validation/milestone-e-package-publication-tag-binding-refresh-validation-2026-06-22.md)
+and binds the accepted package tag names to activated main commit `421bed8` / tree
+`aa0d5d31d879540fd0044052dfeb747f12b64204`; operator evidence remains required, package tag
+creation remains blocked, registry publication remains blocked, and public installation remains
+blocked.
+The package publication operator preflight is recorded in
+[`docs/validation/milestone-e-package-publication-operator-preflight-validation-2026-06-22.md`](validation/milestone-e-package-publication-operator-preflight-validation-2026-06-22.md)
+and records manual crates.io owner/account evidence requirements, reserved-name confirmation,
+dependency order, package tag names, and command order; manual registry evidence remains required,
+public installation remains blocked, and registry publication remains blocked.
 The registry-assembly prep follow-up records future non-public dependent candidate assembly
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,

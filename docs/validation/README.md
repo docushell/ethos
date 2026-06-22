@@ -414,6 +414,16 @@ recording the exact current-main source candidate and required follow-up evidenc
   the three accepted candidate manifests changed, records that non-candidate crates stay blocked,
   and keeps package tag source binding refresh, real-version cargo publish, and public
   installation instructions blocked.
+- `milestone-e-package-publication-tag-binding-refresh-validation-2026-06-22.md` - package
+  publication tag binding refresh validation; the record refreshes the package tag source binding
+  to activated main commit `421bed8` / tree `aa0d5d31d879540fd0044052dfeb747f12b64204`, keeps
+  package tag creation and registry publication blocked, and records that operator evidence
+  remains required while public installation remains blocked.
+- `milestone-e-package-publication-operator-preflight-validation-2026-06-22.md` - package
+  publication operator preflight validation; the record lists manual crates.io owner/account
+  evidence, reserved-name confirmation, dependency order, package tag names, and command order for
+  a later registry action while recording that manual registry evidence remains required and public
+  installation remains blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main
