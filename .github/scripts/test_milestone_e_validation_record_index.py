@@ -215,6 +215,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_package_publication_dry_run_smoke.py",
     ),
     RecordCoverage(
+        "milestone-e-package-publication-current-dry-run-smoke-validation-2026-06-22.md",
+        "test_milestone_e_package_publication_dry_run_smoke.py",
+    ),
+    RecordCoverage(
         "milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md",
         "test_milestone_e_package_publication_version_tag_policy.py",
     ),

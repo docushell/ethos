@@ -80,7 +80,7 @@ EXPECTED_EVIDENCE_RECORDS = {
 }
 EXPECTED_FOLLOW_UP_RECORDS = {
     "package_metadata_readiness": "docs/validation/milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md",
-    "package_dry_run_smoke": "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md",
+    "package_dry_run_smoke": "docs/validation/milestone-e-package-publication-current-dry-run-smoke-validation-2026-06-22.md",
     "package_version_tag_policy": "docs/validation/milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md",
     "package_pdfium_boundary": "docs/validation/milestone-e-package-publication-pdfium-boundary-closeout-validation-2026-06-21.md",
     "package_dependency_ordering": "docs/validation/milestone-e-package-publication-dependency-ordering-closeout-validation-2026-06-21.md",
@@ -509,6 +509,10 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("registry-assembly prep recorded", status["install_build_smoke_path"])
         self.assertIn("registry-assembly activation prep recorded", status["install_build_smoke_path"])
         self.assertIn("manifest activation applied for source review", status["install_build_smoke_path"])
+        self.assertIn(
+            "current dry-run smoke selector refreshed after manifest activation",
+            status["install_build_smoke_path"],
+        )
         self.assertIn("publication remains blocked", status["install_build_smoke_path"])
         self.assertIn("version/tag policy follow-up", status["version_tag_policy"])
         self.assertIn("real-version-selection prep recorded", status["version_tag_policy"])

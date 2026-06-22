@@ -282,6 +282,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   package publication and public installation blocked while recording local package assembly for
   `ethos-core`, source-tree checks for `ethos-verify` and `ethos-pdf`, and retained dependent
   package assembly blockers.
+- `milestone-e-package-publication-current-dry-run-smoke-validation-2026-06-22.md` - package
+  publication dry-run/smoke validation refresh after source manifest activation; the record keeps
+  package publication and public installation blocked while recording local package assembly for
+  `ethos-doc-core`, source-tree checks for `ethos-verify` and `ethos-pdf`, and the separate
+  registry-equivalent dependent package assembly evidence boundary.
 - `milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md` - package
   publication version/tag policy validation for the current source-tree candidate path; the record
   keeps package publication and public installation blocked while recording source-tree version,
