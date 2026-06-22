@@ -163,14 +163,22 @@ class MilestoneEPublicBetaSourceOnlyApprovalTests(unittest.TestCase):
         normalized_readme = re.sub(r"\s+", " ", readme)
         examples = read(EXAMPLES_README)
 
-        self.assertIn(EXPECTED_WORDING, readme)
+        self.assertIn(
+            "Ethos is public beta for source and Rust crate evaluation. It verifies whether AI "
+            "citations are grounded in document evidence across native Ethos JSON and supported "
+            "foreign parser outputs.",
+            normalized_readme,
+        )
+        self.assertIn("ethos-doc-core", readme)
+        self.assertIn("ethos-verify", readme)
+        self.assertIn("ethos-pdf", readme)
         self.assertIn("status-public--beta", readme)
         self.assertIn("source-only public beta", examples)
         self.assertIn("cargo build --locked -p ethos-cli", readme)
         self.assertIn("make verify-alpha", readme)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", readme)
         self.assertIn(
-            "There are no published crates, wheels, npm packages, binaries, or GitHub release artifacts yet.",
+            "There are no wheels, npm packages, binaries, hosted surfaces, or GitHub release artifacts.",
             normalized_readme,
         )
 

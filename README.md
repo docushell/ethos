@@ -7,17 +7,17 @@
 ![Rust: 1.87+](https://img.shields.io/badge/rust-1.87%2B-orange)
 ![status: public beta](https://img.shields.io/badge/status-public--beta-blue)
 
-> **Status: source-only public beta evaluation.**
-> Ethos is public beta for source-only evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Package publication, hosted surfaces, production positioning, and public benchmark claims remain blocked.
-> The approved public beta surface is this GitHub source repository only, pinned to reviewed commit
+> **Status: public beta evaluation.**
+> Ethos is public beta for source and Rust crate evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are available on crates.io at `0.1.0` for evaluation. Hosted surfaces, production positioning, and public benchmark claims remain blocked.
+> The approved source-repository public beta surface is this GitHub source repository only, pinned to reviewed commit
 > `902c423` and merged main commit `6019a97`, which have matching source trees. Excluded surfaces
-> include published crates, wheels, npm packages, binaries, release artifacts, hosted demos or APIs,
+> include wheels, npm packages, binaries, release artifacts, hosted demos or APIs,
 > project-maintained PDFium builds, public benchmark reports, and performance, footprint, quality,
 > table-quality, or parser-quality claims.
-> Ethos crate publication is in internal preparation only and remains blocked for public
-> installation. No Ethos crates are published; the reserved crates.io names remain
-> 0.0.0-reserved.0 placeholders with no public API. Wheels, npm packages, binaries, hosted
-> surfaces, production positioning, and public benchmark claims remain blocked.
+> Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are available on
+> crates.io at `0.1.0` for evaluation. The Ethos CLI, wheels, npm packages, binaries, hosted
+> surfaces, production positioning, public benchmark reports, public benchmark claims,
+> project-maintained PDFium builds, `ethos-doc`, and `ethos-rag` remain blocked.
 > Current execution status and blockers live in `docs/execution-status.md`; public-release
 > hygiene gates live in `docs/public-release-checklist.md`.
 
@@ -33,8 +33,9 @@ Same input, same pinned profile, same stable payload projection and fingerprint.
 
 ## Install / Build from source
 
-Ethos is public beta for source-only evaluation. There are no published crates, wheels, npm
-packages, binaries, or GitHub release artifacts yet.
+Ethos is public beta for source and Rust crate evaluation. Rust library crates `ethos-doc-core`,
+`ethos-verify`, and `ethos-pdf` are available on crates.io at `0.1.0` for evaluation. There are no
+wheels, npm packages, binaries, hosted surfaces, or GitHub release artifacts.
 
 Prerequisites:
 
@@ -59,6 +60,14 @@ To install the source-built CLI from the checkout into your local Cargo bin:
 ```bash
 cargo install --locked --path crates/ethos-cli
 ethos --help
+```
+
+To add the currently approved Rust library crates to another Rust project:
+
+```bash
+cargo add ethos-doc-core@0.1.0
+cargo add ethos-verify@0.1.0
+cargo add ethos-pdf@0.1.0
 ```
 
 ## Minimal end-to-end example
@@ -100,8 +109,7 @@ The command exits `0` and writes a verification report shaped like this:
 
 ## Try the alpha verification loop
 
-The source-only public beta path has no release artifacts or package installs. From a source
-checkout, the current verification loop is:
+From a source checkout, the current verification loop is:
 
 ```bash
 make verify-alpha
@@ -180,7 +188,7 @@ Generated reports and crop descriptors are written under `target/verify-alpha/`.
 - Verification checks **evidence grounding** (the cited region exists, the text matches, the
   fingerprint is fresh). It is not a semantic correctness judgment of an answer.
 - Non-embedded CJK font fallback is out of Release 1 and warns explicitly.
-- Public benchmark reports, package publication, GitHub releases, binaries, wheels, npm updates,
+- Public benchmark reports, GitHub releases, binaries, wheels, npm updates, hosted surfaces,
   and launch announcements are blocked until the release checklist is complete.
 
 It is built for teams that need trustworthy local document grounding, deterministic native parsing
@@ -284,7 +292,7 @@ Report vulnerabilities through GitHub private vulnerability reporting. See `SECU
 | `ethos verify --fail-on-ungrounded` exits `1` | The command wrote a report, but at least one requested evidence check was stale, missing, mismatched, unsupported, or capability-blocked. Inspect `all_evidence_grounded`, `checks[].status`, `warnings`, and `capability_limits`. |
 | Scanned or image-only PDFs do not parse | Base Ethos does not include OCR. These inputs should fail with `ocr_required` until OCR support is explicitly added. |
 | Rendered crop PNGs are missing or skipped | Logical crop descriptor JSON works in the alpha path; rendered PNG crop artifacts require the source PDF path and a configured PDFium runtime. |
-| Release/tag workflow fails | Public releases, binaries, wheels, npm packages, and crates are blocked until they have separate approval. |
+| Release/tag workflow fails | Public releases, binaries, wheels, npm packages, hosted surfaces, and non-approved crates are blocked until they have separate approval. |
 
 ## FAQ
 
@@ -311,8 +319,8 @@ Not in the base install. Scanned or image-only pages fail with `ocr_required`.
 ### Can I use Ethos in CI?
 
 The source-built CLI supports `--fail-on-ungrounded`, which exits `1` when verification completes
-but evidence is not fully grounded. Treat the current repo as source-only public beta evaluation,
-not a stable package or release artifact.
+but evidence is not fully grounded. Treat the current repo and approved Rust library crates as
+public beta evaluation, not a stable release artifact.
 
 ### Where are benchmark results?
 
