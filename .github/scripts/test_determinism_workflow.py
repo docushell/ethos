@@ -53,7 +53,7 @@ class DeterminismWorkflowTests(unittest.TestCase):
         text = workflow_text()
 
         self.assertIn("runs-on: ${{ matrix.os }}", text)
-        self.assertIn("cargo test --locked -p ethos-core --all-features", text)
+        self.assertIn("cargo test --locked -p ethos-doc-core --all-features", text)
 
     def test_pdfium_corpus_step_remains_explicitly_configured(self) -> None:
         text = workflow_text()

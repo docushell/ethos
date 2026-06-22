@@ -529,7 +529,7 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
         block = target_block("milestone-d-crop-element-contract")
 
         required = [
-            "cargo test --locked -p ethos-core crop_element",
+            "cargo test --locked -p ethos-doc-core crop_element",
             "cargo test --locked -p ethos-cli --test verify "
             "native_verify_crop_dir_writes_deterministic_crop_descriptors",
             "cargo test --locked -p ethos-cli --test verify crop_element_cli",

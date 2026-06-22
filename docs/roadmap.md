@@ -129,6 +129,11 @@ The manifest-activation prep follow-up records future package dependency manifes
 while current Cargo manifests remain unchanged; package dependency manifest activation,
 registry-backed dependent package assembly activation, public installation, and package publication
 remain blocked.
+The manifest activation applied follow-up is recorded in
+[`docs/validation/milestone-e-package-publication-manifest-activation-applied-validation-2026-06-22.md`](validation/milestone-e-package-publication-manifest-activation-applied-validation-2026-06-22.md)
+and records the source package name `ethos-doc-core`, Rust library name `ethos_core`, and workspace
+dependency activation for review only; `publish = false`, public installation, and package
+publication remain blocked.
 The registry-assembly prep follow-up records future non-public dependent candidate assembly
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,

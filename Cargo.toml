@@ -36,7 +36,7 @@ tempfile = "3"
 proptest = "1"
 
 # internal
-ethos-core = { path = "crates/ethos-core", version = "0.1.0", default-features = false }
+ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.0", default-features = false }
 ethos-layout = { path = "crates/ethos-layout", version = "0.1.0" }
 ethos-tables = { path = "crates/ethos-tables", version = "0.1.0" }
 

@@ -42,6 +42,26 @@ CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 SOURCE_COMMIT = "9054f1c3823b8f0ff69f0776b60060b642705e28"
 SOURCE_SHORT = "9054f1c"
 SOURCE_TREE = "3f8cb66249826d67ab6030032c7784a2a4ff411b"
+HISTORICAL_CANDIDATE_CRATES = [
+    "ethos-doc-core mapped from crates/ethos-core; package-name migration remains pending",
+    "ethos-verify mapped from crates/ethos-verify; dependency manifest activation remains pending",
+    "ethos-pdf mapped from crates/ethos-pdf; dependency manifest activation and PDFium boundary confirmation must remain current",
+]
+HISTORICAL_CANDIDATE_MANIFEST_DIFF = [
+    "crates/ethos-core/Cargo.toml candidate package-name migration: package.name ethos-core -> ethos-doc-core; current manifest remains unchanged",
+    "crates/ethos-verify/Cargo.toml candidate dependency activation: ethos_core package alias points at ethos-doc-core; current manifest remains unchanged",
+    "crates/ethos-pdf/Cargo.toml candidate dependency activation: ethos_core package alias points at ethos-doc-core; current manifest remains unchanged",
+    "included candidate crates require later publish-flag activation only after dedicated approval; current manifests remain publish=false",
+]
+HISTORICAL_RETAINED_BLOCKERS = [
+    "candidate package version map is recorded but no package publication version is selected",
+    "candidate package tag names are recorded but no package tag is created",
+    "candidate manifest activation diff is recorded but no Cargo manifest is changed",
+    "registry-backed dependent package assembly evidence remains required",
+    "public installation remains blocked",
+    "package publication remains blocked",
+    "real-version cargo publish remains blocked",
+]
 FORBIDDEN_SCOPE_EXPANSION = [
     "public reports are approved",
     "public result wording approved",
@@ -115,15 +135,15 @@ class MilestoneEPackagePublicationApprovalReadinessReviewTests(unittest.TestCase
         record = normalized(RECORD)
 
         self.assertEqual("decision_input_packet_recorded_publication_blocked", packet["packet_state"])
-        for crate in packet["candidate_crates"]:
+        for crate in HISTORICAL_CANDIDATE_CRATES:
             self.assertIn(crate, record)
         for version in packet["candidate_version_map"]:
             self.assertIn(version, record)
         for tag in packet["candidate_package_tag_names"]:
             self.assertIn(tag, record)
-        for candidate_diff in packet["candidate_manifest_activation_diff"]:
+        for candidate_diff in HISTORICAL_CANDIDATE_MANIFEST_DIFF:
             self.assertIn(candidate_diff, record)
-        for blocker in packet["retained_blockers"]:
+        for blocker in HISTORICAL_RETAINED_BLOCKERS:
             self.assertIn(blocker, record)
         self.assertIn("exact package publication approval decision record remains required", record)
         self.assertIn("registry-backed dependent package assembly evidence remains required", record)
@@ -142,7 +162,7 @@ class MilestoneEPackagePublicationApprovalReadinessReviewTests(unittest.TestCase
         for value in packet["candidate_package_tag_names"]:
             tag = value.split(": ", maxsplit=1)[1].split(";", maxsplit=1)[0]
             self.assertEqual("", git("tag", "--list", tag))
-        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn('reserved_crates_io_name = "ethos-doc-core"', core_manifest)
         self.assertIn("publish = false", core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)

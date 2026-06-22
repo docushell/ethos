@@ -196,7 +196,7 @@ name = "ethos-cli"
 version = "0.1.0"
 dependencies = [
  "clap",
- "ethos-core",
+ "ethos-doc-core",
  "ethos-grounding-opendataloader-json",
  "ethos-layout",
  "ethos-pdf",
@@ -209,7 +209,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ethos-core"
+name = "ethos-doc-core"
 version = "0.1.0"
 dependencies = [
  "proptest",
@@ -223,7 +223,7 @@ dependencies = [
 name = "ethos-grounding-opendataloader-json"
 version = "0.1.0"
 dependencies = [
- "ethos-core",
+ "ethos-doc-core",
  "serde",
  "serde_json",
 ]
@@ -232,14 +232,14 @@ dependencies = [
 name = "ethos-layout"
 version = "0.1.0"
 dependencies = [
- "ethos-core",
+ "ethos-doc-core",
 ]
 
 [[package]]
 name = "ethos-pdf"
 version = "0.1.0"
 dependencies = [
- "ethos-core",
+ "ethos-doc-core",
  "serde",
  "serde_json",
 ]
@@ -248,14 +248,14 @@ dependencies = [
 name = "ethos-tables"
 version = "0.1.0"
 dependencies = [
- "ethos-core",
+ "ethos-doc-core",
 ]
 
 [[package]]
 name = "ethos-verify"
 version = "0.1.0"
 dependencies = [
- "ethos-core",
+ "ethos-doc-core",
  "serde",
  "serde_json",
 ]

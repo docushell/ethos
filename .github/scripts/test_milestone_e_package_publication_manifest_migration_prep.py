@@ -92,7 +92,7 @@ class MilestoneEPackagePublicationManifestMigrationPrepTests(unittest.TestCase):
         )
         self.assertIn("manifest-migration prep recorded", status)
         self.assertIn("registry-assembly prep recorded", status)
-        self.assertIn("current source-tree manifests remain unchanged", status)
+        self.assertIn("manifest activation applied for source review", status)
         self.assertIn("publication remains blocked", status)
         self.assertIn("registry-backed dependent package assembly activation", blocker_text)
         self.assertIn("package dependency manifest activation", blocker_text)
@@ -107,19 +107,19 @@ class MilestoneEPackagePublicationManifestMigrationPrepTests(unittest.TestCase):
         verify = read(ROOT / "crates/ethos-verify/Cargo.toml")
         pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
 
-        self.assertIn('name = "ethos-core"', core)
-        self.assertNotIn('\nname = "ethos-doc-core"\n', core)
+        self.assertIn('name = "ethos-doc-core"', core)
+        self.assertIn('[lib]\nname = "ethos_core"', core)
         self.assertIn('reserved_crates_io_name = "ethos-doc-core"', core)
         self.assertIn("publish = false", core)
         self.assertIn("publish = false", verify)
         self.assertIn("publish = false", pdf)
         self.assertIn(
-            'ethos-core = { path = "crates/ethos-core", version = "0.1.0", default-features = false }',
+            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.0", default-features = false }',
             workspace,
         )
         self.assertIn('ethos-core = { workspace = true, features = ["grounding", "verify-types"] }', verify)
         self.assertIn('ethos-core = { workspace = true, features = ["full"] }', pdf)
-        for manifest in (workspace, verify, pdf):
+        for manifest in (verify, pdf):
             self.assertNotIn('package = "ethos-doc-core"', manifest)
 
     def test_manifest_migration_prep_record_names_future_shape_without_activation(self) -> None:

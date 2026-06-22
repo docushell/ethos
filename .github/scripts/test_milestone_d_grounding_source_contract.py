@@ -117,7 +117,7 @@ class MilestoneDGroundingSourceContractTests(unittest.TestCase):
         block = target_block("milestone-d-grounding-source-contract")
 
         required = [
-            "cargo test --locked -p ethos-core grounding",
+            "cargo test --locked -p ethos-doc-core grounding",
             "cargo test --locked -p ethos-cli --test verify native_ethos_verify_produces_non_empty_checks",
             "cargo test --locked -p ethos-cli --test verify opendataloader_verify_adapter_produces_capability_aware_report",
             "$(PYTHON) schemas/validate_examples.py",

@@ -114,7 +114,7 @@ CONTRACT_REGISTRY = [
         "inventory": "examples/verify/grounding_source_v1_contract.json",
         "schema": "schemas/ethos-grounding-source-contract.schema.json",
         "commands": [
-            "cargo test --locked -p ethos-core grounding",
+            "cargo test --locked -p ethos-doc-core grounding",
             "cargo test --locked -p ethos-cli --test verify native_ethos_verify_produces_non_empty_checks",
             "cargo test --locked -p ethos-cli --test verify opendataloader_verify_adapter_produces_capability_aware_report",
         ]
@@ -166,7 +166,7 @@ CONTRACT_REGISTRY = [
         "inventory": "examples/crop/crop_element_v1_contract.json",
         "schema": "schemas/ethos-crop-element-contract.schema.json",
         "commands": [
-            "cargo test --locked -p ethos-core crop_element",
+            "cargo test --locked -p ethos-doc-core crop_element",
             "cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors",
             "cargo test --locked -p ethos-cli --test verify crop_element_cli",
         ]

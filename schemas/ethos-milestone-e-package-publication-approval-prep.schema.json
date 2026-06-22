@@ -225,7 +225,7 @@
           "const": "metadata/readiness follow-up recorded for in-tree priority candidates; ethos-doc and ethos-rag remain reserved placeholders without in-tree manifests, and publication remains blocked"
         },
         "install_build_smoke_path": {
-          "const": "local source-tree smoke, dependency-ordering follow-up recorded, manifest-migration prep recorded, manifest-activation prep recorded, registry-assembly prep recorded, and registry-assembly activation prep recorded; ethos-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, current source-tree manifests remain unchanged, and publication remains blocked"
+          "const": "local source-tree smoke, dependency-ordering follow-up recorded, manifest-migration prep recorded, manifest-activation prep recorded, registry-assembly prep recorded, registry-assembly activation prep recorded, candidate activation evidence recorded, and manifest activation applied for source review; ethos-doc-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, publish flags remain false, and publication remains blocked"
         },
         "version_tag_policy": {
           "const": "version/tag policy follow-up, real-version-selection prep recorded, and package tag-creation prep recorded; workspace 0.1.0 remains source-tree only, reserved 0.0.0-reserved.0 names remain placeholders, no package publication version is selected, no package tag is created, and real-version publication remains blocked"
@@ -296,7 +296,8 @@
         "package_approval_decision_template",
         "package_approval_decision_record",
         "package_candidate_activation_evidence",
-        "package_approval_decision_refresh"
+        "package_approval_decision_refresh",
+        "package_manifest_activation_applied"
       ],
       "additionalProperties": false,
       "properties": {
@@ -365,6 +366,9 @@
         },
         "package_approval_decision_refresh": {
           "const": "docs/validation/milestone-e-package-publication-approval-decision-refresh-validation-2026-06-22.md"
+        },
+        "package_manifest_activation_applied": {
+          "const": "docs/validation/milestone-e-package-publication-manifest-activation-applied-validation-2026-06-22.md"
         }
       }
     },
@@ -570,7 +574,7 @@
           "const": "not selected; package source tree binding remains blocked"
         },
         "manifest_activation_diff": {
-          "const": "not prepared; current Cargo manifests remain unchanged"
+          "const": "applied for source review only; Cargo manifests keep publish=false and package publication remains blocked"
         },
         "registry_assembly_evidence": {
           "const": "not activated; registry-backed dependent package assembly remains blocked"
@@ -805,9 +809,9 @@
     },
     "candidate_included_crate": {
       "enum": [
-        "ethos-doc-core from crates/ethos-core; current manifest name ethos-core; publish=false; package-name migration remains pending",
-        "ethos-verify from crates/ethos-verify; current manifest name ethos-verify; publish=false; dependency manifest activation remains pending",
-        "ethos-pdf from crates/ethos-pdf; current manifest name ethos-pdf; publish=false; dependency manifest activation and PDFium boundary confirmation must remain current"
+        "ethos-doc-core from crates/ethos-core; source manifest name ethos-doc-core; lib.name ethos_core; publish=false",
+        "ethos-verify from crates/ethos-verify; source workspace dependency resolves through ethos-doc-core; publish=false",
+        "ethos-pdf from crates/ethos-pdf; source workspace dependency resolves through ethos-doc-core; PDFium boundary remains current; publish=false"
       ]
     },
     "candidate_excluded_crate": {
@@ -831,7 +835,7 @@
         "candidate surface review does not approve package publication",
         "candidate surface review does not select a package publication version",
         "candidate surface review does not create a package tag",
-        "candidate surface review does not change Cargo manifests",
+        "candidate surface review does not approve removing publish=false",
         "candidate surface review does not approve public installation",
         "candidate surface review does not approve registry-backed dependent package assembly activation"
       ]
@@ -866,7 +870,7 @@
     "bundle_review_boundary": {
       "enum": [
         "package tag and source-commit decision inputs are recorded while creating no package tag",
-        "package dependency manifest activation inputs are recorded while changing no Cargo manifest",
+        "package dependency manifest activation inputs are recorded and source activation is applied for review while publish flags remain false",
         "registry-backed dependent package assembly inputs are recorded while creating no registry and activating no assembly",
         "public installation wording and exclusion inputs are recorded while inviting no public installation"
       ]
@@ -887,8 +891,8 @@
       "enum": [
         "this bundle does not select a package publication version",
         "this bundle does not create a package tag",
-        "this bundle does not change Cargo manifests",
-        "this bundle does not activate package dependency manifests",
+        "this bundle does not remove publish=false",
+        "this bundle does not approve package dependency manifest activation for publication",
         "this bundle does not create a registry",
         "this bundle does not activate registry-backed dependent package assembly",
         "this bundle does not invite public installation",
@@ -907,9 +911,9 @@
     },
     "packet_candidate_crate": {
       "enum": [
-        "ethos-doc-core mapped from crates/ethos-core; package-name migration remains pending",
-        "ethos-verify mapped from crates/ethos-verify; dependency manifest activation remains pending",
-        "ethos-pdf mapped from crates/ethos-pdf; dependency manifest activation and PDFium boundary confirmation must remain current"
+        "ethos-doc-core mapped from crates/ethos-core; source package-name activation is applied for review while publish=false remains",
+        "ethos-verify mapped from crates/ethos-verify; source workspace dependency resolves through ethos-doc-core while publish=false remains",
+        "ethos-pdf mapped from crates/ethos-pdf; source workspace dependency resolves through ethos-doc-core, PDFium boundary remains current, and publish=false remains"
       ]
     },
     "packet_package_version": {
@@ -948,8 +952,8 @@
       "enum": [
         "this packet does not select a package publication version",
         "this packet does not create a package tag",
-        "this packet does not change Cargo manifests",
-        "this packet does not activate package dependency manifests",
+        "this packet does not remove publish=false",
+        "this packet does not approve package dependency manifest activation for publication",
         "this packet does not create a registry",
         "this packet does not activate registry-backed dependent package assembly",
         "this packet does not invite public installation",
@@ -983,9 +987,9 @@
     },
     "exact_packet_manifest_activation_diff": {
       "enum": [
-        "crates/ethos-core/Cargo.toml candidate package-name migration: package.name ethos-core -> ethos-doc-core; current manifest remains unchanged",
-        "crates/ethos-verify/Cargo.toml candidate dependency activation: ethos_core package alias points at ethos-doc-core; current manifest remains unchanged",
-        "crates/ethos-pdf/Cargo.toml candidate dependency activation: ethos_core package alias points at ethos-doc-core; current manifest remains unchanged",
+        "crates/ethos-core/Cargo.toml source package-name activation: package.name ethos-doc-core with lib.name ethos_core; publish=false remains",
+        "Cargo.toml source workspace dependency activation: ethos-core dependency key points at package ethos-doc-core for ethos-verify and ethos-pdf; publish=false remains",
+        "Cargo.lock source activation: dependency graph resolves ethos-doc-core while source imports retain ethos_core",
         "included candidate crates require later publish-flag activation only after dedicated approval; current manifests remain publish=false"
       ]
     },
@@ -1005,8 +1009,8 @@
       "enum": [
         "this exact decision input packet does not select a package publication version",
         "this exact decision input packet does not create a package tag",
-        "this exact decision input packet does not change Cargo manifests",
-        "this exact decision input packet does not activate package dependency manifests",
+        "this exact decision input packet does not remove publish=false",
+        "this exact decision input packet does not approve package dependency manifest activation for publication",
         "this exact decision input packet does not create a registry",
         "this exact decision input packet does not activate registry-backed dependent package assembly",
         "this exact decision input packet does not invite public installation",
@@ -1017,7 +1021,7 @@
       "enum": [
         "candidate package version map is recorded but no package publication version is selected",
         "candidate package tag names are recorded but no package tag is created",
-        "candidate manifest activation diff is recorded but no Cargo manifest is changed",
+        "candidate manifest activation is applied for source review but no publication action is approved",
         "registry-backed dependent package assembly evidence remains required",
         "public installation remains blocked",
         "package publication remains blocked",
@@ -1029,7 +1033,7 @@
         "version map gap: no package publication version is selected; requires exact SemVer package version or per-crate version map",
         "tag name gap: no package tag is created; requires exact package tag name",
         "tag binding gap: no package_tag_source_commit or source tree is selected; requires exact source commit and tree binding",
-        "manifest activation gap: current Cargo manifests remain unchanged; requires exact package-name migration and dependency activation diff",
+        "manifest approval gap: source manifest activation is applied for review; requires exact approval before publish flags, tags, public installation, or publication can advance",
         "registry assembly gap: no registry-backed dependent package assembly is activated; requires exact non-public assembly evidence",
         "public installation wording gap: no public installation wording is approved; requires exact wording and exclusions",
         "posture and claims gate gap: gates must rerun after exact public installation wording changes"
@@ -1039,8 +1043,8 @@
       "enum": [
         "selecting a package publication version remains blocked",
         "creating a package tag remains blocked",
-        "changing Cargo manifests remains blocked",
-        "activating package dependency manifests remains blocked",
+        "removing publish=false remains blocked",
+        "approving package dependency manifest activation for publication remains blocked",
         "creating a registry remains blocked",
         "activating registry-backed dependent package assembly remains blocked",
         "inviting public installation remains blocked",
@@ -1065,8 +1069,8 @@
       "enum": [
         "this ledger does not select a package publication version",
         "this ledger does not create a package tag",
-        "this ledger does not change Cargo manifests",
-        "this ledger does not activate package dependency manifests",
+        "this ledger does not remove publish=false",
+        "this ledger does not approve package dependency manifest activation for publication",
         "this ledger does not create a registry",
         "this ledger does not activate registry-backed dependent package assembly",
         "this ledger does not invite public installation",
@@ -1075,7 +1079,7 @@
     },
     "in_tree_reconciliation": {
       "enum": [
-        "ethos-doc-core maps to the in-tree ethos-core crate before any future publish prep can advance",
+        "ethos-doc-core maps to crates/ethos-core with the source package name activated and Rust library name retained as ethos_core",
         "ethos-doc has no in-tree workspace member yet and remains a reserved placeholder until a package owner, README, and metadata are prepared",
         "ethos-verify maps to crates/ethos-verify and currently remains publish=false",
         "ethos-rag has no in-tree workspace member yet and remains a reserved placeholder until a package owner, README, and metadata are prepared",

@@ -42,6 +42,12 @@ CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 SOURCE_COMMIT = "89d24c84614a7c961dcecdccf85a9e9eca235046"
 SOURCE_SHORT = "89d24c8"
 SOURCE_TREE = "21b263dca908ef7cc977e7669e40206096eef93e"
+HISTORICAL_CANDIDATE_MANIFEST_DIFF = [
+    "crates/ethos-core/Cargo.toml candidate package-name migration: package.name ethos-core -> ethos-doc-core; current manifest remains unchanged",
+    "crates/ethos-verify/Cargo.toml candidate dependency activation: ethos_core package alias points at ethos-doc-core; current manifest remains unchanged",
+    "crates/ethos-pdf/Cargo.toml candidate dependency activation: ethos_core package alias points at ethos-doc-core; current manifest remains unchanged",
+    "included candidate crates require later publish-flag activation only after dedicated approval; current manifests remain publish=false",
+]
 FORBIDDEN_SCOPE_EXPANSION = [
     "public reports are approved",
     "public result wording approved",
@@ -114,7 +120,7 @@ class MilestoneEPackagePublicationManifestActivationDiffReviewTests(unittest.Tes
         packet = load_json(PREP)["package_publication_decision_input_packet"]
         record = normalized(RECORD)
 
-        for candidate_diff in packet["candidate_manifest_activation_diff"]:
+        for candidate_diff in HISTORICAL_CANDIDATE_MANIFEST_DIFF:
             self.assertIn(candidate_diff, record)
         self.assertIn("Candidate manifest activation diff is recorded", record)
         self.assertIn("No Cargo manifest was changed", record)
@@ -134,7 +140,7 @@ class MilestoneEPackagePublicationManifestActivationDiffReviewTests(unittest.Tes
         for value in packet["candidate_package_tag_names"]:
             tag = value.split(": ", maxsplit=1)[1].split(";", maxsplit=1)[0]
             self.assertEqual("", git("tag", "--list", tag))
-        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn('reserved_crates_io_name = "ethos-doc-core"', core_manifest)
         self.assertIn("publish = false", core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)

@@ -246,6 +246,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_package_publication_candidate_activation_evidence.py
       - name: Milestone E package publication approval decision refresh tests
         run: python3 .github/scripts/test_milestone_e_package_publication_approval_decision_refresh.py
+      - name: Milestone E package publication manifest activation applied tests
+        run: python3 .github/scripts/test_milestone_e_package_publication_manifest_activation_applied.py
       - name: Milestone E public-facing readiness ledger tests
         run: python3 .github/scripts/test_milestone_e_public_facing_readiness_ledger.py
       - name: Milestone E public beta current-main refresh prep tests
@@ -299,8 +301,8 @@ jobs:
       - name: grounding feature really is minimal
         run: |
           # the trait module must build without serde_json/sha2/thiserror
-          cargo check --locked -p ethos-core --no-default-features --features grounding
-          cargo check --locked -p ethos-core --no-default-features --features verify-types
+          cargo check --locked -p ethos-doc-core --no-default-features --features grounding
+          cargo check --locked -p ethos-doc-core --no-default-features --features verify-types
 
   schema-validate:
     runs-on: ubuntu-latest

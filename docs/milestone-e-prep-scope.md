@@ -159,6 +159,11 @@ It records that activation evidence is present for source commit `6a91511` / tre
 `8b150d9aebdc282c358e4552a4d709c3140f41b4`, while manual exact approval remains required,
 source Cargo manifests remain unchanged, package publication remains blocked, and public
 installation remains blocked.
+The package publication manifest activation applied follow-up is recorded in
+`docs/validation/milestone-e-package-publication-manifest-activation-applied-validation-2026-06-22.md`.
+It records the source package name `ethos-doc-core`, Rust library name `ethos_core`, and workspace
+dependency activation for review only; `publish = false`, public installation, and package
+publication remain blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -347,6 +352,9 @@ or broad demo-generation workflows.
 - The package publication approval decision refresh records that activation evidence is present;
   manual exact approval remains required, source Cargo manifests remain unchanged, public
   installation remains blocked, and package publication remains blocked.
+- The package publication manifest activation applied follow-up records the source package name
+  `ethos-doc-core`, Rust library name `ethos_core`, and workspace dependency activation for review
+  only; `publish = false`, public installation, and package publication remain blocked.
 - The public-facing readiness ledger records the current-main source-only public beta source binding
   and package-publication gap retention; it does not approve package publication, approve public
   installation, or soften any current

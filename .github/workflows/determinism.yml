@@ -31,7 +31,7 @@ jobs:
       # asserting the same pinned hashes IS cross-platform byte equality for the
       # serialization layer. Corpus-level fingerprint comparison joins when the engine
       # parses the frozen manifest (WS-ENGINE + WS-HARNESS).
-      - run: cargo test --locked -p ethos-core --all-features
+      - run: cargo test --locked -p ethos-doc-core --all-features
       - name: full-corpus fingerprint equality
         shell: bash
         run: |

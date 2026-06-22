@@ -39,7 +39,7 @@ The current source-tree fixture for this contract boundary is
 
 Focused validation command:
 
-- `cargo test --locked -p ethos-core crop_element`
+- `cargo test --locked -p ethos-doc-core crop_element`
 - `cargo test --locked -p ethos-cli --test verify crop_element_cli`
 - `make milestone-d-crop-element-contract PYTHON=<jsonschema-venv>/bin/python`
 

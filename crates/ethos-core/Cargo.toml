@@ -1,5 +1,5 @@
 [package]
-name = "ethos-core"
+name = "ethos-doc-core"
 publish = false
 description = "Ethos canonical document model, IDs, errors, schema types, traits, c14n and fingerprints"
 readme = "README.md"
@@ -16,6 +16,9 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 authors.workspace = true
+
+[lib]
+name = "ethos_core"
 
 [package.metadata.ethos_publication]
 reserved_crates_io_name = "ethos-doc-core"

@@ -114,38 +114,47 @@ def record_command(command: str, commands: list[dict[str, object]], stdout: str 
     )
 
 
-def replace_once(path: Path, old: str, new: str) -> None:
+def replace_once_if_needed(path: Path, old: str, new: str) -> None:
     text = path.read_text(encoding="utf-8")
-    if old not in text:
-        raise RuntimeError(f"expected text not found in {path}: {old}")
-    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+    if old in text:
+        path.write_text(text.replace(old, new, 1), encoding="utf-8")
+        return
+    if new in text:
+        return
+    raise RuntimeError(f"expected source or activated text not found in {path}: {old}")
 
 
 def rewrite_candidate_lockfile(workspace: Path) -> None:
     lockfile = workspace / "Cargo.lock"
     text = lockfile.read_text(encoding="utf-8")
-    if 'name = "ethos-core"' not in text:
-        raise RuntimeError("expected ethos-core package entry in candidate Cargo.lock")
-    lockfile.write_text(text.replace("ethos-core", CORE_PACKAGE), encoding="utf-8")
+    if 'name = "ethos-core"' in text:
+        lockfile.write_text(text.replace("ethos-core", CORE_PACKAGE), encoding="utf-8")
+        return
+    if 'name = "ethos-doc-core"' in text:
+        return
+    raise RuntimeError("expected core package entry in candidate Cargo.lock")
 
 
 def materialize_candidate_workspace(workspace: Path) -> None:
     shutil.copytree(ROOT, workspace, ignore=should_ignore)
 
-    replace_once(
+    replace_once_if_needed(
         workspace / "Cargo.toml",
         'ethos-core = { path = "crates/ethos-core", version = "0.1.0", default-features = false }',
         'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.0", default-features = false }',
     )
-    with (workspace / "Cargo.toml").open("a", encoding="utf-8") as handle:
-        handle.write(
-            '\n[patch.crates-io]\n'
-            'ethos-doc-core = { path = "crates/ethos-core" }\n'
-        )
+    root_manifest = workspace / "Cargo.toml"
+    root_text = root_manifest.read_text(encoding="utf-8")
+    if 'ethos-doc-core = { path = "crates/ethos-core" }' not in root_text:
+        with root_manifest.open("a", encoding="utf-8") as handle:
+            handle.write(
+                '\n[patch.crates-io]\n'
+                'ethos-doc-core = { path = "crates/ethos-core" }\n'
+            )
 
     core_manifest = workspace / "crates/ethos-core/Cargo.toml"
-    replace_once(core_manifest, 'name = "ethos-core"', 'name = "ethos-doc-core"')
-    replace_once(
+    replace_once_if_needed(core_manifest, 'name = "ethos-core"', 'name = "ethos-doc-core"')
+    replace_once_if_needed(
         core_manifest,
         "authors.workspace = true\n\n[package.metadata.ethos_publication]",
         'authors.workspace = true\n\n[lib]\nname = "ethos_core"\n\n[package.metadata.ethos_publication]',
@@ -529,18 +538,39 @@ def validate_packaged_manifests(artifacts: list[dict[str, str]]) -> dict[str, ob
     return checks
 
 
+def source_manifests_have_activation_shape() -> bool:
+    workspace = (ROOT / "Cargo.toml").read_text(encoding="utf-8")
+    core = (ROOT / "crates/ethos-core/Cargo.toml").read_text(encoding="utf-8")
+    verify = (ROOT / "crates/ethos-verify/Cargo.toml").read_text(encoding="utf-8")
+    pdf = (ROOT / "crates/ethos-pdf/Cargo.toml").read_text(encoding="utf-8")
+    lockfile = (ROOT / "Cargo.lock").read_text(encoding="utf-8")
+    return all(
+        [
+            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.0", default-features = false }'
+            in workspace,
+            'name = "ethos-doc-core"' in core,
+            '[lib]\nname = "ethos_core"' in core,
+            'ethos-core = { workspace = true, features = ["grounding", "verify-types"] }' in verify,
+            'ethos-core = { workspace = true, features = ["full"] }' in pdf,
+            'name = "ethos-doc-core"' in lockfile,
+            'name = "ethos-core"' not in lockfile,
+        ]
+    )
+
+
 def source_manifests_are_still_blocked() -> bool:
     core = (ROOT / "crates/ethos-core/Cargo.toml").read_text(encoding="utf-8")
     verify = (ROOT / "crates/ethos-verify/Cargo.toml").read_text(encoding="utf-8")
     pdf = (ROOT / "crates/ethos-pdf/Cargo.toml").read_text(encoding="utf-8")
     return all(
         [
-            'name = "ethos-core"' in core,
+            source_manifests_have_activation_shape(),
             "publish = false" in core,
             "publish = false" in verify,
             "publish = false" in pdf,
-            'package = "ethos-doc-core"' not in verify,
-            'package = "ethos-doc-core"' not in pdf,
+            'publication_status = "blocked"' in core,
+            'publication_status = "blocked"' in verify,
+            'publication_status = "blocked"' in pdf,
             not (ROOT / ".cargo/config.toml").exists(),
             not (ROOT / "target/package-registry").exists(),
         ]
@@ -584,6 +614,7 @@ def run_candidate_activation(workspace: Path) -> dict[str, object]:
             for artifact in artifacts
         ],
         "registry_equivalent_consumer_check": "pass",
+        "source_manifest_activation_applied": source_manifests_have_activation_shape(),
         "source_manifests_remain_blocked": source_manifests_are_still_blocked(),
         "package_publication_approved": False,
         "public_installation_approved": False,

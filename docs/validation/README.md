@@ -381,6 +381,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   present; the record binds the refresh to source commit `6a91511` / tree
   `8b150d9aebdc282c358e4552a4d709c3140f41b4`, records that manual exact approval remains
   required, and keeps package publication and public installation blocked.
+- `milestone-e-package-publication-manifest-activation-applied-validation-2026-06-22.md` -
+  package publication manifest activation applied validation for the source package name
+  `ethos-doc-core`, Rust library name `ethos_core`, workspace dependency activation, and retained
+  `publish = false` blockers; package publication and public installation remain blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main

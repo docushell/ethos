@@ -160,7 +160,7 @@ class MilestoneEPackagePublicationCandidateActivationEvidenceTests(unittest.Test
 
         self.assertEqual(read(ROOT_PROFILE), read(PDF_PROFILE))
         self.assertIn('include_str!("../assets/ethos-deterministic-v1.json")', pdf_lib)
-        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn("publish = false", core_manifest)
         self.assertIn("publish = false", verify_manifest)
         self.assertIn("publish = false", pdf_manifest)

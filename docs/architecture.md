@@ -77,13 +77,14 @@ canonical graph + versioned config; Markdown is secondary.
 
 ## Crate map (Release 1)
 
-Public crates.io package identity is governed by ADR-0006. The internal `ethos-core`
-crate maps to the planned public package name `ethos-doc-core`; code may keep the
-internal crate name until the publishing migration.
+Public crates.io package identity is governed by ADR-0006. The source package under
+`crates/ethos-core` is named `ethos-doc-core`, while its Rust library name remains
+`ethos_core`; the workspace dependency key may remain `ethos-core` for source-tree
+dependency wiring. Package publication and public installation remain blocked.
 
 | Crate | Milestone | Role |
 | --- | --- | --- |
-| `ethos-core` | A | canonical model, IDs, errors/warnings, schema types, traits, c14n + fingerprint, page-range config |
+| `ethos-doc-core` package / `ethos_core` library | A | canonical model, IDs, errors/warnings, schema types, traits, c14n + fingerprint, page-range config |
 | `ethos-pdf` | A | PDFium behind `EthosPdfBackend`; quantize-at-extraction lives here; font-mapper override (ADR-0003) |
 | `ethos-verify` | B alpha, D v1 | parser-agnostic verification via `GroundingSource` only |
 | `adapters/grounding/opendataloader-json` | A stub, B alpha, D v1 | first foreign-parser adapter; LiteParse/Docling candidates later |
