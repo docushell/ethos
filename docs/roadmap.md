@@ -206,6 +206,11 @@ The package publication dependent registry action evidence is recorded in
 [`docs/validation/milestone-e-package-publication-dependent-registry-action-evidence-validation-2026-06-22.md`](validation/milestone-e-package-publication-dependent-registry-action-evidence-validation-2026-06-22.md)
 and captures completed `ethos-verify` and `ethos-pdf` registry action evidence; public installation
 wording remains blocked.
+The package publication public installation availability record is
+[`docs/validation/milestone-e-package-publication-public-installation-availability-validation-2026-06-22.md`](validation/milestone-e-package-publication-public-installation-availability-validation-2026-06-22.md)
+and captures crates.io availability for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at
+`0.1.0` while bounding Rust crate installation wording and retaining CLI, wheel, npm, binary,
+hosted, production, public benchmark, PDFium-build, `ethos-doc`, and `ethos-rag` blockers.
 The registry-assembly prep follow-up records future non-public dependent candidate assembly
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,

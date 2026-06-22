@@ -245,6 +245,8 @@ The package publication dependent registry action approval in `docs/validation/m
 
 The package publication dependent registry action evidence in `docs/validation/milestone-e-package-publication-dependent-registry-action-evidence-validation-2026-06-22.md` captures completed `ethos-verify` and `ethos-pdf` registry action evidence. Public installation wording remains blocked.
 
+The package publication public installation availability record in `docs/validation/milestone-e-package-publication-public-installation-availability-validation-2026-06-22.md` captures crates.io availability for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.0` and bounds Rust crate installation wording while retaining CLI, wheel, npm, binary, hosted, production, public benchmark, PDFium-build, `ethos-doc`, and `ethos-rag` blockers.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |

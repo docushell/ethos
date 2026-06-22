@@ -236,6 +236,11 @@ The package publication dependent registry action evidence is recorded in
 `docs/validation/milestone-e-package-publication-dependent-registry-action-evidence-validation-2026-06-22.md`.
 It captures completed `ethos-verify` and `ethos-pdf` registry action evidence; public installation
 wording remains blocked.
+The package publication public installation availability record is
+`docs/validation/milestone-e-package-publication-public-installation-availability-validation-2026-06-22.md`.
+It captures crates.io availability for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at
+`0.1.0` and bounds Rust crate installation wording while retaining CLI, wheel, npm, binary,
+hosted, production, public benchmark, PDFium-build, `ethos-doc`, and `ethos-rag` blockers.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and

@@ -37,10 +37,11 @@ APPROVED_SENTENCE = (
     "across native Ethos JSON and supported foreign parser outputs."
 )
 APPROVED_PUBLIC_BETA_SENTENCE = (
-    "Ethos is public beta for source-only evaluation. It verifies whether AI citations are "
+    "Ethos is public beta for source and Rust crate evaluation. It verifies whether AI citations are "
     "grounded in document evidence across native Ethos JSON and supported foreign parser outputs. "
-    "Package publication, hosted surfaces, production positioning, and public benchmark claims "
-    "remain blocked."
+    "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are available on "
+    "crates.io at `0.1.0` for evaluation. Hosted surfaces, production positioning, and public "
+    "benchmark claims remain blocked."
 )
 
 FORBIDDEN_APPROVAL_WORDING = [

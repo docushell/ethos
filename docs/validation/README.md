@@ -456,6 +456,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   package publication dependent registry action evidence validation; the record captures completed
   `ethos-verify` and `ethos-pdf` registry action evidence while recording that public installation
   wording remains blocked.
+- `milestone-e-package-publication-public-installation-availability-validation-2026-06-22.md` -
+  package publication public installation availability validation; the record captures crates.io
+  availability for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.0` and bounds Rust
+  crate installation wording while retaining CLI, wheel, npm, binary, hosted, production, public
+  benchmark, PDFium-build, `ethos-doc`, and `ethos-rag` blockers.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main
