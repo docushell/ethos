@@ -34,6 +34,35 @@ RECORD = (
 )
 VALIDATION_README = ROOT / "docs/validation/README.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
+HISTORICAL_GAP_ROWS = [
+    "version map gap: no package publication version is selected; requires exact SemVer package version or per-crate version map",
+    "tag name gap: no package tag is created; requires exact package tag name",
+    "tag binding gap: no package_tag_source_commit or source tree is selected; requires exact source commit and tree binding",
+    "manifest activation gap: current Cargo manifests remain unchanged; requires exact package-name migration and dependency activation diff",
+    "registry assembly gap: no registry-backed dependent package assembly is activated; requires exact non-public assembly evidence",
+    "public installation wording gap: no public installation wording is approved; requires exact wording and exclusions",
+    "posture and claims gate gap: gates must rerun after exact public installation wording changes",
+]
+HISTORICAL_BLOCKED_ACTIONS = [
+    "selecting a package publication version remains blocked",
+    "creating a package tag remains blocked",
+    "changing Cargo manifests remains blocked",
+    "activating package dependency manifests remains blocked",
+    "creating a registry remains blocked",
+    "activating registry-backed dependent package assembly remains blocked",
+    "inviting public installation remains blocked",
+    "approving package publication remains blocked",
+]
+HISTORICAL_NON_APPROVALS = [
+    "this ledger does not select a package publication version",
+    "this ledger does not create a package tag",
+    "this ledger does not change Cargo manifests",
+    "this ledger does not activate package dependency manifests",
+    "this ledger does not create a registry",
+    "this ledger does not activate registry-backed dependent package assembly",
+    "this ledger does not invite public installation",
+    "this ledger does not approve package publication",
+]
 
 FORBIDDEN_SCOPE_EXPANSION = [
     "public reports are approved",
@@ -110,13 +139,13 @@ class MilestoneEPackagePublicationPreApprovalGapLedgerTests(unittest.TestCase):
 
         self.assertEqual("pre_approval_gaps_recorded_publication_blocked", ledger["ledger_state"])
         self.assertIn(ledger["ledger_state"], record)
-        for row in ledger["gap_rows"]:
+        for row in HISTORICAL_GAP_ROWS:
             self.assertIn(row, record)
-        for action in ledger["blocked_actions"]:
+        for action in HISTORICAL_BLOCKED_ACTIONS:
             self.assertIn(action, record)
         for required in ledger["required_resolution_inputs"]:
             self.assertIn(required, record)
-        for non_approval in ledger["non_approvals"]:
+        for non_approval in HISTORICAL_NON_APPROVALS:
             self.assertIn(non_approval, record)
         for blocker in ledger["retained_blockers"]:
             self.assertIn(blocker, record)

@@ -91,7 +91,7 @@ class MilestoneEPackagePublicationRegistryAssemblyPrepTests(unittest.TestCase):
             prep["follow_up_records"]["package_registry_assembly_prep"],
         )
         self.assertIn("registry-assembly prep recorded", status)
-        self.assertIn("current source-tree manifests remain unchanged", status)
+        self.assertIn("manifest activation applied for source review", status)
         self.assertIn("publication remains blocked", status)
         self.assertIn("registry-backed dependent package assembly activation", blocker_text)
         self.assertIn("package dependency manifest activation", blocker_text)
@@ -106,17 +106,17 @@ class MilestoneEPackagePublicationRegistryAssemblyPrepTests(unittest.TestCase):
         verify = read(ROOT / "crates/ethos-verify/Cargo.toml")
         pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
 
-        self.assertIn('name = "ethos-core"', core)
+        self.assertIn('name = "ethos-doc-core"', core)
         self.assertIn("publish = false", core)
         self.assertIn("publish = false", verify)
         self.assertIn("publish = false", pdf)
         self.assertIn(
-            'ethos-core = { path = "crates/ethos-core", version = "0.1.0", default-features = false }',
+            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.0", default-features = false }',
             workspace,
         )
         self.assertIn('ethos-core = { workspace = true, features = ["grounding", "verify-types"] }', verify)
         self.assertIn('ethos-core = { workspace = true, features = ["full"] }', pdf)
-        for manifest in (workspace, verify, pdf):
+        for manifest in (verify, pdf):
             self.assertNotIn('package = "ethos-doc-core"', manifest)
 
     def test_registry_assembly_prep_record_names_future_rehearsal_boundary(self) -> None:

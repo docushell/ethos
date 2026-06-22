@@ -35,8 +35,8 @@ RECORD = (
 )
 
 LOCAL_SMOKE_COMMANDS = [
-    "cargo package --locked --offline -p ethos-core --allow-dirty --no-verify",
-    "cargo package --list --locked --offline -p ethos-core --allow-dirty",
+    "cargo package --locked --offline -p ethos-doc-core --allow-dirty --no-verify",
+    "cargo package --list --locked --offline -p ethos-doc-core --allow-dirty",
     "cargo check --locked --offline -p ethos-verify",
     "cargo check --locked --offline -p ethos-pdf",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_dry_run_smoke.py",
@@ -88,8 +88,8 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
         commands = [line.strip() for line in block.splitlines() if line.strip()]
 
         self.assertEqual(LOCAL_SMOKE_COMMANDS, commands)
-        self.assertIn("cargo package --locked --offline -p ethos-core --allow-dirty --no-verify", block)
-        self.assertIn("cargo package --list --locked --offline -p ethos-core --allow-dirty", block)
+        self.assertIn("cargo package --locked --offline -p ethos-doc-core --allow-dirty --no-verify", block)
+        self.assertIn("cargo package --list --locked --offline -p ethos-doc-core --allow-dirty", block)
         self.assertIn("cargo check --locked --offline -p ethos-verify", block)
         self.assertIn("cargo check --locked --offline -p ethos-pdf", block)
         self.assertNotIn("cargo publish", block)
@@ -121,7 +121,7 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
         self.assertIn("dependency-ordering follow-up recorded", status)
         self.assertIn("manifest-migration prep recorded", status)
         self.assertIn("registry-assembly prep recorded", status)
-        self.assertIn("current source-tree manifests remain unchanged", status)
+        self.assertIn("manifest activation applied for source review", status)
         self.assertIn("publication remains blocked", status)
         self.assertIn("registry-backed dependent package assembly", blocker_text)
         self.assertIn("package dependency manifest activation", blocker_text)

@@ -42,6 +42,36 @@ CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 SOURCE_COMMIT = "54bf70f57b8c357ec76059e31d203b80ade7c0e4"
 SOURCE_SHORT = "54bf70f"
 SOURCE_TREE = "5a197bee718e3b31399563340169e9efd4f1317c"
+HISTORICAL_CANDIDATE_CRATES = [
+    "ethos-doc-core mapped from crates/ethos-core; package-name migration remains pending",
+    "ethos-verify mapped from crates/ethos-verify; dependency manifest activation remains pending",
+    "ethos-pdf mapped from crates/ethos-pdf; dependency manifest activation and PDFium boundary confirmation must remain current",
+]
+HISTORICAL_CANDIDATE_MANIFEST_DIFF = [
+    "crates/ethos-core/Cargo.toml candidate package-name migration: package.name ethos-core -> ethos-doc-core; current manifest remains unchanged",
+    "crates/ethos-verify/Cargo.toml candidate dependency activation: ethos_core package alias points at ethos-doc-core; current manifest remains unchanged",
+    "crates/ethos-pdf/Cargo.toml candidate dependency activation: ethos_core package alias points at ethos-doc-core; current manifest remains unchanged",
+    "included candidate crates require later publish-flag activation only after dedicated approval; current manifests remain publish=false",
+]
+HISTORICAL_NON_APPROVALS = [
+    "this exact decision input packet does not select a package publication version",
+    "this exact decision input packet does not create a package tag",
+    "this exact decision input packet does not change Cargo manifests",
+    "this exact decision input packet does not activate package dependency manifests",
+    "this exact decision input packet does not create a registry",
+    "this exact decision input packet does not activate registry-backed dependent package assembly",
+    "this exact decision input packet does not invite public installation",
+    "this exact decision input packet does not approve package publication",
+]
+HISTORICAL_RETAINED_BLOCKERS = [
+    "candidate package version map is recorded but no package publication version is selected",
+    "candidate package tag names are recorded but no package tag is created",
+    "candidate manifest activation diff is recorded but no Cargo manifest is changed",
+    "registry-backed dependent package assembly evidence remains required",
+    "public installation remains blocked",
+    "package publication remains blocked",
+    "real-version cargo publish remains blocked",
+]
 FORBIDDEN_SCOPE_EXPANSION = [
     "public reports are approved",
     "public result wording approved",
@@ -126,7 +156,8 @@ class MilestoneEPackagePublicationDecisionInputPacketTests(unittest.TestCase):
         self.assertEqual(4, len(packet["candidate_manifest_activation_diff"]))
         self.assertIn("0.1.0; not selected or approved", " ".join(packet["candidate_version_map"]))
         self.assertIn("tag is not created", " ".join(packet["candidate_package_tag_names"]))
-        self.assertIn("current manifest remains unchanged", " ".join(packet["candidate_manifest_activation_diff"]))
+        self.assertIn("source package-name activation", " ".join(packet["candidate_manifest_activation_diff"]))
+        self.assertIn("publish=false remains", " ".join(packet["candidate_manifest_activation_diff"]))
         self.assertIn("no registry is created and no assembly is activated", packet["registry_backed_assembly_input"])
         self.assertIn("public installation remains blocked", packet["candidate_public_installation_wording"])
         self.assertIn("this exact decision input packet does not approve package publication", packet["non_approvals"])
@@ -134,13 +165,13 @@ class MilestoneEPackagePublicationDecisionInputPacketTests(unittest.TestCase):
         self.assertIn("package publication remains blocked", packet["retained_blockers"])
         self.assertIn("public installation remains blocked", packet["retained_blockers"])
         for values in (
-            packet["candidate_crates"],
+            HISTORICAL_CANDIDATE_CRATES,
             packet["candidate_version_map"],
             packet["candidate_package_tag_names"],
-            packet["candidate_manifest_activation_diff"],
+            HISTORICAL_CANDIDATE_MANIFEST_DIFF,
             packet["required_before_approval"],
-            packet["non_approvals"],
-            packet["retained_blockers"],
+            HISTORICAL_NON_APPROVALS,
+            HISTORICAL_RETAINED_BLOCKERS,
         ):
             for value in values:
                 self.assertIn(value, record)
@@ -154,7 +185,7 @@ class MilestoneEPackagePublicationDecisionInputPacketTests(unittest.TestCase):
         for value in packet["candidate_package_tag_names"]:
             tag = value.split(": ", maxsplit=1)[1].split(";", maxsplit=1)[0]
             self.assertEqual("", git("tag", "--list", tag))
-        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn("publish = false", core_manifest)
         self.assertIn('reserved_crates_io_name = "ethos-doc-core"', core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)

@@ -215,6 +215,8 @@ The package publication candidate activation evidence in `docs/validation/milest
 
 The package publication approval decision refresh in `docs/validation/milestone-e-package-publication-approval-decision-refresh-validation-2026-06-22.md` records that activation evidence is present against source commit `6a91511` / tree `8b150d9aebdc282c358e4552a4d709c3140f41b4`. Manual exact approval remains required; source Cargo manifests remain unchanged, package publication remains blocked, and public installation remains blocked.
 
+The package publication manifest activation applied record in `docs/validation/milestone-e-package-publication-manifest-activation-applied-validation-2026-06-22.md` records the source package name `ethos-doc-core`, Rust library name `ethos_core`, and workspace dependency activation for review only. `publish = false`, package publication, and public installation remain blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |

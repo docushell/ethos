@@ -137,9 +137,9 @@ class MilestoneEPackagePublicationMetadataReadinessTests(unittest.TestCase):
         readme = normalized(ROOT / "crates/ethos-core/README.md")
         manifest = read(ROOT / "crates/ethos-core/Cargo.toml")
 
-        self.assertIn('name = "ethos-core"', manifest)
+        self.assertIn('name = "ethos-doc-core"', manifest)
         self.assertIn('reserved_crates_io_name = "ethos-doc-core"', manifest)
-        self.assertIn("in-tree crate name remains `ethos-core`", readme)
+        self.assertIn("Rust library name remains `ethos_core`", readme)
         self.assertIn("public crates.io identifier `ethos-doc-core`", readme)
 
     def test_pdfium_boundary_remains_explicit(self) -> None:

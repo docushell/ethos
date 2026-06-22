@@ -92,7 +92,7 @@ class MilestoneEPackagePublicationRegistryAssemblyActivationPrepTests(unittest.T
             prep["follow_up_records"]["package_registry_assembly_activation_prep"],
         )
         self.assertIn("registry-assembly activation prep recorded", status)
-        self.assertIn("current source-tree manifests remain unchanged", status)
+        self.assertIn("manifest activation applied for source review", status)
         self.assertIn("publication remains blocked", status)
         self.assertIn("registry-backed dependent package assembly activation", blocker_text)
         self.assertIn("package dependency manifest activation", blocker_text)
@@ -107,11 +107,11 @@ class MilestoneEPackagePublicationRegistryAssemblyActivationPrepTests(unittest.T
         pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
         core = read(ROOT / "crates/ethos-core/Cargo.toml")
 
-        self.assertIn('ethos-core = { path = "crates/ethos-core"', workspace)
-        self.assertNotIn('package = "ethos-doc-core"', workspace)
+        self.assertIn('ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core"', workspace)
         self.assertIn('ethos-core = { workspace = true, features = ["grounding", "verify-types"] }', verify)
         self.assertIn('ethos-core = { workspace = true, features = ["full"] }', pdf)
-        self.assertIn('name = "ethos-core"', core)
+        self.assertIn('name = "ethos-doc-core"', core)
+        self.assertIn('[lib]\nname = "ethos_core"', core)
         self.assertIn("publish = false", core)
         self.assertIn("publish = false", verify)
         self.assertIn("publish = false", pdf)

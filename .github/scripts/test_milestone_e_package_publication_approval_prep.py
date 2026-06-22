@@ -101,6 +101,7 @@ EXPECTED_FOLLOW_UP_RECORDS = {
     "package_approval_decision_record": "docs/validation/milestone-e-package-publication-approval-decision-validation-2026-06-21.md",
     "package_candidate_activation_evidence": "docs/validation/milestone-e-package-publication-candidate-activation-evidence-validation-2026-06-22.md",
     "package_approval_decision_refresh": "docs/validation/milestone-e-package-publication-approval-decision-refresh-validation-2026-06-22.md",
+    "package_manifest_activation_applied": "docs/validation/milestone-e-package-publication-manifest-activation-applied-validation-2026-06-22.md",
 }
 EXPECTED_PUBLICATION_DECISION_INPUTS = {
     "decision_status": "not_approved_pending_exact_decision",
@@ -137,9 +138,9 @@ EXPECTED_PUBLICATION_DECISION_INPUTS = {
 EXPECTED_CANDIDATE_CRATE_SURFACE_REVIEW = {
     "review_state": "candidate_surface_review_recorded_publication_blocked",
     "included_candidate_crates": [
-        "ethos-doc-core from crates/ethos-core; current manifest name ethos-core; publish=false; package-name migration remains pending",
-        "ethos-verify from crates/ethos-verify; current manifest name ethos-verify; publish=false; dependency manifest activation remains pending",
-        "ethos-pdf from crates/ethos-pdf; current manifest name ethos-pdf; publish=false; dependency manifest activation and PDFium boundary confirmation must remain current",
+        "ethos-doc-core from crates/ethos-core; source manifest name ethos-doc-core; lib.name ethos_core; publish=false",
+        "ethos-verify from crates/ethos-verify; source workspace dependency resolves through ethos-doc-core; publish=false",
+        "ethos-pdf from crates/ethos-pdf; source workspace dependency resolves through ethos-doc-core; PDFium boundary remains current; publish=false",
     ],
     "excluded_reserved_crates": [
         "ethos-doc remains excluded because no in-tree workspace member or package manifest exists",
@@ -157,7 +158,7 @@ EXPECTED_CANDIDATE_CRATE_SURFACE_REVIEW = {
         "candidate surface review does not approve package publication",
         "candidate surface review does not select a package publication version",
         "candidate surface review does not create a package tag",
-        "candidate surface review does not change Cargo manifests",
+        "candidate surface review does not approve removing publish=false",
         "candidate surface review does not approve public installation",
         "candidate surface review does not approve registry-backed dependent package assembly activation",
     ],
@@ -190,7 +191,7 @@ EXPECTED_PACKAGE_PUBLICATION_DECISION_PREP_BUNDLE = {
     "decision_state": "combined_decision_inputs_recorded_actions_blocked",
     "review_boundary": [
         "package tag and source-commit decision inputs are recorded while creating no package tag",
-        "package dependency manifest activation inputs are recorded while changing no Cargo manifest",
+        "package dependency manifest activation inputs are recorded and source activation is applied for review while publish flags remain false",
         "registry-backed dependent package assembly inputs are recorded while creating no registry and activating no assembly",
         "public installation wording and exclusion inputs are recorded while inviting no public installation",
     ],
@@ -207,8 +208,8 @@ EXPECTED_PACKAGE_PUBLICATION_DECISION_PREP_BUNDLE = {
     "non_approvals": [
         "this bundle does not select a package publication version",
         "this bundle does not create a package tag",
-        "this bundle does not change Cargo manifests",
-        "this bundle does not activate package dependency manifests",
+        "this bundle does not remove publish=false",
+        "this bundle does not approve package dependency manifest activation for publication",
         "this bundle does not create a registry",
         "this bundle does not activate registry-backed dependent package assembly",
         "this bundle does not invite public installation",
@@ -226,9 +227,9 @@ EXPECTED_PACKAGE_PUBLICATION_DECISION_PREP_BUNDLE = {
 EXPECTED_PACKAGE_PUBLICATION_APPROVAL_REQUEST_PACKET = {
     "packet_state": "approval_request_packet_recorded_publication_blocked",
     "candidate_crates": [
-        "ethos-doc-core mapped from crates/ethos-core; package-name migration remains pending",
-        "ethos-verify mapped from crates/ethos-verify; dependency manifest activation remains pending",
-        "ethos-pdf mapped from crates/ethos-pdf; dependency manifest activation and PDFium boundary confirmation must remain current",
+        "ethos-doc-core mapped from crates/ethos-core; source package-name activation is applied for review while publish=false remains",
+        "ethos-verify mapped from crates/ethos-verify; source workspace dependency resolves through ethos-doc-core while publish=false remains",
+        "ethos-pdf mapped from crates/ethos-pdf; source workspace dependency resolves through ethos-doc-core, PDFium boundary remains current, and publish=false remains",
     ],
     "package_version_map": [
         "ethos-doc-core has no selected package publication version",
@@ -238,7 +239,7 @@ EXPECTED_PACKAGE_PUBLICATION_APPROVAL_REQUEST_PACKET = {
     "package_tag_name": "not selected; package tag creation remains blocked",
     "package_tag_source_commit": "not selected; package tag binding remains blocked",
     "package_tag_source_tree": "not selected; package source tree binding remains blocked",
-    "manifest_activation_diff": "not prepared; current Cargo manifests remain unchanged",
+    "manifest_activation_diff": "applied for source review only; Cargo manifests keep publish=false and package publication remains blocked",
     "registry_assembly_evidence": "not activated; registry-backed dependent package assembly remains blocked",
     "public_installation_wording": "No public installation wording is approved; public installation remains blocked.",
     "explicit_exclusions": [
@@ -265,8 +266,8 @@ EXPECTED_PACKAGE_PUBLICATION_APPROVAL_REQUEST_PACKET = {
     "non_approvals": [
         "this packet does not select a package publication version",
         "this packet does not create a package tag",
-        "this packet does not change Cargo manifests",
-        "this packet does not activate package dependency manifests",
+        "this packet does not remove publish=false",
+        "this packet does not approve package dependency manifest activation for publication",
         "this packet does not create a registry",
         "this packet does not activate registry-backed dependent package assembly",
         "this packet does not invite public installation",
@@ -288,7 +289,7 @@ EXPECTED_PACKAGE_PUBLICATION_PRE_APPROVAL_GAP_LEDGER = {
         "version map gap: no package publication version is selected; requires exact SemVer package version or per-crate version map",
         "tag name gap: no package tag is created; requires exact package tag name",
         "tag binding gap: no package_tag_source_commit or source tree is selected; requires exact source commit and tree binding",
-        "manifest activation gap: current Cargo manifests remain unchanged; requires exact package-name migration and dependency activation diff",
+        "manifest approval gap: source manifest activation is applied for review; requires exact approval before publish flags, tags, public installation, or publication can advance",
         "registry assembly gap: no registry-backed dependent package assembly is activated; requires exact non-public assembly evidence",
         "public installation wording gap: no public installation wording is approved; requires exact wording and exclusions",
         "posture and claims gate gap: gates must rerun after exact public installation wording changes",
@@ -296,8 +297,8 @@ EXPECTED_PACKAGE_PUBLICATION_PRE_APPROVAL_GAP_LEDGER = {
     "blocked_actions": [
         "selecting a package publication version remains blocked",
         "creating a package tag remains blocked",
-        "changing Cargo manifests remains blocked",
-        "activating package dependency manifests remains blocked",
+        "removing publish=false remains blocked",
+        "approving package dependency manifest activation for publication remains blocked",
         "creating a registry remains blocked",
         "activating registry-backed dependent package assembly remains blocked",
         "inviting public installation remains blocked",
@@ -318,8 +319,8 @@ EXPECTED_PACKAGE_PUBLICATION_PRE_APPROVAL_GAP_LEDGER = {
     "non_approvals": [
         "this ledger does not select a package publication version",
         "this ledger does not create a package tag",
-        "this ledger does not change Cargo manifests",
-        "this ledger does not activate package dependency manifests",
+        "this ledger does not remove publish=false",
+        "this ledger does not approve package dependency manifest activation for publication",
         "this ledger does not create a registry",
         "this ledger does not activate registry-backed dependent package assembly",
         "this ledger does not invite public installation",
@@ -477,7 +478,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn('"crates/ethos-verify"', cargo)
         self.assertNotIn('"crates/ethos-doc"', cargo)
         self.assertNotIn('"crates/ethos-rag"', cargo)
-        self.assertIn("ethos-doc-core maps to the in-tree ethos-core crate", " ".join(approved["in_tree_reconciliation"]))
+        self.assertIn("ethos-doc-core maps to crates/ethos-core", " ".join(approved["in_tree_reconciliation"]))
         self.assertIn("ethos-doc has no in-tree workspace member yet", " ".join(approved["in_tree_reconciliation"]))
         self.assertIn("ethos-rag has no in-tree workspace member yet", " ".join(approved["in_tree_reconciliation"]))
 
@@ -486,7 +487,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         verify = read(ROOT / "crates/ethos-verify/Cargo.toml")
         pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
 
-        self.assertIn('name = "ethos-core"', core)
+        self.assertIn('name = "ethos-doc-core"', core)
         self.assertIn("publish = false", core)
         self.assertIn('name = "ethos-verify"', verify)
         self.assertIn("publish = false", verify)
@@ -507,7 +508,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("manifest-activation prep recorded", status["install_build_smoke_path"])
         self.assertIn("registry-assembly prep recorded", status["install_build_smoke_path"])
         self.assertIn("registry-assembly activation prep recorded", status["install_build_smoke_path"])
-        self.assertIn("current source-tree manifests remain unchanged", status["install_build_smoke_path"])
+        self.assertIn("manifest activation applied for source review", status["install_build_smoke_path"])
         self.assertIn("publication remains blocked", status["install_build_smoke_path"])
         self.assertIn("version/tag policy follow-up", status["version_tag_policy"])
         self.assertIn("real-version-selection prep recorded", status["version_tag_policy"])
@@ -575,7 +576,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn('"crates/ethos-pdf"', cargo)
         self.assertNotIn('"crates/ethos-doc"', cargo)
         self.assertNotIn('"crates/ethos-rag"', cargo)
-        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn('reserved_crates_io_name = "ethos-doc-core"', core_manifest)
         self.assertIn("publish = false", core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)
@@ -649,7 +650,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             bundle["required_decision_inputs"],
         )
         self.assertIn("this bundle does not create a package tag", bundle["non_approvals"])
-        self.assertIn("this bundle does not change Cargo manifests", bundle["non_approvals"])
+        self.assertIn("this bundle does not remove publish=false", bundle["non_approvals"])
         self.assertIn("this bundle does not create a registry", bundle["non_approvals"])
         self.assertIn("this bundle does not invite public installation", bundle["non_approvals"])
         self.assertIn("this bundle does not approve package publication", bundle["non_approvals"])
@@ -659,7 +660,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("publish = false", core_manifest)
         self.assertIn("publish = false", verify_manifest)
         self.assertIn("publish = false", pdf_manifest)
-        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)
         self.assertIn('name = "ethos-pdf"', pdf_manifest)
         self.assertIn('version = "0.1.0"', cargo)
@@ -684,7 +685,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             packet["package_tag_source_commit"],
         )
         self.assertEqual(
-            "not prepared; current Cargo manifests remain unchanged",
+            "applied for source review only; Cargo manifests keep publish=false and package publication remains blocked",
             packet["manifest_activation_diff"],
         )
         self.assertIn("public installation remains blocked", packet["public_installation_wording"])
@@ -692,7 +693,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("project-maintained PDFium builds", packet["explicit_exclusions"])
         self.assertIn("exact package tag name and package_tag_source_commit", packet["required_before_approval"])
         self.assertIn("posture and claims gates after exact public installation wording changes", packet["required_before_approval"])
-        self.assertIn("this packet does not change Cargo manifests", packet["non_approvals"])
+        self.assertIn("this packet does not remove publish=false", packet["non_approvals"])
         self.assertIn("this packet does not invite public installation", packet["non_approvals"])
         self.assertIn("this packet does not approve package publication", packet["non_approvals"])
         self.assertIn("real-version cargo publish remains blocked", packet["retained_blockers"])
@@ -702,7 +703,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("publish = false", core_manifest)
         self.assertIn("publish = false", verify_manifest)
         self.assertIn("publish = false", pdf_manifest)
-        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)
         self.assertIn('name = "ethos-pdf"', pdf_manifest)
 
@@ -718,7 +719,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertEqual(7, len(ledger["gap_rows"]))
         self.assertEqual(8, len(ledger["blocked_actions"]))
         self.assertIn("creating a package tag remains blocked", ledger["blocked_actions"])
-        self.assertIn("changing Cargo manifests remains blocked", ledger["blocked_actions"])
+        self.assertIn("removing publish=false remains blocked", ledger["blocked_actions"])
         self.assertIn("inviting public installation remains blocked", ledger["blocked_actions"])
         self.assertIn(
             "exact package_tag_source_commit and package source tree",
@@ -733,7 +734,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn("publish = false", core_manifest)
         self.assertIn("publish = false", verify_manifest)
         self.assertIn("publish = false", pdf_manifest)
-        self.assertIn('name = "ethos-core"', core_manifest)
+        self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)
         self.assertIn('name = "ethos-pdf"', pdf_manifest)
         self.assertIn('version = "0.1.0"', cargo)

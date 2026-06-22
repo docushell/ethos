@@ -116,6 +116,7 @@ EXPECTED_MILESTONE_E_PREP_COMMANDS = (
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_decision_record.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_candidate_activation_evidence.py",
     "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_decision_refresh.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_package_publication_manifest_activation_applied.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_facing_readiness_ledger.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_refresh_prep.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_source_only_approval.py",

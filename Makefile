@@ -70,7 +70,7 @@ milestone-d-claim-kind-boundary-contract:
 	git diff --check
 
 milestone-d-grounding-source-contract:
-	cargo test --locked -p ethos-core grounding
+	cargo test --locked -p ethos-doc-core grounding
 	cargo test --locked -p ethos-cli --test verify native_ethos_verify_produces_non_empty_checks
 	cargo test --locked -p ethos-cli --test verify opendataloader_verify_adapter_produces_capability_aware_report
 	$(PYTHON) schemas/validate_examples.py
@@ -80,7 +80,7 @@ milestone-d-grounding-source-contract:
 	git diff --check
 
 milestone-d-crop-element-contract:
-	cargo test --locked -p ethos-core crop_element
+	cargo test --locked -p ethos-doc-core crop_element
 	cargo test --locked -p ethos-cli --test verify native_verify_crop_dir_writes_deterministic_crop_descriptors
 	cargo test --locked -p ethos-cli --test verify crop_element_cli
 	$(PYTHON) schemas/validate_examples.py
@@ -230,6 +230,7 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_decision_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_candidate_activation_evidence.py
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_decision_refresh.py
+	$(PYTHON) .github/scripts/test_milestone_e_package_publication_manifest_activation_applied.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_facing_readiness_ledger.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_refresh_prep.py
 	$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_source_only_approval.py
@@ -246,8 +247,8 @@ milestone-e-prep:
 	git diff --check
 
 package-publication-dry-run-smoke:
-	cargo package --locked --offline -p ethos-core --allow-dirty --no-verify
-	cargo package --list --locked --offline -p ethos-core --allow-dirty
+	cargo package --locked --offline -p ethos-doc-core --allow-dirty --no-verify
+	cargo package --list --locked --offline -p ethos-doc-core --allow-dirty
 	cargo check --locked --offline -p ethos-verify
 	cargo check --locked --offline -p ethos-pdf
 	$(PYTHON) .github/scripts/test_milestone_e_package_publication_dry_run_smoke.py

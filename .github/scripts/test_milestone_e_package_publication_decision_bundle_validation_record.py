@@ -34,6 +34,38 @@ RECORD = (
 )
 VALIDATION_README = ROOT / "docs/validation/README.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
+HISTORICAL_REVIEW_BOUNDARY = [
+    "package tag and source-commit decision inputs are recorded while creating no package tag",
+    "package dependency manifest activation inputs are recorded while changing no Cargo manifest",
+    "registry-backed dependent package assembly inputs are recorded while creating no registry and activating no assembly",
+    "public installation wording and exclusion inputs are recorded while inviting no public installation",
+]
+HISTORICAL_CANDIDATE_CRATES = [
+    "ethos-doc-core mapped from crates/ethos-core; package-name migration remains pending",
+    "ethos-verify mapped from crates/ethos-verify; dependency manifest activation remains pending",
+    "ethos-pdf mapped from crates/ethos-pdf; dependency manifest activation and PDFium boundary confirmation must remain current",
+]
+HISTORICAL_MANIFEST_ACTIVATION_DIFF = "not prepared; current Cargo manifests remain unchanged"
+HISTORICAL_BUNDLE_NON_APPROVALS = [
+    "this bundle does not select a package publication version",
+    "this bundle does not create a package tag",
+    "this bundle does not change Cargo manifests",
+    "this bundle does not activate package dependency manifests",
+    "this bundle does not create a registry",
+    "this bundle does not activate registry-backed dependent package assembly",
+    "this bundle does not invite public installation",
+    "this bundle does not approve package publication",
+]
+HISTORICAL_PACKET_NON_APPROVALS = [
+    "this packet does not select a package publication version",
+    "this packet does not create a package tag",
+    "this packet does not change Cargo manifests",
+    "this packet does not activate package dependency manifests",
+    "this packet does not create a registry",
+    "this packet does not activate registry-backed dependent package assembly",
+    "this packet does not invite public installation",
+    "this packet does not approve package publication",
+]
 
 FORBIDDEN_SCOPE_EXPANSION = [
     "public reports are approved",
@@ -111,11 +143,11 @@ class MilestoneEPackagePublicationDecisionBundleValidationRecordTests(unittest.T
         record = normalized(RECORD)
 
         self.assertEqual("combined_decision_inputs_recorded_actions_blocked", bundle["decision_state"])
-        for boundary in bundle["review_boundary"]:
+        for boundary in HISTORICAL_REVIEW_BOUNDARY:
             self.assertIn(boundary, record)
         for decision_input in bundle["required_decision_inputs"]:
             self.assertIn(decision_input, record)
-        for non_approval in bundle["non_approvals"]:
+        for non_approval in HISTORICAL_BUNDLE_NON_APPROVALS:
             self.assertIn(non_approval, record)
         for blocker in bundle["retained_blockers"]:
             self.assertIn(blocker, record)
@@ -130,21 +162,21 @@ class MilestoneEPackagePublicationDecisionBundleValidationRecordTests(unittest.T
 
         self.assertEqual("approval_request_packet_recorded_publication_blocked", packet["packet_state"])
         self.assertIn(packet["packet_state"], record)
-        for candidate in packet["candidate_crates"]:
+        for candidate in HISTORICAL_CANDIDATE_CRATES:
             self.assertIn(candidate, record)
         for version in packet["package_version_map"]:
             self.assertIn(version, record)
         self.assertIn(packet["package_tag_name"], record)
         self.assertIn(packet["package_tag_source_commit"], record)
         self.assertIn(packet["package_tag_source_tree"], record)
-        self.assertIn(packet["manifest_activation_diff"], record)
+        self.assertIn(HISTORICAL_MANIFEST_ACTIVATION_DIFF, record)
         self.assertIn(packet["registry_assembly_evidence"], record)
         self.assertIn(packet["public_installation_wording"], record)
         for exclusion in packet["explicit_exclusions"]:
             self.assertIn(exclusion, record)
         for required in packet["required_before_approval"]:
             self.assertIn(required, record)
-        for non_approval in packet["non_approvals"]:
+        for non_approval in HISTORICAL_PACKET_NON_APPROVALS:
             self.assertIn(non_approval, record)
         for blocker in packet["retained_blockers"]:
             self.assertIn(blocker, record)
