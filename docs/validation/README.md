@@ -491,6 +491,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   caller-provided PDFium; public artifact publication remains blocked, and hosted, production,
   public benchmark, Windows x64, bundled PDFium, `ethos-doc`, and `ethos-rag` blockers remain
   explicit.
+- `first-public-release-launch-copy-audit-template-2026-06-22.md` - launch copy audit template
+  records the required sentence-level evidence mapping for future first public release wording; no
+  launch wording is approved, and hosted, production, public benchmark, Windows x64, bundled
+  PDFium, `ethos-doc`, and `ethos-rag` blockers remain explicit.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

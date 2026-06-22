@@ -275,6 +275,7 @@ release-candidate-prep:
 	$(PYTHON) .github/scripts/test_release_artifact_workflow_prep.py
 	$(PYTHON) .github/scripts/test_release_candidate_prep.py
 	$(PYTHON) .github/scripts/test_release_reproducibility_scaffold.py
+	$(PYTHON) .github/scripts/test_launch_copy_approval_scaffold.py
 	cargo test --locked -p ethos-cli --test verify invalid_config_constraints_are_usage_errors
 	git diff --check
 
