@@ -211,6 +211,9 @@ The package publication public installation availability record is
 and captures crates.io availability for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at
 `0.1.0` while bounding Rust crate installation wording and retaining CLI, wheel, npm, binary,
 hosted, production, public benchmark, PDFium-build, `ethos-doc`, and `ethos-rag` blockers.
+Current public evaluation wording is therefore limited to the GitHub source repository plus those
+three Rust library crates at `0.1.0`; earlier package-publication blocker statements remain
+historical record summaries for the steps that preceded the availability record.
 The registry-assembly prep follow-up records future non-public dependent candidate assembly
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,

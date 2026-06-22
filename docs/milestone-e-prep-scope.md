@@ -241,6 +241,9 @@ The package publication public installation availability record is
 It captures crates.io availability for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at
 `0.1.0` and bounds Rust crate installation wording while retaining CLI, wheel, npm, binary,
 hosted, production, public benchmark, PDFium-build, `ethos-doc`, and `ethos-rag` blockers.
+Current public evaluation wording is limited to the GitHub source repository plus those three Rust
+library crates at `0.1.0`. Earlier package-publication and public-installation blocker statements in
+this scope remain historical summaries for the approval steps that preceded the availability record.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -455,6 +458,10 @@ or broad demo-generation workflows.
   and package-publication gap retention; it does not approve package publication, approve public
   installation, or soften any current
   public-facing blocker.
+- The public installation availability record bounds current public evaluation wording to the
+  GitHub source repository plus `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.0`, while
+  retaining CLI, wheel, npm, binary, hosted, production, public benchmark, PDFium-build, `ethos-doc`,
+  and `ethos-rag` blockers.
 - The public beta current-main refresh prep remains limited to refresh evidence preparation for
   current main `9262b28`; it does not change the approved public beta wording, refresh the reviewed
   source-only public beta source state, approve package publication, approve public installation, or
