@@ -89,14 +89,14 @@ def load_json(path: Path) -> dict:
 
 
 class MilestoneEPackagePublicationMetadataReadinessTests(unittest.TestCase):
-    def test_in_tree_candidate_metadata_files_are_present_and_blocked(self) -> None:
+    def test_in_tree_candidate_metadata_files_are_present_and_activated(self) -> None:
         for crate, details in CANDIDATE_CRATES.items():
             root = details["path"]
             manifest = read(root / "Cargo.toml")
             readme = normalized(root / "README.md")
             notice = normalized(root / "NOTICE.md")
 
-            self.assertIn("publish = false", manifest, crate)
+            self.assertNotIn("publish = false", manifest, crate)
             self.assertIn('readme = "README.md"', manifest, crate)
             self.assertIn('"README.md"', manifest, crate)
             self.assertIn('"NOTICE.md"', manifest, crate)
@@ -104,20 +104,20 @@ class MilestoneEPackagePublicationMetadataReadinessTests(unittest.TestCase):
             self.assertIn("license.workspace = true", manifest, crate)
             self.assertIn("repository.workspace = true", manifest, crate)
             self.assertIn("authors.workspace = true", manifest, crate)
-            self.assertIn("publication_status = \"blocked\"", manifest, crate)
+            self.assertIn("publication_status = \"approved_for_crates_io_publication\"", manifest, crate)
             self.assertIn(
                 f"reserved_crates_io_name = \"{details['reserved_name']}\"",
                 manifest,
                 crate,
             )
             self.assertIn("reserved_crates_io_version = \"0.0.0-reserved.0\"", manifest, crate)
-            self.assertIn("Package publication remains blocked", readme, crate)
+            self.assertIn("Publication metadata is activated", readme, crate)
             self.assertIn("Public installation from crates.io remains blocked", readme, crate)
             self.assertIn("0.0.0-reserved.0", readme, crate)
-            self.assertIn("no public API", readme, crate)
-            self.assertIn("internal metadata readiness review only", readme, crate)
-            self.assertIn("Package publication remains blocked", notice, crate)
-            self.assertIn("internal metadata readiness review only", notice, crate)
+            self.assertIn("registry action", readme, crate)
+            self.assertIn("package-publication activation review only", readme, crate)
+            self.assertIn("Publication metadata is activated", notice, crate)
+            self.assertIn("public installation and registry action remain blocked", notice, crate)
 
     def test_reserved_placeholder_crates_without_manifests_stay_blocked(self) -> None:
         prep = load_json(PREP)

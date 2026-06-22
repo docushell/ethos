@@ -171,7 +171,7 @@ class MilestoneEPackagePublicationApprovalResolutionPlanTests(unittest.TestCase)
         ):
             text = read(manifest)
 
-            self.assertIn("publish = false", text)
+            self.assertNotIn("publish = false", text)
             self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', text)
 
     def test_docs_reference_resolution_plan_and_blockers(self) -> None:

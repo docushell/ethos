@@ -8,11 +8,12 @@ ADR-0006 reserves the public crates.io identifier `ethos-verify` at `0.0.0-reser
 
 ## Publication Boundary
 
-- `publish = false` remains set.
-- Package publication remains blocked.
-- Public installation from crates.io remains blocked.
-- The reserved crates.io placeholder remains `0.0.0-reserved.0` with no public API.
-- This README supports internal metadata readiness review only.
+- Publication metadata is activated for the approved crates.io candidate surface.
+- Public installation from crates.io remains blocked until refreshed tag/source binding and
+  operator evidence are recorded.
+- The reserved crates.io placeholder remains `0.0.0-reserved.0` until registry action is
+  explicitly recorded.
+- This README supports package-publication activation review only.
 
 ## Metadata Notes
 

@@ -110,9 +110,9 @@ class MilestoneEPackagePublicationRealVersionSelectionPrepTests(unittest.TestCas
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', core)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', verify)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', pdf)
-        self.assertIn("publish = false", core)
-        self.assertIn("publish = false", verify)
-        self.assertIn("publish = false", pdf)
+        self.assertNotIn("publish = false", core)
+        self.assertNotIn("publish = false", verify)
+        self.assertNotIn("publish = false", pdf)
 
     def test_real_version_selection_record_names_future_review_boundary(self) -> None:
         record = normalized(RECORD)

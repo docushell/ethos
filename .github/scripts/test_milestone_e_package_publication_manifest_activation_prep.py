@@ -110,9 +110,9 @@ class MilestoneEPackagePublicationManifestActivationPrepTests(unittest.TestCase)
         self.assertIn('ethos-core = { workspace = true, features = ["full"] }', pdf)
         self.assertIn('name = "ethos-doc-core"', core)
         self.assertIn('[lib]\nname = "ethos_core"', core)
-        self.assertIn("publish = false", core)
-        self.assertIn("publish = false", verify)
-        self.assertIn("publish = false", pdf)
+        self.assertNotIn("publish = false", core)
+        self.assertNotIn("publish = false", verify)
+        self.assertNotIn("publish = false", pdf)
 
     def test_manifest_activation_record_names_future_review_boundary(self) -> None:
         record = normalized(RECORD)

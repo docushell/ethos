@@ -1,6 +1,5 @@
 [package]
 name = "ethos-pdf"
-publish = false
 description = "PDFium backend behind EthosPdfBackend — quantize-at-extraction lives here (WS-ENGINE, Milestone A)"
 readme = "README.md"
 keywords = ["ethos", "pdf", "evidence"]
@@ -21,7 +20,7 @@ authors.workspace = true
 [package.metadata.ethos_publication]
 reserved_crates_io_name = "ethos-pdf"
 reserved_crates_io_version = "0.0.0-reserved.0"
-publication_status = "blocked"
+publication_status = "approved_for_crates_io_publication"
 
 [dependencies]
 ethos-core = { workspace = true, features = ["full"] }

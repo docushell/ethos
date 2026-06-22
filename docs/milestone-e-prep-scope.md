@@ -179,6 +179,18 @@ It accepts the exact bounded candidate crates, version map, package tag names, s
 wording, and exclusions; publish-flag activation remains blocked, package tag creation remains
 blocked, real-version cargo publish remains blocked, and public installation instructions remain
 unchanged until later gated activation.
+The package publication publish-flag activation request is recorded in
+`docs/validation/milestone-e-package-publication-publish-flag-activation-request-validation-2026-06-22.md`.
+It records the exact requested activation diff for the three accepted candidate manifests only;
+activation remains blocked, package tag source binding must be refreshed after activation,
+package tag creation remains blocked, real-version cargo publish remains blocked, and public
+installation instructions remain unchanged.
+The package publication activation applied follow-up is recorded in
+`docs/validation/milestone-e-package-publication-activation-applied-validation-2026-06-22.md`.
+It binds the activated candidate manifests to source commit `f50f294` / tree
+`00c3e4df7a7b3b368659650601a2df76b63a2ce8`; non-candidate crates remain blocked, package tag
+source binding must be refreshed, public installation remains blocked, and real-version cargo
+publish remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -380,6 +392,15 @@ or broad demo-generation workflows.
   candidate crates, version map, package tag names, source binding, wording, and exclusions;
   publish-flag activation remains blocked, package tag creation remains blocked, and real-version
   cargo publish remains blocked until later gated activation.
+- The package publication publish-flag activation request records exact requested source changes
+  for the three accepted candidate manifests only; activation remains blocked, package tag source
+  binding must be refreshed after activation, package tag creation remains blocked, and
+  real-version cargo publish remains blocked.
+- The package publication activation applied follow-up records that the three accepted candidate
+  manifests are activated at source commit `f50f294` / tree
+  `00c3e4df7a7b3b368659650601a2df76b63a2ce8`; non-candidate crates remain blocked, package tag
+  source binding must be refreshed, public installation remains blocked, and real-version cargo
+  publish remains blocked.
 - The public-facing readiness ledger records the current-main source-only public beta source binding
   and package-publication gap retention; it does not approve package publication, approve public
   installation, or soften any current

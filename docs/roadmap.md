@@ -149,6 +149,17 @@ and accepts the exact bounded candidate crates, version map, package tag names, 
 wording, and explicit exclusions; publish-flag activation remains blocked, package tag creation
 remains blocked, real-version cargo publish remains blocked, and public installation instructions
 remain unchanged until later gated activation.
+The publish-flag activation request is recorded in
+[`docs/validation/milestone-e-package-publication-publish-flag-activation-request-validation-2026-06-22.md`](validation/milestone-e-package-publication-publish-flag-activation-request-validation-2026-06-22.md)
+and records the exact requested source diff for the three accepted candidate manifests only;
+activation remains blocked, package tag source binding must be refreshed after activation, package
+tag creation remains blocked, real-version cargo publish remains blocked, and public installation
+instructions remain unchanged.
+The package publication activation applied follow-up is recorded in
+[`docs/validation/milestone-e-package-publication-activation-applied-validation-2026-06-22.md`](validation/milestone-e-package-publication-activation-applied-validation-2026-06-22.md)
+and binds the activated candidate manifests to source commit `f50f294` / tree
+`00c3e4df7a7b3b368659650601a2df76b63a2ce8`; package tag source binding must be refreshed, public
+installation remains blocked, and real-version cargo publish remains blocked.
 The registry-assembly prep follow-up records future non-public dependent candidate assembly
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,

@@ -29,7 +29,11 @@ ROOT = Path(__file__).resolve().parents[2]
 RECORD = (
     ROOT
     / "docs/validation/"
-    "milestone-e-package-publication-final-approval-request-validation-2026-06-22.md"
+    "milestone-e-package-publication-publish-flag-activation-request-validation-2026-06-22.md"
+)
+FINAL_DECISION_RECORD = (
+    "docs/validation/"
+    "milestone-e-package-publication-final-approval-decision-validation-2026-06-22.md"
 )
 VALIDATION_README = ROOT / "docs/validation/README.md"
 PREP_SCOPE = ROOT / "docs/milestone-e-prep-scope.md"
@@ -37,33 +41,23 @@ ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 
-SOURCE_COMMIT = "b48e2f2c7ff6f3507bbf84c6d603cf4a385b9875"
-SOURCE_SHORT = "b48e2f2"
-SOURCE_TREE = "4d660bd7c1de69259d0f8c59e6ac8d1c2cb6a3a3"
+SOURCE_COMMIT = "cea20182e11271bf83675c12de43498df9c42c18"
+SOURCE_SHORT = "cea2018"
+SOURCE_TREE = "8c7076b0997fe925827bb81f859b74790a4d8b16"
 EXACT_CRATES = ["ethos-doc-core", "ethos-verify", "ethos-pdf"]
 EXACT_TAGS = [
     "ethos-package-ethos-doc-core-0.1.0",
     "ethos-package-ethos-verify-0.1.0",
     "ethos-package-ethos-pdf-0.1.0",
 ]
-EXACT_PUBLIC_WORDING = (
-    "Ethos Rust crates ethos-doc-core, ethos-verify, and ethos-pdf version 0.1.0 are proposed "
-    "for crates.io installation only after explicit package-publication approval and package-tag "
-    "creation. ethos-pdf requires caller-provided PDFium through ETHOS_PDFIUM_LIBRARY_PATH. "
-    "Wheels, npm packages, binaries, hosted surfaces, production positioning, public benchmark "
-    "reports, public benchmark claims, project-maintained PDFium builds, ethos-doc, and ethos-rag "
-    "remain blocked."
-)
-REQUIRED_PACKET_FIELDS = [
-    "Decision requested: approve exact crates.io publication preparation inputs for later decider signoff.",
+REQUIRED_REQUEST_FIELDS = [
+    "Decision requested: approve exact publish-flag and package metadata activation diff.",
     "Approver requested: docushell-admin acting as decider.",
-    "Exact candidate crate list requested: `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` only.",
-    "Exact package version map requested: `ethos-doc-core = 0.1.0`, `ethos-verify = 0.1.0`, and `ethos-pdf = 0.1.0`.",
-    "Exact package tag source commit requested: `b48e2f2c7ff6f3507bbf84c6d603cf4a385b9875`.",
-    "Exact package tag source tree requested: `4d660bd7c1de69259d0f8c59e6ac8d1c2cb6a3a3`.",
-    "Exact publish-flag activation requested later: remove `publish = false` from the three candidate crate manifests only after decider approval.",
-    "Exact metadata activation requested later: change `publication_status = \"blocked\"` only after decider approval.",
-    "Exact public installation wording requested later:",
+    "Date requested: 2026-06-22.",
+    "Exact activation crate list requested: `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` only.",
+    "Exact activation diff requested: remove `publish = false` from the three accepted candidate manifests only.",
+    "Exact metadata diff requested: change `publication_status = \"blocked\"` to `publication_status = \"approved_for_crates_io_publication\"` in the three accepted candidate manifests only.",
+    "Package tag source binding impact: the previous accepted source binding keeps `publish = false`; package tag source binding must be refreshed after the activation diff is applied and reviewed.",
 ]
 FORBIDDEN_SCOPE_EXPANSION = [
     "public reports are approved",
@@ -71,8 +65,6 @@ FORBIDDEN_SCOPE_EXPANSION = [
     "release-ready",
     "release artifact approved",
     "package-ready",
-    "package publication is approved",
-    "package publication approved",
     "packages are published",
     "published packages",
     "production-ready",
@@ -110,35 +102,37 @@ def git(*args: str) -> str:
     ).strip()
 
 
-class MilestoneEPackagePublicationFinalApprovalRequestTests(unittest.TestCase):
+class MilestoneEPackagePublicationPublishFlagActivationRequestTests(unittest.TestCase):
     def test_request_record_is_indexed_and_source_bound(self) -> None:
         readme = normalized(VALIDATION_README)
         record = normalized(RECORD)
 
         self.assertIn(RECORD.name, readme)
-        self.assertIn("package publication final approval request validation", readme)
+        self.assertIn("package publication publish-flag activation request validation", readme)
         self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", read(RECORD))
-        self.assertIn(f"Final approval request source commit: `{SOURCE_COMMIT}`", record)
-        self.assertIn(f"Final approval request source tree: `{SOURCE_TREE}`", record)
+        self.assertIn(f"Activation request source commit: `{SOURCE_COMMIT}`", record)
+        self.assertIn(f"Activation request source tree: `{SOURCE_TREE}`", record)
         self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
         self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
 
-    def test_request_packet_names_exact_surface_version_tags_and_wording(self) -> None:
+    def test_request_names_exact_activation_diff_and_binding_impact(self) -> None:
         record = normalized(RECORD)
 
-        self.assertIn("Status: **pass for exact package-publication approval request packet with publication blocked**", record)
-        for field in REQUIRED_PACKET_FIELDS:
+        self.assertIn(
+            "Status: **pass for publish-flag activation request with activation blocked**",
+            record,
+        )
+        for field in REQUIRED_REQUEST_FIELDS:
             self.assertIn(field, record)
         for crate in EXACT_CRATES:
             self.assertIn(crate, record)
-            self.assertIn(f"{crate} = 0.1.0", record)
         for tag in EXACT_TAGS:
             self.assertIn(tag, record)
-        self.assertIn(EXACT_PUBLIC_WORDING, record)
+        self.assertIn(FINAL_DECISION_RECORD, record)
         self.assertIn("`ethos-doc` remains excluded", record)
         self.assertIn("`ethos-rag` remains excluded", record)
 
-    def test_request_does_not_mutate_manifests_or_create_tags(self) -> None:
+    def test_request_does_not_mutate_current_source_or_tags(self) -> None:
         for manifest in (
             ROOT / "crates/ethos-core/Cargo.toml",
             ROOT / "crates/ethos-verify/Cargo.toml",
@@ -148,50 +142,41 @@ class MilestoneEPackagePublicationFinalApprovalRequestTests(unittest.TestCase):
             self.assertNotIn("publish = false", text, str(manifest))
             self.assertIn('publication_status = "approved_for_crates_io_publication"', text, str(manifest))
 
+        for manifest in (
+            ROOT / "crates/ethos-cli/Cargo.toml",
+            ROOT / "crates/ethos-layout/Cargo.toml",
+            ROOT / "crates/ethos-tables/Cargo.toml",
+        ):
+            self.assertIn("publish = false", read(manifest), str(manifest))
         for tag in EXACT_TAGS:
             self.assertEqual("", git("tag", "--list", tag))
         self.assertFalse((ROOT / ".cargo/config.toml").exists())
         self.assertFalse((ROOT / "target/package-registry").exists())
 
-    def test_request_references_current_evidence_and_retains_blockers(self) -> None:
-        record = normalized(RECORD)
-
-        self.assertIn(
-            "milestone-e-package-publication-current-dry-run-smoke-validation-2026-06-22.md",
-            record,
-        )
-        self.assertIn(
-            "milestone-e-package-publication-current-registry-assembly-validation-2026-06-22.md",
-            record,
-        )
-        self.assertIn(
-            "milestone-e-package-publication-manifest-activation-applied-validation-2026-06-22.md",
-            record,
-        )
-        self.assertIn("Package publication remains blocked pending explicit decider approval.", record)
-        self.assertIn("Public installation remains blocked pending explicit decider approval.", record)
-
-    def test_docs_reference_request_packet_and_retained_blockers(self) -> None:
+    def test_docs_reference_request_and_retained_blockers(self) -> None:
         for path in (PREP_SCOPE, ROADMAP, EXECUTION_STATUS, VALIDATION_README):
-            doc = normalized(path)
+            doc = normalized(path).lower()
 
             self.assertIn(RECORD.name, doc, str(path))
-            self.assertIn("final approval request", doc.lower(), str(path))
-            self.assertIn("package publication remains blocked", doc, str(path))
-            self.assertIn("public installation remains blocked", doc, str(path))
+            self.assertIn("publish-flag activation request", doc, str(path))
+            self.assertIn("activation remains blocked", doc, str(path))
+            self.assertIn("package tag source binding must be refreshed", doc, str(path))
+            self.assertIn("real-version cargo publish remains blocked", doc, str(path))
 
-    def test_make_and_ci_run_request_after_current_assembly(self) -> None:
+    def test_make_and_ci_run_request_after_final_decision_before_readiness(self) -> None:
         make_block = target_block("milestone-e-prep")
         ci = read(CI_WORKFLOW)
-        assembly_guard = "test_milestone_e_package_publication_current_registry_assembly.py"
-        request_guard = "test_milestone_e_package_publication_final_approval_request.py"
+        decision_guard = "test_milestone_e_package_publication_final_approval_decision.py"
+        activation_request_guard = (
+            "test_milestone_e_package_publication_activation_request.py"
+        )
         readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
-            self.assertIn(prefix + request_guard, text)
-            self.assertEqual(1, text.count(prefix + request_guard))
-            self.assertLess(text.index(prefix + assembly_guard), text.index(prefix + request_guard))
-            self.assertLess(text.index(prefix + request_guard), text.index(prefix + readiness_guard))
+            self.assertIn(prefix + activation_request_guard, text)
+            self.assertEqual(1, text.count(prefix + activation_request_guard))
+            self.assertLess(text.index(prefix + decision_guard), text.index(prefix + activation_request_guard))
+            self.assertLess(text.index(prefix + activation_request_guard), text.index(prefix + readiness_guard))
 
     def test_record_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = normalized(RECORD).lower()

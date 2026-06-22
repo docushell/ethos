@@ -119,7 +119,8 @@ class MilestoneEPackagePublicationCurrentRegistryAssemblyTests(unittest.TestCase
         self.assertEqual(["ethos-doc-core", "ethos-verify", "ethos-pdf"], result["candidate_packages"])
         self.assertEqual("pass", result["registry_equivalent_consumer_check"])
         self.assertTrue(result["source_manifest_activation_applied"])
-        self.assertTrue(result["source_manifests_remain_blocked"])
+        self.assertTrue(result["source_candidate_manifests_activated"])
+        self.assertFalse(result["source_manifests_remain_blocked"])
         self.assertFalse(result["package_publication_approved"])
         self.assertFalse(result["public_installation_approved"])
         self.assertIn("cargo package --locked --offline -p ethos-doc-core --allow-dirty --no-verify", commands)
@@ -142,15 +143,22 @@ class MilestoneEPackagePublicationCurrentRegistryAssemblyTests(unittest.TestCase
             self.assertRegex(artifact["sha256"], r"^[0-9a-f]{64}$")
             self.assertTrue(artifact["crate_file"].endswith("-0.1.0.crate"))
 
-    def test_source_manifests_tags_and_registry_state_remain_blocked(self) -> None:
+    def test_source_candidate_manifests_are_activated_while_tags_and_registry_stay_absent(self) -> None:
         for manifest in (
             ROOT / "crates/ethos-core/Cargo.toml",
             ROOT / "crates/ethos-verify/Cargo.toml",
             ROOT / "crates/ethos-pdf/Cargo.toml",
         ):
             text = read(manifest)
-            self.assertIn("publish = false", text, str(manifest))
-            self.assertIn('publication_status = "blocked"', text, str(manifest))
+            self.assertNotIn("publish = false", text, str(manifest))
+            self.assertIn('publication_status = "approved_for_crates_io_publication"', text, str(manifest))
+
+        for manifest in (
+            ROOT / "crates/ethos-cli/Cargo.toml",
+            ROOT / "crates/ethos-layout/Cargo.toml",
+            ROOT / "crates/ethos-tables/Cargo.toml",
+        ):
+            self.assertIn("publish = false", read(manifest), str(manifest))
 
         for tag in (
             "ethos-package-ethos-doc-core-0.1.0",

@@ -186,12 +186,12 @@ class MilestoneEPackagePublicationDecisionInputPacketTests(unittest.TestCase):
             tag = value.split(": ", maxsplit=1)[1].split(";", maxsplit=1)[0]
             self.assertEqual("", git("tag", "--list", tag))
         self.assertIn('name = "ethos-doc-core"', core_manifest)
-        self.assertIn("publish = false", core_manifest)
+        self.assertNotIn("publish = false", core_manifest)
         self.assertIn('reserved_crates_io_name = "ethos-doc-core"', core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)
-        self.assertIn("publish = false", verify_manifest)
+        self.assertNotIn("publish = false", verify_manifest)
         self.assertIn('name = "ethos-pdf"', pdf_manifest)
-        self.assertIn("publish = false", pdf_manifest)
+        self.assertNotIn("publish = false", pdf_manifest)
         self.assertNotIn('package = "ethos-doc-core"', verify_manifest)
         self.assertNotIn('package = "ethos-doc-core"', pdf_manifest)
 

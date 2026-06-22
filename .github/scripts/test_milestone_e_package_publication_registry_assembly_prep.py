@@ -107,9 +107,9 @@ class MilestoneEPackagePublicationRegistryAssemblyPrepTests(unittest.TestCase):
         pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
 
         self.assertIn('name = "ethos-doc-core"', core)
-        self.assertIn("publish = false", core)
-        self.assertIn("publish = false", verify)
-        self.assertIn("publish = false", pdf)
+        self.assertNotIn("publish = false", core)
+        self.assertNotIn("publish = false", verify)
+        self.assertNotIn("publish = false", pdf)
         self.assertIn(
             'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.0", default-features = false }',
             workspace,

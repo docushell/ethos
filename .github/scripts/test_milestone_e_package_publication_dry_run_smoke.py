@@ -103,8 +103,8 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
             ROOT / "crates/ethos-pdf/Cargo.toml",
         ):
             text = read(manifest)
-            self.assertIn("publish = false", text, str(manifest))
-            self.assertIn("publication_status = \"blocked\"", text, str(manifest))
+            self.assertNotIn("publish = false", text, str(manifest))
+            self.assertIn("publication_status = \"approved_for_crates_io_publication\"", text, str(manifest))
             self.assertIn("reserved_crates_io_version = \"0.0.0-reserved.0\"", text, str(manifest))
 
     def test_dependent_package_assembly_blocker_is_recorded(self) -> None:
