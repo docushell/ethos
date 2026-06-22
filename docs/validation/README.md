@@ -424,6 +424,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   evidence, reserved-name confirmation, dependency order, package tag names, and command order for
   a later registry action while recording that manual registry evidence remains required and public
   installation remains blocked.
+- `milestone-e-package-publication-manual-registry-evidence-request-validation-2026-06-22.md` -
+  package publication manual registry evidence request validation; the record provides the exact
+  non-secret evidence output packet for crates.io owner/account confirmation, reserved-name owner
+  outputs, dry-run outputs, package tag names, and explicit exclusions while keeping package tag
+  creation, registry publication, and public installation blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main

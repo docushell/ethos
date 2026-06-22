@@ -201,6 +201,12 @@ The package publication operator preflight is recorded in
 It records manual crates.io owner/account evidence requirements, reserved-name confirmation,
 dependency order, package tag names, and command order; manual registry evidence remains required,
 public installation remains blocked, and registry publication remains blocked.
+The package publication manual registry evidence request is recorded in
+`docs/validation/milestone-e-package-publication-manual-registry-evidence-request-validation-2026-06-22.md`.
+It provides the exact non-secret output packet required from the operator for crates.io
+owner/account confirmation, reserved-name owner outputs, dry-run outputs, package tag names, and
+explicit exclusions; manual registry evidence remains required, public installation remains
+blocked, and registry publication remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
