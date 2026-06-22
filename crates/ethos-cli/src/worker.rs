@@ -16,7 +16,9 @@
 
 use std::fmt;
 use std::fs::File;
-use std::io::{BufReader, Read, Write};
+use std::io::{BufReader, Read};
+#[cfg(debug_assertions)]
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command as ProcessCommand, ExitStatus, Output, Stdio};
 use std::thread::{self, JoinHandle};

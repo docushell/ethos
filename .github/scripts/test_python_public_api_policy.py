@@ -68,7 +68,9 @@ class PythonPublicApiPolicyTests(unittest.TestCase):
         self.assertIn('name = "ethos-pdf"', text)
         self.assertIn('version = "0.1.0"', text)
         self.assertIn('requires-python = ">=3.8"', text)
-        self.assertIn('license = { text = "Apache-2.0" }', text)
+        self.assertIn('license = "Apache-2.0"', text)
+        self.assertNotIn('license = { text = "Apache-2.0" }', text)
+        self.assertNotIn("License :: OSI Approved :: Apache Software License", text)
         self.assertIn('readme = "python/README.md"', text)
         self.assertIn('package-dir = { "" = "python" }', text)
 
