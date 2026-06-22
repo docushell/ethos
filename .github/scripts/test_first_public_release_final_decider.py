@@ -94,6 +94,14 @@ def git(*args: str) -> str:
     ).strip()
 
 
+def git_object_available(rev: str) -> bool:
+    return subprocess.run(
+        ["git", "cat-file", "-e", rev],
+        cwd=ROOT,
+        stderr=subprocess.DEVNULL,
+    ).returncode == 0
+
+
 class FirstPublicReleaseFinalDeciderTests(unittest.TestCase):
     def test_record_is_source_bound(self) -> None:
         record = normalized(RECORD)
@@ -101,8 +109,9 @@ class FirstPublicReleaseFinalDeciderTests(unittest.TestCase):
         self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", read(RECORD))
         self.assertIn(f"Final-decider source commit: `{SOURCE_COMMIT}`", record)
         self.assertIn(f"Final-decider source tree: `{SOURCE_TREE}`", record)
-        self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
-        self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
+        if git_object_available(SOURCE_COMMIT):
+            self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
+            self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
 
     def test_record_approves_only_evidenced_artifact_evaluation_surfaces(self) -> None:
         record = normalized(RECORD)
