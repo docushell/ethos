@@ -31,7 +31,7 @@ VALIDATION_README = ROOT / "docs/validation/README.md"
 CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 RECORD = (
     ROOT
-    / "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md"
+    / "docs/validation/milestone-e-package-publication-current-dry-run-smoke-validation-2026-06-22.md"
 )
 
 LOCAL_SMOKE_COMMANDS = [
@@ -114,7 +114,7 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
         blocker_text = " ".join(prep["explicit_blockers"])
 
         self.assertEqual(
-            "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md",
+            "docs/validation/milestone-e-package-publication-current-dry-run-smoke-validation-2026-06-22.md",
             follow_ups["package_dry_run_smoke"],
         )
         self.assertIn("local source-tree smoke", status)
@@ -122,6 +122,7 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
         self.assertIn("manifest-migration prep recorded", status)
         self.assertIn("registry-assembly prep recorded", status)
         self.assertIn("manifest activation applied for source review", status)
+        self.assertIn("current dry-run smoke selector refreshed after manifest activation", status)
         self.assertIn("publication remains blocked", status)
         self.assertIn("registry-backed dependent package assembly", blocker_text)
         self.assertIn("package dependency manifest activation", blocker_text)
@@ -134,14 +135,20 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
         record = normalized(RECORD)
 
         self.assertIn(RECORD.name, readme)
-        self.assertIn("Validated source HEAD before this record: `d1c9384`", record)
-        self.assertIn("Status: **pass for local dry-run smoke evidence with blockers retained**", record)
-        self.assertIn("cargo package --locked --offline -p ethos-core --allow-dirty --no-verify", record)
-        self.assertIn("cargo package --list --locked --offline -p ethos-core --allow-dirty", record)
+        self.assertIn("Validated source HEAD before this record: `4d337b4`", record)
+        self.assertIn(
+            "Status: **pass for current source-tree dry-run smoke evidence with blockers retained**",
+            record,
+        )
+        self.assertIn("cargo package --locked --offline -p ethos-doc-core --allow-dirty --no-verify", record)
+        self.assertIn("cargo package --list --locked --offline -p ethos-doc-core --allow-dirty", record)
         self.assertIn("cargo check --locked --offline -p ethos-verify", record)
         self.assertIn("cargo check --locked --offline -p ethos-pdf", record)
-        self.assertIn("dependent package assembly remains blocked", record.lower())
-        self.assertIn("no matching package named `ethos-core`", record)
+        self.assertIn(
+            "registry-equivalent dependent package assembly evidence is tracked separately",
+            record.lower(),
+        )
+        self.assertIn("publication remains blocked", record.lower())
         self.assertIn("Package publication remains blocked", record)
         self.assertIn("Public installation from crates.io remains blocked", record)
         self.assertIn("Real-version cargo publish remains blocked", record)

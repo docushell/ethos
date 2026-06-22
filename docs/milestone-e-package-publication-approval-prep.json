@@ -52,7 +52,7 @@
   "evidence_review_status": {
     "package_inventory": "evidence recorded; ADR-0006 reserved names and current workspace mapping are reconciled for prep, while publication remains blocked",
     "package_metadata_license_readme_review": "metadata/readiness follow-up recorded for in-tree priority candidates; ethos-doc and ethos-rag remain reserved placeholders without in-tree manifests, and publication remains blocked",
-    "install_build_smoke_path": "local source-tree smoke, dependency-ordering follow-up recorded, manifest-migration prep recorded, manifest-activation prep recorded, registry-assembly prep recorded, registry-assembly activation prep recorded, candidate activation evidence recorded, and manifest activation applied for source review; ethos-doc-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, publish flags remain false, and publication remains blocked",
+    "install_build_smoke_path": "local source-tree smoke, dependency-ordering follow-up recorded, manifest-migration prep recorded, manifest-activation prep recorded, registry-assembly prep recorded, registry-assembly activation prep recorded, candidate activation evidence recorded, manifest activation applied for source review, and current dry-run smoke selector refreshed after manifest activation; ethos-doc-core package assembly passes offline, ethos-verify and ethos-pdf source checks pass offline, publish flags remain false, and publication remains blocked",
     "version_tag_policy": "version/tag policy follow-up, real-version-selection prep recorded, and package tag-creation prep recorded; workspace 0.1.0 remains source-tree only, reserved 0.0.0-reserved.0 names remain placeholders, no package publication version is selected, no package tag is created, and real-version publication remains blocked",
     "pdfium_packaging_boundary": "PDFium boundary follow-up recorded for current source-tree ethos-pdf; no bundled PDFium binary, caller-provided ETHOS_PDFIUM_LIBRARY_PATH, and no raw PDFium types across public schemas/APIs are confirmed while publication remains blocked",
     "public_surface_posture_check": "run after exact wording changes by the package evidence guard path",
@@ -68,7 +68,7 @@
   },
   "follow_up_records": {
     "package_metadata_readiness": "docs/validation/milestone-e-package-publication-metadata-readiness-closeout-validation-2026-06-21.md",
-    "package_dry_run_smoke": "docs/validation/milestone-e-package-publication-dry-run-smoke-closeout-validation-2026-06-21.md",
+    "package_dry_run_smoke": "docs/validation/milestone-e-package-publication-current-dry-run-smoke-validation-2026-06-22.md",
     "package_version_tag_policy": "docs/validation/milestone-e-package-publication-version-tag-policy-closeout-validation-2026-06-21.md",
     "package_pdfium_boundary": "docs/validation/milestone-e-package-publication-pdfium-boundary-closeout-validation-2026-06-21.md",
     "package_dependency_ordering": "docs/validation/milestone-e-package-publication-dependency-ordering-closeout-validation-2026-06-21.md",

@@ -111,9 +111,9 @@ reserved-name inventory, metadata/license/README readiness, dry-run/smoke planni
 policy, and PDFium packaging boundary review, while package publication remains blocked. The
 metadata-readiness follow-up records README, NOTICE, manifest metadata, and include-list readiness
 for `ethos-core`, `ethos-verify`, and `ethos-pdf`; `ethos-doc` and `ethos-rag` remain reserved
-placeholders without in-tree manifests. The dry-run/smoke follow-up records local package assembly
-for `ethos-core` and source-tree checks for `ethos-verify` and `ethos-pdf`; dependent package
-assembly, public installation, and package publication remain blocked.
+placeholders without in-tree manifests. The current dry-run/smoke follow-up records local package
+assembly for `ethos-doc-core` and source-tree checks for `ethos-verify` and `ethos-pdf`; exact
+registry-backed assembly activation, public installation, and package publication remain blocked.
 The version/tag policy follow-up records source-tree version, reserved placeholder version, source
 snapshot tag, and future package tag namespace separation; real package version selection, package
 tag creation, public installation, and package publication remain blocked.

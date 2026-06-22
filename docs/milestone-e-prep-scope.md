@@ -168,9 +168,10 @@ The metadata-readiness follow-up record under `docs/validation/` covers README, 
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
 package publication remains blocked.
-The dry-run/smoke follow-up record under `docs/validation/` covers local package assembly for
-`ethos-core` and source-tree checks for `ethos-verify` and `ethos-pdf` only. Dependent package
-assembly, public installation, and package publication remain blocked.
+The current dry-run/smoke follow-up record under `docs/validation/` covers local package assembly
+for `ethos-doc-core` and source-tree checks for `ethos-verify` and `ethos-pdf` only after source
+manifest activation. Public installation, exact registry-backed assembly activation, and package
+publication remain blocked.
 The version/tag policy follow-up record under `docs/validation/` covers source-tree version,
 reserved placeholder version, source snapshot tag, and future package tag namespace separation
 only. Real package version selection, package tag creation, public installation, and package
@@ -323,11 +324,10 @@ or broad demo-generation workflows.
   metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf`, while
   `ethos-doc`, `ethos-rag`, dry-run/smoke, version/tag policy, PDFium follow-through, and package
   publication remain blocked.
-- The package publication dry-run/smoke follow-up remains limited to local package assembly for
-  `ethos-core` and source-tree checks for `ethos-verify` and `ethos-pdf`; dependent package
-  assembly, public installation, real package version selection, package tag creation,
-  PDFium follow-through, and package publication
-  remain blocked.
+- The package publication current dry-run/smoke follow-up remains limited to local package
+  assembly for `ethos-doc-core` and source-tree checks for `ethos-verify` and `ethos-pdf`; exact
+  registry-backed assembly activation, public installation, real package version selection,
+  package tag creation, PDFium follow-through, and package publication remain blocked.
 - The package publication version/tag policy follow-up remains limited to source-tree version,
   reserved placeholder version, source snapshot tag, and future package tag namespace separation;
   real package version selection, package tag creation, public installation, and package publication
