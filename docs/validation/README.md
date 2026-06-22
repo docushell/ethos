@@ -500,6 +500,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   Python wheel, and npm package evidence while recording build/package caveats; public artifact
   publication remains blocked, and launch wording, hosted, production, public benchmark, Windows
   x64, bundled PDFium, `ethos-doc`, and `ethos-rag` blockers remain explicit.
+- `first-public-release-final-decider-validation-2026-06-23.md` - first public release final
+  decider validation approves only the evidenced macOS arm64 CLI artifact and Python wheel
+  evaluation surfaces, records the exact approved launch wording, and keeps Linux x64 CLI artifact
+  publication blocked; npm publication remains blocked, and hosted, production, public benchmark,
+  Windows x64, bundled PDFium, `ethos-doc`, and `ethos-rag` blockers remain explicit.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
