@@ -479,6 +479,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   installation, hosted surfaces, production positioning, public benchmark reports, public
   benchmark claims, release artifacts, binaries, wheels, npm packages, crate publication,
   project-maintained PDFium builds, public reports, and public result wording remain blocked.
+- `milestone-e-public-evaluation-current-state-closeout-validation-2026-06-22.md` - public
+  evaluation current-state closeout validation recorded current main `034881e` / tree
+  `fb089e027641a7d2152d7d1ebd499f45bb1f6a1c` as GitHub source repository plus
+  `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.0` for Rust crate evaluation; CLI,
+  wheel, npm, binary, hosted, production, public benchmark, project-maintained PDFium-build,
+  `ethos-doc`, `ethos-rag`, and broader public wording blockers remain explicit.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
