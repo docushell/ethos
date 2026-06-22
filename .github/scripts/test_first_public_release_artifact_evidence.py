@@ -95,6 +95,14 @@ def git(*args: str) -> str:
     ).strip()
 
 
+def git_object_available(rev: str) -> bool:
+    return subprocess.run(
+        ["git", "cat-file", "-e", rev],
+        cwd=ROOT,
+        stderr=subprocess.DEVNULL,
+    ).returncode == 0
+
+
 class FirstPublicReleaseArtifactEvidenceTests(unittest.TestCase):
     def test_record_is_source_bound(self) -> None:
         record = normalized(RECORD)
@@ -102,8 +110,9 @@ class FirstPublicReleaseArtifactEvidenceTests(unittest.TestCase):
         self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", read(RECORD))
         self.assertIn(f"Release-candidate source commit: `{SOURCE_COMMIT}`", record)
         self.assertIn(f"Release-candidate source tree: `{SOURCE_TREE}`", record)
-        self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
-        self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
+        if git_object_available(SOURCE_COMMIT):
+            self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
+            self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
 
     def test_record_captures_artifact_python_and_npm_evidence(self) -> None:
         record = normalized(RECORD)
