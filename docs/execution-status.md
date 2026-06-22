@@ -217,6 +217,10 @@ The package publication approval decision refresh in `docs/validation/milestone-
 
 The package publication manifest activation applied record in `docs/validation/milestone-e-package-publication-manifest-activation-applied-validation-2026-06-22.md` records the source package name `ethos-doc-core`, Rust library name `ethos_core`, and workspace dependency activation for review only. `publish = false`, package publication, and public installation remain blocked.
 
+The package publication current registry-equivalent assembly record in `docs/validation/milestone-e-package-publication-current-registry-assembly-validation-2026-06-22.md` records non-public assembly evidence for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` against source commit `b48e2f2` / tree `4d660bd7c1de69259d0f8c59e6ac8d1c2cb6a3a3`. Package publication remains blocked, and public installation remains blocked.
+
+The package publication final approval request in `docs/validation/milestone-e-package-publication-final-approval-request-validation-2026-06-22.md` records exact candidate crates, version map, package tag names, source binding, proposed public installation wording, and explicit exclusions for decider review. Package publication remains blocked, and public installation remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |

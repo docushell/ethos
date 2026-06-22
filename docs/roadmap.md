@@ -134,6 +134,15 @@ The manifest activation applied follow-up is recorded in
 and records the source package name `ethos-doc-core`, Rust library name `ethos_core`, and workspace
 dependency activation for review only; `publish = false`, public installation, and package
 publication remain blocked.
+The current registry-equivalent assembly follow-up is recorded in
+[`docs/validation/milestone-e-package-publication-current-registry-assembly-validation-2026-06-22.md`](validation/milestone-e-package-publication-current-registry-assembly-validation-2026-06-22.md)
+and records non-public assembly evidence for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`;
+public installation and package publication remain blocked.
+The final approval request is recorded in
+[`docs/validation/milestone-e-package-publication-final-approval-request-validation-2026-06-22.md`](validation/milestone-e-package-publication-final-approval-request-validation-2026-06-22.md)
+and records exact candidate crates, version map, package tag names, source binding, proposed public
+installation wording, and explicit exclusions for decider review; public installation and package
+publication remain blocked.
 The registry-assembly prep follow-up records future non-public dependent candidate assembly
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,
