@@ -164,6 +164,15 @@ The package publication manifest activation applied follow-up is recorded in
 It records the source package name `ethos-doc-core`, Rust library name `ethos_core`, and workspace
 dependency activation for review only; `publish = false`, public installation, and package
 publication remain blocked.
+The package publication current registry-equivalent assembly follow-up is recorded in
+`docs/validation/milestone-e-package-publication-current-registry-assembly-validation-2026-06-22.md`.
+It records current registry-equivalent assembly evidence for `ethos-doc-core`, `ethos-verify`, and
+`ethos-pdf`; public installation and package publication remain blocked.
+The package publication final approval request is recorded in
+`docs/validation/milestone-e-package-publication-final-approval-request-validation-2026-06-22.md`.
+It records exact candidate crates, version map, package tag names, source binding, proposed public
+installation wording, and explicit exclusions for decider review; public installation and package
+publication remain blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -355,6 +364,12 @@ or broad demo-generation workflows.
 - The package publication manifest activation applied follow-up records the source package name
   `ethos-doc-core`, Rust library name `ethos_core`, and workspace dependency activation for review
   only; `publish = false`, public installation, and package publication remain blocked.
+- The package publication current registry-equivalent assembly follow-up records non-public
+  assembly evidence for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`; public installation and
+  package publication remain blocked.
+- The package publication final approval request records exact candidate crates, version map,
+  package tag names, source binding, proposed public installation wording, and explicit exclusions
+  for decider review; public installation and package publication remain blocked.
 - The public-facing readiness ledger records the current-main source-only public beta source binding
   and package-publication gap retention; it does not approve package publication, approve public
   installation, or soften any current

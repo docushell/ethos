@@ -390,6 +390,14 @@ recording the exact current-main source candidate and required follow-up evidenc
   package publication manifest activation applied validation for the source package name
   `ethos-doc-core`, Rust library name `ethos_core`, workspace dependency activation, and retained
   `publish = false` blockers; package publication and public installation remain blocked.
+- `milestone-e-package-publication-current-registry-assembly-validation-2026-06-22.md` - package
+  publication current registry-equivalent assembly validation after source manifest activation; the
+  record keeps package publication and public installation blocked while recording non-public
+  assembly evidence for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`.
+- `milestone-e-package-publication-final-approval-request-validation-2026-06-22.md` - package
+  publication final approval request validation; the record keeps package publication and public
+  installation blocked while recording exact candidate crates, version map, package tag names,
+  source binding, proposed public installation wording, and explicit exclusions for decider review.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main
