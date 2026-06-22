@@ -9,7 +9,7 @@ Release-candidate source tree: `7f7952c001256a493b3fce81ad7a1851a495a34a`
 Status: **artifact evidence recorded; public artifact publication remains blocked**
 
 This record captures local first public release artifact evidence after
-`make release-candidate-prep PYTHON=/private/tmp/ethos-jsonschema-venv-main/bin/python` passed on
+`make release-candidate-prep PYTHON=<jsonschema-venv>/bin/python` passed on
 the release-candidate source state. It does not approve publication to GitHub Releases, PyPI, npm,
 or any hosted surface, and it does not approve launch wording.
 
@@ -18,7 +18,7 @@ or any hosted surface, and it does not approve launch wording.
 Command:
 
 ```sh
-make release-candidate-prep PYTHON=/private/tmp/ethos-jsonschema-venv-main/bin/python
+make release-candidate-prep PYTHON=<jsonschema-venv>/bin/python
 ```
 
 Result: **pass**

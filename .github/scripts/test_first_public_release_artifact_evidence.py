@@ -36,7 +36,7 @@ MACOS_SHA256 = "35c7cc19ea51231edb1a0cfb6d160d3a2e620ba9357d116ef071f66ebc5e236f
 NPM_SHASUM = "cf83c7e0196d451f169f3dcbee26e4d009e5da82"
 
 REQUIRED_EVIDENCE = (
-    "make release-candidate-prep PYTHON=/private/tmp/ethos-jsonschema-venv-main/bin/python",
+    "make release-candidate-prep PYTHON=<jsonschema-venv>/bin/python",
     "ethos-macos-arm64.tar.gz",
     "ethos 0.1.0",
     "exit_code=12",
