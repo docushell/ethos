@@ -18,6 +18,8 @@ ADR-0006 reserves the public crates.io identifier `ethos-pdf` at `0.0.0-reserved
 
 - No PDFium binary is bundled in this crate.
 - PDFium remains caller-provided through `ETHOS_PDFIUM_LIBRARY_PATH`.
+- If `ETHOS_PDFIUM_LIBRARY_PATH` is missing, PDFium-backed paths fail with a setup error naming the
+  environment variable.
 - Public schemas and APIs expose no PDFium types.
 - If that boundary cannot be guaranteed in a later review, `ethos-pdf` remains held out of any
   future crate surface.

@@ -26,6 +26,11 @@ caller-provided source PDF and crop artifact directory arguments for rendered cr
 does not bundle PDFium, does not publish hosted surfaces, and does not expand parser behavior. The
 Rust CLI remains the source of truth.
 
+PDFium-backed parse and crop paths require caller-provided PDFium through
+`ETHOS_PDFIUM_LIBRARY_PATH`. Importing `ethos_pdf` does not require PDFium. If PDFium is missing,
+the underlying CLI error is preserved in `EthosCommandError.stderr` so callers can show the setup
+guidance from `docs/pdfium-manual-setup.md`.
+
 Run the focused tests with:
 
 ```sh
