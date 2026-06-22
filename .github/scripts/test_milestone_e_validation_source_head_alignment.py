@@ -102,7 +102,18 @@ def introducing_commit(record: Path) -> str | None:
     commits = git("log", "--all", "--diff-filter=A", "--format=%H", "--", relative)
     if not commits:
         return None
-    return commits.splitlines()[-1]
+
+    candidates = commits.splitlines()
+    heads = source_heads(record)
+    if len(heads) == 1:
+        resolved_source_head = try_resolve_commit(heads[0])
+        if resolved_source_head is not None:
+            for commit in candidates:
+                parent = try_resolve_commit(f"{commit}^")
+                if parent == resolved_source_head:
+                    return commit
+
+    return candidates[-1]
 
 
 @lru_cache(maxsize=None)
