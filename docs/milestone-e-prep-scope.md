@@ -213,6 +213,11 @@ It captures the supplied non-secret owner/account evidence, reserved-name owner 
 `ethos-doc-core` dry-run output, expected blocked dependent dry-run outputs, package tag names, and
 explicit exclusions; manual registry evidence supplied is recorded, public installation remains
 blocked, and registry publication remains blocked.
+The package publication registry action authorization request is recorded in
+`docs/validation/milestone-e-package-publication-registry-action-authorization-request-validation-2026-06-22.md`.
+It provides the exact non-secret authorization packet and command order for later package tag
+creation and the first registry action; package tag creation remains blocked, public installation
+remains blocked, and registry publication remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
