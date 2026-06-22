@@ -485,6 +485,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.0` for Rust crate evaluation; CLI,
   wheel, npm, binary, hosted, production, public benchmark, project-maintained PDFium-build,
   `ethos-doc`, `ethos-rag`, and broader public wording blockers remain explicit.
+- `first-public-release-scope-decision-validation-2026-06-22.md` - first public release scope
+  decision validation starts release preparation for draft CLI artifacts, Python package
+  preparation, and npm binary package preparation on macOS arm64 and Linux x64 with
+  caller-provided PDFium; public artifact publication remains blocked, and hosted, production,
+  public benchmark, Windows x64, bundled PDFium, `ethos-doc`, and `ethos-rag` blockers remain
+  explicit.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
