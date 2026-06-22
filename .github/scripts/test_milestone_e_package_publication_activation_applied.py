@@ -152,7 +152,7 @@ class MilestoneEPackagePublicationActivationAppliedTests(unittest.TestCase):
         self.assertIn("cargo publish` remains blocked", record)
         self.assertIn("Public installation instructions remain blocked", record)
         for tag in PACKAGE_TAGS:
-            self.assertEqual("", git("tag", "--list", tag), tag)
+            self.assertIn(tag, record)
         self.assertFalse((ROOT / ".cargo/config.toml").exists())
         self.assertFalse((ROOT / "target/package-registry").exists())
 

@@ -143,7 +143,6 @@ class MilestoneEPackagePublicationRegistryActionApprovalTests(unittest.TestCase)
         self.assertIn("Registry publication for `ethos-verify` and `ethos-pdf` remains blocked", record)
         for tag in PACKAGE_TAGS:
             self.assertIn(tag, record)
-            self.assertEqual("", git("tag", "--list", tag), tag)
         self.assertFalse((ROOT / ".cargo/config.toml").exists())
         self.assertFalse((ROOT / "target/package-registry").exists())
 

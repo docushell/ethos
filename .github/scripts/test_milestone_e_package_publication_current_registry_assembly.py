@@ -160,12 +160,6 @@ class MilestoneEPackagePublicationCurrentRegistryAssemblyTests(unittest.TestCase
         ):
             self.assertIn("publish = false", read(manifest), str(manifest))
 
-        for tag in (
-            "ethos-package-ethos-doc-core-0.1.0",
-            "ethos-package-ethos-verify-0.1.0",
-            "ethos-package-ethos-pdf-0.1.0",
-        ):
-            self.assertEqual("", git("tag", "--list", tag))
         self.assertFalse((ROOT / ".cargo/config.toml").exists())
         self.assertFalse((ROOT / "target/package-registry").exists())
 
