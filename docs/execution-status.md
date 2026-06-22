@@ -243,6 +243,8 @@ The package publication registry action evidence in `docs/validation/milestone-e
 
 The package publication dependent registry action approval in `docs/validation/milestone-e-package-publication-dependent-registry-action-approval-validation-2026-06-22.md` authorizes only the dependent `ethos-verify` and `ethos-pdf` registry actions. Public installation remains blocked.
 
+The package publication dependent registry action evidence in `docs/validation/milestone-e-package-publication-dependent-registry-action-evidence-validation-2026-06-22.md` captures completed `ethos-verify` and `ethos-pdf` registry action evidence. Public installation wording remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
