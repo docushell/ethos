@@ -448,6 +448,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   publication registry action evidence validation; the record captures tag evidence, first
   `ethos-doc-core` registry action evidence, and refreshed dependent dry-run evidence while
   recording that dependent registry actions remain blocked and public installation remains blocked.
+- `milestone-e-package-publication-dependent-registry-action-approval-validation-2026-06-22.md` -
+  package publication dependent registry action approval validation; the record authorizes only the
+  dependent `ethos-verify` and `ethos-pdf` registry actions while recording that public
+  installation remains blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main
