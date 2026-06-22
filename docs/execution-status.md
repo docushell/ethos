@@ -225,6 +225,8 @@ The package publication final approval decision in `docs/validation/milestone-e-
 
 The package publication publish-flag activation request in `docs/validation/milestone-e-package-publication-publish-flag-activation-request-validation-2026-06-22.md` records the exact requested activation diff for the three accepted candidate manifests only. Activation remains blocked, package tag source binding must be refreshed after activation, package tag creation remains blocked, real-version cargo publish remains blocked, and public installation instructions remain unchanged.
 
+The package publication activation applied record in `docs/validation/milestone-e-package-publication-activation-applied-validation-2026-06-22.md` binds the applied manifest activation to source commit `f50f294` / tree `00c3e4df7a7b3b368659650601a2df76b63a2ce8`. The three accepted candidate manifests are activated, non-candidate crates remain blocked, package tag source binding must be refreshed, real-version cargo publish remains blocked, and public installation remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |

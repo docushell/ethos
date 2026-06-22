@@ -408,6 +408,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   requested activation diff for the three accepted candidate manifests while keeping activation
   blocked, recording that package tag source binding must be refreshed after activation, and
   keeping tag creation, real-version cargo publish, and public installation instructions blocked.
+- `milestone-e-package-publication-activation-applied-validation-2026-06-22.md` - package
+  publication activation applied validation; the record binds the applied manifest activation to
+  source commit `f50f294` / tree `00c3e4df7a7b3b368659650601a2df76b63a2ce8`, records that only
+  the three accepted candidate manifests changed, records that non-candidate crates stay blocked,
+  and keeps package tag source binding refresh, real-version cargo publish, and public
+  installation instructions blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main

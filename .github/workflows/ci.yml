@@ -256,6 +256,8 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_package_publication_final_approval_decision.py
       - name: Milestone E package publication publish-flag activation request tests
         run: python3 .github/scripts/test_milestone_e_package_publication_activation_request.py
+      - name: Milestone E package publication activation applied tests
+        run: python3 .github/scripts/test_milestone_e_package_publication_activation_applied.py
       - name: Milestone E public-facing readiness ledger tests
         run: python3 .github/scripts/test_milestone_e_public_facing_readiness_ledger.py
       - name: Milestone E public beta current-main refresh prep tests
