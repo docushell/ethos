@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+#
+# Copyright 2026 The Ethos maintainers
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
+PACKAGE_JSON = PACKAGE_DIR / "package.json"
+BIN = PACKAGE_DIR / "bin/ethos-pdf.js"
+README = PACKAGE_DIR / "README.md"
+NOTICE = PACKAGE_DIR / "NOTICE"
+LICENSE = PACKAGE_DIR / "LICENSE"
+
+
+def read(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+class NpmBinaryPackageScaffoldTests(unittest.TestCase):
+    def test_package_metadata_is_bounded_to_supported_release_targets(self) -> None:
+        package = json.loads(read(PACKAGE_JSON))
+
+        self.assertEqual("@docushell/ethos-pdf", package["name"])
+        self.assertEqual("0.1.0", package["version"])
+        self.assertEqual("Apache-2.0", package["license"])
+        self.assertEqual({"ethos": "./bin/ethos-pdf.js"}, package["bin"])
+        self.assertEqual(["darwin", "linux"], package["os"])
+        self.assertEqual(["arm64", "x64"], package["cpu"])
+        self.assertEqual(">=18", package["engines"]["node"])
+        self.assertNotIn("dependencies", package)
+
+    def test_platform_selection_is_exact_and_rejects_windows(self) -> None:
+        result = subprocess.run(
+            ["node", "test/platform-selection.test.js"],
+            cwd=PACKAGE_DIR,
+            check=False,
+            encoding="utf-8",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn("platform selection ok", result.stdout)
+
+    def test_package_docs_keep_pdfium_and_publication_boundaries(self) -> None:
+        text = read(README)
+        normalized = re.sub(r"\s+", " ", text)
+
+        self.assertIn("macOS arm64", text)
+        self.assertIn("Linux x64", text)
+        self.assertIn("does not bundle PDFium", text)
+        self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
+        self.assertIn("not approved for public publication", text)
+        self.assertIn("does not include public benchmark reports or claims", normalized)
+
+    def test_release_scaffold_contains_required_notice_and_license_files(self) -> None:
+        self.assertTrue(BIN.is_file())
+        self.assertTrue(NOTICE.is_file())
+        self.assertTrue(LICENSE.is_file())
+        self.assertIn("no bundled PDFium", read(NOTICE))
+        self.assertIn("Apache License", read(LICENSE))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,34 @@
+{
+  "name": "@docushell/ethos-pdf",
+  "version": "0.1.0",
+  "description": "Ethos PDF CLI binary package for document evidence workflows.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/docushell/ethos.git",
+    "directory": "packages/npm/ethos-pdf"
+  },
+  "bin": {
+    "ethos": "./bin/ethos-pdf.js"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "cpu": [
+    "arm64",
+    "x64"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test/platform-selection.test.js"
+  }
+}
