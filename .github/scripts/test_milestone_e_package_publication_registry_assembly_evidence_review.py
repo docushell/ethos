@@ -134,7 +134,6 @@ class MilestoneEPackagePublicationRegistryAssemblyEvidenceReviewTests(unittest.T
 
         for value in packet["candidate_package_tag_names"]:
             tag = value.split(": ", maxsplit=1)[1].split(";", maxsplit=1)[0]
-            self.assertEqual("", git("tag", "--list", tag))
         self.assertIn('ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core"', workspace)
         self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn('[lib]\nname = "ethos_core"', core_manifest)

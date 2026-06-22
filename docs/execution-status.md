@@ -239,6 +239,8 @@ The package publication registry action authorization request in `docs/validatio
 
 The package publication registry action approval in `docs/validation/milestone-e-package-publication-registry-action-approval-validation-2026-06-22.md` captures exact bounded authorization for the three annotated package tags and first `ethos-doc-core` registry action. Dependent registry actions remain blocked and public installation remains blocked.
 
+The package publication registry action evidence in `docs/validation/milestone-e-package-publication-registry-action-evidence-validation-2026-06-22.md` captures tag evidence, first `ethos-doc-core` registry action evidence, and refreshed dependent dry-run evidence. Dependent registry actions remain blocked and public installation remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |

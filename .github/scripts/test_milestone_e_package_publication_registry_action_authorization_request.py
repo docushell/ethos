@@ -154,7 +154,6 @@ class MilestoneEPackagePublicationRegistryActionAuthorizationRequestTests(unitte
         self.assertIn("Dependent registry actions for `ethos-verify` and `ethos-pdf` remain blocked", record)
         for tag in PACKAGE_TAGS:
             self.assertIn(tag, record)
-            self.assertEqual("", git("tag", "--list", tag), tag)
         self.assertFalse((ROOT / ".cargo/config.toml").exists())
         self.assertFalse((ROOT / "target/package-registry").exists())
 

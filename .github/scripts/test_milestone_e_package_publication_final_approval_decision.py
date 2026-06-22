@@ -194,8 +194,6 @@ class MilestoneEPackagePublicationFinalApprovalDecisionTests(unittest.TestCase):
             'ethos-core = { package = "ethos-doc-core"',
             read(ROOT / "Cargo.toml"),
         )
-        for tag in EXACT_TAGS:
-            self.assertEqual("", git("tag", "--list", tag))
         self.assertFalse((ROOT / ".cargo/config.toml").exists())
         self.assertFalse((ROOT / "target/package-registry").exists())
 

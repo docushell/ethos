@@ -160,7 +160,6 @@ class MilestoneEPackagePublicationTagBindingRefreshTests(unittest.TestCase):
         self.assertIn("operator evidence remains required", record)
         for tag in PACKAGE_TAGS:
             self.assertIn(tag, record)
-            self.assertEqual("", git("tag", "--list", tag), tag)
         self.assertFalse((ROOT / ".cargo/config.toml").exists())
         self.assertFalse((ROOT / "target/package-registry").exists())
 

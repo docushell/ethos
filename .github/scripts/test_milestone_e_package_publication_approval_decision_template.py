@@ -149,7 +149,6 @@ class MilestoneEPackagePublicationApprovalDecisionTemplateTests(unittest.TestCas
 
         for value in packet["candidate_package_tag_names"]:
             tag = value.split(": ", maxsplit=1)[1].split(";", maxsplit=1)[0]
-            self.assertEqual("", git("tag", "--list", tag))
         self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertNotIn("publish = false", core_manifest)
         self.assertNotIn("publish = false", verify_manifest)

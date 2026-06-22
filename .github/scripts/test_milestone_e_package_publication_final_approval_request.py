@@ -148,8 +148,6 @@ class MilestoneEPackagePublicationFinalApprovalRequestTests(unittest.TestCase):
             self.assertNotIn("publish = false", text, str(manifest))
             self.assertIn('publication_status = "approved_for_crates_io_publication"', text, str(manifest))
 
-        for tag in EXACT_TAGS:
-            self.assertEqual("", git("tag", "--list", tag))
         self.assertFalse((ROOT / ".cargo/config.toml").exists())
         self.assertFalse((ROOT / "target/package-registry").exists())
 

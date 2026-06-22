@@ -351,6 +351,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_package_publication_registry_action_approval.py",
     ),
     RecordCoverage(
+        "milestone-e-package-publication-registry-action-evidence-validation-2026-06-22.md",
+        "test_milestone_e_package_publication_registry_action_evidence.py",
+    ),
+    RecordCoverage(
         "milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md",
         "test_milestone_e_public_facing_readiness_ledger.py",
     ),
@@ -527,6 +531,9 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         package_registry_action_approval_guard = (
             "test_milestone_e_package_publication_registry_action_approval.py"
         )
+        package_registry_action_evidence_guard = (
+            "test_milestone_e_package_publication_registry_action_evidence.py"
+        )
         readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
         beta_refresh_guard = "test_milestone_e_public_beta_current_main_refresh_prep.py"
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
@@ -675,6 +682,10 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             )
             self.assertLess(
                 text.index(prefix + package_registry_action_approval_guard),
+                text.index(prefix + package_registry_action_evidence_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_registry_action_evidence_guard),
                 text.index(prefix + readiness_guard),
             )
             self.assertLess(text.index(prefix + readiness_guard), text.index(prefix + beta_refresh_guard))
@@ -814,6 +825,14 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             )
             self.assertLess(
                 text.index(prefix + package_registry_action_approval_guard),
+                text.index(prefix + index_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_registry_action_evidence_guard),
+                text.index(prefix + command_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_registry_action_evidence_guard),
                 text.index(prefix + index_guard),
             )
             self.assertLess(

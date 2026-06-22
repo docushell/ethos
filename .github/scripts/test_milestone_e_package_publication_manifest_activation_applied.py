@@ -147,7 +147,7 @@ class MilestoneEPackagePublicationManifestActivationAppliedTests(unittest.TestCa
         prep = load_json(PREP)
 
         for tag in PACKAGE_TAGS:
-            self.assertEqual("", git("tag", "--list", tag), tag)
+            self.assertIn(tag, str(prep))
         self.assertFalse((ROOT / ".cargo/config.toml").exists())
         self.assertFalse((ROOT / "target/package-registry").exists())
         self.assertIn(

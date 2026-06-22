@@ -193,6 +193,11 @@ The package publication registry action approval is recorded in
 and captures exact bounded authorization for the three annotated package tags and first
 `ethos-doc-core` registry action; dependent registry actions remain blocked and public installation
 remains blocked.
+The package publication registry action evidence is recorded in
+[`docs/validation/milestone-e-package-publication-registry-action-evidence-validation-2026-06-22.md`](validation/milestone-e-package-publication-registry-action-evidence-validation-2026-06-22.md)
+and captures tag evidence, first `ethos-doc-core` registry action evidence, and refreshed dependent
+dry-run evidence; dependent registry actions remain blocked and public installation remains
+blocked.
 The registry-assembly prep follow-up records future non-public dependent candidate assembly
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,
