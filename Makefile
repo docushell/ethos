@@ -13,7 +13,7 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep package-publication-dry-run-smoke verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep release-candidate-prep package-publication-dry-run-smoke verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 .PHONY: milestone-d-capability-downgrade-contract
 .PHONY: milestone-d-opendataloader-adapter-shape-contract
 .PHONY: milestone-d-grounding-source-contract
@@ -260,6 +260,23 @@ milestone-e-prep:
 	$(PYTHON) .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_prep_validation_record.py
 	$(PYTHON) .github/scripts/test_milestone_e_final_closeout_record.py
+	git diff --check
+
+release-candidate-prep:
+	$(PYTHON) .github/scripts/test_public_surface_posture.py
+	$(PYTHON) .github/scripts/claims_gate.py
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_first_public_release_scope_decision.py
+	$(PYTHON) .github/scripts/test_python_public_api_policy.py
+	$(MAKE) python-surface-test PYTHON=$(PYTHON)
+	$(PYTHON) .github/scripts/test_npm_binary_package_scaffold.py
+	npm test --prefix packages/npm/ethos-pdf
+	$(PYTHON) .github/scripts/test_pdfium_manual_setup_contract.py
+	$(PYTHON) .github/scripts/test_release_artifact_workflow_prep.py
+	$(PYTHON) .github/scripts/test_release_candidate_prep.py
+	$(PYTHON) .github/scripts/test_release_reproducibility_scaffold.py
+	$(PYTHON) .github/scripts/test_launch_copy_approval_scaffold.py
+	cargo test --locked -p ethos-cli --test verify invalid_config_constraints_are_usage_errors
 	git diff --check
 
 package-publication-dry-run-smoke:

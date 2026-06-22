@@ -1,26 +1,72 @@
-# release.yml — pre-alpha release guard.
+# release.yml — first public release-prep draft artifact workflow.
 #
-# Ethos is currently source-only pre-alpha. Tag-triggered binaries, GitHub
-# releases, wheels, npm packages, and crate publication are intentionally
-# blocked until the public-release checklist is complete.
+# This workflow creates CI draft artifacts only. It does not create GitHub Releases,
+# publish PyPI distributions, publish npm packages, or approve launch wording.
 name: release
 
 on:
+  workflow_dispatch:
   push:
     tags: ["v*"]
 
 jobs:
-  blocked:
+  preflight:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: pre-public readiness gate
-        run: python3 .github/scripts/readiness_gate.py public
+      - name: public surface posture tests
+        run: python3 .github/scripts/test_public_surface_posture.py
       - name: claims gate
         run: python3 .github/scripts/claims_gate.py
-      - name: release artifacts are blocked in pre-alpha
+      - name: first public release scope decision tests
+        run: python3 .github/scripts/test_first_public_release_scope_decision.py
+      - name: Python public API policy tests
+        run: python3 .github/scripts/test_python_public_api_policy.py
+      - name: npm binary package scaffold tests
+        run: python3 .github/scripts/test_npm_binary_package_scaffold.py
+      - name: PDFium manual setup contract tests
+        run: python3 .github/scripts/test_pdfium_manual_setup_contract.py
+
+  cli-draft-artifacts:
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - artifact_target: macos-arm64
+            os: macos-14
+            archive_ext: tar.gz
+          - artifact_target: linux-x64
+            os: ubuntu-latest
+            archive_ext: tar.gz
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show
+      - name: build CLI
+        run: cargo build --locked --release -p ethos-cli
+      - name: assemble draft artifact
+        shell: bash
         run: |
-          echo "RELEASE BLOCKED: Ethos is source-only pre-alpha."
-          echo "Do not create GitHub releases, binaries, wheels, npm packages, or crates yet."
-          echo "Complete docs/public-release-checklist.md before restoring artifact jobs."
-          exit 1
+          set -euo pipefail
+          out="target/release-artifacts/ethos-${{ matrix.artifact_target }}"
+          mkdir -p "$out"
+          cp target/release/ethos "$out/ethos"
+          cp LICENSE NOTICE "$out/"
+          cp docs/pdfium-manual-setup.md "$out/"
+          tar -C "$(dirname "$out")" -czf "$out.${{ matrix.archive_ext }}" "$(basename "$out")"
+          shasum -a 256 "$out.${{ matrix.archive_ext }}" > "$out.${{ matrix.archive_ext }}.sha256"
+          python3 .github/scripts/write_release_artifact_inventory.py \
+            --artifact "$out.${{ matrix.archive_ext }}" \
+            --checksum "$out.${{ matrix.archive_ext }}.sha256" \
+            --target "${{ matrix.artifact_target }}" \
+            --out "$out.inventory.json"
+      - name: validate draft artifact inventory
+        run: python3 .github/scripts/validate_release_artifact_inventory.py target/release-artifacts/*.inventory.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ethos-cli-draft-${{ matrix.artifact_target }}
+          path: |
+            target/release-artifacts/*.tar.gz
+            target/release-artifacts/*.sha256
+            target/release-artifacts/*.inventory.json

@@ -1010,7 +1010,7 @@ impl PdfiumRuntime {
     fn load(backend: &PdfiumBackend) -> Result<Self, EthosError> {
         let path = backend.configured_library_path().ok_or_else(|| {
             EthosError::internal(format!(
-                "pdfium library path is not configured; set {PDFIUM_LIBRARY_PATH_ENV}"
+                "PDFium not found: set {PDFIUM_LIBRARY_PATH_ENV} to the caller-provided PDFium dynamic library path"
             ))
         })?;
         if !path.is_file() {

@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-"""Internal pre-alpha Python surface for local Ethos CLI operations."""
+"""Public Python API for local Ethos CLI operations."""
 
 from ._cli import (
     EthosCli,
@@ -28,6 +28,8 @@ from ._cli import (
     parse_pdf_markdown,
     parse_pdf_text,
 )
+
+__version__ = "0.1.0"
 
 __all__ = [
     "EthosCli",

@@ -52,6 +52,11 @@ if mode == "sleep":
 if mode == "invalid-json":
     sys.stdout.write("not-json\\n")
     raise SystemExit(0)
+if mode == "missing-pdfium":
+    sys.stderr.write(
+        "PDFium not found: set ETHOS_PDFIUM_LIBRARY_PATH to the caller-provided PDFium dynamic library path\\n"
+    )
+    raise SystemExit(1)
 
 if sys.argv[1:2] == ["crop_element"]:
     if "--request" not in sys.argv or "--check-id" not in sys.argv:
@@ -154,6 +159,16 @@ class PythonSurfaceTests(unittest.TestCase):
         self.assertEqual(caught.exception.returncode, 2)
         self.assertIn("partial output", caught.exception.stdout)
         self.assertIn("fake ethos failure", caught.exception.stderr)
+
+    def test_missing_pdfium_setup_error_is_preserved_from_cli_stderr(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "missing-pdfium"})
+
+        with self.assertRaises(EthosCommandError) as caught:
+            cli.parse_pdf_json(self.pdf)
+
+        self.assertEqual(caught.exception.returncode, 1)
+        self.assertIn("PDFium not found", caught.exception.stderr)
+        self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", caught.exception.stderr)
 
     def test_missing_binary_raises_not_found(self) -> None:
         cli = EthosCli(self.root / "missing-ethos")
