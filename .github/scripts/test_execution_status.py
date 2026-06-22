@@ -34,10 +34,11 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            "Status: Pre-alpha / internal Milestone D source-only closeout complete, "
-            "with Milestone E prep source-only closeout recorded for the current internal prep boundary.",
+            "Status: Public beta evaluation is approved for the GitHub source repository and the three bounded "
+            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.0`.",
             text,
         )
+        self.assertIn("Internal Milestone D source-only closeout remains complete", text)
         self.assertIn(
             "Ethos is pre-alpha. It verifies whether AI citations are grounded in document "
             "evidence across native Ethos JSON and supported foreign parser outputs.",
@@ -80,16 +81,21 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            "Public language may use this exact approved sentence on the GitHub source-repository public beta surface",
+            "Public language may use this exact approved sentence on the current source and Rust crate evaluation surfaces",
             text,
         )
         self.assertIn(
-            "Ethos is public beta for source-only evaluation. It verifies whether AI citations "
+            "Ethos is public beta for source and Rust crate evaluation. It verifies whether AI citations "
             "are grounded in document evidence across native Ethos JSON and supported foreign "
-            "parser outputs. Package publication, hosted surfaces, production positioning, and "
-            "public benchmark claims remain blocked.",
+            "parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` "
+            "are available on crates.io at `0.1.0` for evaluation. Hosted surfaces, production "
+            "positioning, and public benchmark claims remain blocked.",
             text,
         )
+        self.assertIn("ethos-doc-core", text)
+        self.assertIn("ethos-verify", text)
+        self.assertIn("ethos-pdf", text)
+        self.assertIn("wheels, npm packages, binaries, hosted surfaces", text)
         self.assertIn("All wording beyond that sentence still requires claim-audit", text)
         self.assertIn("Closed for the exact approved pre-alpha sentence only", text)
         self.assertIn("milestone-e-public-beta-source-only-approval-validation-2026-06-20.md", text)
