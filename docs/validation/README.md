@@ -495,6 +495,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   records the required sentence-level evidence mapping for future first public release wording; no
   launch wording is approved, and hosted, production, public benchmark, Windows x64, bundled
   PDFium, `ethos-doc`, and `ethos-rag` blockers remain explicit.
+- `first-public-release-artifact-evidence-validation-2026-06-23.md` - first public release
+  artifact evidence validation records release-candidate prep, macOS arm64 draft CLI artifact,
+  Python wheel, and npm package evidence while recording build/package caveats; public artifact
+  publication remains blocked, and launch wording, hosted, production, public benchmark, Windows
+  x64, bundled PDFium, `ethos-doc`, and `ethos-rag` blockers remain explicit.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
