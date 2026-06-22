@@ -207,6 +207,12 @@ It provides the exact non-secret output packet required from the operator for cr
 owner/account confirmation, reserved-name owner outputs, dry-run outputs, package tag names, and
 explicit exclusions; manual registry evidence remains required, public installation remains
 blocked, and registry publication remains blocked.
+The package publication manual registry evidence supplied record is recorded in
+`docs/validation/milestone-e-package-publication-manual-registry-evidence-supplied-validation-2026-06-22.md`.
+It captures the supplied non-secret owner/account evidence, reserved-name owner outputs,
+`ethos-doc-core` dry-run output, expected blocked dependent dry-run outputs, package tag names, and
+explicit exclusions; manual registry evidence supplied is recorded, public installation remains
+blocked, and registry publication remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and

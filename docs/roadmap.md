@@ -177,6 +177,12 @@ and provides the exact non-secret output packet required from the operator for c
 owner/account confirmation, reserved-name owner outputs, dry-run outputs, package tag names, and
 explicit exclusions; manual registry evidence remains required, public installation remains
 blocked, and registry publication remains blocked.
+The package publication manual registry evidence supplied record is recorded in
+[`docs/validation/milestone-e-package-publication-manual-registry-evidence-supplied-validation-2026-06-22.md`](validation/milestone-e-package-publication-manual-registry-evidence-supplied-validation-2026-06-22.md)
+and captures the supplied non-secret owner/account evidence, reserved-name owner outputs,
+`ethos-doc-core` dry-run output, expected blocked dependent dry-run outputs, package tag names, and
+explicit exclusions; manual registry evidence supplied is recorded, public installation remains
+blocked, and registry publication remains blocked.
 The registry-assembly prep follow-up records future non-public dependent candidate assembly
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,

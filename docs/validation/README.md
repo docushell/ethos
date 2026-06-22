@@ -429,6 +429,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   non-secret evidence output packet for crates.io owner/account confirmation, reserved-name owner
   outputs, dry-run outputs, package tag names, and explicit exclusions while keeping package tag
   creation, registry publication, and public installation blocked.
+- `milestone-e-package-publication-manual-registry-evidence-supplied-validation-2026-06-22.md` -
+  package publication manual registry evidence supplied validation; the record captures the
+  non-secret crates.io owner/account evidence, reserved-name owner outputs, dry-run output for
+  `ethos-doc-core`, expected blocked dependent dry-run outputs, package tag names, and explicit
+  exclusions while keeping package tag creation blocked; registry publication remains blocked,
+  and public installation remains blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main
