@@ -241,6 +241,13 @@ The package publication public installation availability record is
 It captures crates.io availability for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at
 `0.1.0` and bounds Rust crate installation wording while retaining CLI, wheel, npm, binary,
 hosted, production, public benchmark, PDFium-build, `ethos-doc`, and `ethos-rag` blockers.
+The public evaluation current-state closeout record is
+`docs/validation/milestone-e-public-evaluation-current-state-closeout-validation-2026-06-22.md`.
+It records current main `034881e` / tree `fb089e027641a7d2152d7d1ebd499f45bb1f6a1c` as GitHub
+source repository plus `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.0` for Rust crate
+evaluation while retaining hosted surfaces, production positioning, public benchmark claims, CLI
+distribution, wheels, npm packages, binaries, project-maintained PDFium builds, `ethos-doc`,
+`ethos-rag`, and broader public wording as blocked.
 Current public evaluation wording is limited to the GitHub source repository plus those three Rust
 library crates at `0.1.0`. Earlier package-publication and public-installation blocker statements in
 this scope remain historical summaries for the approval steps that preceded the availability record.

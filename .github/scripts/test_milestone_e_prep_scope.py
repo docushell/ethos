@@ -434,6 +434,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
     "$(PYTHON) .github/scripts/test_milestone_e_public_facing_readiness_ledger.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_refresh_prep.py",
     "$(PYTHON) .github/scripts/test_milestone_e_public_beta_current_main_source_only_approval.py",
+    "$(PYTHON) .github/scripts/test_milestone_e_public_evaluation_current_state_closeout.py",
     "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index_validation_record.py",
             "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py",
