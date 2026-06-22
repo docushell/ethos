@@ -227,6 +227,10 @@ The package publication publish-flag activation request in `docs/validation/mile
 
 The package publication activation applied record in `docs/validation/milestone-e-package-publication-activation-applied-validation-2026-06-22.md` binds the applied manifest activation to source commit `f50f294` / tree `00c3e4df7a7b3b368659650601a2df76b63a2ce8`. The three accepted candidate manifests are activated, non-candidate crates remain blocked, package tag source binding must be refreshed, real-version cargo publish remains blocked, and public installation remains blocked.
 
+The package publication tag binding refresh in `docs/validation/milestone-e-package-publication-tag-binding-refresh-validation-2026-06-22.md` binds the accepted package tag names to activated main commit `421bed8` / tree `aa0d5d31d879540fd0044052dfeb747f12b64204`. Operator evidence remains required, package tag creation remains blocked, registry publication remains blocked, and public installation remains blocked.
+
+The package publication operator preflight in `docs/validation/milestone-e-package-publication-operator-preflight-validation-2026-06-22.md` records manual crates.io owner/account evidence requirements, reserved-name confirmation, dependency order, package tag names, and command order for a later registry action. Manual registry evidence remains required, public installation remains blocked, and registry publication remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
