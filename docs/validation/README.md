@@ -440,6 +440,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   exact non-secret authorization packet and command order for later package tag creation and the
   first registry action while recording that package tag creation remains blocked, registry
   publication remains blocked, and public installation remains blocked.
+- `milestone-e-package-publication-registry-action-approval-validation-2026-06-22.md` - package
+  publication registry action approval validation; the record captures exact bounded authorization
+  for the three annotated package tags and first `ethos-doc-core` registry action while recording
+  that dependent registry actions remain blocked and public installation remains blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main
