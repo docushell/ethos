@@ -482,6 +482,9 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         package_publish_flag_activation_request_guard = (
             "test_milestone_e_package_publication_activation_request.py"
         )
+        package_publication_activation_applied_guard = (
+            "test_milestone_e_package_publication_activation_applied.py"
+        )
         readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
         beta_refresh_guard = "test_milestone_e_public_beta_current_main_refresh_prep.py"
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
@@ -602,6 +605,10 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             )
             self.assertLess(
                 text.index(prefix + package_publish_flag_activation_request_guard),
+                text.index(prefix + package_publication_activation_applied_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_publication_activation_applied_guard),
                 text.index(prefix + readiness_guard),
             )
             self.assertLess(text.index(prefix + readiness_guard), text.index(prefix + beta_refresh_guard))
@@ -685,6 +692,14 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             )
             self.assertLess(
                 text.index(prefix + package_publish_flag_activation_request_guard),
+                text.index(prefix + index_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_publication_activation_applied_guard),
+                text.index(prefix + command_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_publication_activation_applied_guard),
                 text.index(prefix + index_guard),
             )
             self.assertLess(
