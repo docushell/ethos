@@ -398,6 +398,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   publication final approval request validation; the record keeps package publication and public
   installation blocked while recording exact candidate crates, version map, package tag names,
   source binding, proposed public installation wording, and explicit exclusions for decider review.
+- `milestone-e-package-publication-final-approval-decision-validation-2026-06-22.md` - package
+  publication final approval decision validation; the record accepts the exact bounded candidate
+  crates, version map, tag names, source binding, wording, and exclusions while recording that
+  publish-flag activation remains blocked, package tag creation remains blocked, real-version
+  cargo publish remains blocked, and public installation instructions remain a later gated action.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main

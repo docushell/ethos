@@ -173,6 +173,12 @@ The package publication final approval request is recorded in
 It records exact candidate crates, version map, package tag names, source binding, proposed public
 installation wording, and explicit exclusions for decider review; public installation and package
 publication remain blocked.
+The package publication final approval decision is recorded in
+`docs/validation/milestone-e-package-publication-final-approval-decision-validation-2026-06-22.md`.
+It accepts the exact bounded candidate crates, version map, package tag names, source binding,
+wording, and exclusions; publish-flag activation remains blocked, package tag creation remains
+blocked, real-version cargo publish remains blocked, and public installation instructions remain
+unchanged until later gated activation.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -370,6 +376,10 @@ or broad demo-generation workflows.
 - The package publication final approval request records exact candidate crates, version map,
   package tag names, source binding, proposed public installation wording, and explicit exclusions
   for decider review; public installation and package publication remain blocked.
+- The package publication final approval decision records exact decider acceptance of the bounded
+  candidate crates, version map, package tag names, source binding, wording, and exclusions;
+  publish-flag activation remains blocked, package tag creation remains blocked, and real-version
+  cargo publish remains blocked until later gated activation.
 - The public-facing readiness ledger records the current-main source-only public beta source binding
   and package-publication gap retention; it does not approve package publication, approve public
   installation, or soften any current
