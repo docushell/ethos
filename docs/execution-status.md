@@ -231,6 +231,10 @@ The package publication tag binding refresh in `docs/validation/milestone-e-pack
 
 The package publication operator preflight in `docs/validation/milestone-e-package-publication-operator-preflight-validation-2026-06-22.md` records manual crates.io owner/account evidence requirements, reserved-name confirmation, dependency order, package tag names, and command order for a later registry action. Manual registry evidence remains required, public installation remains blocked, and registry publication remains blocked.
 
+The package publication manual registry evidence request in `docs/validation/milestone-e-package-publication-manual-registry-evidence-request-validation-2026-06-22.md` records the exact non-secret output packet required from the operator for crates.io owner/account confirmation, reserved-name owner outputs, dry-run outputs, package tag names, and explicit exclusions. Manual registry evidence remains required, public installation remains blocked, and registry publication remains blocked.
+
+The package publication manual registry evidence supplied record in `docs/validation/milestone-e-package-publication-manual-registry-evidence-supplied-validation-2026-06-22.md` captures the supplied non-secret owner/account evidence, reserved-name owner outputs, `ethos-doc-core` dry-run output, expected blocked dependent dry-run outputs, package tag names, and explicit exclusions. Manual registry evidence supplied is recorded, public installation remains blocked, and registry publication remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
