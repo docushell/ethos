@@ -166,7 +166,7 @@ class MilestoneEPackagePublicationEvidenceRecordTests(unittest.TestCase):
             ROOT / "crates/ethos-verify/Cargo.toml",
             ROOT / "crates/ethos-pdf/Cargo.toml",
         ):
-            self.assertIn("publish = false", read(manifest), str(manifest))
+            self.assertNotIn("publish = false", read(manifest), str(manifest))
         self.assertIn("cargo build --locked -p ethos-cli", record)
         self.assertIn("cargo publish --dry-run -p ethos-verify", record)
         self.assertIn("These commands are not approved as current publication evidence", record)
@@ -188,7 +188,7 @@ class MilestoneEPackagePublicationEvidenceRecordTests(unittest.TestCase):
         verify_manifest = read(ROOT / "crates/ethos-verify/Cargo.toml")
         pdf_manifest = read(ROOT / "crates/ethos-pdf/Cargo.toml")
 
-        self.assertIn("publish = false", pdf_manifest)
+        self.assertNotIn("publish = false", pdf_manifest)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", record)
         self.assertIn("expose no PDFium types in public API", record)
         self.assertIn("public schemas and", traits)

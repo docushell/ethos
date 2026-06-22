@@ -140,8 +140,8 @@ class MilestoneEPackagePublicationManifestActivationAppliedTests(unittest.TestCa
         self.assertNotIn('package = "ethos-doc-core"', verify)
         self.assertNotIn('package = "ethos-doc-core"', pdf)
         for manifest in (core, verify, pdf):
-            self.assertIn("publish = false", manifest)
-            self.assertIn('publication_status = "blocked"', manifest)
+            self.assertNotIn("publish = false", manifest)
+            self.assertIn('publication_status = "approved_for_crates_io_publication"', manifest)
 
     def test_tags_registry_and_public_installation_remain_blocked(self) -> None:
         prep = load_json(PREP)

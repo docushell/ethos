@@ -109,9 +109,9 @@ class MilestoneEPackagePublicationDependencyOrderingTests(unittest.TestCase):
 
         self.assertIn('name = "ethos-doc-core"', core)
         self.assertIn('reserved_crates_io_name = "ethos-doc-core"', core)
-        self.assertIn("publish = false", core)
-        self.assertIn("publish = false", verify)
-        self.assertIn("publish = false", pdf)
+        self.assertNotIn("publish = false", core)
+        self.assertNotIn("publish = false", verify)
+        self.assertNotIn("publish = false", pdf)
         self.assertIn('ethos-core = { workspace = true, features = ["grounding", "verify-types"] }', verify)
         self.assertIn('ethos-core = { workspace = true, features = ["full"] }', pdf)
         self.assertNotIn('package = "ethos-doc-core"', verify)

@@ -186,8 +186,8 @@ class MilestoneEPackagePublicationFinalApprovalDecisionTests(unittest.TestCase):
             ROOT / "crates/ethos-pdf/Cargo.toml",
         ):
             text = read(manifest)
-            self.assertIn("publish = false", text, str(manifest))
-            self.assertIn('publication_status = "blocked"', text, str(manifest))
+            self.assertNotIn("publish = false", text, str(manifest))
+            self.assertIn('publication_status = "approved_for_crates_io_publication"', text, str(manifest))
 
         self.assertIn('name = "ethos-doc-core"', read(ROOT / "crates/ethos-core/Cargo.toml"))
         self.assertIn(

@@ -145,8 +145,8 @@ class MilestoneEPackagePublicationFinalApprovalRequestTests(unittest.TestCase):
             ROOT / "crates/ethos-pdf/Cargo.toml",
         ):
             text = read(manifest)
-            self.assertIn("publish = false", text, str(manifest))
-            self.assertIn('publication_status = "blocked"', text, str(manifest))
+            self.assertNotIn("publish = false", text, str(manifest))
+            self.assertIn('publication_status = "approved_for_crates_io_publication"', text, str(manifest))
 
         for tag in EXACT_TAGS:
             self.assertEqual("", git("tag", "--list", tag))

@@ -124,8 +124,8 @@ class MilestoneEPackagePublicationPdfiumBoundaryTests(unittest.TestCase):
         readme = normalized(PDF_CRATE / "README.md")
         notice = normalized(PDF_CRATE / "NOTICE.md")
 
-        self.assertIn("publish = false", manifest)
-        self.assertIn("publication_status = \"blocked\"", manifest)
+        self.assertNotIn("publish = false", manifest)
+        self.assertIn("publication_status = \"approved_for_crates_io_publication\"", manifest)
         self.assertIn("reserved_crates_io_version = \"0.0.0-reserved.0\"", manifest)
         self.assertIn('"assets/**"', manifest)
         self.assertNotIn("build.rs", manifest)

@@ -211,7 +211,6 @@ include = [
     "NOTICE.md",
     "src/**",
 ]
-publish = false
 description = "Parser-agnostic citation evidence verification over GroundingSource (alpha lands Milestone B)"
 readme = "README.md"
 keywords = [
@@ -223,7 +222,7 @@ license = "Apache-2.0"
 repository = "https://github.com/docushell/ethos"
 
 [package.metadata.ethos_publication]
-publication_status = "blocked"
+publication_status = "approved_for_crates_io_publication"
 reserved_crates_io_name = "ethos-verify"
 reserved_crates_io_version = "0.0.0-reserved.0"
 
@@ -259,7 +258,6 @@ include = [
     "assets/**",
     "src/**",
 ]
-publish = false
 description = "PDFium backend behind EthosPdfBackend - quantize-at-extraction lives here (WS-ENGINE, Milestone A)"
 readme = "README.md"
 keywords = [
@@ -271,7 +269,7 @@ license = "Apache-2.0"
 repository = "https://github.com/docushell/ethos"
 
 [package.metadata.ethos_publication]
-publication_status = "blocked"
+publication_status = "approved_for_crates_io_publication"
 reserved_crates_io_name = "ethos-pdf"
 reserved_crates_io_version = "0.0.0-reserved.0"
 
@@ -558,19 +556,25 @@ def source_manifests_have_activation_shape() -> bool:
     )
 
 
-def source_manifests_are_still_blocked() -> bool:
+def source_manifests_are_activated_for_candidates() -> bool:
     core = (ROOT / "crates/ethos-core/Cargo.toml").read_text(encoding="utf-8")
     verify = (ROOT / "crates/ethos-verify/Cargo.toml").read_text(encoding="utf-8")
     pdf = (ROOT / "crates/ethos-pdf/Cargo.toml").read_text(encoding="utf-8")
+    cli = (ROOT / "crates/ethos-cli/Cargo.toml").read_text(encoding="utf-8")
+    layout = (ROOT / "crates/ethos-layout/Cargo.toml").read_text(encoding="utf-8")
+    tables = (ROOT / "crates/ethos-tables/Cargo.toml").read_text(encoding="utf-8")
     return all(
         [
             source_manifests_have_activation_shape(),
-            "publish = false" in core,
-            "publish = false" in verify,
-            "publish = false" in pdf,
-            'publication_status = "blocked"' in core,
-            'publication_status = "blocked"' in verify,
-            'publication_status = "blocked"' in pdf,
+            "publish = false" not in core,
+            "publish = false" not in verify,
+            "publish = false" not in pdf,
+            'publication_status = "approved_for_crates_io_publication"' in core,
+            'publication_status = "approved_for_crates_io_publication"' in verify,
+            'publication_status = "approved_for_crates_io_publication"' in pdf,
+            "publish = false" in cli,
+            "publish = false" in layout,
+            "publish = false" in tables,
             not (ROOT / ".cargo/config.toml").exists(),
             not (ROOT / "target/package-registry").exists(),
         ]
@@ -615,7 +619,8 @@ def run_candidate_activation(workspace: Path) -> dict[str, object]:
         ],
         "registry_equivalent_consumer_check": "pass",
         "source_manifest_activation_applied": source_manifests_have_activation_shape(),
-        "source_manifests_remain_blocked": source_manifests_are_still_blocked(),
+        "source_candidate_manifests_activated": source_manifests_are_activated_for_candidates(),
+        "source_manifests_remain_blocked": False,
         "package_publication_approved": False,
         "public_installation_approved": False,
         "commands": commands,
