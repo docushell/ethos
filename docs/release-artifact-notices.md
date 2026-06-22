@@ -53,6 +53,11 @@ It writes a planning bundle under `target/release-notice-draft/`:
 
 The draft bundle is intentionally marked `draft_not_release_ready`.
 
+The first public release-prep workflow may also create CI-only draft CLI artifact archives for
+macOS arm64 and Linux x64. Those archives must include SHA256 checksums and an
+`ethos.release_artifact_inventory.v1` inventory marked `draft_not_release_ready` and
+`publication: blocked`.
+
 ## Release Gate
 
 Approved H2 artifact scope as of 2026-06-20 is `source-snapshot` only. This scope does not approve
