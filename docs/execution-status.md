@@ -237,6 +237,8 @@ The package publication manual registry evidence supplied record in `docs/valida
 
 The package publication registry action authorization request in `docs/validation/milestone-e-package-publication-registry-action-authorization-request-validation-2026-06-22.md` provides the exact non-secret authorization packet and command order for later package tag creation and the first registry action. Package tag creation remains blocked, public installation remains blocked, and registry publication remains blocked.
 
+The package publication registry action approval in `docs/validation/milestone-e-package-publication-registry-action-approval-validation-2026-06-22.md` captures exact bounded authorization for the three annotated package tags and first `ethos-doc-core` registry action. Dependent registry actions remain blocked and public installation remains blocked.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |

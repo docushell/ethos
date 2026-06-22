@@ -218,6 +218,11 @@ The package publication registry action authorization request is recorded in
 It provides the exact non-secret authorization packet and command order for later package tag
 creation and the first registry action; package tag creation remains blocked, public installation
 remains blocked, and registry publication remains blocked.
+The package publication registry action approval is recorded in
+`docs/validation/milestone-e-package-publication-registry-action-approval-validation-2026-06-22.md`.
+It captures exact bounded authorization for the three annotated package tags and first
+`ethos-doc-core` registry action; dependent registry actions remain blocked and public installation
+remains blocked.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
