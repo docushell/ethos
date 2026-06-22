@@ -319,6 +319,10 @@ EXPECTED_RECORDS = (
         "test_milestone_e_package_publication_final_approval_decision.py",
     ),
     RecordCoverage(
+        "milestone-e-package-publication-publish-flag-activation-request-validation-2026-06-22.md",
+        "test_milestone_e_package_publication_activation_request.py",
+    ),
+    RecordCoverage(
         "milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md",
         "test_milestone_e_public_facing_readiness_ledger.py",
     ),
@@ -471,6 +475,9 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
         package_final_approval_decision_guard = (
             "test_milestone_e_package_publication_final_approval_decision.py"
         )
+        package_publish_flag_activation_request_guard = (
+            "test_milestone_e_package_publication_activation_request.py"
+        )
         readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
         beta_refresh_guard = "test_milestone_e_public_beta_current_main_refresh_prep.py"
         command_guard = "test_milestone_e_validation_command_index_validation_record.py"
@@ -587,6 +594,10 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             )
             self.assertLess(
                 text.index(prefix + package_final_approval_decision_guard),
+                text.index(prefix + package_publish_flag_activation_request_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_publish_flag_activation_request_guard),
                 text.index(prefix + readiness_guard),
             )
             self.assertLess(text.index(prefix + readiness_guard), text.index(prefix + beta_refresh_guard))
@@ -662,6 +673,14 @@ class MilestoneEValidationRecordIndexTests(unittest.TestCase):
             )
             self.assertLess(
                 text.index(prefix + package_final_approval_decision_guard),
+                text.index(prefix + index_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_publish_flag_activation_request_guard),
+                text.index(prefix + command_guard),
+            )
+            self.assertLess(
+                text.index(prefix + package_publish_flag_activation_request_guard),
                 text.index(prefix + index_guard),
             )
             self.assertLess(

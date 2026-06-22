@@ -403,6 +403,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   crates, version map, tag names, source binding, wording, and exclusions while recording that
   publish-flag activation remains blocked, package tag creation remains blocked, real-version
   cargo publish remains blocked, and public installation instructions remain a later gated action.
+- `milestone-e-package-publication-publish-flag-activation-request-validation-2026-06-22.md` -
+  package publication publish-flag activation request validation; the record captures the exact
+  requested activation diff for the three accepted candidate manifests while keeping activation
+  blocked, recording that package tag source binding must be refreshed after activation, and
+  keeping tag creation, real-version cargo publish, and public installation instructions blocked.
 - `milestone-e-public-facing-readiness-ledger-validation-2026-06-21.md` - public-facing readiness
   ledger validation recorded `docs/milestone-e-public-facing-readiness-ledger.json` as a
   current-main refresh candidate and package-publication gap-retention artifact; current main

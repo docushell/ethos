@@ -179,6 +179,12 @@ It accepts the exact bounded candidate crates, version map, package tag names, s
 wording, and exclusions; publish-flag activation remains blocked, package tag creation remains
 blocked, real-version cargo publish remains blocked, and public installation instructions remain
 unchanged until later gated activation.
+The package publication publish-flag activation request is recorded in
+`docs/validation/milestone-e-package-publication-publish-flag-activation-request-validation-2026-06-22.md`.
+It records the exact requested activation diff for the three accepted candidate manifests only;
+activation remains blocked, package tag source binding must be refreshed after activation,
+package tag creation remains blocked, real-version cargo publish remains blocked, and public
+installation instructions remain unchanged.
 The metadata-readiness follow-up record under `docs/validation/` covers README, NOTICE, manifest
 metadata, and include-list readiness for `ethos-core`, `ethos-verify`, and `ethos-pdf` only.
 `ethos-doc` and `ethos-rag` remain reserved placeholders without in-tree package manifests, and
@@ -380,6 +386,10 @@ or broad demo-generation workflows.
   candidate crates, version map, package tag names, source binding, wording, and exclusions;
   publish-flag activation remains blocked, package tag creation remains blocked, and real-version
   cargo publish remains blocked until later gated activation.
+- The package publication publish-flag activation request records exact requested source changes
+  for the three accepted candidate manifests only; activation remains blocked, package tag source
+  binding must be refreshed after activation, package tag creation remains blocked, and
+  real-version cargo publish remains blocked.
 - The public-facing readiness ledger records the current-main source-only public beta source binding
   and package-publication gap retention; it does not approve package publication, approve public
   installation, or soften any current
