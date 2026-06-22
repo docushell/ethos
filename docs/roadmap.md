@@ -143,6 +143,12 @@ The final approval request is recorded in
 and records exact candidate crates, version map, package tag names, source binding, proposed public
 installation wording, and explicit exclusions for decider review; public installation and package
 publication remain blocked.
+The final approval decision is recorded in
+[`docs/validation/milestone-e-package-publication-final-approval-decision-validation-2026-06-22.md`](validation/milestone-e-package-publication-final-approval-decision-validation-2026-06-22.md)
+and accepts the exact bounded candidate crates, version map, package tag names, source binding,
+wording, and explicit exclusions; publish-flag activation remains blocked, package tag creation
+remains blocked, real-version cargo publish remains blocked, and public installation instructions
+remain unchanged until later gated activation.
 The registry-assembly prep follow-up records future non-public dependent candidate assembly
 rehearsal while no registry is created and current Cargo manifests remain unchanged;
 registry-backed dependent package assembly activation, package dependency manifest activation,

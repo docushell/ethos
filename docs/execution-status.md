@@ -221,6 +221,8 @@ The package publication current registry-equivalent assembly record in `docs/val
 
 The package publication final approval request in `docs/validation/milestone-e-package-publication-final-approval-request-validation-2026-06-22.md` records exact candidate crates, version map, package tag names, source binding, proposed public installation wording, and explicit exclusions for decider review. Package publication remains blocked, and public installation remains blocked.
 
+The package publication final approval decision in `docs/validation/milestone-e-package-publication-final-approval-decision-validation-2026-06-22.md` records decider acceptance of the exact bounded candidate crates, version map, package tag names, source binding, wording, and explicit exclusions. Publish-flag activation remains blocked, package tag creation remains blocked, real-version cargo publish remains blocked, and public installation instructions remain unchanged until later gated activation.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
