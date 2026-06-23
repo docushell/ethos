@@ -59,6 +59,12 @@ fn pdfium_configured() -> Option<PathBuf> {
         .filter(|path| path.is_file())
 }
 
+fn assert_pdfium_setup_guidance(message: &str) {
+    assert!(message.contains("ethos doctor"));
+    assert!(message.contains("ethos doctor --require-pdfium"));
+    assert!(message.contains("docs/pdfium-manual-setup.md"));
+}
+
 #[test]
 fn public_help_lists_doctor_but_not_internal_probe() {
     let output = run_ethos(&["--help"]);
@@ -106,6 +112,7 @@ fn doctor_require_pdfium_fails_with_exit_12_when_pdfium_is_unset() {
         .as_str()
         .unwrap()
         .contains("ETHOS_PDFIUM_LIBRARY_PATH is unset"));
+    assert_pdfium_setup_guidance(error["error"]["message"].as_str().unwrap());
 }
 
 #[test]
@@ -118,6 +125,9 @@ fn doctor_reports_missing_pdfium_path_without_worker_probe() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("ETHOS_PDFIUM_LIBRARY_PATH: set"));
     assert!(stdout.contains("does not point to a file"));
+    let error: Value = serde_json::from_slice(&output.stderr).expect("stderr is error JSON");
+    assert_eq!(error["error"]["code"], "internal_error");
+    assert_pdfium_setup_guidance(error["error"]["message"].as_str().unwrap());
 }
 
 #[test]
@@ -134,6 +144,7 @@ fn doctor_reports_non_library_file_as_unusable_without_crashing_main_process() {
     assert!(stdout.contains("configured PDFium is not usable by Ethos"));
     let error: Value = serde_json::from_slice(&output.stderr).expect("stderr is error JSON");
     assert_eq!(error["error"]["code"], "internal_error");
+    assert_pdfium_setup_guidance(error["error"]["message"].as_str().unwrap());
 }
 
 #[test]

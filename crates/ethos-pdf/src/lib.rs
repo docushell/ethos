@@ -53,6 +53,9 @@ pub const PDFIUM_VERSION_ENV: &str = "ETHOS_PDFIUM_VERSION";
 /// Optional environment variable containing the downloaded Phase 1 release artifact path.
 pub const PDFIUM_ARTIFACT_PATH_ENV: &str = "ETHOS_PDFIUM_ARTIFACT_PATH";
 
+const PDFIUM_SETUP_GUIDANCE: &str =
+    "Run ethos doctor for setup diagnostics, run ethos doctor --require-pdfium after setting it, and see docs/pdfium-manual-setup.md.";
+
 /// Profile quantization: 100 quanta per PDF point.
 pub const QUANTUM_PER_POINT: u32 = 100;
 const ORIGIN_LOCATOR_POLICY: &str = "origin-run-locator-v1";
@@ -1022,13 +1025,13 @@ impl PdfiumRuntime {
     fn load(backend: &PdfiumBackend) -> Result<Self, EthosError> {
         let path = backend.configured_library_path().ok_or_else(|| {
             EthosError::internal(format!(
-                "PDFium not found: set {PDFIUM_LIBRARY_PATH_ENV} to the caller-provided PDFium dynamic library path"
+                "PDFium not found: set {PDFIUM_LIBRARY_PATH_ENV} to the caller-provided PDFium dynamic library path. {PDFIUM_SETUP_GUIDANCE}"
             ))
         })?;
         if !path.is_file() {
-            return Err(EthosError::internal(
-                "pdfium library path does not point to a file",
-            ));
+            return Err(EthosError::internal(format!(
+                "pdfium library path does not point to a file. {PDFIUM_SETUP_GUIDANCE}"
+            )));
         }
         validate_pinned_pdfium_payload(backend, &path)?;
 
@@ -2214,6 +2217,9 @@ mod tests {
         let err = backend.page_count(b"%PDF-1.7\n").unwrap_err();
         assert_eq!(err.code, ErrorCode::InternalError);
         assert!(err.message.contains(PDFIUM_LIBRARY_PATH_ENV));
+        assert!(err.message.contains("ethos doctor"));
+        assert!(err.message.contains("ethos doctor --require-pdfium"));
+        assert!(err.message.contains("docs/pdfium-manual-setup.md"));
     }
 
     #[test]
@@ -2286,7 +2292,12 @@ mod tests {
         let backend = PdfiumBackend::from_library_path(&path);
         let err = backend.page_count(b"%PDF-1.7\n").unwrap_err();
         assert_eq!(err.code, ErrorCode::InternalError);
-        assert_eq!(err.message, "pdfium library path does not point to a file");
+        assert!(err
+            .message
+            .contains("pdfium library path does not point to a file"));
+        assert!(err.message.contains("ethos doctor"));
+        assert!(err.message.contains("ethos doctor --require-pdfium"));
+        assert!(err.message.contains("docs/pdfium-manual-setup.md"));
         assert!(!err.message.contains(path.to_string_lossy().as_ref()));
     }
 

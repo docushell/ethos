@@ -146,6 +146,24 @@ Run `ethos doctor` for local setup diagnostics. Run `ethos doctor --require-pdfi
 
 GitHub Release `v0.1.0` also provides evaluation CLI archives for macOS arm64 and Linux x64.
 
+## 2-minute PDF parse quickstart
+
+This source-checkout quickstart uses a generated, license-clean born-digital fixture. PDFium remains
+caller-provided through `ETHOS_PDFIUM_LIBRARY_PATH`; Ethos checks whether the configured PDFium is
+usable by Ethos, and does not download, install, repair, or vet untrusted dynamic libraries.
+
+```bash
+cargo build --locked -p ethos-cli
+export ETHOS_PDFIUM_LIBRARY_PATH=/absolute/path/to/libpdfium.dylib
+
+./target/debug/ethos doctor --require-pdfium
+./target/debug/ethos doc parse fixtures/synthetic/simple-text/document.pdf --format json
+./target/debug/ethos doc parse fixtures/synthetic/simple-text/document.pdf --format text
+```
+
+The fixture is synthetic and born-digital. This is an evaluation smoke path, not a benchmark or a
+claim about broader PDF, OCR, table, production, hosted, or bundled-PDFium support.
+
 ## Minimal end-to-end example
 
 This verifies three citation claims against checked-in native Ethos document JSON: a quote, a

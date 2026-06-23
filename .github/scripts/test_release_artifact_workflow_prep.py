@@ -128,7 +128,7 @@ if sys.argv[1:] == ["--help"]:
     raise SystemExit(0)
 if sys.argv[1:3] == ["doc", "parse"]:
     print(
-        "PDFium not found: set ETHOS_PDFIUM_LIBRARY_PATH to the caller-provided PDFium dynamic library path",
+        "PDFium not found: set ETHOS_PDFIUM_LIBRARY_PATH to the caller-provided PDFium dynamic library path. Run ethos doctor for setup diagnostics, run ethos doctor --require-pdfium after setting it, and see docs/pdfium-manual-setup.md.",
         file=sys.stderr,
     )
     raise SystemExit(12)

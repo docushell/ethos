@@ -58,7 +58,7 @@ if mode == "invalid-json":
     raise SystemExit(0)
 if mode == "missing-pdfium":
     sys.stderr.write(
-        "PDFium not found: set ETHOS_PDFIUM_LIBRARY_PATH to the caller-provided PDFium dynamic library path\\n"
+        "PDFium not found: set ETHOS_PDFIUM_LIBRARY_PATH to the caller-provided PDFium dynamic library path. Run ethos doctor for setup diagnostics, run ethos doctor --require-pdfium after setting it, and see docs/pdfium-manual-setup.md.\\n"
     )
     raise SystemExit(1)
 if mode == "invalid-pdf":
@@ -186,6 +186,9 @@ class PythonSurfaceTests(unittest.TestCase):
         self.assertEqual(caught.exception.returncode, 1)
         self.assertIn("PDFium not found", caught.exception.stderr)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", caught.exception.stderr)
+        self.assertIn("ethos doctor", caught.exception.stderr)
+        self.assertIn("ethos doctor --require-pdfium", caught.exception.stderr)
+        self.assertIn("docs/pdfium-manual-setup.md", caught.exception.stderr)
 
     def test_invalid_pdf_exit_code_maps_to_specific_exception(self) -> None:
         cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "invalid-pdf"})
