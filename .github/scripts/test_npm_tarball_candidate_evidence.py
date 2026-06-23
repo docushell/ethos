@@ -20,6 +20,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import tempfile
 import unittest
@@ -29,6 +30,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
 PACKAGE_TARBALL = PACKAGE_DIR / "docushell-ethos-pdf-0.1.0.tgz"
+RECORD = ROOT / "docs/validation/npm-tarball-candidate-evidence-validation-2026-06-23.md"
+VALIDATION_README = ROOT / "docs/validation/README.md"
+SOURCE_SHORT = "5a956a5"
+SOURCE_COMMIT = "5a956a562ea70e1ae63eccb4e830d68699d5f767"
+SOURCE_TREE = "5f9d252ed8544850bd7b1327dfb2e7f1660b3a03"
 EXPECTED_FILES = {
     "LICENSE",
     "NOTICE",
@@ -56,6 +62,14 @@ EXPECTED_PACK_INTEGRITY = (
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def read(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def normalized(path: Path) -> str:
+    return re.sub(r"\s+", " ", read(path))
 
 
 class NpmTarballCandidateEvidenceTests(unittest.TestCase):
@@ -91,6 +105,23 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
                 self.assertEqual(EXPECTED_PACK_SHA256, sha256(PACKAGE_TARBALL))
             finally:
                 PACKAGE_TARBALL.unlink(missing_ok=True)
+
+    def test_candidate_evidence_record_is_source_bound_and_indexed(self) -> None:
+        record = normalized(RECORD)
+        readme = normalized(VALIDATION_README)
+
+        self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", read(RECORD))
+        self.assertIn(f"npm tarball candidate source commit: `{SOURCE_COMMIT}`", record)
+        self.assertIn(f"npm tarball candidate source tree: `{SOURCE_TREE}`", record)
+        self.assertIn(EXPECTED_PACK_SHASUM, record)
+        self.assertIn(EXPECTED_PACK_SHA256, record)
+        self.assertIn(EXPECTED_PACK_INTEGRITY, record)
+        self.assertIn("ethos 0.1.0", record)
+        self.assertIn("exit code `12`", record)
+        self.assertIn("npm publication remains blocked", record)
+        self.assertNotIn("npm publication approved", record.lower())
+        self.assertIn(RECORD.name, readme)
+        self.assertIn("npm tarball candidate evidence validation", readme)
 
     def test_candidate_tarball_installs_and_preserves_pdfium_boundary(self) -> None:
         with tempfile.TemporaryDirectory(prefix="ethos-npm-install-") as temp:

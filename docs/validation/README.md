@@ -535,6 +535,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   validation, target selection, and `npm pack` inclusion checks; npm publication remains blocked
   until a dedicated decider binds the exact assembled npm tarball, source commit, package version,
   vendor payload checksums, and public wording.
+- `npm-tarball-candidate-evidence-validation-2026-06-23.md` - npm tarball candidate evidence
+  validation records the exact local `@docushell/ethos-pdf@0.1.0` candidate assembled from approved
+  macOS arm64 and Linux x64 release artifacts, including vendor binary checksums, `npm pack`
+  metadata, tarball SHA256, packed file list, install smoke, and missing-PDFium exit `12`; npm
+  publication remains blocked until a dedicated decider approves `npm publish`.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
