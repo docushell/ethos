@@ -23,6 +23,7 @@ from makefile_guard import target_block
 
 
 EXPECTED_COMMANDS = (
+    "$(MAKE) light-check PYTHON=$(PYTHON)",
     "$(PYTHON) .github/scripts/test_public_surface_posture.py",
     "$(PYTHON) .github/scripts/claims_gate.py",
     "$(PYTHON) schemas/validate_examples.py",

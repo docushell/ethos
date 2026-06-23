@@ -30,6 +30,7 @@ PREP_SCOPE = ROOT / "docs/milestone-e-prep-scope.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 
 EXPECTED_MILESTONE_E_PREP_COMMANDS = (
+    "$(MAKE) light-check PYTHON=$(PYTHON)",
     "$(PYTHON) .github/scripts/test_execution_status.py",
     "$(PYTHON) .github/scripts/test_roadmap_status.py",
     "$(PYTHON) .github/scripts/test_public_surface_posture.py",
