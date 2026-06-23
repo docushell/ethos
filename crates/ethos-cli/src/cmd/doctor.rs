@@ -24,6 +24,8 @@ use crate::worker::probe_pdfium_with_worker;
 use crate::{write_output, DoctorArgs, Failure, INTERNAL_PDFIUM_LOAD_PROBE_ENV};
 
 const DOCTOR_PDFIUM_PROBE_TIMEOUT: Duration = Duration::from_secs(5);
+// Keep packaged-target reporting single-sourced with the npm vendor payload. If the packaging
+// layout moves, update this include rather than adding a second release target list.
 const NPM_VENDOR_MANIFEST: &str =
     include_str!("../../../../packages/npm/ethos-pdf/vendor/manifest.json");
 
@@ -52,32 +54,41 @@ pub(crate) fn pdfium_load_probe() -> Result<(), Failure> {
 
 fn pdfium_status() -> PdfiumStatus {
     let Some(path) = std::env::var_os(PDFIUM_LIBRARY_PATH_ENV).map(PathBuf::from) else {
-        return PdfiumStatus::warning(format!(
+        return PdfiumStatus::warning(false, format!(
             "{PDFIUM_LIBRARY_PATH_ENV} is unset; set it to the caller-provided PDFium dynamic library path before PDFium-backed commands"
         ));
     };
     if !path.is_file() {
-        return PdfiumStatus::warning(format!(
+        return PdfiumStatus::warning(true, format!(
             "{PDFIUM_LIBRARY_PATH_ENV} does not point to a file; configured PDFium is not usable by Ethos"
         ));
     }
     match probe_pdfium_with_worker(DOCTOR_PDFIUM_PROBE_TIMEOUT) {
         Ok(()) => PdfiumStatus {
             kind: PdfiumStatusKind::Usable,
+            env_set: true,
             message: "configured PDFium is usable by Ethos".to_string(),
         },
-        Err(Failure::Ethos(error)) => PdfiumStatus::warning(format!(
-            "configured PDFium is not usable by Ethos: {}",
-            error.message
-        )),
-        Err(Failure::Usage(message)) => {
-            PdfiumStatus::warning(format!("configured PDFium probe did not run: {message}"))
-        }
-        Err(Failure::EthosWithDiagnostics { error, .. }) => PdfiumStatus::warning(format!(
-            "configured PDFium is not usable by Ethos: {}",
-            error.message
-        )),
+        Err(Failure::Ethos(error)) => PdfiumStatus::warning(
+            true,
+            format!(
+                "configured PDFium is not usable by Ethos: {}",
+                error.message
+            ),
+        ),
+        Err(Failure::Usage(message)) => PdfiumStatus::warning(
+            true,
+            format!("configured PDFium probe did not run: {message}"),
+        ),
+        Err(Failure::EthosWithDiagnostics { error, .. }) => PdfiumStatus::warning(
+            true,
+            format!(
+                "configured PDFium is not usable by Ethos: {}",
+                error.message
+            ),
+        ),
         Err(Failure::Ungrounded) => PdfiumStatus::warning(
+            true,
             "configured PDFium probe returned an unexpected verification status".to_string(),
         ),
     }
@@ -117,22 +128,18 @@ fn current_platform() -> String {
 }
 
 fn packaged_target_status(platform: &str) -> String {
-    if manifest_targets().iter().any(|target| target == platform) {
-        "supported by the approved npm vendor manifest".to_string()
-    } else {
-        "not listed in the approved npm vendor manifest".to_string()
+    match manifest_targets() {
+        Some(targets) if targets.iter().any(|target| target == platform) => {
+            "supported by the approved npm vendor manifest".to_string()
+        }
+        Some(_) => "not listed in the approved npm vendor manifest".to_string(),
+        None => "could not read approved npm vendor manifest targets".to_string(),
     }
 }
 
-fn manifest_targets() -> Vec<String> {
-    let value: serde_json::Value =
-        serde_json::from_str(NPM_VENDOR_MANIFEST).expect("npm vendor manifest is valid JSON");
-    value["targets"]
-        .as_object()
-        .expect("npm vendor manifest targets are an object")
-        .keys()
-        .cloned()
-        .collect()
+fn manifest_targets() -> Option<Vec<String>> {
+    let value: serde_json::Value = serde_json::from_str(NPM_VENDOR_MANIFEST).ok()?;
+    Some(value.get("targets")?.as_object()?.keys().cloned().collect())
 }
 
 fn pdfium_error(message: String) -> Failure {
@@ -147,21 +154,24 @@ enum PdfiumStatusKind {
 
 struct PdfiumStatus {
     kind: PdfiumStatusKind,
+    env_set: bool,
     message: String,
 }
 
 impl PdfiumStatus {
-    fn warning(message: String) -> Self {
+    fn warning(env_set: bool, message: String) -> Self {
         PdfiumStatus {
             kind: PdfiumStatusKind::Warning,
+            env_set,
             message,
         }
     }
 
     fn env_status(&self) -> &'static str {
-        match std::env::var_os(PDFIUM_LIBRARY_PATH_ENV) {
-            Some(_) => "set",
-            None => "unset",
+        if self.env_set {
+            "set"
+        } else {
+            "unset"
         }
     }
 
