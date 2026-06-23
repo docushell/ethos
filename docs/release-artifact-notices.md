@@ -1,7 +1,7 @@
 # Release Artifact Notices
 
-Ethos has approved `v0.1.0` public beta evaluation surfaces for source, Rust crates, Python wheel,
-macOS arm64 CLI artifact, Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.1.0`. This
+Ethos has prepared `v0.1.1` public beta evaluation surfaces for source, Rust crates, Python wheel,
+macOS arm64 CLI artifact, Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.1.1`. This
 document defines the license and NOTICE bundle contract for release artifacts; it does not
 authorize additional releases, package publication, binaries, wheels, npm updates, hosted surfaces,
 production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, or
@@ -56,8 +56,9 @@ It writes a planning bundle under `target/release-notice-draft/`:
 
 The draft bundle is intentionally marked `draft_not_release_ready`.
 
-The first public release-prep workflow may also create CI-only draft CLI artifact archives for
-macOS arm64 and Linux x64. Those archives must include SHA256 checksums and an
+The release-prep workflow may also create CI-only draft CLI artifact archives for macOS arm64 and
+Linux x64. Patch `0.1.1` archives must smoke as `ethos 0.1.1`. Those archives must include SHA256
+checksums and an
 `ethos.release_artifact_inventory.v1` inventory marked `draft_not_release_ready` and
 `publication: blocked`.
 
@@ -79,6 +80,7 @@ Before any public release artifact:
 
 - replace the draft artifact identifier with the concrete artifact name and platform;
 - review the artifact payload inventory and checksums;
+- refresh `packages/npm/ethos-pdf/vendor/manifest.json` only from approved artifact checksums;
 - include PDFium/font notices when those assets are bundled;
 - rerun `make release-advisory`;
 - rerun `make third-party-license-manifest`;
