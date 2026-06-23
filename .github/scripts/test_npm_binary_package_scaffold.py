@@ -41,12 +41,12 @@ SUPPORTED_TARGETS = {
     "darwin:arm64": {
         "binary": "ethos-darwin-arm64",
         "release_asset": "ethos-macos-arm64.tar.gz",
-        "release_asset_sha256": "9cb66dac20f93c55f574357dd0494e0cad711e1e5969cdfb29ae4c64ddf7c95d",
+        "release_asset_sha256": "eac79cddc6f5fc834ecc279401905729978d73e99ae11a2bea82d7356a4bcd88",
     },
     "linux:x64": {
         "binary": "ethos-linux-x64",
         "release_asset": "ethos-linux-x64.tar.gz",
-        "release_asset_sha256": "59dc8e4efe4888afe80d18488fd83b08293ea30550ab38961e601f8f18a098b2",
+        "release_asset_sha256": "842aa4b71333aecc54f344d9f5362160d0943d8efd32dffabe99dc19553916a0",
     },
 }
 
