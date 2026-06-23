@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -26,6 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/release.yml"
+SMOKE_SCRIPT = ROOT / ".github/scripts/smoke_release_cli_artifact.py"
 
 
 def read(path: Path) -> str:
@@ -41,6 +43,7 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
         self.assertIn("linux-x64", text)
         self.assertIn("cargo build --locked --release -p ethos-cli", text)
         self.assertIn("write_release_artifact_inventory.py", text)
+        self.assertIn("smoke_release_cli_artifact.py", text)
         self.assertIn("validate_release_artifact_inventory.py", text)
         self.assertIn("actions/upload-artifact@v4", text)
         self.assertNotIn("gh release create", text)
@@ -100,6 +103,49 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
             self.assertEqual("draft_not_release_ready", data["status"])
             self.assertEqual("blocked", data["publication"])
             self.assertEqual("caller-provided", data["pdfium_policy"])
+
+    def test_release_artifact_smoke_checks_version_help_and_missing_pdfium(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            artifact = Path(temp) / "ethos-linux-x64"
+            artifact.mkdir()
+            for name in ("LICENSE", "NOTICE", "pdfium-manual-setup.md"):
+                (artifact / name).write_text(f"{name}\n", encoding="utf-8")
+            ethos = artifact / "ethos"
+            ethos.write_text(
+                """#!/usr/bin/env python3
+import sys
+if sys.argv[1:] == ["--version"]:
+    print("ethos 0.1.0")
+    raise SystemExit(0)
+if sys.argv[1:] == ["--help"]:
+    print("doc rag security verify fingerprint")
+    raise SystemExit(0)
+if sys.argv[1:3] == ["doc", "parse"]:
+    print(
+        "PDFium not found: set ETHOS_PDFIUM_LIBRARY_PATH to the caller-provided PDFium dynamic library path",
+        file=sys.stderr,
+    )
+    raise SystemExit(12)
+raise SystemExit(2)
+""",
+                encoding="utf-8",
+            )
+            ethos.chmod(0o755)
+
+            env = dict(os.environ)
+            env["ETHOS_PDFIUM_LIBRARY_PATH"] = "/must/be/cleared/by/smoke"
+            subprocess.check_call(
+                [
+                    "python3",
+                    str(SMOKE_SCRIPT),
+                    "--artifact-dir",
+                    str(artifact),
+                    "--expected-version",
+                    "ethos 0.1.0",
+                ],
+                cwd=ROOT,
+                env=env,
+            )
 
 
 if __name__ == "__main__":
