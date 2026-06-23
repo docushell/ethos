@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: approve exact patch `0.1.1` npm publication decision for later operator publish; no npm publish or support-boundary change.
 - boundary-exception: request patch `0.1.1` npm publication approval for exact refreshed package candidate; no npm publish or support-boundary change.
 - boundary-exception: refresh patch `0.1.1` npm vendor payload from published CLI artifacts; no npm publication or support-boundary change.
 - boundary-exception: close patch `0.1.1` CLI artifact publication with exact GitHub Release evidence; no npm vendor refresh, npm publication, or support-boundary change.
