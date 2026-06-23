@@ -37,11 +37,16 @@ APPROVED_SENTENCE = (
     "across native Ethos JSON and supported foreign parser outputs."
 )
 APPROVED_PUBLIC_BETA_SENTENCE = (
-    "Ethos is public beta for source and Rust crate evaluation. It verifies whether AI citations are "
-    "grounded in document evidence across native Ethos JSON and supported foreign parser outputs. "
-    "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are available on "
-    "crates.io at `0.1.0` for evaluation. Hosted surfaces, production positioning, and public "
-    "benchmark claims remain blocked."
+    "Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, "
+    "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether "
+    "AI citations are grounded in document evidence across native Ethos JSON and supported foreign "
+    "parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are "
+    "available on crates.io at `0.1.0` for evaluation. The Python `ethos-pdf` wheel, npm "
+    "`@docushell/ethos-pdf@0.1.0` package, and macOS arm64/Linux x64 CLI artifacts are available "
+    "for evaluation with caller-provided PDFium. Hosted surfaces, production positioning, Windows "
+    "packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, "
+    "public benchmark reports, public benchmark claims, and speed, footprint, parser-quality, "
+    "table-quality, or production claims remain blocked."
 )
 
 FORBIDDEN_APPROVAL_WORDING = [
@@ -80,9 +85,17 @@ def normalized(path: Path) -> str:
     return re.sub(r"\s+", " ", read(path))
 
 
+def normalized_public_readme() -> str:
+    return re.sub(
+        r"\s+",
+        " ",
+        " ".join(line.removeprefix("> ").strip() for line in read(README).splitlines()),
+    )
+
+
 class PublicPreAlphaWordingApprovalTests(unittest.TestCase):
     def test_exact_approved_sentence_is_present_on_controlled_surfaces(self) -> None:
-        self.assertIn(APPROVED_PUBLIC_BETA_SENTENCE, normalized(README))
+        self.assertIn(APPROVED_PUBLIC_BETA_SENTENCE, normalized_public_readme())
 
         for path in (EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST, RECORD):
             self.assertIn(APPROVED_SENTENCE, normalized(path), str(path))

@@ -42,6 +42,12 @@ EXPECTED_WORDING = (
     "Package publication, hosted surfaces, production positioning, and public benchmark claims "
     "remain blocked."
 )
+CURRENT_README_WORDING = (
+    "Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, "
+    "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether "
+    "AI citations are grounded in document evidence across native Ethos JSON and supported foreign "
+    "parser outputs."
+)
 EXPECTED_SOURCE = {
     "surface": "GitHub source repository docushell/ethos source-only evaluation",
     "reviewed_commit": "d755e7c",
@@ -160,15 +166,14 @@ class MilestoneEPublicBetaSourceOnlyApprovalTests(unittest.TestCase):
 
     def test_public_surfaces_use_exact_approved_wording_and_exclusions(self) -> None:
         readme = read(README)
-        normalized_readme = re.sub(r"\s+", " ", readme)
+        normalized_readme = re.sub(
+            r"\s+",
+            " ",
+            " ".join(line.removeprefix("> ").strip() for line in readme.splitlines()),
+        )
         examples = read(EXAMPLES_README)
 
-        self.assertIn(
-            "Ethos is public beta for source and Rust crate evaluation. It verifies whether AI "
-            "citations are grounded in document evidence across native Ethos JSON and supported "
-            "foreign parser outputs.",
-            normalized_readme,
-        )
+        self.assertIn(CURRENT_README_WORDING, normalized_readme)
         self.assertIn("ethos-doc-core", readme)
         self.assertIn("ethos-verify", readme)
         self.assertIn("ethos-pdf", readme)
@@ -177,10 +182,11 @@ class MilestoneEPublicBetaSourceOnlyApprovalTests(unittest.TestCase):
         self.assertIn("cargo build --locked -p ethos-cli", readme)
         self.assertIn("make verify-alpha", readme)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", readme)
-        self.assertIn(
-            "There are no wheels, npm packages, binaries, hosted surfaces, or GitHub release artifacts.",
-            normalized_readme,
-        )
+        self.assertIn("npm `@docushell/ethos-pdf@0.1.0` package", normalized_readme)
+        self.assertIn("Windows packaged artifacts", normalized_readme)
+        self.assertIn("bundled project-maintained PDFium builds", normalized_readme)
+        self.assertIn("public benchmark reports", normalized_readme)
+        self.assertIn("public benchmark claims", normalized_readme)
 
     def test_make_target_and_ci_run_approval_after_required_evidence(self) -> None:
         block = target_block("milestone-e-prep")

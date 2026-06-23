@@ -48,6 +48,18 @@ EXACT_PUBLIC_WORDING = (
     "on crates.io at `0.1.0` for evaluation. Hosted surfaces, production positioning, and public "
     "benchmark claims remain blocked."
 )
+CURRENT_README_WORDING = (
+    "Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, "
+    "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether "
+    "AI citations are grounded in document evidence across native Ethos JSON and supported foreign "
+    "parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are "
+    "available on crates.io at `0.1.0` for evaluation. The Python `ethos-pdf` wheel, npm "
+    "`@docushell/ethos-pdf@0.1.0` package, and macOS arm64/Linux x64 CLI artifacts are available "
+    "for evaluation with caller-provided PDFium. Hosted surfaces, production positioning, Windows "
+    "packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, "
+    "public benchmark reports, public benchmark claims, and speed, footprint, parser-quality, "
+    "table-quality, or production claims remain blocked."
+)
 APPROVED_SURFACE_LINES = (
     "GitHub source repository",
     "`ethos-doc-core`",
@@ -126,13 +138,13 @@ class MilestoneEPublicEvaluationCurrentStateCloseoutTests(unittest.TestCase):
             self.assertIn(blocker, record)
 
     def test_readme_and_status_docs_match_exact_public_wording(self) -> None:
-        for path in (README, EXECUTION_STATUS):
-            text = re.sub(
-                r"\s+",
-                " ",
-                " ".join(line.removeprefix("> ").strip() for line in read(path).splitlines()),
-            )
-            self.assertIn(EXACT_PUBLIC_WORDING, text, str(path))
+        readme_text = re.sub(
+            r"\s+",
+            " ",
+            " ".join(line.removeprefix("> ").strip() for line in read(README).splitlines()),
+        )
+        self.assertIn(CURRENT_README_WORDING, readme_text, str(README))
+        self.assertIn(EXACT_PUBLIC_WORDING, normalized(EXECUTION_STATUS), str(EXECUTION_STATUS))
 
     def test_docs_reference_current_state_and_retained_blockers(self) -> None:
         for path in (PREP_SCOPE, ROADMAP, EXECUTION_STATUS, VALIDATION_README):

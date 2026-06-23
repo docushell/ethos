@@ -32,35 +32,31 @@ def read(path: Path) -> str:
 
 
 class PublicSurfacePostureTests(unittest.TestCase):
-    def test_readme_status_matches_public_beta_and_crate_installation_scope(self) -> None:
+    def test_readme_status_matches_public_beta_evaluation_scope(self) -> None:
         text = read(README)
         normalized = " ".join(line.removeprefix("> ").strip() for line in text.splitlines())
 
         self.assertIn("public beta evaluation", text)
         self.assertIn(
-            "Ethos is public beta for source and Rust crate evaluation. It verifies whether AI citations "
-            "are grounded in document evidence across native Ethos JSON and supported foreign "
-            "parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` "
-            "are available on crates.io at `0.1.0` for evaluation. Hosted surfaces, production "
-            "positioning, and public benchmark claims remain blocked.",
-            text,
-        )
-        self.assertIn("902c423", text)
-        self.assertIn("6019a97", text)
-        self.assertIn("wheels, npm packages, binaries, release artifacts", text)
-        self.assertIn("project-maintained PDFium builds", text)
-        self.assertIn("performance, footprint, quality", text)
-        self.assertIn("table-quality, or parser-quality claims", text)
-        self.assertIn(
-            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are available "
-            "on crates.io at `0.1.0` for evaluation. The Ethos CLI, wheels, npm packages, binaries, "
-            "hosted surfaces, production positioning, public benchmark reports, public benchmark "
-            "claims, project-maintained PDFium builds, `ethos-doc`, and `ethos-rag` remain blocked.",
+            "Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, "
+            "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation.",
             normalized,
         )
+        self.assertIn("Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`", text)
+        self.assertIn("npm `@docushell/ethos-pdf@0.1.0` package", normalized)
+        self.assertIn("macOS arm64/Linux x64 CLI artifacts", normalized)
+        self.assertIn("Python `ethos-pdf` wheel", normalized)
+        self.assertIn("caller-provided PDFium", text)
+        self.assertIn("Windows packaged artifacts", text)
+        self.assertIn("project-maintained PDFium builds", text)
+        self.assertIn("public benchmark reports", text)
+        self.assertIn("public benchmark claims", text)
+        self.assertIn("speed, footprint, parser-quality", text)
+        self.assertIn("table-quality, or production claims remain blocked", normalized)
         self.assertIn("cargo add ethos-doc-core@0.1.0", text)
         self.assertIn("cargo add ethos-verify@0.1.0", text)
         self.assertIn("cargo add ethos-pdf@0.1.0", text)
+        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.0", text)
         self.assertNotIn("contracts phase", text)
         self.assertNotIn("has not run", text)
 
