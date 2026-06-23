@@ -29,7 +29,9 @@ from typing import Dict, Optional
 REQUIRED_FILES = ("ethos", "LICENSE", "NOTICE", "pdfium-manual-setup.md")
 PDFIUM_MESSAGE = (
     "PDFium not found: set ETHOS_PDFIUM_LIBRARY_PATH to the caller-provided "
-    "PDFium dynamic library path"
+    "PDFium dynamic library path. Run ethos doctor for setup diagnostics, run "
+    "ethos doctor --require-pdfium after setting it, and see "
+    "docs/pdfium-manual-setup.md."
 )
 
 

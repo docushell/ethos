@@ -24,6 +24,8 @@ use crate::worker::probe_pdfium_with_worker;
 use crate::{write_output, DoctorArgs, Failure, INTERNAL_PDFIUM_LOAD_PROBE_ENV};
 
 const DOCTOR_PDFIUM_PROBE_TIMEOUT: Duration = Duration::from_secs(5);
+const PDFIUM_SETUP_GUIDANCE: &str =
+    "Run ethos doctor for setup diagnostics, run ethos doctor --require-pdfium after setting it, and see docs/pdfium-manual-setup.md.";
 // Keep packaged-target reporting single-sourced with the npm vendor payload. If the packaging
 // layout moves, update this include rather than adding a second release target list.
 const NPM_VENDOR_MANIFEST: &str =
@@ -55,12 +57,12 @@ pub(crate) fn pdfium_load_probe() -> Result<(), Failure> {
 fn pdfium_status() -> PdfiumStatus {
     let Some(path) = std::env::var_os(PDFIUM_LIBRARY_PATH_ENV).map(PathBuf::from) else {
         return PdfiumStatus::warning(false, format!(
-            "{PDFIUM_LIBRARY_PATH_ENV} is unset; set it to the caller-provided PDFium dynamic library path before PDFium-backed commands"
+            "{PDFIUM_LIBRARY_PATH_ENV} is unset; set it to the caller-provided PDFium dynamic library path before PDFium-backed commands. {PDFIUM_SETUP_GUIDANCE}"
         ));
     };
     if !path.is_file() {
         return PdfiumStatus::warning(true, format!(
-            "{PDFIUM_LIBRARY_PATH_ENV} does not point to a file; configured PDFium is not usable by Ethos"
+            "{PDFIUM_LIBRARY_PATH_ENV} does not point to a file; configured PDFium is not usable by Ethos. {PDFIUM_SETUP_GUIDANCE}"
         ));
     }
     match probe_pdfium_with_worker(DOCTOR_PDFIUM_PROBE_TIMEOUT) {
@@ -72,24 +74,26 @@ fn pdfium_status() -> PdfiumStatus {
         Err(Failure::Ethos(error)) => PdfiumStatus::warning(
             true,
             format!(
-                "configured PDFium is not usable by Ethos: {}",
-                error.message
+                "configured PDFium is not usable by Ethos: {}. {PDFIUM_SETUP_GUIDANCE}",
+                error.message,
             ),
         ),
         Err(Failure::Usage(message)) => PdfiumStatus::warning(
             true,
-            format!("configured PDFium probe did not run: {message}"),
+            format!("configured PDFium probe did not run: {message}. {PDFIUM_SETUP_GUIDANCE}"),
         ),
         Err(Failure::EthosWithDiagnostics { error, .. }) => PdfiumStatus::warning(
             true,
             format!(
-                "configured PDFium is not usable by Ethos: {}",
-                error.message
+                "configured PDFium is not usable by Ethos: {}. {PDFIUM_SETUP_GUIDANCE}",
+                error.message,
             ),
         ),
         Err(Failure::Ungrounded) => PdfiumStatus::warning(
             true,
-            "configured PDFium probe returned an unexpected verification status".to_string(),
+            format!(
+                "configured PDFium probe returned an unexpected verification status. {PDFIUM_SETUP_GUIDANCE}"
+            ),
         ),
     }
 }

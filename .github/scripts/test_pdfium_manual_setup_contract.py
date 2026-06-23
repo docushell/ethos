@@ -68,6 +68,9 @@ class PdfiumManualSetupContractTests(unittest.TestCase):
 
         self.assertIn("PDFium not found: set {PDFIUM_LIBRARY_PATH_ENV}", text)
         self.assertIn("caller-provided PDFium dynamic library path", text)
+        self.assertIn("ethos doctor", text)
+        self.assertIn("ethos doctor --require-pdfium", text)
+        self.assertIn("docs/pdfium-manual-setup.md", text)
 
     def test_surface_docs_reference_same_setup_contract(self) -> None:
         for path in (PDF_CRATE_README, PYTHON_README, NPM_README):
@@ -81,6 +84,9 @@ class PdfiumManualSetupContractTests(unittest.TestCase):
         self.assertIn('"ETHOS_FAKE_MODE": "missing-pdfium"', text)
         self.assertIn("PDFium not found", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
+        self.assertIn("ethos doctor", text)
+        self.assertIn("ethos doctor --require-pdfium", text)
+        self.assertIn("docs/pdfium-manual-setup.md", text)
         self.assertIn("EthosCommandError", text)
 
 

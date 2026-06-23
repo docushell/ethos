@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- cli: point missing or unusable PDFium errors to `ethos doctor`, `ethos doctor --require-pdfium`, and the manual setup doc without changing exit codes.
 - docs: add a bounded 2-minute PDF parse quickstart using the synthetic born-digital fixture and `ethos doctor --require-pdfium`.
 - boundary-exception: add `ethos doctor` docs pointer for caller-provided PDFium diagnostics; no PDFium posture or support-boundary change.
 - process-follow-up: include synthetic fixture stage goldens in the light-lane golden-change rationale guard; no parser output change.
