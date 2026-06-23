@@ -31,8 +31,14 @@ default = ["full"]
 grounding = []
 # Verification report/config schema types + stable warning codes (still parser-internal-free).
 verify-types = ["grounding"]
-# Everything: canonical model, c14n, fingerprints, geometry, config, backend/layout traits.
+# Everything stable: canonical model, c14n, fingerprints, geometry, config,
+# backend/layout traits. Source-only crop descriptors require `crop-element`.
 full = ["verify-types", "dep:serde_json", "dep:sha2", "dep:thiserror"]
+# Source-only pre-alpha crop descriptor API. This is intentionally outside the
+# default `full` feature because it is not part of the stable public crate surface.
+# It depends on `full` because crop descriptors reuse canonical model, c14n,
+# fingerprint, geometry, and stable error helpers.
+crop-element = ["full"]
 
 [dependencies]
 serde = { workspace = true }

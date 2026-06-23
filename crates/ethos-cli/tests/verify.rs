@@ -53,6 +53,22 @@ fn parse_success(args: &[&str]) -> Value {
     serde_json::from_slice(&output.stdout).expect("stdout is JSON")
 }
 
+fn parse_crop_element_success(args: &[&str]) -> Value {
+    let output = run_ethos(args);
+    assert!(
+        output.status.success(),
+        "ethos failed\nstatus: {:?}\nstderr:\n{}\nstdout:\n{}",
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        "warning: crop_element is source-only pre-alpha and unsupported\n"
+    );
+    serde_json::from_slice(&output.stdout).expect("stdout is JSON")
+}
+
 fn temp_json(name: &str, json: &str) -> PathBuf {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -520,7 +536,7 @@ fn native_verify_crop_dir_writes_deterministic_crop_descriptors() {
 #[test]
 fn crop_element_cli_writes_descriptor() {
     let root = repo_root();
-    let descriptor = parse_success(&[
+    let descriptor = parse_crop_element_success(&[
         "crop_element",
         root.join("schemas/examples/document.example.json")
             .to_str()
@@ -550,7 +566,10 @@ fn crop_element_cli_writes_descriptor() {
 
     assert_eq!(output.status.code(), Some(0));
     assert_eq!(output.stdout, b"");
-    assert_eq!(output.stderr, b"");
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        "warning: crop_element is source-only pre-alpha and unsupported\n"
+    );
     assert_eq!(json_file(out), expected);
 }
 
@@ -695,7 +714,10 @@ fn crop_element_cli_writes_rendered_artifacts_when_pdfium_is_configured() {
 
     assert_eq!(output.status.code(), Some(0));
     assert_eq!(output.stdout, b"");
-    assert_eq!(output.stderr, b"");
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr),
+        "warning: crop_element is source-only pre-alpha and unsupported\n"
+    );
 
     let descriptor = json_file(&out);
     assert_eq!(descriptor["rendering_status"], "rendered");

@@ -30,6 +30,7 @@
 //!   and therefore can never see parser internals. CI builds it that way to prove it.
 //! - `verify-types` — verification report/config schema types + stable warning codes.
 //! - `full` (default) — canonical model, c14n, fingerprints, geometry, config, traits.
+//! - `crop-element` — source-only pre-alpha crop descriptor API, intentionally opt-in.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -46,7 +47,7 @@ pub mod verify_types;
 pub mod c14n;
 #[cfg(feature = "full")]
 pub mod config;
-#[cfg(feature = "full")]
+#[cfg(feature = "crop-element")]
 pub mod crop_element;
 #[cfg(feature = "full")]
 pub mod error;

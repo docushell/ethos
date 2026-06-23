@@ -13,7 +13,14 @@ caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.
 
 Installing this package must not require PDFium. PDFium-backed commands fail until
 `ETHOS_PDFIUM_LIBRARY_PATH` points to a caller-provided PDFium dynamic library. See
-`docs/pdfium-manual-setup.md` in the Ethos source repository for the setup contract.
+`QUICKSTART.md` in this package and `docs/pdfium-manual-setup.md` in the Ethos source repository
+for the setup contract.
+
+Runtime behavior:
+
+- unsupported OS/CPU targets exit before invoking a binary;
+- missing packaged binaries exit with a clear "binary is missing" message;
+- PDFium-backed commands preserve the Rust CLI exit code and stderr.
 
 The package is not approved for public publication until the final release approval record binds the
 source commit, package version, artifact checksums, and exact public wording.

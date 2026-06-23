@@ -14,6 +14,10 @@ Public API:
 - `EthosNotFoundError`
 - `EthosTimeoutError`
 - `EthosCommandError`
+- `PdfiumNotFoundError`
+- `InvalidPdfError`
+- `CorruptPdfError`
+- `ParseTimeoutError`
 - `EthosOutputError`
 - `parse_pdf_json`
 - `parse_pdf_markdown`
@@ -28,8 +32,27 @@ Rust CLI remains the source of truth.
 
 PDFium-backed parse and crop paths require caller-provided PDFium through
 `ETHOS_PDFIUM_LIBRARY_PATH`. Importing `ethos_pdf` does not require PDFium. If PDFium is missing,
-the underlying CLI error is preserved in `EthosCommandError.stderr` so callers can show the setup
-guidance from `docs/pdfium-manual-setup.md`.
+the wrapper raises `PdfiumNotFoundError` and preserves the underlying CLI stderr so callers can show
+the setup guidance from `QUICKSTART.md` or `docs/pdfium-manual-setup.md`.
+
+## Exceptions
+
+All wrapper-owned exceptions inherit from `EthosPythonSurfaceError`.
+
+Subprocess failures inherit from `EthosCommandError` and expose `command`, `returncode`, `stdout`,
+and `stderr`. When the CLI emits its stable JSON error envelope on stderr, the wrapper maps by
+`error.code`; otherwise it falls back to the documented exit code:
+
+| CLI condition | Exit | Python exception |
+| --- | ---: | --- |
+| missing caller-provided PDFium | any non-zero exit with PDFium setup stderr | `PdfiumNotFoundError` |
+| `invalid_pdf` | 3 | `InvalidPdfError` |
+| `corrupt_pdf` | 4 | `CorruptPdfError` |
+| `parse_timeout` | 10 | `ParseTimeoutError` |
+| any other non-zero CLI exit | other | `EthosCommandError` |
+
+Wrapper-side timeouts raised by `subprocess.run(..., timeout=...)` use `EthosTimeoutError`.
+Missing input files raise Python `FileNotFoundError` before invoking the CLI.
 
 Run the focused tests with:
 

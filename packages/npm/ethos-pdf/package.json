@@ -13,6 +13,8 @@
   },
   "files": [
     "bin/",
+    "scripts/",
+    "QUICKSTART.md",
     "README.md",
     "LICENSE",
     "NOTICE"
@@ -29,6 +31,7 @@
     "node": ">=18"
   },
   "scripts": {
+    "postinstall": "node scripts/postinstall.js",
     "test": "node test/platform-selection.test.js"
   }
 }

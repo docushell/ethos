@@ -20,7 +20,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Sequence, Union
+from typing import Any, Dict, Mapping, Optional, Sequence, Type, Union
 
 PathLike = Union[str, os.PathLike[str]]
 
@@ -68,6 +68,22 @@ class EthosCommandError(EthosPythonSurfaceError):
         self.returncode = returncode
         self.stdout = stdout
         self.stderr = stderr
+
+
+class PdfiumNotFoundError(EthosCommandError):
+    """Raised when the CLI reports missing caller-provided PDFium."""
+
+
+class InvalidPdfError(EthosCommandError):
+    """Raised when the CLI reports `invalid_pdf`."""
+
+
+class CorruptPdfError(EthosCommandError):
+    """Raised when the CLI reports `corrupt_pdf`."""
+
+
+class ParseTimeoutError(EthosCommandError):
+    """Raised when the CLI reports `parse_timeout`."""
 
 
 class EthosOutputError(EthosPythonSurfaceError):
@@ -304,7 +320,8 @@ class EthosCli:
         stdout = _decode_utf8(completed.stdout, command, "stdout")
         stderr = _decode_utf8(completed.stderr, command, "stderr")
         if completed.returncode != 0:
-            raise EthosCommandError(command, completed.returncode, stdout, stderr)
+            error_class = _command_error_class(completed.returncode, stderr)
+            raise error_class(command, completed.returncode, stdout, stderr)
         return stdout
 
 
@@ -420,3 +437,36 @@ def _decode_utf8(data: bytes, command: Sequence[str], stream: str) -> str:
             command,
             data.decode("utf-8", errors="replace"),
         ) from exc
+
+
+def _command_error_class(returncode: int, stderr: str) -> Type[EthosCommandError]:
+    error_code = _stable_error_code(stderr)
+    if error_code == "invalid_pdf":
+        return InvalidPdfError
+    if error_code == "corrupt_pdf":
+        return CorruptPdfError
+    if error_code == "parse_timeout":
+        return ParseTimeoutError
+    if "ETHOS_PDFIUM_LIBRARY_PATH" in stderr or "PDFium not found" in stderr:
+        return PdfiumNotFoundError
+    return {
+        3: InvalidPdfError,
+        4: CorruptPdfError,
+        10: ParseTimeoutError,
+    }.get(returncode, EthosCommandError)
+
+
+def _stable_error_code(stderr: str) -> Optional[str]:
+    try:
+        envelope = json.loads(stderr)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(envelope, dict):
+        return None
+    error = envelope.get("error")
+    if not isinstance(error, dict):
+        return None
+    code = error.get("code")
+    if isinstance(code, str):
+        return code
+    return None

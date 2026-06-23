@@ -14,7 +14,7 @@ name = "ethos"
 path = "src/main.rs"
 
 [dependencies]
-ethos-core = { workspace = true, features = ["full"] }
+ethos-core = { workspace = true, features = ["full", "crop-element"] }
 ethos-layout = { workspace = true }
 ethos-tables = { workspace = true }
 ethos-pdf = { path = "../ethos-pdf", version = "0.1.0" }

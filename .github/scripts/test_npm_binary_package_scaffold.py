@@ -29,6 +29,7 @@ PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
 PACKAGE_JSON = PACKAGE_DIR / "package.json"
 BIN = PACKAGE_DIR / "bin/ethos-pdf.js"
 README = PACKAGE_DIR / "README.md"
+QUICKSTART = PACKAGE_DIR / "QUICKSTART.md"
 NOTICE = PACKAGE_DIR / "NOTICE"
 LICENSE = PACKAGE_DIR / "LICENSE"
 
@@ -71,11 +72,17 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertIn("Linux x64", text)
         self.assertIn("does not bundle PDFium", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
+        self.assertIn("QUICKSTART.md", text)
         self.assertIn("not approved for public publication", text)
         self.assertIn("does not include public benchmark reports or claims", normalized)
 
+        quickstart = read(QUICKSTART)
+        self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", quickstart)
+        self.assertIn("libpdfium", quickstart)
+
     def test_release_scaffold_contains_required_notice_and_license_files(self) -> None:
         self.assertTrue(BIN.is_file())
+        self.assertTrue(QUICKSTART.is_file())
         self.assertTrue(NOTICE.is_file())
         self.assertTrue(LICENSE.is_file())
         self.assertIn("no bundled PDFium", read(NOTICE))

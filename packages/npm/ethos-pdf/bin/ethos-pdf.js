@@ -55,6 +55,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  main,
   SUPPORTED_TARGETS,
   resolveBinary,
   targetKey

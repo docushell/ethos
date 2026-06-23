@@ -24,11 +24,15 @@ import unittest
 from pathlib import Path
 
 from ethos_pdf import (
+    CorruptPdfError,
     EthosCli,
     EthosCommandError,
     EthosNotFoundError,
     EthosOutputError,
     EthosTimeoutError,
+    InvalidPdfError,
+    ParseTimeoutError,
+    PdfiumNotFoundError,
     crop_element,
     parse_pdf_json,
 )
@@ -57,6 +61,18 @@ if mode == "missing-pdfium":
         "PDFium not found: set ETHOS_PDFIUM_LIBRARY_PATH to the caller-provided PDFium dynamic library path\\n"
     )
     raise SystemExit(1)
+if mode == "invalid-pdf":
+    sys.stderr.write("invalid_pdf: not a PDF\\n")
+    raise SystemExit(3)
+if mode == "invalid-pdf-envelope":
+    sys.stderr.write(json.dumps({"error": {"code": "invalid_pdf", "message": "not a PDF"}}) + "\\n")
+    raise SystemExit(3)
+if mode == "corrupt-pdf":
+    sys.stderr.write("corrupt_pdf: broken xref\\n")
+    raise SystemExit(4)
+if mode == "parse-timeout":
+    sys.stderr.write("parse_timeout: parse exceeded wall-time limit\\n")
+    raise SystemExit(10)
 
 if sys.argv[1:2] == ["crop_element"]:
     if "--request" not in sys.argv or "--check-id" not in sys.argv:
@@ -160,15 +176,49 @@ class PythonSurfaceTests(unittest.TestCase):
         self.assertIn("partial output", caught.exception.stdout)
         self.assertIn("fake ethos failure", caught.exception.stderr)
 
-    def test_missing_pdfium_setup_error_is_preserved_from_cli_stderr(self) -> None:
+    def test_missing_pdfium_setup_error_is_specific_and_preserves_stderr(self) -> None:
         cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "missing-pdfium"})
 
-        with self.assertRaises(EthosCommandError) as caught:
+        with self.assertRaises(PdfiumNotFoundError) as caught:
             cli.parse_pdf_json(self.pdf)
 
+        self.assertIsInstance(caught.exception, EthosCommandError)
         self.assertEqual(caught.exception.returncode, 1)
         self.assertIn("PDFium not found", caught.exception.stderr)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", caught.exception.stderr)
+
+    def test_invalid_pdf_exit_code_maps_to_specific_exception(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "invalid-pdf"})
+
+        with self.assertRaises(InvalidPdfError) as caught:
+            cli.parse_pdf_json(self.pdf)
+
+        self.assertIsInstance(caught.exception, EthosCommandError)
+        self.assertEqual(caught.exception.returncode, 3)
+
+    def test_stable_error_envelope_maps_to_specific_exception(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "invalid-pdf-envelope"})
+
+        with self.assertRaises(InvalidPdfError) as caught:
+            cli.parse_pdf_json(self.pdf)
+
+        self.assertIn('"code": "invalid_pdf"', caught.exception.stderr)
+
+    def test_corrupt_pdf_exit_code_maps_to_specific_exception(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "corrupt-pdf"})
+
+        with self.assertRaises(CorruptPdfError) as caught:
+            cli.parse_pdf_json(self.pdf)
+
+        self.assertEqual(caught.exception.returncode, 4)
+
+    def test_parse_timeout_exit_code_maps_to_specific_exception(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "parse-timeout"})
+
+        with self.assertRaises(ParseTimeoutError) as caught:
+            cli.parse_pdf_json(self.pdf)
+
+        self.assertEqual(caught.exception.returncode, 10)
 
     def test_missing_binary_raises_not_found(self) -> None:
         cli = EthosCli(self.root / "missing-ethos")
