@@ -121,8 +121,13 @@ class NpmPublicationFinalApprovalRequestTests(unittest.TestCase):
             self.assertIn(blocker, raw)
         for phrase in FORBIDDEN:
             self.assertNotIn(phrase, lower)
-        for private_marker in ("/Users/", "/private/tmp", "/private/var", "/var/folders", "saumildiwaker", "Desktop/Stuff", "project/repo/ethos"):
-            self.assertNotIn(private_marker, raw)
+        self.assertNotIn("/Users/", raw)
+        self.assertNotIn("/private/tmp", raw)
+        self.assertNotIn("/private/var", raw)
+        self.assertNotIn("/var/folders", raw)
+        self.assertNotIn("saumildiwaker", raw)
+        self.assertNotIn("Desktop/Stuff", raw)
+        self.assertNotIn("project/repo/ethos", raw)
 
     def test_record_is_indexed(self) -> None:
         readme = normalized(VALIDATION_README)
