@@ -31,6 +31,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
 PACKAGE_JSON = PACKAGE_DIR / "package.json"
 BIN = PACKAGE_DIR / "bin/ethos-pdf.js"
+VENDOR_ASSEMBLY = PACKAGE_DIR / "scripts" / "prepare-vendor.js"
 README = PACKAGE_DIR / "README.md"
 QUICKSTART = PACKAGE_DIR / "QUICKSTART.md"
 NOTICE = PACKAGE_DIR / "NOTICE"
@@ -66,6 +67,7 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertEqual(["darwin", "linux"], package["os"])
         self.assertEqual(["arm64", "x64"], package["cpu"])
         self.assertEqual(">=18", package["engines"]["node"])
+        self.assertEqual("node scripts/prepare-vendor.js", package["scripts"]["prepare:vendor"])
         self.assertNotIn("dependencies", package)
 
     def test_vendor_manifest_binds_supported_targets_to_release_assets(self) -> None:
@@ -108,6 +110,7 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
 
     def test_release_scaffold_contains_required_notice_and_license_files(self) -> None:
         self.assertTrue(BIN.is_file())
+        self.assertTrue(VENDOR_ASSEMBLY.is_file())
         self.assertTrue(QUICKSTART.is_file())
         self.assertTrue(NOTICE.is_file())
         self.assertTrue(LICENSE.is_file())

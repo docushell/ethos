@@ -32,7 +32,8 @@
     "node": ">=18"
   },
   "scripts": {
+    "prepare:vendor": "node scripts/prepare-vendor.js",
     "postinstall": "node scripts/postinstall.js",
-    "test": "node test/platform-selection.test.js"
+    "test": "node test/platform-selection.test.js && node test/vendor-assembly.test.js"
   }
 }
