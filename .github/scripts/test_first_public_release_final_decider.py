@@ -27,12 +27,17 @@ from makefile_guard import target_block
 
 ROOT = Path(__file__).resolve().parents[2]
 RECORD = ROOT / "docs/validation/first-public-release-final-decider-validation-2026-06-23.md"
+RECONCILIATION_RECORD = (
+    ROOT
+    / "docs/validation/first-public-release-macos-artifact-publication-reconciliation-validation-2026-06-23.md"
+)
 VALIDATION_README = ROOT / "docs/validation/README.md"
 
 SOURCE_SHORT = "858bf0f"
 SOURCE_COMMIT = "858bf0fbcac38040ee68f714c302672a72fb27d9"
 SOURCE_TREE = "86b7cc44e28a1308af3c29632c7d9e90a0270bfb"
 MACOS_SHA256 = "35c7cc19ea51231edb1a0cfb6d160d3a2e620ba9357d116ef071f66ebc5e236f"
+PUBLISHED_MACOS_SHA256 = "9cb66dac20f93c55f574357dd0494e0cad711e1e5969cdfb29ae4c64ddf7c95d"
 
 APPROVED_SURFACES = (
     "GitHub Release artifact evaluation for `ethos-macos-arm64.tar.gz`",
@@ -150,6 +155,16 @@ class FirstPublicReleaseFinalDeciderTests(unittest.TestCase):
         self.assertIn("first public release final decider validation", readme)
         self.assertIn("npm publication remains blocked", readme)
         self.assertIn("$(PYTHON) .github/scripts/test_first_public_release_final_decider.py", block)
+
+    def test_later_reconciliation_preserves_decider_boundary_until_linux_evidence(self) -> None:
+        reconciliation = normalized(RECONCILIATION_RECORD)
+        lower = reconciliation.lower()
+
+        self.assertIn(MACOS_SHA256, reconciliation)
+        self.assertIn(PUBLISHED_MACOS_SHA256, reconciliation)
+        self.assertIn("must not be attached to the existing `v0.1.0` GitHub Release", reconciliation)
+        self.assertIn("Linux x64 CLI artifact publication remains blocked", reconciliation)
+        self.assertNotIn("linux x64 cli artifact publication is approved", lower)
 
 
 if __name__ == "__main__":

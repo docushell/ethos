@@ -61,6 +61,12 @@ jobs:
             --checksum "$out.${{ matrix.archive_ext }}.sha256" \
             --target "${{ matrix.artifact_target }}" \
             --out "$out.inventory.json"
+      - name: smoke draft artifact
+        run: |
+          python3 .github/scripts/smoke_release_cli_artifact.py \
+            --artifact-dir "target/release-artifacts/ethos-${{ matrix.artifact_target }}" \
+            --target "${{ matrix.artifact_target }}" \
+            --out "target/release-artifacts/ethos-${{ matrix.artifact_target }}.smoke.json"
       - name: validate draft artifact inventory
         run: python3 .github/scripts/validate_release_artifact_inventory.py target/release-artifacts/*.inventory.json
       - uses: actions/upload-artifact@v4
@@ -70,3 +76,4 @@ jobs:
             target/release-artifacts/*.tar.gz
             target/release-artifacts/*.sha256
             target/release-artifacts/*.inventory.json
+            target/release-artifacts/*.smoke.json

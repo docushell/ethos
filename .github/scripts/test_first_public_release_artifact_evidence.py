@@ -27,12 +27,17 @@ from makefile_guard import target_block
 
 ROOT = Path(__file__).resolve().parents[2]
 RECORD = ROOT / "docs/validation/first-public-release-artifact-evidence-validation-2026-06-23.md"
+RECONCILIATION_RECORD = (
+    ROOT
+    / "docs/validation/first-public-release-macos-artifact-publication-reconciliation-validation-2026-06-23.md"
+)
 VALIDATION_README = ROOT / "docs/validation/README.md"
 
 SOURCE_SHORT = "7c99a33"
 SOURCE_COMMIT = "7c99a338819d580dd0537af9062d069c052944ac"
 SOURCE_TREE = "7f7952c001256a493b3fce81ad7a1851a495a34a"
 MACOS_SHA256 = "35c7cc19ea51231edb1a0cfb6d160d3a2e620ba9357d116ef071f66ebc5e236f"
+PUBLISHED_MACOS_SHA256 = "9cb66dac20f93c55f574357dd0494e0cad711e1e5969cdfb29ae4c64ddf7c95d"
 NPM_SHASUM = "cf83c7e0196d451f169f3dcbee26e4d009e5da82"
 
 REQUIRED_EVIDENCE = (
@@ -141,6 +146,17 @@ class FirstPublicReleaseArtifactEvidenceTests(unittest.TestCase):
         self.assertIn("first public release artifact evidence validation", readme)
         self.assertIn("public artifact publication remains blocked", readme)
         self.assertIn("$(PYTHON) .github/scripts/test_first_public_release_artifact_evidence.py", block)
+
+    def test_published_macos_checksum_discrepancy_is_reconciled_before_linux(self) -> None:
+        reconciliation = normalized(RECONCILIATION_RECORD)
+        readme = normalized(VALIDATION_README)
+
+        self.assertIn(MACOS_SHA256, reconciliation)
+        self.assertIn(PUBLISHED_MACOS_SHA256, reconciliation)
+        self.assertIn("different artifact states", reconciliation)
+        self.assertIn("operator verification", reconciliation)
+        self.assertIn("Linux x64 CLI artifact publication remains blocked", reconciliation)
+        self.assertIn(RECONCILIATION_RECORD.name, readme)
 
 
 if __name__ == "__main__":
