@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import json
 import unittest
 from pathlib import Path
 
@@ -25,10 +26,16 @@ ROOT = Path(__file__).resolve().parents[2]
 README = ROOT / "README.md"
 EXAMPLES_README = ROOT / "examples/README.md"
 CLAIMS_GATE = ROOT / ".github/scripts/claims_gate.py"
+BOUNDARY_CLAIMS = ROOT / "docs/public-boundary-claims.json"
 
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def readme_boundary_claims() -> list[str]:
+    payload = json.loads(read(BOUNDARY_CLAIMS))
+    return payload["surfaces"]["readme"]["claims"]
 
 
 class PublicSurfacePostureTests(unittest.TestCase):
@@ -37,14 +44,9 @@ class PublicSurfacePostureTests(unittest.TestCase):
         normalized = " ".join(line.removeprefix("> ").strip() for line in text.splitlines())
 
         self.assertIn("public beta evaluation", text)
-        self.assertIn(
-            "Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, "
-            "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation.",
-            normalized,
-        )
+        for claim in readme_boundary_claims():
+            self.assertIn(claim, normalized)
         self.assertIn("Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`", text)
-        self.assertIn("npm `@docushell/ethos-pdf@0.1.0` package", normalized)
-        self.assertIn("macOS arm64/Linux x64 CLI artifacts", normalized)
         self.assertIn("Python `ethos-pdf` wheel", normalized)
         self.assertIn("caller-provided PDFium", text)
         self.assertIn("Windows packaged artifacts", text)

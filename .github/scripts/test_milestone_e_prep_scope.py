@@ -329,6 +329,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         block = target_block("milestone-e-prep")
 
         expected = [
+            "$(MAKE) light-check PYTHON=$(PYTHON)",
             "$(PYTHON) .github/scripts/test_execution_status.py",
             "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_public_surface_posture.py",
