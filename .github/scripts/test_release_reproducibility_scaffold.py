@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 
@@ -25,10 +26,16 @@ ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/release.yml"
 INVENTORY_WRITER = ROOT / ".github/scripts/write_release_artifact_inventory.py"
 INVENTORY_VALIDATOR = ROOT / ".github/scripts/validate_release_artifact_inventory.py"
+OPERATOR_RUNBOOK = ROOT / "docs/RELEASE_OPERATOR_RUNBOOK.md"
+RELEASE_NOTICES = ROOT / "docs/release-artifact-notices.md"
 
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def normalized(path: Path) -> str:
+    return re.sub(r"\s+", " ", read(path))
 
 
 class ReleaseReproducibilityScaffoldTests(unittest.TestCase):
@@ -52,6 +59,23 @@ class ReleaseReproducibilityScaffoldTests(unittest.TestCase):
         self.assertIn("macos-arm64", validator)
         self.assertIn("linux-x64", validator)
         self.assertIn("malformed sha256", validator)
+
+    def test_patch_release_artifact_refresh_prep_stays_bounded(self) -> None:
+        runbook = read(OPERATOR_RUNBOOK)
+        notices = read(RELEASE_NOTICES)
+        normalized_notices = normalized(RELEASE_NOTICES)
+        combined = f"{runbook}\n{notices}"
+
+        self.assertIn("@docushell/ethos-pdf@0.1.1", runbook)
+        self.assertIn("Patch 0.1.1 Artifact Refresh Prep", runbook)
+        self.assertIn("ethos 0.1.1", runbook)
+        self.assertIn("ethos 0.1.1", notices)
+        self.assertIn("packages/npm/ethos-pdf/vendor/manifest.json", combined)
+        self.assertIn("draft_not_release_ready", notices)
+        self.assertIn("publication: blocked", notices)
+        self.assertIn("does not authorize", normalized_notices)
+        self.assertIn("npm publication as blocked", runbook)
+        self.assertNotIn("@docushell/ethos-pdf@0.1.0` surfaces", combined)
 
 
 if __name__ == "__main__":

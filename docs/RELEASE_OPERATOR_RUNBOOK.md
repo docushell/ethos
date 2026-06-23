@@ -1,10 +1,10 @@
 # Release Operator Runbook
 
-Ethos is public beta evaluation for approved source, Rust crate, Python wheel, macOS arm64 CLI
-artifact, Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.1.0` surfaces. This runbook
-describes the operator checks required before any additional public promotion. It does not authorize
-new GitHub Release artifacts, new package publication, hosted surfaces, production positioning,
-Windows packaged artifacts, bundled project-maintained PDFium builds, or benchmark reports.
+Ethos is public beta evaluation for source, Rust crate, Python wheel, macOS arm64 CLI artifact,
+Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.1.1` surfaces. This runbook describes the
+operator checks required before any public promotion. It does not authorize new GitHub Release
+artifacts, new package publication, hosted surfaces, production positioning, Windows packaged
+artifacts, bundled project-maintained PDFium builds, or benchmark reports.
 
 ## Who Can Release
 
@@ -24,6 +24,23 @@ record names an operator or approving group, treat the workflow output as draft 
 7. Treat the downloaded archives as CI evidence only unless a separate approval record authorizes
    the exact public release artifact, version, checksum, and wording.
 
+## Patch 0.1.1 Artifact Refresh Prep
+
+The source tree now prepares `0.1.1` package and CLI version surfaces. The checked-in npm vendor
+manifest and vendor binaries must not be refreshed from local builds or unapproved archives. Before
+publishing or attaching any `0.1.1` artifact, the operator must:
+
+1. Produce macOS arm64 and Linux x64 draft CLI archives from the release workflow at the reviewed
+   source commit.
+2. Verify each archive with `smoke_release_cli_artifact.py` and require `ethos 0.1.1` in the smoke
+   evidence.
+3. Record each archive SHA256 and inventory in a dedicated approval record.
+4. Update `packages/npm/ethos-pdf/vendor/manifest.json` only from approved `0.1.1` archive
+   checksums.
+5. Run `npm run prepare:vendor -- <release-artifact-dir>` only against the approved archives.
+6. Treat npm publication as blocked until an approval record binds the refreshed vendor checksums,
+   package version, artifact source commit, and exact public wording.
+
 ## Local Checks Before Any Future Promotion
 
 ```sh
@@ -36,8 +53,7 @@ python3 .github/scripts/validate_release_artifact_inventory.py target/release-ar
 ## Promotion Gate
 
 Before creating or updating any public GitHub Release, package registry entry, or public release
-notes beyond the already-approved `v0.1.0` evaluation surfaces, the operator needs an approval
-record that binds:
+notes for `v0.1.1`, the operator needs an approval record that binds:
 
 - exact source commit;
 - artifact names and platform targets;
