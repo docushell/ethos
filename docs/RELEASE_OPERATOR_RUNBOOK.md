@@ -1,9 +1,10 @@
 # Release Operator Runbook
 
-Ethos is source-only pre-alpha. This runbook describes the current draft-artifact workflow and the
-checks an operator must complete before any future public promotion. It does not authorize GitHub
-Release publication, package publication, wheels, npm packages, hosted surfaces, or benchmark
-reports.
+Ethos is public beta evaluation for approved source, Rust crate, Python wheel, macOS arm64 CLI
+artifact, Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.1.0` surfaces. This runbook
+describes the operator checks required before any additional public promotion. It does not authorize
+new GitHub Release artifacts, new package publication, hosted surfaces, production positioning,
+Windows packaged artifacts, bundled project-maintained PDFium builds, or benchmark reports.
 
 ## Who Can Release
 
@@ -21,7 +22,7 @@ record names an operator or approving group, treat the workflow output as draft 
 6. Inspect each `*.inventory.json` and confirm it is marked draft/blocked, matches the archive
    filename, and records the expected platform target.
 7. Treat the downloaded archives as CI evidence only unless a separate approval record authorizes
-   public release artifacts.
+   the exact public release artifact, version, checksum, and wording.
 
 ## Local Checks Before Any Future Promotion
 
@@ -35,7 +36,8 @@ python3 .github/scripts/validate_release_artifact_inventory.py target/release-ar
 ## Promotion Gate
 
 Before creating or updating any public GitHub Release, package registry entry, or public release
-notes, the operator needs an approval record that binds:
+notes beyond the already-approved `v0.1.0` evaluation surfaces, the operator needs an approval
+record that binds:
 
 - exact source commit;
 - artifact names and platform targets;

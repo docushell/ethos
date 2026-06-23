@@ -54,6 +54,15 @@ EXACT_PUBLIC_WORDING = (
     "on crates.io at `0.1.0` for evaluation. Hosted surfaces, production positioning, and public "
     "benchmark claims remain blocked."
 )
+CURRENT_README_WORDING = (
+    "Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, "
+    "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether "
+    "AI citations are grounded in document evidence across native Ethos JSON and supported foreign "
+    "parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are "
+    "available on crates.io at `0.1.0` for evaluation. The Python `ethos-pdf` wheel, npm "
+    "`@docushell/ethos-pdf@0.1.0` package, and macOS arm64/Linux x64 CLI artifacts are available "
+    "for evaluation with caller-provided PDFium."
+)
 BOUNDED_INSTALLATION_WORDING = (
     "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are available on "
     "crates.io at `0.1.0` for evaluation. The Ethos CLI, wheels, npm packages, binaries, hosted "
@@ -155,14 +164,16 @@ class MilestoneEPackagePublicationPublicInstallationAvailabilityTests(unittest.T
             " ".join(line.removeprefix("> ").strip() for line in read(README).splitlines()),
         )
 
-        self.assertIn(EXACT_PUBLIC_WORDING, readme)
-        self.assertIn(BOUNDED_INSTALLATION_WORDING, readme)
+        self.assertIn(CURRENT_README_WORDING, readme)
         for command in INSTALL_COMMANDS:
             self.assertIn(command, readme)
-        self.assertIn("The Ethos CLI", readme)
-        self.assertIn("wheels, npm packages, binaries, hosted surfaces", readme)
-        self.assertIn("project-maintained PDFium builds", readme)
-        self.assertIn("`ethos-doc`, and `ethos-rag` remain blocked", readme)
+        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.0", readme)
+        self.assertIn("macOS arm64/Linux x64 CLI artifacts", readme)
+        self.assertIn("Windows packaged artifacts", readme)
+        self.assertIn("bundled project-maintained PDFium builds", readme)
+        self.assertIn("`ethos-doc`, `ethos-rag`", readme)
+        self.assertIn("public benchmark reports", readme)
+        self.assertIn("public benchmark claims", readme)
 
     def test_docs_reference_availability_and_retained_blockers(self) -> None:
         for path in (PREP_SCOPE, ROADMAP, EXECUTION_STATUS, VALIDATION_README):

@@ -1,8 +1,11 @@
 # Release Artifact Notices
 
-Ethos is source-only pre-alpha. This document defines the license and NOTICE bundle contract for
-future release artifacts; it does not authorize releases, package publication, binaries, wheels,
-npm updates, or public benchmark reports.
+Ethos has approved `v0.1.0` public beta evaluation surfaces for source, Rust crates, Python wheel,
+macOS arm64 CLI artifact, Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.1.0`. This
+document defines the license and NOTICE bundle contract for release artifacts; it does not
+authorize additional releases, package publication, binaries, wheels, npm updates, hosted surfaces,
+production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, or
+public benchmark reports.
 
 ## Artifact Classes
 
@@ -60,10 +63,17 @@ macOS arm64 and Linux x64. Those archives must include SHA256 checksums and an
 
 ## Release Gate
 
-Approved H2 artifact scope as of 2026-06-20 is `source-snapshot` only. This scope does not approve
-GitHub release binaries, wheels, npm packages, crate publication, hosted surfaces, public benchmark
-reports, or wording beyond the exact approved pre-alpha sentence. The approval record is
-`docs/validation/h2-source-snapshot-scope-approval-2026-06-20.md`.
+The current approved public beta evaluation surfaces are bound by their validation and decider
+records, including the first-public-release and npm-publication records under `docs/validation/`.
+Those records do not approve hosted surfaces, production positioning, Windows packaged artifacts,
+bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, public benchmark reports, or
+public benchmark claims.
+
+Historical H2 source-snapshot scope approval is recorded in
+`docs/validation/h2-source-snapshot-scope-approval-2026-06-20.md`. That record approved
+`source-snapshot` scope only for its reviewed boundary and did not approve GitHub release binaries,
+wheels, npm packages, crate publication, hosted surfaces, public benchmark reports, or broader
+wording.
 
 Before any public release artifact:
 

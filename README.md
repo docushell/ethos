@@ -8,16 +8,16 @@
 ![status: public beta](https://img.shields.io/badge/status-public--beta-blue)
 
 > **Status: public beta evaluation.**
-> Ethos is public beta for source and Rust crate evaluation. It verifies whether AI citations are grounded in document evidence across native Ethos JSON and supported foreign parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are available on crates.io at `0.1.0` for evaluation. Hosted surfaces, production positioning, and public benchmark claims remain blocked.
-> The approved source-repository public beta surface is this GitHub source repository only, pinned to reviewed commit
-> `902c423` and merged main commit `6019a97`, which have matching source trees. Excluded surfaces
-> include wheels, npm packages, binaries, release artifacts, hosted demos or APIs,
-> project-maintained PDFium builds, public benchmark reports, and performance, footprint, quality,
-> table-quality, or parser-quality claims.
-> Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are available on
-> crates.io at `0.1.0` for evaluation. The Ethos CLI, wheels, npm packages, binaries, hosted
-> surfaces, production positioning, public benchmark reports, public benchmark claims,
-> project-maintained PDFium builds, `ethos-doc`, and `ethos-rag` remain blocked.
+> Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact,
+> Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether
+> AI citations are grounded in document evidence across native Ethos JSON and supported foreign
+> parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are
+> available on crates.io at `0.1.0` for evaluation. The Python `ethos-pdf` wheel, npm
+> `@docushell/ethos-pdf@0.1.0` package, and macOS arm64/Linux x64 CLI artifacts are available
+> for evaluation with caller-provided PDFium. Hosted surfaces, production positioning, Windows
+> packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`,
+> public benchmark reports, public benchmark claims, and speed, footprint, parser-quality,
+> table-quality, or production claims remain blocked.
 > Current execution status and blockers live in `docs/execution-status.md`; public-release
 > hygiene gates live in `docs/public-release-checklist.md`.
 
@@ -31,11 +31,70 @@ inspection.
 One native parser. No JVM. No Python ML stack. No GPU. No OCR model in the base install.
 Same input, same pinned profile, same stable payload projection and fingerprint.
 
-## Install / Build from source
+## Why Ethos?
 
-Ethos is public beta for source and Rust crate evaluation. Rust library crates `ethos-doc-core`,
-`ethos-verify`, and `ethos-pdf` are available on crates.io at `0.1.0` for evaluation. There are no
-wheels, npm packages, binaries, hosted surfaces, or GitHub release artifacts.
+Many document tools focus on converting files into text, Markdown, or structured elements. Ethos
+focuses on the next step: making document evidence auditable.
+
+Ethos parses supported born-digital PDFs into source-bound artifacts, then verifies whether AI
+citations are grounded in that evidence. It keeps page identity, text spans, coordinates,
+fingerprints, crop descriptors, and source-capability warnings explicit so downstream systems can
+inspect what was actually proven.
+
+## What Ethos produces
+
+From supported born-digital PDFs and native Ethos JSON flows, Ethos can produce:
+
+- structured document JSON;
+- Markdown and plain text projections;
+- chunk records for downstream retrieval evaluation;
+- citation and verification reports;
+- page/text coordinates and crop descriptors;
+- optional source-bound rendered crop artifacts when PDFium is configured;
+- security warnings for document-level risk signals.
+
+## Where Ethos fits
+
+Ethos is useful when a pipeline needs to answer questions like:
+
+- Which document evidence supports this citation?
+- Did the cited text, page, or region actually exist in the source?
+- Is the citation stale relative to the source fingerprint?
+- Which source capabilities were missing or downgraded?
+- Can a reviewer inspect the cited region instead of trusting a model answer?
+
+Ethos should be evaluated as a local evidence-grounding and citation-verification tool, not as a
+general-purpose document conversion suite, OCR system, hosted parsing API, or benchmark-proven
+parser-quality leader. Other tools may focus on broad format conversion, OCR, office-document
+ingestion, Markdown conversion, hosted extraction, or production ETL. Ethos currently focuses on
+auditable evidence identity, source fingerprints, citation grounding, and explicit capability
+limits.
+
+## Supported today / not yet
+
+| Area | Current evaluation support |
+| --- | --- |
+| Born-digital PDF parsing | Narrow public beta path with caller-provided PDFium |
+| Native Ethos JSON verification | Supported in the current verification loop |
+| Foreign parser grounding | OpenDataLoader-style JSON adapter path |
+| Output formats | JSON, Markdown, text, chunks, verification reports, crop descriptors |
+| Distribution | Source, Rust crates, Python wheel, npm package, macOS arm64 CLI artifact, Linux x64 CLI artifact |
+| Local execution | Base flows run locally; PDFium is caller-provided |
+
+| Area | Current boundary |
+| --- | --- |
+| Scanned/image-only PDFs | No base OCR; fails with `ocr_required` |
+| Windows packaged artifacts | Blocked |
+| Hosted API or demo | Blocked |
+| Bundled project-maintained PDFium | Blocked |
+| Public benchmark claims | Blocked |
+| Production positioning | Blocked |
+
+## Install / Build
+
+Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, Linux x64 CLI
+artifact, and npm `@docushell/ethos-pdf` evaluation. PDFium-backed commands require
+caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.
 
 Prerequisites:
 
@@ -69,6 +128,19 @@ cargo add ethos-doc-core@0.1.0
 cargo add ethos-verify@0.1.0
 cargo add ethos-pdf@0.1.0
 ```
+
+To install the npm CLI package on a supported first-release platform:
+
+```bash
+npm install -g @docushell/ethos-pdf@0.1.0
+ethos --version
+```
+
+The npm package vendors only the approved macOS arm64 and Linux x64 CLI binaries. Unsupported
+platforms fail before invoking a binary. PDFium-backed commands fail until
+`ETHOS_PDFIUM_LIBRARY_PATH` points to a caller-provided PDFium dynamic library.
+
+GitHub Release `v0.1.0` also provides evaluation CLI archives for macOS arm64 and Linux x64.
 
 ## Minimal end-to-end example
 
@@ -188,8 +260,9 @@ Generated reports and crop descriptors are written under `target/verify-alpha/`.
 - Verification checks **evidence grounding** (the cited region exists, the text matches, the
   fingerprint is fresh). It is not a semantic correctness judgment of an answer.
 - Non-embedded CJK font fallback is out of Release 1 and warns explicitly.
-- Public benchmark reports, GitHub releases, binaries, wheels, npm updates, hosted surfaces,
-  and launch announcements are blocked until the release checklist is complete.
+- Public benchmark reports, Windows packaged artifacts, bundled project-maintained PDFium builds,
+  hosted surfaces, production positioning, and launch announcements remain blocked until a
+  dedicated approval record exists.
 
 It is built for teams that need trustworthy local document grounding, deterministic native parsing
 when they want it, and citation evidence that can be inspected instead of trusted blindly.
@@ -292,7 +365,7 @@ Report vulnerabilities through GitHub private vulnerability reporting. See `SECU
 | `ethos verify --fail-on-ungrounded` exits `1` | The command wrote a report, but at least one requested evidence check was stale, missing, mismatched, unsupported, or capability-blocked. Inspect `all_evidence_grounded`, `checks[].status`, `warnings`, and `capability_limits`. |
 | Scanned or image-only PDFs do not parse | Base Ethos does not include OCR. These inputs should fail with `ocr_required` until OCR support is explicitly added. |
 | Rendered crop PNGs are missing or skipped | Logical crop descriptor JSON works in the alpha path; rendered PNG crop artifacts require the source PDF path and a configured PDFium runtime. |
-| Release/tag workflow fails | Public releases, binaries, wheels, npm packages, hosted surfaces, and non-approved crates are blocked until they have separate approval. |
+| Release/tag workflow fails | Release, package, hosted, Windows, bundled PDFium, benchmark, and production surfaces are blocked unless a dedicated approval record authorizes the exact surface. |
 
 ## FAQ
 
@@ -319,8 +392,9 @@ Not in the base install. Scanned or image-only pages fail with `ocr_required`.
 ### Can I use Ethos in CI?
 
 The source-built CLI supports `--fail-on-ungrounded`, which exits `1` when verification completes
-but evidence is not fully grounded. Treat the current repo and approved Rust library crates as
-public beta evaluation, not a stable release artifact.
+but evidence is not fully grounded. Treat the current repo, approved Rust library crates, Python
+wheel, npm package, and macOS arm64/Linux x64 CLI artifacts as public beta evaluation, not stable
+production surfaces.
 
 ### Where are benchmark results?
 
