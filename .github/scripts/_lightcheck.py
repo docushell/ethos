@@ -25,6 +25,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def fail(message: str) -> None:
+    raise SystemExit(f"LIGHT-CHECK {message}")
+
+
 def git(*args: str) -> str:
     return subprocess.check_output(
         ["git", *args],
@@ -38,19 +42,24 @@ def base_ref() -> str:
     configured = os.environ.get("ETHOS_LIGHT_CHECK_BASE")
     if configured:
         try:
-            git("rev-parse", "--verify", configured)
-        except subprocess.CalledProcessError as exc:
-            raise RuntimeError(
-                f"ETHOS_LIGHT_CHECK_BASE does not resolve: {configured}"
-            ) from exc
+            git("cat-file", "-e", configured)
+        except subprocess.CalledProcessError:
+            fail(f"ETHOS_LIGHT_CHECK_BASE does not resolve: {configured}")
+        try:
+            git("merge-base", "--is-ancestor", configured, "HEAD")
+        except subprocess.CalledProcessError:
+            fail(f"ETHOS_LIGHT_CHECK_BASE is not an ancestor of HEAD: {configured}")
+        if git("rev-parse", configured) == git("rev-parse", "HEAD"):
+            fail(f"ETHOS_LIGHT_CHECK_BASE resolves to HEAD and would make the diff empty: {configured}")
         return configured
 
     try:
-        return git("merge-base", "HEAD", "origin/main")
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError(
-            "origin/main does not resolve; fetch origin/main or set ETHOS_LIGHT_CHECK_BASE"
-        ) from exc
+        base = git("merge-base", "HEAD", "origin/main")
+    except subprocess.CalledProcessError:
+        fail("origin/main does not resolve; fetch origin/main or set ETHOS_LIGHT_CHECK_BASE")
+    if base == git("rev-parse", "HEAD"):
+        fail("origin/main resolves to HEAD and would make the diff empty")
+    return base
 
 
 def changed_files() -> list[str]:
