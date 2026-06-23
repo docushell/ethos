@@ -43,6 +43,7 @@ pub(crate) const EXIT_USAGE: u8 = 2;
 pub(crate) const EXIT_UNGROUNDED: u8 = 1;
 pub(crate) const INTERNAL_GEOMETRY_PROBE_ENV: &str = "ETHOS_INTERNAL_GEOMETRY_PROBE";
 pub(crate) const INTERNAL_TABLE_CANDIDATE_PROBE_ENV: &str = "ETHOS_INTERNAL_TABLE_CANDIDATE_PROBE";
+pub(crate) const INTERNAL_PDFIUM_LOAD_PROBE_ENV: &str = "ETHOS_INTERNAL_PDFIUM_LOAD_PROBE";
 
 #[derive(Parser)]
 #[command(
@@ -77,6 +78,8 @@ enum Command {
     Verify(VerifyArgs),
     /// Recompute and check a document fingerprint
     Fingerprint(FingerprintArgs),
+    /// Diagnose local Ethos and caller-provided PDFium setup
+    Doctor(DoctorArgs),
     /// Source-only pre-alpha crop descriptor for one native document element
     #[command(name = "crop_element")]
     CropElement(CropElementArgs),
@@ -86,6 +89,9 @@ enum Command {
     /// Internal PDFium geometry source probe. Not a public CLI surface.
     #[command(name = "__pdfium-geometry-probe", hide = true)]
     PdfiumGeometryProbe(PdfiumGeometryProbeArgs),
+    /// Internal PDFium load probe. Not a public CLI surface.
+    #[command(name = "__pdfium-load-probe", hide = true)]
+    PdfiumLoadProbe,
     /// Internal deterministic table-candidate probe. Not a public CLI surface.
     #[command(name = "__table-candidate-probe", hide = true)]
     TableCandidateProbe(TableCandidateProbeArgs),
@@ -126,6 +132,13 @@ pub(crate) struct FingerprintArgs {
     /// Internal/test override for the parse timeout limit.
     #[arg(long, hide = true)]
     pub(crate) max_parse_ms: Option<u64>,
+}
+
+#[derive(Args)]
+pub(crate) struct DoctorArgs {
+    /// Fail if caller-provided PDFium is not configured and usable by Ethos.
+    #[arg(long)]
+    pub(crate) require_pdfium: bool,
 }
 
 #[derive(Args)]
@@ -352,9 +365,11 @@ fn run(cli: Cli) -> Result<(), Failure> {
         } => cmd::security::security_report(args),
         Command::Verify(args) => cmd::verify::verify(args),
         Command::Fingerprint(args) => cmd::doc::fingerprint(args),
+        Command::Doctor(args) => cmd::doctor::doctor(args),
         Command::CropElement(args) => cmd::crop::crop_element(args),
         Command::PdfiumWorker(args) => cmd::doc::pdfium_worker(args),
         Command::PdfiumGeometryProbe(args) => cmd::doc::pdfium_geometry_probe(args),
+        Command::PdfiumLoadProbe => cmd::doctor::pdfium_load_probe(),
         Command::TableCandidateProbe(args) => cmd::doc::table_candidate_probe(args),
     }
 }

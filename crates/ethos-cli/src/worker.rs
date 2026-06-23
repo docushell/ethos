@@ -102,6 +102,15 @@ pub(crate) fn parse_pdf_json_artifact_with_worker(
     Err(worker_failure(&output, diagnostics))
 }
 
+pub(crate) fn probe_pdfium_with_worker(timeout: Duration) -> Result<(), Failure> {
+    let command = pdfium_load_probe_command()?;
+    let output = run_worker_with_timeout(command, timeout)?;
+    if output.status.success() {
+        return Ok(());
+    }
+    Err(worker_failure(&output, false))
+}
+
 pub(crate) fn worker_json_artifact_header_bytes(
     document_fingerprint: &str,
     payload_sha256: &str,
@@ -141,6 +150,17 @@ fn pdfium_worker_command(
     if diagnostics {
         command.arg("--diagnostics");
     }
+    Ok(command)
+}
+
+fn pdfium_load_probe_command() -> Result<ProcessCommand, Failure> {
+    let mut command = ProcessCommand::new(
+        std::env::current_exe()
+            .map_err(|_| EthosError::internal("failed to locate current executable"))?,
+    );
+    command
+        .arg("__pdfium-load-probe")
+        .env(crate::INTERNAL_PDFIUM_LOAD_PROBE_ENV, "1");
     Ok(command)
 }
 
