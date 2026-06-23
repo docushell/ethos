@@ -12,8 +12,8 @@
 > Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether
 > AI citations are grounded in document evidence across native Ethos JSON and supported foreign
 > parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are
-> available on crates.io at `0.1.0` for evaluation. The Python `ethos-pdf` wheel, npm
-> `@docushell/ethos-pdf@0.1.0` package, and macOS arm64/Linux x64 CLI artifacts are available
+> available on crates.io at `0.1.1` for evaluation. The Python `ethos-pdf` wheel, npm
+> `@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 CLI artifacts are available
 > for evaluation with caller-provided PDFium. Hosted surfaces, production positioning, Windows
 > packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`,
 > public benchmark reports, public benchmark claims, and speed, footprint, parser-quality,
@@ -125,15 +125,15 @@ ethos --help
 To add the currently approved Rust library crates to another Rust project:
 
 ```bash
-cargo add ethos-doc-core@0.1.0
-cargo add ethos-verify@0.1.0
-cargo add ethos-pdf@0.1.0
+cargo add ethos-doc-core@0.1.1
+cargo add ethos-verify@0.1.1
+cargo add ethos-pdf@0.1.1
 ```
 
 To install the npm CLI package on a supported first-release platform:
 
 ```bash
-npm install -g @docushell/ethos-pdf@0.1.0
+npm install -g @docushell/ethos-pdf@0.1.1
 ethos --version
 ```
 
@@ -144,7 +144,7 @@ platforms fail before invoking a binary. PDFium-backed commands fail until
 Run `ethos doctor` for local setup diagnostics. Run `ethos doctor --require-pdfium` after setting
 `ETHOS_PDFIUM_LIBRARY_PATH` to check whether the configured PDFium is usable by Ethos.
 
-GitHub Release `v0.1.0` also provides evaluation CLI archives for macOS arm64 and Linux x64.
+GitHub Release `v0.1.1` also provides evaluation CLI archives for macOS arm64 and Linux x64.
 
 ## 2-minute PDF parse quickstart
 
@@ -187,7 +187,7 @@ The command exits `0` and writes a verification report shaped like this:
   "grounding": {
     "parser": {
       "name": "ethos",
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   },
   "checks": [

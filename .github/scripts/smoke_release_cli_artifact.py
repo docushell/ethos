@@ -104,7 +104,7 @@ def smoke_artifact(artifact_dir: Path, expected_version: str, target: str) -> Di
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifact-dir", required=True)
-    parser.add_argument("--expected-version", default="ethos 0.1.0")
+    parser.add_argument("--expected-version", default="ethos 0.1.1")
     parser.add_argument("--target", required=True, choices=("macos-arm64", "linux-x64"))
     parser.add_argument("--out")
     args = parser.parse_args()

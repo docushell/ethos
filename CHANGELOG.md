@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: prepare patch `0.1.1` workspace, Python, npm, CLI, and public install/version surfaces for review; no new hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, or `ethos-rag` boundary opens.
 - boundary-exception: add patch `0.1.1` readiness-prep record for review only; no version bump, release approval, artifact approval, package publication, or support-boundary change.
 - process-follow-up: record patch `0.1.1` readiness prep contents and retained blockers without approving release action or changing versions.
 - process-follow-up: keep validation-record integrity from treating decimal workflow run IDs as git refs.

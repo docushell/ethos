@@ -101,7 +101,7 @@ class MilestoneEPackagePublicationVersionTagPolicyTests(unittest.TestCase):
         adr = normalized(ROOT / "docs/decisions/ADR-0006-package-identifiers.md")
         record = normalized(RECORD)
 
-        self.assertIn('version = "0.1.0"', root_manifest)
+        self.assertIn('version = "0.1.1"', root_manifest)
         self.assertIn("0.0.0-reserved.0", adr)
         self.assertIn("Workspace package version `0.1.0` remains a source-tree version", record)
         self.assertIn("ADR-0006 crates.io reservations remain `0.0.0-reserved.0` placeholders", record)

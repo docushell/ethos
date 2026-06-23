@@ -121,7 +121,7 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
                 """#!/usr/bin/env python3
 import sys
 if sys.argv[1:] == ["--version"]:
-    print("ethos 0.1.0")
+    print("ethos 0.1.1")
     raise SystemExit(0)
 if sys.argv[1:] == ["--help"]:
     print("doc rag security verify fingerprint")
@@ -148,7 +148,7 @@ raise SystemExit(2)
                     "--artifact-dir",
                     str(artifact),
                     "--expected-version",
-                    "ethos 0.1.0",
+                    "ethos 0.1.1",
                     "--target",
                     "linux-x64",
                     "--out",
@@ -160,7 +160,7 @@ raise SystemExit(2)
             evidence = json.loads(smoke.read_text(encoding="utf-8"))
             self.assertEqual("ethos.release_artifact_smoke.v1", evidence["schema"])
             self.assertEqual("linux-x64", evidence["target"])
-            self.assertEqual("ethos 0.1.0", evidence["version_stdout"])
+            self.assertEqual("ethos 0.1.1", evidence["version_stdout"])
             self.assertEqual(12, evidence["missing_pdfium_exit_code"])
             self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", evidence["missing_pdfium_message"])
 

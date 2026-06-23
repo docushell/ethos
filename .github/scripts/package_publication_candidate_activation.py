@@ -29,7 +29,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 CORE_PACKAGE = "ethos-doc-core"
 CANDIDATE_PACKAGES = (CORE_PACKAGE, "ethos-verify", "ethos-pdf")
 CONSUMER_PACKAGE = "ethos-package-candidate-consumer"
@@ -140,8 +140,8 @@ def materialize_candidate_workspace(workspace: Path) -> None:
 
     replace_once_if_needed(
         workspace / "Cargo.toml",
-        'ethos-core = { path = "crates/ethos-core", version = "0.1.0", default-features = false }',
-        'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.0", default-features = false }',
+        'ethos-core = { path = "crates/ethos-core", version = "0.1.1", default-features = false }',
+        'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.1", default-features = false }',
     )
     root_manifest = workspace / "Cargo.toml"
     root_text = root_manifest.read_text(encoding="utf-8")
@@ -544,7 +544,7 @@ def source_manifests_have_activation_shape() -> bool:
     lockfile = (ROOT / "Cargo.lock").read_text(encoding="utf-8")
     return all(
         [
-            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.0", default-features = false }'
+            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.1", default-features = false }'
             in workspace,
             'name = "ethos-doc-core"' in core,
             '[lib]\nname = "ethos_core"' in core,

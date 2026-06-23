@@ -127,7 +127,7 @@ class MilestoneEPackagePublicationManifestActivationAppliedTests(unittest.TestCa
 
         self.assertIn(
             'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", '
-            'version = "0.1.0", default-features = false }',
+            'version = "0.1.1", default-features = false }',
             workspace,
         )
         self.assertIn('name = "ethos-doc-core"', core)

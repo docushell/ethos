@@ -29,7 +29,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
-PACKAGE_TARBALL = PACKAGE_DIR / "docushell-ethos-pdf-0.1.0.tgz"
+PACKAGE_TARBALL = PACKAGE_DIR / "docushell-ethos-pdf-0.1.1.tgz"
 RECORD = ROOT / "docs/validation/npm-tarball-candidate-evidence-validation-2026-06-23.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 SOURCE_SHORT = "5a956a5"
@@ -53,9 +53,14 @@ EXPECTED_VENDOR_SHA256 = {
     "vendor/ethos-linux-x64": "7ef796a6d1c86b7c3b5b1afe58dd9cc348b706cec441602833540d8a0c9260ac",
     "vendor/manifest.json": "0d03124957255dca55b7374e3318707da488f4b6648bfcec5e6e598079353b1f",
 }
-EXPECTED_PACK_SHASUM = "17a053c5ccb802bca2a295e1b1d0e6106c6a3ca6"
-EXPECTED_PACK_SHA256 = "8d0483d69a6de471dee52c8ef06d46712c06861682a0d7319ca573fdb1fe6376"
+EXPECTED_PACK_SHASUM = "d60100a96a27094ee4b5007699be9235e63ba991"
+EXPECTED_PACK_SHA256 = "1716bf6f0163672497aaa8d5d678759f251e07860f23fe1a3e04d85f6cc3052e"
 EXPECTED_PACK_INTEGRITY = (
+    "sha512-kYTwuzx0nZTHekEFP8iRB4q4eIacDN/nuRPlB7d0v3hhtipHSxeenbonQ78kTJKDjzew6YKK8ix/Uk27tZ7KoQ=="
+)
+EVIDENCE_PACK_SHASUM = "17a053c5ccb802bca2a295e1b1d0e6106c6a3ca6"
+EVIDENCE_PACK_SHA256 = "8d0483d69a6de471dee52c8ef06d46712c06861682a0d7319ca573fdb1fe6376"
+EVIDENCE_PACK_INTEGRITY = (
     "sha512-uWTHYd9Hfkm3nkahK2UchCMOVvYWe82z03jffZnX6aYPqYGd6LkuiEoTH5DjrXl+oA817EjlE88fIKBxZbhjMw=="
 )
 EXPECTED_NODE_VERSION = "v23.11.1"
@@ -103,8 +108,8 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
                 files = {entry["path"]: entry for entry in pack["files"]}
 
                 self.assertEqual("@docushell/ethos-pdf", pack["name"])
-                self.assertEqual("0.1.0", pack["version"])
-                self.assertEqual("docushell-ethos-pdf-0.1.0.tgz", pack["filename"])
+                self.assertEqual("0.1.1", pack["version"])
+                self.assertEqual("docushell-ethos-pdf-0.1.1.tgz", pack["filename"])
                 self.assertEqual(EXPECTED_FILES, set(files))
                 self.assertEqual(493, files["vendor/ethos-darwin-arm64"]["mode"])
                 self.assertEqual(493, files["vendor/ethos-linux-x64"]["mode"])
@@ -124,9 +129,9 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
         self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", read(RECORD))
         self.assertIn(f"npm tarball candidate source commit: `{SOURCE_COMMIT}`", record)
         self.assertIn(f"npm tarball candidate source tree: `{SOURCE_TREE}`", record)
-        self.assertIn(EXPECTED_PACK_SHASUM, record)
-        self.assertIn(EXPECTED_PACK_SHA256, record)
-        self.assertIn(EXPECTED_PACK_INTEGRITY, record)
+        self.assertIn(EVIDENCE_PACK_SHASUM, record)
+        self.assertIn(EVIDENCE_PACK_SHA256, record)
+        self.assertIn(EVIDENCE_PACK_INTEGRITY, record)
         self.assertIn(f"Node.js: `{EXPECTED_NODE_VERSION}`", record)
         self.assertIn(f"npm: `{EXPECTED_NPM_VERSION}`", record)
         self.assertIn("durable package-content provenance", record)

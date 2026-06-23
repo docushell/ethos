@@ -106,7 +106,7 @@ class MilestoneEPackagePublicationRealVersionSelectionPrepTests(unittest.TestCas
         verify = read(ROOT / "crates/ethos-verify/Cargo.toml")
         pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
 
-        self.assertIn('version = "0.1.0"', workspace)
+        self.assertIn('version = "0.1.1"', workspace)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', core)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', verify)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', pdf)

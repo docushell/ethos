@@ -138,7 +138,7 @@ class MilestoneEPackagePublicationTagBindingRefreshTests(unittest.TestCase):
             )
             self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', text, str(manifest))
 
-        self.assertIn('version = "0.1.0"', read(ROOT / "Cargo.toml"))
+        self.assertIn('version = "0.1.1"', read(ROOT / "Cargo.toml"))
 
         for manifest in (
             ROOT / "crates/ethos-cli/Cargo.toml",
