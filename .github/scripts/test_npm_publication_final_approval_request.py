@@ -24,16 +24,16 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RECORD = ROOT / "docs/validation/npm-publication-final-approval-request-validation-2026-06-23.md"
+RECORD = ROOT / "docs/validation/patch-0-1-1-npm-publication-approval-request-validation-2026-06-23.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 
-SOURCE_SHORT = "73f673c"
-SOURCE_COMMIT = "73f673cd4e6afcac6c96baffd743b339a89de96c"
-SOURCE_TREE = "942087f3d45f8d62e46f116b3f576b1713e17f37"
-PACKAGE = "@docushell/ethos-pdf@0.1.0"
-NPM_SHASUM = "17a053c5ccb802bca2a295e1b1d0e6106c6a3ca6"
-TARBALL_SHA256 = "8d0483d69a6de471dee52c8ef06d46712c06861682a0d7319ca573fdb1fe6376"
-INTEGRITY = "sha512-uWTHYd9Hfkm3nkahK2UchCMOVvYWe82z03jffZnX6aYPqYGd6LkuiEoTH5DjrXl+oA817EjlE88fIKBxZbhjMw=="
+SOURCE_SHORT = "af1851c"
+SOURCE_COMMIT = "af1851c88b2b7c17f706a902ca64987c2af082be"
+SOURCE_TREE = "7d501ab7fa5a585352918f65fbd2de1756a184b9"
+PACKAGE = "@docushell/ethos-pdf@0.1.1"
+NPM_SHASUM = "a150d08395724aa186d077074782413249a48689"
+TARBALL_SHA256 = "4b227d37bd125c6db1ffe40534f6cb5223a60073f26e3c4dbf60709561671d3d"
+INTEGRITY = "sha512-wVF4Ew6836sRncPZkvVieyQuo8FFbbBsIQ/vdupleUQZVX4YHgXb+lFZzZNcVB54Hh7srbbY17El4Z5sV7odhA=="
 NODE_VERSION = "v23.11.1"
 NPM_VERSION = "10.9.2"
 FORBIDDEN = (
@@ -70,8 +70,8 @@ class NpmPublicationFinalApprovalRequestTests(unittest.TestCase):
         record = normalized(RECORD)
 
         self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", read(RECORD))
-        self.assertIn(f"npm publication final approval request source commit: `{SOURCE_COMMIT}`", record)
-        self.assertIn(f"npm publication final approval request source tree: `{SOURCE_TREE}`", record)
+        self.assertIn(f"npm publication approval request source commit: `{SOURCE_COMMIT}`", record)
+        self.assertIn(f"npm publication approval request source tree: `{SOURCE_TREE}`", record)
         self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
         self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
 
@@ -80,20 +80,20 @@ class NpmPublicationFinalApprovalRequestTests(unittest.TestCase):
 
         for expected in (
             PACKAGE,
-            "docushell-ethos-pdf-0.1.0.tgz",
+            "docushell-ethos-pdf-0.1.1.tgz",
             NPM_SHASUM,
             TARBALL_SHA256,
             INTEGRITY,
             f"Node.js: `{NODE_VERSION}`",
             f"npm: `{NPM_VERSION}`",
-            "per-file SHA256 values are the durable cross-toolchain provenance binding",
+            "per-file vendor SHA256 values are the durable cross-toolchain provenance binding",
             "vendor/ethos-darwin-arm64",
             "vendor/ethos-linux-x64",
             "vendor/manifest.json",
-            "ethos 0.1.0",
+            "ethos 0.1.1",
             "exit code `12`",
             "ETHOS_PDFIUM_LIBRARY_PATH",
-            "npm-tarball-candidate-evidence-validation-2026-06-23.md",
+            "patch-0-1-1-npm-vendor-refresh-validation-2026-06-23.md",
             "npm-vendor-binary-payload-strategy-validation-2026-06-23.md",
         ):
             self.assertIn(expected, record)
@@ -139,7 +139,7 @@ class NpmPublicationFinalApprovalRequestTests(unittest.TestCase):
         readme = normalized(VALIDATION_README)
 
         self.assertIn(RECORD.name, readme)
-        self.assertIn("npm publication final approval request validation", readme)
+        self.assertIn("patch 0.1.1 npm publication approval request", readme.lower())
         self.assertIn("npm publish remains blocked", readme)
 
 
