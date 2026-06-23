@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: close patch `0.1.1` npm publication with exact registry evidence; no hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, or `ethos-rag` boundary change.
 - boundary-exception: approve exact patch `0.1.1` npm publication decision for later operator publish; no npm publish or support-boundary change.
 - boundary-exception: request patch `0.1.1` npm publication approval for exact refreshed package candidate; no npm publish or support-boundary change.
 - boundary-exception: refresh patch `0.1.1` npm vendor payload from published CLI artifacts; no npm publication or support-boundary change.

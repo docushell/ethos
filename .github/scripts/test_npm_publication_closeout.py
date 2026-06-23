@@ -27,16 +27,16 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RECORD = ROOT / "docs/validation/npm-publication-closeout-validation-2026-06-23.md"
+RECORD = ROOT / "docs/validation/patch-0-1-1-npm-publication-closeout-validation-2026-06-24.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 
-SOURCE_SHORT = "bbaa34d"
-SOURCE_COMMIT = "bbaa34dbf4d6dfaa2e8d637f22b5b494cd81d721"
-SOURCE_TREE = "ab3e1cf061ba5a9605e415177b299e5b06187d30"
+SOURCE_SHORT = "65360a9"
+SOURCE_COMMIT = "65360a9012104227ba939f6d30f2ec7b82b2ac4d"
+SOURCE_TREE = "85465e6eb1918155088e4d4cb4f5608f5ea65589"
 PACKAGE = "@docushell/ethos-pdf"
-VERSION = "0.1.0"
-SHASUM = "17a053c5ccb802bca2a295e1b1d0e6106c6a3ca6"
-INTEGRITY = "sha512-uWTHYd9Hfkm3nkahK2UchCMOVvYWe82z03jffZnX6aYPqYGd6LkuiEoTH5DjrXl+oA817EjlE88fIKBxZbhjMw=="
+VERSION = "0.1.1"
+SHASUM = "a150d08395724aa186d077074782413249a48689"
+INTEGRITY = "sha512-wVF4Ew6836sRncPZkvVieyQuo8FFbbBsIQ/vdupleUQZVX4YHgXb+lFZzZNcVB54Hh7srbbY17El4Z5sV7odhA=="
 
 
 def read(path: Path) -> str:
@@ -73,13 +73,13 @@ class NpmPublicationCloseoutTests(unittest.TestCase):
         record = normalized(RECORD)
 
         for expected in (
-            "+ @docushell/ethos-pdf@0.1.0",
+            "+ @docushell/ethos-pdf@0.1.1",
             "npm auto-corrected",
             '"bin[ethos]" script name was cleaned',
             SHASUM,
             INTEGRITY,
             "fileCount",
-            "3774465",
+            "3811617",
             "v23.11.1",
             "10.9.2",
             "ETHOS_PDFIUM_LIBRARY_PATH",
@@ -90,14 +90,15 @@ class NpmPublicationCloseoutTests(unittest.TestCase):
         self.assertEqual(VERSION, npm_view(f"{PACKAGE}", "version"))
         versions = json.loads(npm_view(f"{PACKAGE}", "versions", "--json"))
         self.assertIn("0.0.0-reserved.0", versions)
+        self.assertIn("0.1.0", versions)
         self.assertIn(VERSION, versions)
         dist = json.loads(npm_view(f"{PACKAGE}", "dist", "--json"))
         self.assertEqual(SHASUM, dist["shasum"])
         self.assertEqual(INTEGRITY, dist["integrity"])
         self.assertEqual(11, dist["fileCount"])
-        self.assertEqual(3774465, dist["unpackedSize"])
+        self.assertEqual(3811617, dist["unpackedSize"])
         self.assertEqual(
-            "https://registry.npmjs.org/@docushell/ethos-pdf/-/ethos-pdf-0.1.0.tgz",
+            "https://registry.npmjs.org/@docushell/ethos-pdf/-/ethos-pdf-0.1.1.tgz",
             dist["tarball"],
         )
 
