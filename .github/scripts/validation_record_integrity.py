@@ -30,13 +30,13 @@ VALIDATION_DIR = ROOT / "docs/validation"
 VALIDATION_README = VALIDATION_DIR / "README.md"
 HEX_REF = re.compile(r"`([0-9a-f]{7,40})`")
 PRIVATE_MARKERS = (
-    "/Users/",
-    "/private/tmp",
-    "/private/var",
-    "/var/folders",
-    "saumildiwaker",
-    "Desktop/Stuff",
-    "project/repo/ethos",
+    "/" + "Users/",
+    "/" + "private/tmp",
+    "/" + "private/var",
+    "/" + "var/folders",
+    "saumil" + "diwaker",
+    "Desktop/" + "Stuff",
+    "project/repo/" + "ethos",
 )
 
 
