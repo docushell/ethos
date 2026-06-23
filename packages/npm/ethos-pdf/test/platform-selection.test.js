@@ -71,11 +71,13 @@ assert.throws(
 
 const originalError = console.error;
 const errors = [];
+const missingVendorDir = fs.mkdtempSync(path.join(os.tmpdir(), "ethos-npm-missing-vendor-"));
 console.error = (message) => errors.push(String(message));
 try {
-  assert.strictEqual(main(["--version"]), 1);
+  assert.strictEqual(main(["--version"], "linux", "x64", missingVendorDir), 1);
 } finally {
   console.error = originalError;
+  fs.rmSync(missingVendorDir, { force: true, recursive: true });
 }
 assert.match(errors.join("\n"), /Ethos binary is missing from this package/);
 
