@@ -31,6 +31,17 @@ def is_golden_like(path: str) -> bool:
     name = Path(path).name
     return (
         "/goldens/" in path
+        or (
+            path.startswith("fixtures/")
+            and name
+            in {
+                "extraction.json",
+                "layout.json",
+                "markdown.md",
+                "tables.json",
+                "text.txt",
+            }
+        )
         or "fingerprint" in name
         or name.startswith("expected.")
         or name.endswith(".golden.json")
