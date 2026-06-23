@@ -568,6 +568,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   Release publication, npm vendor refresh, npm publication, hosted surfaces, production
   positioning, Windows packaged artifacts, bundled project-maintained PDFium, or public benchmark
   claims.
+- `patch-0-1-1-artifact-publication-approval-request-validation-2026-06-23.md` - patch 0.1.1
+  artifact publication approval request validation binds the exact requested macOS arm64 and Linux
+  x64 GitHub Release `v0.1.1` artifact names, SHA256 values, source commit, workflow evidence, and
+  bounded public wording for decider review while keeping publication, npm vendor refresh, npm
+  publication, hosted surfaces, production positioning, Windows packaged artifacts, bundled
+  project-maintained PDFium, and public benchmark claims blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
