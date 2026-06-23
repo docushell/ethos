@@ -28,6 +28,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/release.yml"
 SMOKE_SCRIPT = ROOT / ".github/scripts/smoke_release_cli_artifact.py"
+WORKFLOW_EVIDENCE_RECORD = (
+    ROOT / "docs/validation/first-public-release-linux-x64-workflow-evidence-validation-2026-06-23.md"
+)
+VALIDATION_README = ROOT / "docs/validation/README.md"
 
 
 def read(path: Path) -> str:
@@ -159,6 +163,18 @@ raise SystemExit(2)
             self.assertEqual("ethos 0.1.0", evidence["version_stdout"])
             self.assertEqual(12, evidence["missing_pdfium_exit_code"])
             self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", evidence["missing_pdfium_message"])
+
+    def test_linux_x64_workflow_evidence_records_green_run_and_remaining_blocker(self) -> None:
+        record = read(WORKFLOW_EVIDENCE_RECORD)
+        readme = read(VALIDATION_README)
+
+        self.assertIn("https://github.com/docushell/ethos/actions/runs/28004938177", record)
+        self.assertIn("cli-draft-artifacts (linux-x64, ubuntu-latest, tar.gz)`: passed", record)
+        self.assertIn("release artifact runtime smoke", record)
+        self.assertIn("artifact byte evidence still blocked", record)
+        self.assertIn("Linux x64 CLI artifact publication remains blocked", record)
+        self.assertIn("ethos-linux-x64.smoke.json", record)
+        self.assertIn(WORKFLOW_EVIDENCE_RECORD.name, readme)
 
 
 if __name__ == "__main__":

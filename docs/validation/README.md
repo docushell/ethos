@@ -510,6 +510,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   checked-in local draft checksum evidence and the handoff-reported published GitHub Release
   checksum; Linux x64 CLI artifact publication remains blocked until the published macOS release
   asset checksum sidecars are operator-verified and cited in Linux evidence.
+- `first-public-release-linux-x64-workflow-evidence-validation-2026-06-23.md` - first public
+  release Linux x64 workflow evidence validation records that release workflow run `28004938177`
+  passed the Linux x64 draft artifact job and runtime smoke step, while keeping Linux x64
+  publication blocked until the uploaded artifact bytes, checksum, inventory, and smoke sidecar are
+  retrieved and recorded.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
