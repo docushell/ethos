@@ -70,7 +70,7 @@ class PythonPublicApiPolicyTests(unittest.TestCase):
         text = pyproject_text()
 
         self.assertIn('name = "ethos-pdf"', text)
-        self.assertIn('version = "0.1.0"', text)
+        self.assertIn('version = "0.1.1"', text)
         self.assertIn('requires-python = ">=3.8"', text)
         self.assertIn('license = "Apache-2.0"', text)
         self.assertNotIn('license = { text = "Apache-2.0" }', text)
@@ -81,7 +81,7 @@ class PythonPublicApiPolicyTests(unittest.TestCase):
     def test_public_module_version_and_all_match_metadata(self) -> None:
         assignments = parse_init_assignments()
 
-        self.assertEqual("0.1.0", assignments["__version__"])
+        self.assertEqual("0.1.1", assignments["__version__"])
         self.assertEqual(list(PUBLIC_API), assignments["__all__"])
 
     def test_readme_documents_semver_and_exact_public_api_boundary(self) -> None:

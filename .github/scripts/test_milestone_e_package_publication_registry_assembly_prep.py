@@ -111,7 +111,7 @@ class MilestoneEPackagePublicationRegistryAssemblyPrepTests(unittest.TestCase):
         self.assertNotIn("publish = false", verify)
         self.assertNotIn("publish = false", pdf)
         self.assertIn(
-            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.0", default-features = false }',
+            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.1", default-features = false }',
             workspace,
         )
         self.assertIn('ethos-core = { workspace = true, features = ["grounding", "verify-types"] }', verify)

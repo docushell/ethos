@@ -59,8 +59,8 @@ CURRENT_README_WORDING = (
     "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether "
     "AI citations are grounded in document evidence across native Ethos JSON and supported foreign "
     "parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are "
-    "available on crates.io at `0.1.0` for evaluation. The Python `ethos-pdf` wheel, npm "
-    "`@docushell/ethos-pdf@0.1.0` package, and macOS arm64/Linux x64 CLI artifacts are available "
+    "available on crates.io at `0.1.1` for evaluation. The Python `ethos-pdf` wheel, npm "
+    "`@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 CLI artifacts are available "
     "for evaluation with caller-provided PDFium."
 )
 BOUNDED_INSTALLATION_WORDING = (
@@ -86,6 +86,11 @@ INSTALL_COMMANDS = (
     "cargo add ethos-doc-core@0.1.0",
     "cargo add ethos-verify@0.1.0",
     "cargo add ethos-pdf@0.1.0",
+)
+CURRENT_INSTALL_COMMANDS = (
+    "cargo add ethos-doc-core@0.1.1",
+    "cargo add ethos-verify@0.1.1",
+    "cargo add ethos-pdf@0.1.1",
 )
 FORBIDDEN_SCOPE_EXPANSION = [
     "public reports are approved",
@@ -165,9 +170,9 @@ class MilestoneEPackagePublicationPublicInstallationAvailabilityTests(unittest.T
         )
 
         self.assertIn(CURRENT_README_WORDING, readme)
-        for command in INSTALL_COMMANDS:
+        for command in CURRENT_INSTALL_COMMANDS:
             self.assertIn(command, readme)
-        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.0", readme)
+        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.1", readme)
         self.assertIn("macOS arm64/Linux x64 CLI artifacts", readme)
         self.assertIn("Windows packaged artifacts", readme)
         self.assertIn("bundled project-maintained PDFium builds", readme)

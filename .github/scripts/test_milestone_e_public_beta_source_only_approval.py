@@ -182,7 +182,7 @@ class MilestoneEPublicBetaSourceOnlyApprovalTests(unittest.TestCase):
         self.assertIn("cargo build --locked -p ethos-cli", readme)
         self.assertIn("make verify-alpha", readme)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", readme)
-        self.assertIn("npm `@docushell/ethos-pdf@0.1.0` package", normalized_readme)
+        self.assertIn("npm `@docushell/ethos-pdf@0.1.1` package", normalized_readme)
         self.assertIn("Windows packaged artifacts", normalized_readme)
         self.assertIn("bundled project-maintained PDFium builds", normalized_readme)
         self.assertIn("public benchmark reports", normalized_readme)

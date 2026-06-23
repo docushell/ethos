@@ -121,7 +121,7 @@ class MilestoneEPackagePublicationCandidateActivationEvidenceTests(unittest.Test
         commands = [entry["command"] for entry in result["commands"]]
 
         self.assertEqual("pass", result["status"])
-        self.assertEqual("0.1.0", result["candidate_version"])
+        self.assertEqual("0.1.1", result["candidate_version"])
         self.assertEqual(["ethos-doc-core", "ethos-verify", "ethos-pdf"], result["candidate_packages"])
         self.assertEqual("pass", result["registry_equivalent_consumer_check"])
         self.assertTrue(result["source_candidate_manifests_activated"])
@@ -151,7 +151,7 @@ class MilestoneEPackagePublicationCandidateActivationEvidenceTests(unittest.Test
         self.assertEqual({"ethos-doc-core", "ethos-verify", "ethos-pdf"}, set(artifacts))
         for artifact in artifacts.values():
             self.assertRegex(artifact["sha256"], r"^[0-9a-f]{64}$")
-            self.assertTrue(artifact["crate_file"].endswith("-0.1.0.crate"))
+            self.assertTrue(artifact["crate_file"].endswith("-0.1.1.crate"))
 
     def test_source_candidate_manifests_are_activated_and_profile_copy_is_in_sync(self) -> None:
         core_manifest = read(ROOT / "crates/ethos-core/Cargo.toml")
