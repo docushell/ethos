@@ -8,6 +8,17 @@
 The package does not bundle PDFium. Commands that parse or crop PDFs require a caller-provided
 PDFium dynamic library.
 
+## Vendor Binary Assembly
+
+Before publication, assemble the package vendor payload from the approved GitHub Release archives:
+
+```sh
+npm run prepare:vendor -- /absolute/path/to/release-assets
+```
+
+The directory must contain `ethos-macos-arm64.tar.gz` and `ethos-linux-x64.tar.gz`. The assembly
+script verifies the checksums in `vendor/manifest.json` before writing the packaged binaries.
+
 ## PDFium Setup
 
 1. Install or build PDFium for your platform.

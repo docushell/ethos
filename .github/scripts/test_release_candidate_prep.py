@@ -31,6 +31,7 @@ EXPECTED_COMMANDS = (
     "$(MAKE) python-surface-test PYTHON=$(PYTHON)",
     "$(PYTHON) .github/scripts/test_npm_binary_package_scaffold.py",
     "npm test --prefix packages/npm/ethos-pdf",
+    "$(PYTHON) .github/scripts/test_npm_vendor_binary_payload_strategy.py",
     "$(PYTHON) .github/scripts/test_pdfium_manual_setup_contract.py",
     "$(PYTHON) .github/scripts/test_release_artifact_workflow_prep.py",
     "$(PYTHON) .github/scripts/test_release_candidate_prep.py",

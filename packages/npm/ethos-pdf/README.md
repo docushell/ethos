@@ -22,5 +22,14 @@ Runtime behavior:
 - missing packaged binaries exit with a clear "binary is missing" message;
 - PDFium-backed commands preserve the Rust CLI exit code and stderr.
 
+Vendor assembly:
+
+- place the approved `ethos-macos-arm64.tar.gz` and `ethos-linux-x64.tar.gz` release archives in
+  one local directory;
+- run `npm run prepare:vendor -- <release-artifact-dir>`;
+- the script verifies the archive SHA256 values recorded in `vendor/manifest.json`;
+- the script extracts the `ethos` executable from each archive and writes
+  `vendor/ethos-darwin-arm64` and `vendor/ethos-linux-x64`.
+
 The package is not approved for public publication until the final release approval record binds the
 source commit, package version, artifact checksums, and exact public wording.
