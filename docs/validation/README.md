@@ -524,6 +524,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   artifact assets to existing GitHub Release `v0.1.0` for evaluation, updates bounded launch
   wording to include Linux x64, and keeps npm, hosted, production, public benchmark, Windows x64,
   bundled PDFium, `ethos-doc`, and `ethos-rag` blockers explicit.
+- `first-public-release-linux-x64-publication-closeout-validation-2026-06-23.md` - first public
+  release Linux x64 publication closeout validation records successful upload of the four approved
+  Linux x64 assets to GitHub Release `v0.1.0`, verifies the release asset list, and closes the
+  bounded first public evaluation release for approved source, Rust crate, Python wheel, macOS
+  arm64 CLI artifact, and Linux x64 CLI artifact surfaces.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
