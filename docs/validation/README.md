@@ -598,6 +598,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   npm candidate, binds the Node.js `v23.11.1` and npm `10.9.2` toolchain-qualified tarball
   metadata plus durable per-file vendor SHA256 values, keeps unrelated blockers explicit, and
   leaves operator publish pending as a separate credentialed action.
+- `patch-0-1-1-npm-publication-closeout-validation-2026-06-24.md` - patch 0.1.1 npm publication
+  closeout validation records successful publication of `@docushell/ethos-pdf@0.1.1`, registry
+  verification for version, latest tag, shasum, integrity, file count, unpacked size, npm's
+  publish-time bin-name auto-correction warning, and retained blockers.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
