@@ -34,6 +34,7 @@ EXPECTED_COMMANDS = (
     "$(PYTHON) .github/scripts/test_npm_vendor_binary_payload_strategy.py",
     "$(PYTHON) .github/scripts/test_npm_tarball_candidate_evidence.py",
     "$(PYTHON) .github/scripts/test_npm_publication_final_approval_request.py",
+    "$(PYTHON) .github/scripts/test_npm_publication_final_approval_decision.py",
     "$(PYTHON) .github/scripts/test_pdfium_manual_setup_contract.py",
     "$(PYTHON) .github/scripts/test_release_artifact_workflow_prep.py",
     "$(PYTHON) .github/scripts/test_release_candidate_prep.py",
