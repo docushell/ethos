@@ -561,6 +561,13 @@ recording the exact current-main source candidate and required follow-up evidenc
   on `main`; no release, tag, version bump, package publish, GitHub Release artifact, hosted
   surface, production positioning, Windows packaged artifact, bundled project-maintained PDFium
   build, public benchmark report, or public benchmark claim is approved.
+- `patch-0-1-1-release-artifact-evidence-validation-2026-06-23.md` - patch 0.1.1 release artifact
+  evidence validation records the green release workflow run, downloaded macOS arm64 and Linux x64
+  draft CLI artifacts, matching SHA256 sidecars, inventory status `draft_not_release_ready`,
+  `publication: blocked`, and smoke evidence showing `ethos 0.1.1`; it does not approve GitHub
+  Release publication, npm vendor refresh, npm publication, hosted surfaces, production
+  positioning, Windows packaged artifacts, bundled project-maintained PDFium, or public benchmark
+  claims.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

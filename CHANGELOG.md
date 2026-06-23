@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: record patch `0.1.1` draft artifact evidence for decider review; no GitHub Release publication, npm vendor refresh, npm publication, or support-boundary change.
 - boundary-exception: clarify patch `0.1.1` artifact and npm vendor refresh prep in operator docs; no artifact publication, package publication, or support-boundary change.
 - boundary-exception: prepare patch `0.1.1` workspace, Python, npm, CLI, and public install/version surfaces for review; no new hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, or `ethos-rag` boundary opens.
 - boundary-exception: add patch `0.1.1` readiness-prep record for review only; no version bump, release approval, artifact approval, package publication, or support-boundary change.
