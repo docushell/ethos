@@ -43,14 +43,23 @@ def main() -> int:
         failures.append("docs/public-boundary-claims.json must use version 1")
 
     for surface, spec in payload.get("surfaces", {}).items():
-        path = ROOT / spec["path"]
+        surface_path = spec.get("path")
+        if not surface_path:
+            failures.append(f"{surface}: missing path")
+            continue
+        path = (ROOT / surface_path).resolve()
+        try:
+            path.relative_to(ROOT)
+        except ValueError:
+            failures.append(f"{surface}: path escapes repository root: {surface_path}")
+            continue
         if not path.is_file():
-            failures.append(f"{surface}: missing surface file {spec['path']}")
+            failures.append(f"{surface}: missing surface file {surface_path}")
             continue
         text = normalized_markdown(path)
         for claim in spec.get("claims", []):
             if claim not in text:
-                failures.append(f"{surface}: missing boundary claim in {spec['path']}: {claim}")
+                failures.append(f"{surface}: missing boundary claim in {surface_path}: {claim}")
 
     if failures:
         for failure in failures:

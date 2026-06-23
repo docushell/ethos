@@ -17,11 +17,12 @@
 
 from __future__ import annotations
 
-import os
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+from _lightcheck import changed_files
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,34 +40,26 @@ PRIVATE_MARKERS = (
 )
 
 
-def git(*args: str) -> str:
-    return subprocess.check_output(["git", *args], cwd=ROOT, encoding="utf-8", stderr=subprocess.DEVNULL).strip()
-
-
-def base_ref() -> str:
-    configured = os.environ.get("ETHOS_LIGHT_CHECK_BASE")
-    if configured:
-        return configured
-    try:
-        return git("merge-base", "HEAD", "origin/main")
-    except subprocess.CalledProcessError:
-        return "HEAD"
-
-
 def changed_validation_records() -> list[Path]:
-    base = base_ref()
-    blobs = [
-        git("diff", "--name-only", f"{base}...HEAD"),
-        git("diff", "--name-only", "--cached"),
-        git("diff", "--name-only"),
-        git("ls-files", "--others", "--exclude-standard"),
+    paths = [
+        line
+        for line in changed_files()
+        if line.startswith("docs/validation/") and line.endswith(".md")
     ]
-    paths = sorted({line for blob in blobs for line in blob.splitlines() if line.startswith("docs/validation/") and line.endswith(".md")})
     return [ROOT / path for path in paths if (ROOT / path).is_file()]
 
 
 def object_exists(ref: str) -> bool:
-    return subprocess.run(["git", "cat-file", "-e", f"{ref}^{{commit}}"], cwd=ROOT).returncode == 0
+    type_result = subprocess.run(
+        ["git", "cat-file", "-t", ref],
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        encoding="utf-8",
+    )
+    if type_result.returncode != 0:
+        return False
+    return type_result.stdout.strip() in {"commit", "tree"}
 
 
 def main() -> int:
@@ -83,7 +76,7 @@ def main() -> int:
                 failures.append(f"{relative}: contains private marker {marker}")
         for ref in sorted(set(HEX_REF.findall(text))):
             if not object_exists(ref):
-                failures.append(f"{relative}: git commit ref does not exist: {ref}")
+                failures.append(f"{relative}: git commit/tree ref does not exist: {ref}")
 
     if failures:
         for failure in failures:

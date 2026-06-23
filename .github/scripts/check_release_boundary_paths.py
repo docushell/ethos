@@ -17,10 +17,10 @@
 
 from __future__ import annotations
 
-import os
-import subprocess
 import sys
 from pathlib import Path
+
+from _lightcheck import changed_files, has_added_marker
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -53,29 +53,6 @@ HEAVY_SUFFIXES = (
 )
 
 
-def git(*args: str) -> str:
-    return subprocess.check_output(["git", *args], cwd=ROOT, encoding="utf-8", stderr=subprocess.DEVNULL).strip()
-
-
-def base_ref() -> str:
-    configured = os.environ.get("ETHOS_LIGHT_CHECK_BASE")
-    if configured:
-        return configured
-    try:
-        return git("merge-base", "HEAD", "origin/main")
-    except subprocess.CalledProcessError:
-        return "HEAD"
-
-
-def changed_files() -> list[str]:
-    base = base_ref()
-    output = git("diff", "--name-only", f"{base}...HEAD")
-    staged = git("diff", "--name-only", "--cached")
-    unstaged = git("diff", "--name-only")
-    untracked = git("ls-files", "--others", "--exclude-standard")
-    return sorted({line for blob in (output, staged, unstaged, untracked) for line in blob.splitlines() if line})
-
-
 def is_heavy(path: str) -> bool:
     return (
         path in HEAVY_EXACT
@@ -85,9 +62,7 @@ def is_heavy(path: str) -> bool:
 
 
 def has_boundary_exception() -> bool:
-    if not CHANGELOG.is_file():
-        return False
-    return "boundary-exception:" in CHANGELOG.read_text(encoding="utf-8")
+    return has_added_marker(CHANGELOG, "boundary-exception")
 
 
 def main() -> int:
