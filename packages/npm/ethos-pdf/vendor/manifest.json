@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "package": "@docushell/ethos-pdf",
+  "targets": {
+    "darwin:arm64": {
+      "binary": "ethos-darwin-arm64",
+      "release_asset": "ethos-macos-arm64.tar.gz",
+      "release_asset_sha256": "9cb66dac20f93c55f574357dd0494e0cad711e1e5969cdfb29ae4c64ddf7c95d"
+    },
+    "linux:x64": {
+      "binary": "ethos-linux-x64",
+      "release_asset": "ethos-linux-x64.tar.gz",
+      "release_asset_sha256": "59dc8e4efe4888afe80d18488fd83b08293ea30550ab38961e601f8f18a098b2"
+    }
+  }
+}

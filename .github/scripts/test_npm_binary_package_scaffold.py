@@ -18,10 +18,13 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
+from shutil import copytree
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,6 +35,19 @@ README = PACKAGE_DIR / "README.md"
 QUICKSTART = PACKAGE_DIR / "QUICKSTART.md"
 NOTICE = PACKAGE_DIR / "NOTICE"
 LICENSE = PACKAGE_DIR / "LICENSE"
+VENDOR_MANIFEST = PACKAGE_DIR / "vendor" / "manifest.json"
+SUPPORTED_TARGETS = {
+    "darwin:arm64": {
+        "binary": "ethos-darwin-arm64",
+        "release_asset": "ethos-macos-arm64.tar.gz",
+        "release_asset_sha256": "9cb66dac20f93c55f574357dd0494e0cad711e1e5969cdfb29ae4c64ddf7c95d",
+    },
+    "linux:x64": {
+        "binary": "ethos-linux-x64",
+        "release_asset": "ethos-linux-x64.tar.gz",
+        "release_asset_sha256": "59dc8e4efe4888afe80d18488fd83b08293ea30550ab38961e601f8f18a098b2",
+    },
+}
 
 
 def read(path: Path) -> str:
@@ -46,10 +62,20 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertEqual("0.1.0", package["version"])
         self.assertEqual("Apache-2.0", package["license"])
         self.assertEqual({"ethos": "./bin/ethos-pdf.js"}, package["bin"])
+        self.assertIn("vendor/", package["files"])
         self.assertEqual(["darwin", "linux"], package["os"])
         self.assertEqual(["arm64", "x64"], package["cpu"])
         self.assertEqual(">=18", package["engines"]["node"])
         self.assertNotIn("dependencies", package)
+
+    def test_vendor_manifest_binds_supported_targets_to_release_assets(self) -> None:
+        manifest = json.loads(read(VENDOR_MANIFEST))
+
+        self.assertEqual(1, manifest["version"])
+        self.assertEqual("@docushell/ethos-pdf", manifest["package"])
+        self.assertEqual(SUPPORTED_TARGETS, manifest["targets"])
+        for target in manifest["targets"].values():
+            self.assertRegex(target["release_asset_sha256"], r"^[a-f0-9]{64}$")
 
     def test_platform_selection_is_exact_and_rejects_windows(self) -> None:
         result = subprocess.run(
@@ -85,8 +111,37 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertTrue(QUICKSTART.is_file())
         self.assertTrue(NOTICE.is_file())
         self.assertTrue(LICENSE.is_file())
+        self.assertTrue(VENDOR_MANIFEST.is_file())
         self.assertIn("no bundled PDFium", read(NOTICE))
         self.assertIn("Apache License", read(LICENSE))
+
+    def test_npm_pack_includes_vendor_payload_when_binaries_are_present(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="ethos-npm-pack-") as temp:
+            package_copy = Path(temp) / "ethos-pdf"
+            copytree(PACKAGE_DIR, package_copy, ignore=lambda _dir, names: {"node_modules", "*.tgz"} & set(names))
+            vendor = package_copy / "vendor"
+            for target in SUPPORTED_TARGETS.values():
+                binary = vendor / target["binary"]
+                binary.write_text("#!/usr/bin/env sh\nexit 0\n", encoding="utf-8")
+                binary.chmod(0o755)
+
+            result = subprocess.run(
+                ["npm", "pack", "--json", "--dry-run"],
+                cwd=package_copy,
+                check=False,
+                encoding="utf-8",
+                env={**os.environ, "npm_config_cache": str(Path(temp) / "npm-cache")},
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        pack = json.loads(result.stdout)[0]
+        files = {entry["path"] for entry in pack["files"]}
+        self.assertIn("vendor/manifest.json", files)
+        self.assertIn("vendor/ethos-darwin-arm64", files)
+        self.assertIn("vendor/ethos-linux-x64", files)
+        self.assertNotIn("vendor/ethos-win32-x64", files)
 
 
 if __name__ == "__main__":
