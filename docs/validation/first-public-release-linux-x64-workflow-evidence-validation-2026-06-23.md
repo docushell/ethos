@@ -55,7 +55,7 @@ The Linux x64 job passed these workflow steps:
 The local environment attempted to download the completed workflow artifacts with:
 
 ```sh
-GH_PROMPT_DISABLED=1 gh run download 28004938177 --dir /private/tmp/ethos-release-run-28004938177
+GH_PROMPT_DISABLED=1 gh run download 28004938177 --dir <artifact-download-dir>
 ```
 
 Result: **blocked by GitHub API timeout**.
