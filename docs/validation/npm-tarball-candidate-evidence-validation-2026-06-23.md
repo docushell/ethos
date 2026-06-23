@@ -52,6 +52,16 @@ Command:
 npm_config_cache=/tmp/ethos-npm-cache npm pack --json
 ```
 
+Pack toolchain:
+
+- Node.js: `v23.11.1`
+- npm: `10.9.2`
+
+The npm shasum, tarball SHA256, and integrity below are qualified by this exact pack toolchain
+because npm's gzip/tar serialization can change across npm versions. The durable package-content
+provenance is the packed file list plus the per-file SHA256 values for the release-derived vendor
+payload above.
+
 Candidate metadata:
 
 - package: `@docushell/ethos-pdf@0.1.0`
@@ -76,6 +86,16 @@ Packed file list:
 - `vendor/manifest.json`
 
 The vendor binaries were packed with executable mode `493`.
+
+## Provenance Chain
+
+- GitHub Release `v0.1.0` approved and published the macOS arm64 and Linux x64 CLI release
+  archives named above.
+- `scripts/prepare-vendor.js` extracted only the `ethos` executable from each approved archive.
+- The extracted vendor payload is durably bound by per-file SHA256:
+  `vendor/ethos-darwin-arm64`, `vendor/ethos-linux-x64`, and `vendor/manifest.json`.
+- The npm tarball shasum, tarball SHA256, and integrity are reproducibility checks only under
+  Node.js `v23.11.1` and npm `10.9.2`; they are not the primary cross-toolchain provenance binding.
 
 ## Local Install Smoke
 
@@ -140,4 +160,6 @@ OK
 ## Result
 
 The exact npm tarball candidate is assembled and locally validated. This closes the candidate
-evidence step for the npm lane but does not approve publication.
+evidence step for the npm lane but does not approve publication. Any operator reproducing or
+publishing this candidate must use Node.js `v23.11.1` and npm `10.9.2` for npm tarball hash
+comparison, and must treat the per-file vendor SHA256 values as the durable content binding.

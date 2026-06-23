@@ -34,6 +34,8 @@ PACKAGE = "@docushell/ethos-pdf@0.1.0"
 NPM_SHASUM = "17a053c5ccb802bca2a295e1b1d0e6106c6a3ca6"
 TARBALL_SHA256 = "8d0483d69a6de471dee52c8ef06d46712c06861682a0d7319ca573fdb1fe6376"
 INTEGRITY = "sha512-uWTHYd9Hfkm3nkahK2UchCMOVvYWe82z03jffZnX6aYPqYGd6LkuiEoTH5DjrXl+oA817EjlE88fIKBxZbhjMw=="
+NODE_VERSION = "v23.11.1"
+NPM_VERSION = "10.9.2"
 FORBIDDEN = (
     "npm publish is approved",
     "npm publication approved",
@@ -82,6 +84,9 @@ class NpmPublicationFinalApprovalRequestTests(unittest.TestCase):
             NPM_SHASUM,
             TARBALL_SHA256,
             INTEGRITY,
+            f"Node.js: `{NODE_VERSION}`",
+            f"npm: `{NPM_VERSION}`",
+            "per-file SHA256 values are the durable cross-toolchain provenance binding",
             "vendor/ethos-darwin-arm64",
             "vendor/ethos-linux-x64",
             "vendor/manifest.json",
@@ -99,6 +104,7 @@ class NpmPublicationFinalApprovalRequestTests(unittest.TestCase):
 
         self.assertIn("Manual action is required before any publish operation", record)
         self.assertIn("A decider must accept or reject this exact request packet.", record)
+        self.assertIn("Publication must use Node.js `v23.11.1` and npm `10.9.2`", record)
         self.assertIn("Only after that decision record passes may an operator run `npm publish`", record)
         self.assertIn("No `npm publish` command is approved by this request record.", record)
         self.assertIn("npm publication remains blocked pending explicit decider approval.", raw)

@@ -41,6 +41,12 @@ approve `ethos-doc`, approve `ethos-rag`, or approve public benchmark reports or
   `8d0483d69a6de471dee52c8ef06d46712c06861682a0d7319ca573fdb1fe6376`.
 - Exact npm integrity requested:
   `sha512-uWTHYd9Hfkm3nkahK2UchCMOVvYWe82z03jffZnX6aYPqYGd6LkuiEoTH5DjrXl+oA817EjlE88fIKBxZbhjMw==`.
+- Exact npm pack toolchain requested for reproducing those tarball hashes:
+  - Node.js: `v23.11.1`
+  - npm: `10.9.2`
+- Exact npm tarball hash interpretation requested: npm shasum, tarball SHA256, and integrity are
+  qualified by Node.js `v23.11.1` and npm `10.9.2`; per-file SHA256 values are the durable
+  cross-toolchain provenance binding.
 - Exact vendor binary payload requested:
   - `vendor/ethos-darwin-arm64`
     - SHA256: `f1b0c9e47dace78b7e8b3639b9445afe9a01f0db5d5b7b0bd81858def4df2cf5`
@@ -61,6 +67,8 @@ approve `ethos-doc`, approve `ethos-rag`, or approve public benchmark reports or
 
 - Only `@docushell/ethos-pdf@0.1.0` is in scope.
 - Publication must use the exact candidate tarball bound above.
+- Publication must use Node.js `v23.11.1` and npm `10.9.2` when reproducing npm pack hashes or
+  running `npm publish`.
 - Publication must not change the package version.
 - Publication must not add Windows packaged artifacts.
 - Publication must not add hosted surfaces.
@@ -86,6 +94,9 @@ No `npm publish` command is approved by this request record.
 - `npm test --prefix packages/npm/ethos-pdf` passed.
 - `python3 .github/scripts/test_milestone_e_source_snapshot_candidate_audit.py` passed.
 - `make release-candidate-prep PYTHON=python3` passed on merged `main` before this request branch.
+- Provenance chain confirmed: approved GitHub Release archives are bound by archive SHA256, the
+  extracted npm vendor payload is bound by per-file SHA256, and npm tarball hashes are
+  toolchain-qualified under Node.js `v23.11.1` and npm `10.9.2`.
 
 ## Non-Approvals
 
@@ -131,6 +142,6 @@ git diff --check
 
 ```text
 npm publication final approval request packet recorded
-Exact package, version, npm shasum, tarball SHA256, integrity, vendor payload checksums, installed CLI smoke, and PDFium boundary were recorded
+Exact package, version, toolchain-qualified npm shasum, toolchain-qualified tarball SHA256, toolchain-qualified integrity, durable vendor payload checksums, installed CLI smoke, and PDFium boundary were recorded
 npm publish remains blocked pending explicit decider approval and later operator action
 ```
