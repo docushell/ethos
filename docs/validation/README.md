@@ -529,6 +529,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   Linux x64 assets to GitHub Release `v0.1.0`, verifies the release asset list, and closes the
   bounded first public evaluation release for approved source, Rust crate, Python wheel, macOS
   arm64 CLI artifact, and Linux x64 CLI artifact surfaces.
+- `npm-vendor-binary-payload-strategy-validation-2026-06-23.md` - npm vendor binary payload
+  strategy validation records the local package contract for assembling approved macOS arm64 and
+  Linux x64 CLI release archives into `@docushell/ethos-pdf` `vendor/` binaries, including checksum
+  validation, target selection, and `npm pack` inclusion checks; npm publication remains blocked
+  until a dedicated decider binds the exact assembled npm tarball, source commit, package version,
+  vendor payload checksums, and public wording.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
