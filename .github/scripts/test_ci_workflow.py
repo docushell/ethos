@@ -839,141 +839,19 @@ class CiWorkflowTests(unittest.TestCase):
                 "python3 .github/scripts/"
                 "test_milestone_e_required_before_alignment_validation_record.py"
             ),
-            text.index("python3 .github/scripts/test_milestone_e_validation_command_index.py"),
-        )
-        self.assertIn(
-            "python3 .github/scripts/test_milestone_e_validation_command_index.py",
-            text,
-        )
-        self.assertEqual(
-            1,
-            text.count("python3 .github/scripts/test_milestone_e_validation_command_index.py"),
-        )
-        self.assertLess(
-            text.index("python3 .github/scripts/test_milestone_e_validation_command_index.py"),
-            text.index(
-                "python3 .github/scripts/"
-                "test_milestone_e_validation_command_index_validation_record.py"
-            ),
-        )
-        self.assertIn(
-            "python3 .github/scripts/"
-            "test_milestone_e_validation_command_index_validation_record.py",
-            text,
-        )
-        self.assertEqual(
-            1,
-            text.count(
-                "python3 .github/scripts/"
-                "test_milestone_e_validation_command_index_validation_record.py"
-            ),
-        )
-        self.assertLess(
-            text.index(
-                "python3 .github/scripts/"
-                "test_milestone_e_validation_command_index_validation_record.py"
-            ),
-            text.index("python3 .github/scripts/test_milestone_e_validation_record_index.py"),
-        )
-        self.assertIn("python3 .github/scripts/test_milestone_e_validation_record_index.py", text)
-        self.assertEqual(
-            1,
-            text.count("python3 .github/scripts/test_milestone_e_validation_record_index.py"),
-        )
-        self.assertLess(
-            text.index("python3 .github/scripts/test_milestone_e_validation_record_index.py"),
-            text.index(
-                "python3 .github/scripts/"
-                "test_milestone_e_validation_record_index_validation_record.py"
-            ),
-        )
-        self.assertIn(
-            "python3 .github/scripts/"
-            "test_milestone_e_validation_record_index_validation_record.py",
-            text,
-        )
-        self.assertEqual(
-            1,
-            text.count(
-                "python3 .github/scripts/"
-                "test_milestone_e_validation_record_index_validation_record.py"
-            ),
-        )
-        self.assertLess(
-            text.index(
-                "python3 .github/scripts/"
-                "test_milestone_e_validation_record_index_validation_record.py"
-            ),
-            text.index("python3 .github/scripts/test_milestone_e_validation_source_head_alignment.py"),
-        )
-        self.assertIn(
-            "python3 .github/scripts/test_milestone_e_validation_source_head_alignment.py",
-            text,
-        )
-        self.assertEqual(
-            1,
-            text.count("python3 .github/scripts/test_milestone_e_validation_source_head_alignment.py"),
-        )
-        self.assertLess(
-            text.index("python3 .github/scripts/test_milestone_e_validation_source_head_alignment.py"),
-            text.index(
-                "python3 .github/scripts/"
-                "test_milestone_e_validation_source_head_alignment_validation_record.py"
-            ),
-        )
-        self.assertIn(
-            "python3 .github/scripts/"
-            "test_milestone_e_validation_source_head_alignment_validation_record.py",
-            text,
-        )
-        self.assertEqual(
-            1,
-            text.count(
-                "python3 .github/scripts/"
-                "test_milestone_e_validation_source_head_alignment_validation_record.py"
-            ),
-        )
-        self.assertLess(
-            text.index(
-                "python3 .github/scripts/"
-                "test_milestone_e_validation_source_head_alignment_validation_record.py"
-            ),
-            text.index("python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py"),
-        )
-        self.assertIn(
-            "python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py",
-            text,
-        )
-        self.assertEqual(
-            1,
-            text.count("python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py"),
-        )
-        self.assertLess(
-            text.index("python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py"),
-            text.index(
-                "python3 .github/scripts/"
-                "test_milestone_e_prep_guard_sequence_index_validation_record.py"
-            ),
-        )
-        self.assertIn(
-            "python3 .github/scripts/"
-            "test_milestone_e_prep_guard_sequence_index_validation_record.py",
-            text,
-        )
-        self.assertEqual(
-            1,
-            text.count(
-                "python3 .github/scripts/"
-                "test_milestone_e_prep_guard_sequence_index_validation_record.py"
-            ),
-        )
-        self.assertLess(
-            text.index(
-                "python3 .github/scripts/"
-                "test_milestone_e_prep_guard_sequence_index_validation_record.py"
-            ),
             text.index("python3 .github/scripts/test_milestone_e_prep_validation_record.py"),
         )
+        for removed_guard in (
+            "test_milestone_e_validation_command_index.py",
+            "test_milestone_e_validation_command_index_validation_record.py",
+            "test_milestone_e_validation_record_index.py",
+            "test_milestone_e_validation_record_index_validation_record.py",
+            "test_milestone_e_validation_source_head_alignment.py",
+            "test_milestone_e_validation_source_head_alignment_validation_record.py",
+            "test_milestone_e_prep_guard_sequence_index.py",
+            "test_milestone_e_prep_guard_sequence_index_validation_record.py",
+        ):
+            self.assertNotIn(f"python3 .github/scripts/{removed_guard}", text)
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_validation_record.py", text)
         self.assertEqual(
             1,

@@ -152,12 +152,10 @@ class MilestoneEPackagePublicationRealVersionSelectionPrepTests(unittest.TestCas
         ci = read(CI_WORKFLOW)
         registry_guard = "test_milestone_e_package_publication_registry_assembly_prep.py"
         version_guard = "test_milestone_e_package_publication_real_version_selection_prep.py"
-        command_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + version_guard, text)
             self.assertLess(text.index(prefix + registry_guard), text.index(prefix + version_guard))
-            self.assertLess(text.index(prefix + version_guard), text.index(prefix + command_guard))
 
     def test_no_scope_expansion_language_or_private_paths(self) -> None:
         for path in (RECORD, ROOT / "docs/milestone-e-package-publication-approval-prep.json"):

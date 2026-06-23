@@ -238,13 +238,11 @@ class MilestoneEPublicFacingReadinessLedgerTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         package_gap_guard = "test_milestone_e_package_publication_pre_approval_gap_ledger.py"
         ledger_guard = "test_milestone_e_public_facing_readiness_ledger.py"
-        command_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + ledger_guard, text)
             self.assertEqual(1, text.count(prefix + ledger_guard))
             self.assertLess(text.index(prefix + package_gap_guard), text.index(prefix + ledger_guard))
-            self.assertLess(text.index(prefix + ledger_guard), text.index(prefix + command_guard))
 
     def test_ledger_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = json.dumps(load_json(LEDGER), sort_keys=True).lower()

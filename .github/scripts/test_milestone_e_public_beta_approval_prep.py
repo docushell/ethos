@@ -226,13 +226,11 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
         beta_record = (
             "$(PYTHON) .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py"
         )
-        index_guard = "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(beta_guard, block)
         self.assertIn(beta_record, block)
         self.assertLess(block.index(lane_record), block.index(beta_guard))
         self.assertLess(block.index(beta_guard), block.index(beta_record))
-        self.assertLess(block.index(beta_record), block.index(index_guard))
         self.assertLess(block.index(beta_record), block.index("git diff --check"))
 
     def test_ci_runs_public_beta_prep_once_in_order(self) -> None:
@@ -242,7 +240,6 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
         )
         beta_guard = "python3 .github/scripts/test_milestone_e_public_beta_approval_prep.py"
         beta_record = "python3 .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py"
-        index_guard = "python3 .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(beta_guard, text)
         self.assertIn(beta_record, text)
@@ -250,7 +247,6 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
         self.assertEqual(1, text.count(beta_record))
         self.assertLess(text.index(lane_record), text.index(beta_guard))
         self.assertLess(text.index(beta_guard), text.index(beta_record))
-        self.assertLess(text.index(beta_record), text.index(index_guard))
 
     def test_prep_avoids_scope_expansion_language(self) -> None:
         text = json.dumps(load_json(PREP), sort_keys=True).lower()

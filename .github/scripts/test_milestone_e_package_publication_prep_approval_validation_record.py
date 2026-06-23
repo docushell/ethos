@@ -163,13 +163,11 @@ class MilestoneEPackagePublicationPrepApprovalValidationRecordTests(unittest.Tes
         approval_record_guard = (
             "test_milestone_e_package_publication_prep_approval_validation_record.py"
         )
-        index_guard = "test_milestone_e_validation_record_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + approval_record_guard, text)
             self.assertLess(text.index(prefix + package_guard), text.index(prefix + old_record_guard))
             self.assertLess(text.index(prefix + old_record_guard), text.index(prefix + approval_record_guard))
-            self.assertLess(text.index(prefix + approval_record_guard), text.index(prefix + index_guard))
 
     def test_record_avoids_scope_expansion_language_and_private_paths(self) -> None:
         lower = normalized(RECORD).lower()

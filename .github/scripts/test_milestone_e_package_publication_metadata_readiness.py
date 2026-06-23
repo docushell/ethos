@@ -191,12 +191,10 @@ class MilestoneEPackagePublicationMetadataReadinessTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         evidence_guard = "test_milestone_e_package_publication_evidence_records.py"
         metadata_guard = "test_milestone_e_package_publication_metadata_readiness.py"
-        command_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + metadata_guard, text)
             self.assertLess(text.index(prefix + evidence_guard), text.index(prefix + metadata_guard))
-            self.assertLess(text.index(prefix + metadata_guard), text.index(prefix + command_guard))
 
     def test_no_scope_expansion_language_or_private_paths(self) -> None:
         paths = [RECORD]

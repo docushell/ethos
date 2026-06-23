@@ -161,12 +161,10 @@ class MilestoneEPackagePublicationDryRunSmokeTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         metadata_guard = "test_milestone_e_package_publication_metadata_readiness.py"
         smoke_guard = "test_milestone_e_package_publication_dry_run_smoke.py"
-        command_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + smoke_guard, text)
             self.assertLess(text.index(prefix + metadata_guard), text.index(prefix + smoke_guard))
-            self.assertLess(text.index(prefix + smoke_guard), text.index(prefix + command_guard))
 
         self.assertIn("make package-publication-dry-run-smoke", ci)
         self.assertLess(

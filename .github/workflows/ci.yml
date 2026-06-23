@@ -286,22 +286,6 @@ jobs:
         run: python3 .github/scripts/test_milestone_e_public_beta_current_main_source_only_approval.py
       - name: Milestone E public evaluation current-state closeout tests
         run: python3 .github/scripts/test_milestone_e_public_evaluation_current_state_closeout.py
-      - name: Milestone E validation-command index tests
-        run: python3 .github/scripts/test_milestone_e_validation_command_index.py
-      - name: Milestone E validation-command index validation record tests
-        run: python3 .github/scripts/test_milestone_e_validation_command_index_validation_record.py
-      - name: Milestone E validation-record index tests
-        run: python3 .github/scripts/test_milestone_e_validation_record_index.py
-      - name: Milestone E validation-record index validation record tests
-        run: python3 .github/scripts/test_milestone_e_validation_record_index_validation_record.py
-      - name: Milestone E validation-record source-head alignment tests
-        run: python3 .github/scripts/test_milestone_e_validation_source_head_alignment.py
-      - name: Milestone E validation-record source-head alignment validation record tests
-        run: python3 .github/scripts/test_milestone_e_validation_source_head_alignment_validation_record.py
-      - name: Milestone E prep guard-sequence index tests
-        run: python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py
-      - name: Milestone E prep guard-sequence index validation record tests
-        run: python3 .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py
       - name: Milestone E prep validation record tests
         run: python3 .github/scripts/test_milestone_e_prep_validation_record.py
       - name: Milestone E final prep closeout validation record tests

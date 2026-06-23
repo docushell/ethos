@@ -151,12 +151,10 @@ class MilestoneEPackagePublicationManifestActivationPrepTests(unittest.TestCase)
         ci = read(CI_WORKFLOW)
         tag_guard = "test_milestone_e_package_publication_tag_creation_prep.py"
         activation_guard = "test_milestone_e_package_publication_manifest_activation_prep.py"
-        command_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + activation_guard, text)
             self.assertLess(text.index(prefix + tag_guard), text.index(prefix + activation_guard))
-            self.assertLess(text.index(prefix + activation_guard), text.index(prefix + command_guard))
 
     def test_no_scope_expansion_language_or_private_paths(self) -> None:
         for path in (RECORD, ROOT / "docs/milestone-e-package-publication-approval-prep.json"):

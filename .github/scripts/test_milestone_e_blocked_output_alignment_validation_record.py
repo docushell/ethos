@@ -156,11 +156,9 @@ class MilestoneEBlockedOutputAlignmentValidationRecordTests(unittest.TestCase):
         record_guard = (
             "$(PYTHON) .github/scripts/test_milestone_e_blocked_output_alignment_validation_record.py"
         )
-        command_guard = "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py"
 
         self.assertIn(record_guard, block)
         self.assertLess(block.index(public_boundary_record), block.index(record_guard))
-        self.assertLess(block.index(record_guard), block.index(command_guard))
         self.assertLess(block.index(record_guard), block.index("git diff --check"))
 
     def test_ci_runs_blocked_output_record_guard_once_in_order(self) -> None:
@@ -171,12 +169,10 @@ class MilestoneEBlockedOutputAlignmentValidationRecordTests(unittest.TestCase):
         record_guard = (
             "python3 .github/scripts/test_milestone_e_blocked_output_alignment_validation_record.py"
         )
-        command_guard = "python3 .github/scripts/test_milestone_e_validation_command_index.py"
 
         self.assertIn(record_guard, text)
         self.assertEqual(1, text.count(record_guard))
         self.assertLess(text.index(public_boundary_record), text.index(record_guard))
-        self.assertLess(text.index(record_guard), text.index(command_guard))
 
     def test_record_avoids_scope_expansion_language(self) -> None:
         text = normalized_record_text().lower()

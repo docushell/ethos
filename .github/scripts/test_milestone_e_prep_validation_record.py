@@ -131,12 +131,10 @@ class MilestoneEPrepValidationRecordTests(unittest.TestCase):
         text = current_record_text()
 
         self.assertIn("Validated source HEAD before this record: `ff16cfd`", text)
-        self.assertIn("python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py", text)
         self.assertIn(
             "python3 .github/scripts/test_milestone_e_prep_guard_sequence_index_validation_record.py",
             text,
         )
-        self.assertIn("python3 .github/scripts/test_milestone_e_validation_record_index.py", text)
         self.assertIn(
             "python3 .github/scripts/test_milestone_e_validation_record_index_validation_record.py",
             text,

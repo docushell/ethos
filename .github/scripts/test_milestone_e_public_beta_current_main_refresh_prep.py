@@ -224,13 +224,11 @@ class MilestoneEPublicBetaCurrentMainRefreshPrepTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
         refresh_guard = "test_milestone_e_public_beta_current_main_refresh_prep.py"
-        command_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + refresh_guard, text)
             self.assertEqual(1, text.count(prefix + refresh_guard))
             self.assertLess(text.index(prefix + readiness_guard), text.index(prefix + refresh_guard))
-            self.assertLess(text.index(prefix + refresh_guard), text.index(prefix + command_guard))
 
     def test_refresh_prep_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = json.dumps(load_json(PREP), sort_keys=True).lower()

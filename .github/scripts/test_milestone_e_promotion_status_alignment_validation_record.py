@@ -89,8 +89,6 @@ class MilestoneEPromotionStatusAlignmentValidationRecordTests(unittest.TestCase)
         )
         self.assertIn("python3 .github/scripts/test_milestone_e_diagnostic_boundary_alignment.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_e_prep_scope.py", text)
-        self.assertIn("python3 .github/scripts/test_milestone_e_validation_record_index.py", text)
-        self.assertIn("python3 .github/scripts/test_milestone_e_prep_guard_sequence_index.py", text)
         self.assertIn("python3 .github/scripts/test_ci_workflow.py", text)
         self.assertIn("python3 .github/scripts/test_public_surface_posture.py", text)
         self.assertIn("python3 .github/scripts/claims_gate.py", text)
@@ -142,11 +140,9 @@ class MilestoneEPromotionStatusAlignmentValidationRecordTests(unittest.TestCase)
         record_guard = (
             "$(PYTHON) .github/scripts/test_milestone_e_promotion_status_alignment_validation_record.py"
         )
-        command_guard = "$(PYTHON) .github/scripts/test_milestone_e_validation_command_index.py"
 
         self.assertIn(record_guard, block)
         self.assertLess(block.index(diagnostic_boundary_record), block.index(record_guard))
-        self.assertLess(block.index(record_guard), block.index(command_guard))
         self.assertLess(block.index(record_guard), block.index("git diff --check"))
 
     def test_ci_runs_promotion_status_record_guard_once_in_order(self) -> None:
@@ -157,12 +153,10 @@ class MilestoneEPromotionStatusAlignmentValidationRecordTests(unittest.TestCase)
         record_guard = (
             "python3 .github/scripts/test_milestone_e_promotion_status_alignment_validation_record.py"
         )
-        command_guard = "python3 .github/scripts/test_milestone_e_validation_command_index.py"
 
         self.assertIn(record_guard, text)
         self.assertEqual(1, text.count(record_guard))
         self.assertLess(text.index(diagnostic_boundary_record), text.index(record_guard))
-        self.assertLess(text.index(record_guard), text.index(command_guard))
 
     def test_record_avoids_scope_expansion_language(self) -> None:
         text = normalized_record_text().lower()

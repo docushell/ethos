@@ -299,13 +299,11 @@ class MilestoneEPublicApprovalLaneBlockerTests(unittest.TestCase):
         lane_record_guard = (
             "$(PYTHON) .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py"
         )
-        index_guard = "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(lane_guard, block)
         self.assertIn(lane_record_guard, block)
         self.assertLess(block.index(required_before_record), block.index(lane_guard))
         self.assertLess(block.index(lane_guard), block.index(lane_record_guard))
-        self.assertLess(block.index(lane_record_guard), block.index(index_guard))
         self.assertLess(block.index(lane_record_guard), block.index("git diff --check"))
 
     def test_ci_runs_lane_guard_once_in_order(self) -> None:
@@ -317,7 +315,6 @@ class MilestoneEPublicApprovalLaneBlockerTests(unittest.TestCase):
         lane_record_guard = (
             "python3 .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py"
         )
-        index_guard = "python3 .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(lane_guard, text)
         self.assertIn(lane_record_guard, text)
@@ -325,7 +322,6 @@ class MilestoneEPublicApprovalLaneBlockerTests(unittest.TestCase):
         self.assertEqual(1, text.count(lane_record_guard))
         self.assertLess(text.index(required_before_record), text.index(lane_guard))
         self.assertLess(text.index(lane_guard), text.index(lane_record_guard))
-        self.assertLess(text.index(lane_record_guard), text.index(index_guard))
 
     def test_ledger_avoids_scope_expansion_language(self) -> None:
         text = json.dumps(load_json(LEDGER), sort_keys=True).lower()

@@ -162,13 +162,11 @@ class MilestoneEPublicEvaluationCurrentStateCloseoutTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         source_approval_guard = "test_milestone_e_public_beta_current_main_source_only_approval.py"
         closeout_guard = "test_milestone_e_public_evaluation_current_state_closeout.py"
-        command_index_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + closeout_guard, text)
             self.assertEqual(1, text.count(prefix + closeout_guard))
             self.assertLess(text.index(prefix + source_approval_guard), text.index(prefix + closeout_guard))
-            self.assertLess(text.index(prefix + closeout_guard), text.index(prefix + command_index_guard))
 
     def test_record_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = normalized(RECORD).lower()

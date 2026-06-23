@@ -201,14 +201,10 @@ class MilestoneEPackagePublicationEvidenceRecordTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         prep_approval_guard = "test_milestone_e_package_publication_prep_approval_validation_record.py"
         evidence_guard = "test_milestone_e_package_publication_evidence_records.py"
-        command_guard = "test_milestone_e_validation_command_index.py"
-        index_guard = "test_milestone_e_validation_record_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + evidence_guard, text)
             self.assertLess(text.index(prefix + prep_approval_guard), text.index(prefix + evidence_guard))
-            self.assertLess(text.index(prefix + evidence_guard), text.index(prefix + command_guard))
-            self.assertLess(text.index(prefix + evidence_guard), text.index(prefix + index_guard))
 
     def test_records_avoid_scope_expansion_language_and_private_paths(self) -> None:
         for name in RECORDS.values():

@@ -130,12 +130,10 @@ class MilestoneEPublicBetaRequiredEvidenceRecordTests(unittest.TestCase):
         )
         evidence_guard = "$(PYTHON) .github/scripts/test_milestone_e_public_beta_required_evidence_records.py"
         package_guard = "$(PYTHON) .github/scripts/test_milestone_e_package_publication_approval_prep.py"
-        index_guard = "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(evidence_guard, block)
         self.assertLess(block.index(beta_record), block.index(evidence_guard))
         self.assertLess(block.index(evidence_guard), block.index(package_guard))
-        self.assertLess(block.index(evidence_guard), block.index(index_guard))
         self.assertLess(block.index(evidence_guard), block.index("git diff --check"))
 
     def test_ci_runs_required_evidence_once_in_order(self) -> None:
@@ -145,13 +143,11 @@ class MilestoneEPublicBetaRequiredEvidenceRecordTests(unittest.TestCase):
         )
         evidence_guard = "python3 .github/scripts/test_milestone_e_public_beta_required_evidence_records.py"
         package_guard = "python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py"
-        index_guard = "python3 .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(evidence_guard, text)
         self.assertEqual(1, text.count(evidence_guard))
         self.assertLess(text.index(beta_record), text.index(evidence_guard))
         self.assertLess(text.index(evidence_guard), text.index(package_guard))
-        self.assertLess(text.index(evidence_guard), text.index(index_guard))
 
     def test_records_avoid_scope_expansion_language(self) -> None:
         for record in RECORDS:

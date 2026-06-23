@@ -135,11 +135,9 @@ class MilestoneEPublicBoundaryAlignmentValidationRecordTests(unittest.TestCase):
         record_guard = (
             "$(PYTHON) .github/scripts/test_milestone_e_public_boundary_alignment_validation_record.py"
         )
-        index_guard = "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(record_guard, block)
         self.assertLess(block.index(schema_record_guard), block.index(record_guard))
-        self.assertLess(block.index(record_guard), block.index(index_guard))
         self.assertLess(block.index(record_guard), block.index("git diff --check"))
 
     def test_ci_runs_public_boundary_record_guard_once_in_order(self) -> None:
@@ -150,12 +148,10 @@ class MilestoneEPublicBoundaryAlignmentValidationRecordTests(unittest.TestCase):
         record_guard = (
             "python3 .github/scripts/test_milestone_e_public_boundary_alignment_validation_record.py"
         )
-        index_guard = "python3 .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(record_guard, text)
         self.assertEqual(1, text.count(record_guard))
         self.assertLess(text.index(schema_record_guard), text.index(record_guard))
-        self.assertLess(text.index(record_guard), text.index(index_guard))
 
     def test_record_avoids_scope_expansion_language(self) -> None:
         text = normalized_record_text().lower()
