@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- boundary-exception: add patch `0.1.1` readiness-prep record for review only; no version bump, release approval, artifact approval, package publication, or support-boundary change.
+- process-follow-up: record patch `0.1.1` readiness prep contents and retained blockers without approving release action or changing versions.
+- process-follow-up: keep validation-record integrity from treating decimal workflow run IDs as git refs.
 - cli: point missing or unusable PDFium errors to `ethos doctor`, `ethos doctor --require-pdfium`, and the manual setup doc without changing exit codes.
 - docs: add a bounded 2-minute PDF parse quickstart using the synthetic born-digital fixture and `ethos doctor --require-pdfium`.
 - boundary-exception: add `ethos doctor` docs pointer for caller-provided PDFium diagnostics; no PDFium posture or support-boundary change.

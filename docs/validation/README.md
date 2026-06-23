@@ -555,6 +555,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   shasum, integrity, file count, unpacked size, npm's publish-time bin-name auto-correction warning,
   and retained blockers for hosted, production, Windows, bundled PDFium, `ethos-doc`, `ethos-rag`,
   and public benchmark surfaces.
+- `patch-0-1-1-readiness-prep-validation-2026-06-23.md` - patch 0.1.1 readiness prep validation
+  records candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change
+  guarding, the 2-minute PDF parse quickstart, and improved missing/unusable PDFium guidance landed
+  on `main`; no release, tag, version bump, package publish, GitHub Release artifact, hosted
+  surface, production positioning, Windows packaged artifact, bundled project-maintained PDFium
+  build, public benchmark report, or public benchmark claim is approved.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

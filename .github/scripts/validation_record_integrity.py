@@ -28,7 +28,7 @@ from _lightcheck import changed_files
 ROOT = Path(__file__).resolve().parents[2]
 VALIDATION_DIR = ROOT / "docs/validation"
 VALIDATION_README = VALIDATION_DIR / "README.md"
-HEX_REF = re.compile(r"`([0-9a-f]{7,40})`")
+HEX_REF = re.compile(r"`(?=[0-9a-f]*[a-f])([0-9a-f]{7,40})`")
 PRIVATE_MARKERS = (
     "/" + "Users/",
     "/" + "private/tmp",
