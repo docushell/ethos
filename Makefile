@@ -283,6 +283,7 @@ release-candidate-prep:
 	$(PYTHON) .github/scripts/test_release_artifact_workflow_prep.py
 	$(PYTHON) .github/scripts/test_patch_0_1_1_release_artifact_evidence.py
 	$(PYTHON) .github/scripts/test_patch_0_1_1_artifact_publication_approval_request.py
+	$(PYTHON) .github/scripts/test_patch_0_1_1_artifact_publication_approval_decision.py
 	$(PYTHON) .github/scripts/test_release_candidate_prep.py
 	$(PYTHON) .github/scripts/test_release_reproducibility_scaffold.py
 	$(PYTHON) .github/scripts/test_launch_copy_approval_scaffold.py
