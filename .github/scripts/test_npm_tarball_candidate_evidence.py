@@ -58,6 +58,8 @@ EXPECTED_PACK_SHA256 = "8d0483d69a6de471dee52c8ef06d46712c06861682a0d7319ca573fd
 EXPECTED_PACK_INTEGRITY = (
     "sha512-uWTHYd9Hfkm3nkahK2UchCMOVvYWe82z03jffZnX6aYPqYGd6LkuiEoTH5DjrXl+oA817EjlE88fIKBxZbhjMw=="
 )
+EXPECTED_NODE_VERSION = "v23.11.1"
+EXPECTED_NPM_VERSION = "10.9.2"
 
 
 def sha256(path: Path) -> str:
@@ -78,6 +80,12 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
             self.assertEqual(expected, sha256(PACKAGE_DIR / relative_path))
 
     def test_npm_pack_candidate_contents_and_checksums(self) -> None:
+        node_version = subprocess.check_output(["node", "--version"], encoding="utf-8").strip()
+        npm_version = subprocess.check_output(["npm", "--version"], encoding="utf-8").strip()
+        exact_pack_toolchain = (
+            node_version == EXPECTED_NODE_VERSION and npm_version == EXPECTED_NPM_VERSION
+        )
+
         with tempfile.TemporaryDirectory(prefix="ethos-npm-candidate-") as temp:
             env = {**os.environ, "npm_config_cache": str(Path(temp) / "npm-cache")}
             result = subprocess.run(
@@ -97,12 +105,15 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
                 self.assertEqual("@docushell/ethos-pdf", pack["name"])
                 self.assertEqual("0.1.0", pack["version"])
                 self.assertEqual("docushell-ethos-pdf-0.1.0.tgz", pack["filename"])
-                self.assertEqual(EXPECTED_PACK_SHASUM, pack["shasum"])
-                self.assertEqual(EXPECTED_PACK_INTEGRITY, pack["integrity"])
                 self.assertEqual(EXPECTED_FILES, set(files))
                 self.assertEqual(493, files["vendor/ethos-darwin-arm64"]["mode"])
                 self.assertEqual(493, files["vendor/ethos-linux-x64"]["mode"])
-                self.assertEqual(EXPECTED_PACK_SHA256, sha256(PACKAGE_TARBALL))
+                for relative_path, expected in EXPECTED_VENDOR_SHA256.items():
+                    self.assertEqual(expected, sha256(PACKAGE_DIR / relative_path))
+                if exact_pack_toolchain:
+                    self.assertEqual(EXPECTED_PACK_SHASUM, pack["shasum"])
+                    self.assertEqual(EXPECTED_PACK_INTEGRITY, pack["integrity"])
+                    self.assertEqual(EXPECTED_PACK_SHA256, sha256(PACKAGE_TARBALL))
             finally:
                 PACKAGE_TARBALL.unlink(missing_ok=True)
 
@@ -116,6 +127,10 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
         self.assertIn(EXPECTED_PACK_SHASUM, record)
         self.assertIn(EXPECTED_PACK_SHA256, record)
         self.assertIn(EXPECTED_PACK_INTEGRITY, record)
+        self.assertIn(f"Node.js: `{EXPECTED_NODE_VERSION}`", record)
+        self.assertIn(f"npm: `{EXPECTED_NPM_VERSION}`", record)
+        self.assertIn("durable package-content provenance", record)
+        self.assertIn("per-file vendor SHA256 values as the durable content binding", record)
         self.assertIn("ethos 0.1.0", record)
         self.assertIn("exit code `12`", record)
         self.assertIn("npm publication remains blocked", record)

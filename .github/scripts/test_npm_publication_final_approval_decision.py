@@ -24,12 +24,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RECORD = ROOT / "docs/validation/npm-publication-final-approval-request-validation-2026-06-23.md"
+RECORD = ROOT / "docs/validation/npm-publication-final-approval-decision-validation-2026-06-23.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 
-SOURCE_SHORT = "73f673c"
-SOURCE_COMMIT = "73f673cd4e6afcac6c96baffd743b339a89de96c"
-SOURCE_TREE = "942087f3d45f8d62e46f116b3f576b1713e17f37"
+SOURCE_SHORT = "aab7a97"
+SOURCE_COMMIT = "aab7a97dabc17fa1f90e085e8934e1582827dcda"
+SOURCE_TREE = "b842f2aaedf51275cebf25c9ecadc37f56120106"
 PACKAGE = "@docushell/ethos-pdf@0.1.0"
 NPM_SHASUM = "17a053c5ccb802bca2a295e1b1d0e6106c6a3ca6"
 TARBALL_SHA256 = "8d0483d69a6de471dee52c8ef06d46712c06861682a0d7319ca573fdb1fe6376"
@@ -37,14 +37,13 @@ INTEGRITY = "sha512-uWTHYd9Hfkm3nkahK2UchCMOVvYWe82z03jffZnX6aYPqYGd6LkuiEoTH5Dj
 NODE_VERSION = "v23.11.1"
 NPM_VERSION = "10.9.2"
 FORBIDDEN = (
-    "npm publish is approved",
-    "npm publication approved",
-    "package is published",
     "production-ready",
     "hosted surfaces approved",
     "public benchmark claims approved",
     "windows packaged artifacts approved",
     "bundled pdfium approved",
+    "ethos-doc approved",
+    "ethos-rag approved",
 )
 
 
@@ -65,17 +64,17 @@ def git(*args: str) -> str:
     ).strip()
 
 
-class NpmPublicationFinalApprovalRequestTests(unittest.TestCase):
-    def test_request_record_is_source_bound(self) -> None:
+class NpmPublicationFinalApprovalDecisionTests(unittest.TestCase):
+    def test_decision_record_is_source_bound(self) -> None:
         record = normalized(RECORD)
 
         self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", read(RECORD))
-        self.assertIn(f"npm publication final approval request source commit: `{SOURCE_COMMIT}`", record)
-        self.assertIn(f"npm publication final approval request source tree: `{SOURCE_TREE}`", record)
+        self.assertIn(f"npm publication final approval decision source commit: `{SOURCE_COMMIT}`", record)
+        self.assertIn(f"npm publication final approval decision source tree: `{SOURCE_TREE}`", record)
         self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
         self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
 
-    def test_request_names_exact_candidate_and_evidence(self) -> None:
+    def test_decision_accepts_exact_bounded_npm_candidate(self) -> None:
         record = normalized(RECORD)
 
         for expected in (
@@ -93,36 +92,32 @@ class NpmPublicationFinalApprovalRequestTests(unittest.TestCase):
             "ethos 0.1.0",
             "exit code `12`",
             "ETHOS_PDFIUM_LIBRARY_PATH",
-            "npm-tarball-candidate-evidence-validation-2026-06-23.md",
-            "npm-vendor-binary-payload-strategy-validation-2026-06-23.md",
+            "Approved Operator Action",
         ):
             self.assertIn(expected, record)
 
-    def test_request_requires_manual_decider_and_keeps_publish_blocked(self) -> None:
+    def test_decision_permits_only_later_operator_publish_with_boundaries(self) -> None:
         record = normalized(RECORD)
+
+        self.assertIn("This decision does not itself execute `npm publish`", record)
+        self.assertIn("publication remains an explicit later operator action", record)
+        self.assertIn("the operator uses Node.js `v23.11.1` and npm `10.9.2`", record)
+        self.assertIn("npm credentials authorized for the `@docushell` scope", record)
+        self.assertIn("targets only `@docushell/ethos-pdf@0.1.0`", record)
+
+    def test_decision_retains_unrelated_blockers_and_avoids_scope_expansion(self) -> None:
         raw = read(RECORD)
-
-        self.assertIn("Manual action is required before any publish operation", record)
-        self.assertIn("A decider must accept or reject this exact request packet.", record)
-        self.assertIn("Publication must use Node.js `v23.11.1` and npm `10.9.2`", record)
-        self.assertIn("Only after that decision record passes may an operator run `npm publish`", record)
-        self.assertIn("No `npm publish` command is approved by this request record.", record)
-        self.assertIn("npm publication remains blocked pending explicit decider approval.", raw)
-        self.assertIn("Actual npm publish remains blocked pending explicit operator action", raw)
-
-    def test_request_retains_blockers_and_avoids_scope_expansion(self) -> None:
         lower = normalized(RECORD).lower()
-        raw = read(RECORD)
 
         for blocker in (
-            "Hosted surfaces remain blocked.",
-            "Production positioning remains blocked.",
-            "Public benchmark reports remain blocked.",
-            "Public benchmark claims remain blocked.",
-            "Windows packaged artifacts remain blocked.",
-            "Bundled project-maintained PDFium builds remain blocked.",
-            "`ethos-doc` remains blocked.",
-            "`ethos-rag` remains blocked.",
+            "hosted surfaces remain blocked",
+            "production positioning remains blocked",
+            "public benchmark reports remain blocked",
+            "public benchmark claims remain blocked",
+            "Windows packaged artifacts remain blocked",
+            "bundled project-maintained PDFium builds remain blocked",
+            "`ethos-doc` remains blocked",
+            "`ethos-rag` remains blocked",
         ):
             self.assertIn(blocker, raw)
         for phrase in FORBIDDEN:
@@ -135,12 +130,12 @@ class NpmPublicationFinalApprovalRequestTests(unittest.TestCase):
         self.assertNotIn("Desktop/Stuff", raw)
         self.assertNotIn("project/repo/ethos", raw)
 
-    def test_record_is_indexed(self) -> None:
+    def test_decision_is_indexed(self) -> None:
         readme = normalized(VALIDATION_README)
 
         self.assertIn(RECORD.name, readme)
-        self.assertIn("npm publication final approval request validation", readme)
-        self.assertIn("npm publish remains blocked", readme)
+        self.assertIn("npm publication final approval decision validation", readme)
+        self.assertIn("leaves operator publish pending", readme)
 
 
 if __name__ == "__main__":
