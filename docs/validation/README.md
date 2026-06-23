@@ -515,6 +515,15 @@ recording the exact current-main source candidate and required follow-up evidenc
   passed the Linux x64 draft artifact job and runtime smoke step, while keeping Linux x64
   publication blocked until the uploaded artifact bytes, checksum, inventory, and smoke sidecar are
   retrieved and recorded.
+- `first-public-release-linux-x64-artifact-evidence-validation-2026-06-23.md` - first public
+  release Linux x64 artifact evidence validation records the downloaded workflow artifact,
+  `ethos-linux-x64.tar.gz` SHA256, inventory, smoke sidecar, archive contents, and operator-verified
+  published macOS checksum; Linux x64 publication remains blocked until the final decider record.
+- `first-public-release-linux-x64-final-decider-validation-2026-06-23.md` - first public release
+  Linux x64 final decider validation approves only attaching the exact evidenced Linux x64 CLI
+  artifact assets to existing GitHub Release `v0.1.0` for evaluation, updates bounded launch
+  wording to include Linux x64, and keeps npm, hosted, production, public benchmark, Windows x64,
+  bundled PDFium, `ethos-doc`, and `ethos-rag` blockers explicit.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

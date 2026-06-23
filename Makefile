@@ -278,6 +278,8 @@ release-candidate-prep:
 	$(PYTHON) .github/scripts/test_launch_copy_approval_scaffold.py
 	$(PYTHON) .github/scripts/test_first_public_release_artifact_evidence.py
 	$(PYTHON) .github/scripts/test_first_public_release_final_decider.py
+	$(PYTHON) .github/scripts/test_first_public_release_linux_x64_artifact_evidence.py
+	$(PYTHON) .github/scripts/test_first_public_release_linux_x64_final_decider.py
 	cargo test --locked -p ethos-cli --test verify invalid_config_constraints_are_usage_errors
 	git diff --check
 
