@@ -540,6 +540,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   macOS arm64 and Linux x64 release artifacts, including vendor binary checksums, `npm pack`
   metadata, tarball SHA256, packed file list, install smoke, and missing-PDFium exit `12`; npm
   publication remains blocked until a dedicated decider approves `npm publish`.
+- `npm-publication-final-approval-request-validation-2026-06-23.md` - npm publication final
+  approval request validation records the exact `@docushell/ethos-pdf@0.1.0` candidate package,
+  npm shasum, tarball SHA256, integrity, vendor payload checksums, installed CLI smoke, PDFium
+  boundary, and retained blockers for decider review; npm publish remains blocked until a separate
+  approval decision and explicit operator action with npm credentials.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
