@@ -44,6 +44,8 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
         self.assertIn("cargo build --locked --release -p ethos-cli", text)
         self.assertIn("write_release_artifact_inventory.py", text)
         self.assertIn("smoke_release_cli_artifact.py", text)
+        self.assertIn("--target \"${{ matrix.artifact_target }}\"", text)
+        self.assertIn("*.smoke.json", text)
         self.assertIn("validate_release_artifact_inventory.py", text)
         self.assertIn("actions/upload-artifact@v4", text)
         self.assertNotIn("gh release create", text)
@@ -134,6 +136,7 @@ raise SystemExit(2)
 
             env = dict(os.environ)
             env["ETHOS_PDFIUM_LIBRARY_PATH"] = "/must/be/cleared/by/smoke"
+            smoke = artifact.with_suffix(".smoke.json")
             subprocess.check_call(
                 [
                     "python3",
@@ -142,10 +145,20 @@ raise SystemExit(2)
                     str(artifact),
                     "--expected-version",
                     "ethos 0.1.0",
+                    "--target",
+                    "linux-x64",
+                    "--out",
+                    str(smoke),
                 ],
                 cwd=ROOT,
                 env=env,
             )
+            evidence = json.loads(smoke.read_text(encoding="utf-8"))
+            self.assertEqual("ethos.release_artifact_smoke.v1", evidence["schema"])
+            self.assertEqual("linux-x64", evidence["target"])
+            self.assertEqual("ethos 0.1.0", evidence["version_stdout"])
+            self.assertEqual(12, evidence["missing_pdfium_exit_code"])
+            self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", evidence["missing_pdfium_message"])
 
 
 if __name__ == "__main__":

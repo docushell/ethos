@@ -18,11 +18,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 
 REQUIRED_FILES = ("ethos", "LICENSE", "NOTICE", "pdfium-manual-setup.md")
@@ -47,7 +48,7 @@ def require(condition: bool, message: str) -> None:
         raise SystemExit(message)
 
 
-def smoke_artifact(artifact_dir: Path, expected_version: str) -> None:
+def smoke_artifact(artifact_dir: Path, expected_version: str, target: str) -> Dict[str, object]:
     for required in REQUIRED_FILES:
         path = artifact_dir / required
         require(path.is_file(), f"artifact is missing required file: {required}")
@@ -86,15 +87,29 @@ def smoke_artifact(artifact_dir: Path, expected_version: str) -> None:
         PDFIUM_MESSAGE in missing_pdfium.stderr,
         "missing PDFium smoke did not include the setup guidance",
     )
+    return {
+        "schema": "ethos.release_artifact_smoke.v1",
+        "target": target,
+        "artifact_dir": artifact_dir.name,
+        "required_files": list(REQUIRED_FILES),
+        "version_stdout": version.stdout.strip(),
+        "help_command_groups": ["doc", "rag", "security", "verify", "fingerprint"],
+        "missing_pdfium_exit_code": missing_pdfium.returncode,
+        "missing_pdfium_message": PDFIUM_MESSAGE,
+    }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifact-dir", required=True)
     parser.add_argument("--expected-version", default="ethos 0.1.0")
+    parser.add_argument("--target", required=True, choices=("macos-arm64", "linux-x64"))
+    parser.add_argument("--out")
     args = parser.parse_args()
 
-    smoke_artifact(Path(args.artifact_dir), args.expected_version)
+    evidence = smoke_artifact(Path(args.artifact_dir), args.expected_version, args.target)
+    if args.out:
+        Path(args.out).write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return 0
 
 
