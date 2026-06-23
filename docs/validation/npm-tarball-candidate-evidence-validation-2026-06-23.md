@@ -83,7 +83,7 @@ Install command:
 
 ```sh
 npm_config_cache=/tmp/ethos-npm-cache npm install \
-  /Users/saumildiwaker/Desktop/Stuff/project/repo/ethos/packages/npm/ethos-pdf/docushell-ethos-pdf-0.1.0.tgz \
+  <npm-tarball-candidate-path>/docushell-ethos-pdf-0.1.0.tgz \
   --prefix /tmp/ethos-npm-candidate-install
 ```
 
