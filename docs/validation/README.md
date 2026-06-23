@@ -593,6 +593,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   publication approval request validation binds the exact `@docushell/ethos-pdf@0.1.1` npm
   candidate, toolchain-qualified tarball hashes, durable vendor payload checksums, installed CLI
   smoke, PDFium boundary, and retained blockers for decider review; npm publish remains blocked.
+- `patch-0-1-1-npm-publication-approval-decision-validation-2026-06-23.md` - patch 0.1.1 npm
+  publication approval decision validation accepts the exact `@docushell/ethos-pdf@0.1.1` bounded
+  npm candidate, binds the Node.js `v23.11.1` and npm `10.9.2` toolchain-qualified tarball
+  metadata plus durable per-file vendor SHA256 values, keeps unrelated blockers explicit, and
+  leaves operator publish pending as a separate credentialed action.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

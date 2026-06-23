@@ -24,16 +24,16 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RECORD = ROOT / "docs/validation/npm-publication-final-approval-decision-validation-2026-06-23.md"
+RECORD = ROOT / "docs/validation/patch-0-1-1-npm-publication-approval-decision-validation-2026-06-23.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 
-SOURCE_SHORT = "aab7a97"
-SOURCE_COMMIT = "aab7a97dabc17fa1f90e085e8934e1582827dcda"
-SOURCE_TREE = "b842f2aaedf51275cebf25c9ecadc37f56120106"
-PACKAGE = "@docushell/ethos-pdf@0.1.0"
-NPM_SHASUM = "17a053c5ccb802bca2a295e1b1d0e6106c6a3ca6"
-TARBALL_SHA256 = "8d0483d69a6de471dee52c8ef06d46712c06861682a0d7319ca573fdb1fe6376"
-INTEGRITY = "sha512-uWTHYd9Hfkm3nkahK2UchCMOVvYWe82z03jffZnX6aYPqYGd6LkuiEoTH5DjrXl+oA817EjlE88fIKBxZbhjMw=="
+SOURCE_SHORT = "25d52b9"
+SOURCE_COMMIT = "25d52b9dc0119aaa39e66d3886583a95bb852128"
+SOURCE_TREE = "26e6faa2d0171589efc4d18a7ce6593f36583d32"
+PACKAGE = "@docushell/ethos-pdf@0.1.1"
+NPM_SHASUM = "a150d08395724aa186d077074782413249a48689"
+TARBALL_SHA256 = "4b227d37bd125c6db1ffe40534f6cb5223a60073f26e3c4dbf60709561671d3d"
+INTEGRITY = "sha512-wVF4Ew6836sRncPZkvVieyQuo8FFbbBsIQ/vdupleUQZVX4YHgXb+lFZzZNcVB54Hh7srbbY17El4Z5sV7odhA=="
 NODE_VERSION = "v23.11.1"
 NPM_VERSION = "10.9.2"
 FORBIDDEN = (
@@ -79,17 +79,17 @@ class NpmPublicationFinalApprovalDecisionTests(unittest.TestCase):
 
         for expected in (
             PACKAGE,
-            "docushell-ethos-pdf-0.1.0.tgz",
+            "docushell-ethos-pdf-0.1.1.tgz",
             NPM_SHASUM,
             TARBALL_SHA256,
             INTEGRITY,
             f"Node.js: `{NODE_VERSION}`",
             f"npm: `{NPM_VERSION}`",
-            "per-file SHA256 values are the durable cross-toolchain provenance binding",
+            "per-file vendor SHA256 values are the durable cross-toolchain provenance binding",
             "vendor/ethos-darwin-arm64",
             "vendor/ethos-linux-x64",
             "vendor/manifest.json",
-            "ethos 0.1.0",
+            "ethos 0.1.1",
             "exit code `12`",
             "ETHOS_PDFIUM_LIBRARY_PATH",
             "Approved Operator Action",
@@ -103,7 +103,7 @@ class NpmPublicationFinalApprovalDecisionTests(unittest.TestCase):
         self.assertIn("publication remains an explicit later operator action", record)
         self.assertIn("the operator uses Node.js `v23.11.1` and npm `10.9.2`", record)
         self.assertIn("npm credentials authorized for the `@docushell` scope", record)
-        self.assertIn("targets only `@docushell/ethos-pdf@0.1.0`", record)
+        self.assertIn("targets only `@docushell/ethos-pdf@0.1.1`", record)
 
     def test_decision_retains_unrelated_blockers_and_avoids_scope_expansion(self) -> None:
         raw = read(RECORD)
@@ -134,7 +134,7 @@ class NpmPublicationFinalApprovalDecisionTests(unittest.TestCase):
         readme = normalized(VALIDATION_README)
 
         self.assertIn(RECORD.name, readme)
-        self.assertIn("npm publication final approval decision validation", readme)
+        self.assertIn("patch 0.1.1 npm publication approval decision", readme.lower())
         self.assertIn("leaves operator publish pending", readme)
 
 
