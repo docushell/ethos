@@ -251,6 +251,8 @@ The package publication public installation availability record in `docs/validat
 
 The public evaluation current-state closeout record in `docs/validation/milestone-e-public-evaluation-current-state-closeout-validation-2026-06-22.md` records current main `034881e` / tree `fb089e027641a7d2152d7d1ebd499f45bb1f6a1c` as GitHub source repository plus `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.0` for Rust crate evaluation. Hosted surfaces, production positioning, public benchmark claims, CLI distribution, wheels, npm packages, binaries, project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and broader public wording remain blocked.
 
+The patch `0.1.1` readiness prep record in `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` records candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change guarding, the 2-minute PDF parse quickstart, and improved missing/unusable PDFium guidance landed on `main`. This is a prep record only: it does not approve a release, tag, version bump, package publish, GitHub Release artifact, hosted surface, production positioning, Windows packaged artifact, bundled project-maintained PDFium build, public benchmark report, or public benchmark claim. The current public baseline remains `v0.1.0` until a separate release decision, version update, artifact build, smoke evidence, and operator action are completed.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |

@@ -11,6 +11,14 @@ preflight passes and the current claim language is used. The package-name/tradem
 closed by ADR-0006, but public benchmark, parser-quality, table, heading, speed, footprint, and
 rendered-crop byte-identity claims remain blocked.
 
+Patch `0.1.1` readiness prep is recorded in
+`docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records
+candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change guarding, the
+2-minute PDF parse quickstart, and improved missing/unusable PDFium guidance landed on `main`. It
+does not approve a release, tag, version bump, package publish, GitHub Release artifact, hosted
+surface, production positioning, Windows packaged artifact, bundled project-maintained PDFium
+build, public benchmark report, or public benchmark claim.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in
