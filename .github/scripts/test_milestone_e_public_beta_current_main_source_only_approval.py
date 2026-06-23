@@ -220,13 +220,11 @@ class MilestoneEPublicBetaCurrentMainSourceOnlyApprovalTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         refresh_guard = "test_milestone_e_public_beta_current_main_refresh_prep.py"
         approval_guard = "test_milestone_e_public_beta_current_main_source_only_approval.py"
-        command_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + approval_guard, text)
             self.assertEqual(1, text.count(prefix + approval_guard))
             self.assertLess(text.index(prefix + refresh_guard), text.index(prefix + approval_guard))
-            self.assertLess(text.index(prefix + approval_guard), text.index(prefix + command_guard))
 
     def test_approval_record_avoids_scope_expansion_language_and_private_paths(self) -> None:
         text = (

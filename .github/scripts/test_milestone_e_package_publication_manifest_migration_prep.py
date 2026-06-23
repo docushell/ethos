@@ -164,12 +164,10 @@ class MilestoneEPackagePublicationManifestMigrationPrepTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         dependency_guard = "test_milestone_e_package_publication_dependency_ordering.py"
         migration_guard = "test_milestone_e_package_publication_manifest_migration_prep.py"
-        command_guard = "test_milestone_e_validation_command_index.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + migration_guard, text)
             self.assertLess(text.index(prefix + dependency_guard), text.index(prefix + migration_guard))
-            self.assertLess(text.index(prefix + migration_guard), text.index(prefix + command_guard))
 
     def test_no_scope_expansion_language_or_private_paths(self) -> None:
         for path in (RECORD, ROOT / "docs/milestone-e-package-publication-approval-prep.json"):

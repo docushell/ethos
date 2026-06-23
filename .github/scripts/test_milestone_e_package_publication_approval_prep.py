@@ -902,7 +902,6 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         package_prep_approval_record = (
             "$(PYTHON) .github/scripts/test_milestone_e_package_publication_prep_approval_validation_record.py"
         )
-        index_guard = "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(package_guard, block)
         self.assertIn(package_record, block)
@@ -910,7 +909,6 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertLess(block.index(beta_record), block.index(package_guard))
         self.assertLess(block.index(package_guard), block.index(package_record))
         self.assertLess(block.index(package_record), block.index(package_prep_approval_record))
-        self.assertLess(block.index(package_prep_approval_record), block.index(index_guard))
         self.assertLess(block.index(package_prep_approval_record), block.index("git diff --check"))
 
     def test_ci_runs_package_prep_once_in_order(self) -> None:
@@ -925,7 +923,6 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         package_prep_approval_record = (
             "python3 .github/scripts/test_milestone_e_package_publication_prep_approval_validation_record.py"
         )
-        index_guard = "python3 .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(package_guard, text)
         self.assertIn(package_record, text)
@@ -936,7 +933,6 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertLess(text.index(beta_record), text.index(package_guard))
         self.assertLess(text.index(package_guard), text.index(package_record))
         self.assertLess(text.index(package_record), text.index(package_prep_approval_record))
-        self.assertLess(text.index(package_prep_approval_record), text.index(index_guard))
 
     def test_prep_avoids_scope_expansion_language(self) -> None:
         text = json.dumps(load_json(PREP), sort_keys=True).lower()

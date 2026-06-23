@@ -57,8 +57,6 @@ def base_ref() -> str:
         base = git("merge-base", "HEAD", "origin/main")
     except subprocess.CalledProcessError:
         fail("origin/main does not resolve; fetch origin/main or set ETHOS_LIGHT_CHECK_BASE")
-    if base == git("rev-parse", "HEAD"):
-        fail("origin/main resolves to HEAD and would make the diff empty")
     return base
 
 

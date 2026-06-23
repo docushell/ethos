@@ -82,6 +82,8 @@ def private_marker_hits() -> list[PrivateMarkerHit]:
     hits: list[PrivateMarkerHit] = []
     for relative_path in tracked_files():
         path = ROOT / relative_path
+        if not path.is_file():
+            continue
         try:
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
@@ -106,7 +108,6 @@ def is_allowed_sentinel_hit(hit: PrivateMarkerHit) -> bool:
         return (
             "assertNotIn(" in hit.line
             or hit.path == ".github/scripts/test_milestone_e_source_snapshot_candidate_audit.py"
-            or hit.path == ".github/scripts/test_milestone_e_validation_command_index.py"
         )
 
     if hit.path == "docs/validation/public-source-push-preflight-2026-06-15.md":

@@ -99,7 +99,6 @@ class MilestoneEPublicApprovalLaneBlockersValidationRecordTests(unittest.TestCas
             text,
         )
         self.assertIn("python3 .github/scripts/test_milestone_e_required_before_alignment_validation_record.py", text)
-        self.assertIn("python3 .github/scripts/test_milestone_e_validation_record_index.py", text)
         self.assertIn("python3 .github/scripts/test_ci_workflow.py", text)
         self.assertIn("python3 .github/scripts/test_public_surface_posture.py", text)
         self.assertIn("python3 .github/scripts/claims_gate.py", text)
@@ -162,12 +161,10 @@ class MilestoneEPublicApprovalLaneBlockersValidationRecordTests(unittest.TestCas
         record_guard = (
             "$(PYTHON) .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py"
         )
-        index_guard = "$(PYTHON) .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(record_guard, block)
         self.assertLess(block.index(required_before_record), block.index(lane_guard))
         self.assertLess(block.index(lane_guard), block.index(record_guard))
-        self.assertLess(block.index(record_guard), block.index(index_guard))
         self.assertLess(block.index(record_guard), block.index("git diff --check"))
 
     def test_ci_runs_lane_record_guard_once_in_order(self) -> None:
@@ -179,13 +176,11 @@ class MilestoneEPublicApprovalLaneBlockersValidationRecordTests(unittest.TestCas
         record_guard = (
             "python3 .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py"
         )
-        index_guard = "python3 .github/scripts/test_milestone_e_validation_record_index.py"
 
         self.assertIn(record_guard, text)
         self.assertEqual(1, text.count(record_guard))
         self.assertLess(text.index(required_before_record), text.index(lane_guard))
         self.assertLess(text.index(lane_guard), text.index(record_guard))
-        self.assertLess(text.index(record_guard), text.index(index_guard))
 
     def test_record_avoids_scope_expansion_language(self) -> None:
         text = normalized_record_text().lower()
