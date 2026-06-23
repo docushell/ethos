@@ -252,6 +252,18 @@ impl PdfiumBackend {
             .unwrap_or_else(|| pinned_pdfium_profile().version.clone())
     }
 
+    /// Probe whether the configured PDFium dynamic library can be loaded and initialized.
+    ///
+    /// This does not parse a document. It uses the same library load, symbol resolution, and
+    /// process-global PDFium init/destroy path as extraction, so callers should run it in a
+    /// disposable subprocess when probing operator-provided libraries.
+    pub fn probe_library(&self) -> Result<BackendManifest, EthosError> {
+        let _guard = PDFIUM_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let runtime = PdfiumRuntime::load(self)?;
+        drop(runtime);
+        Ok(self.manifest())
+    }
+
     /// Produce a debug-only geometry-source probe from PDFium text APIs.
     ///
     /// The returned data is diagnostic evidence only. It is intentionally

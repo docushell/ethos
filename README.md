@@ -112,6 +112,7 @@ cd ethos
 rustup show
 cargo build --locked -p ethos-cli
 ./target/debug/ethos --help
+./target/debug/ethos doctor
 ```
 
 To install the source-built CLI from the checkout into your local Cargo bin:
@@ -139,6 +140,9 @@ ethos --version
 The npm package vendors only the approved macOS arm64 and Linux x64 CLI binaries. Unsupported
 platforms fail before invoking a binary. PDFium-backed commands fail until
 `ETHOS_PDFIUM_LIBRARY_PATH` points to a caller-provided PDFium dynamic library.
+
+Run `ethos doctor` for local setup diagnostics. Run `ethos doctor --require-pdfium` after setting
+`ETHOS_PDFIUM_LIBRARY_PATH` to check whether the configured PDFium is usable by Ethos.
 
 GitHub Release `v0.1.0` also provides evaluation CLI archives for macOS arm64 and Linux x64.
 
