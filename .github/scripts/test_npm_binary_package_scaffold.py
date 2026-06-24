@@ -41,12 +41,12 @@ SUPPORTED_TARGETS = {
     "darwin:arm64": {
         "binary": "ethos-darwin-arm64",
         "release_asset": "ethos-macos-arm64.tar.gz",
-        "release_asset_sha256": "eac79cddc6f5fc834ecc279401905729978d73e99ae11a2bea82d7356a4bcd88",
+        "release_asset_sha256": "7da7da71fb0c21b25cd2ffc198480ee80bf9f0c9e70e461cffbdcbdda8d7023c",
     },
     "linux:x64": {
         "binary": "ethos-linux-x64",
         "release_asset": "ethos-linux-x64.tar.gz",
-        "release_asset_sha256": "842aa4b71333aecc54f344d9f5362160d0943d8efd32dffabe99dc19553916a0",
+        "release_asset_sha256": "4e260b464dc9557bc31c29fb1d1dfa75311fe12734bc79af4a31e1649797e456",
     },
 }
 
@@ -60,7 +60,7 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         package = json.loads(read(PACKAGE_JSON))
 
         self.assertEqual("@docushell/ethos-pdf", package["name"])
-        self.assertEqual("0.1.1", package["version"])
+        self.assertEqual("0.1.2", package["version"])
         self.assertEqual("Apache-2.0", package["license"])
         self.assertEqual({"ethos": "./bin/ethos-pdf.js"}, package["bin"])
         self.assertIn("vendor/", package["files"])

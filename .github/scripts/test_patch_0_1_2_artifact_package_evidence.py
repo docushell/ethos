@@ -290,7 +290,7 @@ class Patch012ArtifactPackageEvidenceTests(unittest.TestCase):
     def test_source_metadata_and_public_install_baseline_remain_split(self) -> None:
         self.assertIn('version = "0.1.2"', read(PYPROJECT))
         self.assertIn('__version__ = "0.1.2"', read(PY_INIT))
-        self.assertEqual("0.1.1", json.loads(read(NPM_PACKAGE))["version"])
+        self.assertEqual("0.1.2", json.loads(read(NPM_PACKAGE))["version"])
 
         for path in (EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST):
             doc = normalized(path)

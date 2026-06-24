@@ -75,6 +75,13 @@ bounded release wording, but the public install baseline remains `0.1.1`, regist
 remains blocked, npm vendor refresh remains blocked, npm publication remains blocked, and public
 installation wording remains blocked until separate lanes pass.
 
+Patch `0.1.2` npm vendor refresh is recorded in
+`docs/validation/patch-0-1-2-npm-vendor-refresh-validation-2026-06-24.md` for candidate validation
+only. The checked-in `@docushell/ethos-pdf@0.1.2` vendor payload is refreshed from published
+GitHub Release `v0.1.2` assets, but npm publication remains blocked, public installation wording
+remains blocked, registry publication remains blocked, and the public install baseline remains
+`0.1.1` until separate approval, operator, registry, and wording closeout lanes pass.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

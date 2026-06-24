@@ -83,11 +83,11 @@ class Patch012VersionActivationTests(unittest.TestCase):
         self.assertIn('version = "0.1.2"', read(PYPROJECT))
         self.assertIn('__version__ = "0.1.2"', read(PYTHON_INIT))
 
-    def test_npm_and_public_install_wording_wait_for_artifacts(self) -> None:
+    def test_public_install_wording_waits_after_npm_candidate_refresh(self) -> None:
         npm = json.loads(read(NPM_PACKAGE))
         readme = read(README)
 
-        self.assertEqual("0.1.1", npm["version"])
+        self.assertEqual("0.1.2", npm["version"])
         self.assertIn("cargo add ethos-doc-core@0.1.1", readme)
         self.assertIn("cargo add ethos-verify@0.1.1", readme)
         self.assertIn("cargo add ethos-pdf@0.1.1", readme)
