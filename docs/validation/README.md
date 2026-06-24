@@ -611,6 +611,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   crates.io publication approval decision validation accepts the exact `ethos-doc-core`,
   `ethos-verify`, and `ethos-pdf` `0.1.1` crate set, package source binding, package tag names,
   dependency-ordered operator commands, and retained blockers; operator publish remains pending.
+- `patch-0-1-1-crates-publication-closeout-validation-2026-06-24.md` - patch 0.1.1 crates.io
+  publication closeout validation records successful crates.io publication and live registry
+  verification for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` `0.1.1`, while keeping public
+  installation wording and unrelated public/support surfaces blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
