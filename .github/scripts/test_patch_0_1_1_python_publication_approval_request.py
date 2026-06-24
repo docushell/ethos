@@ -140,16 +140,16 @@ class Patch011PythonPublicationApprovalRequestTests(unittest.TestCase):
         self.assertNotIn("saumildiwaker", raw)
         self.assertNotIn("Desktop/Stuff", raw)
 
-    def test_source_metadata_remains_expected_for_python_wheel(self) -> None:
+    def test_source_metadata_keeps_current_python_surface_shape(self) -> None:
         pyproject = read(PYPROJECT)
         init = read(INIT)
 
         self.assertIn('name = "ethos-pdf"', pyproject)
-        self.assertIn('version = "0.1.1"', pyproject)
+        self.assertIn('version = "0.1.2"', pyproject)
         self.assertIn('requires-python = ">=3.8"', pyproject)
         self.assertIn('license = "Apache-2.0"', pyproject)
         self.assertIn('readme = "python/README.md"', pyproject)
-        self.assertIn('__version__ = "0.1.1"', init)
+        self.assertIn('__version__ = "0.1.2"', init)
         self.assertIn('"EthosCli"', init)
         self.assertIn('"EthosCommandError"', init)
 

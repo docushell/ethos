@@ -653,6 +653,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   the current public install baseline at `0.1.1` and leaving release, tag, publication, GitHub
   Release artifact, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and
   `ethos-rag` surfaces unapproved.
+- `patch-0-1-2-version-activation-validation-2026-06-24.md` - patch 0.1.2 version activation
+  validation records Rust workspace and Python source/package metadata at `0.1.2`, keeps npm and
+  public install wording on the published `0.1.1` baseline until matching CLI artifacts and
+  publication evidence exist, and leaves release, tag, publication, GitHub Release artifact,
+  hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces
+  unapproved.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
