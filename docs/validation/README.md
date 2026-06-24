@@ -607,6 +607,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   `ethos-verify`, and `ethos-pdf` `0.1.1` crate set, source commit, package tag names, local crate
   artifact hashes, publish order, and retained blockers for decider review; `cargo publish`
   remains blocked.
+- `patch-0-1-1-crates-publication-approval-decision-validation-2026-06-24.md` - patch 0.1.1
+  crates.io publication approval decision validation accepts the exact `ethos-doc-core`,
+  `ethos-verify`, and `ethos-pdf` `0.1.1` crate set, package source binding, package tag names,
+  dependency-ordered operator commands, and retained blockers; operator publish remains pending.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
