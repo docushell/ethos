@@ -380,9 +380,14 @@ def discovered_d_contract_schemas() -> list[str]:
 
 
 def discovered_d_request_envelope_schemas() -> list[str]:
+    current_d_request_names = {
+        "ethos-crop-element-request.schema.json",
+        "ethos-sandbox-subprocess-request.schema.json",
+    }
     return sorted(
         str(path.relative_to(ROOT))
         for path in (ROOT / "schemas").glob("ethos-*-request.schema.json")
+        if path.name in current_d_request_names
     )
 
 

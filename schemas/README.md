@@ -11,6 +11,8 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-security-report.schema.json` | `security_report.json` |
 | `ethos-citations.schema.json` | citation input consumed by `ethos verify --citations` |
 | `ethos-verification-report.schema.json` | `verification_report.json` |
+| `ethos-evidence-anchor-request.schema.json` | evidence refs consumed by `ethos evidence anchor --evidence-refs` |
+| `ethos-evidence-anchor-report.schema.json` | `evidence_anchor_report.json` emitted by `ethos evidence anchor` |
 | `ethos-verification-config.schema.json` | verification config (its c14n hash stamps reports) |
 | `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos crop_element` and `ethos verify --crop-dir` |
 | `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |

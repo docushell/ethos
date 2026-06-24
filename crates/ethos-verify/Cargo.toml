@@ -27,6 +27,7 @@ publication_status = "approved_for_crates_io_publication"
 # the canonical model, never backend traits, never ethos-pdf.
 ethos-core = { workspace = true, features = ["grounding", "verify-types"] }
 serde = { workspace = true }
+sha2 = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }
