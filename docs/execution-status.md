@@ -6,6 +6,13 @@ Status: Public beta evaluation is approved for the GitHub source repository, the
 
 Older Milestone E paragraphs below preserve historical review records and their blockers at the time they were written. Patch `0.1.1` closeout records supersede those historical blockers only for the approved source, Rust crate, Python wheel, npm package, macOS arm64 CLI artifact, and Linux x64 CLI artifact evaluation surfaces.
 
+Patch `0.1.2` npm publication approval request is recorded in
+`docs/validation/patch-0-1-2-npm-publication-approval-request-validation-2026-06-24.md` for decider
+review only. It binds the exact `@docushell/ethos-pdf@0.1.2` npm candidate from the refreshed
+vendor payload, but `npm publish`, registry closeout, public installation wording, hosted surfaces,
+production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
+public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag` remain blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane

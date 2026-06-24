@@ -82,6 +82,13 @@ GitHub Release `v0.1.2` assets, but npm publication remains blocked, public inst
 remains blocked, registry publication remains blocked, and the public install baseline remains
 `0.1.1` until separate approval, operator, registry, and wording closeout lanes pass.
 
+Patch `0.1.2` npm publication approval request is recorded in
+`docs/validation/patch-0-1-2-npm-publication-approval-request-validation-2026-06-24.md` for decider
+review only. It binds the exact `@docushell/ethos-pdf@0.1.2` npm candidate, toolchain-qualified
+tarball hashes, durable vendor checksums, installed CLI smoke, and missing-PDFium behavior, but
+`npm publish` remains blocked until a separate approval decision and operator action pass. Public
+installation wording remains blocked.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in
