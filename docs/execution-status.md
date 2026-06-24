@@ -282,6 +282,8 @@ The patch `0.1.2` artifact publication approval decision in `docs/validation/pat
 
 The patch `0.1.2` artifact publication closeout in `docs/validation/patch-0-1-2-artifact-publication-closeout-validation-2026-06-24.md` records GitHub Release `v0.1.2`, the approved tag target, exact macOS arm64/Linux x64 CLI artifact assets, matching checksums, sidecars, and bounded release wording. The public install baseline remains `0.1.1`, registry publication remains blocked, npm vendor refresh remains blocked, npm publication remains blocked, and public installation wording remains blocked until separate lanes pass.
 
+The patch `0.1.2` npm vendor refresh in `docs/validation/patch-0-1-2-npm-vendor-refresh-validation-2026-06-24.md` refreshes the checked-in `@docushell/ethos-pdf@0.1.2` vendor payload from the published GitHub Release `v0.1.2` assets and records local pack/install smoke evidence. npm publication remains blocked, public installation wording remains blocked, registry publication remains blocked, and the public install baseline remains `0.1.1` until separate approval, operator, registry, and wording closeout lanes pass.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |

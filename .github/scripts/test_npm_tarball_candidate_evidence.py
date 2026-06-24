@@ -29,12 +29,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
-PACKAGE_TARBALL = PACKAGE_DIR / "docushell-ethos-pdf-0.1.1.tgz"
-RECORD = ROOT / "docs/validation/patch-0-1-1-npm-vendor-refresh-validation-2026-06-23.md"
+PACKAGE_TARBALL = PACKAGE_DIR / "docushell-ethos-pdf-0.1.2.tgz"
+RECORD = ROOT / "docs/validation/patch-0-1-2-npm-vendor-refresh-validation-2026-06-24.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
-SOURCE_SHORT = "da5b5f4"
-SOURCE_COMMIT = "da5b5f4ed1a2645e13d8e629ed18d67babaf7eee"
-SOURCE_TREE = "24781c7305a3daca92cd5c1cb0ae6efe3edf1f23"
+SOURCE_SHORT = "2323398"
+SOURCE_COMMIT = "23233986035e0f4a20295b24a9cfafafe65aa117"
+SOURCE_TREE = "750551f51094f0bc9625c781b8cc978431e431c3"
 EXPECTED_FILES = {
     "LICENSE",
     "NOTICE",
@@ -49,14 +49,14 @@ EXPECTED_FILES = {
     "vendor/manifest.json",
 }
 EXPECTED_VENDOR_SHA256 = {
-    "vendor/ethos-darwin-arm64": "a3d0d4be596da25313659a89de8fbff0e13f4b355462381e1bbedd05078c09f2",
-    "vendor/ethos-linux-x64": "ee14be020fb79e326686fc77bcf781503f4759d2e3b7bcb6a641b2311608a354",
-    "vendor/manifest.json": "7be6e6c02c0086de7c10594a6f0443c8535d5782a4ffc0bc0eed3f8ebb13bda8",
+    "vendor/ethos-darwin-arm64": "47c2f4aaac6cb6a1ca5cf1d9a0cc1f897ef00c48cdd8549455de70f0fbc6bcc1",
+    "vendor/ethos-linux-x64": "e75122f2954efbde6b8c07a98601b8d4a3b7a06647891a9e60d6aef4046649c3",
+    "vendor/manifest.json": "d557e081b946be0f839b17b8593027e31267b668498e202372026020f68a97a1",
 }
-EXPECTED_PACK_SHASUM = "a150d08395724aa186d077074782413249a48689"
-EXPECTED_PACK_SHA256 = "4b227d37bd125c6db1ffe40534f6cb5223a60073f26e3c4dbf60709561671d3d"
+EXPECTED_PACK_SHASUM = "39b85d74f588666bfbf69e423a189c2039743de4"
+EXPECTED_PACK_SHA256 = "77cbc9c79dd60cc16073690a186e149ecbaabacce035fb0bd3603b267ce64112"
 EXPECTED_PACK_INTEGRITY = (
-    "sha512-wVF4Ew6836sRncPZkvVieyQuo8FFbbBsIQ/vdupleUQZVX4YHgXb+lFZzZNcVB54Hh7srbbY17El4Z5sV7odhA=="
+    "sha512-3loga13tnAkUkjuOrjKjpA0D3Cm5lW6Al8OwTyRx7NGMt6EB4gMpZOoaSCPjZWchYv7as1uPaEnZyOqrmFOPxg=="
 )
 EVIDENCE_PACK_SHASUM = EXPECTED_PACK_SHASUM
 EVIDENCE_PACK_SHA256 = EXPECTED_PACK_SHA256
@@ -108,8 +108,8 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
                 files = {entry["path"]: entry for entry in pack["files"]}
 
                 self.assertEqual("@docushell/ethos-pdf", pack["name"])
-                self.assertEqual("0.1.1", pack["version"])
-                self.assertEqual("docushell-ethos-pdf-0.1.1.tgz", pack["filename"])
+                self.assertEqual("0.1.2", pack["version"])
+                self.assertEqual("docushell-ethos-pdf-0.1.2.tgz", pack["filename"])
                 self.assertEqual(EXPECTED_FILES, set(files))
                 self.assertEqual(493, files["vendor/ethos-darwin-arm64"]["mode"])
                 self.assertEqual(493, files["vendor/ethos-linux-x64"]["mode"])
@@ -136,12 +136,13 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
         self.assertIn(f"npm: `{EXPECTED_NPM_VERSION}`", record)
         self.assertIn("durable package-content provenance", record)
         self.assertIn("per-file vendor SHA256 values as the durable content binding", record)
-        self.assertIn("ethos 0.1.1", record)
+        self.assertIn("ethos 0.1.2", record)
         self.assertIn("exit code `12`", record)
         self.assertIn("npm publication remains blocked", record)
+        self.assertIn("Public installation wording remains blocked", record)
         self.assertNotIn("npm publication approved", record.lower())
         self.assertIn(RECORD.name, readme)
-        self.assertIn("patch 0.1.1 npm vendor refresh validation", readme)
+        self.assertIn("patch 0.1.2 npm vendor refresh validation", readme)
 
     def test_candidate_tarball_installs_and_preserves_pdfium_boundary(self) -> None:
         with tempfile.TemporaryDirectory(prefix="ethos-npm-install-") as temp:
@@ -177,7 +178,7 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
                     stderr=subprocess.PIPE,
                 )
                 self.assertEqual(0, version.returncode, version.stderr)
-                self.assertEqual("ethos 0.1.1", version.stdout.strip())
+                self.assertEqual("ethos 0.1.2", version.stdout.strip())
 
                 dummy_pdf = Path(temp) / "dummy.pdf"
                 dummy_pdf.write_text("%PDF-1.4\n%%EOF\n", encoding="utf-8")
