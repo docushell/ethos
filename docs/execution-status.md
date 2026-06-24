@@ -111,7 +111,7 @@ publication remain blocked.
 
 ## Current Reality
 
-The repository is in public beta/evaluation for the approved source, package, and CLI artifact surfaces, but it is not production-ready. Real parsing and real alpha verification exist. They are narrow, fixture-backed, and now have an accepted internal Gate Zero decision for roadmap control. That decision is not a public benchmark report, release approval, package approval, production approval, or claim approval.
+The repository is in public beta/evaluation for the approved source, package, and CLI artifact surfaces, and production positioning remains blocked. Real parsing and real alpha verification exist. They are narrow, fixture-backed, and now have an accepted internal Gate Zero decision for roadmap control. That decision is not a public benchmark report, release approval, package approval, production approval, or claim approval.
 
 The committed implementation now includes:
 
