@@ -59,6 +59,13 @@ wording remains blocked until registry availability closeout, and Python install
 `ethos-pdf==0.1.1` until separate PyPI `0.1.2` approval, operator publication, and closeout records
 pass.
 
+Patch `0.1.2` crates.io publication closeout is recorded in
+`docs/validation/patch-0-1-2-crates-publication-closeout-validation-2026-06-25.md`. crates.io now
+reports `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.2`. Rust crate public
+installation wording remains blocked until a separate wording and availability closeout, and Python
+installation remains at `ethos-pdf==0.1.1` until separate PyPI `0.1.2` approval, operator
+publication, and closeout records pass.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane
