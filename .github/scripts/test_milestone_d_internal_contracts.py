@@ -330,6 +330,7 @@ def schemas_readme_contract_table_entries() -> dict[str, str]:
         schema_name: description
         for schema_name, description in schemas_readme_table_entries().items()
         if re.fullmatch(r"ethos-.+-contract\.schema\.json", schema_name)
+        and description.startswith("Milestone D ")
     }
 
 
@@ -376,6 +377,7 @@ def discovered_d_contract_schemas() -> list[str]:
     return sorted(
         str(path.relative_to(ROOT))
         for path in (ROOT / "schemas").glob("ethos-*-contract.schema.json")
+        if "Milestone D" in path.read_text(encoding="utf-8")
     )
 
 
@@ -401,6 +403,7 @@ def discovered_d_contract_inventories() -> list[str]:
         str(path.relative_to(ROOT))
         for root in roots
         for path in root.glob("*_v1_contract.json")
+        if load_json(str(path.relative_to(ROOT))).get("status") == "source-only-pre-alpha"
     )
 
 

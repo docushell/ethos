@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "contract": "evidence_anchor.v1",
+  "status": "source-only-public-beta-evaluation",
+  "carrier": "ethos evidence anchor",
+  "request_schema": "schemas/ethos-evidence-anchor-request.schema.json",
+  "report_schema": "schemas/ethos-evidence-anchor-report.schema.json",
+  "implementation": [
+    "crates/ethos-core/src/evidence_anchor.rs",
+    "crates/ethos-verify/src/lib.rs",
+    "crates/ethos-cli/src/cmd/evidence.rs",
+    "crates/ethos-cli/src/main.rs",
+    "crates/ethos-cli/tests/evidence_anchor.rs"
+  ],
+  "cli_tests": [
+    "help_lists_evidence_anchor",
+    "missing_evidence_refs_exits_usage",
+    "empty_refs_succeeds_with_empty_anchors",
+    "native_page_text_bbox_and_table_cell_bind",
+    "opendataloader_text_binds_and_bbox_is_capability_limited",
+    "non_bound_outcomes_still_exit_zero",
+    "repeated_input_is_byte_identical",
+    "unknown_grounding_and_source_shape_exit_two",
+    "usage_errors_are_exit_two",
+    "table_cell_expected_text_uses_exact_normalized_match",
+    "text_mismatch_takes_precedence_over_bbox_capability_limit"
+  ],
+  "supported_groundings": [
+    {
+      "name": "native-ethos-json",
+      "cli_argument": "ethos-json",
+      "parser_scope": "native Ethos document JSON through the existing GroundingSource path",
+      "expected_capability_boundary": "page, text, text_bbox, and table_cell anchors can bind when the source provides the required evidence"
+    },
+    {
+      "name": "opendataloader-json",
+      "cli_argument": "opendataloader-json",
+      "parser_scope": "OpenDataLoader-style JSON through the existing opendataloader-json adapter",
+      "expected_capability_boundary": "text anchors can bind; bbox detail remains capability_limited when coordinate capability is unavailable"
+    }
+  ],
+  "supported_anchor_statuses": [
+    "bound",
+    "mismatch",
+    "not_found",
+    "stale_fingerprint",
+    "capability_limited",
+    "unsupported_evidence_kind"
+  ],
+  "deterministic_guards": [
+    "schema-backed request and report examples",
+    "byte-identical repeated report output",
+    "usage errors exit 2",
+    "non-bound per-ref outcomes exit 0"
+  ],
+  "explicit_blockers": [
+    "semantic answer verification",
+    "multi-source joins",
+    "crop rendering or source-region image generation",
+    "hosted API or service surfaces",
+    "DocuShell-specific behavior",
+    "production positioning",
+    "benchmark, speed, footprint, parser-quality, or table-quality claims"
+  ]
+}

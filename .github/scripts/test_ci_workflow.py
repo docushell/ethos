@@ -94,7 +94,16 @@ class CiWorkflowTests(unittest.TestCase):
         )
         self.assertLess(
             text.index("python3 .github/scripts/test_h2_source_snapshot_closeout.py"),
+            text.index("python3 .github/scripts/test_evidence_anchor_v1_contract.py"),
+        )
+        self.assertLess(
+            text.index("python3 .github/scripts/test_evidence_anchor_v1_contract.py"),
             text.index("python3 .github/scripts/test_milestone_d_internal_contracts.py"),
+        )
+        self.assertIn("python3 .github/scripts/test_evidence_anchor_v1_contract.py", text)
+        self.assertEqual(
+            1,
+            text.count("python3 .github/scripts/test_evidence_anchor_v1_contract.py"),
         )
         self.assertIn("python3 .github/scripts/test_milestone_d_internal_contracts.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_b_closeout_record.py", text)

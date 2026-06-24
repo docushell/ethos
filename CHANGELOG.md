@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: add an `evidence_anchor` v1 guard target, CI guard step, and schema-bound inventory for the merged source-only command; no hosted, production, Windows, bundled PDFium, benchmark, parser-quality, table-quality, or release-posture boundary change.
 - boundary-exception: add source-only `ethos evidence anchor` schema and CLI surface for deterministic evidence refs; no hosted, production, Windows, bundled PDFium, benchmark, parser-quality, table-quality, or release-posture boundary change.
 - boundary-exception: refresh patch `0.1.1` execution status for published evaluation surfaces while retaining hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.
 - boundary-exception: document bounded patch `0.1.1` public install paths for published evaluation surfaces while retaining hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.

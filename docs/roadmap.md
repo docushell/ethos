@@ -53,6 +53,15 @@ The source-only [`sandbox_subprocess` v1 contract](milestone-d-sandbox-subproces
 classifies the existing PDF worker-process boundary behind `ethos doc parse` and
 `ethos fingerprint`; it does not add hardened sandbox rules or a new command or
 binding surface.
+The post-merge [`evidence_anchor` v1 guard](evidence-anchor-v1-contract.md)
+binds the current `ethos evidence anchor` command to request/report schemas,
+focused CLI tests, native Ethos JSON and OpenDataLoader-style grounding inputs,
+and explicit non-goals. Focused validation is
+`make evidence-anchor-v1-contract PYTHON=<jsonschema-venv>/bin/python`; PR CI also runs
+`.github/scripts/test_evidence_anchor_v1_contract.py` so the guard's richer drift checks are
+enforced automatically. This guard does not expand public beta/evaluation posture, hosted
+surfaces, production positioning, semantic answer verification, or benchmark/parser/table-quality
+claims.
 Current Milestone D source-only final closeout is recorded in
 [`docs/validation/milestone-d-final-closeout-validation-2026-06-19.md`](validation/milestone-d-final-closeout-validation-2026-06-19.md).
 The prior contract closeout is recorded in
