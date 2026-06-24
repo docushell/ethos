@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: add source-only `ethos evidence anchor` schema and CLI surface for deterministic evidence refs; no hosted, production, Windows, bundled PDFium, benchmark, parser-quality, table-quality, or release-posture boundary change.
 - boundary-exception: refresh patch `0.1.1` execution status for published evaluation surfaces while retaining hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.
 - boundary-exception: document bounded patch `0.1.1` public install paths for published evaluation surfaces while retaining hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.
 - boundary-exception: close patch `0.1.1` Python PyPI publication with exact registry evidence; no public install wording, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, or `ethos-rag` boundary change.

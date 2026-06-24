@@ -211,6 +211,17 @@ The command exits `0` and writes a verification report shaped like this:
 }
 ```
 
+## Evidence anchoring
+
+Ethos can check whether caller-provided evidence refs bind to source document evidence.
+This is deterministic source tracing, not semantic validation of an answer.
+
+```bash
+./target/debug/ethos evidence anchor schemas/examples/document.example.json \
+  --evidence-refs schemas/examples/evidence-anchor-request.example.json \
+  --out /tmp/ethos-evidence-anchor-report.json
+```
+
 ## Try the alpha verification loop
 
 From a source checkout, the current verification loop is:

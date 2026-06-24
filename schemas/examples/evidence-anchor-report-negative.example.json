@@ -1,0 +1,36 @@
+{
+  "artifact_type": "ethos.evidence_anchor_report.v1",
+  "schema_version": "1.0.0",
+  "source_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "grounding": {
+    "parser": {
+      "name": "ethos",
+      "version": "0.1.0"
+    },
+    "capabilities": {
+      "spans": true,
+      "char_offsets": true,
+      "tables": true,
+      "fingerprint": true,
+      "coordinate_origin": "top-left",
+      "crop_support": false
+    }
+  },
+  "anchors": [
+    {
+      "evidence_id": "ev_missing",
+      "evidence_kind": "text",
+      "anchor_status": "not_found",
+      "required_anchor_level": "text",
+      "achieved_anchor_level": "none",
+      "checks": {
+        "fingerprint": "matched",
+        "page": "not_found",
+        "text": "not_found",
+        "bbox": "not_checked",
+        "table_cell": "not_checked"
+      },
+      "capability_limits": []
+    }
+  ]
+}

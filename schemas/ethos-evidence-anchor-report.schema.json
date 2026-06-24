@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:evidence-anchor-report:1",
+  "title": "Ethos evidence anchor report",
+  "description": "Deterministic report showing whether caller-provided evidence refs bind to source document evidence. This is source tracing, not semantic answer verification.",
+  "type": "object",
+  "required": ["artifact_type", "schema_version", "grounding", "anchors"],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": { "const": "ethos.evidence_anchor_report.v1" },
+    "schema_version": { "const": "1.0.0" },
+    "source_fingerprint": { "$ref": "#/$defs/fingerprint" },
+    "grounding": {
+      "type": "object",
+      "required": ["parser", "capabilities"],
+      "additionalProperties": false,
+      "properties": {
+        "parser": {
+          "type": "object",
+          "required": ["name", "version"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "adapter": { "type": "string" },
+            "adapter_version": { "type": "string" }
+          }
+        },
+        "capabilities": {
+          "type": "object",
+          "required": [
+            "spans",
+            "char_offsets",
+            "tables",
+            "fingerprint",
+            "coordinate_origin",
+            "crop_support"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "spans": { "type": "boolean" },
+            "char_offsets": { "type": "boolean" },
+            "tables": { "type": "boolean" },
+            "fingerprint": { "type": "boolean" },
+            "coordinate_origin": { "enum": ["top-left", "bottom-left", "unknown"] },
+            "crop_support": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "anchors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/anchor" }
+    }
+  },
+  "$defs": {
+    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "capability_limit": {
+      "enum": [
+        "missing_spans",
+        "missing_char_offsets",
+        "missing_tables",
+        "missing_fingerprint",
+        "unknown_coordinate_origin",
+        "missing_crop_support"
+      ]
+    },
+    "checks": {
+      "type": "object",
+      "required": ["fingerprint", "page", "text", "bbox", "table_cell"],
+      "additionalProperties": false,
+      "properties": {
+        "fingerprint": {
+          "enum": ["matched", "stale", "not_checked", "capability_limited"]
+        },
+        "page": { "enum": ["found", "not_found", "not_checked"] },
+        "text": {
+          "enum": ["matched", "mismatch", "not_found", "not_checked", "capability_limited"]
+        },
+        "bbox": {
+          "enum": ["valid", "invalid", "not_found", "not_checked", "capability_limited"]
+        },
+        "table_cell": {
+          "enum": ["matched", "mismatch", "not_found", "not_checked", "capability_limited"]
+        }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "required": [
+        "evidence_id",
+        "evidence_kind",
+        "anchor_status",
+        "required_anchor_level",
+        "achieved_anchor_level",
+        "checks",
+        "capability_limits"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": { "type": "string", "minLength": 1 },
+        "evidence_kind": {
+          "enum": ["page", "text", "text_region", "table_cell", "region", "other"]
+        },
+        "anchor_status": {
+          "enum": [
+            "bound",
+            "mismatch",
+            "not_found",
+            "stale_fingerprint",
+            "capability_limited",
+            "unsupported_evidence_kind"
+          ]
+        },
+        "required_anchor_level": {
+          "enum": ["page", "text", "bbox", "text_bbox", "table_cell"]
+        },
+        "achieved_anchor_level": {
+          "enum": ["none", "page", "text", "bbox", "text_bbox", "table_cell"]
+        },
+        "checks": { "$ref": "#/$defs/checks" },
+        "capability_limits": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/capability_limit" },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

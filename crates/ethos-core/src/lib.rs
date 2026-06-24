@@ -41,6 +41,8 @@ pub mod grounding;
 #[cfg(feature = "verify-types")]
 pub mod codes;
 #[cfg(feature = "verify-types")]
+pub mod evidence_anchor;
+#[cfg(feature = "verify-types")]
 pub mod verify_types;
 
 #[cfg(feature = "full")]

@@ -74,6 +74,11 @@ enum Command {
         #[command(subcommand)]
         command: SecurityCommand,
     },
+    /// Deterministic evidence anchoring
+    Evidence {
+        #[command(subcommand)]
+        command: EvidenceCommand,
+    },
     /// Citation evidence verification (ethos-verify)
     Verify(VerifyArgs),
     /// Recompute and check a document fingerprint
@@ -214,6 +219,12 @@ enum SecurityCommand {
     Report(SecurityReportArgs),
 }
 
+#[derive(Subcommand)]
+enum EvidenceCommand {
+    /// Check caller-provided evidence refs against source evidence
+    Anchor(EvidenceAnchorArgs),
+}
+
 #[derive(Args)]
 pub(crate) struct RagChunkArgs {
     /// Canonical document (`*.ethos.json`)
@@ -228,6 +239,21 @@ pub(crate) struct SecurityReportArgs {
     /// Canonical document (`*.ethos.json`)
     pub(crate) input: PathBuf,
     /// Output path for security_report.json (default: stdout)
+    #[arg(long)]
+    pub(crate) out: Option<PathBuf>,
+}
+
+#[derive(Args)]
+pub(crate) struct EvidenceAnchorArgs {
+    /// Grounding input: canonical Ethos document, or foreign output with --grounding
+    pub(crate) input: PathBuf,
+    /// Evidence refs request JSON.
+    #[arg(long)]
+    pub(crate) evidence_refs: PathBuf,
+    /// Grounding adapter id: ethos-json or opendataloader-json.
+    #[arg(long, default_value = "ethos-json")]
+    pub(crate) grounding: String,
+    /// Output path for evidence_anchor_report.json (default: stdout)
     #[arg(long)]
     pub(crate) out: Option<PathBuf>,
 }
@@ -363,6 +389,9 @@ fn run(cli: Cli) -> Result<(), Failure> {
         Command::Security {
             command: SecurityCommand::Report(args),
         } => cmd::security::security_report(args),
+        Command::Evidence {
+            command: EvidenceCommand::Anchor(args),
+        } => cmd::evidence::evidence_anchor(args),
         Command::Verify(args) => cmd::verify::verify(args),
         Command::Fingerprint(args) => cmd::doc::fingerprint(args),
         Command::Doctor(args) => cmd::doctor::doctor(args),

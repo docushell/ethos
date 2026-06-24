@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:evidence-anchor-request:1",
+  "title": "Ethos evidence anchor request",
+  "description": "Caller-provided evidence refs to check against one source document representation. Evidence anchoring is deterministic source tracing, not semantic answer verification.",
+  "type": "object",
+  "required": ["artifact_type", "schema_version", "evidence_refs"],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": { "const": "ethos.evidence_anchor_request.v1" },
+    "schema_version": { "const": "1.0.0" },
+    "source_fingerprint": { "$ref": "#/$defs/fingerprint" },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidence_ref" }
+    }
+  },
+  "$defs": {
+    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "bbox": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "cell": {
+      "type": "object",
+      "required": ["row", "col"],
+      "additionalProperties": false,
+      "properties": {
+        "row": { "type": "integer", "minimum": 0 },
+        "col": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page_index": { "type": "integer", "minimum": 1 },
+        "page_id": { "type": "string" },
+        "element_id": { "type": "string" },
+        "span_id": { "type": "string" },
+        "bbox": { "$ref": "#/$defs/bbox" },
+        "table_id": { "type": "string" },
+        "cell": { "$ref": "#/$defs/cell" },
+        "coordinate_profile": { "const": "ethos_quantized_top_left_v1" }
+      },
+      "dependentRequired": {
+        "bbox": ["coordinate_profile"]
+      },
+      "not": {
+        "required": ["page_index", "page_id"]
+      }
+    },
+    "evidence_ref": {
+      "type": "object",
+      "required": ["evidence_id", "evidence_kind", "required_anchor_level", "locator"],
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": { "type": "string", "minLength": 1 },
+        "evidence_kind": {
+          "enum": ["page", "text", "text_region", "table_cell", "region", "other"]
+        },
+        "required_anchor_level": {
+          "enum": ["page", "text", "bbox", "text_bbox", "table_cell"]
+        },
+        "locator": { "$ref": "#/$defs/locator" },
+        "expected_text": { "type": "string" },
+        "expected_text_sha256": { "$ref": "#/$defs/fingerprint" },
+        "text_normalization_profile": { "const": "ethos_collapse_whitespace_v1" }
+      },
+      "dependentRequired": {
+        "expected_text_sha256": ["expected_text", "text_normalization_profile"]
+      }
+    }
+  }
+}

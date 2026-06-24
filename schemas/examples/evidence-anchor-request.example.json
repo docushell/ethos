@@ -1,0 +1,20 @@
+{
+  "artifact_type": "ethos.evidence_anchor_request.v1",
+  "schema_version": "1.0.0",
+  "source_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "evidence_refs": [
+    {
+      "evidence_id": "ev_001",
+      "evidence_kind": "text_region",
+      "required_anchor_level": "text_bbox",
+      "locator": {
+        "page_index": 1,
+        "bbox": [7200, 10100, 54000, 11500],
+        "coordinate_profile": "ethos_quantized_top_left_v1"
+      },
+      "expected_text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.",
+      "expected_text_sha256": "sha256:49f675142f930e31d75679b14e23f7c639cb9903029eacb3235c709c14fe4be5",
+      "text_normalization_profile": "ethos_collapse_whitespace_v1"
+    }
+  ]
+}

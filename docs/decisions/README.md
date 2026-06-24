@@ -15,5 +15,6 @@ Every closing PRD §15 open question gets an ADR here. Output-changing merges re
 | 0008 | Gate Zero G2 footprint policy | Accepted |
 | 0009 | G3 geometry fingerprint policy | Accepted |
 | 0010 | Deterministic table candidates | Accepted |
+| 0012 | Deterministic evidence anchoring boundary | Accepted |
 
 Format: Status / Date / Governs, Context, Decision, Consequences. Statuses: Proposed → Accepted | Rejected | Superseded-by-NNNN.

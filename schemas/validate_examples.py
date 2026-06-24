@@ -78,6 +78,13 @@ PAIRS = [
         EXAMPLES / "verification-report.example.json",
         EXAMPLES / "verification-report-negative.example.json",
     ]),
+    ("ethos-evidence-anchor-request.schema.json", [
+        EXAMPLES / "evidence-anchor-request.example.json",
+    ]),
+    ("ethos-evidence-anchor-report.schema.json", [
+        EXAMPLES / "evidence-anchor-report.example.json",
+        EXAMPLES / "evidence-anchor-report-negative.example.json",
+    ]),
     ("ethos-verification-config.schema.json", [EXAMPLES / "verification-config.example.json"]),
     ("ethos-crop-descriptor.schema.json", [EXAMPLES / "crop-descriptor.example.json"]),
     ("ethos-crop-element-request.schema.json", [
