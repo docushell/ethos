@@ -88,16 +88,12 @@ class ExecutionStatusTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            "Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, "
-            "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether "
-            "AI citations are grounded in document evidence across native Ethos JSON and supported "
-            "foreign parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and "
-            "`ethos-pdf` are available on crates.io at `0.1.1` for evaluation. The Python "
-            "`ethos-pdf` wheel, npm `@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 "
-            "CLI artifacts are available for evaluation with caller-provided PDFium. Hosted "
-            "surfaces, production positioning, Windows packaged artifacts, bundled project-maintained "
-            "PDFium builds, `ethos-doc`, `ethos-rag`, public benchmark reports, public benchmark "
-            "claims, and speed, footprint, parser-quality, table-quality, or production claims remain blocked.",
+            "Ethos is a deterministic document evidence layer for source-grounded verification and "
+            "citation checking across native Ethos JSON and supported foreign parser outputs. The current "
+            "beta includes the GitHub source repository, Rust library crates `ethos-doc-core`, "
+            "`ethos-verify`, and `ethos-pdf` at `0.1.1`, the Python `ethos-pdf` wheel, the npm "
+            "`@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 CLI artifacts. PDFium-backed "
+            "commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.",
             text,
         )
         self.assertIn("ethos-doc-core", text)

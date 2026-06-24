@@ -8,18 +8,14 @@
 ![status: public beta](https://img.shields.io/badge/status-public--beta-blue)
 
 > **Status: public beta evaluation.**
-> Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact,
-> Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether
-> AI citations are grounded in document evidence across native Ethos JSON and supported foreign
-> parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are
-> available on crates.io at `0.1.1` for evaluation. The Python `ethos-pdf` wheel, npm
-> `@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 CLI artifacts are available
-> for evaluation with caller-provided PDFium. Hosted surfaces, production positioning, Windows
-> packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`,
-> public benchmark reports, public benchmark claims, and speed, footprint, parser-quality,
-> table-quality, or production claims remain blocked.
-> Current execution status and blockers live in `docs/execution-status.md`; public-release
-> hygiene gates live in `docs/public-release-checklist.md`.
+> Ethos is a deterministic document evidence layer for source-grounded verification and
+> citation checking across native Ethos JSON and supported foreign parser outputs. The current
+> beta includes the GitHub source repository, Rust library crates `ethos-doc-core`,
+> `ethos-verify`, and `ethos-pdf` at `0.1.1`, the Python `ethos-pdf` wheel, the npm
+> `@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 CLI artifacts. PDFium-backed
+> commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.
+> Current execution status and release-scope notes live in `docs/execution-status.md`;
+> public-release hygiene gates live in `docs/public-release-checklist.md`.
 
 Ethos is a verification and grounding system for document evidence. It includes a deterministic
 PDF parser that turns born-digital PDFs into auditable grounding artifacts: JSON, Markdown, text,
@@ -293,7 +289,7 @@ verify-alpha demo checks passed
 
 Generated reports and crop descriptors are written under `target/verify-alpha/`.
 
-## What Ethos is not (honest scope)
+## Scope and Boundaries
 
 - Ethos is **not an OCR engine** yet, and it does not claim to beat VLM parsers on complex
   scanned layouts. Scanned/image-only pages fail with a stable `ocr_required` error.
@@ -303,9 +299,8 @@ Generated reports and crop descriptors are written under `target/verify-alpha/`.
 - Verification checks **evidence grounding** (the cited region exists, the text matches, the
   fingerprint is fresh). It is not a semantic correctness judgment of an answer.
 - Non-embedded CJK font fallback is out of Release 1 and warns explicitly.
-- Public benchmark reports, Windows packaged artifacts, bundled project-maintained PDFium builds,
-  hosted surfaces, production positioning, and launch announcements remain blocked until a
-  dedicated approval record exists.
+- Windows packaged artifacts, bundled project-maintained PDFium builds, hosted surfaces, public
+  benchmark reports, and launch announcements are tracked as separate release-scope work.
 
 It is built for teams that need trustworthy local document grounding, deterministic native parsing
 when they want it, and citation evidence that can be inspected instead of trusted blindly.
@@ -436,8 +431,8 @@ Not in the base install. Scanned or image-only pages fail with `ocr_required`.
 
 The source-built CLI supports `--fail-on-ungrounded`, which exits `1` when verification completes
 but evidence is not fully grounded. Treat the current repo, approved Rust library crates, Python
-wheel, npm package, and macOS arm64/Linux x64 CLI artifacts as public beta evaluation, not stable
-production surfaces.
+wheel, npm package, and macOS arm64/Linux x64 CLI artifacts as public beta evaluation surfaces.
+Release scope and support boundaries are tracked in `docs/execution-status.md`.
 
 ### Where are benchmark results?
 
