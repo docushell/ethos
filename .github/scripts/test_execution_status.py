@@ -34,8 +34,10 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            "Status: Public beta evaluation is approved for the GitHub source repository and the three bounded "
-            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.0`.",
+            "Status: Public beta evaluation is approved for the GitHub source repository, the three bounded "
+            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`, the Python "
+            "`ethos-pdf` wheel, the npm `@docushell/ethos-pdf` CLI package, the macOS arm64 CLI "
+            "artifact, and the Linux x64 CLI artifact at `0.1.1`.",
             text,
         )
         self.assertIn("Internal Milestone D source-only closeout remains complete", text)
@@ -81,21 +83,37 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            "Public language may use this exact approved sentence on the current source and Rust crate evaluation surfaces",
+            "Public language may use this exact approved sentence on the current source, Rust crate, Python wheel, "
+            "npm package, macOS arm64 CLI artifact, and Linux x64 CLI artifact evaluation surfaces",
             text,
         )
         self.assertIn(
-            "Ethos is public beta for source and Rust crate evaluation. It verifies whether AI citations "
-            "are grounded in document evidence across native Ethos JSON and supported foreign "
-            "parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` "
-            "are available on crates.io at `0.1.0` for evaluation. Hosted surfaces, production "
-            "positioning, and public benchmark claims remain blocked.",
+            "Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, "
+            "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether "
+            "AI citations are grounded in document evidence across native Ethos JSON and supported "
+            "foreign parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and "
+            "`ethos-pdf` are available on crates.io at `0.1.1` for evaluation. The Python "
+            "`ethos-pdf` wheel, npm `@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 "
+            "CLI artifacts are available for evaluation with caller-provided PDFium. Hosted "
+            "surfaces, production positioning, Windows packaged artifacts, bundled project-maintained "
+            "PDFium builds, `ethos-doc`, `ethos-rag`, public benchmark reports, public benchmark "
+            "claims, and speed, footprint, parser-quality, table-quality, or production claims remain blocked.",
             text,
         )
         self.assertIn("ethos-doc-core", text)
         self.assertIn("ethos-verify", text)
         self.assertIn("ethos-pdf", text)
-        self.assertIn("wheels, npm packages, binaries, hosted surfaces", text)
+        self.assertIn(
+            "Patch `0.1.1` closeout records supersede those historical blockers only for the approved "
+            "source, Rust crate, Python wheel, npm package, macOS arm64 CLI artifact, and Linux x64 CLI "
+            "artifact evaluation surfaces.",
+            text,
+        )
+        self.assertIn(
+            "Hosted surfaces, Windows packaged artifacts, bundled project-maintained PDFium builds, "
+            "`ethos-doc`, and `ethos-rag` remain blocked.",
+            text,
+        )
         self.assertIn("All wording beyond that sentence still requires claim-audit", text)
         self.assertIn("Closed for the exact approved pre-alpha sentence only", text)
         self.assertIn("milestone-e-public-beta-source-only-approval-validation-2026-06-20.md", text)

@@ -312,12 +312,14 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
         )
         self.assertIn("schema-validated by `schemas/validate_examples.py`", status)
         self.assertIn(
-            "later public-report, project-maintained PDFium build, stable CLI/Python docs, and "
-            "hosted demo work remain blocked on explicit claim-audit and release-scope decisions",
+            "hosted surfaces, production positioning, Windows packaged artifacts, bundled "
+            "project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, public benchmark reports, "
+            "public benchmark claims, and speed/footprint/parser-quality/table-quality/production "
+            "claims remain blocked on explicit claim-audit and release-scope decisions",
             roadmap,
         )
         self.assertIn("Still absent or not claimable:", status)
-        self.assertIn("exact approved source-only public beta wording", status)
+        self.assertIn("exact approved patch `0.1.1` public beta/evaluation wording", status)
         self.assertIn("Broader public result language remains blocked", status)
         self.assertIn(
             "intentionally excludes public-report, release, package, hosted, and broad "

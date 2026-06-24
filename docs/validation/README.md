@@ -10,10 +10,9 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
-Current package publication evidence records keep publication blocked while tracking reserved-name
-inventory, metadata/readiness, dry-run planning, version/tag policy, and PDFium boundary blockers.
-The public-facing readiness ledger keeps the current-main refresh candidate and package publication
-resolution gaps explicit without approving package publication or public installation.
+Patch `0.1.1` closeout records now document the approved public beta/evaluation surfaces for source,
+Rust crates, the Python wheel, npm package, and macOS arm64/Linux x64 CLI artifacts. Historical
+package publication evidence records below keep their at-the-time blocker wording for traceability.
 The public beta current-main refresh prep record keeps refreshed source approval blocked while
 recording the exact current-main source candidate and required follow-up evidence.
 
@@ -644,6 +643,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   public installation wording closeout validation documents published evaluation install paths for
   Rust crates, the Python wheel, npm package, and GitHub Release CLI artifacts while retaining
   hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.
+- `patch-0-1-1-execution-status-refresh-validation-2026-06-24.md` - patch 0.1.1 execution
+  status refresh validation updates the current execution-status summary and PM rule for published
+  evaluation surfaces while retaining hosted, production, Windows, bundled PDFium, benchmark,
+  `ethos-doc`, and `ethos-rag` blockers.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
