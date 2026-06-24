@@ -273,6 +273,7 @@ release-candidate-prep:
 	$(PYTHON) .github/scripts/test_python_public_api_policy.py
 	$(MAKE) python-surface-test PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/test_patch_0_1_1_python_publication_approval_request.py
+	$(PYTHON) .github/scripts/test_patch_0_1_1_python_publication_approval_decision.py
 	$(PYTHON) .github/scripts/test_npm_binary_package_scaffold.py
 	npm test --prefix packages/npm/ethos-pdf
 	$(PYTHON) .github/scripts/test_npm_vendor_binary_payload_strategy.py
