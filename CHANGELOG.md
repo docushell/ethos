@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: approve exact patch `0.1.1` Python PyPI wheel publication decision for later operator upload; no PyPI upload or support-boundary change.
 - boundary-exception: request exact patch `0.1.1` Python PyPI wheel publication approval for decider review; no PyPI upload or support-boundary change.
 - boundary-exception: close patch `0.1.1` Rust crates.io publication with exact registry evidence; no public installation wording or support-boundary change.
 - boundary-exception: approve exact patch `0.1.1` Rust crates.io publication decision for later operator publish; no `cargo publish` or support-boundary change.

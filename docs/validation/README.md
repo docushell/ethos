@@ -619,6 +619,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   Python PyPI publication approval request validation binds the exact `ethos-pdf==0.1.1` wheel,
   source commit, wheel metadata, wheel SHA256, local install/import smoke, and retained blockers
   for decider review; PyPI upload remains blocked.
+- `patch-0-1-1-python-publication-approval-decision-validation-2026-06-24.md` - patch 0.1.1
+  Python PyPI publication approval decision validation accepts the exact `ethos-pdf==0.1.1` wheel
+  candidate, source binding, wheel metadata, SHA256, and retained blockers; operator upload remains
+  pending.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
