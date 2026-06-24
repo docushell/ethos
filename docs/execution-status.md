@@ -42,6 +42,14 @@ public README and public boundary inventory now point npm installation to
 remains at `0.1.1`, and Python installation remains at `ethos-pdf==0.1.1` until separate
 crates.io/PyPI `0.1.2` publication closeout records pass.
 
+Patch `0.1.2` crates.io publication approval request is recorded in
+`docs/validation/patch-0-1-2-crates-publication-approval-request-validation-2026-06-25.md` for
+decider review only. It binds exact `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` crate
+artifacts at `0.1.2`, SHA256 values, source commit, source tree, package tag names, and requested
+operator commands. `cargo publish` remains blocked, package tag creation remains blocked, Rust
+crate public installation wording remains blocked, and Python installation remains at
+`ethos-pdf==0.1.1` until separate approval, operator publication, and closeout records pass.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane

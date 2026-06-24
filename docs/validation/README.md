@@ -717,6 +717,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   `@docushell/ethos-pdf@0.1.2` and GitHub Release `v0.1.2` CLI artifacts while keeping Rust crate
   and Python wheel install wording on the published `0.1.1` baseline until separate crates.io/PyPI
   `0.1.2` publication closeout records pass.
+- `patch-0-1-2-crates-publication-approval-request-validation-2026-06-25.md` - patch 0.1.2
+  crates.io publication approval request validation records exact `ethos-doc-core`,
+  `ethos-verify`, and `ethos-pdf` `0.1.2` crate artifacts, SHA256 values, source binding,
+  package tag names, publish order, requested later operator commands, and retained blockers;
+  `cargo publish`, tag creation, and Rust crate public installation wording remain blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

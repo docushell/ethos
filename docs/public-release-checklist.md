@@ -114,6 +114,16 @@ and GitHub Release CLI archives to `v0.1.2`. Rust crate installation remains at 
 Python installation remains at `ethos-pdf==0.1.1` until separate crates.io/PyPI `0.1.2`
 publication closeout records pass.
 
+Patch `0.1.2` crates.io publication approval request is recorded in
+`docs/validation/patch-0-1-2-crates-publication-approval-request-validation-2026-06-25.md` for
+decider review only. It binds exact `0.1.2` candidate crates, artifact hashes, source binding,
+package tag names, and requested later operator commands, but `cargo publish` remains blocked,
+package tag creation remains blocked, Rust crate public installation wording remains blocked, PyPI
+publication remains blocked, hosted surfaces remain blocked, production positioning remains
+blocked, Windows packaged artifacts remain blocked, bundled project-maintained PDFium builds remain
+blocked, `ethos-doc` remains blocked, `ethos-rag` remains blocked, and public benchmark claims
+remain blocked.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in
