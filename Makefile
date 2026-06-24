@@ -311,6 +311,7 @@ release-candidate-prep:
 	$(PYTHON) .github/scripts/test_patch_0_1_2_version_activation.py
 	$(PYTHON) .github/scripts/test_patch_0_1_2_artifact_package_evidence.py
 	$(PYTHON) .github/scripts/test_patch_0_1_2_draft_artifact_evidence.py
+	$(PYTHON) .github/scripts/test_patch_0_1_2_artifact_publication_approval_request.py
 	$(PYTHON) .github/scripts/test_first_public_release_artifact_evidence.py
 	$(PYTHON) .github/scripts/test_first_public_release_final_decider.py
 	$(PYTHON) .github/scripts/test_first_public_release_linux_x64_artifact_evidence.py
