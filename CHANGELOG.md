@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: request decider review for exact patch `0.1.2` macOS arm64 and Linux x64 GitHub Release CLI artifact publication while keeping publication, registry, npm vendor refresh, public install wording, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: record patch `0.1.2` draft CLI artifact evidence for macOS arm64 and Linux x64 while keeping GitHub Release publication, registry publication, npm vendor refresh, public install wording, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: record patch `0.1.2` artifact/package evidence prep and update draft CLI artifact smoke expectations to `ethos 0.1.2` while keeping npm, public install wording, registry publication, GitHub Release publication, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: activate Rust workspace and Python source/package metadata for patch `0.1.2` candidate validation while keeping npm and public install wording on the published `0.1.1` baseline; no release, tag, package publication, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, or `ethos-rag` boundary change.

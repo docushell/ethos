@@ -276,6 +276,8 @@ The patch `0.1.2` artifact/package evidence record in `docs/validation/patch-0-1
 
 The patch `0.1.2` draft artifact evidence record in `docs/validation/patch-0-1-2-draft-artifact-evidence-validation-2026-06-24.md` records a green `release.yml` workflow run and downloaded macOS arm64/Linux x64 draft CLI artifact sidecars. Both draft artifact smokes reported `ethos 0.1.2`; the public install baseline remains `0.1.1`, GitHub Release artifact publication remains blocked, registry publication remains blocked, npm vendor refresh remains blocked, and public installation wording remains blocked until separate approval, operator evidence, and closeout records pass.
 
+The patch `0.1.2` artifact publication approval request in `docs/validation/patch-0-1-2-artifact-publication-approval-request-validation-2026-06-24.md` binds the exact macOS arm64/Linux x64 draft CLI artifact names, SHA256 values, source commit, workflow evidence, and requested bounded wording for decider review only. Publication remains blocked, the public install baseline remains `0.1.1`, registry publication remains blocked, npm vendor refresh remains blocked, and public installation wording remains blocked until a separate decision and operator evidence pass.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
