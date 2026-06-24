@@ -84,6 +84,8 @@ jobs:
         run: python3 .github/scripts/test_h2_source_snapshot_candidate_evidence.py
       - name: H2 source-snapshot closeout tests
         run: python3 .github/scripts/test_h2_source_snapshot_closeout.py
+      - name: Evidence anchor v1 contract guard tests
+        run: python3 .github/scripts/test_evidence_anchor_v1_contract.py
       - name: Milestone D internal contract target tests
         run: python3 .github/scripts/test_milestone_d_internal_contracts.py
       - name: Milestone B closeout validation record tests

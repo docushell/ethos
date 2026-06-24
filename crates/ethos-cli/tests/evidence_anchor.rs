@@ -16,9 +16,12 @@
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::Value;
+
+static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 fn ethos_bin() -> &'static str {
     env!("CARGO_BIN_EXE_ethos")
@@ -61,7 +64,11 @@ fn temp_json(name: &str, value: Value) -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .expect("clock after unix epoch")
         .as_nanos();
-    let path = std::env::temp_dir().join(format!("ethos-evidence-anchor-{name}-{nanos}.json"));
+    let pid = std::process::id();
+    let counter = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let path = std::env::temp_dir().join(format!(
+        "ethos-evidence-anchor-{name}-{pid}-{nanos}-{counter}.json"
+    ));
     std::fs::write(
         &path,
         serde_json::to_string(&value).expect("temp JSON serializes"),

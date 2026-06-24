@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:evidence-anchor-contract:1",
+  "title": "Ethos evidence_anchor v1 contract inventory",
+  "description": "Source-only public beta evaluation guard inventory for the current evidence_anchor v1 contract carried by ethos evidence anchor. This validates inventory shape and vocabulary; executable alignment stays in the repository guard.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "contract",
+    "status",
+    "carrier",
+    "request_schema",
+    "report_schema",
+    "implementation",
+    "cli_tests",
+    "supported_groundings",
+    "supported_anchor_statuses",
+    "deterministic_guards",
+    "explicit_blockers"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "contract": { "const": "evidence_anchor.v1" },
+    "status": { "const": "source-only-public-beta-evaluation" },
+    "carrier": { "const": "ethos evidence anchor" },
+    "request_schema": { "$ref": "#/$defs/repo_path" },
+    "report_schema": { "$ref": "#/$defs/repo_path" },
+    "implementation": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/repo_path" },
+      "uniqueItems": true
+    },
+    "cli_tests": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/rust_method_name" },
+      "uniqueItems": true
+    },
+    "supported_groundings": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/supported_grounding" },
+      "uniqueItems": true
+    },
+    "supported_anchor_statuses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "bound",
+          "mismatch",
+          "not_found",
+          "stale_fingerprint",
+          "capability_limited",
+          "unsupported_evidence_kind"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "deterministic_guards": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "explicit_blockers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "supported_grounding": {
+      "type": "object",
+      "required": [
+        "name",
+        "cli_argument",
+        "parser_scope",
+        "expected_capability_boundary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "enum": ["native-ethos-json", "opendataloader-json"] },
+        "cli_argument": { "enum": ["ethos-json", "opendataloader-json"] },
+        "parser_scope": { "type": "string", "minLength": 1 },
+        "expected_capability_boundary": { "type": "string", "minLength": 1 }
+      }
+    },
+    "repo_path": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_./-]+$" },
+    "rust_method_name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+  }
+}

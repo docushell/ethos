@@ -13,6 +13,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-verification-report.schema.json` | `verification_report.json` |
 | `ethos-evidence-anchor-request.schema.json` | evidence refs consumed by `ethos evidence anchor --evidence-refs` |
 | `ethos-evidence-anchor-report.schema.json` | `evidence_anchor_report.json` emitted by `ethos evidence anchor` |
+| `ethos-evidence-anchor-contract.schema.json` | `evidence_anchor` v1 source-only public beta evaluation guard inventory |
 | `ethos-verification-config.schema.json` | verification config (its c14n hash stamps reports) |
 | `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos crop_element` and `ethos verify --crop-dir` |
 | `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |
@@ -51,6 +52,14 @@ security-report / verification-report examples).
 `verification-report.example.json` shows a grounded report.
 `verification-report-negative.example.json` shows a non-grounded report with a per-check
 `reason` label.
+
+Evidence-anchor V1 guard work is tracked in `docs/evidence-anchor-v1-contract.md`. In this
+source-only public beta evaluation guard, `evidence_anchor` names the deterministic source-tracing
+contract currently carried by `ethos evidence anchor`; it does not add semantic answer
+verification, hosted/API behavior, app-specific integration, crop rendering, or production
+positioning. The contract inventory at `examples/verify/evidence_anchor_v1_contract.json` is
+schema-validated here; its alignment with focused CLI tests, OpenDataLoader adapter coverage,
+status docs, and Makefile wiring is checked by the evidence-anchor repository guard.
 
 Milestone D `verify_citations` v1 contract work is tracked in
 `docs/milestone-d-verify-citations-contract.md`. In this source-only pre-alpha slice,
