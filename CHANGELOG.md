@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: request exact patch `0.1.1` deterministic Python PyPI wheel approval for decider review; no PyPI upload or support-boundary change.
 - boundary-exception: record patch `0.1.1` Python wheel reproducibility blocker after pre-upload hash mismatch; no PyPI upload or support-boundary change.
 - boundary-exception: approve exact patch `0.1.1` Python PyPI wheel publication decision for later operator upload; no PyPI upload or support-boundary change.
 - boundary-exception: request exact patch `0.1.1` Python PyPI wheel publication approval for decider review; no PyPI upload or support-boundary change.

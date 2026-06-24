@@ -627,6 +627,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   Python wheel reproducibility blocker validation records that a fresh standard pre-upload rebuild
   did not match the approved wheel SHA256 because generated ZIP timestamps drifted; PyPI upload
   remains blocked pending a deterministic wheel approval request and decision.
+- `patch-0-1-1-python-deterministic-wheel-approval-request-validation-2026-06-24.md` - patch
+  0.1.1 Python deterministic wheel approval request validation binds the exact
+  `SOURCE_DATE_EPOCH=0` `ethos-pdf==0.1.1` wheel candidate, source commit, wheel metadata,
+  deterministic SHA256, local install/import smoke, and retained blockers for decider review; PyPI
+  upload remains blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
