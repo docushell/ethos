@@ -683,6 +683,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   operator upload while keeping upload, registry, npm vendor refresh, public install wording,
   hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces
   blocked until separate closeout or approval records pass.
+- `patch-0-1-2-artifact-publication-closeout-validation-2026-06-24.md` - patch 0.1.2
+  artifact publication closeout validation records GitHub Release `v0.1.2`, approved tag target,
+  exact published macOS arm64 and Linux x64 assets, matching checksums, sidecars, bounded release
+  wording, and retained blockers; registry publication, npm vendor refresh, npm publication, and
+  public installation wording remain separate blocked lanes.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

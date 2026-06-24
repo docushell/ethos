@@ -68,6 +68,13 @@ remains `0.1.1`, registry publication remains blocked, npm vendor refresh remain
 public installation wording remains blocked until post-upload closeout or separate approval records
 pass.
 
+Patch `0.1.2` artifact publication closeout is recorded in
+`docs/validation/patch-0-1-2-artifact-publication-closeout-validation-2026-06-24.md`. GitHub
+Release `v0.1.2` now contains the exact approved macOS arm64/Linux x64 CLI artifact assets and
+bounded release wording, but the public install baseline remains `0.1.1`, registry publication
+remains blocked, npm vendor refresh remains blocked, npm publication remains blocked, and public
+installation wording remains blocked until separate lanes pass.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in
