@@ -722,6 +722,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   `ethos-verify`, and `ethos-pdf` `0.1.2` crate artifacts, SHA256 values, source binding,
   package tag names, publish order, requested later operator commands, and retained blockers;
   `cargo publish`, tag creation, and Rust crate public installation wording remain blocked.
+- `patch-0-1-2-crates-publication-approval-decision-validation-2026-06-25.md` - patch 0.1.2
+  crates.io publication approval decision validation accepts only bounded later operator execution
+  for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` `0.1.2`; actual publication, package tag
+  creation, Rust crate public installation wording, PyPI publication, hosted, production, Windows,
+  bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces remain blocked until separate
+  closeout or approval records pass.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

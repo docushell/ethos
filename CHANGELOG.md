@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: record decider approval for bounded later crates.io publication of patch `0.1.2` Rust crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` while keeping actual operator publication, package tag creation, Rust public install wording, PyPI publication, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: request decider review for exact patch `0.1.2` Rust crates.io publication of `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` while keeping `cargo publish`, package tag creation, Rust public install wording, PyPI publication, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: close patch `0.1.2` public install wording for the published npm package and GitHub Release CLI artifacts while keeping Rust crates and Python wheel install wording on `0.1.1`, and retaining hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.
 - boundary-exception: close patch `0.1.2` npm publication with exact registry evidence for `@docushell/ethos-pdf@0.1.2` while keeping public install wording, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
