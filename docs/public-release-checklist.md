@@ -124,6 +124,16 @@ blocked, Windows packaged artifacts remain blocked, bundled project-maintained P
 blocked, `ethos-doc` remains blocked, `ethos-rag` remains blocked, and public benchmark claims
 remain blocked.
 
+Patch `0.1.2` crates.io publication approval decision is recorded in
+`docs/validation/patch-0-1-2-crates-publication-approval-decision-validation-2026-06-25.md`.
+It approves only bounded later operator execution for `ethos-doc-core`, `ethos-verify`, and
+`ethos-pdf` at `0.1.2`. Actual crates.io publication remains a separate operator action, package
+tag creation remains blocked until registry closeout, Rust crate public installation wording
+remains blocked until registry availability closeout, PyPI publication remains blocked, hosted
+surfaces remain blocked, production positioning remains blocked, Windows packaged artifacts remain
+blocked, bundled project-maintained PDFium builds remain blocked, `ethos-doc` remains blocked,
+`ethos-rag` remains blocked, and public benchmark claims remain blocked.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in
