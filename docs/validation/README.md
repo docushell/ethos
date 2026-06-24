@@ -12,7 +12,7 @@ Records:
 
 Patch `0.1.1` closeout records now document the approved public beta/evaluation surfaces for source,
 Rust crates, the Python wheel, npm package, and macOS arm64/Linux x64 CLI artifacts. Historical
-package-publication records below keep their at-the-time blocker wording for traceability.
+package publication evidence records below keep their at-the-time blocker wording for traceability.
 The public beta current-main refresh prep record keeps refreshed source approval blocked while
 recording the exact current-main source candidate and required follow-up evidence.
 

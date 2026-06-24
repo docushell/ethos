@@ -137,14 +137,14 @@ class MilestoneEPublicEvaluationCurrentStateCloseoutTests(unittest.TestCase):
         for blocker in RETAINED_BLOCKERS:
             self.assertIn(blocker, record)
 
-    def test_readme_and_status_docs_match_exact_public_wording(self) -> None:
+    def test_current_docs_use_current_public_wording(self) -> None:
         readme_text = re.sub(
             r"\s+",
             " ",
             " ".join(line.removeprefix("> ").strip() for line in read(README).splitlines()),
         )
         self.assertIn(CURRENT_README_WORDING, readme_text, str(README))
-        self.assertIn(EXACT_PUBLIC_WORDING, normalized(EXECUTION_STATUS), str(EXECUTION_STATUS))
+        self.assertIn(CURRENT_README_WORDING, normalized(EXECUTION_STATUS), str(EXECUTION_STATUS))
 
     def test_docs_reference_current_state_and_retained_blockers(self) -> None:
         for path in (PREP_SCOPE, ROADMAP, EXECUTION_STATUS, VALIDATION_README):

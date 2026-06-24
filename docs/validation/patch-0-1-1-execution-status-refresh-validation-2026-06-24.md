@@ -64,6 +64,7 @@ surfaces only.
 ```sh
 python3 .github/scripts/test_execution_status.py
 python3 .github/scripts/test_public_prealpha_wording_approval.py
+python3 .github/scripts/test_milestone_e_prep_scope.py
 python3 .github/scripts/public_boundary_claims_gate.py
 python3 .github/scripts/claims_gate.py
 python3 .github/scripts/test_public_surface_posture.py
