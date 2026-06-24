@@ -659,6 +659,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   publication evidence exist, and leaves release, tag, publication, GitHub Release artifact,
   hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces
   unapproved.
+- `patch-0-1-2-artifact-package-evidence-validation-2026-06-24.md` - patch 0.1.2
+  artifact/package evidence validation dynamically checks `0.1.2` Rust crate candidates and the
+  `ethos_pdf-0.1.2-py3-none-any.whl` candidate, updates draft CLI artifact workflow smoke
+  expectations to `ethos 0.1.2`, and keeps npm at `0.1.1`, public install wording blocked,
+  registry publication blocked, GitHub Release artifact publication blocked, hosted, production,
+  Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces unapproved.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

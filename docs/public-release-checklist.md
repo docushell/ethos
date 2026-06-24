@@ -35,6 +35,15 @@ evidence exist, and does not approve a release, tag, package publish, GitHub Rel
 hosted surface, production positioning, Windows packaged artifact, bundled project-maintained
 PDFium build, public benchmark report, or public benchmark claim.
 
+Patch `0.1.2` artifact/package evidence is recorded in
+`docs/validation/patch-0-1-2-artifact-package-evidence-validation-2026-06-24.md` for local
+candidate validation only. It dynamically checks `0.1.2` Rust crate candidates and the
+`ethos_pdf-0.1.2-py3-none-any.whl` candidate, and it updates draft CLI artifact workflow smoke
+expectations to `ethos 0.1.2`. The public install baseline remains `0.1.1`, public installation
+wording remains blocked, registry publication remains blocked, GitHub Release artifact publication
+remains blocked, and npm vendor refresh remains blocked until separate approval, operator evidence,
+and closeout records pass.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

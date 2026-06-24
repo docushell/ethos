@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: record patch `0.1.2` artifact/package evidence prep and update draft CLI artifact smoke expectations to `ethos 0.1.2` while keeping npm, public install wording, registry publication, GitHub Release publication, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: activate Rust workspace and Python source/package metadata for patch `0.1.2` candidate validation while keeping npm and public install wording on the published `0.1.1` baseline; no release, tag, package publication, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, or `ethos-rag` boundary change.
 - boundary-exception: record narrow patch `0.1.2` readiness prep and professional public README beta wording while retaining `0.1.1` install baselines; no release, tag, package publication, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, or `ethos-rag` boundary change.
 - boundary-exception: add an `evidence_anchor` v1 guard target, CI guard step, and schema-bound inventory for the merged source-only command; no hosted, production, Windows, bundled PDFium, benchmark, parser-quality, table-quality, or release-posture boundary change.

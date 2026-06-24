@@ -272,6 +272,8 @@ The patch `0.1.2` readiness prep record in `docs/validation/patch-0-1-2-readines
 
 The patch `0.1.2` version activation record in `docs/validation/patch-0-1-2-version-activation-validation-2026-06-24.md` moves the Rust workspace and Python source/package metadata to `0.1.2` for candidate validation only. npm and public install wording remain on the published `0.1.1` baseline until matching `0.1.2` CLI artifacts, registry/GitHub Release evidence, and operator actions are recorded. This activation does not approve a release, tag, package publish, GitHub Release artifact, hosted surface, production positioning, Windows packaged artifact, bundled project-maintained PDFium build, public benchmark report, or public benchmark claim.
 
+The patch `0.1.2` artifact/package evidence record in `docs/validation/patch-0-1-2-artifact-package-evidence-validation-2026-06-24.md` adds a dynamic release-candidate-prep guard for local `0.1.2` Rust crate candidates and the `ethos_pdf-0.1.2-py3-none-any.whl` candidate, and updates draft CLI artifact workflow smoke expectations to `ethos 0.1.2`. The public install baseline remains `0.1.1`, public installation wording remains blocked, registry publication remains blocked, GitHub Release artifact publication remains blocked, and npm vendor refresh remains blocked until separate approval, operator evidence, and closeout records pass.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
