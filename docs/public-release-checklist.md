@@ -95,6 +95,12 @@ operator action only. It accepts the exact `@docushell/ethos-pdf@0.1.2` npm cand
 pre-publish checks, but does not run `npm publish`; registry closeout and public installation
 wording remain blocked until separate operator evidence and closeout lanes pass.
 
+Patch `0.1.2` npm publication blocker is recorded in
+`docs/validation/patch-0-1-2-npm-publication-blocker-validation-2026-06-24.md`. The approved
+`@docushell/ethos-pdf@0.1.2` publish attempt failed with npm `E404`, and registry checks still
+show latest `0.1.1`; retry, registry closeout, and public installation wording remain blocked
+pending npm account or `@docushell` scope permission resolution.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

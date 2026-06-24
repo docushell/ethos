@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: record patch `0.1.2` npm publication blocker after an approved `@docushell/ethos-pdf@0.1.2` publish attempt failed with npm `E404`; retry, registry closeout, public install wording, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces remain blocked.
 - boundary-exception: approve exact patch `0.1.2` npm publication decision for later operator publish of `@docushell/ethos-pdf@0.1.2` while keeping publish execution, public install wording, registry closeout, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: request decider review for exact patch `0.1.2` npm publication of `@docushell/ethos-pdf@0.1.2` while keeping publish, public install wording, registry closeout, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: refresh the `@docushell/ethos-pdf@0.1.2` npm vendor payload from published patch `0.1.2` GitHub Release CLI artifacts while keeping npm publication, public install wording, registry publication, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.

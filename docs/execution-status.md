@@ -21,6 +21,13 @@ hosted surfaces, production positioning, Windows packaged artifacts, bundled pro
 PDFium builds, public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag`
 remain blocked.
 
+Patch `0.1.2` npm publication blocker is recorded in
+`docs/validation/patch-0-1-2-npm-publication-blocker-validation-2026-06-24.md`. The approved
+`@docushell/ethos-pdf@0.1.2` publish attempt failed with npm `E404`; registry checks still show
+latest `0.1.1`, so retry, registry closeout, public installation wording, hosted surfaces,
+production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
+public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag` remain blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane
