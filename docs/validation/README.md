@@ -647,6 +647,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   status refresh validation updates the current execution-status summary and PM rule for published
   evaluation surfaces while retaining hosted, production, Windows, bundled PDFium, benchmark,
   `ethos-doc`, and `ethos-rag` blockers.
+- `patch-0-1-2-readiness-prep-validation-2026-06-24.md` - patch 0.1.2 readiness prep validation
+  records the narrow beta patch candidate boundary after `ethos evidence anchor`, the
+  `evidence_anchor` v1 guard, and professional public README status wording landed, while keeping
+  the current public install baseline at `0.1.1` and leaving release, tag, publication, GitHub
+  Release artifact, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and
+  `ethos-rag` surfaces unapproved.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

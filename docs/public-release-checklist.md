@@ -19,6 +19,14 @@ does not approve a release, tag, version bump, package publish, GitHub Release a
 surface, production positioning, Windows packaged artifact, bundled project-maintained PDFium
 build, public benchmark report, or public benchmark claim.
 
+Patch `0.1.2` readiness prep is recorded in
+`docs/validation/patch-0-1-2-readiness-prep-validation-2026-06-24.md` for review only. It records
+the narrow beta patch candidate boundary after `ethos evidence anchor`, the `evidence_anchor` v1
+guard, and professional public README status wording landed on `main`. It keeps the current public
+install baseline at `0.1.1` and does not approve a release, tag, version bump, package publish,
+GitHub Release artifact, hosted surface, production positioning, Windows packaged artifact,
+bundled project-maintained PDFium build, public benchmark report, or public benchmark claim.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

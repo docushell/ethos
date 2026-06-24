@@ -55,13 +55,12 @@ EXACT_PUBLIC_WORDING = (
     "benchmark claims remain blocked."
 )
 CURRENT_README_WORDING = (
-    "Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, "
-    "Linux x64 CLI artifact, and npm `@docushell/ethos-pdf` evaluation. It verifies whether "
-    "AI citations are grounded in document evidence across native Ethos JSON and supported foreign "
-    "parser outputs. Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are "
-    "available on crates.io at `0.1.1` for evaluation. The Python `ethos-pdf` wheel, npm "
-    "`@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 CLI artifacts are available "
-    "for evaluation with caller-provided PDFium."
+    "Ethos is a deterministic document evidence layer for source-grounded verification and "
+    "citation checking across native Ethos JSON and supported foreign parser outputs. The current "
+    "beta includes the GitHub source repository, Rust library crates `ethos-doc-core`, "
+    "`ethos-verify`, and `ethos-pdf` at `0.1.1`, the Python `ethos-pdf` wheel, the npm "
+    "`@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 CLI artifacts. PDFium-backed "
+    "commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`."
 )
 BOUNDED_INSTALLATION_WORDING = (
     "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are available on "
@@ -176,9 +175,10 @@ class MilestoneEPackagePublicationPublicInstallationAvailabilityTests(unittest.T
         self.assertIn("macOS arm64/Linux x64 CLI artifacts", readme)
         self.assertIn("Windows packaged artifacts", readme)
         self.assertIn("bundled project-maintained PDFium builds", readme)
-        self.assertIn("`ethos-doc`, `ethos-rag`", readme)
+        self.assertIn("ethos-doc", readme)
+        self.assertIn("ethos-rag", readme)
         self.assertIn("public benchmark reports", readme)
-        self.assertIn("public benchmark claims", readme)
+        self.assertIn("release-scope work", readme)
 
     def test_docs_reference_availability_and_retained_blockers(self) -> None:
         for path in (PREP_SCOPE, ROADMAP, EXECUTION_STATUS, VALIDATION_README):
