@@ -60,6 +60,14 @@ baseline remains `0.1.1`, registry publication remains blocked, npm vendor refre
 and public installation wording remains blocked until a separate decision and operator evidence
 pass.
 
+Patch `0.1.2` artifact publication approval decision is recorded in
+`docs/validation/patch-0-1-2-artifact-publication-approval-decision-validation-2026-06-24.md` for
+later operator upload only. It accepts the exact macOS arm64/Linux x64 CLI artifact names and
+SHA256 values for GitHub Release `v0.1.2`, but upload remains pending, the public install baseline
+remains `0.1.1`, registry publication remains blocked, npm vendor refresh remains blocked, and
+public installation wording remains blocked until post-upload closeout or separate approval records
+pass.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

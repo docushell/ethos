@@ -278,6 +278,8 @@ The patch `0.1.2` draft artifact evidence record in `docs/validation/patch-0-1-2
 
 The patch `0.1.2` artifact publication approval request in `docs/validation/patch-0-1-2-artifact-publication-approval-request-validation-2026-06-24.md` binds the exact macOS arm64/Linux x64 draft CLI artifact names, SHA256 values, source commit, workflow evidence, and requested bounded wording for decider review only. Publication remains blocked, the public install baseline remains `0.1.1`, registry publication remains blocked, npm vendor refresh remains blocked, and public installation wording remains blocked until a separate decision and operator evidence pass.
 
+The patch `0.1.2` artifact publication approval decision in `docs/validation/patch-0-1-2-artifact-publication-approval-decision-validation-2026-06-24.md` accepts only the exact macOS arm64/Linux x64 CLI artifact names, SHA256 values, source binding, workflow evidence, and bounded wording for later operator upload to GitHub Release `v0.1.2`. Upload remains pending, the public install baseline remains `0.1.1`, registry publication remains blocked, npm vendor refresh remains blocked, and public installation wording remains blocked until post-upload closeout or separate approval records pass.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
