@@ -152,22 +152,35 @@ fn validate_anchor_request(request: &EvidenceAnchorRequest) -> Result<(), Eviden
 }
 
 fn validate_evidence_ref(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAnchorError> {
-    if evidence_ref.locator.page_index == Some(0) {
+    validate_locator(evidence_ref)?;
+    validate_expected_text(evidence_ref)?;
+    validate_kind_level_compat(evidence_ref)?;
+    validate_required_anchor_inputs(evidence_ref)?;
+    validate_required_page_locator(evidence_ref)?;
+    Ok(())
+}
+
+fn validate_locator(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAnchorError> {
+    let locator = &evidence_ref.locator;
+    if locator.page_index == Some(0) {
         return Err(EvidenceAnchorError::new("page_index must be 1-based"));
     }
-    if evidence_ref.locator.page_index.is_some() && evidence_ref.locator.page_id.is_some() {
+    if locator.page_index.is_some() && locator.page_id.is_some() {
         return Err(EvidenceAnchorError::new(
             "use exactly one of page_index or page_id",
         ));
     }
-    if evidence_ref.locator.bbox.is_some()
-        && evidence_ref.locator.coordinate_profile
-            != Some(CoordinateProfile::EthosQuantizedTopLeftV1)
+    if locator.bbox.is_some()
+        && locator.coordinate_profile != Some(CoordinateProfile::EthosQuantizedTopLeftV1)
     {
         return Err(EvidenceAnchorError::new(
             "bbox requires coordinate_profile ethos_quantized_top_left_v1",
         ));
     }
+    Ok(())
+}
+
+fn validate_expected_text(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAnchorError> {
     if let Some(expected_text) = evidence_ref.expected_text.as_deref() {
         if normalize_expected_text(expected_text).is_empty() {
             return Err(EvidenceAnchorError::new(
@@ -198,6 +211,10 @@ fn validate_evidence_ref(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAncho
             ));
         }
     }
+    Ok(())
+}
+
+fn validate_kind_level_compat(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAnchorError> {
     match evidence_ref.evidence_kind {
         EvidenceKind::Page if evidence_ref.required_anchor_level != AnchorLevel::Page => {
             return Err(EvidenceAnchorError::new(
@@ -234,6 +251,10 @@ fn validate_evidence_ref(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAncho
         EvidenceKind::Region | EvidenceKind::Other => {}
         _ => {}
     }
+    Ok(())
+}
+
+fn validate_required_anchor_inputs(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAnchorError> {
     if anchor_requires_text(evidence_ref) && evidence_ref.expected_text.is_none() {
         return Err(EvidenceAnchorError::new(
             "required_anchor_level text or text_bbox requires expected_text",
@@ -244,6 +265,10 @@ fn validate_evidence_ref(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAncho
             "required_anchor_level bbox or text_bbox requires locator.bbox",
         ));
     }
+    Ok(())
+}
+
+fn validate_required_page_locator(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAnchorError> {
     if page_locator_required(evidence_ref)
         && evidence_ref.locator.page_index.is_none()
         && evidence_ref.locator.page_id.is_none()
