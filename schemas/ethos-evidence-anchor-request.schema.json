@@ -65,7 +65,7 @@
           "enum": ["page", "text", "bbox", "text_bbox", "table_cell"]
         },
         "locator": { "$ref": "#/$defs/locator" },
-        "expected_text": { "type": "string" },
+        "expected_text": { "type": "string", "minLength": 1 },
         "expected_text_sha256": { "$ref": "#/$defs/fingerprint" },
         "text_normalization_profile": { "const": "ethos_collapse_whitespace_v1" }
       },

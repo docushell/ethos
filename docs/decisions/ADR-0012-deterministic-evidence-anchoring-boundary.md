@@ -30,6 +30,19 @@ The command:
 - reports stale fingerprints, missing evidence, mismatches, unsupported v1 kinds, and source
   capability limits explicitly.
 
+Per-ref rollup is fail-closed and ordered:
+
+1. accepted-but-unsupported v1 evidence kinds report `unsupported_evidence_kind`;
+2. stale source fingerprints short-circuit page/text/bbox/table checks and report
+   `stale_fingerprint`;
+3. missing required targets report `not_found`;
+4. checked mismatches report `mismatch`;
+5. capability gaps report `capability_limited` only when no checked required axis failed;
+6. only fully satisfied required axes report `bound`.
+
+This preserves the trust boundary for mixed outcomes. For example, if text mismatches while bbox
+checking is capability-limited, the anchor reports `mismatch`, not `capability_limited`.
+
 The command does not perform semantic support checks, AI answer verification, RAG workflow,
 source-map validation, evidence export, crop rendering, batch document-set processing, or
 production-readiness gating.

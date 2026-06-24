@@ -168,6 +168,13 @@ fn validate_evidence_ref(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAncho
             "bbox requires coordinate_profile ethos_quantized_top_left_v1",
         ));
     }
+    if let Some(expected_text) = evidence_ref.expected_text.as_deref() {
+        if normalize_expected_text(expected_text).is_empty() {
+            return Err(EvidenceAnchorError::new(
+                "expected_text must not be empty after normalization",
+            ));
+        }
+    }
     if evidence_ref.expected_text_sha256.is_some() {
         let Some(expected_text) = evidence_ref.expected_text.as_deref() else {
             return Err(EvidenceAnchorError::new(
@@ -226,6 +233,16 @@ fn validate_evidence_ref(evidence_ref: &EvidenceRef) -> Result<(), EvidenceAncho
         }
         EvidenceKind::Region | EvidenceKind::Other => {}
         _ => {}
+    }
+    if anchor_requires_text(evidence_ref) && evidence_ref.expected_text.is_none() {
+        return Err(EvidenceAnchorError::new(
+            "required_anchor_level text or text_bbox requires expected_text",
+        ));
+    }
+    if requires_bbox(evidence_ref) && evidence_ref.locator.bbox.is_none() {
+        return Err(EvidenceAnchorError::new(
+            "required_anchor_level bbox or text_bbox requires locator.bbox",
+        ));
     }
     if page_locator_required(evidence_ref)
         && evidence_ref.locator.page_index.is_none()
@@ -333,7 +350,7 @@ fn anchor_one(
         EvidenceKind::Region | EvidenceKind::Other => {}
     }
 
-    capability_limits.sort_by_key(|limit| format!("{limit:?}"));
+    capability_limits.sort_by_key(|limit| capability_limit_order(*limit));
     capability_limits.dedup();
     let achieved_anchor_level =
         achieved_anchor_level(evidence_ref, achieved_page, text_ok, bbox_ok, table_ok);
@@ -563,7 +580,7 @@ fn resolve_anchor_table_cell(index: &SourceIndex, evidence_ref: &EvidenceRef) ->
     };
     let check = match evidence_ref.expected_text.as_deref() {
         Some(expected) => {
-            if text_check(expected, &cell.text) == TextCheck::Matched {
+            if table_cell_text_matches(expected, &cell.text) {
                 TableCellCheck::Matched
             } else {
                 TableCellCheck::Mismatch
@@ -596,8 +613,23 @@ fn text_check(expected: &str, actual: &str) -> TextCheck {
     }
 }
 
+fn table_cell_text_matches(expected: &str, actual: &str) -> bool {
+    normalize_expected_text(actual) == normalize_expected_text(expected)
+}
+
 fn normalize_expected_text(input: &str) -> String {
     normalize_quote(input)
+}
+
+fn capability_limit_order(limit: CapabilityLimit) -> u8 {
+    match limit {
+        CapabilityLimit::MissingSpans => 0,
+        CapabilityLimit::MissingCharOffsets => 1,
+        CapabilityLimit::MissingTables => 2,
+        CapabilityLimit::MissingFingerprint => 3,
+        CapabilityLimit::UnknownCoordinateOrigin => 4,
+        CapabilityLimit::MissingCropSupport => 5,
+    }
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {

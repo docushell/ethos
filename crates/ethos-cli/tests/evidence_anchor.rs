@@ -281,6 +281,31 @@ fn usage_errors_are_exit_two() {
         request(serde_json::json!([
             {
                 "evidence_id": "ev",
+                "evidence_kind": "text",
+                "required_anchor_level": "text",
+                "locator": { "page_index": 1 }
+            }
+        ])),
+        request(serde_json::json!([
+            {
+                "evidence_id": "ev",
+                "evidence_kind": "text_region",
+                "required_anchor_level": "bbox",
+                "locator": { "page_index": 1 }
+            }
+        ])),
+        request(serde_json::json!([
+            {
+                "evidence_id": "ev",
+                "evidence_kind": "text",
+                "required_anchor_level": "text",
+                "locator": { "page_index": 1 },
+                "expected_text": "   "
+            }
+        ])),
+        request(serde_json::json!([
+            {
+                "evidence_id": "ev",
                 "evidence_kind": "page",
                 "required_anchor_level": "page",
                 "locator": { "page_index": 0 }
@@ -323,6 +348,60 @@ fn usage_errors_are_exit_two() {
         assert_eq!(output.status.code(), Some(2));
         assert!(output.stdout.is_empty());
     }
+}
+
+#[test]
+fn table_cell_expected_text_uses_exact_normalized_match() {
+    let request = request(serde_json::json!([
+        {
+            "evidence_id": "ev_cell",
+            "evidence_kind": "table_cell",
+            "required_anchor_level": "table_cell",
+            "locator": {
+                "table_id": "t0001",
+                "cell": { "row": 1, "col": 1 }
+            },
+            "expected_text": "12.4"
+        }
+    ]));
+    let report = parse_success(&[
+        "evidence",
+        "anchor",
+        document_example().to_str().unwrap(),
+        "--evidence-refs",
+        request.to_str().unwrap(),
+    ]);
+    assert_eq!(report["anchors"][0]["anchor_status"], "mismatch");
+    assert_eq!(report["anchors"][0]["checks"]["table_cell"], "mismatch");
+}
+
+#[test]
+fn text_mismatch_takes_precedence_over_bbox_capability_limit() {
+    let request = request(serde_json::json!([
+        {
+            "evidence_id": "odl_mismatch_limited",
+            "evidence_kind": "text_region",
+            "required_anchor_level": "text_bbox",
+            "locator": {
+                "page_index": 1,
+                "bbox": [72, 101, 540, 115],
+                "coordinate_profile": "ethos_quantized_top_left_v1"
+            },
+            "expected_text": "not present in the source"
+        }
+    ]));
+    let report = parse_success(&[
+        "evidence",
+        "anchor",
+        opendataloader_example().to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--evidence-refs",
+        request.to_str().unwrap(),
+    ]);
+    assert_eq!(report["anchors"][0]["checks"]["text"], "mismatch");
+    assert_eq!(report["anchors"][0]["checks"]["bbox"], "capability_limited");
+    assert_eq!(report["anchors"][0]["anchor_status"], "mismatch");
 }
 
 #[test]

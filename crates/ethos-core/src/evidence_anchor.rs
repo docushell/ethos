@@ -162,6 +162,7 @@ pub enum CoordinateProfile {
 
 /// Evidence-anchor report envelope.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EvidenceAnchorReport {
     /// Artifact type identity.
     pub artifact_type: String,
@@ -178,6 +179,7 @@ pub struct EvidenceAnchorReport {
 
 /// Grounding metadata embedded in evidence-anchor reports.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EvidenceAnchorGrounding {
     /// Producing parser identity.
     pub parser: ParserIdentity,
@@ -187,6 +189,7 @@ pub struct EvidenceAnchorGrounding {
 
 /// One evidence anchor outcome.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EvidenceAnchor {
     /// Caller correlation key.
     pub evidence_id: String,
@@ -224,6 +227,7 @@ pub enum AnchorStatus {
 
 /// Per-axis evidence-anchor checks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AnchorChecks {
     /// Fingerprint check.
     pub fingerprint: FingerprintCheck,
