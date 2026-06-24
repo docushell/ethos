@@ -107,6 +107,13 @@ Patch `0.1.2` npm publication closeout is recorded in
 tarball URL, source commit, file count, and unpacked size. Public installation wording remains
 blocked until a separate public wording closeout lane passes.
 
+Patch `0.1.2` public install wording closeout is recorded in
+`docs/validation/patch-0-1-2-public-install-wording-closeout-validation-2026-06-24.md`. Public
+README and claim-inventory wording now point npm installation to `@docushell/ethos-pdf@0.1.2`
+and GitHub Release CLI archives to `v0.1.2`. Rust crate installation remains at `0.1.1`, and
+Python installation remains at `ethos-pdf==0.1.1` until separate crates.io/PyPI `0.1.2`
+publication closeout records pass.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in
