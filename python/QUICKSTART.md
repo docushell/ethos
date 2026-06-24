@@ -3,6 +3,12 @@
 The `ethos-pdf` Python package is a thin wrapper around a caller-provided local `ethos` CLI binary.
 It does not bundle Ethos or PDFium.
 
+Install the published evaluation wheel from PyPI with:
+
+```sh
+python3 -m pip install ethos-pdf==0.1.1
+```
+
 ## PDFium Setup
 
 PDF-backed parse and crop commands require a caller-provided PDFium dynamic library.

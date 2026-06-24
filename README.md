@@ -130,6 +130,16 @@ cargo add ethos-verify@0.1.1
 cargo add ethos-pdf@0.1.1
 ```
 
+To install the Python wrapper from PyPI:
+
+```bash
+python3 -m pip install ethos-pdf==0.1.1
+```
+
+The Python wheel is a thin wrapper around a caller-provided local `ethos` CLI binary. It does not
+bundle the CLI or PDFium. Install or provide `ethos` separately, and keep
+`ETHOS_PDFIUM_LIBRARY_PATH` set for PDFium-backed commands.
+
 To install the npm CLI package on a supported first-release platform:
 
 ```bash

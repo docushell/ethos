@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: document bounded patch `0.1.1` public install paths for published evaluation surfaces while retaining hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.
 - boundary-exception: close patch `0.1.1` Python PyPI publication with exact registry evidence; no public install wording, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, or `ethos-rag` boundary change.
 - boundary-exception: approve exact patch `0.1.1` deterministic Python PyPI wheel publication decision for later operator upload; no PyPI upload or support-boundary change.
 - boundary-exception: request exact patch `0.1.1` deterministic Python PyPI wheel approval for decider review; no PyPI upload or support-boundary change.
