@@ -40,7 +40,6 @@ FORBIDDEN_RELEASE_CLAIMS = (
     "v0.1.2 is published",
     "publish 0.1.2",
     "tag v0.1.2",
-    "npm install -g @docushell/ethos-pdf@0.1.2",
     "python3 -m pip install ethos-pdf==0.1.2",
     "cargo add ethos-doc-core@0.1.2",
     "cargo add ethos-verify@0.1.2",
@@ -92,7 +91,7 @@ class Patch012VersionActivationTests(unittest.TestCase):
         self.assertIn("cargo add ethos-verify@0.1.1", readme)
         self.assertIn("cargo add ethos-pdf@0.1.1", readme)
         self.assertIn("python3 -m pip install ethos-pdf==0.1.1", readme)
-        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.1", readme)
+        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.2", readme)
         for phrase in FORBIDDEN_RELEASE_CLAIMS:
             self.assertNotIn(phrase, readme.lower())
 

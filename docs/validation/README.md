@@ -10,9 +10,12 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
-Patch `0.1.1` closeout records now document the approved public beta/evaluation surfaces for source,
-Rust crates, the Python wheel, npm package, and macOS arm64/Linux x64 CLI artifacts. Historical
-package publication evidence records below keep their at-the-time blocker wording for traceability.
+Patch `0.1.2` closeout records now document the approved public beta/evaluation npm package and
+macOS arm64/Linux x64 CLI artifact surfaces, while Rust crate and Python wheel install wording
+remain on the published `0.1.1` baseline. Patch `0.1.1` closeout records document the approved
+public beta/evaluation surfaces for source, Rust crates, the Python wheel, npm package, and macOS
+arm64/Linux x64 CLI artifacts. Historical package publication evidence records below keep their
+at-the-time blocker wording for traceability.
 The public beta current-main refresh prep record keeps refreshed source approval blocked while
 recording the exact current-main source candidate and required follow-up evidence.
 
@@ -709,6 +712,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   publication closeout validation records successful publication of `@docushell/ethos-pdf@0.1.2`,
   registry verification for latest version, shasum, integrity, tarball URL, file count, unpacked
   size, source commit binding, and retained blockers; public installation wording remains blocked.
+- `patch-0-1-2-public-install-wording-closeout-validation-2026-06-24.md` - patch 0.1.2
+  public install wording closeout validation records README and public claim-inventory wording for
+  `@docushell/ethos-pdf@0.1.2` and GitHub Release `v0.1.2` CLI artifacts while keeping Rust crate
+  and Python wheel install wording on the published `0.1.1` baseline until separate crates.io/PyPI
+  `0.1.2` publication closeout records pass.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

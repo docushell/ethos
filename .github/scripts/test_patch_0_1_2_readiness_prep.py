@@ -53,7 +53,6 @@ FORBIDDEN_RELEASE_CLAIMS = (
     "v0.1.2 is released",
     "publish 0.1.2",
     "tag v0.1.2",
-    "npm install -g @docushell/ethos-pdf@0.1.2",
     "python3 -m pip install ethos-pdf==0.1.2",
     "cargo add ethos-doc-core@0.1.2",
     "cargo add ethos-verify@0.1.2",
@@ -113,7 +112,7 @@ class Patch012ReadinessPrepTests(unittest.TestCase):
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
         self.assertIn("cargo add ethos-doc-core@0.1.1", text)
         self.assertIn("python3 -m pip install ethos-pdf==0.1.1", text)
-        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.1", text)
+        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.2", text)
         self.assertNotIn("not production-ready", lower)
         self.assertNotIn("not stable production surfaces", lower)
         for phrase in FORBIDDEN_RELEASE_CLAIMS:
@@ -122,7 +121,6 @@ class Patch012ReadinessPrepTests(unittest.TestCase):
     def test_package_manifests_do_not_rewrite_prep_record_boundary(self) -> None:
         self.assertIn("current public install baseline remains `0.1.1`", normalized(RECORD))
         self.assertNotIn("python3 -m pip install ethos-pdf==0.1.2", read(README))
-        self.assertNotIn("npm install -g @docushell/ethos-pdf@0.1.2", read(README))
 
     def test_record_is_indexed_and_status_docs_reference_it(self) -> None:
         record_name = RECORD.name

@@ -68,6 +68,7 @@ EXPECTED_COMMANDS = (
     "$(PYTHON) .github/scripts/test_patch_0_1_2_artifact_publication_approval_decision.py",
     "$(PYTHON) .github/scripts/test_patch_0_1_2_artifact_publication_closeout.py",
     "$(PYTHON) .github/scripts/test_patch_0_1_2_npm_vendor_refresh.py",
+    "$(PYTHON) .github/scripts/test_patch_0_1_2_public_install_wording_closeout.py",
     "$(PYTHON) .github/scripts/test_first_public_release_artifact_evidence.py",
     "$(PYTHON) .github/scripts/test_first_public_release_final_decider.py",
     "$(PYTHON) .github/scripts/test_first_public_release_linux_x64_artifact_evidence.py",

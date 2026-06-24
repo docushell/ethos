@@ -54,7 +54,7 @@ class PublicSurfacePostureTests(unittest.TestCase):
         self.assertIn("cargo add ethos-doc-core@0.1.1", text)
         self.assertIn("cargo add ethos-verify@0.1.1", text)
         self.assertIn("cargo add ethos-pdf@0.1.1", text)
-        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.1", text)
+        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.2", text)
         self.assertNotIn("not production-ready", text.lower())
         self.assertNotIn("not stable production surfaces", text.lower())
         self.assertNotIn("contracts phase", text)

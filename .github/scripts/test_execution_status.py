@@ -34,10 +34,10 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            "Status: Public beta evaluation is approved for the GitHub source repository, the three bounded "
-            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`, the Python "
-            "`ethos-pdf` wheel, the npm `@docushell/ethos-pdf` CLI package, the macOS arm64 CLI "
-            "artifact, and the Linux x64 CLI artifact at `0.1.1`.",
+            "Status: Public beta evaluation is approved for the GitHub source repository; the three bounded "
+            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.1`; "
+            "the Python `ethos-pdf` wheel at `0.1.1`; the npm `@docushell/ethos-pdf` CLI package "
+            "at `0.1.2`; and the GitHub Release `v0.1.2` macOS arm64 and Linux x64 CLI artifacts.",
             text,
         )
         self.assertIn("Internal Milestone D source-only closeout remains complete", text)
@@ -91,9 +91,10 @@ class ExecutionStatusTests(unittest.TestCase):
             "Ethos is a deterministic document evidence layer for source-grounded verification and "
             "citation checking across native Ethos JSON and supported foreign parser outputs. The current "
             "beta includes the GitHub source repository, Rust library crates `ethos-doc-core`, "
-            "`ethos-verify`, and `ethos-pdf` at `0.1.1`, the Python `ethos-pdf` wheel, the npm "
-            "`@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 CLI artifacts. PDFium-backed "
-            "commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.",
+            "`ethos-verify`, and `ethos-pdf` at `0.1.1`, the Python `ethos-pdf` wheel at `0.1.1`, "
+            "the npm `@docushell/ethos-pdf@0.1.2` package, and GitHub Release `v0.1.2` macOS "
+            "arm64/Linux x64 CLI artifacts. PDFium-backed commands use caller-provided PDFium through "
+            "`ETHOS_PDFIUM_LIBRARY_PATH`.",
             text,
         )
         self.assertIn("ethos-doc-core", text)

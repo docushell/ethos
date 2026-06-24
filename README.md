@@ -11,9 +11,10 @@
 > Ethos is a deterministic document evidence layer for source-grounded verification and
 > citation checking across native Ethos JSON and supported foreign parser outputs. The current
 > beta includes the GitHub source repository, Rust library crates `ethos-doc-core`,
-> `ethos-verify`, and `ethos-pdf` at `0.1.1`, the Python `ethos-pdf` wheel, the npm
-> `@docushell/ethos-pdf@0.1.1` package, and macOS arm64/Linux x64 CLI artifacts. PDFium-backed
-> commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.
+> `ethos-verify`, and `ethos-pdf` at `0.1.1`, the Python `ethos-pdf` wheel at `0.1.1`, the npm
+> `@docushell/ethos-pdf@0.1.2` package, and GitHub Release `v0.1.2` macOS arm64/Linux x64 CLI
+> artifacts. PDFium-backed commands use caller-provided PDFium through
+> `ETHOS_PDFIUM_LIBRARY_PATH`.
 > Current execution status and release-scope notes live in `docs/execution-status.md`;
 > public-release hygiene gates live in `docs/public-release-checklist.md`.
 
@@ -139,7 +140,7 @@ bundle the CLI or PDFium. Install or provide `ethos` separately, and keep
 To install the npm CLI package on a supported first-release platform:
 
 ```bash
-npm install -g @docushell/ethos-pdf@0.1.1
+npm install -g @docushell/ethos-pdf@0.1.2
 ethos --version
 ```
 
@@ -150,7 +151,7 @@ platforms fail before invoking a binary. PDFium-backed commands fail until
 Run `ethos doctor` for local setup diagnostics. Run `ethos doctor --require-pdfium` after setting
 `ETHOS_PDFIUM_LIBRARY_PATH` to check whether the configured PDFium is usable by Ethos.
 
-GitHub Release `v0.1.1` also provides evaluation CLI archives for macOS arm64 and Linux x64.
+GitHub Release `v0.1.2` also provides evaluation CLI archives for macOS arm64 and Linux x64.
 
 ## 2-minute PDF parse quickstart
 
@@ -193,7 +194,7 @@ The command exits `0` and writes a verification report shaped like this:
   "grounding": {
     "parser": {
       "name": "ethos",
-      "version": "0.1.1"
+      "version": "0.1.2"
     }
   },
   "checks": [
