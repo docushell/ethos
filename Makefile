@@ -298,6 +298,7 @@ release-candidate-prep:
 	$(PYTHON) .github/scripts/test_patch_0_1_2_npm_publication_approval_request.py
 	$(PYTHON) .github/scripts/test_patch_0_1_2_npm_publication_approval_decision.py
 	$(PYTHON) .github/scripts/test_patch_0_1_2_npm_publication_blocker.py
+	$(PYTHON) .github/scripts/test_patch_0_1_2_npm_publication_closeout.py
 	$(PYTHON) .github/scripts/test_patch_0_1_1_crates_publication_approval_request.py
 	$(PYTHON) .github/scripts/test_patch_0_1_1_crates_publication_approval_decision.py
 	$(PYTHON) .github/scripts/test_patch_0_1_1_crates_publication_closeout.py

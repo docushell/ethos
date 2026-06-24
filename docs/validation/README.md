@@ -705,6 +705,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   publication blocker validation records that the approved `@docushell/ethos-pdf@0.1.2` publish
   attempt failed with npm `E404`, registry checks still show latest `0.1.1`, and retry, registry
   closeout, and public installation wording remain blocked pending npm account/scope resolution.
+- `patch-0-1-2-npm-publication-closeout-validation-2026-06-24.md` - patch 0.1.2 npm
+  publication closeout validation records successful publication of `@docushell/ethos-pdf@0.1.2`,
+  registry verification for latest version, shasum, integrity, tarball URL, file count, unpacked
+  size, source commit binding, and retained blockers; public installation wording remains blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

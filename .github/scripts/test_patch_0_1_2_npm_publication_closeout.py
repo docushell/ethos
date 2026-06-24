@@ -3,16 +3,6 @@
 # Copyright 2026 The Ethos maintainers
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 #
 
 from __future__ import annotations
@@ -27,16 +17,18 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-RECORD = ROOT / "docs/validation/patch-0-1-1-npm-publication-closeout-validation-2026-06-24.md"
+RECORD = ROOT / "docs/validation/patch-0-1-2-npm-publication-closeout-validation-2026-06-24.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
 
-SOURCE_SHORT = "65360a9"
-SOURCE_COMMIT = "65360a9012104227ba939f6d30f2ec7b82b2ac4d"
-SOURCE_TREE = "85465e6eb1918155088e4d4cb4f5608f5ea65589"
+SOURCE_SHORT = "b7476e9"
+SOURCE_COMMIT = "b7476e95db438b849d12e44a54296da9380091e2"
+SOURCE_TREE = "958417827cb1678ec2bf492c12a698143c58f58b"
 PACKAGE = "@docushell/ethos-pdf"
-VERSION = "0.1.1"
-SHASUM = "a150d08395724aa186d077074782413249a48689"
-INTEGRITY = "sha512-wVF4Ew6836sRncPZkvVieyQuo8FFbbBsIQ/vdupleUQZVX4YHgXb+lFZzZNcVB54Hh7srbbY17El4Z5sV7odhA=="
+VERSION = "0.1.2"
+SHASUM = "39b85d74f588666bfbf69e423a189c2039743de4"
+INTEGRITY = "sha512-3loga13tnAkUkjuOrjKjpA0D3Cm5lW6Al8OwTyRx7NGMt6EB4gMpZOoaSCPjZWchYv7as1uPaEnZyOqrmFOPxg=="
+TARBALL = "https://registry.npmjs.org/@docushell/ethos-pdf/-/ethos-pdf-0.1.2.tgz"
+UNPACKED_SIZE = 3934993
 
 
 def read(path: Path) -> str:
@@ -58,7 +50,7 @@ def npm_view(*args: str) -> str:
         ).strip()
 
 
-class NpmPublicationCloseoutTests(unittest.TestCase):
+class Patch012NpmPublicationCloseoutTests(unittest.TestCase):
     def test_record_is_source_bound_and_indexed(self) -> None:
         record = normalized(RECORD)
         readme = normalized(VALIDATION_README)
@@ -67,46 +59,51 @@ class NpmPublicationCloseoutTests(unittest.TestCase):
         self.assertIn(f"npm publication closeout source commit: `{SOURCE_COMMIT}`", record)
         self.assertIn(f"npm publication closeout source tree: `{SOURCE_TREE}`", record)
         self.assertIn(RECORD.name, readme)
-        self.assertIn("npm publication closeout validation", readme)
+        self.assertIn("patch 0.1.2 npm publication closeout", readme)
 
     def test_record_captures_publish_and_registry_evidence(self) -> None:
         record = normalized(RECORD)
 
         for expected in (
-            "+ @docushell/ethos-pdf@0.1.1",
-            "npm auto-corrected",
-            '"bin[ethos]" script name was cleaned',
+            "+ @docushell/ethos-pdf@0.1.2",
             SHASUM,
             INTEGRITY,
+            TARBALL,
             "fileCount",
-            "3811617",
+            str(UNPACKED_SIZE),
+            "2026-06-24T17:48:40.528Z",
             "v23.11.1",
             "10.9.2",
             "ETHOS_PDFIUM_LIBRARY_PATH",
+            "The registry latest is now `0.1.2`",
         ):
             self.assertIn(expected, record)
 
     def test_registry_reports_published_candidate(self) -> None:
-        self.assertEqual("0.1.2", npm_view(f"{PACKAGE}", "version"))
+        self.assertEqual(VERSION, npm_view(f"{PACKAGE}", "version"))
         versions = json.loads(npm_view(f"{PACKAGE}", "versions", "--json"))
         self.assertIn("0.0.0-reserved.0", versions)
         self.assertIn("0.1.0", versions)
+        self.assertIn("0.1.1", versions)
         self.assertIn(VERSION, versions)
-        dist = json.loads(npm_view(f"{PACKAGE}@{VERSION}", "dist", "--json"))
+        metadata = json.loads(npm_view(f"{PACKAGE}@{VERSION}", "--json"))
+        dist = metadata["dist"]
+
+        self.assertEqual(SOURCE_COMMIT, metadata["gitHead"])
+        self.assertEqual("23.11.1", metadata["_nodeVersion"])
+        self.assertEqual("10.9.2", metadata["_npmVersion"])
         self.assertEqual(SHASUM, dist["shasum"])
         self.assertEqual(INTEGRITY, dist["integrity"])
+        self.assertEqual(TARBALL, dist["tarball"])
         self.assertEqual(11, dist["fileCount"])
-        self.assertEqual(3811617, dist["unpackedSize"])
-        self.assertEqual(
-            "https://registry.npmjs.org/@docushell/ethos-pdf/-/ethos-pdf-0.1.1.tgz",
-            dist["tarball"],
-        )
+        self.assertEqual(UNPACKED_SIZE, dist["unpackedSize"])
 
     def test_retained_blockers_and_public_path_hygiene(self) -> None:
         raw = read(RECORD)
         lower = normalized(RECORD).lower()
 
         for blocker in (
+            "Public installation wording remains blocked.",
             "Hosted surfaces remain blocked.",
             "Production positioning remains blocked.",
             "Public benchmark reports remain blocked.",

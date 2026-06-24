@@ -101,6 +101,12 @@ Patch `0.1.2` npm publication blocker is recorded in
 show latest `0.1.1`; retry, registry closeout, and public installation wording remain blocked
 pending npm account or `@docushell` scope permission resolution.
 
+Patch `0.1.2` npm publication closeout is recorded in
+`docs/validation/patch-0-1-2-npm-publication-closeout-validation-2026-06-24.md`. npm now reports
+`@docushell/ethos-pdf@0.1.2` as the latest published package with matching shasum, integrity,
+tarball URL, source commit, file count, and unpacked size. Public installation wording remains
+blocked until a separate public wording closeout lane passes.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

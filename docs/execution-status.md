@@ -28,6 +28,13 @@ latest `0.1.1`, so retry, registry closeout, public installation wording, hosted
 production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
 public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag` remain blocked.
 
+Patch `0.1.2` npm publication closeout is recorded in
+`docs/validation/patch-0-1-2-npm-publication-closeout-validation-2026-06-24.md`. npm now reports
+`@docushell/ethos-pdf@0.1.2` as latest with matching registry shasum, integrity, tarball URL,
+source commit, file count, and unpacked size. Public installation wording, hosted surfaces,
+production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
+public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag` remain blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane
