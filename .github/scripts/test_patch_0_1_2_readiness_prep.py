@@ -119,11 +119,10 @@ class Patch012ReadinessPrepTests(unittest.TestCase):
         for phrase in FORBIDDEN_RELEASE_CLAIMS:
             self.assertNotIn(phrase, lower)
 
-    def test_package_manifests_remain_on_published_baseline(self) -> None:
-        self.assertIn('version = "0.1.1"', read(WORKSPACE_CARGO))
-        self.assertIn('version = "0.1.1"', read(PYPROJECT))
-        self.assertIn('__version__ = "0.1.1"', read(PYTHON_INIT))
-        self.assertIn('"version": "0.1.1"', read(NPM_PACKAGE))
+    def test_package_manifests_do_not_rewrite_prep_record_boundary(self) -> None:
+        self.assertIn("current public install baseline remains `0.1.1`", normalized(RECORD))
+        self.assertNotIn("python3 -m pip install ethos-pdf==0.1.2", read(README))
+        self.assertNotIn("npm install -g @docushell/ethos-pdf@0.1.2", read(README))
 
     def test_record_is_indexed_and_status_docs_reference_it(self) -> None:
         record_name = RECORD.name

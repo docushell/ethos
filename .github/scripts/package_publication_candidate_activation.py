@@ -29,7 +29,6 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-VERSION = "0.1.1"
 CORE_PACKAGE = "ethos-doc-core"
 CANDIDATE_PACKAGES = (CORE_PACKAGE, "ethos-verify", "ethos-pdf")
 CONSUMER_PACKAGE = "ethos-package-candidate-consumer"
@@ -48,6 +47,23 @@ IGNORE_NAMES = {
     "web",
     ".roadmap.md.swp",
 }
+
+
+def current_workspace_version() -> str:
+    manifest = (ROOT / "Cargo.toml").read_text(encoding="utf-8")
+    in_workspace_package = False
+    for line in manifest.splitlines():
+        if line == "[workspace.package]":
+            in_workspace_package = True
+            continue
+        if in_workspace_package and line.startswith("["):
+            break
+        if in_workspace_package and line.startswith('version = "'):
+            return line.split('"', 2)[1]
+    raise RuntimeError("unable to determine workspace package version")
+
+
+VERSION = current_workspace_version()
 
 
 def should_ignore(_: str, names: list[str]) -> set[str]:
@@ -140,8 +156,8 @@ def materialize_candidate_workspace(workspace: Path) -> None:
 
     replace_once_if_needed(
         workspace / "Cargo.toml",
-        'ethos-core = { path = "crates/ethos-core", version = "0.1.1", default-features = false }',
-        'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.1", default-features = false }',
+        f'ethos-core = {{ path = "crates/ethos-core", version = "{VERSION}", default-features = false }}',
+        f'ethos-core = {{ package = "ethos-doc-core", path = "crates/ethos-core", version = "{VERSION}", default-features = false }}',
     )
     root_manifest = workspace / "Cargo.toml"
     root_text = root_manifest.read_text(encoding="utf-8")
@@ -547,7 +563,7 @@ def source_manifests_have_activation_shape() -> bool:
     lockfile = (ROOT / "Cargo.lock").read_text(encoding="utf-8")
     return all(
         [
-            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.1", default-features = false }'
+            f'ethos-core = {{ package = "ethos-doc-core", path = "crates/ethos-core", version = "{VERSION}", default-features = false }}'
             in workspace,
             'name = "ethos-doc-core"' in core,
             '[lib]\nname = "ethos_core"' in core,

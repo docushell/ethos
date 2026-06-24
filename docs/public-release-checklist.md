@@ -27,6 +27,14 @@ install baseline at `0.1.1` and does not approve a release, tag, version bump, p
 GitHub Release artifact, hosted surface, production positioning, Windows packaged artifact,
 bundled project-maintained PDFium build, public benchmark report, or public benchmark claim.
 
+Patch `0.1.2` version activation is recorded in
+`docs/validation/patch-0-1-2-version-activation-validation-2026-06-24.md` for candidate validation
+only. It moves Rust workspace and Python source/package metadata to `0.1.2`, keeps npm and public
+install wording on the published `0.1.1` baseline until matching CLI artifacts and publication
+evidence exist, and does not approve a release, tag, package publish, GitHub Release artifact,
+hosted surface, production positioning, Windows packaged artifact, bundled project-maintained
+PDFium build, public benchmark report, or public benchmark claim.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

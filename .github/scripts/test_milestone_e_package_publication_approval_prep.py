@@ -493,7 +493,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertNotIn("publish = false", verify)
         self.assertIn('name = "ethos-pdf"', pdf)
         self.assertNotIn("publish = false", pdf)
-        self.assertIn('version = "0.1.1"', read(ROOT / "Cargo.toml"))
+        self.assertIn('version = "0.1.2"', read(ROOT / "Cargo.toml"))
 
     def test_evidence_status_matches_decider_input(self) -> None:
         status = load_json(PREP)["evidence_review_status"]
@@ -611,7 +611,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
             "semver_decision_inputs_recorded_version_unselected_publication_blocked",
             review["review_state"],
         )
-        self.assertIn('version = "0.1.1"', cargo)
+        self.assertIn('version = "0.1.2"', cargo)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', core_manifest)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', verify_manifest)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', pdf_manifest)
@@ -667,7 +667,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)
         self.assertIn('name = "ethos-pdf"', pdf_manifest)
-        self.assertIn('version = "0.1.1"', cargo)
+        self.assertIn('version = "0.1.2"', cargo)
 
     def test_package_publication_approval_request_packet_keeps_all_actions_blocked(self) -> None:
         packet = load_json(PREP)["package_publication_approval_request_packet"]
@@ -741,7 +741,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertIn('name = "ethos-doc-core"', core_manifest)
         self.assertIn('name = "ethos-verify"', verify_manifest)
         self.assertIn('name = "ethos-pdf"', pdf_manifest)
-        self.assertIn('version = "0.1.1"', cargo)
+        self.assertIn('version = "0.1.2"', cargo)
 
     def test_pdfium_boundary_keeps_ethos_pdf_held_until_confirmed(self) -> None:
         approved = load_json(PREP)["approved_package_publication_prep"]

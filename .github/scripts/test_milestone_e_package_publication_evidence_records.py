@@ -176,7 +176,7 @@ class MilestoneEPackagePublicationEvidenceRecordTests(unittest.TestCase):
         record = normalized(record_path(RECORDS["version_tag_policy"]))
         root_manifest = read(ROOT / "Cargo.toml")
 
-        self.assertIn('version = "0.1.1"', root_manifest)
+        self.assertIn('version = "0.1.2"', root_manifest)
         self.assertIn("Workspace package version is `0.1.0`", record)
         self.assertIn("`0.0.0-reserved.0` placeholders", record)
         self.assertIn("`ethos-source-snapshot-660f268`", record)
