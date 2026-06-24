@@ -693,6 +693,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   published GitHub Release `v0.1.2` assets, per-file vendor SHA256 values, local `npm pack`
   metadata, install smoke, missing-PDFium behavior, and retained publication blockers; npm publish
   and public installation wording remain blocked.
+- `patch-0-1-2-npm-publication-approval-request-validation-2026-06-24.md` - patch 0.1.2 npm
+  publication approval request validation binds the exact `@docushell/ethos-pdf@0.1.2` npm
+  candidate, toolchain-qualified tarball hashes, durable vendor checksums, installed CLI smoke,
+  missing-PDFium behavior, and retained blockers for decider review; npm publish remains blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
