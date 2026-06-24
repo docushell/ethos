@@ -602,6 +602,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   closeout validation records successful publication of `@docushell/ethos-pdf@0.1.1`, registry
   verification for version, latest tag, shasum, integrity, file count, unpacked size, npm's
   publish-time bin-name auto-correction warning, and retained blockers.
+- `patch-0-1-1-crates-publication-approval-request-validation-2026-06-24.md` - patch 0.1.1
+  crates.io publication approval request validation binds the exact `ethos-doc-core`,
+  `ethos-verify`, and `ethos-pdf` `0.1.1` crate set, source commit, package tag names, local crate
+  artifact hashes, publish order, and retained blockers for decider review; `cargo publish`
+  remains blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
