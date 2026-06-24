@@ -665,6 +665,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   expectations to `ethos 0.1.2`, and keeps npm at `0.1.1`, public install wording blocked,
   registry publication blocked, GitHub Release artifact publication blocked, hosted, production,
   Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces unapproved.
+- `patch-0-1-2-draft-artifact-evidence-validation-2026-06-24.md` - patch 0.1.2 draft artifact
+  evidence validation records the green `release.yml` workflow run and downloaded macOS arm64 and
+  Linux x64 draft CLI artifact sidecars, with smoke output `ethos 0.1.2`, while keeping GitHub
+  Release artifact publication, registry publication, npm vendor refresh, public install wording,
+  hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces
+  blocked.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
