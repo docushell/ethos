@@ -36,7 +36,7 @@ CONSUMER_PACKAGE = "ethos-package-candidate-consumer"
 CANDIDATE_NORMAL_DEPENDENCIES = {
     CORE_PACKAGE: ["serde", "serde_json", "sha2", "thiserror"],
     "ethos-pdf": [CORE_PACKAGE, "serde", "serde_json"],
-    "ethos-verify": [CORE_PACKAGE, "serde"],
+    "ethos-verify": [CORE_PACKAGE, "serde", "sha2"],
     CONSUMER_PACKAGE: [CORE_PACKAGE, "ethos-pdf", "ethos-verify"],
 }
 IGNORE_NAMES = {
@@ -242,6 +242,9 @@ package = "{CORE_PACKAGE}"
 [dependencies.serde]
 version = "1"
 features = ["derive"]
+
+[dependencies.sha2]
+version = "0.10"
 """
 
     if package == "ethos-pdf":
