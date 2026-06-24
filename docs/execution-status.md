@@ -50,6 +50,15 @@ operator commands. `cargo publish` remains blocked, package tag creation remains
 crate public installation wording remains blocked, and Python installation remains at
 `ethos-pdf==0.1.1` until separate approval, operator publication, and closeout records pass.
 
+Patch `0.1.2` crates.io publication approval decision is recorded in
+`docs/validation/patch-0-1-2-crates-publication-approval-decision-validation-2026-06-25.md`.
+It accepts only the exact bounded later operator commands for `ethos-doc-core`, `ethos-verify`,
+and `ethos-pdf` at `0.1.2`. Actual crates.io publication remains a separate operator action,
+package tag creation remains blocked until publication closeout, Rust crate public installation
+wording remains blocked until registry availability closeout, and Python installation remains at
+`ethos-pdf==0.1.1` until separate PyPI `0.1.2` approval, operator publication, and closeout records
+pass.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane
