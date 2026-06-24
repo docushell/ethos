@@ -89,6 +89,12 @@ tarball hashes, durable vendor checksums, installed CLI smoke, and missing-PDFiu
 `npm publish` remains blocked until a separate approval decision and operator action pass. Public
 installation wording remains blocked.
 
+Patch `0.1.2` npm publication approval decision is recorded in
+`docs/validation/patch-0-1-2-npm-publication-approval-decision-validation-2026-06-24.md` for later
+operator action only. It accepts the exact `@docushell/ethos-pdf@0.1.2` npm candidate and required
+pre-publish checks, but does not run `npm publish`; registry closeout and public installation
+wording remain blocked until separate operator evidence and closeout lanes pass.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

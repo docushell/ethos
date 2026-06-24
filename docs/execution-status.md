@@ -13,6 +13,14 @@ vendor payload, but `npm publish`, registry closeout, public installation wordin
 production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
 public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag` remain blocked.
 
+Patch `0.1.2` npm publication approval decision is recorded in
+`docs/validation/patch-0-1-2-npm-publication-approval-decision-validation-2026-06-24.md` for later
+operator action only. It accepts the exact `@docushell/ethos-pdf@0.1.2` npm candidate and required
+pre-publish checks, but does not run `npm publish`; registry closeout, public installation wording,
+hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained
+PDFium builds, public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag`
+remain blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane
