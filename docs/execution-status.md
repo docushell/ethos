@@ -274,6 +274,8 @@ The patch `0.1.2` version activation record in `docs/validation/patch-0-1-2-vers
 
 The patch `0.1.2` artifact/package evidence record in `docs/validation/patch-0-1-2-artifact-package-evidence-validation-2026-06-24.md` adds a dynamic release-candidate-prep guard for local `0.1.2` Rust crate candidates and the `ethos_pdf-0.1.2-py3-none-any.whl` candidate, and updates draft CLI artifact workflow smoke expectations to `ethos 0.1.2`. The public install baseline remains `0.1.1`, public installation wording remains blocked, registry publication remains blocked, GitHub Release artifact publication remains blocked, and npm vendor refresh remains blocked until separate approval, operator evidence, and closeout records pass.
 
+The patch `0.1.2` draft artifact evidence record in `docs/validation/patch-0-1-2-draft-artifact-evidence-validation-2026-06-24.md` records a green `release.yml` workflow run and downloaded macOS arm64/Linux x64 draft CLI artifact sidecars. Both draft artifact smokes reported `ethos 0.1.2`; the public install baseline remains `0.1.1`, GitHub Release artifact publication remains blocked, registry publication remains blocked, npm vendor refresh remains blocked, and public installation wording remains blocked until separate approval, operator evidence, and closeout records pass.
+
 | Work item | Current status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
