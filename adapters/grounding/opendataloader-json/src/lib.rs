@@ -48,7 +48,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use ethos_core::grounding::{
     Capabilities, CoordinateOrigin, GroundingCell, GroundingElement, GroundingSource,
@@ -175,6 +175,13 @@ fn bbox_from(value: &Value) -> Result<[i64; 4], AdapterError> {
     Ok(out)
 }
 
+fn bbox_within_page(bbox: [i64; 4], page: &PageGeometry, label: &str) -> Result<(), AdapterError> {
+    if bbox[0] < 0 || bbox[1] < 0 || bbox[2] > page.width || bbox[3] > page.height {
+        return Err(err(&format!("{label} bbox exceeds page bounds")));
+    }
+    Ok(())
+}
+
 fn optional_positive_u32_field(
     object: &Value,
     field: &str,
@@ -241,7 +248,7 @@ fn parse_pages(root: &Value) -> Result<(Vec<PageGeometry>, HashSet<u32>), Adapte
 
 fn parse_elements(
     root: &Value,
-    page_numbers: &HashSet<u32>,
+    pages_by_number: &HashMap<u32, PageGeometry>,
 ) -> Result<Vec<GroundingElement>, AdapterError> {
     let mut elements = Vec::new();
     let mut element_ids = HashSet::new();
@@ -261,9 +268,9 @@ fn parse_elements(
         if page_number == 0 {
             return Err(err("element.page must be 1-based"));
         }
-        if !page_numbers.contains(&page_number) {
+        let Some(page) = pages_by_number.get(&page_number) else {
             return Err(err("element.page references unknown page"));
-        }
+        };
         let id = el
             .get("id")
             .and_then(Value::as_str)
@@ -275,6 +282,7 @@ fn parse_elements(
             return Err(err("duplicate element.id"));
         }
         let bbox = bbox_from(el.get("bbox").ok_or_else(|| err("missing element.bbox"))?)?;
+        bbox_within_page(bbox, page, "element")?;
         let kind = el
             .get("type")
             .and_then(Value::as_str)
@@ -296,7 +304,7 @@ fn parse_elements(
 
 fn parse_tables(
     root: &Value,
-    page_numbers: &HashSet<u32>,
+    pages_by_number: &HashMap<u32, PageGeometry>,
 ) -> Result<(bool, Vec<GroundingTable>), AdapterError> {
     let Some(tables_value) = root.get("tables") else {
         return Ok((false, Vec::new()));
@@ -321,11 +329,15 @@ fn parse_tables(
         if page_number == 0 {
             return Err(err("table.page must be 1-based"));
         }
-        if !page_numbers.contains(&page_number) {
+        let Some(page) = pages_by_number.get(&page_number) else {
             return Err(err("table.page references unknown page"));
-        }
+        };
         let bbox = bbox_from(table.get("bbox").ok_or_else(|| err("missing table.bbox"))?)?;
+        bbox_within_page(bbox, page, "table")?;
         let cells = parse_table_cells(table)?;
+        for cell in &cells {
+            bbox_within_page(cell.bbox, page, "cell")?;
+        }
         tables.push(GroundingTable {
             id,
             page: format!("page-{page_number}"),
@@ -856,8 +868,14 @@ impl OdlJsonSource {
 
         let (parser_name, parser_version) = parse_tool(root)?;
         let (pages, page_numbers) = parse_pages(root)?;
-        let elements = parse_elements(root, &page_numbers)?;
-        let (tables_capable, tables) = parse_tables(root, &page_numbers)?;
+        let pages_by_number = pages
+            .iter()
+            .cloned()
+            .map(|page| (page.index, page))
+            .collect::<HashMap<_, _>>();
+        debug_assert_eq!(pages_by_number.len(), page_numbers.len());
+        let elements = parse_elements(root, &pages_by_number)?;
+        let (tables_capable, tables) = parse_tables(root, &pages_by_number)?;
 
         Ok(OdlJsonSource {
             parser_name,
@@ -1464,6 +1482,34 @@ mod tests {
             r#"{"file name":"zero.pdf","number of pages":1,"kids":[{"type":"paragraph","page number":1,"bounding box":[1,1,2,1],"content":"A"}]}"#,
             "bbox must have positive area",
         );
+    }
+
+    #[test]
+    fn rejects_documented_subset_bboxes_outside_declared_page_bounds() {
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[{"page":1,"bbox":[1,1,613,2]}]}"#,
+            "element bbox exceeds page bounds",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[{"page":1,"bbox":[-1,1,2,2]}]}"#,
+            "element bbox exceeds page bounds",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[],"tables":[{"id":"t1","page":1,"bbox":[1,1,613,2],"cells":[]}]}"#,
+            "table bbox exceeds page bounds",
+        );
+        assert_error_contains(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[],"tables":[{"id":"t1","page":1,"bbox":[1,1,2,2],"cells":[{"row":1,"col":1,"bbox":[1,1,613,2],"text":"x"}]}]}"#,
+            "cell bbox exceeds page bounds",
+        );
+    }
+
+    #[test]
+    fn accepts_documented_subset_bboxes_on_declared_page_bounds() {
+        OdlJsonSource::from_json_str(
+            r#"{"tool":{"name":"x","version":"1"},"pages":[{"number":1,"width":612,"height":792}],"elements":[{"page":1,"bbox":[0,0,612,792]}],"tables":[{"id":"t1","page":1,"bbox":[0,0,612,792],"cells":[{"row":1,"col":1,"bbox":[0,0,612,792],"text":"x"}]}]}"#,
+        )
+        .expect("exact page-boundary bboxes are valid");
     }
 
     fn assert_error_contains(json: &str, expected: &str) {

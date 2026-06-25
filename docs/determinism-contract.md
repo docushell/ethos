@@ -160,6 +160,9 @@ exactly the fields listed in the profile's `config_hash_inputs` (v1: `pages`).
   security codes are `hidden_text_detected`, `off_page_text_detected`,
   `low_contrast_text_detected`, `annotations_present`, `external_links_present`,
   `unsupported_annotation`, `image_only_page`; the rest are parser warnings.
+- Emission is implementation-scoped. The base parser currently emits `image_only_page`; hidden,
+  off-page, low-contrast, annotation, and external-link codes are reserved stable contract codes and
+  must not be interpreted as active detection until an extractor emits them.
 - Deterministic truncation: any preview text (e.g. security findings) truncates to 120
   Unicode scalar values + `…`, never by bytes.
 
@@ -168,6 +171,12 @@ exactly the fields listed in the profile's `config_hash_inputs` (v1: `pages`).
 Markdown, text, chunks.jsonl, reports, and overlays are deterministic functions of
 (canonical JSON, versioned config). Same document + same config ⇒ byte-identical derived
 artifacts. JSONL files use LF separators and end with a single trailing LF.
+
+Default chunk `text` is derived from `element_refs` in order. Text-bearing elements contribute
+their exact `element.text`; table-anchor elements contribute a plain text table projection built
+from canonical cells as rows joined with `\n` and columns joined with ` | `. Multiple referenced
+elements are joined with `\n\n`. This chunk projection is distinct from the Markdown table export,
+which includes outer pipes, separator rows, and Markdown cell escaping.
 
 ## 10. Test vectors (c14n v1)
 
