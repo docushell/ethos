@@ -193,6 +193,14 @@ decision is recorded; hosted surfaces, production positioning, Windows packaged 
 project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims remain
 blocked.
 
+Patch `0.1.2` package tag approval decision is recorded in
+`docs/validation/patch-0-1-2-package-tag-approval-decision-validation-2026-06-25.md`. It accepts
+the exact package tag names, source commit, source tree, and later operator commands. Package tag
+creation remains a separate operator action after this decision is merged and validation passes on
+merged source; hosted surfaces, production positioning, Windows packaged artifacts, bundled
+project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims remain
+blocked.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in
