@@ -143,6 +143,14 @@ blocked, Windows packaged artifacts remain blocked, bundled project-maintained P
 blocked, `ethos-doc` remains blocked, `ethos-rag` remains blocked, and public benchmark claims
 remain blocked.
 
+Patch `0.1.2` Rust public install wording closeout is recorded in
+`docs/validation/patch-0-1-2-rust-public-install-wording-closeout-validation-2026-06-25.md`.
+README and claim-inventory wording now point Rust crate installation to `ethos-doc-core`,
+`ethos-verify`, and `ethos-pdf` at `0.1.2`. PyPI publication remains blocked, hosted surfaces
+remain blocked, production positioning remains blocked, Windows packaged artifacts remain blocked,
+bundled project-maintained PDFium builds remain blocked, `ethos-doc` remains blocked, `ethos-rag`
+remains blocked, and public benchmark claims remain blocked.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

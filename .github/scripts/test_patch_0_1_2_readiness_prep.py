@@ -102,17 +102,15 @@ class Patch012ReadinessPrepTests(unittest.TestCase):
             self.assertNotIn(phrase, lower)
         self.assertIn("current public install baseline remains `0.1.1`", text)
 
-    def test_public_readme_uses_professional_beta_wording_without_version_drift(self) -> None:
-        text = read(README)
+    def test_prep_record_uses_professional_beta_wording_without_version_drift(self) -> None:
+        text = read(RECORD)
         lower = text.lower()
 
         self.assertIn("Status: public beta evaluation.", text)
-        self.assertIn("deterministic document evidence layer", text)
-        self.assertIn("source-grounded verification", text)
+        self.assertIn("Professional public README status wording", text)
+        self.assertIn("source-grounded verification layer", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
-        self.assertIn("cargo add ethos-doc-core@0.1.1", text)
-        self.assertIn("python3 -m pip install ethos-pdf==0.1.1", text)
-        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.2", text)
+        self.assertIn("current public install baseline remains `0.1.1`", text)
         self.assertNotIn("not production-ready", lower)
         self.assertNotIn("not stable production surfaces", lower)
         for phrase in FORBIDDEN_RELEASE_CLAIMS:

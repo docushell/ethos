@@ -82,18 +82,16 @@ class Patch012VersionActivationTests(unittest.TestCase):
         self.assertIn('version = "0.1.2"', read(PYPROJECT))
         self.assertIn('__version__ = "0.1.2"', read(PYTHON_INIT))
 
-    def test_public_install_wording_waits_after_npm_candidate_refresh(self) -> None:
+    def test_version_activation_record_delays_public_install_wording(self) -> None:
         npm = json.loads(read(NPM_PACKAGE))
+        record = normalized(RECORD)
         readme = read(README)
 
         self.assertEqual("0.1.2", npm["version"])
-        self.assertIn("cargo add ethos-doc-core@0.1.1", readme)
-        self.assertIn("cargo add ethos-verify@0.1.1", readme)
-        self.assertIn("cargo add ethos-pdf@0.1.1", readme)
+        self.assertIn("current public install baseline remains `0.1.1`", record)
+        self.assertIn("does not approve public installation wording for `0.1.2`", record)
         self.assertIn("python3 -m pip install ethos-pdf==0.1.1", readme)
-        self.assertIn("npm install -g @docushell/ethos-pdf@0.1.2", readme)
-        for phrase in FORBIDDEN_RELEASE_CLAIMS:
-            self.assertNotIn(phrase, readme.lower())
+        self.assertNotIn("python3 -m pip install ethos-pdf==0.1.2", readme)
 
     def test_boundaries_remain_closed(self) -> None:
         record = normalized(RECORD)
