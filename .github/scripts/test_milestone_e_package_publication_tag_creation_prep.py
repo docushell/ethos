@@ -22,6 +22,7 @@ import re
 import unittest
 from pathlib import Path
 
+from cargo_manifest_guard import assert_workspace_version_is_semver
 from makefile_guard import target_block
 
 
@@ -105,7 +106,7 @@ class MilestoneEPackagePublicationTagCreationPrepTests(unittest.TestCase):
         verify = read(ROOT / "crates/ethos-verify/Cargo.toml")
         pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
 
-        self.assertIn('version = "0.1.2"', workspace)
+        assert_workspace_version_is_semver(self, workspace)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', core)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', verify)
         self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', pdf)

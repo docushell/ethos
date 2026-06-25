@@ -22,6 +22,7 @@ import re
 import unittest
 from pathlib import Path
 
+from cargo_manifest_guard import assert_workspace_version_is_semver
 from makefile_guard import target_block
 
 
@@ -101,7 +102,7 @@ class MilestoneEPackagePublicationVersionTagPolicyTests(unittest.TestCase):
         adr = normalized(ROOT / "docs/decisions/ADR-0006-package-identifiers.md")
         record = normalized(RECORD)
 
-        self.assertIn('version = "0.1.2"', root_manifest)
+        assert_workspace_version_is_semver(self, root_manifest)
         self.assertIn("0.0.0-reserved.0", adr)
         self.assertIn("Workspace package version `0.1.0` remains a source-tree version", record)
         self.assertIn("ADR-0006 crates.io reservations remain `0.0.0-reserved.0` placeholders", record)

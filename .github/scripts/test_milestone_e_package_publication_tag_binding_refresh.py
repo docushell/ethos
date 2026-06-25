@@ -22,6 +22,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from cargo_manifest_guard import assert_workspace_version_is_semver
 from makefile_guard import target_block
 
 
@@ -138,7 +139,7 @@ class MilestoneEPackagePublicationTagBindingRefreshTests(unittest.TestCase):
             )
             self.assertIn('reserved_crates_io_version = "0.0.0-reserved.0"', text, str(manifest))
 
-        self.assertIn('version = "0.1.2"', read(ROOT / "Cargo.toml"))
+        assert_workspace_version_is_semver(self, read(ROOT / "Cargo.toml"))
 
         for manifest in (
             ROOT / "crates/ethos-cli/Cargo.toml",

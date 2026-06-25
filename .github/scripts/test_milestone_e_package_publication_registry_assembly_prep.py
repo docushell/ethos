@@ -22,6 +22,7 @@ import re
 import unittest
 from pathlib import Path
 
+from cargo_manifest_guard import assert_workspace_dependency_uses_workspace_version
 from makefile_guard import target_block
 
 
@@ -110,9 +111,13 @@ class MilestoneEPackagePublicationRegistryAssemblyPrepTests(unittest.TestCase):
         self.assertNotIn("publish = false", core)
         self.assertNotIn("publish = false", verify)
         self.assertNotIn("publish = false", pdf)
-        self.assertIn(
-            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.2", default-features = false }',
+        assert_workspace_dependency_uses_workspace_version(
+            self,
             workspace,
+            dependency="ethos-core",
+            package="ethos-doc-core",
+            path="crates/ethos-core",
+            default_features_false=True,
         )
         self.assertIn('ethos-core = { workspace = true, features = ["grounding", "verify-types"] }', verify)
         self.assertIn('ethos-core = { workspace = true, features = ["full"] }', pdf)

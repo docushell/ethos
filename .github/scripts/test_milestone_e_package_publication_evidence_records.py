@@ -23,6 +23,7 @@ import unittest
 from pathlib import Path
 from typing import Any
 
+from cargo_manifest_guard import assert_workspace_version_is_semver
 from makefile_guard import target_block
 
 
@@ -176,7 +177,7 @@ class MilestoneEPackagePublicationEvidenceRecordTests(unittest.TestCase):
         record = normalized(record_path(RECORDS["version_tag_policy"]))
         root_manifest = read(ROOT / "Cargo.toml")
 
-        self.assertIn('version = "0.1.2"', root_manifest)
+        assert_workspace_version_is_semver(self, root_manifest)
         self.assertIn("Workspace package version is `0.1.0`", record)
         self.assertIn("`0.0.0-reserved.0` placeholders", record)
         self.assertIn("`ethos-source-snapshot-660f268`", record)

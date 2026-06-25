@@ -23,6 +23,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from cargo_manifest_guard import workspace_package_version
 from makefile_guard import target_block
 
 
@@ -121,7 +122,7 @@ class MilestoneEPackagePublicationCandidateActivationEvidenceTests(unittest.Test
         commands = [entry["command"] for entry in result["commands"]]
 
         self.assertEqual("pass", result["status"])
-        self.assertEqual("0.1.2", result["candidate_version"])
+        self.assertEqual(workspace_package_version(read(ROOT / "Cargo.toml")), result["candidate_version"])
         self.assertEqual(["ethos-doc-core", "ethos-verify", "ethos-pdf"], result["candidate_packages"])
         self.assertEqual("pass", result["registry_equivalent_consumer_check"])
         self.assertTrue(result["source_candidate_manifests_activated"])
@@ -149,9 +150,10 @@ class MilestoneEPackagePublicationCandidateActivationEvidenceTests(unittest.Test
         self.assertEqual(["full"], activation["pdf_core_features"])
         self.assertTrue(all(checks.values()))
         self.assertEqual({"ethos-doc-core", "ethos-verify", "ethos-pdf"}, set(artifacts))
+        candidate_version = self.result["candidate_version"]
         for artifact in artifacts.values():
             self.assertRegex(artifact["sha256"], r"^[0-9a-f]{64}$")
-            self.assertTrue(artifact["crate_file"].endswith("-0.1.2.crate"))
+            self.assertTrue(artifact["crate_file"].endswith(f"-{candidate_version}.crate"))
 
     def test_source_candidate_manifests_are_activated_and_profile_copy_is_in_sync(self) -> None:
         core_manifest = read(ROOT / "crates/ethos-core/Cargo.toml")

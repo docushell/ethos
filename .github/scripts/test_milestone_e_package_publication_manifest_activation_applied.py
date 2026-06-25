@@ -23,6 +23,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from cargo_manifest_guard import assert_workspace_dependency_uses_workspace_version
 from makefile_guard import target_block
 
 
@@ -125,10 +126,13 @@ class MilestoneEPackagePublicationManifestActivationAppliedTests(unittest.TestCa
         verify = read(ROOT / "crates/ethos-verify/Cargo.toml")
         pdf = read(ROOT / "crates/ethos-pdf/Cargo.toml")
 
-        self.assertIn(
-            'ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", '
-            'version = "0.1.2", default-features = false }',
+        assert_workspace_dependency_uses_workspace_version(
+            self,
             workspace,
+            dependency="ethos-core",
+            package="ethos-doc-core",
+            path="crates/ethos-core",
+            default_features_false=True,
         )
         self.assertIn('name = "ethos-doc-core"', core)
         self.assertIn('[lib]\nname = "ethos_core"', core)
