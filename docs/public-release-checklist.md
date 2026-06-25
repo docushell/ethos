@@ -159,6 +159,15 @@ blocked, production positioning remains blocked, Windows packaged artifacts rema
 project-maintained PDFium builds remain blocked, `ethos-doc` remains blocked, `ethos-rag` remains
 blocked, and public benchmark claims remain blocked.
 
+Patch `0.1.2` Python PyPI publication approval decision is recorded in
+`docs/validation/patch-0-1-2-python-publication-approval-decision-validation-2026-06-25.md`. It
+accepts only later operator upload of the exact deterministic `ethos-pdf==0.1.2` wheel candidate.
+Actual PyPI upload remains a separate operator action, Python public installation wording remains
+blocked until PyPI availability closeout, package tag creation remains blocked, hosted surfaces
+remain blocked, production positioning remains blocked, Windows packaged artifacts remain blocked,
+bundled project-maintained PDFium builds remain blocked, `ethos-doc` remains blocked, `ethos-rag`
+remains blocked, and public benchmark claims remain blocked.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in
