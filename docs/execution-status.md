@@ -112,6 +112,14 @@ decision is recorded, and hosted surfaces, production positioning, Windows packa
 bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims
 remain blocked.
 
+Patch `0.1.2` package tag approval decision is recorded in
+`docs/validation/patch-0-1-2-package-tag-approval-decision-validation-2026-06-25.md`. It accepts
+the exact package tag names, source commit, source tree, and later operator commands. Package tag
+creation remains a separate operator action after this decision is merged and validation passes on
+merged source, and hosted surfaces, production positioning, Windows packaged artifacts, bundled
+project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims remain
+blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane

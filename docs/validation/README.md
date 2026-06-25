@@ -765,6 +765,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   tree, and requested later operator commands for decider review; package tag creation, hosted,
   production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces remain
   blocked until a separate approval decision passes.
+- `patch-0-1-2-package-tag-approval-decision-validation-2026-06-25.md` - patch 0.1.2
+  package tag approval decision validation accepts the exact package tag names, source commit,
+  source tree, and later operator commands; package tag creation remains a separate operator
+  action, and hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag`
+  surfaces remain blocked until separate approval or closeout records pass.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the

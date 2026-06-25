@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- boundary-exception: record decider approval for exact patch `0.1.2` package tag creation while keeping actual tag creation as a later operator action and retaining hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.
 - boundary-exception: request decider review for exact patch `0.1.2` package tag creation while keeping tag creation, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked pending a separate approval decision.
 - boundary-exception: close patch `0.1.2` Python public install wording for published PyPI wheel `ethos-pdf==0.1.2` while keeping package tag creation, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: close patch `0.1.2` Python PyPI publication with exact registry evidence for `ethos-pdf==0.1.2` while keeping Python public install wording, package tag creation, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
