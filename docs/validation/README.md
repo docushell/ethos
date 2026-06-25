@@ -760,6 +760,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   public claim-inventory wording for `ethos-pdf==0.1.2`; package tag creation, hosted,
   production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces remain
   blocked until separate closeout or approval records pass.
+- `patch-0-1-2-package-tag-approval-request-validation-2026-06-25.md` - patch 0.1.2
+  package tag approval request validation records exact package tag names, source commit, source
+  tree, and requested later operator commands for decider review; package tag creation, hosted,
+  production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces remain
+  blocked until a separate approval decision passes.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
