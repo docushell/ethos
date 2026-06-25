@@ -201,6 +201,13 @@ merged source; hosted surfaces, production positioning, Windows packaged artifac
 project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims remain
 blocked.
 
+Patch `0.1.2` package tag closeout is recorded in
+`docs/validation/patch-0-1-2-package-tag-closeout-validation-2026-06-25.md`. Package tag creation
+closeout is complete for the three approved annotated package tags, and remote `origin` tag refs
+dereference to the approved package source commit. Hosted surfaces, production positioning, Windows
+packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public
+benchmark claims remain blocked.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

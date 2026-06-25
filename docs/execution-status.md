@@ -120,6 +120,13 @@ merged source, and hosted surfaces, production positioning, Windows packaged art
 project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims remain
 blocked.
 
+Patch `0.1.2` package tag closeout is recorded in
+`docs/validation/patch-0-1-2-package-tag-closeout-validation-2026-06-25.md`. Package tag creation
+closeout is complete for the three approved annotated package tags, and remote `origin` tag refs
+dereference to the approved package source commit. Hosted surfaces, production positioning, Windows
+packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public
+benchmark claims remain blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane
