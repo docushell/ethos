@@ -24,7 +24,10 @@
     "source_fingerprint": { "$ref": "#/$defs/fingerprint", "description": "sha256 of the original PDF bytes." },
     "config_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Effective parse+chunk config hash (page selection included)." },
     "id": { "type": "string", "pattern": "^c[0-9]{6}$" },
-    "text": { "type": "string" },
+    "text": {
+      "type": "string",
+      "description": "Deterministic plain-text projection of element_refs in order: exact element.text for text-bearing elements; for table anchors, canonical table cells joined as columns with ' | ' and rows with '\\n'; multiple elements are joined with '\\n\\n'. This is distinct from Markdown table export."
+    },
     "element_refs": { "type": "array", "items": { "type": "string", "pattern": "^e[0-9]{6}$" }, "minItems": 1 },
     "page_refs": { "type": "array", "items": { "type": "string", "pattern": "^p[0-9]{4}$" }, "minItems": 1 },
     "bboxes": {

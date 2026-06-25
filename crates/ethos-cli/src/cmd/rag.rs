@@ -18,7 +18,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use ethos_core::codes::WarningCode;
 use ethos_core::error::EthosError;
-use ethos_core::model::{Chunk, Document};
+use ethos_core::model::{Chunk, Document, Table};
 
 use crate::{read_document, write_output, Failure, RagChunkArgs};
 
@@ -50,6 +50,7 @@ struct PageBounds {
 struct RagChunkRefs<'a> {
     page_bounds: BTreeMap<&'a str, PageBounds>,
     element_pages: BTreeMap<&'a str, &'a str>,
+    element_texts: BTreeMap<&'a str, Result<String, String>>,
     element_span_refs: BTreeMap<&'a str, &'a [String]>,
     element_warning_refs: BTreeMap<&'a str, &'a [String]>,
     excluded_element_warnings: BTreeMap<&'a str, (&'a str, WarningCode)>,
@@ -105,6 +106,37 @@ impl<'a> RagChunkRefs<'a> {
                 .iter()
                 .map(|element| (element.id.as_str(), element.page.as_str()))
                 .collect(),
+            element_texts: {
+                let table_texts = doc
+                    .payload
+                    .tables
+                    .iter()
+                    .map(|table| (table.id.as_str(), table_chunk_text(table)))
+                    .collect::<BTreeMap<_, _>>();
+                doc.payload
+                    .elements
+                    .iter()
+                    .map(|element| {
+                        let table_text = match element.table_ref.as_deref() {
+                            Some(table_ref) => match table_texts.get(table_ref) {
+                                Some(text) => Ok(Some(text.clone())),
+                                None => Err(format!(
+                                    "element {} table_ref {} does not resolve",
+                                    element.id, table_ref
+                                )),
+                            },
+                            None => Ok(None),
+                        };
+                        let text = match (element.text.as_ref(), table_text) {
+                            (Some(text), Ok(_)) => Ok(text.clone()),
+                            (None, Ok(Some(text))) => Ok(text),
+                            (None, Ok(None)) => Ok(String::new()),
+                            (_, Err(message)) => Err(message),
+                        };
+                        (element.id.as_str(), text)
+                    })
+                    .collect()
+            },
             element_span_refs: doc
                 .payload
                 .elements
@@ -135,7 +167,8 @@ fn validate_chunk_refs(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Fai
     validate_chunk_element_refs(chunk, refs, &page_refs, &mut backed_pages)?;
     validate_chunk_bboxes(chunk, refs, &page_refs, &mut backed_pages)?;
     validate_backed_page_refs(chunk, &page_refs, &backed_pages)?;
-    validate_chunk_warning_refs(chunk, refs)
+    validate_chunk_warning_refs(chunk, refs)?;
+    validate_chunk_text(chunk, refs)
 }
 
 fn validate_chunk_required_refs(chunk: &Chunk) -> Result<(), Failure> {
@@ -348,6 +381,48 @@ fn validate_element_default_chunk_warnings(
         }
     }
     Ok(())
+}
+
+fn validate_chunk_text(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Failure> {
+    let reconstructed = chunk
+        .element_refs
+        .iter()
+        .map(|element_ref| {
+            let Some(text) = refs.element_texts.get(element_ref.as_str()) else {
+                return Ok("");
+            };
+            text.as_deref()
+                .map_err(|message| Failure::Usage(message.clone()))
+        })
+        .collect::<Result<Vec<_>, _>>()?
+        .join("\n\n");
+    // Exact equality is intentional: chunk text is a deterministic derived artifact,
+    // not a verification claim using whitespace-normalized matching.
+    if chunk.text != reconstructed {
+        return Err(Failure::Usage(format!(
+            "chunk {} text does not match referenced element text",
+            chunk.id
+        )));
+    }
+    Ok(())
+}
+
+fn table_chunk_text(table: &Table) -> String {
+    let mut rows = Vec::new();
+    for row in 0..table.n_rows {
+        let mut cols = Vec::new();
+        for col in 0..table.n_cols {
+            let text = table
+                .cells
+                .iter()
+                .find(|cell| cell.row == row && cell.col == col)
+                .map(|cell| cell.text.as_str())
+                .unwrap_or("");
+            cols.push(text);
+        }
+        rows.push(cols.join(" | "));
+    }
+    rows.join("\n")
 }
 
 fn rag_chunk_record(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<serde_json::Value, Failure> {
