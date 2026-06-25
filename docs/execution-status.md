@@ -89,6 +89,14 @@ remains blocked until PyPI availability closeout, package tag creation remains b
 surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium
 builds, `ethos-doc`, `ethos-rag`, and public benchmark claims remain blocked.
 
+Patch `0.1.2` Python PyPI publication closeout is recorded in
+`docs/validation/patch-0-1-2-python-publication-closeout-validation-2026-06-25.md`. PyPI now
+reports `ethos-pdf==0.1.2` with matching wheel filename, SHA256, upload time, size, URL, and
+non-yanked status. Python public installation wording remains blocked until a separate wording and
+availability closeout, package tag creation remains blocked, and hosted surfaces, production
+positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`,
+`ethos-rag`, and public benchmark claims remain blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane
