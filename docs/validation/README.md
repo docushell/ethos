@@ -41,6 +41,15 @@ registry dry-run gate passed for `ethos-doc-core 0.2.0`, producing
 dependent-crate dry-runs, tag creation, artifact publication, and installable `0.2.0` wording
 remain blocked until separate evidence and operator decisions pass.
 
+v0.2.0 package/build evidence is recorded in
+`v0-2-0-package-build-evidence-validation-2026-06-25.md`. It records a passing local Python
+wheel build/install/wrapper smoke, a passing local macOS arm64 draft CLI artifact build/inventory
+smoke with `ethos 0.2.0`, and passing npm tests plus `npm pack --dry-run` metadata for
+`@docushell/ethos-pdf@0.2.0`. npm v0.2.0 artifact candidacy remains blocked because the
+checked-in vendored binaries still expose `ethos 0.1.2`; Linux x64 CLI artifact evidence, npm
+vendor refresh, publication, tag creation, artifact upload, and installable `0.2.0` wording remain
+blocked.
+
 Patch `0.1.2` closeout records now document that the approved patch `0.1.2` evaluation surfaces
 are closed for the GitHub source repository, Rust crates, Python wheel, npm package, macOS
 arm64/Linux x64 CLI artifacts, and the three approved annotated package tags. Hosted surfaces

@@ -45,6 +45,14 @@ crate SHA256
 dependent-crate dry-runs, tag creation, artifact publication, and installable `0.2.0` wording
 remain blocked until separate evidence and operator decisions pass.
 
+v0.2.0 package/build evidence is recorded in
+`docs/validation/v0-2-0-package-build-evidence-validation-2026-06-25.md`. Python wheel local build,
+install, and wrapper smoke passed; the local macOS arm64 draft CLI artifact smoke reported
+`ethos 0.2.0`; npm tests and dry-run package metadata passed for `@docushell/ethos-pdf@0.2.0`.
+npm v0.2.0 artifact candidacy remains blocked because the checked-in vendored binaries still
+report `ethos 0.1.2`. Linux x64 CLI artifact evidence, npm vendor refresh, publication, tag
+creation, artifact upload, and installable `0.2.0` wording remain blocked.
+
 Older Milestone E paragraphs below preserve historical review records and their blockers at the time they were written. Patch `0.1.1` closeout records supersede those historical blockers only for the approved source, Rust crate, Python wheel, npm package, macOS arm64 CLI artifact, and Linux x64 CLI artifact evaluation surfaces.
 
 Patch `0.1.2` npm publication approval request is recorded in

@@ -43,6 +43,13 @@ It records a passing `cargo publish --dry-run --locked -p ethos-doc-core` for
 `ethos-doc-core 0.2.0`; no publication, tag, artifact upload, dependent-crate dry-run, or
 installable `0.2.0` wording is approved by that record.
 
+v0.2.0 package/build evidence is recorded in
+`docs/validation/v0-2-0-package-build-evidence-validation-2026-06-25.md`. It records local package
+build checks for the Python wheel, macOS arm64 draft CLI artifact, and npm package metadata. The
+npm candidate remains blocked until v0.2.0 macOS arm64 and Linux x64 CLI artifacts both exist and
+the vendored payload is refreshed from those artifacts; no publication, artifact upload, tag, or
+installable `0.2.0` wording is approved by that record.
+
 Patch `0.1.1` readiness prep is recorded in
 `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records
 candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change guarding, the

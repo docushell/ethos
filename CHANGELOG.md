@@ -6,6 +6,11 @@
   while keeping actual `cargo publish`, dependent-crate dry-runs, PyPI upload, npm publish, GitHub
   Release artifact publication, release/package tags, installable `0.2.0` wording, hosted,
   production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
+- boundary-exception: record v0.2.0 package/build evidence for the Python wheel, local macOS arm64
+  draft CLI artifact, and npm package metadata while keeping npm artifact candidacy blocked on
+  stale vendored `ethos 0.1.2` binaries and keeping publication, artifact upload, tags, installable
+  `0.2.0` wording, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and
+  `ethos-rag` surfaces blocked.
 - boundary-exception: activate v0.2.0 release-candidate source versions for Rust, Python, and npm
   package metadata while keeping `cargo publish`, PyPI upload, npm publish, GitHub Release
   artifact publication, release/package tags, installable `0.2.0` wording, hosted, production,
