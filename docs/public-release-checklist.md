@@ -185,6 +185,14 @@ production positioning remains blocked, Windows packaged artifacts remain blocke
 project-maintained PDFium builds remain blocked, `ethos-doc` remains blocked, `ethos-rag` remains
 blocked, and public benchmark claims remain blocked.
 
+Patch `0.1.2` package tag approval request is recorded in
+`docs/validation/patch-0-1-2-package-tag-approval-request-validation-2026-06-25.md`. It records the
+exact package tag names, source commit, source tree, and requested later operator commands for
+decider review only. Package tag creation remains blocked until a separate explicit approval
+decision is recorded; hosted surfaces, production positioning, Windows packaged artifacts, bundled
+project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims remain
+blocked.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

@@ -104,6 +104,14 @@ to `ethos-pdf==0.1.2`. Package tag creation remains blocked, and hosted surfaces
 positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`,
 `ethos-rag`, and public benchmark claims remain blocked.
 
+Patch `0.1.2` package tag approval request is recorded in
+`docs/validation/patch-0-1-2-package-tag-approval-request-validation-2026-06-25.md`. It records the
+exact package tag names, source commit, source tree, and requested later operator commands for
+decider review only. Package tag creation remains blocked until a separate explicit approval
+decision is recorded, and hosted surfaces, production positioning, Windows packaged artifacts,
+bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims
+remain blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane
