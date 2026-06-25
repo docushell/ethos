@@ -16,7 +16,7 @@ mapping (same input bytes, same output, same order); depend only on `ethos-core`
 `grounding` feature, never on parser internals; ship fixtures with every mapping change
 (request template: `.github/ISSUE_TEMPLATE/adapter_request.yml`).
 
-For v0.2.0 preparation, OpenDataLoader remains the full reference adapter, not the minimum
+For the v0.2.0 release-candidate lane, OpenDataLoader remains the full reference adapter, not the minimum
 onboarding example. It validates the documented subset strictly, downgrades unsupported
 capabilities explicitly, bounds element/table/cell boxes to page dimensions, rejects negative
 origins, and accepts exact page boundaries. New parser authors should start with

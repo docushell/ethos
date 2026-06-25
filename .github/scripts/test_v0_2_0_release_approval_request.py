@@ -183,12 +183,16 @@ class V020ReleaseApprovalRequestTests(unittest.TestCase):
         self.assertIn("Only after registry/artifact availability and smoke evidence", prep)
         self.assertIn("Only after publication and smoke evidence", record)
 
-    def test_current_tree_is_not_version_bumped_by_request_packet(self) -> None:
-        self.assertIn('version = "0.1.2"', read(ROOT / "Cargo.toml"))
-        self.assertIn('ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.2"', read(ROOT / "Cargo.toml"))
-        self.assertIn('version = "0.1.2"', read(ROOT / "pyproject.toml"))
-        self.assertIn('"version": "0.1.2"', read(ROOT / "packages/npm/ethos-pdf/package.json"))
-        self.assertIn('__version__ = "0.1.2"', read(ROOT / "python/ethos_pdf/__init__.py"))
+    def test_request_packet_does_not_itself_perform_release_actions(self) -> None:
+        record = normalized(RECORD)
+
+        self.assertIn("This request record does not approve a version bump.", record)
+        self.assertIn("This request record does not create a release-candidate branch.", record)
+        self.assertIn("This request record does not approve `cargo publish`.", record)
+        self.assertIn("This request record does not approve PyPI upload.", record)
+        self.assertIn("This request record does not approve `npm publish`.", record)
+        self.assertIn("This request record does not upload CLI artifacts.", record)
+        self.assertIn("This request record does not approve installable `0.2.0` public wording.", record)
 
     def test_v0_2_release_prep_runs_request_guard_once_before_claims(self) -> None:
         makefile = read(MAKEFILE)

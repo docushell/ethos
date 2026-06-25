@@ -15,7 +15,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.87"
 license = "Apache-2.0"
@@ -36,9 +36,9 @@ tempfile = "3"
 proptest = "1"
 
 # internal
-ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.1.2", default-features = false }
-ethos-layout = { path = "crates/ethos-layout", version = "0.1.2" }
-ethos-tables = { path = "crates/ethos-tables", version = "0.1.2" }
+ethos-core = { package = "ethos-doc-core", path = "crates/ethos-core", version = "0.2.0", default-features = false }
+ethos-layout = { path = "crates/ethos-layout", version = "0.2.0" }
+ethos-tables = { path = "crates/ethos-tables", version = "0.2.0" }
 
 [profile.release]
 # Footprint discipline for the G2 gate (≤ 30 MB installed): strip + LTO + size-lean codegen.

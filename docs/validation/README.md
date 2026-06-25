@@ -27,6 +27,12 @@ installable `0.2.0` wording, hosted surfaces, production positioning, Windows pa
 bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims
 remain blocked until separate evidence records and operator decisions pass.
 
+v0.2.0 version activation is recorded in
+`v0-2-0-version-activation-validation-2026-06-25.md`. It moves Rust, Python, and npm
+source/package metadata to `0.2.0` for release-candidate validation only. Public install commands
+and installable wording remain on the approved `0.1.2` evaluation baseline until publication,
+registry/artifact availability, smoke evidence, and wording closeout records pass.
+
 Patch `0.1.2` closeout records now document that the approved patch `0.1.2` evaluation surfaces
 are closed for the GitHub source repository, Rust crates, Python wheel, npm package, macOS
 arm64/Linux x64 CLI artifacts, and the three approved annotated package tags. Hosted surfaces

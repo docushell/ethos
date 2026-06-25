@@ -1,6 +1,6 @@
 # Bring Your Own Parser
 
-Status: v0.2.0 preparation tutorial for parser authors. This document shows the intended trust-layer
+Status: v0.2.0 release-candidate tutorial for parser authors. This document shows the intended trust-layer
 integration shape before any `0.2.0` publication claim is made.
 
 The integration model is:
@@ -153,4 +153,3 @@ Parser adapters should:
 
 The OpenDataLoader JSON adapter remains the full reference adapter. It is useful for serious
 foreign-parser mapping, but the minimal integration surface is the `GroundingSource` trait above.
-

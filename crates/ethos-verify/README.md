@@ -6,7 +6,7 @@ verification limited to the current source-tree evidence-grounding contract.
 
 ADR-0006 reserves the public crates.io identifier `ethos-verify` at `0.0.0-reserved.0`.
 
-For the v0.2.0 preparation lane, verification consumers should treat this as the Rust package for
+For the v0.2.0 release-candidate lane, verification consumers should treat this as the Rust package for
 running checks over caller-provided `GroundingSource` evidence:
 
 ```toml
@@ -29,8 +29,8 @@ unverifiable source fingerprints fail closed in the report.
 - The reserved crates.io placeholder remains `0.0.0-reserved.0` until registry action is
   explicitly recorded.
 - This README supports package-publication activation review only.
-- v0.2.0 registry install wording remains in preparation status until publication approval,
-  registry availability, and clean smoke tests are recorded.
+- v0.2.0 registry install wording remains in release-candidate status until publication, registry
+  availability, and clean smoke tests are recorded.
 
 ## Metadata Notes
 

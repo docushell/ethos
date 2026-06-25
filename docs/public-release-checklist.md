@@ -31,6 +31,12 @@ artifact publication, installable `0.2.0` wording, hosted surfaces, production p
 Windows packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`,
 or public benchmark claims.
 
+v0.2.0 version activation is recorded in
+`docs/validation/v0-2-0-version-activation-validation-2026-06-25.md`. It moves Rust, Python, and
+npm source/package metadata to `0.2.0` for release-candidate validation only. Public install
+commands and installable wording remain on the approved `0.1.2` evaluation baseline until
+publication, registry/artifact availability, smoke evidence, and wording closeout records pass.
+
 Patch `0.1.1` readiness prep is recorded in
 `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records
 candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change guarding, the

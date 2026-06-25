@@ -5,7 +5,7 @@ traits. It normalizes parser output before data crosses the crate boundary.
 
 ADR-0006 reserves the public crates.io identifier `ethos-pdf` at `0.0.0-reserved.0`.
 
-For the v0.2.0 preparation lane, this crate is a continuity crate for the lockstep Rust workspace.
+For the v0.2.0 release-candidate lane, this crate is a continuity crate for the lockstep Rust workspace.
 The release headline remains JSON verification and evidence anchoring over caller-provided source
 evidence. `ethos-pdf` remains the parser/PDFium-facing crate.
 
@@ -17,8 +17,8 @@ evidence. `ethos-pdf` remains the parser/PDFium-facing crate.
 - The reserved crates.io placeholder remains `0.0.0-reserved.0` until registry action is
   explicitly recorded.
 - This README supports package-publication activation review only.
-- v0.2.0 registry install wording remains in preparation status until publication approval,
-  registry availability, and clean smoke tests are recorded.
+- v0.2.0 registry install wording remains in release-candidate status until publication, registry
+  availability, and clean smoke tests are recorded.
 
 ## PDFium Boundary
 

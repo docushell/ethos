@@ -17,9 +17,9 @@ path = "src/main.rs"
 ethos-core = { workspace = true, features = ["full", "crop-element"] }
 ethos-layout = { workspace = true }
 ethos-tables = { workspace = true }
-ethos-pdf = { path = "../ethos-pdf", version = "0.1.2" }
-ethos-verify = { path = "../ethos-verify", version = "0.1.2" }
-ethos-grounding-opendataloader-json = { path = "../../adapters/grounding/opendataloader-json", version = "0.1.2" }
+ethos-pdf = { path = "../ethos-pdf", version = "0.2.0" }
+ethos-verify = { path = "../ethos-verify", version = "0.2.0" }
+ethos-grounding-opendataloader-json = { path = "../../adapters/grounding/opendataloader-json", version = "0.2.0" }
 clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

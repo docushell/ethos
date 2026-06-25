@@ -1,11 +1,11 @@
 # Ethos v0.2.0 Release Preparation
 
-Status: source-preparation record. This document does not approve `cargo publish`, PyPI upload,
-GitHub Release creation, package tags, or public `0.2.0` installability wording.
+Status: release-candidate activation record. This document does not approve `cargo publish`, PyPI
+upload, GitHub Release creation, package tags, or public `0.2.0` installability wording.
 
 Canonical preparation sentence:
 
-> v0.2.0 is being prepared to publish registry install surfaces for JSON verification and evidence
+> v0.2.0 release-candidate source versions are activated for JSON verification and evidence
 > anchoring.
 
 The release promise being prepared is narrow:
