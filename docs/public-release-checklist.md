@@ -5,12 +5,11 @@ or launch announcement. It is intentionally stricter than the day-to-day enginee
 
 ## Current Status
 
-Ethos has approved public beta/evaluation surfaces for the GitHub source repository, Rust library
-crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.2`, the Python `ethos-pdf` wheel
-at `0.1.2`, the npm `@docushell/ethos-pdf@0.1.2` package, GitHub Release `v0.1.2` macOS arm64 and
-Linux x64 CLI artifacts, and the three approved annotated package tags. The approved patch `0.1.2`
-evaluation surfaces are closed by
-`docs/validation/patch-0-1-2-current-state-closeout-validation-2026-06-25.md`. Hosted surfaces,
+Ethos v0.2.0 public beta/evaluation surfaces are live for the GitHub source repository, Rust
+library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`, the Python
+`ethos-pdf` wheel at `0.2.0`, npm `@docushell/ethos-pdf@0.2.1`, and GitHub Release `v0.2.0`
+macOS arm64 and Linux x64 CLI artifacts. npm `@docushell/ethos-pdf@0.2.0` is deprecated because
+it shipped stale CLI binaries that reported `ethos 0.1.2`; use `0.2.1`. Hosted surfaces,
 production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
 public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality,
 `ethos-doc`, and `ethos-rag` remain blocked.
@@ -56,6 +55,12 @@ v0.2.0 draft artifact evidence is recorded in
 sidecars report `ethos 0.2.0`. This evidence does not approve GitHub Release artifact
 publication, npm vendor refresh, registry publication, tag creation, or installable `0.2.0`
 wording.
+
+v0.2.0 npm vendor refresh is recorded in
+`docs/validation/v0-2-0-npm-vendor-refresh-validation-2026-06-25.md`. It refreshes the checked-in
+npm vendor payload from validated v0.2.0 draft CLI artifacts. npm `@docushell/ethos-pdf@0.2.0`
+was published with stale binaries and deprecated; npm `@docushell/ethos-pdf@0.2.1` is the current
+package and registry install smoke reports `ethos 0.2.0`.
 
 Patch `0.1.1` readiness prep is recorded in
 `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records

@@ -4,10 +4,10 @@
 the `GroundingSource` boundary. It depends on `ethos-core` without parser internals and keeps
 verification limited to the current source-tree evidence-grounding contract.
 
-ADR-0006 reserves the public crates.io identifier `ethos-verify` at `0.0.0-reserved.0`.
+ADR-0006 reserves the public crates.io identifier `ethos-verify`.
 
-For the v0.2.0 release-candidate lane, verification consumers should treat this as the Rust package for
-running checks over caller-provided `GroundingSource` evidence:
+Verification consumers should treat this as the Rust package for running checks over
+caller-provided `GroundingSource` evidence:
 
 ```toml
 ethos-doc-core = { version = "0.2", features = ["grounding"] }
@@ -23,14 +23,8 @@ unverifiable source fingerprints fail closed in the report.
 
 ## Publication Boundary
 
-- Publication metadata is activated for the approved crates.io candidate surface.
-- Public installation from crates.io remains blocked until refreshed tag/source binding and
-  operator evidence are recorded.
-- The reserved crates.io placeholder remains `0.0.0-reserved.0` until registry action is
-  explicitly recorded.
-- This README supports package-publication activation review only.
-- v0.2.0 registry install wording remains in release-candidate status until publication, registry
-  availability, and clean smoke tests are recorded.
+- Public installation from crates.io is available at `0.2.0`.
+- The reserved crates.io placeholder remains historical; `0.2.0` is the current public package.
 
 ## Metadata Notes
 

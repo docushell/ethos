@@ -46,21 +46,13 @@ SOURCE_SHORT = "523e114"
 SOURCE_COMMIT = "523e1143bec52e16e596593f5dd649df741b4971"
 SOURCE_TREE = "8f13de3588a36927635a967cf120fba8f73a39f6"
 VERSION = "0.2.0"
-PUBLIC_BASELINE = "0.1.2"
+NPM_VERSION = "0.2.1"
 RELEASE_CANDIDATE_SENTENCE = (
     "v0.2.0 release-candidate source versions are activated for JSON verification and evidence "
     "anchoring."
 )
 FORBIDDEN_INSTALL_WORDING = (
-    "cargo add ethos-doc-core@0.2.0",
-    "cargo add ethos-verify@0.2.0",
-    "cargo add ethos-pdf@0.2.0",
-    "python3 -m pip install ethos-pdf==0.2.0",
     "npm install -g @docushell/ethos-pdf@0.2.0",
-    "0.2.0 is released",
-    "v0.2.0 is released",
-    "0.2.0 is published",
-    "v0.2.0 is published",
 )
 PRIVATE_PATH_MARKERS = (
     "/" + "Users/",
@@ -130,25 +122,25 @@ class V020VersionActivationTests(unittest.TestCase):
         self.assertGreaterEqual(lock.count(f'version = "{VERSION}"'), 7)
         self.assertIn(f'version = "{VERSION}"', read(PYPROJECT))
         self.assertIn(f'__version__ = "{VERSION}"', read(PYTHON_INIT))
-        self.assertEqual(VERSION, npm["version"])
+        self.assertEqual(NPM_VERSION, npm["version"])
 
-    def test_public_install_commands_remain_on_approved_baseline(self) -> None:
+    def test_public_install_commands_match_published_closeout(self) -> None:
         readme = read(README)
         claims = json.loads(read(CLAIMS))["surfaces"]["readme"]["claims"]
         joined_claims = "\n".join(claims)
 
         for expected in (
-            f"cargo add ethos-doc-core@{PUBLIC_BASELINE}",
-            f"cargo add ethos-verify@{PUBLIC_BASELINE}",
-            f"cargo add ethos-pdf@{PUBLIC_BASELINE}",
-            f"python3 -m pip install ethos-pdf=={PUBLIC_BASELINE}",
-            f"npm install -g @docushell/ethos-pdf@{PUBLIC_BASELINE}",
+            f"cargo add ethos-doc-core@{VERSION}",
+            f"cargo add ethos-verify@{VERSION}",
+            f"cargo add ethos-pdf@{VERSION}",
+            f"python3 -m pip install ethos-pdf=={VERSION}",
+            f"npm install -g @docushell/ethos-pdf@{NPM_VERSION}",
         ):
             self.assertIn(expected, readme)
             self.assertIn(expected, joined_claims)
 
-        self.assertIn(RELEASE_CANDIDATE_SENTENCE, normalized_markdown(README))
-        self.assertIn(RELEASE_CANDIDATE_SENTENCE, joined_claims)
+        self.assertNotIn(RELEASE_CANDIDATE_SENTENCE, normalized_markdown(README))
+        self.assertNotIn(RELEASE_CANDIDATE_SENTENCE, joined_claims)
         for forbidden in FORBIDDEN_INSTALL_WORDING:
             self.assertNotIn(forbidden, readme)
             self.assertNotIn(forbidden, joined_claims)

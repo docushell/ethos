@@ -8,6 +8,14 @@
 The package does not bundle PDFium. Commands that parse or crop PDFs require a caller-provided
 PDFium dynamic library.
 
+Install the current npm package with:
+
+```sh
+npm install -g @docushell/ethos-pdf@0.2.1
+```
+
+Version `0.2.0` is deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`.
+
 ## Vendor Binary Assembly
 
 Before publication, assemble the package vendor payload from the approved GitHub Release archives:

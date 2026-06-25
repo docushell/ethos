@@ -3,22 +3,16 @@
 `ethos-pdf` is the in-tree Rust crate for the PDFium-backed PDF source path behind Ethos parser
 traits. It normalizes parser output before data crosses the crate boundary.
 
-ADR-0006 reserves the public crates.io identifier `ethos-pdf` at `0.0.0-reserved.0`.
+ADR-0006 reserves the public crates.io identifier `ethos-pdf`.
 
-For the v0.2.0 release-candidate lane, this crate is a continuity crate for the lockstep Rust workspace.
-The release headline remains JSON verification and evidence anchoring over caller-provided source
-evidence. `ethos-pdf` remains the parser/PDFium-facing crate.
+For v0.2.0, this crate is a continuity crate for the lockstep Rust workspace. The release headline
+is JSON verification and evidence anchoring over caller-provided source evidence. `ethos-pdf`
+remains the parser/PDFium-facing crate.
 
 ## Publication Boundary
 
-- Publication metadata is activated for the approved crates.io candidate surface.
-- Public installation from crates.io remains blocked until refreshed tag/source binding and
-  operator evidence are recorded.
-- The reserved crates.io placeholder remains `0.0.0-reserved.0` until registry action is
-  explicitly recorded.
-- This README supports package-publication activation review only.
-- v0.2.0 registry install wording remains in release-candidate status until publication, registry
-  availability, and clean smoke tests are recorded.
+- Public installation from crates.io is available at `0.2.0`.
+- The reserved crates.io placeholder remains historical; `0.2.0` is the current public package.
 
 ## PDFium Boundary
 
