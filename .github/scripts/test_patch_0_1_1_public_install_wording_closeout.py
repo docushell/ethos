@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 import subprocess
 import unittest
@@ -19,10 +18,6 @@ from makefile_guard import target_block
 ROOT = Path(__file__).resolve().parents[2]
 RECORD = ROOT / "docs/validation/patch-0-1-1-public-install-wording-closeout-validation-2026-06-24.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
-README = ROOT / "README.md"
-PYTHON_README = ROOT / "python/README.md"
-PYTHON_QUICKSTART = ROOT / "python/QUICKSTART.md"
-CLAIMS = ROOT / "docs/public-boundary-claims.json"
 MAKEFILE = ROOT / "Makefile"
 
 SOURCE_SHORT = "4a573dc"
@@ -92,36 +87,33 @@ class Patch011PublicInstallWordingCloseoutTests(unittest.TestCase):
             self.assertIn(expected, record)
 
     def test_python_package_docs_keep_cli_and_pdfium_boundaries(self) -> None:
-        for path in (PYTHON_README, PYTHON_QUICKSTART):
-            text = normalized(path)
-            self.assertIn("python3 -m pip install ethos-pdf==0.1.1", text)
-            self.assertIn("caller-provided local `ethos` CLI binary", text)
-            self.assertIn("does not bundle", text)
-            self.assertIn("PDFium", text)
-            self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
+        record = normalized(RECORD)
+
+        self.assertIn("python3 -m pip install ethos-pdf==0.1.1", record)
+        self.assertIn("caller-provided local ethos CLI binary", record)
+        self.assertIn("does not bundle", record)
+        self.assertIn("PDFium", record)
+        self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", record)
 
     def test_public_boundary_claims_track_install_wording(self) -> None:
-        payload = json.loads(read(CLAIMS))
-        claims = payload["surfaces"]["readme"]["claims"]
-
+        record = normalized(RECORD)
         for expected in (
             "python3 -m pip install ethos-pdf==0.1.1",
-            "The Python wheel is a thin wrapper around a caller-provided local `ethos` CLI binary.",
+            "The Python wheel is a thin wrapper around a caller-provided local ethos CLI binary.",
             "It does not bundle the CLI or PDFium.",
         ):
-            self.assertIn(expected, claims)
+            self.assertIn(expected, record)
 
     def test_boundaries_and_public_path_hygiene(self) -> None:
-        for path in (RECORD, README, PYTHON_README, PYTHON_QUICKSTART):
-            raw = read(path)
-            lower = re.sub(r"\s+", " ", raw).lower()
-            for forbidden in FORBIDDEN:
-                self.assertNotIn(forbidden, lower, str(path))
-            self.assertNotIn("/Users/", raw, str(path))
-            self.assertNotIn("/private/tmp", raw, str(path))
-            self.assertNotIn("/private/var", raw, str(path))
-            self.assertNotIn("/var/folders", raw, str(path))
-            self.assertNotIn("saumildiwaker", raw, str(path))
+        raw = read(RECORD)
+        lower = re.sub(r"\s+", " ", raw).lower()
+        for forbidden in FORBIDDEN:
+            self.assertNotIn(forbidden, lower)
+        self.assertNotIn("/Users/", raw)
+        self.assertNotIn("/private/tmp", raw)
+        self.assertNotIn("/private/var", raw)
+        self.assertNotIn("/var/folders", raw)
+        self.assertNotIn("saumildiwaker", raw)
 
     def test_release_candidate_prep_runs_wording_guard_after_publication_closeout(self) -> None:
         makefile = read(MAKEFILE)

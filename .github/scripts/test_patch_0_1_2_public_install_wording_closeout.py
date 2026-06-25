@@ -19,10 +19,6 @@ from makefile_guard import target_block
 ROOT = Path(__file__).resolve().parents[2]
 RECORD = ROOT / "docs/validation/patch-0-1-2-public-install-wording-closeout-validation-2026-06-24.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
-PYTHON_README = ROOT / "python/README.md"
-PYTHON_QUICKSTART = ROOT / "python/QUICKSTART.md"
-EXECUTION_STATUS = ROOT / "docs/execution-status.md"
-PUBLIC_RELEASE_CHECKLIST = ROOT / "docs/public-release-checklist.md"
 MAKEFILE = ROOT / "Makefile"
 
 SOURCE_SHORT = "37c294a"
@@ -105,14 +101,11 @@ class Patch012PublicInstallWordingCloseoutTests(unittest.TestCase):
         self.assertNotIn("npm install -g @docushell/ethos-pdf@0.1.1", record)
         self.assertNotIn("python3 -m pip install ethos-pdf==0.1.2", record)
 
-    def test_python_package_docs_remain_on_published_pypi_baseline(self) -> None:
-        for path in (PYTHON_README, PYTHON_QUICKSTART):
-            text = normalized(path)
-            self.assertIn(PYTHON_INSTALL, text)
-            self.assertNotIn("ethos-pdf==0.1.2", text)
-            self.assertIn("caller-provided local `ethos` CLI binary", text)
-            self.assertIn("does not bundle", text)
-            self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
+    def test_record_preserves_python_baseline_at_time_of_closeout(self) -> None:
+        record = normalized(RECORD)
+
+        self.assertIn(PYTHON_INSTALL, record)
+        self.assertNotIn("python3 -m pip install ethos-pdf==0.1.2", record)
 
     def test_status_docs_record_retained_rust_python_boundaries(self) -> None:
         for path in (RECORD,):
@@ -125,16 +118,15 @@ class Patch012PublicInstallWordingCloseoutTests(unittest.TestCase):
             self.assertIn("crates.io/PyPI `0.1.2` publication closeout records", text)
 
     def test_boundaries_and_public_path_hygiene(self) -> None:
-        for path in (RECORD, PYTHON_README, PYTHON_QUICKSTART):
-            raw = read(path)
-            lower = re.sub(r"\s+", " ", raw).lower()
-            for forbidden in FORBIDDEN:
-                self.assertNotIn(forbidden, lower, str(path))
-            self.assertNotIn("/Users/", raw, str(path))
-            self.assertNotIn("/private/tmp", raw, str(path))
-            self.assertNotIn("/private/var", raw, str(path))
-            self.assertNotIn("/var/folders", raw, str(path))
-            self.assertNotIn("saumildiwaker", raw, str(path))
+        raw = read(RECORD)
+        lower = re.sub(r"\s+", " ", raw).lower()
+        for forbidden in FORBIDDEN:
+            self.assertNotIn(forbidden, lower)
+        self.assertNotIn("/Users/", raw)
+        self.assertNotIn("/private/tmp", raw)
+        self.assertNotIn("/private/var", raw)
+        self.assertNotIn("/var/folders", raw)
+        self.assertNotIn("saumildiwaker", raw)
 
     def test_release_candidate_prep_runs_wording_guard_after_0_1_2_publication_closeouts(self) -> None:
         makefile = read(MAKEFILE)

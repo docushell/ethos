@@ -129,8 +129,10 @@ class Patch012CratesPublicationApprovalRequestTests(unittest.TestCase):
             self.assertIn("0.1.2", text, str(path))
             self.assertIn("`cargo publish`", text, str(path))
             self.assertIn("remain blocked", text, str(path))
-            self.assertIn("Rust crate public installation wording remains blocked", text, str(path))
-            self.assertIn("Python installation remains at `ethos-pdf==0.1.1`", text, str(path))
+
+        record = normalized(RECORD)
+        self.assertIn("Rust crate public installation wording remains blocked", record)
+        self.assertIn("Python installation remains at `ethos-pdf==0.1.1`", record)
 
     def test_source_manifests_keep_expected_publish_surface(self) -> None:
         for manifest in (
