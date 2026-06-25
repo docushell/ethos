@@ -10,6 +10,12 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.2.0 publication closeout is recorded in
+`v0-2-0-publication-closeout-validation-2026-06-25.md`. It records crates.io publication for
+`ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`; PyPI `ethos-pdf==0.2.0`;
+npm `@docushell/ethos-pdf@0.2.1` after deprecating stale `0.2.0`; and GitHub Release `v0.2.0`
+macOS arm64/Linux x64 CLI artifacts with checksum, inventory, and smoke evidence.
+
 v0.2.0 release approval request is recorded in
 `v0-2-0-release-approval-request-validation-2026-06-25.md` for decider review only. It binds the
 exact source commit, version-bump plan, Rust crate set, `ethos-pdf` continuity decision, Python
@@ -56,6 +62,13 @@ v0.2.0 draft artifact evidence is recorded in
 Linux x64 draft CLI artifacts, matching checksum sidecars, inventory sidecars, and smoke sidecars
 that report `ethos 0.2.0`. Artifact publication, npm vendor refresh, registry publication, tag
 creation, and installable `0.2.0` wording remain blocked until separate records pass.
+
+v0.2.0 npm vendor refresh is recorded in
+`v0-2-0-npm-vendor-refresh-validation-2026-06-25.md`. It refreshes the
+checked-in npm vendor payload from the validated v0.2.0 draft CLI artifacts. npm
+`@docushell/ethos-pdf@0.2.0` was published with stale binaries and deprecated; npm
+`@docushell/ethos-pdf@0.2.1` is the current package and registry install smoke reports
+`ethos 0.2.0`.
 
 Patch `0.1.2` closeout records now document that the approved patch `0.1.2` evaluation surfaces
 are closed for the GitHub source repository, Rust crates, Python wheel, npm package, macOS

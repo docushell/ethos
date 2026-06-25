@@ -1,6 +1,6 @@
 {
   "name": "@docushell/ethos-pdf",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Ethos PDF CLI binary package for document evidence workflows.",
   "license": "Apache-2.0",
   "repository": {

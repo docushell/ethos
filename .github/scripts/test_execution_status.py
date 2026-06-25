@@ -34,10 +34,14 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            "Status: Public beta evaluation is approved for the GitHub source repository; the three bounded "
-            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.2`; "
-            "the Python `ethos-pdf` wheel at `0.1.2`; the npm `@docushell/ethos-pdf` CLI package "
-            "at `0.1.2`; and the GitHub Release `v0.1.2` macOS arm64 and Linux x64 CLI artifacts.",
+            "Status: v0.2.0 public beta/evaluation surfaces are live for the GitHub source repository; "
+            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`; "
+            "the Python `ethos-pdf` wheel at `0.2.0`; npm `@docushell/ethos-pdf@0.2.1`; "
+            "and GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts.",
+            text,
+        )
+        self.assertIn(
+            "npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries",
             text,
         )
         self.assertIn("Internal Milestone D source-only closeout remains complete", text)
@@ -97,6 +101,12 @@ class ExecutionStatusTests(unittest.TestCase):
             "`ETHOS_PDFIUM_LIBRARY_PATH`.",
             text,
         )
+        self.assertIn(
+            "v0.2.0 public beta/evaluation surfaces are live for the GitHub source repository",
+            text,
+        )
+        self.assertIn("npm `@docushell/ethos-pdf@0.2.1`", text)
+        self.assertIn("GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts", text)
         self.assertIn("ethos-doc-core", text)
         self.assertIn("ethos-verify", text)
         self.assertIn("ethos-pdf", text)

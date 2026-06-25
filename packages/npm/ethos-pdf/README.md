@@ -1,6 +1,6 @@
 # @docushell/ethos-pdf
 
-`@docushell/ethos-pdf` is the npm binary package scaffold for the Ethos CLI.
+`@docushell/ethos-pdf` is the npm binary package for the Ethos CLI.
 
 Supported first-release targets:
 
@@ -31,5 +31,6 @@ Vendor assembly:
 - the script extracts the `ethos` executable from each archive and writes
   `vendor/ethos-darwin-arm64` and `vendor/ethos-linux-x64`.
 
-The package is not approved for public publication until the final release approval record binds the
-source commit, package version, artifact checksums, and exact public wording.
+The current npm package is `@docushell/ethos-pdf@0.2.1`, which vendors CLI binaries that report
+`ethos 0.2.0`. Version `0.2.0` is deprecated because it shipped stale CLI binaries that reported
+`ethos 0.1.2`.

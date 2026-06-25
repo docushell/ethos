@@ -5,13 +5,11 @@ This directory contains the `ethos-pdf` Python package source for Ethos.
 Install the published evaluation wheel from PyPI with:
 
 ```sh
-python3 -m pip install ethos-pdf==0.1.2
+python3 -m pip install ethos-pdf==0.2.0
 ```
 
-`v0.2.0` release-candidate source versions are activated for JSON verification and evidence-anchor
-wrapper calls through a caller-provided `ethos` CLI binary. Do not use `0.2.0` install wording
-until the package is published, matching CLI artifacts are available, and the post-publication
-smoke tests are recorded.
+`v0.2.0` adds JSON verification and evidence-anchor wrapper calls through a caller-provided
+`ethos` CLI binary. The Python wheel does not bundle the CLI or PDFium.
 
 The package exposes a public semver API beginning at `0.1.0` for Python `>=3.8`. Patch releases
 must not break public function signatures, exception classes, or documented return shapes. Minor
@@ -110,7 +108,7 @@ surface. Non-bound evidence-anchor outcomes are returned as structured reports, 
 Verify exit semantics:
 
 - exit `0` with JSON returns a report;
-- exit `1` with JSON returns a negative verification report;
+- exit `1` with JSON returns a negative verification report when `fail_on_ungrounded=True`;
 - exit `>=2` raises `EthosCommandError` or a more specific subclass.
 
 Run the focused tests with:

@@ -4,12 +4,10 @@
 types, deterministic serialization identifiers, fingerprints, stable codes, schema types, and
 trait boundaries.
 
-ADR-0006 reserves the public crates.io identifier `ethos-doc-core` at
-`0.0.0-reserved.0`. The Rust library name remains `ethos_core` so existing source imports keep the
-same crate path while registry action remains blocked.
+ADR-0006 reserves the public crates.io identifier `ethos-doc-core`. The Rust library name remains
+`ethos_core` so existing source imports keep the same crate path.
 
-For the v0.2.0 release-candidate lane, parser authors should treat this as the Rust package for
-`GroundingSource` implementations:
+Parser authors should treat this as the Rust package for `GroundingSource` implementations:
 
 ```toml
 ethos-doc-core = { version = "0.2", features = ["grounding"] }
@@ -24,16 +22,10 @@ library crate is `ethos_core`.
 
 ## Publication Boundary
 
-- Publication metadata is activated for the approved crates.io candidate surface.
-- Public installation from crates.io remains blocked until refreshed tag/source binding and
-  operator evidence are recorded.
-- The reserved crates.io placeholder remains `0.0.0-reserved.0` until registry action is
-  explicitly recorded.
-- This README supports package-publication activation review only.
+- Public installation from crates.io is available at `0.2.0`.
+- The reserved crates.io placeholder remains historical; `0.2.0` is the current public package.
 - Source-only pre-alpha crop descriptor APIs are not part of the default public surface. They
   require the explicit Cargo feature `crop-element`, which exists for in-tree CLI contract work.
-- v0.2.0 registry install wording remains in release-candidate status until publication, registry
-  availability, and clean smoke tests are recorded.
 
 ## Metadata Notes
 

@@ -6,7 +6,7 @@ It does not bundle Ethos or PDFium.
 Install the published evaluation wheel from PyPI with:
 
 ```sh
-python3 -m pip install ethos-pdf==0.1.2
+python3 -m pip install ethos-pdf==0.2.0
 ```
 
 ## PDFium Setup
