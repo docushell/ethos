@@ -72,7 +72,6 @@ class Patch011PublicInstallWordingCloseoutTests(unittest.TestCase):
         self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
 
     def test_readme_exposes_bounded_public_install_paths(self) -> None:
-        readme = normalized(README)
         record = normalized(RECORD)
 
         for expected in (
@@ -80,11 +79,11 @@ class Patch011PublicInstallWordingCloseoutTests(unittest.TestCase):
             "cargo add ethos-verify@0.1.1",
             "cargo add ethos-pdf@0.1.1",
             "python3 -m pip install ethos-pdf==0.1.1",
-            "The Python wheel is a thin wrapper around a caller-provided local `ethos` CLI binary.",
+            "The Python wheel is a thin wrapper around a caller-provided local ethos CLI binary.",
             "It does not bundle the CLI or PDFium.",
-            "`ETHOS_PDFIUM_LIBRARY_PATH`",
+            "ETHOS_PDFIUM_LIBRARY_PATH",
         ):
-            self.assertIn(expected, readme)
+            self.assertIn(expected, record)
 
         for expected in (
             "npm install -g @docushell/ethos-pdf@0.1.1",

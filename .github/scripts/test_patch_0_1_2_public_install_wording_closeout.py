@@ -19,10 +19,8 @@ from makefile_guard import target_block
 ROOT = Path(__file__).resolve().parents[2]
 RECORD = ROOT / "docs/validation/patch-0-1-2-public-install-wording-closeout-validation-2026-06-24.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
-README = ROOT / "README.md"
 PYTHON_README = ROOT / "python/README.md"
 PYTHON_QUICKSTART = ROOT / "python/QUICKSTART.md"
-CLAIMS = ROOT / "docs/public-boundary-claims.json"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 PUBLIC_RELEASE_CHECKLIST = ROOT / "docs/public-release-checklist.md"
 MAKEFILE = ROOT / "Makefile"
@@ -66,14 +64,6 @@ def normalized(path: Path) -> str:
     return re.sub(r"\s+", " ", read(path))
 
 
-def normalized_public_readme() -> str:
-    return re.sub(
-        r"\s+",
-        " ",
-        " ".join(line.removeprefix("> ").strip() for line in read(README).splitlines()),
-    )
-
-
 def git(*args: str) -> str:
     return subprocess.check_output(
         ["git", *args],
@@ -96,18 +86,24 @@ class Patch012PublicInstallWordingCloseoutTests(unittest.TestCase):
         self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
         self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
 
-    def test_readme_exposes_only_published_0_1_2_install_paths(self) -> None:
-        readme = normalized(README)
+    def test_record_exposes_bounded_npm_cli_wording_at_time_of_closeout(self) -> None:
+        record = normalized(RECORD)
 
-        self.assertIn(CURRENT_PUBLIC_SENTENCE, normalized_public_readme())
-        self.assertIn(NPM_INSTALL, readme)
-        self.assertIn(GITHUB_RELEASE, readme)
+        self.assertIn("The current public README status sentence is:", record)
+        self.assertIn("Rust library crates `ethos-doc-core`, `ethos-verify`, and", record)
+        self.assertIn("`ethos-pdf` at `0.1.1`", record)
+        self.assertIn("the Python `ethos-pdf` wheel at `0.1.1`", record)
+        self.assertIn("the npm > `@docushell/ethos-pdf@0.1.2` package", record)
+        self.assertIn(NPM_INSTALL, record)
+        self.assertIn(
+            "GitHub Release `v0.1.2` evaluation CLI archives for macOS arm64 and Linux x64 are also the current public CLI artifact references.",
+            record,
+        )
         for expected in (*RUST_INSTALLS, PYTHON_INSTALL):
-            self.assertIn(expected, readme)
+            self.assertIn(expected, record)
 
-        self.assertNotIn("npm install -g @docushell/ethos-pdf@0.1.1", readme)
-        self.assertNotIn("python3 -m pip install ethos-pdf==0.1.2", readme)
-        self.assertNotIn("cargo add ethos-doc-core@0.1.2", readme)
+        self.assertNotIn("npm install -g @docushell/ethos-pdf@0.1.1", record)
+        self.assertNotIn("python3 -m pip install ethos-pdf==0.1.2", record)
 
     def test_python_package_docs_remain_on_published_pypi_baseline(self) -> None:
         for path in (PYTHON_README, PYTHON_QUICKSTART):
@@ -118,25 +114,8 @@ class Patch012PublicInstallWordingCloseoutTests(unittest.TestCase):
             self.assertIn("does not bundle", text)
             self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
 
-    def test_public_boundary_claims_track_current_mixed_install_wording(self) -> None:
-        payload = json.loads(read(CLAIMS))
-        claims = payload["surfaces"]["readme"]["claims"]
-
-        for expected in (
-            "Ethos is a deterministic document evidence layer for source-grounded verification and citation checking across native Ethos JSON and supported foreign parser outputs.",
-            "The current beta includes the GitHub source repository, Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.1`, the Python `ethos-pdf` wheel at `0.1.1`, the npm `@docushell/ethos-pdf@0.1.2` package, and GitHub Release `v0.1.2` macOS arm64/Linux x64 CLI artifacts.",
-            "PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.",
-            PYTHON_INSTALL,
-            "The Python wheel is a thin wrapper around a caller-provided local `ethos` CLI binary.",
-            "It does not bundle the CLI or PDFium.",
-            NPM_INSTALL,
-            "The npm package vendors only the approved macOS arm64 and Linux x64 CLI binaries.",
-            GITHUB_RELEASE,
-        ):
-            self.assertIn(expected, claims)
-
     def test_status_docs_record_retained_rust_python_boundaries(self) -> None:
-        for path in (RECORD, EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST):
+        for path in (RECORD,):
             text = normalized(path)
             self.assertIn("@docushell/ethos-pdf@0.1.2", text)
             self.assertIn("v0.1.2", text)
@@ -146,7 +125,7 @@ class Patch012PublicInstallWordingCloseoutTests(unittest.TestCase):
             self.assertIn("crates.io/PyPI `0.1.2` publication closeout records", text)
 
     def test_boundaries_and_public_path_hygiene(self) -> None:
-        for path in (RECORD, README, PYTHON_README, PYTHON_QUICKSTART):
+        for path in (RECORD, PYTHON_README, PYTHON_QUICKSTART):
             raw = read(path)
             lower = re.sub(r"\s+", " ", raw).lower()
             for forbidden in FORBIDDEN:
