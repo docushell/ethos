@@ -33,6 +33,14 @@ source/package metadata to `0.2.0` for release-candidate validation only. Public
 and installable wording remain on the approved `0.1.2` evaluation baseline until publication,
 registry/artifact availability, smoke evidence, and wording closeout records pass.
 
+v0.2.0 `ethos-doc-core` dry-run evidence is recorded in
+`v0-2-0-ethos-doc-core-cargo-publish-dry-run-evidence-validation-2026-06-25.md`. The first Rust
+registry dry-run gate passed for `ethos-doc-core 0.2.0`, producing
+`ethos-doc-core-0.2.0.crate` with SHA256
+`de86ce74dd791b50d0722cddc878756cceabae2162f747e9e24902b88e5c7de1`. `cargo publish`,
+dependent-crate dry-runs, tag creation, artifact publication, and installable `0.2.0` wording
+remain blocked until separate evidence and operator decisions pass.
+
 Patch `0.1.2` closeout records now document that the approved patch `0.1.2` evaluation surfaces
 are closed for the GitHub source repository, Rust crates, Python wheel, npm package, macOS
 arm64/Linux x64 CLI artifacts, and the three approved annotated package tags. Hosted surfaces

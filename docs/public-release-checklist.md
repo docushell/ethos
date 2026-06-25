@@ -37,6 +37,12 @@ npm source/package metadata to `0.2.0` for release-candidate validation only. Pu
 commands and installable wording remain on the approved `0.1.2` evaluation baseline until
 publication, registry/artifact availability, smoke evidence, and wording closeout records pass.
 
+v0.2.0 `ethos-doc-core` dry-run evidence is recorded in
+`docs/validation/v0-2-0-ethos-doc-core-cargo-publish-dry-run-evidence-validation-2026-06-25.md`.
+It records a passing `cargo publish --dry-run --locked -p ethos-doc-core` for
+`ethos-doc-core 0.2.0`; no publication, tag, artifact upload, dependent-crate dry-run, or
+installable `0.2.0` wording is approved by that record.
+
 Patch `0.1.1` readiness prep is recorded in
 `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records
 candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change guarding, the

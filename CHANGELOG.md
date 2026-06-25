@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- boundary-exception: record passing `ethos-doc-core 0.2.0` locked cargo publish dry-run evidence
+  while keeping actual `cargo publish`, dependent-crate dry-runs, PyPI upload, npm publish, GitHub
+  Release artifact publication, release/package tags, installable `0.2.0` wording, hosted,
+  production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
 - boundary-exception: activate v0.2.0 release-candidate source versions for Rust, Python, and npm
   package metadata while keeping `cargo publish`, PyPI upload, npm publish, GitHub Release
   artifact publication, release/package tags, installable `0.2.0` wording, hosted, production,

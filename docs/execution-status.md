@@ -37,6 +37,14 @@ and release-candidate wording now point to `0.2.0` for candidate validation. Pub
 commands and installable wording remain on the approved `0.1.2` evaluation baseline until
 publication, registry/artifact availability, smoke evidence, and wording closeout records pass.
 
+v0.2.0 `ethos-doc-core` dry-run evidence is recorded in
+`docs/validation/v0-2-0-ethos-doc-core-cargo-publish-dry-run-evidence-validation-2026-06-25.md`.
+The first Rust registry dry-run gate passed for `ethos-doc-core 0.2.0` and recorded the generated
+crate SHA256
+`de86ce74dd791b50d0722cddc878756cceabae2162f747e9e24902b88e5c7de1`. Actual `cargo publish`,
+dependent-crate dry-runs, tag creation, artifact publication, and installable `0.2.0` wording
+remain blocked until separate evidence and operator decisions pass.
+
 Older Milestone E paragraphs below preserve historical review records and their blockers at the time they were written. Patch `0.1.1` closeout records supersede those historical blockers only for the approved source, Rust crate, Python wheel, npm package, macOS arm64 CLI artifact, and Linux x64 CLI artifact evaluation surfaces.
 
 Patch `0.1.2` npm publication approval request is recorded in
