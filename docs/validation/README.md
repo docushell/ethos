@@ -50,6 +50,13 @@ checked-in vendored binaries still expose `ethos 0.1.2`; Linux x64 CLI artifact 
 vendor refresh, publication, tag creation, artifact upload, and installable `0.2.0` wording remain
 blocked.
 
+v0.2.0 draft artifact evidence is recorded in
+`v0-2-0-draft-artifact-evidence-validation-2026-06-25.md`. It records a passing
+`release.yml` workflow-dispatch run on `dev/v0-2-approval-packet`, downloaded macOS arm64 and
+Linux x64 draft CLI artifacts, matching checksum sidecars, inventory sidecars, and smoke sidecars
+that report `ethos 0.2.0`. Artifact publication, npm vendor refresh, registry publication, tag
+creation, and installable `0.2.0` wording remain blocked until separate records pass.
+
 Patch `0.1.2` closeout records now document that the approved patch `0.1.2` evaluation surfaces
 are closed for the GitHub source repository, Rust crates, Python wheel, npm package, macOS
 arm64/Linux x64 CLI artifacts, and the three approved annotated package tags. Hosted surfaces

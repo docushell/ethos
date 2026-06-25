@@ -351,6 +351,7 @@ v0-2-release-prep:
 	$(PYTHON) .github/scripts/test_v0_2_0_version_activation.py
 	$(PYTHON) .github/scripts/test_v0_2_0_ethos_doc_core_cargo_publish_dry_run_evidence.py
 	$(PYTHON) .github/scripts/test_v0_2_0_package_build_evidence.py
+	$(PYTHON) .github/scripts/test_v0_2_0_draft_artifact_evidence.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
 	git diff --check

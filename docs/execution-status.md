@@ -53,6 +53,13 @@ npm v0.2.0 artifact candidacy remains blocked because the checked-in vendored bi
 report `ethos 0.1.2`. Linux x64 CLI artifact evidence, npm vendor refresh, publication, tag
 creation, artifact upload, and installable `0.2.0` wording remain blocked.
 
+v0.2.0 draft artifact evidence is recorded in
+`docs/validation/v0-2-0-draft-artifact-evidence-validation-2026-06-25.md`. The release workflow
+passed on `dev/v0-2-approval-packet` and produced macOS arm64 plus Linux x64 draft CLI artifacts
+whose smoke sidecars report `ethos 0.2.0`. Artifact publication, npm vendor refresh, registry
+publication, tag creation, and installable `0.2.0` wording remain blocked until separate records
+and operator decisions pass.
+
 Older Milestone E paragraphs below preserve historical review records and their blockers at the time they were written. Patch `0.1.1` closeout records supersede those historical blockers only for the approved source, Rust crate, Python wheel, npm package, macOS arm64 CLI artifact, and Linux x64 CLI artifact evaluation surfaces.
 
 Patch `0.1.2` npm publication approval request is recorded in

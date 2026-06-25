@@ -50,6 +50,13 @@ npm candidate remains blocked until v0.2.0 macOS arm64 and Linux x64 CLI artifac
 the vendored payload is refreshed from those artifacts; no publication, artifact upload, tag, or
 installable `0.2.0` wording is approved by that record.
 
+v0.2.0 draft artifact evidence is recorded in
+`docs/validation/v0-2-0-draft-artifact-evidence-validation-2026-06-25.md`. It records a successful
+`release.yml` workflow run and downloaded macOS arm64/Linux x64 draft CLI artifacts whose smoke
+sidecars report `ethos 0.2.0`. This evidence does not approve GitHub Release artifact
+publication, npm vendor refresh, registry publication, tag creation, or installable `0.2.0`
+wording.
+
 Patch `0.1.1` readiness prep is recorded in
 `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records
 candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change guarding, the
