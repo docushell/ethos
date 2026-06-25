@@ -14,7 +14,10 @@ v0.2.0 publication closeout is recorded in
 `v0-2-0-publication-closeout-validation-2026-06-25.md`. It records crates.io publication for
 `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`; PyPI `ethos-pdf==0.2.0`;
 npm `@docushell/ethos-pdf@0.2.1` after deprecating stale `0.2.0`; and GitHub Release `v0.2.0`
-macOS arm64/Linux x64 CLI artifacts with checksum, inventory, and smoke evidence.
+macOS arm64/Linux x64 CLI artifacts with checksum, inventory, and smoke evidence. Post-merge
+`main` verification at `87fbdfb600d06f5e6d61ac1f6bd03caa9bad34a5` passed
+`make v0-2-release-prep PYTHON=python3`, claims gates, public-boundary claims gate, and
+`git diff --check`.
 
 v0.2.0 release approval request is recorded in
 `v0-2-0-release-approval-request-validation-2026-06-25.md` for decider review only. It binds the

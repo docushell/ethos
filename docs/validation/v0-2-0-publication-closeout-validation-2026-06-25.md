@@ -139,6 +139,19 @@ GitHub Actions release workflow:
 Run release (28189912786) completed with 'success'
 ```
 
+Post-merge `main` verification:
+
+```text
+main commit: 87fbdfb600d06f5e6d61ac1f6bd03caa9bad34a5
+make v0-2-release-prep PYTHON=python3
+OK
+python3 .github/scripts/claims_gate.py
+claims gate green
+python3 .github/scripts/public_boundary_claims_gate.py
+public boundary claims green
+git diff --check
+```
+
 ## Retained Blockers
 
 - Windows packaged artifacts remain blocked.
