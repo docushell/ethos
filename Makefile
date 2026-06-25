@@ -344,6 +344,7 @@ v0-2-release-prep:
 	cargo test --locked --workspace
 	$(MAKE) python-surface-test PYTHON=$(PYTHON)
 	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_validation_record_source.py
 	$(PYTHON) .github/scripts/test_v0_2_0_release_approval_request.py
 	$(PYTHON) .github/scripts/test_v0_2_0_release_approval_decision.py
 	$(PYTHON) .github/scripts/test_v0_2_0_version_activation.py

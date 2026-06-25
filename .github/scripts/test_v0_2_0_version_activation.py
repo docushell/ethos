@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 import unittest
 from pathlib import Path
 
 from makefile_guard import target_block
+from validation_record_source import assert_record_source_binding
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,6 +24,17 @@ PUBLIC_RELEASE_CHECKLIST = ROOT / "docs/public-release-checklist.md"
 MAKEFILE = ROOT / "Makefile"
 README = ROOT / "README.md"
 CLAIMS = ROOT / "docs/public-boundary-claims.json"
+INSTALL_WORDING_SURFACES = (
+    ROOT / "README.md",
+    ROOT / "python/README.md",
+    ROOT / "python/QUICKSTART.md",
+    ROOT / "packages/npm/ethos-pdf/README.md",
+    ROOT / "packages/npm/ethos-pdf/QUICKSTART.md",
+    ROOT / "crates/ethos-core/README.md",
+    ROOT / "crates/ethos-verify/README.md",
+    ROOT / "crates/ethos-pdf/README.md",
+    ROOT / "adapters/grounding/opendataloader-json/README.md",
+)
 CARGO = ROOT / "Cargo.toml"
 CARGO_LOCK = ROOT / "Cargo.lock"
 CLI_CARGO = ROOT / "crates/ethos-cli/Cargo.toml"
@@ -78,25 +89,21 @@ def normalized_markdown(path: Path) -> str:
     )
 
 
-def git(*args: str) -> str:
-    return subprocess.check_output(
-        ["git", *args],
-        cwd=ROOT,
-        encoding="utf-8",
-        stderr=subprocess.DEVNULL,
-    ).strip()
-
-
 class V020VersionActivationTests(unittest.TestCase):
     def test_record_is_source_bound_and_indexed(self) -> None:
         raw = read(RECORD)
         record = normalized(RECORD)
 
-        self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", raw)
-        self.assertIn(f"v0.2.0 version activation source commit: `{SOURCE_COMMIT}`", record)
-        self.assertIn(f"v0.2.0 version activation source tree: `{SOURCE_TREE}`", record)
-        self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
-        self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
+        assert_record_source_binding(
+            self,
+            root=ROOT,
+            raw_record=raw,
+            normalized_record=record,
+            validated_head=SOURCE_SHORT,
+            source_label="v0.2.0 version activation",
+            source_commit=SOURCE_COMMIT,
+            source_tree=SOURCE_TREE,
+        )
 
         for path in (VALIDATION_README, EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST):
             text = normalized(path)
@@ -145,6 +152,8 @@ class V020VersionActivationTests(unittest.TestCase):
         for forbidden in FORBIDDEN_INSTALL_WORDING:
             self.assertNotIn(forbidden, readme)
             self.assertNotIn(forbidden, joined_claims)
+            for path in INSTALL_WORDING_SURFACES:
+                self.assertNotIn(forbidden, read(path), str(path))
 
     def test_boundaries_remain_closed(self) -> None:
         raw = read(RECORD)

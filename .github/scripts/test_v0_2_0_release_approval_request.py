@@ -18,11 +18,11 @@
 from __future__ import annotations
 
 import re
-import subprocess
 import unittest
 from pathlib import Path
 
 from makefile_guard import target_block
+from validation_record_source import assert_record_source_binding
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -93,25 +93,21 @@ def normalized(path: Path) -> str:
     return re.sub(r"\s+", " ", read(path))
 
 
-def git(*args: str) -> str:
-    return subprocess.check_output(
-        ["git", *args],
-        cwd=ROOT,
-        encoding="utf-8",
-        stderr=subprocess.DEVNULL,
-    ).strip()
-
-
 class V020ReleaseApprovalRequestTests(unittest.TestCase):
     def test_request_record_is_source_bound_and_indexed(self) -> None:
         raw = read(RECORD)
         record = normalized(RECORD)
 
-        self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", raw)
-        self.assertIn(f"v0.2.0 release approval request source commit: `{SOURCE_COMMIT}`", record)
-        self.assertIn(f"v0.2.0 release approval request source tree: `{SOURCE_TREE}`", record)
-        self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
-        self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
+        assert_record_source_binding(
+            self,
+            root=ROOT,
+            raw_record=raw,
+            normalized_record=record,
+            validated_head=SOURCE_SHORT,
+            source_label="v0.2.0 release approval request",
+            source_commit=SOURCE_COMMIT,
+            source_tree=SOURCE_TREE,
+        )
 
         for path in (VALIDATION_README, EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST):
             text = normalized(path)
