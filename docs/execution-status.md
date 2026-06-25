@@ -73,6 +73,14 @@ The public README and public boundary inventory now point Rust crate installatio
 `ethos-pdf==0.1.1` until separate PyPI `0.1.2` approval, operator publication, and closeout
 records pass.
 
+Patch `0.1.2` Python PyPI publication approval request is recorded in
+`docs/validation/patch-0-1-2-python-publication-approval-request-validation-2026-06-25.md`. It
+binds the exact deterministic `ethos-pdf==0.1.2` wheel candidate, source commit, source tree,
+metadata, SHA256, and local install/import smoke for decider review only. PyPI upload, Python
+public installation wording, package tag creation, hosted surfaces, production positioning, Windows
+packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public
+benchmark claims remain blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane
