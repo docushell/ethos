@@ -11,7 +11,7 @@
 > Ethos is a deterministic document evidence layer for source-grounded verification and
 > citation checking across native Ethos JSON and supported foreign parser outputs. The current
 > beta includes the GitHub source repository, Rust library crates `ethos-doc-core`,
-> `ethos-verify`, and `ethos-pdf` at `0.1.2`, the Python `ethos-pdf` wheel at `0.1.1`, the npm
+> `ethos-verify`, and `ethos-pdf` at `0.1.2`, the Python `ethos-pdf` wheel at `0.1.2`, the npm
 > `@docushell/ethos-pdf@0.1.2` package, and GitHub Release `v0.1.2` macOS arm64/Linux x64 CLI
 > artifacts. PDFium-backed commands use caller-provided PDFium through
 > `ETHOS_PDFIUM_LIBRARY_PATH`.
@@ -130,7 +130,7 @@ cargo add ethos-pdf@0.1.2
 To install the Python wrapper from PyPI:
 
 ```bash
-python3 -m pip install ethos-pdf==0.1.1
+python3 -m pip install ethos-pdf==0.1.2
 ```
 
 The Python wheel is a thin wrapper around a caller-provided local `ethos` CLI binary. It does not

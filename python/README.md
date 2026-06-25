@@ -5,7 +5,7 @@ This directory contains the `ethos-pdf` Python package source for Ethos.
 Install the published evaluation wheel from PyPI with:
 
 ```sh
-python3 -m pip install ethos-pdf==0.1.1
+python3 -m pip install ethos-pdf==0.1.2
 ```
 
 The package exposes a public semver API beginning at `0.1.0` for Python `>=3.8`. Patch releases

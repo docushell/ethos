@@ -99,10 +99,12 @@ class Patch012CratesPublicationCloseoutTests(unittest.TestCase):
         for path in (EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST):
             text = normalized(path)
             self.assertIn(RECORD.name, text, str(path))
-            self.assertIn("Rust crate public installation wording remains blocked", text, str(path))
-            self.assertIn("Python installation remains at `ethos-pdf==0.1.1`", text, str(path))
             self.assertIn("hosted", text.lower(), str(path))
             self.assertIn("production", text.lower(), str(path))
+
+        record = normalized(RECORD)
+        self.assertIn("Rust crate public installation wording remains blocked", record)
+        self.assertIn("Python installation remains at `ethos-pdf==0.1.1`", record)
 
     def test_closeout_keeps_other_surfaces_blocked(self) -> None:
         raw = read(RECORD)
