@@ -42,39 +42,99 @@ The release promise being prepared is narrow:
 - hidden/off-page/low-contrast text detection;
 - annotation, link, embedded-file, or JavaScript inventories unless implemented.
 
-## Publication Governance
+## Release Sequence
 
-Before any `0.2.0` publication action:
+### 1. Decide Python Scope
 
-- obtain explicit `0.2.0` publication approval;
-- confirm crates.io ownership for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`;
-- confirm ADR-0006 package-identifier governance;
-- confirm publication metadata for intended crates;
-- confirm how `reserved_crates_io_version` remains historical reservation metadata;
-- confirm whether the Python wrapper is in the public promise;
-- confirm the operator and closeout evidence owner.
+Before approval, decide whether Python is public in `v0.2.0`.
+
+If Python is public in `v0.2.0`, commit to all of these surfaces together:
+
+- PyPI wheel;
+- `v0.2.0` CLI artifacts usable by the wrapper;
+- docs explaining that `ethos-pdf` is historical package naming and that JSON verify/anchor calls
+  use a caller-provided CLI binary.
+
+If Python is not public in `v0.2.0`, remove Python from the public promise before approval.
+
+### 2. Prepare Approval Packet
+
+The approval packet must bind:
+
+- exact source commit;
+- version-bump plan;
+- crates: `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`;
+- explicit `ethos-pdf` continuity decision;
+- Python decision;
+- npm `@docushell/ethos-pdf` fate;
+- CLI artifact decision;
+- tag and package-tag approval;
+- ADR-0006/name ownership confirmation;
+- `reserved_crates_io_version` handling;
+- append-only crates.io risk;
+- operator and closeout owner;
+- retained blockers.
 
 If approval or registry publication is deferred, public wording must stay in preparation language
 and must not claim `0.2.0` registry installation.
 
-## Publish Order
+### 3. Create Release-Candidate Branch
 
-The intended Rust order is:
+After approval, create a release-candidate branch and make the versioned release-candidate changes:
 
-1. Run local tests and gates.
-2. Dry-run only `ethos-doc-core` before any `0.2.0` crate is live.
-3. Publish `ethos-doc-core`.
-4. Wait for crates.io index availability and smoke a clean temp project.
-5. Dry-run and publish `ethos-verify`.
-6. Run a real API smoke with the bring-your-own-parser example.
-7. Dry-run and publish `ethos-pdf` as a continuity crate.
+- bump Rust workspace/package dependency versions to `0.2.0`;
+- bump Python metadata and `__version__` if Python is included;
+- bump npm if npm is included;
+- finalize `CHANGELOG.md`;
+- update version-pinned docs to release-candidate wording, not installable wording yet.
+
+### 4. Run Full Gates On The Bumped Tree
+
+Run:
+
+```bash
+make v0-2-release-prep PYTHON=python3
+cargo publish --dry-run -p ethos-doc-core
+```
+
+Also run package/build checks for Python, npm, and CLI artifacts if those surfaces are included.
+
+### 5. Publish In Dependency Order
+
+Rust publication order:
+
+1. Publish `ethos-doc-core`.
+2. Wait for crates.io index availability.
+3. Dry-run and publish `ethos-verify`.
+4. Dry-run and publish `ethos-pdf`.
 
 `ethos-verify` and `ethos-pdf` registry-resolution dry-runs belong after
 `ethos-doc-core 0.2.0` is live in the crates.io index.
 
-## Required Gates
+Publish Python, npm, and CLI artifacts only if they are in scope.
 
-Source-prep gates:
+### 6. Smoke Real Usage
+
+Smoke:
+
+- Rust bring-your-own-parser API;
+- CLI JSON verify;
+- CLI evidence anchor;
+- Python wrapper against the published CLI artifact if Python is in scope.
+
+### 7. Flip Docs Only After Smoke
+
+Only after registry/artifact availability and smoke evidence, flip docs to installable `0.2.0`
+wording and rerun:
+
+```bash
+python3 .github/scripts/claims_gate.py
+python3 .github/scripts/public_boundary_claims_gate.py
+```
+
+## Source-Prep Gate
+
+Current source-prep gate before a release-candidate branch:
 
 ```bash
 make v0-2-release-prep PYTHON=python3
@@ -82,13 +142,6 @@ make v0-2-release-prep PYTHON=python3
 
 The target expands to the workspace Rust test suite, Python surface tests, schema example
 validation, public claims gates, and whitespace diff checks.
-
-Post-publication wording flip gates:
-
-```bash
-python3 .github/scripts/claims_gate.py
-python3 .github/scripts/public_boundary_claims_gate.py
-```
 
 ## Python Wrapper Contract
 
@@ -116,3 +169,15 @@ ethos evidence anchor <source> \
 ```
 
 Evidence anchor has no v0.2 fail flag. Non-bound anchor outcomes remain exit-0 structured reports.
+
+## DocuShell Design-Partner Pilot
+
+The DocuShell wedge should stay internal/design-partner scoped as "Evidence-Checked Answers", not a
+public launch.
+
+The two learning goals are:
+
+- claim extraction quality;
+- non-PDF ingestion.
+
+Those decide whether the deterministic trust layer is easy to apply outside Ethos' own parser path.
