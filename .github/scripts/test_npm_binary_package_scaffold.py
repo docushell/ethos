@@ -60,7 +60,7 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         package = json.loads(read(PACKAGE_JSON))
 
         self.assertEqual("@docushell/ethos-pdf", package["name"])
-        self.assertEqual("0.1.2", package["version"])
+        self.assertRegex(package["version"], r"^\d+\.\d+\.\d+$")
         self.assertEqual("Apache-2.0", package["license"])
         self.assertEqual({"ethos": "./bin/ethos-pdf.js"}, package["bin"])
         self.assertIn("vendor/", package["files"])

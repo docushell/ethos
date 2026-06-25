@@ -56,6 +56,13 @@ def pyproject_text() -> str:
     return read(PYPROJECT)
 
 
+def pyproject_version() -> str:
+    match = re.search(r'^version = "([^"]+)"$', pyproject_text(), re.MULTILINE)
+    if match is None:
+        raise AssertionError("pyproject.toml is missing a project version")
+    return match.group(1)
+
+
 def parse_init_assignments() -> dict[str, object]:
     module = ast.parse(read(INIT))
     values: dict[str, object] = {}
@@ -70,9 +77,10 @@ def parse_init_assignments() -> dict[str, object]:
 class PythonPublicApiPolicyTests(unittest.TestCase):
     def test_package_metadata_declares_public_release_policy(self) -> None:
         text = pyproject_text()
+        version = pyproject_version()
 
         self.assertIn('name = "ethos-pdf"', text)
-        self.assertIn('version = "0.1.2"', text)
+        self.assertRegex(version, r"^\d+\.\d+\.\d+$")
         self.assertIn('requires-python = ">=3.8"', text)
         self.assertIn('license = "Apache-2.0"', text)
         self.assertNotIn('license = { text = "Apache-2.0" }', text)
@@ -83,7 +91,7 @@ class PythonPublicApiPolicyTests(unittest.TestCase):
     def test_public_module_version_and_all_match_metadata(self) -> None:
         assignments = parse_init_assignments()
 
-        self.assertEqual("0.1.2", assignments["__version__"])
+        self.assertEqual(pyproject_version(), assignments["__version__"])
         self.assertEqual(list(PUBLIC_API), assignments["__all__"])
 
     def test_readme_documents_semver_and_exact_public_api_boundary(self) -> None:

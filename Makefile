@@ -343,6 +343,7 @@ release-candidate-prep:
 v0-2-release-prep:
 	cargo test --locked --workspace
 	$(MAKE) python-surface-test PYTHON=$(PYTHON)
+	$(PYTHON) .github/scripts/test_python_public_api_policy.py
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_validation_record_source.py
 	$(PYTHON) .github/scripts/test_v0_2_0_release_approval_request.py
