@@ -61,6 +61,11 @@ positioning. The contract inventory at `examples/verify/evidence_anchor_v1_contr
 schema-validated here; its alignment with focused CLI tests, OpenDataLoader adapter coverage,
 status docs, and Makefile wiring is checked by the evidence-anchor repository guard.
 
+The v0.2.x compatibility policy is tracked in `docs/v0-2-x-compatibility-policy.md`. Verification
+report schemas, evidence-anchor request/report schemas, default verification-config semantics,
+`GroundingSource` obligations, and CLI JSON input/output shapes are frozen across compatible
+`0.2.x` updates after the `0.2.0` lane is approved and published.
+
 Milestone D `verify_citations` v1 contract work is tracked in
 `docs/milestone-d-verify-citations-contract.md`. In this source-only pre-alpha slice,
 `verify_citations` names the citation-input to verification-report contract currently carried by

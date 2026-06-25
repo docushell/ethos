@@ -8,6 +8,20 @@ ADR-0006 reserves the public crates.io identifier `ethos-doc-core` at
 `0.0.0-reserved.0`. The Rust library name remains `ethos_core` so existing source imports keep the
 same crate path while registry action remains blocked.
 
+For the v0.2.0 preparation lane, parser authors should treat this as the Rust package for
+`GroundingSource` implementations:
+
+```toml
+ethos-doc-core = { version = "0.2", features = ["grounding"] }
+```
+
+```rust
+use ethos_core::grounding::*;
+```
+
+The package name and import name intentionally differ. The package is `ethos-doc-core`; the Rust
+library crate is `ethos_core`.
+
 ## Publication Boundary
 
 - Publication metadata is activated for the approved crates.io candidate surface.
@@ -18,6 +32,8 @@ same crate path while registry action remains blocked.
 - This README supports package-publication activation review only.
 - Source-only pre-alpha crop descriptor APIs are not part of the default public surface. They
   require the explicit Cargo feature `crop-element`, which exists for in-tree CLI contract work.
+- v0.2.0 registry install wording remains in preparation status until publication approval,
+  registry availability, and clean smoke tests are recorded.
 
 ## Metadata Notes
 

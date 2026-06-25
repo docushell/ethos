@@ -15,6 +15,9 @@
 > `@docushell/ethos-pdf@0.1.2` package, and GitHub Release `v0.1.2` macOS arm64/Linux x64 CLI
 > artifacts. PDFium-backed commands use caller-provided PDFium through
 > `ETHOS_PDFIUM_LIBRARY_PATH`.
+> v0.2.0 is being prepared to publish registry install surfaces for JSON verification and
+> evidence anchoring. No `0.2.0` registry install wording is approved until publication approval,
+> registry availability, and clean smoke tests are recorded.
 > Current execution status and release-scope notes live in `docs/execution-status.md`;
 > public-release hygiene gates live in `docs/public-release-checklist.md`.
 
@@ -137,6 +140,28 @@ The Python wheel is a thin wrapper around a caller-provided local `ethos` CLI bi
 bundle the CLI or PDFium. Install or provide `ethos` separately, and keep
 `ETHOS_PDFIUM_LIBRARY_PATH` set for PDFium-backed commands.
 
+The v0.2.0 preparation lane adds Python wrapper methods for JSON verification and evidence
+anchoring through that caller-provided CLI:
+
+```python
+from ethos_pdf import EthosCli
+
+ethos = EthosCli(binary="/path/to/ethos")
+report = ethos.verify(
+    source="source.ethos.json",
+    citations="citations.json",
+    fail_on_ungrounded=False,
+)
+anchor_report = ethos.anchor(
+    source="source.ethos.json",
+    evidence_refs="evidence_refs.json",
+)
+```
+
+The JSON verification and evidence-anchor wrapper calls use the caller-provided CLI and do not
+require PDFium unless the chosen command path invokes PDFium-backed parser, crop, or render
+behavior.
+
 To install the npm CLI package on a supported first-release platform:
 
 ```bash
@@ -175,6 +200,7 @@ claim about broader PDF, OCR, table, production, hosted, or bundled-PDFium suppo
 
 This verifies three citation claims against checked-in native Ethos document JSON: a quote, a
 table cell, and page-level presence evidence.
+It consumes JSON inputs and does not require PDFium.
 
 ```bash
 cargo build --locked -p ethos-cli
@@ -212,6 +238,7 @@ The command exits `0` and writes a verification report shaped like this:
 
 Ethos can check whether caller-provided evidence refs bind to source document evidence.
 This is deterministic source tracing, not semantic validation of an answer.
+It consumes JSON inputs and does not require PDFium.
 
 ```bash
 ./target/debug/ethos evidence anchor schemas/examples/document.example.json \

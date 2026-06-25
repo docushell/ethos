@@ -220,6 +220,14 @@ production positioning, Windows packaged artifacts, bundled project-maintained P
 `ethos-doc`, `ethos-rag`, public benchmark reports, public benchmark claims, speed, footprint,
 parser-quality, table-quality, and production claims remain blocked.
 
+v0.2.0 source preparation is tracked in `docs/v0-2-0-release-prep.md`,
+`docs/v0-2-x-compatibility-policy.md`, and `docs/bring-your-own-parser.md`. This lane prepares
+JSON verification and evidence anchoring over caller-provided source evidence, plus the Python
+CLI-wrapper calls for `verify(...)` and `anchor(...)`. It does not approve `0.2.0` package
+publication, package tags, GitHub Release artifacts, PyPI upload, public install wording, hosted
+surfaces, production positioning, public benchmark claims, Windows packaged artifacts, or bundled
+project-maintained PDFium.
+
 ## Required Before Public Push
 
 - Package-name and trademark decision is closed by accepted ADR-0006 in

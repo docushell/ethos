@@ -27,10 +27,12 @@ from ._cli import (
     InvalidPdfError,
     ParseTimeoutError,
     PdfiumNotFoundError,
+    anchor,
     crop_element,
     parse_pdf_json,
     parse_pdf_markdown,
     parse_pdf_text,
+    verify,
 )
 
 __version__ = "0.1.2"
@@ -46,8 +48,10 @@ __all__ = [
     "InvalidPdfError",
     "ParseTimeoutError",
     "PdfiumNotFoundError",
+    "anchor",
     "crop_element",
     "parse_pdf_json",
     "parse_pdf_markdown",
     "parse_pdf_text",
+    "verify",
 ]

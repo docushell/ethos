@@ -39,10 +39,12 @@ PUBLIC_API = (
     "InvalidPdfError",
     "ParseTimeoutError",
     "PdfiumNotFoundError",
+    "anchor",
     "crop_element",
     "parse_pdf_json",
     "parse_pdf_markdown",
     "parse_pdf_text",
+    "verify",
 )
 
 

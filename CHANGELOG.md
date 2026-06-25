@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- boundary-exception: add v0.2.0 source-preparation docs and gates for JSON verification and
+  evidence anchoring, the v0.2.x compatibility policy, and the bring-your-own-parser tutorial; no
+  `0.2.0` publication, package tag, GitHub Release artifact, or public install wording is approved
+  by this entry.
+- python: add `EthosCli.verify(...)`, `EthosCli.anchor(...)`, top-level `verify(...)`, and
+  top-level `anchor(...)` as caller-provided CLI wrapper calls; verify exit `1` with a JSON report
+  returns a negative result instead of raising.
 - boundary-exception: close patch `0.1.2` current status for the approved evaluation surfaces; no hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, or `ethos-rag` boundary change.
 - boundary-exception: close patch `0.1.2` package tag creation with exact remote tag evidence while retaining hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.
 - boundary-exception: record decider approval for exact patch `0.1.2` package tag creation while keeping actual tag creation as a later operator action and retaining hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` blockers.

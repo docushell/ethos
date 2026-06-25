@@ -8,6 +8,10 @@ Install the published evaluation wheel from PyPI with:
 python3 -m pip install ethos-pdf==0.1.2
 ```
 
+`v0.2.0` is being prepared to add JSON verification and evidence-anchor wrapper calls through a
+caller-provided `ethos` CLI binary. Do not use `0.2.0` install wording until the package is
+published and the post-publication smoke tests are recorded.
+
 The package exposes a public semver API beginning at `0.1.0` for Python `>=3.8`. Patch releases
 must not break public function signatures, exception classes, or documented return shapes. Minor
 releases may add backward-compatible API, and major releases may break API after a release-scope
@@ -29,12 +33,18 @@ Public API:
 - `parse_pdf_markdown`
 - `parse_pdf_text`
 - `crop_element`
+- `verify`
+- `anchor`
 
 The current module is intentionally thin: it shells out to a caller-provided local `ethos` CLI
-binary and returns `ethos doc parse` output or source-bound `ethos crop_element` JSON. It can pass
-caller-provided source PDF and crop artifact directory arguments for rendered crop artifacts. It
-does not bundle PDFium, does not publish hosted surfaces, and does not expand parser behavior. The
-Rust CLI remains the source of truth.
+binary and returns `ethos doc parse` output, source-bound `ethos crop_element` JSON, `ethos verify`
+JSON reports, or `ethos evidence anchor` JSON reports. It can pass caller-provided source PDF and
+crop artifact directory arguments for rendered crop artifacts. It does not bundle PDFium, does not
+publish hosted surfaces, and does not expand parser behavior. The Rust CLI remains the source of
+truth.
+
+The package name is historical continuity naming. JSON verification and evidence-anchor calls do
+not require PDF parsing, but the package is still named `ethos-pdf`.
 
 PDFium-backed parse and crop paths require caller-provided PDFium through
 `ETHOS_PDFIUM_LIBRARY_PATH`. Importing `ethos_pdf` does not require PDFium. If PDFium is missing,
@@ -59,6 +69,48 @@ and `stderr`. When the CLI emits its stable JSON error envelope on stderr, the w
 
 Wrapper-side timeouts raised by `subprocess.run(..., timeout=...)` use `EthosTimeoutError`.
 Missing input files raise Python `FileNotFoundError` before invoking the CLI.
+
+## JSON Verify And Evidence Anchor
+
+Use the `binary` constructor alias when a caller manages the CLI path explicitly:
+
+```python
+from ethos_pdf import EthosCli
+
+ethos = EthosCli(binary="/path/to/ethos")
+
+report = ethos.verify(
+    source="source.ethos.json",
+    citations="citations.json",
+    grounding=None,
+    config=None,
+    fail_on_ungrounded=False,
+    output_format="json",
+    timeout=30,
+)
+
+anchor_report = ethos.anchor(
+    source="source.ethos.json",
+    evidence_refs="evidence_refs.json",
+    grounding=None,
+    output_format="json",
+    timeout=30,
+)
+```
+
+`verify(...)` maps `source` to the positional CLI input, maps `citations` to `--citations`, maps
+`grounding` to an adapter id such as `opendataloader-json`, maps `config` to `--config`, and maps
+`fail_on_ungrounded=True` to `--fail-on-ungrounded`.
+
+`anchor(...)` maps `source` to the positional CLI input, maps `evidence_refs` to `--evidence-refs`,
+and maps `grounding` to an adapter id. It does not expose a fail flag in the v0.2 preparation
+surface. Non-bound evidence-anchor outcomes are returned as structured reports, not exceptions.
+
+Verify exit semantics:
+
+- exit `0` with JSON returns a report;
+- exit `1` with JSON returns a negative verification report;
+- exit `>=2` raises `EthosCommandError` or a more specific subclass.
 
 Run the focused tests with:
 

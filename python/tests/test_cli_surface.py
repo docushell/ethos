@@ -33,8 +33,10 @@ from ethos_pdf import (
     InvalidPdfError,
     ParseTimeoutError,
     PdfiumNotFoundError,
+    anchor,
     crop_element,
     parse_pdf_json,
+    verify,
 )
 
 
@@ -91,6 +93,49 @@ if sys.argv[1:2] == ["crop_element"]:
     )
     raise SystemExit(0)
 
+if sys.argv[1:2] == ["verify"]:
+    if "--citations" not in sys.argv or "--format" not in sys.argv:
+        sys.stderr.write("missing verify arguments\\n")
+        raise SystemExit(2)
+    all_grounded = mode != "verify-negative"
+    sys.stdout.write(
+        json.dumps(
+            {
+                "artifact_type": "ethos.verification_report.v1",
+                "all_evidence_grounded": all_grounded,
+                "argv": sys.argv[1:],
+                "ok": True,
+            },
+            sort_keys=True,
+        )
+        + "\\n"
+    )
+    raise SystemExit(1 if mode == "verify-negative" else 0)
+
+if sys.argv[1:3] == ["evidence", "anchor"]:
+    if "--evidence-refs" not in sys.argv:
+        sys.stderr.write("missing evidence anchor arguments\\n")
+        raise SystemExit(2)
+    sys.stdout.write(
+        json.dumps(
+            {
+                "artifact_type": "ethos.evidence_anchor_report.v1",
+                "anchors": [
+                    {
+                        "anchor_status": "not_found"
+                        if mode == "anchor-non-bound"
+                        else "bound"
+                    }
+                ],
+                "argv": sys.argv[1:],
+                "ok": True,
+            },
+            sort_keys=True,
+        )
+        + "\\n"
+    )
+    raise SystemExit(0)
+
 if sys.argv[1:3] != ["doc", "parse"]:
     sys.stderr.write("unexpected command\\n")
     raise SystemExit(2)
@@ -124,6 +169,15 @@ class PythonSurfaceTests(unittest.TestCase):
         self.pdf.write_bytes(b"%PDF-1.7\n")
         self.document = self.root / "document.ethos.json"
         self.document.write_text("{}", encoding="utf-8")
+        self.citations = self.root / "citations.json"
+        self.citations.write_text("[]", encoding="utf-8")
+        self.config = self.root / "verification-config.json"
+        self.config.write_text("{}", encoding="utf-8")
+        self.evidence_refs = self.root / "evidence-refs.json"
+        self.evidence_refs.write_text(
+            '{"artifact_type":"ethos.evidence_anchor_request.v1","evidence_refs":[]}',
+            encoding="utf-8",
+        )
         self.crop_request = self.root / "crop-request.json"
         self.crop_request.write_text("{}", encoding="utf-8")
         self.crop_source_pdf = self.root / "source.pdf"
@@ -155,6 +209,15 @@ class PythonSurfaceTests(unittest.TestCase):
                 "--diagnostics",
             ],
         )
+
+    def test_constructor_accepts_binary_alias(self) -> None:
+        result = EthosCli(binary=self.fake_ethos).parse_pdf_json(self.pdf)
+
+        self.assertTrue(result["ok"])
+
+    def test_constructor_rejects_binary_and_ethos_bin_together(self) -> None:
+        with self.assertRaises(ValueError):
+            EthosCli(self.fake_ethos, binary=self.fake_ethos)
 
     def test_parse_pdf_text_preserves_cli_stdout(self) -> None:
         result = EthosCli(self.fake_ethos).parse_pdf_text(self.pdf)
@@ -335,6 +398,114 @@ class PythonSurfaceTests(unittest.TestCase):
                 self.document,
                 self.crop_request,
                 crop_source_pdf=self.crop_source_pdf,
+            )
+
+    def test_verify_maps_source_citations_grounding_config_and_fail_flag(self) -> None:
+        result = verify(
+            self.document,
+            citations=self.citations,
+            ethos_bin=self.fake_ethos,
+            grounding="opendataloader-json",
+            config=self.config,
+            fail_on_ungrounded=True,
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["argv"],
+            [
+                "verify",
+                str(self.document),
+                "--citations",
+                str(self.citations),
+                "--grounding",
+                "opendataloader-json",
+                "--config",
+                str(self.config),
+                "--fail-on-ungrounded",
+                "--format",
+                "json",
+            ],
+        )
+
+    def test_verify_exit_one_with_json_returns_negative_result(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "verify-negative"})
+
+        result = cli.verify(
+            self.document,
+            citations=self.citations,
+            fail_on_ungrounded=True,
+        )
+
+        self.assertFalse(result["all_evidence_grounded"])
+
+    def test_verify_exit_one_without_fail_flag_raises_command_error(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "verify-negative"})
+
+        with self.assertRaises(EthosCommandError) as caught:
+            cli.verify(self.document, citations=self.citations)
+
+        self.assertEqual(caught.exception.returncode, 1)
+        self.assertIn("ethos.verification_report.v1", caught.exception.stdout)
+
+    def test_verify_exit_two_raises_command_error(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "fail"})
+
+        with self.assertRaises(EthosCommandError) as caught:
+            cli.verify(self.document, citations=self.citations)
+
+        self.assertEqual(caught.exception.returncode, 2)
+
+    def test_verify_invalid_json_stdout_raises_output_error(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "invalid-json"})
+
+        with self.assertRaises(EthosOutputError):
+            cli.verify(self.document, citations=self.citations)
+
+    def test_verify_rejects_non_json_format(self) -> None:
+        with self.assertRaises(ValueError):
+            EthosCli(self.fake_ethos).verify(
+                self.document,
+                citations=self.citations,
+                output_format="summary",
+            )
+
+    def test_anchor_maps_source_evidence_refs_and_grounding(self) -> None:
+        result = anchor(
+            self.document,
+            evidence_refs=self.evidence_refs,
+            ethos_bin=self.fake_ethos,
+            grounding="opendataloader-json",
+        )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(
+            result["argv"],
+            [
+                "evidence",
+                "anchor",
+                str(self.document),
+                "--evidence-refs",
+                str(self.evidence_refs),
+                "--grounding",
+                "opendataloader-json",
+            ],
+        )
+        self.assertNotIn("--fail-on-ungrounded", result["argv"])
+
+    def test_anchor_non_bound_report_returns_without_exception(self) -> None:
+        cli = EthosCli(self.fake_ethos, env={"ETHOS_FAKE_MODE": "anchor-non-bound"})
+
+        result = cli.anchor(self.document, evidence_refs=self.evidence_refs)
+
+        self.assertEqual(result["anchors"][0]["anchor_status"], "not_found")
+
+    def test_anchor_rejects_non_json_format(self) -> None:
+        with self.assertRaises(ValueError):
+            EthosCli(self.fake_ethos).anchor(
+                self.document,
+                evidence_refs=self.evidence_refs,
+                output_format="summary",
             )
 
 

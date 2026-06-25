@@ -107,9 +107,14 @@ class EthosCli:
         self,
         ethos_bin: PathLike = "ethos",
         *,
+        binary: Optional[PathLike] = None,
         cwd: Optional[PathLike] = None,
         env: Optional[Mapping[str, str]] = None,
     ) -> None:
+        if binary is not None and os.fspath(ethos_bin) != "ethos":
+            raise ValueError("provide either ethos_bin or binary, not both")
+        if binary is not None:
+            ethos_bin = binary
         self.ethos_bin = os.fspath(ethos_bin)
         self.cwd = None if cwd is None else os.fspath(cwd)
         self.env = None if env is None else dict(env)
@@ -239,6 +244,87 @@ class EthosCli:
         stdout = self._run(command, timeout_seconds=timeout_seconds)
         return _load_json_stdout(stdout, command)
 
+    def verify(
+        self,
+        source: PathLike,
+        *,
+        citations: PathLike,
+        grounding: Optional[str] = None,
+        config: Optional[PathLike] = None,
+        fail_on_ungrounded: bool = False,
+        output_format: str = "json",
+        timeout: Optional[float] = 30.0,
+    ) -> Any:
+        """Run `ethos verify` and return the JSON verification report.
+
+        This wrapper intentionally supports JSON output only. Missing source,
+        citations, or config paths raise the built-in `FileNotFoundError`
+        before invoking the CLI.
+
+        A verify exit code of `1` is a normal enforcement verdict when
+        `--fail-on-ungrounded` was requested and the CLI still writes a JSON
+        report. Usage, IO, malformed input, and infrastructure failures still
+        raise `EthosCommandError` or a more specific subclass.
+        """
+
+        if output_format != "json":
+            raise ValueError("output_format must be 'json'")
+        _validate_optional_adapter_id(grounding)
+        _validate_timeout_seconds(timeout)
+
+        source_path = _existing_file_path(source)
+        citations_path = _existing_file_path(citations)
+        config_path = None if config is None else _existing_file_path(config)
+
+        command = self._verify_command(
+            source_path,
+            citations_path,
+            grounding=grounding,
+            config=config_path,
+            fail_on_ungrounded=fail_on_ungrounded,
+            output_format=output_format,
+        )
+        return self._run_json_report(
+            command,
+            timeout_seconds=timeout,
+            report_returncodes={0, 1} if fail_on_ungrounded else {0},
+        )
+
+    def anchor(
+        self,
+        source: PathLike,
+        *,
+        evidence_refs: PathLike,
+        grounding: Optional[str] = None,
+        output_format: str = "json",
+        timeout: Optional[float] = 30.0,
+    ) -> Any:
+        """Run `ethos evidence anchor` and return the JSON anchor report.
+
+        This wrapper intentionally supports JSON output only. Missing source or
+        evidence-ref paths raise the built-in `FileNotFoundError` before
+        invoking the CLI.
+        """
+
+        if output_format != "json":
+            raise ValueError("output_format must be 'json'")
+        _validate_optional_adapter_id(grounding)
+        _validate_timeout_seconds(timeout)
+
+        source_path = _existing_file_path(source)
+        evidence_refs_path = _existing_file_path(evidence_refs)
+
+        command = self._anchor_command(
+            source_path,
+            evidence_refs_path,
+            grounding=grounding,
+        )
+        return self._run_json_report(
+            command,
+            timeout_seconds=timeout,
+            report_returncodes={0},
+        )
+
     def _doc_parse_command(
         self,
         pdf_path: Path,
@@ -290,12 +376,91 @@ class EthosCli:
             )
         return tuple(command)
 
+    def _verify_command(
+        self,
+        source_path: Path,
+        citations_path: Path,
+        *,
+        grounding: Optional[str],
+        config: Optional[Path],
+        fail_on_ungrounded: bool,
+        output_format: str,
+    ) -> Sequence[str]:
+        command = [
+            self.ethos_bin,
+            "verify",
+            os.fspath(source_path),
+            "--citations",
+            os.fspath(citations_path),
+        ]
+        if grounding is not None:
+            command.extend(["--grounding", grounding])
+        if config is not None:
+            command.extend(["--config", os.fspath(config)])
+        if fail_on_ungrounded:
+            command.append("--fail-on-ungrounded")
+        command.extend(["--format", output_format])
+        return tuple(command)
+
+    def _anchor_command(
+        self,
+        source_path: Path,
+        evidence_refs_path: Path,
+        *,
+        grounding: Optional[str],
+    ) -> Sequence[str]:
+        command = [
+            self.ethos_bin,
+            "evidence",
+            "anchor",
+            os.fspath(source_path),
+            "--evidence-refs",
+            os.fspath(evidence_refs_path),
+        ]
+        if grounding is not None:
+            command.extend(["--grounding", grounding])
+        return tuple(command)
+
     def _run(
         self,
         command: Sequence[str],
         *,
         timeout_seconds: Optional[float],
     ) -> str:
+        returncode, stdout, stderr = self._run_completed(
+            command,
+            timeout_seconds=timeout_seconds,
+        )
+        if returncode != 0:
+            error_class = _command_error_class(returncode, stderr)
+            raise error_class(command, returncode, stdout, stderr)
+        return stdout
+
+    def _run_json_report(
+        self,
+        command: Sequence[str],
+        *,
+        timeout_seconds: Optional[float],
+        report_returncodes: set[int],
+    ) -> Any:
+        returncode, stdout, stderr = self._run_completed(
+            command,
+            timeout_seconds=timeout_seconds,
+        )
+        if returncode not in report_returncodes:
+            error_class = _command_error_class(returncode, stderr)
+            raise error_class(command, returncode, stdout, stderr)
+        if returncode != 0 and not stdout.strip():
+            error_class = _command_error_class(returncode, stderr)
+            raise error_class(command, returncode, stdout, stderr)
+        return _load_json_stdout(stdout, command)
+
+    def _run_completed(
+        self,
+        command: Sequence[str],
+        *,
+        timeout_seconds: Optional[float],
+    ) -> tuple[int, str, str]:
         run_env: Optional[Dict[str, str]] = None
         if self.env is not None:
             run_env = dict(os.environ)
@@ -319,10 +484,7 @@ class EthosCli:
 
         stdout = _decode_utf8(completed.stdout, command, "stdout")
         stderr = _decode_utf8(completed.stderr, command, "stderr")
-        if completed.returncode != 0:
-            error_class = _command_error_class(completed.returncode, stderr)
-            raise error_class(command, completed.returncode, stdout, stderr)
-        return stdout
+        return completed.returncode, stdout, stderr
 
 
 def parse_pdf_json(
@@ -405,9 +567,68 @@ def crop_element(
     )
 
 
+def verify(
+    source: PathLike,
+    *,
+    citations: PathLike,
+    ethos_bin: PathLike = "ethos",
+    grounding: Optional[str] = None,
+    config: Optional[PathLike] = None,
+    fail_on_ungrounded: bool = False,
+    output_format: str = "json",
+    timeout: Optional[float] = 30.0,
+    env: Optional[Mapping[str, str]] = None,
+) -> Any:
+    """Verify citations through a local ethos binary and return JSON.
+
+    Missing source, citations, or config paths raise the built-in
+    `FileNotFoundError` before invoking the CLI.
+    """
+
+    return EthosCli(ethos_bin, env=env).verify(
+        source,
+        citations=citations,
+        grounding=grounding,
+        config=config,
+        fail_on_ungrounded=fail_on_ungrounded,
+        output_format=output_format,
+        timeout=timeout,
+    )
+
+
+def anchor(
+    source: PathLike,
+    *,
+    evidence_refs: PathLike,
+    ethos_bin: PathLike = "ethos",
+    grounding: Optional[str] = None,
+    output_format: str = "json",
+    timeout: Optional[float] = 30.0,
+    env: Optional[Mapping[str, str]] = None,
+) -> Any:
+    """Anchor evidence refs through a local ethos binary and return JSON.
+
+    Missing source or evidence-ref paths raise the built-in `FileNotFoundError`
+    before invoking the CLI.
+    """
+
+    return EthosCli(ethos_bin, env=env).anchor(
+        source,
+        evidence_refs=evidence_refs,
+        grounding=grounding,
+        output_format=output_format,
+        timeout=timeout,
+    )
+
+
 def _validate_timeout_seconds(timeout_seconds: Optional[float]) -> None:
     if timeout_seconds is not None and timeout_seconds <= 0:
         raise ValueError("timeout_seconds must be greater than zero when provided")
+
+
+def _validate_optional_adapter_id(adapter_id: Optional[str]) -> None:
+    if adapter_id is not None and not adapter_id:
+        raise ValueError("grounding must be non-empty when provided")
 
 
 def _existing_file_path(path: PathLike) -> Path:
