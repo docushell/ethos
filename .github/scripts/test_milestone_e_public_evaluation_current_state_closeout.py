@@ -52,9 +52,10 @@ CURRENT_README_WORDING = (
     "Ethos is a deterministic document evidence layer for source-grounded verification and "
     "citation checking across native Ethos JSON and supported foreign parser outputs. The current "
     "beta includes the GitHub source repository, Rust library crates `ethos-doc-core`, "
-    "`ethos-verify`, and `ethos-pdf` at `0.1.2`, the Python `ethos-pdf` wheel at `0.1.2`, the "
-    "npm `@docushell/ethos-pdf@0.1.2` package, and GitHub Release `v0.1.2` macOS arm64/Linux x64 "
-    "CLI artifacts. PDFium-backed commands use caller-provided PDFium through "
+    "`ethos-verify`, and `ethos-pdf` at `0.2.0`, the Python `ethos-pdf` wheel at `0.2.0`, the "
+    "npm `@docushell/ethos-pdf@0.2.1` package, and GitHub Release `v0.2.0` macOS arm64/Linux x64 "
+    "CLI artifacts. npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI "
+    "binaries; use `0.2.1`. PDFium-backed commands use caller-provided PDFium through "
     "`ETHOS_PDFIUM_LIBRARY_PATH`."
 )
 APPROVED_SURFACE_LINES = (
@@ -140,8 +141,31 @@ class MilestoneEPublicEvaluationCurrentStateCloseoutTests(unittest.TestCase):
             " ",
             " ".join(line.removeprefix("> ").strip() for line in read(README).splitlines()),
         )
+        execution_status = normalized(EXECUTION_STATUS)
+
         self.assertIn(CURRENT_README_WORDING, readme_text, str(README))
-        self.assertIn(CURRENT_README_WORDING, normalized(EXECUTION_STATUS), str(EXECUTION_STATUS))
+        self.assertIn(
+            "Status: v0.2.0 public beta/evaluation surfaces are live for the GitHub source repository",
+            execution_status,
+            str(EXECUTION_STATUS),
+        )
+        self.assertIn(
+            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`",
+            execution_status,
+            str(EXECUTION_STATUS),
+        )
+        self.assertIn("the Python `ethos-pdf` wheel at `0.2.0`", execution_status, str(EXECUTION_STATUS))
+        self.assertIn("npm `@docushell/ethos-pdf@0.2.1`", execution_status, str(EXECUTION_STATUS))
+        self.assertIn(
+            "GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts",
+            execution_status,
+            str(EXECUTION_STATUS),
+        )
+        self.assertIn(
+            "npm `@docushell/ethos-pdf@0.2.0` is deprecated",
+            execution_status,
+            str(EXECUTION_STATUS),
+        )
 
     def test_docs_reference_current_state_and_retained_blockers(self) -> None:
         for path in (PREP_SCOPE, ROADMAP, EXECUTION_STATUS, VALIDATION_README):
