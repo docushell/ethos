@@ -11,6 +11,16 @@ Release artifacts, PyPI upload, public install wording, hosted surfaces, product
 public benchmark claims, Windows packaged artifacts, and bundled project-maintained PDFium blocked
 until separate approval, operator evidence, and closeout records pass.
 
+v0.2.0 release approval request is recorded in
+`docs/validation/v0-2-0-release-approval-request-validation-2026-06-25.md` for decider review
+only. It requests exact review of the source commit, version-bump plan, `ethos-doc-core`,
+`ethos-verify`, and `ethos-pdf` crate set, `ethos-pdf` continuity decision, Python scope, npm
+fate, CLI artifact decision, tag/package-tag request, ADR-0006/name ownership confirmation,
+`reserved_crates_io_version` handling, crates.io append-only risk, operator and closeout owner,
+and retained blockers. Version bump, release-candidate branch creation, package publication, tag
+creation, artifact publication, and installable `0.2.0` wording remain blocked until explicit
+approval and later evidence records pass.
+
 Older Milestone E paragraphs below preserve historical review records and their blockers at the time they were written. Patch `0.1.1` closeout records supersede those historical blockers only for the approved source, Rust crate, Python wheel, npm package, macOS arm64 CLI artifact, and Linux x64 CLI artifact evaluation surfaces.
 
 Patch `0.1.2` npm publication approval request is recorded in

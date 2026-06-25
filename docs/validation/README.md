@@ -10,6 +10,15 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.2.0 release approval request is recorded in
+`v0-2-0-release-approval-request-validation-2026-06-25.md` for decider review only. It binds the
+exact source commit, version-bump plan, Rust crate set, `ethos-pdf` continuity decision, Python
+scope decision, npm fate, CLI artifact decision, tag/package-tag request, ADR-0006/name ownership
+confirmation, `reserved_crates_io_version` handling, crates.io append-only risk, operator and
+closeout owner, DocuShell internal/design-partner pilot boundary, and retained blockers. Version
+bump, package publication, tag creation, artifact publication, and installable `0.2.0` wording
+remain blocked until explicit approval and later evidence records pass.
+
 Patch `0.1.2` closeout records now document that the approved patch `0.1.2` evaluation surfaces
 are closed for the GitHub source repository, Rust crates, Python wheel, npm package, macOS
 arm64/Linux x64 CLI artifacts, and the three approved annotated package tags. Hosted surfaces

@@ -15,6 +15,14 @@ production positioning, Windows packaged artifacts, bundled project-maintained P
 public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality,
 `ethos-doc`, and `ethos-rag` remain blocked.
 
+v0.2.0 release approval request is recorded in
+`docs/validation/v0-2-0-release-approval-request-validation-2026-06-25.md` for decider review
+only. It does not approve version bump, release-candidate branch creation, package publication,
+tag creation, artifact publication, or installable `0.2.0` wording. The request keeps Python
+public scope conditional on a PyPI wheel, matching `v0.2.0` CLI artifacts, and naming docs for
+the historical `ethos-pdf` package. The request keeps npm scoped to a CLI binary distribution
+decision, not a Node SDK/API claim.
+
 Patch `0.1.1` readiness prep is recorded in
 `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records
 candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change guarding, the
