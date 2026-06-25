@@ -343,7 +343,15 @@ release-candidate-prep:
 v0-2-release-prep:
 	cargo test --locked --workspace
 	$(MAKE) python-surface-test PYTHON=$(PYTHON)
+	$(PYTHON) .github/scripts/test_python_public_api_policy.py
 	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_validation_record_source.py
+	$(PYTHON) .github/scripts/test_v0_2_0_release_approval_request.py
+	$(PYTHON) .github/scripts/test_v0_2_0_release_approval_decision.py
+	$(PYTHON) .github/scripts/test_v0_2_0_version_activation.py
+	$(PYTHON) .github/scripts/test_v0_2_0_ethos_doc_core_cargo_publish_dry_run_evidence.py
+	$(PYTHON) .github/scripts/test_v0_2_0_package_build_evidence.py
+	$(PYTHON) .github/scripts/test_v0_2_0_draft_artifact_evidence.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
 	git diff --check

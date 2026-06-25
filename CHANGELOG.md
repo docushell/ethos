@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- boundary-exception: record passing `ethos-doc-core 0.2.0` locked cargo publish dry-run evidence
+  while keeping actual `cargo publish`, dependent-crate dry-runs, PyPI upload, npm publish, GitHub
+  Release artifact publication, release/package tags, installable `0.2.0` wording, hosted,
+  production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
+- boundary-exception: record v0.2.0 package/build evidence for the Python wheel, local macOS arm64
+  draft CLI artifact, and npm package metadata while keeping npm artifact candidacy blocked on
+  stale vendored `ethos 0.1.2` binaries and keeping publication, artifact upload, tags, installable
+  `0.2.0` wording, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and
+  `ethos-rag` surfaces blocked.
+- boundary-exception: activate v0.2.0 release-candidate source versions for Rust, Python, and npm
+  package metadata while keeping `cargo publish`, PyPI upload, npm publish, GitHub Release
+  artifact publication, release/package tags, installable `0.2.0` wording, hosted, production,
+  Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces blocked.
+- boundary-exception: record decider approval for v0.2.0 release-candidate activation while
+  keeping package publication, artifact publication, tag creation, installable `0.2.0` wording,
+  hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces
+  blocked pending separate evidence records.
 - boundary-exception: add v0.2.0 source-preparation docs and gates for JSON verification and
   evidence anchoring, the v0.2.x compatibility policy, and the bring-your-own-parser tutorial; no
   `0.2.0` publication, package tag, GitHub Release artifact, or public install wording is approved

@@ -8,9 +8,10 @@ Install the published evaluation wheel from PyPI with:
 python3 -m pip install ethos-pdf==0.1.2
 ```
 
-`v0.2.0` is being prepared to add JSON verification and evidence-anchor wrapper calls through a
-caller-provided `ethos` CLI binary. Do not use `0.2.0` install wording until the package is
-published and the post-publication smoke tests are recorded.
+`v0.2.0` release-candidate source versions are activated for JSON verification and evidence-anchor
+wrapper calls through a caller-provided `ethos` CLI binary. Do not use `0.2.0` install wording
+until the package is published, matching CLI artifacts are available, and the post-publication
+smoke tests are recorded.
 
 The package exposes a public semver API beginning at `0.1.0` for Python `>=3.8`. Patch releases
 must not break public function signatures, exception classes, or documented return shapes. Minor

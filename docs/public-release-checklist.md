@@ -15,6 +15,48 @@ production positioning, Windows packaged artifacts, bundled project-maintained P
 public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality,
 `ethos-doc`, and `ethos-rag` remain blocked.
 
+v0.2.0 release approval request is recorded in
+`docs/validation/v0-2-0-release-approval-request-validation-2026-06-25.md` for decider review
+only. It does not approve version bump, release-candidate branch creation, package publication,
+tag creation, artifact publication, or installable `0.2.0` wording. The request keeps Python
+public scope conditional on a PyPI wheel, matching `v0.2.0` CLI artifacts, and naming docs for
+the historical `ethos-pdf` package. The request keeps npm scoped to a CLI binary distribution
+decision, not a Node SDK/API claim.
+
+v0.2.0 release approval decision is recorded in
+`docs/validation/v0-2-0-release-approval-decision-validation-2026-06-25.md`. It accepts
+release-candidate version activation on the current branch for Rust, Python, npm, `CHANGELOG.md`,
+and release-candidate wording only. It does not approve package publication, tag creation,
+artifact publication, installable `0.2.0` wording, hosted surfaces, production positioning,
+Windows packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`,
+or public benchmark claims.
+
+v0.2.0 version activation is recorded in
+`docs/validation/v0-2-0-version-activation-validation-2026-06-25.md`. It moves Rust, Python, and
+npm source/package metadata to `0.2.0` for release-candidate validation only. Public install
+commands and installable wording remain on the approved `0.1.2` evaluation baseline until
+publication, registry/artifact availability, smoke evidence, and wording closeout records pass.
+
+v0.2.0 `ethos-doc-core` dry-run evidence is recorded in
+`docs/validation/v0-2-0-ethos-doc-core-cargo-publish-dry-run-evidence-validation-2026-06-25.md`.
+It records a passing `cargo publish --dry-run --locked -p ethos-doc-core` for
+`ethos-doc-core 0.2.0`; no publication, tag, artifact upload, dependent-crate dry-run, or
+installable `0.2.0` wording is approved by that record.
+
+v0.2.0 package/build evidence is recorded in
+`docs/validation/v0-2-0-package-build-evidence-validation-2026-06-25.md`. It records local package
+build checks for the Python wheel, macOS arm64 draft CLI artifact, and npm package metadata. The
+npm candidate remains blocked until v0.2.0 macOS arm64 and Linux x64 CLI artifacts both exist and
+the vendored payload is refreshed from those artifacts; no publication, artifact upload, tag, or
+installable `0.2.0` wording is approved by that record.
+
+v0.2.0 draft artifact evidence is recorded in
+`docs/validation/v0-2-0-draft-artifact-evidence-validation-2026-06-25.md`. It records a successful
+`release.yml` workflow run and downloaded macOS arm64/Linux x64 draft CLI artifacts whose smoke
+sidecars report `ethos 0.2.0`. This evidence does not approve GitHub Release artifact
+publication, npm vendor refresh, registry publication, tag creation, or installable `0.2.0`
+wording.
+
 Patch `0.1.1` readiness prep is recorded in
 `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records
 candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change guarding, the

@@ -10,6 +10,53 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.2.0 release approval request is recorded in
+`v0-2-0-release-approval-request-validation-2026-06-25.md` for decider review only. It binds the
+exact source commit, version-bump plan, Rust crate set, `ethos-pdf` continuity decision, Python
+scope decision, npm fate, CLI artifact decision, tag/package-tag request, ADR-0006/name ownership
+confirmation, `reserved_crates_io_version` handling, crates.io append-only risk, operator and
+closeout owner, DocuShell internal/design-partner pilot boundary, and retained blockers. Version
+bump, package publication, tag creation, artifact publication, and installable `0.2.0` wording
+remain blocked until explicit approval and later evidence records pass.
+
+v0.2.0 release approval decision is recorded in
+`v0-2-0-release-approval-decision-validation-2026-06-25.md`. It accepts release-candidate version
+activation on `dev/v0-2-approval-packet` for Rust, Python, npm, `CHANGELOG.md`, and
+release-candidate wording only. Package publication, tag creation, artifact publication,
+installable `0.2.0` wording, hosted surfaces, production positioning, Windows packaged artifacts,
+bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims
+remain blocked until separate evidence records and operator decisions pass.
+
+v0.2.0 version activation is recorded in
+`v0-2-0-version-activation-validation-2026-06-25.md`. It moves Rust, Python, and npm
+source/package metadata to `0.2.0` for release-candidate validation only. Public install commands
+and installable wording remain on the approved `0.1.2` evaluation baseline until publication,
+registry/artifact availability, smoke evidence, and wording closeout records pass.
+
+v0.2.0 `ethos-doc-core` dry-run evidence is recorded in
+`v0-2-0-ethos-doc-core-cargo-publish-dry-run-evidence-validation-2026-06-25.md`. The first Rust
+registry dry-run gate passed for `ethos-doc-core 0.2.0`, producing
+`ethos-doc-core-0.2.0.crate` with SHA256
+`de86ce74dd791b50d0722cddc878756cceabae2162f747e9e24902b88e5c7de1`. `cargo publish`,
+dependent-crate dry-runs, tag creation, artifact publication, and installable `0.2.0` wording
+remain blocked until separate evidence and operator decisions pass.
+
+v0.2.0 package/build evidence is recorded in
+`v0-2-0-package-build-evidence-validation-2026-06-25.md`. It records a passing local Python
+wheel build/install/wrapper smoke, a passing local macOS arm64 draft CLI artifact build/inventory
+smoke with `ethos 0.2.0`, and passing npm tests plus `npm pack --dry-run` metadata for
+`@docushell/ethos-pdf@0.2.0`. npm v0.2.0 artifact candidacy remains blocked because the
+checked-in vendored binaries still expose `ethos 0.1.2`; Linux x64 CLI artifact evidence, npm
+vendor refresh, publication, tag creation, artifact upload, and installable `0.2.0` wording remain
+blocked.
+
+v0.2.0 draft artifact evidence is recorded in
+`v0-2-0-draft-artifact-evidence-validation-2026-06-25.md`. It records a passing
+`release.yml` workflow-dispatch run on `dev/v0-2-approval-packet`, downloaded macOS arm64 and
+Linux x64 draft CLI artifacts, matching checksum sidecars, inventory sidecars, and smoke sidecars
+that report `ethos 0.2.0`. Artifact publication, npm vendor refresh, registry publication, tag
+creation, and installable `0.2.0` wording remain blocked until separate records pass.
+
 Patch `0.1.2` closeout records now document that the approved patch `0.1.2` evaluation surfaces
 are closed for the GitHub source repository, Rust crates, Python wheel, npm package, macOS
 arm64/Linux x64 CLI artifacts, and the three approved annotated package tags. Hosted surfaces

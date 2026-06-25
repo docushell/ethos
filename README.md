@@ -15,9 +15,9 @@
 > `@docushell/ethos-pdf@0.1.2` package, and GitHub Release `v0.1.2` macOS arm64/Linux x64 CLI
 > artifacts. PDFium-backed commands use caller-provided PDFium through
 > `ETHOS_PDFIUM_LIBRARY_PATH`.
-> v0.2.0 is being prepared to publish registry install surfaces for JSON verification and
-> evidence anchoring. No `0.2.0` registry install wording is approved until publication approval,
-> registry availability, and clean smoke tests are recorded.
+> v0.2.0 release-candidate source versions are activated for JSON verification and evidence
+> anchoring. No `0.2.0` registry install wording is approved until publication, registry
+> availability, artifact availability, and clean smoke tests are recorded.
 > Current execution status and release-scope notes live in `docs/execution-status.md`;
 > public-release hygiene gates live in `docs/public-release-checklist.md`.
 
@@ -140,7 +140,7 @@ The Python wheel is a thin wrapper around a caller-provided local `ethos` CLI bi
 bundle the CLI or PDFium. Install or provide `ethos` separately, and keep
 `ETHOS_PDFIUM_LIBRARY_PATH` set for PDFium-backed commands.
 
-The v0.2.0 preparation lane adds Python wrapper methods for JSON verification and evidence
+The v0.2.0 release-candidate lane adds Python wrapper methods for JSON verification and evidence
 anchoring through that caller-provided CLI:
 
 ```python
