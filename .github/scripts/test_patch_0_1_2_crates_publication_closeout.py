@@ -14,15 +14,20 @@ import unittest
 import urllib.request
 from pathlib import Path
 
+from makefile_guard import target_block
+
 
 ROOT = Path(__file__).resolve().parents[2]
-RECORD = ROOT / "docs/validation/patch-0-1-1-crates-publication-closeout-validation-2026-06-24.md"
+RECORD = ROOT / "docs/validation/patch-0-1-2-crates-publication-closeout-validation-2026-06-25.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
+EXECUTION_STATUS = ROOT / "docs/execution-status.md"
+PUBLIC_RELEASE_CHECKLIST = ROOT / "docs/public-release-checklist.md"
 MAKEFILE = ROOT / "Makefile"
 
-SOURCE_SHORT = "7bc50f0"
-SOURCE_COMMIT = "7bc50f09f6ce0385737e9b978dcb249f161195b0"
-SOURCE_TREE = "88bc7969652d56c534c5a101824926a8e9bbb4d0"
+SOURCE_SHORT = "35d0cca"
+SOURCE_COMMIT = "35d0cca87669217f079793ce0553c9ac1121884b"
+SOURCE_TREE = "3fcad87f2fc67c59c2f102f4f2c73d9e5c382724"
+VERSION = "0.1.2"
 CRATES = ("ethos-doc-core", "ethos-verify", "ethos-pdf")
 FORBIDDEN = (
     "hosted surfaces approved",
@@ -61,16 +66,16 @@ def crates_io_version(crate: str, version: str) -> str:
     return payload["version"]["num"]
 
 
-class Patch011CratesPublicationCloseoutTests(unittest.TestCase):
+class Patch012CratesPublicationCloseoutTests(unittest.TestCase):
     def test_closeout_record_is_source_bound_and_indexed(self) -> None:
         record = normalized(RECORD)
         readme = normalized(VALIDATION_README)
 
         self.assertIn(RECORD.name, readme)
-        self.assertIn("patch 0.1.1 crates.io publication closeout", readme.lower())
+        self.assertIn("patch 0.1.2 crates.io publication closeout", readme.lower())
         self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", read(RECORD))
-        self.assertIn(f"Patch 0.1.1 crates publication closeout source commit: `{SOURCE_COMMIT}`", record)
-        self.assertIn(f"Patch 0.1.1 crates publication closeout source tree: `{SOURCE_TREE}`", record)
+        self.assertIn(f"Patch 0.1.2 crates publication closeout source commit: `{SOURCE_COMMIT}`", record)
+        self.assertIn(f"Patch 0.1.2 crates publication closeout source tree: `{SOURCE_TREE}`", record)
         self.assertEqual(SOURCE_COMMIT, git("rev-parse", SOURCE_SHORT))
         self.assertEqual(SOURCE_TREE, git("rev-parse", f"{SOURCE_SHORT}^{{tree}}"))
 
@@ -78,23 +83,35 @@ class Patch011CratesPublicationCloseoutTests(unittest.TestCase):
         record = normalized(RECORD)
 
         for crate in CRATES:
-            self.assertIn(f"{crate} = 0.1.1", record)
+            self.assertIn(f"{crate} = {VERSION}", record)
             self.assertIn(f"cargo publish --locked -p {crate}", record)
-            self.assertIn(f"Published {crate} v0.1.1 at registry `crates-io`", record)
+            self.assertIn(f"Published {crate} v{VERSION} at registry `crates-io`", record)
+            self.assertIn(f'{crate} = "{VERSION}"', record)
         self.assertIn("`ethos-doc-core` was published before dependent crates", record)
         self.assertIn("`ethos-verify` was published after ethos-doc-core was visible", record)
-        self.assertIn("`ethos-pdf` was published after ethos-doc-core was visible", record)
+        self.assertIn("`ethos-pdf` was published after ethos-verify was visible", record)
 
     def test_live_crates_io_reports_patch_versions(self) -> None:
         for crate in CRATES:
-            self.assertEqual("0.1.1", crates_io_version(crate, "0.1.1"))
+            self.assertEqual(VERSION, crates_io_version(crate, VERSION))
+
+    def test_status_docs_reference_closeout_and_keep_remaining_boundaries(self) -> None:
+        for path in (EXECUTION_STATUS, PUBLIC_RELEASE_CHECKLIST):
+            text = normalized(path)
+            self.assertIn(RECORD.name, text, str(path))
+            self.assertIn("Rust crate public installation wording remains blocked", text, str(path))
+            self.assertIn("Python installation remains at `ethos-pdf==0.1.1`", text, str(path))
+            self.assertIn("hosted", text.lower(), str(path))
+            self.assertIn("production", text.lower(), str(path))
 
     def test_closeout_keeps_other_surfaces_blocked(self) -> None:
         raw = read(RECORD)
-        lower = normalized(RECORD).lower()
+        record = normalized(RECORD)
+        lower = record.lower()
 
         for expected in (
-            "Public installation wording remains blocked until a separate wording and availability record.",
+            "Rust crate public installation wording remains blocked until a separate wording and availability record.",
+            "Python installation remains at `ethos-pdf==0.1.1` until separate PyPI `0.1.2` publication records pass.",
             "Hosted surfaces remain blocked.",
             "Production positioning remains blocked.",
             "Windows packaged artifacts remain blocked.",
@@ -103,7 +120,7 @@ class Patch011CratesPublicationCloseoutTests(unittest.TestCase):
             "`ethos-rag` remains blocked.",
             "PDFium remains caller-provided through `ETHOS_PDFIUM_LIBRARY_PATH`.",
         ):
-            self.assertIn(expected, raw)
+            self.assertIn(expected, record)
         for forbidden in FORBIDDEN:
             self.assertNotIn(forbidden, lower)
         self.assertNotIn("/Users/", raw)
@@ -113,16 +130,15 @@ class Patch011CratesPublicationCloseoutTests(unittest.TestCase):
 
     def test_release_candidate_prep_runs_closeout_after_decision_guard(self) -> None:
         makefile = read(MAKEFILE)
-        decision_guard = "$(PYTHON) .github/scripts/test_patch_0_1_1_crates_publication_approval_decision.py"
-        closeout_guard = "$(PYTHON) .github/scripts/test_patch_0_1_1_crates_publication_closeout.py"
+        decision_guard = "$(PYTHON) .github/scripts/test_patch_0_1_2_crates_publication_approval_decision.py"
+        closeout_guard = "$(PYTHON) .github/scripts/test_patch_0_1_2_crates_publication_closeout.py"
+        first_public_guard = "$(PYTHON) .github/scripts/test_first_public_release_artifact_evidence.py"
+        block = target_block("release-candidate-prep")
 
-        self.assertIn(closeout_guard, makefile)
+        self.assertIn(closeout_guard, block)
         self.assertEqual(1, makefile.count(closeout_guard))
-        self.assertLess(makefile.index(decision_guard), makefile.index(closeout_guard))
-        self.assertLess(
-            makefile.index(closeout_guard),
-            makefile.index("$(PYTHON) .github/scripts/test_pdfium_manual_setup_contract.py"),
-        )
+        self.assertLess(block.index(decision_guard), block.index(closeout_guard))
+        self.assertLess(block.index(closeout_guard), block.index(first_public_guard))
 
 
 if __name__ == "__main__":

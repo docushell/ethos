@@ -728,6 +728,11 @@ recording the exact current-main source candidate and required follow-up evidenc
   creation, Rust crate public installation wording, PyPI publication, hosted, production, Windows,
   bundled PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces remain blocked until separate
   closeout or approval records pass.
+- `patch-0-1-2-crates-publication-closeout-validation-2026-06-25.md` - patch 0.1.2 crates.io
+  publication closeout validation records operator evidence and live crates.io visibility for
+  `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` `0.1.2`; Rust crate public installation
+  wording, PyPI publication, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`,
+  and `ethos-rag` surfaces remain blocked until separate closeout or approval records pass.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
