@@ -127,6 +127,14 @@ dereference to the approved package source commit. Hosted surfaces, production p
 packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public
 benchmark claims remain blocked.
 
+Patch `0.1.2` current-state closeout is recorded in
+`docs/validation/patch-0-1-2-current-state-closeout-validation-2026-06-25.md`. The approved patch
+`0.1.2` evaluation surfaces are closed for the GitHub source repository, Rust crates, Python wheel,
+npm package, macOS arm64/Linux x64 CLI artifacts, and annotated package tags. Hosted surfaces,
+production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
+`ethos-doc`, `ethos-rag`, public benchmark reports, public benchmark claims, speed, footprint,
+parser-quality, table-quality, and production claims remain blocked.
+
 Public approval lane blocker prep is recorded in
 `docs/milestone-e-public-approval-lane-blockers.json` and schema-bound by
 `schemas/ethos-milestone-e-public-approval-lane-blockers.schema.json`. This public approval lane

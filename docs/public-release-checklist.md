@@ -5,11 +5,15 @@ or launch announcement. It is intentionally stricter than the day-to-day enginee
 
 ## Current Status
 
-Ethos is not package-release, artifact-release, benchmark-report, or launch-announcement ready.
-It may be pushed as a public pre-alpha source repository only if the latest public-source
-preflight passes and the current claim language is used. The package-name/trademark gate is
-closed by ADR-0006, but public benchmark, parser-quality, table, heading, speed, footprint, and
-rendered-crop byte-identity claims remain blocked.
+Ethos has approved public beta/evaluation surfaces for the GitHub source repository, Rust library
+crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.2`, the Python `ethos-pdf` wheel
+at `0.1.2`, the npm `@docushell/ethos-pdf@0.1.2` package, GitHub Release `v0.1.2` macOS arm64 and
+Linux x64 CLI artifacts, and the three approved annotated package tags. The approved patch `0.1.2`
+evaluation surfaces are closed by
+`docs/validation/patch-0-1-2-current-state-closeout-validation-2026-06-25.md`. Hosted surfaces,
+production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
+public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality,
+`ethos-doc`, and `ethos-rag` remain blocked.
 
 Patch `0.1.1` readiness prep is recorded in
 `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records
@@ -207,6 +211,14 @@ closeout is complete for the three approved annotated package tags, and remote `
 dereference to the approved package source commit. Hosted surfaces, production positioning, Windows
 packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public
 benchmark claims remain blocked.
+
+Patch `0.1.2` current-state closeout is recorded in
+`docs/validation/patch-0-1-2-current-state-closeout-validation-2026-06-25.md`. The approved patch
+`0.1.2` evaluation surfaces are closed for the GitHub source repository, Rust crates, Python wheel,
+npm package, macOS arm64/Linux x64 CLI artifacts, and annotated package tags. Hosted surfaces,
+production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
+`ethos-doc`, `ethos-rag`, public benchmark reports, public benchmark claims, speed, footprint,
+parser-quality, table-quality, and production claims remain blocked.
 
 ## Required Before Public Push
 

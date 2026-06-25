@@ -10,12 +10,17 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
-Patch `0.1.2` closeout records now document the approved public beta/evaluation npm package and
-macOS arm64/Linux x64 CLI artifact surfaces, while Rust crate and Python wheel install wording
-remain on the published `0.1.1` baseline. Patch `0.1.1` closeout records document the approved
-public beta/evaluation surfaces for source, Rust crates, the Python wheel, npm package, and macOS
-arm64/Linux x64 CLI artifacts. Historical package publication evidence records below keep their
-at-the-time blocker wording for traceability.
+Patch `0.1.2` closeout records now document that the approved patch `0.1.2` evaluation surfaces
+are closed for the GitHub source repository, Rust crates, Python wheel, npm package, macOS
+arm64/Linux x64 CLI artifacts, and the three approved annotated package tags. Hosted surfaces
+remain blocked. Production positioning remains blocked. Windows packaged artifacts remain blocked.
+Bundled project-maintained PDFium builds remain blocked. Public benchmark reports remain blocked.
+Public benchmark claims remain blocked. Speed, footprint, parser-quality, table-quality, and
+production claims remain blocked. `ethos-doc` and `ethos-rag` remain blocked. Patch `0.1.1`
+closeout records document the approved public beta/evaluation surfaces for source, Rust crates,
+the Python wheel, npm package, and macOS arm64/Linux x64 CLI artifacts.
+The package publication evidence records below keep their at-the-time blocker wording for
+traceability.
 The public beta current-main refresh prep record keeps refreshed source approval blocked while
 recording the exact current-main source candidate and required follow-up evidence.
 
@@ -774,6 +779,10 @@ recording the exact current-main source candidate and required follow-up evidenc
   closeout validation records completed annotated package tag creation and remote tag evidence for
   the three approved package tags; hosted, production, Windows, bundled PDFium, benchmark,
   `ethos-doc`, and `ethos-rag` surfaces remain blocked until separate approval records pass.
+- `patch-0-1-2-current-state-closeout-validation-2026-06-25.md` - patch `0.1.2` current-state
+  closeout validation records that the approved patch `0.1.2` evaluation surfaces are closed while
+  retaining hosted, production, Windows, bundled PDFium, benchmark, speed/footprint/parser-quality/
+  table-quality, `ethos-doc`, and `ethos-rag` blockers.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
