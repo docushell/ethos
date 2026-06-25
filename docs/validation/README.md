@@ -743,6 +743,12 @@ recording the exact current-main source candidate and required follow-up evidenc
   `ethos-pdf==0.1.2` wheel candidate, source commit, source tree, metadata, SHA256, and local
   install/import smoke for decider review; PyPI upload and Python public installation wording
   remain blocked until separate decision, operator, and closeout records pass.
+- `patch-0-1-2-python-publication-approval-decision-validation-2026-06-25.md` - patch 0.1.2
+  Python PyPI publication approval decision validation accepts only bounded later operator
+  execution for the exact deterministic `ethos-pdf==0.1.2` wheel candidate; actual upload,
+  Python public installation wording, package tag creation, hosted, production, Windows, bundled
+  PDFium, benchmark, `ethos-doc`, and `ethos-rag` surfaces remain blocked until separate operator
+  evidence, closeout, or approval records pass.
 - `milestone-e-validation-command-index-validation-2026-06-20.md` - internal Milestone E
   validation-command index validation passed through command-alignment checks, schema enum checks,
   row-record checks, public-surface posture checks, `make milestone-e-prep`, and diff hygiene; the
