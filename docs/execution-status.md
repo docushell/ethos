@@ -21,6 +21,14 @@ and retained blockers. Version bump, release-candidate branch creation, package 
 creation, artifact publication, and installable `0.2.0` wording remain blocked until explicit
 approval and later evidence records pass.
 
+v0.2.0 release approval decision is recorded in
+`docs/validation/v0-2-0-release-approval-decision-validation-2026-06-25.md`. It accepts
+release-candidate version activation on `dev/v0-2-approval-packet` for the exact `0.2.0` Rust
+crate set, Python wheel scope, npm CLI package scope, CLI artifact preparation, `CHANGELOG.md`,
+and release-candidate wording only. `cargo publish`, PyPI upload, `npm publish`, GitHub Release
+artifact upload, release tag creation, package tag creation, and installable `0.2.0` public
+wording remain blocked until separate evidence records and operator decisions pass.
+
 Older Milestone E paragraphs below preserve historical review records and their blockers at the time they were written. Patch `0.1.1` closeout records supersede those historical blockers only for the approved source, Rust crate, Python wheel, npm package, macOS arm64 CLI artifact, and Linux x64 CLI artifact evaluation surfaces.
 
 Patch `0.1.2` npm publication approval request is recorded in

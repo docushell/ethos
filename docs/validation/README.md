@@ -19,6 +19,14 @@ closeout owner, DocuShell internal/design-partner pilot boundary, and retained b
 bump, package publication, tag creation, artifact publication, and installable `0.2.0` wording
 remain blocked until explicit approval and later evidence records pass.
 
+v0.2.0 release approval decision is recorded in
+`v0-2-0-release-approval-decision-validation-2026-06-25.md`. It accepts release-candidate version
+activation on `dev/v0-2-approval-packet` for Rust, Python, npm, `CHANGELOG.md`, and
+release-candidate wording only. Package publication, tag creation, artifact publication,
+installable `0.2.0` wording, hosted surfaces, production positioning, Windows packaged artifacts,
+bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, and public benchmark claims
+remain blocked until separate evidence records and operator decisions pass.
+
 Patch `0.1.2` closeout records now document that the approved patch `0.1.2` evaluation surfaces
 are closed for the GitHub source repository, Rust crates, Python wheel, npm package, macOS
 arm64/Linux x64 CLI artifacts, and the three approved annotated package tags. Hosted surfaces

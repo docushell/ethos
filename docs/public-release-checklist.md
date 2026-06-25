@@ -23,6 +23,14 @@ public scope conditional on a PyPI wheel, matching `v0.2.0` CLI artifacts, and n
 the historical `ethos-pdf` package. The request keeps npm scoped to a CLI binary distribution
 decision, not a Node SDK/API claim.
 
+v0.2.0 release approval decision is recorded in
+`docs/validation/v0-2-0-release-approval-decision-validation-2026-06-25.md`. It accepts
+release-candidate version activation on the current branch for Rust, Python, npm, `CHANGELOG.md`,
+and release-candidate wording only. It does not approve package publication, tag creation,
+artifact publication, installable `0.2.0` wording, hosted surfaces, production positioning,
+Windows packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`,
+or public benchmark claims.
+
 Patch `0.1.1` readiness prep is recorded in
 `docs/validation/patch-0-1-1-readiness-prep-validation-2026-06-23.md` for review only. It records
 candidate onboarding contents after `ethos doctor`, synthetic fixture golden-change guarding, the

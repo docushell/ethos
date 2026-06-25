@@ -345,6 +345,7 @@ v0-2-release-prep:
 	$(MAKE) python-surface-test PYTHON=$(PYTHON)
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_v0_2_0_release_approval_request.py
+	$(PYTHON) .github/scripts/test_v0_2_0_release_approval_decision.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
 	git diff --check
