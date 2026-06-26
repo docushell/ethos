@@ -283,6 +283,57 @@ fn opendataloader_text_binds_and_bbox_is_capability_limited() {
 }
 
 #[test]
+fn opendataloader_source_fingerprint_matches_when_envelope_supplies_one() {
+    let fingerprint = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
+    let source = temp_json(
+        "odl-source",
+        serde_json::json!({
+            "source_fingerprint": fingerprint,
+            "file name": "fingerprinted.pdf",
+            "number of pages": 1,
+            "kids": [
+                {
+                    "type": "paragraph",
+                    "id": 1,
+                    "page number": 1,
+                    "bounding box": [72.0, 101.0, 540.0, 115.0],
+                    "content": "Revenue grew to $12.4M in Q3 2025."
+                }
+            ]
+        }),
+    );
+    let request = request_with_fingerprint(
+        fingerprint,
+        serde_json::json!([
+            {
+                "evidence_id": "odl_text",
+                "evidence_kind": "text",
+                "required_anchor_level": "text",
+                "locator": { "element_id": "odl-1" },
+                "expected_text": "Revenue grew to $12.4M in Q3 2025."
+            }
+        ]),
+    );
+
+    let report = parse_success(&[
+        "evidence",
+        "anchor",
+        source.to_str().unwrap(),
+        "--grounding",
+        "opendataloader-json",
+        "--evidence-refs",
+        request.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["source_fingerprint"], fingerprint);
+    assert_eq!(report["grounding"]["capabilities"]["fingerprint"], true);
+    let anchor = &report["anchors"][0];
+    assert_eq!(anchor["anchor_status"], "bound");
+    assert_eq!(anchor["checks"]["fingerprint"], "matched");
+    assert_eq!(anchor["checks"]["text"], "matched");
+}
+
+#[test]
 fn usage_errors_are_exit_two() {
     let cases = [
         request(serde_json::json!([

@@ -39,7 +39,8 @@
 //!   half-away-from-zero) so units align with Ethos quanta. Origin is declared
 //!   [`CoordinateOrigin::Unknown`] until the B-alpha pin verifies ODL's convention —
 //!   capability-driven downgrade, never silent assumption.
-//! - No spans, no char offsets, no fingerprint, no crops: declared `false`.
+//! - No spans, no char offsets, no crops: declared `false`. Fingerprint support
+//!   is declared only when a caller-provided envelope supplies `source_fingerprint`.
 //!   Table capability is declared when a `tables` array is present in the
 //!   documented subset or when real ODL-style `rows[].cells` table structures carry
 //!   enough explicit page/bbox/text data to map deterministic cells.
@@ -114,6 +115,7 @@ fn u32_field(
 pub struct OdlJsonSource {
     parser_name: String,
     parser_version: String,
+    fingerprint: Option<String>,
     pages: Vec<PageGeometry>,
     elements: Vec<GroundingElement>,
     tables_capable: bool,
@@ -173,6 +175,31 @@ fn bbox_from(value: &Value) -> Result<[i64; 4], AdapterError> {
         return Err(err("bbox must have positive area"));
     }
     Ok(out)
+}
+
+fn source_fingerprint(root: &Value) -> Result<Option<String>, AdapterError> {
+    let Some(value) = root.get("source_fingerprint") else {
+        return Ok(None);
+    };
+    let Some(fingerprint) = value.as_str().map(str::trim) else {
+        return Err(err("source_fingerprint must be a string"));
+    };
+    if !is_sha256_fingerprint(fingerprint) {
+        return Err(err(
+            "source_fingerprint must match sha256:<64 lowercase hex>",
+        ));
+    }
+    Ok(Some(fingerprint.to_string()))
+}
+
+fn is_sha256_fingerprint(value: &str) -> bool {
+    let Some(hex) = value.strip_prefix("sha256:") else {
+        return false;
+    };
+    hex.len() == 64
+        && hex
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 fn bbox_within_page(bbox: [i64; 4], page: &PageGeometry, label: &str) -> Result<(), AdapterError> {
@@ -406,6 +433,7 @@ fn parse_real_odl(root: &Value) -> Result<OdlJsonSource, AdapterError> {
     Ok(OdlJsonSource {
         parser_name: "opendataloader-pdf".to_string(),
         parser_version: "unknown".to_string(),
+        fingerprint: source_fingerprint(root)?,
         pages,
         elements,
         tables_capable: !tables.is_empty(),
@@ -596,10 +624,7 @@ fn parse_real_content_element(
     )?;
     update_page_extent(page_extents, page_number, bbox);
 
-    let id = real_element_id(node, next_synthetic_id)?;
-    if !element_ids.insert(id.clone()) {
-        return Err(err("duplicate content id"));
-    }
+    let id = unique_real_element_id(node, element_ids, next_synthetic_id)?;
     let element_index = elements.len();
     elements.push(GroundingElement {
         id,
@@ -677,6 +702,24 @@ fn real_element_id(node: &Value, next_synthetic_id: &mut u32) -> Result<String, 
     let id = *next_synthetic_id;
     *next_synthetic_id = next_synthetic_id.saturating_add(1);
     Ok(format!("odl-el-{id}"))
+}
+
+fn unique_real_element_id(
+    node: &Value,
+    element_ids: &mut HashSet<String>,
+    next_synthetic_id: &mut u32,
+) -> Result<String, AdapterError> {
+    let id = real_element_id(node, next_synthetic_id)?;
+    if element_ids.insert(id.clone()) {
+        return Ok(id);
+    }
+    loop {
+        let candidate = format!("odl-el-{}", *next_synthetic_id);
+        *next_synthetic_id = next_synthetic_id.saturating_add(1);
+        if element_ids.insert(candidate.clone()) {
+            return Ok(candidate);
+        }
+    }
 }
 
 fn real_content_text(node: &Value) -> Result<Option<String>, AdapterError> {
@@ -880,6 +923,7 @@ impl OdlJsonSource {
         Ok(OdlJsonSource {
             parser_name,
             parser_version,
+            fingerprint: source_fingerprint(root)?,
             pages,
             elements,
             tables_capable,
@@ -903,14 +947,14 @@ impl GroundingSource for OdlJsonSource {
             spans: false,
             char_offsets: false,
             tables: self.tables_capable,
-            fingerprint: false,
+            fingerprint: self.fingerprint.is_some(),
             coordinate_origin: CoordinateOrigin::Unknown,
             crop_support: false,
         }
     }
 
     fn fingerprint(&self) -> Option<String> {
-        None
+        self.fingerprint.clone()
     }
 
     fn pages(&self) -> Vec<PageGeometry> {
@@ -1057,6 +1101,51 @@ mod tests {
     }
 
     #[test]
+    fn maps_source_fingerprint_when_foreign_parser_envelope_provides_one() {
+        let src = OdlJsonSource::from_json_str(
+            r#"{
+              "source_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "file name": "fingerprinted.pdf",
+              "number of pages": 1,
+              "kids": [
+                {
+                  "type": "paragraph",
+                  "id": 1,
+                  "page number": 1,
+                  "bounding box": [10.0, 20.0, 30.0, 40.0],
+                  "content": "Fingerprint bound text."
+                }
+              ]
+            }"#,
+        )
+        .unwrap();
+
+        assert!(src.capabilities().fingerprint);
+        assert_eq!(
+            src.fingerprint().as_deref(),
+            Some("sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_source_fingerprint() {
+        let err = OdlJsonSource::from_json_str(
+            r#"{
+              "source_fingerprint": "sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "file name": "fingerprinted.pdf",
+              "number of pages": 1,
+              "kids": []
+            }"#,
+        )
+        .unwrap_err();
+
+        assert_eq!(
+            err.message,
+            "source_fingerprint must match sha256:<64 lowercase hex>"
+        );
+    }
+
+    #[test]
     fn maps_real_nested_child_structures_in_preorder() {
         let src = OdlJsonSource::from_json_str(
             r#"{
@@ -1166,6 +1255,41 @@ mod tests {
         assert_eq!(tables[0].cells[1].row, 1);
         assert_eq!(tables[0].cells[1].col, 2);
         assert_eq!(tables[0].cells[1].text, "Cell B");
+    }
+
+    #[test]
+    fn maps_real_duplicate_content_ids_with_synthetic_collisions() {
+        let src = OdlJsonSource::from_json_str(
+            r#"{
+              "file name": "duplicate-ids.pdf",
+              "number of pages": 1,
+              "kids": [
+                {
+                  "type": "image",
+                  "id": 2,
+                  "page number": 1,
+                  "bounding box": [10, 10, 30, 30]
+                },
+                {
+                  "type": "paragraph",
+                  "id": 2,
+                  "page number": 1,
+                  "bounding box": [40, 40, 200, 60],
+                  "content": "The duplicate paragraph still grounds."
+                }
+              ]
+            }"#,
+        )
+        .unwrap();
+
+        let elements = src.elements();
+        assert_eq!(elements.len(), 2);
+        assert_eq!(elements[0].id, "odl-2");
+        assert_eq!(elements[1].id, "odl-el-1");
+        assert_eq!(
+            elements[1].text.as_deref(),
+            Some("The duplicate paragraph still grounds.")
+        );
     }
 
     #[test]
@@ -1562,14 +1686,6 @@ mod tests {
         assert_error_contains(
             r#"{"file name":"huge.pdf","number of pages":4294967295,"kids":[]}"#,
             "number of pages exceeds adapter limit",
-        );
-        assert_error_contains(
-            r#"{"file name":"dup.pdf","number of pages":1,"kids":[{"type":"paragraph","id":1,"page number":1,"bounding box":[1,1,2,2],"content":"A","kids":[{"type":"paragraph","id":1,"page number":1,"bounding box":[2,2,3,3],"content":"B"}]}]}"#,
-            "duplicate content id",
-        );
-        assert_error_contains(
-            r#"{"file name":"dup.pdf","number of pages":1,"kids":[{"type":"paragraph","id":"same","page number":1,"bounding box":[1,1,2,2],"content":"A"},{"type":"paragraph","id":"same","page number":1,"bounding box":[2,2,3,3],"content":"B"}]}"#,
-            "duplicate content id",
         );
     }
 
