@@ -367,6 +367,28 @@ grounding source when an adapter can expose text, pages, regions, fingerprints, 
 through the `GroundingSource` trait. When a source lacks required evidence metadata, Ethos reports
 that limitation instead of silently upgrading the claim.
 
+## Bring your own parser
+
+Ethos is not limited to DocuShell or to the native Ethos parser. A parser can participate when its
+output is mapped into the parser-neutral `GroundingSource` boundary:
+
+```text
+parser output
+    -> GroundingSource adapter
+    -> citation claims
+    -> ethos verify
+    -> VerificationReport + optional proof_summary()
+```
+
+The adapter owns the mapping from parser-native structures into Ethos evidence concepts: pages,
+elements, text, tables, regions, fingerprints, and capability declarations. The verifier then
+checks whether caller-provided citations bind to that source evidence. Product layers can use
+`VerificationReport::proof_summary()` for release wording, but the canonical report remains the
+audit artifact.
+
+Start with [`docs/bring-your-own-parser.md`](docs/bring-your-own-parser.md). Use the
+OpenDataLoader adapter as the fuller reference once the minimal `GroundingSource` shape is clear.
+
 ## Current capability status
 
 | Capability | Current status | Claim boundary |
