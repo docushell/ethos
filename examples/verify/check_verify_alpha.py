@@ -27,6 +27,15 @@ import sys
 from pathlib import Path
 
 
+PROOF_LIMITATION_ORDER = [
+    "capability_limited",
+    "stale_fingerprint",
+    "unsupported_claim_kind",
+    "non_grounded_checks",
+    "semantic_unverified",
+]
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, required=True)
@@ -58,6 +67,24 @@ def load_case_inventory(repo_root):
     return inventory
 
 
+def load_contract_inventory(repo_root):
+    inventory_path = repo_root / "examples/verify/verify_citations_v1_contract.json"
+    inventory = load_json(inventory_path)
+    if inventory.get("schema_version") != 1:
+        raise SystemExit(f"{relative(inventory_path, repo_root)} has unsupported schema_version")
+    if inventory.get("contract") != "verify_citations.v1":
+        raise SystemExit(f"{relative(inventory_path, repo_root)} has unsupported contract")
+    for key in [
+        "report_cases",
+        "usage_error_cases",
+        "usage_diagnostic_cases",
+        "summary_cases",
+    ]:
+        if not isinstance(inventory.get(key), list):
+            raise SystemExit(f"{relative(inventory_path, repo_root)} missing {key} list")
+    return inventory
+
+
 def pretty_json(value):
     return json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
 
@@ -80,6 +107,76 @@ def validate_unique_case_names(groups):
             if name in seen:
                 raise SystemExit(f"{name} appears in both {seen[name]} and {group_name}")
             seen[name] = group_name
+
+
+def compare_name_lists(expected, actual, name, expected_label, actual_label):
+    if expected == actual:
+        return
+    diff = "\n".join(
+        difflib.unified_diff(
+            [f"{value}\n" for value in expected],
+            [f"{value}\n" for value in actual],
+            fromfile=expected_label,
+            tofile=actual_label,
+        )
+    )
+    raise SystemExit(f"{name} inventory drift\n{diff}")
+
+
+def validate_contract_inventory(case_inventory, contract_inventory, repo_root):
+    report_case_names = [case["name"] for case in case_inventory["report_cases"]]
+    contract_report_case_names = [
+        case.get("name") for case in contract_inventory["report_cases"]
+    ]
+    compare_name_lists(
+        report_case_names,
+        contract_report_case_names,
+        "report case",
+        "examples/verify/cases.json report_cases[*].name",
+        "examples/verify/verify_citations_v1_contract.json report_cases[*].name",
+    )
+
+    usage_case_names = sorted(case["name"] for case in case_inventory["usage_error_cases"])
+    contract_usage_case_names = sorted(contract_inventory["usage_error_cases"])
+    compare_name_lists(
+        usage_case_names,
+        contract_usage_case_names,
+        "usage-error case",
+        "examples/verify/cases.json usage_error_cases[*].name",
+        "examples/verify/verify_citations_v1_contract.json usage_error_cases[*]",
+    )
+
+    usage_diagnostic_names = sorted(
+        case["name"] for case in contract_inventory["usage_diagnostic_cases"]
+    )
+    compare_name_lists(
+        usage_case_names,
+        usage_diagnostic_names,
+        "usage diagnostic case",
+        "examples/verify/cases.json usage_error_cases[*].name",
+        "examples/verify/verify_citations_v1_contract.json usage_diagnostic_cases[*].name",
+    )
+
+    summary_case_names = sorted(case["name"] for case in case_inventory["summary_cases"])
+    contract_summary_case_names = sorted(contract_inventory["summary_cases"])
+    compare_name_lists(
+        summary_case_names,
+        contract_summary_case_names,
+        "summary case",
+        "examples/verify/cases.json summary_cases[*].name",
+        "examples/verify/verify_citations_v1_contract.json summary_cases[*]",
+    )
+
+    contract_cases = {}
+    for case in contract_inventory["report_cases"]:
+        name = case["name"]
+        if name in contract_cases:
+            raise SystemExit(
+                f"examples/verify/verify_citations_v1_contract.json duplicates {name}"
+            )
+        contract_cases[name] = case
+    print("ok    verify-alpha contract inventory matches executable case wiring")
+    return contract_cases
 
 
 def validate_case_paths(cases, repo_root, fields):
@@ -198,7 +295,7 @@ def compare_json(actual_path, expected_path, repo_root, name):
     expected = load_json(expected_path)
     if actual == expected:
         print(f"ok    {name} matches {relative(expected_path, repo_root)}")
-        return
+        return actual
 
     diff = "".join(
         difflib.unified_diff(
@@ -209,6 +306,116 @@ def compare_json(actual_path, expected_path, repo_root, name):
         )
     )
     raise SystemExit(f"{name} golden mismatch\n{diff}")
+
+
+def has_capability_limit(report):
+    if report.get("capability_limits"):
+        return True
+    if "capability_limited" in report.get("warnings", []):
+        return True
+    return any(
+        "capability_limited" in check.get("warnings", [])
+        for check in report.get("checks", [])
+    )
+
+
+def derive_proof_summary(report):
+    checks = report.get("checks", [])
+    fingerprint_stale = bool(report.get("fingerprint_stale"))
+    reusable_check_ids = []
+    needs_review_check_ids = []
+    for check in checks:
+        check_id = check.get("id")
+        reusable = (
+            check.get("status") == "grounded"
+            and not bool(check.get("semantic_unverified"))
+            and not fingerprint_stale
+        )
+        if reusable:
+            reusable_check_ids.append(check_id)
+        else:
+            needs_review_check_ids.append(check_id)
+
+    request_certified = bool(report.get("all_evidence_grounded"))
+    if request_certified:
+        proof_status = "verified"
+    elif reusable_check_ids:
+        proof_status = "partially_verified"
+    else:
+        proof_status = "unverified"
+
+    limitation_flags = {
+        "capability_limited": has_capability_limit(report),
+        "stale_fingerprint": fingerprint_stale,
+        "unsupported_claim_kind": bool(report.get("unsupported_claim_kinds")),
+        "non_grounded_checks": any(
+            check.get("status") != "grounded" for check in checks
+        ),
+        "semantic_unverified": any(
+            bool(check.get("semantic_unverified")) for check in checks
+        ),
+    }
+    proof_limitations = [
+        limitation
+        for limitation in PROOF_LIMITATION_ORDER
+        if limitation_flags[limitation]
+    ]
+    return {
+        "proof_status": proof_status,
+        "request_certified": request_certified,
+        "reusable_grounded_check_ids": reusable_check_ids,
+        "needs_review_check_ids": needs_review_check_ids,
+        "proof_limitations": proof_limitations,
+    }
+
+
+def compare_contract_value(name, field, expected, actual):
+    if expected != actual:
+        raise SystemExit(
+            f"{name} contract {field} mismatch: expected {expected!r}, got {actual!r}"
+        )
+
+
+def validate_report_contract(report, contract_case, name):
+    statuses = [check.get("status") for check in report.get("checks", [])]
+    reasons = [
+        check["reason"] for check in report.get("checks", []) if "reason" in check
+    ]
+    compare_contract_value(
+        name,
+        "all_evidence_grounded",
+        contract_case["all_evidence_grounded"],
+        report.get("all_evidence_grounded"),
+    )
+    compare_contract_value(name, "statuses", contract_case["statuses"], statuses)
+    compare_contract_value(name, "reasons", contract_case["reasons"], reasons)
+
+    proof = derive_proof_summary(report)
+    compare_contract_value(
+        name,
+        "expected_proof_status",
+        contract_case["expected_proof_status"],
+        proof["proof_status"],
+    )
+    compare_contract_value(
+        name,
+        "expected_request_certified",
+        contract_case["expected_request_certified"],
+        proof["request_certified"],
+    )
+    compare_contract_value(
+        name,
+        "expected_reusable_check_ids",
+        contract_case["expected_reusable_check_ids"],
+        proof["reusable_grounded_check_ids"],
+    )
+    compare_contract_value(
+        name,
+        "expected_proof_limitations",
+        contract_case["expected_proof_limitations"],
+        proof["proof_limitations"],
+    )
+    print(f"ok    {name} matches verify_citations.v1 contract expectations")
 
 
 def list_crop_descriptors(crop_dir):
@@ -336,7 +543,7 @@ def verify_crop_descriptor_case(args):
     )
 
 
-def verify_case(case, args):
+def verify_case(case, contract_case, args):
     first = args.out_dir / f"{case['name']}.run1.json"
     second = args.out_dir / f"{case['name']}.run2.json"
     command = [
@@ -351,7 +558,8 @@ def verify_case(case, args):
     run_verify([*command, "--out", str(first)], args.repo_root, case["name"])
     run_verify([*command, "--out", str(second)], args.repo_root, case["name"])
     compare_bytes(first, second, case["name"])
-    compare_json(first, args.repo_root / case["golden"], args.repo_root, case["name"])
+    report = compare_json(first, args.repo_root / case["golden"], args.repo_root, case["name"])
+    validate_report_contract(report, contract_case, case["name"])
 
 
 def verify_usage_error_case(case, args):
@@ -436,10 +644,12 @@ def main():
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     inventory = load_case_inventory(args.repo_root)
+    contract_inventory = load_contract_inventory(args.repo_root)
     validate_case_inventory(inventory, args.repo_root)
+    contract_cases = validate_contract_inventory(inventory, contract_inventory, args.repo_root)
 
     for case in inventory["report_cases"]:
-        verify_case(case, args)
+        verify_case(case, contract_cases[case["name"]], args)
     for case in inventory["usage_error_cases"]:
         verify_usage_error_case(case, args)
     for case in inventory["summary_cases"]:

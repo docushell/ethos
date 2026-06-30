@@ -10,7 +10,9 @@ case.
 `verify_citations_v1_contract.json` classifies the same executable cases for the current
 Milestone D source-only pre-alpha `verify_citations` v1 contract. The focused
 `make milestone-d-verify-citations-contract` target schema-validates this contract inventory and
-checks that it stays aligned with `cases.json` and the report goldens.
+checks that it stays aligned with `cases.json` and the report goldens. The contract inventory also
+records expected derived proof status, reusable grounded check IDs, request certification, and proof
+limitations; `cases.json` remains command/path wiring.
 
 ## Verify-Alpha Case Inventory
 
@@ -55,8 +57,11 @@ ethos verify schemas/examples/document.example.json \
   --format summary
 ```
 
-The summary includes the verification config hash, declared grounding capabilities, check counts,
-report warnings, non-grounded check reasons, and deterministic diagnostic lines.
+The summary includes the verification config hash, derived `proof_status`,
+`request_certified`, reusable grounded checks, checks that still need review, proof limitations,
+declared grounding capabilities, check counts, report warnings, non-grounded check reasons, and
+deterministic diagnostic lines. The proof fields are derived from the report; they are not added to
+the canonical JSON report.
 
 `make verify-alpha` also checks summary output for a native ungrounded citation set, including
 the non-grounded reason and diagnostic lines.
@@ -80,8 +85,10 @@ ethos verify schemas/examples/document.example.json \
   --out verification_report.json
 ```
 
-Expected result: `all_evidence_grounded: false`. The page presence check can ground, but
-`region` and `other` remain unsupported non-v1 claim kinds and are reported explicitly.
+Expected result: `all_evidence_grounded: false` and derived
+`proof_status: partially_verified`. The page presence check can ground and is reusable, but
+`region` and `other` remain unsupported non-v1 claim kinds and the request as submitted is not
+certified.
 
 ## Native Ethos Ungrounded Citations
 
@@ -106,7 +113,8 @@ ethos verify examples/verify/opendataloader.json \
 Expected result: `all_evidence_grounded: true` with a top-level `capability_limited`
 warning. The warning is intentional: the synthetic OpenDataLoader-style fixture has no
 fingerprint, spans, character offsets, or known coordinate origin, but its element and table
-evidence can still ground these claims.
+evidence can still ground these claims. Derived proof limitations keep the capability limit visible
+even though the request is certified.
 
 ## OpenDataLoader-Style Missing Element
 
