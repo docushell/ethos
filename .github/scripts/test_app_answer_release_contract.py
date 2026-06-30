@@ -83,6 +83,21 @@ def claim_by_id(example: dict) -> dict[str, dict]:
     return {claim["id"]: claim for claim in example["claims"]}
 
 
+def claim_inputs(example: dict) -> list[dict]:
+    fields = [
+        "id",
+        "text",
+        "check_ids",
+        "citation_grounded",
+        "question_relevance",
+        "claim_type",
+    ]
+    return [
+        {field: claim[field] for field in fields if field in claim}
+        for claim in example["claims"]
+    ]
+
+
 def normalized_markdown(path: Path) -> str:
     return " ".join(path.read_text(encoding="utf-8").split())
 
@@ -205,6 +220,25 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
         self.assertEqual([], errors)
         self.assertNotIn("check_id", decision["claims"][0])
         self.assertEqual(["v0001"], decision["claims"][0]["check_ids"])
+
+    def test_python_helper_reproduces_documented_example(self) -> None:
+        if str(PYTHON_PACKAGE) not in sys.path:
+            sys.path.insert(0, str(PYTHON_PACKAGE))
+        from ethos_pdf import app_answer_release_decision
+
+        example = load_json(EXAMPLE)
+        grounding = dict(example["grounding"])
+        verification_report_ref = grounding.pop("verification_report_ref")
+
+        decision = app_answer_release_decision(
+            example["question"],
+            grounding,
+            claim_inputs(example),
+            verification_report_ref=verification_report_ref,
+            notes=example["notes"],
+        )
+
+        self.assertEqual(example, decision)
 
     def test_schema_rejects_grounded_unsupported_claims(self) -> None:
         schema = load_json(SCHEMA)

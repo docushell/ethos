@@ -1344,6 +1344,74 @@ mod tests {
     }
 
     #[test]
+    fn app_answer_release_decision_reproduces_documented_example() {
+        let expected: serde_json::Value = serde_json::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../schemas/examples/app-answer-release-decision.example.json"
+        )))
+        .unwrap();
+        let proof = ProofSummary {
+            proof_status: ProofStatus::PartiallyVerified,
+            request_certified: false,
+            reusable_grounded_check_ids: vec![
+                "v0001".to_string(),
+                "v0002".to_string(),
+                "v0003".to_string(),
+            ],
+            needs_review_check_ids: vec!["v0004".to_string()],
+            proof_limitations: vec![ProofLimitation::NonGroundedChecks],
+        };
+
+        let decision = derive_app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            &proof,
+            vec![
+                AppAnswerClaimInput {
+                    id: "claim-revenue".to_string(),
+                    text: "Revenue grew to $12.4M in Q3 2025.".to_string(),
+                    check_ids: vec!["v0001".to_string()],
+                    citation_grounded: Some(true),
+                    question_relevance: AppQuestionRelevance::DirectAnswer,
+                    claim_type: AppClaimType::SourceFact,
+                },
+                AppAnswerClaimInput {
+                    id: "claim-office-background".to_string(),
+                    text: "The company opened a European office.".to_string(),
+                    check_ids: vec!["v0002".to_string()],
+                    citation_grounded: Some(true),
+                    question_relevance: AppQuestionRelevance::BackgroundOnly,
+                    claim_type: AppClaimType::SourceFact,
+                },
+                AppAnswerClaimInput {
+                    id: "claim-growth-driver".to_string(),
+                    text: "Q3 revenue growth was likely driven by enterprise expansion."
+                        .to_string(),
+                    check_ids: vec!["v0001".to_string(), "v0003".to_string()],
+                    citation_grounded: Some(true),
+                    question_relevance: AppQuestionRelevance::SupportsAnswer,
+                    claim_type: AppClaimType::Synthesis,
+                },
+                AppAnswerClaimInput {
+                    id: "claim-margin".to_string(),
+                    text: "Gross margin improved in Q3 2025.".to_string(),
+                    check_ids: vec!["v0004".to_string()],
+                    citation_grounded: Some(false),
+                    question_relevance: AppQuestionRelevance::DirectAnswer,
+                    claim_type: AppClaimType::Unsupported,
+                },
+            ],
+            "verification_report.json",
+            vec![
+                "This app-layer envelope is not verification_report.json; it records release policy above Ethos grounding."
+                    .to_string(),
+            ],
+        )
+        .unwrap();
+
+        assert_eq!(serde_json::to_value(&decision).unwrap(), expected);
+    }
+
+    #[test]
     fn app_answer_release_decision_blocks_empty_source_answer() {
         let proof = ProofSummary {
             proof_status: ProofStatus::Unverified,
