@@ -78,6 +78,9 @@ PAIRS = [
         EXAMPLES / "verification-report.example.json",
         EXAMPLES / "verification-report-negative.example.json",
     ]),
+    ("ethos-app-answer-release-decision.schema.json", [
+        EXAMPLES / "app-answer-release-decision.example.json",
+    ]),
     ("ethos-evidence-anchor-request.schema.json", [
         EXAMPLES / "evidence-anchor-request.example.json",
     ]),

@@ -21,6 +21,13 @@ The canonical audit artifact remains `verification_report.json`, governed by
 product wording, reusable-check selection, and API wrapper policy. That derived summary is not a
 replacement for the canonical report.
 
+Applications that want a machine-readable wrapper decision envelope may use
+`schemas/ethos-app-answer-release-decision.schema.json`. The example at
+`schemas/examples/app-answer-release-decision.example.json` shows how to combine a derived Ethos
+proof summary with app-owned relevance and synthesis labels. This envelope is not a replacement for
+`verification_report.json`; it records an application release decision above the Ethos grounding
+result.
+
 If a wrapper exposes `invalid_request`, that status is a process or API envelope for malformed
 input, invalid configuration, adapter failure, or usage errors. It is not derived from a
 `VerificationReport`.
@@ -78,6 +85,12 @@ Suggested `claim_type` values:
 
 These labels may come from application policy, a reviewed model output schema, human review, or a
 separate evaluator. They are outside the canonical Ethos verification report.
+
+Suggested `release_action` values for a wrapper decision envelope:
+
+- `show_final`: release the claim in the final answer.
+- `needs_review`: keep the claim in a review surface.
+- `block`: keep the claim out of the final answer.
 
 ## Release Rules
 

@@ -11,6 +11,7 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-security-report.schema.json` | `security_report.json` |
 | `ethos-citations.schema.json` | citation input consumed by `ethos verify --citations` |
 | `ethos-verification-report.schema.json` | `verification_report.json` |
+| `ethos-app-answer-release-decision.schema.json` | non-canonical app wrapper decision envelope for answer release policy over Ethos proof summaries |
 | `ethos-evidence-anchor-request.schema.json` | evidence refs consumed by `ethos evidence anchor --evidence-refs` |
 | `ethos-evidence-anchor-report.schema.json` | `evidence_anchor_report.json` emitted by `ethos evidence anchor` |
 | `ethos-evidence-anchor-contract.schema.json` | `evidence_anchor` v1 source-only public beta evaluation guard inventory |
@@ -52,6 +53,13 @@ security-report / verification-report examples).
 `verification-report.example.json` shows a grounded report.
 `verification-report-negative.example.json` shows a non-grounded report with a per-check
 `reason` label.
+
+App answer release guidance is tracked in `docs/app-answer-release-contract.md`. The schema
+`ethos-app-answer-release-decision.schema.json` and example
+`schemas/examples/app-answer-release-decision.example.json` describe a non-canonical wrapper
+decision envelope for apps that combine Ethos citation grounding with app-owned relevance and
+synthesis policy. This envelope is not `verification_report.json`, is not emitted by the verifier,
+and is not a replacement for the canonical audit report.
 
 Evidence-anchor V1 guard work is tracked in `docs/evidence-anchor-v1-contract.md`. In this
 source-only public beta evaluation guard, `evidence_anchor` names the deterministic source-tracing
