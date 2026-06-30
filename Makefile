@@ -64,6 +64,7 @@ evidence-anchor-v1-contract:
 
 app-answer-release-contract:
 	cargo test --locked -p ethos-doc-core --no-default-features --features verify-types app_answer_release
+	$(MAKE) python-surface-test PYTHON=$(PYTHON)
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_app_answer_release_contract.py
 	$(PYTHON) .github/scripts/claims_gate.py
