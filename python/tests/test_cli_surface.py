@@ -741,6 +741,37 @@ class PythonSurfaceTests(unittest.TestCase):
                 ],
             )
 
+    def test_app_answer_release_decision_rejects_duplicate_claim_ids(self) -> None:
+        summary = {
+            "proof_status": "partially_verified",
+            "request_certified": False,
+            "reusable_grounded_check_ids": ["v0001", "v0002"],
+            "needs_review_check_ids": [],
+            "proof_limitations": [],
+        }
+
+        with self.assertRaisesRegex(ValueError, "duplicate claim id: claim-revenue"):
+            app_answer_release_decision(
+                "What was Q3 2025 revenue?",
+                summary,
+                [
+                    {
+                        "id": "claim-revenue",
+                        "text": "Revenue grew.",
+                        "check_ids": ["v0001"],
+                        "question_relevance": "direct_answer",
+                        "claim_type": "source_fact",
+                    },
+                    {
+                        "id": "claim-revenue",
+                        "text": "Revenue increased.",
+                        "check_ids": ["v0002"],
+                        "question_relevance": "supports_answer",
+                        "claim_type": "source_fact",
+                    },
+                ],
+            )
+
     def test_anchor_maps_source_evidence_refs_and_grounding(self) -> None:
         result = anchor(
             self.document,

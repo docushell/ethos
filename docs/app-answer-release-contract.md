@@ -88,6 +88,9 @@ Suggested `claim_type` values:
 These labels may come from application policy, a reviewed model output schema, human review, or a
 separate evaluator. They are outside the canonical Ethos verification report.
 
+Each claim must have a stable `id` that is unique within the wrapper decision. The helper APIs
+reject duplicate claim IDs so the release lists cannot point to ambiguous claim text.
+
 Suggested `release_action` values for a wrapper decision envelope:
 
 - `show_final`: release the claim in the final answer.

@@ -725,10 +725,15 @@ def app_answer_release_decision(
     reusable = set(grounding["reusable_grounded_check_ids"])
     needs_review = set(grounding["needs_review_check_ids"])
 
-    decisions = [
-        _app_claim_decision(claim, reusable, needs_review)
-        for claim in claims
-    ]
+    seen_claim_ids: set[str] = set()
+    decisions = []
+    for claim in claims:
+        decision = _app_claim_decision(claim, reusable, needs_review)
+        claim_id = decision["id"]
+        if claim_id in seen_claim_ids:
+            raise ValueError(f"duplicate claim id: {claim_id}")
+        seen_claim_ids.add(claim_id)
+        decisions.append(decision)
     final_ids = [
         claim["id"] for claim in decisions if claim["release_action"] == "show_final"
     ]

@@ -154,7 +154,8 @@ print(decision["app_status"])
 
 The helper does not judge relevance or synthesis. Callers supply those labels; the helper applies
 the release rule and requires referenced Ethos check IDs to be reusable before a claim can enter
-the final answer.
+the final answer. It also rejects duplicate claim IDs so `final_answer_claim_ids`,
+`review_claim_ids`, and `blocked_claim_ids` stay unambiguous.
 
 Run the focused tests with:
 

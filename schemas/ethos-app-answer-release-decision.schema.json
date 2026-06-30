@@ -63,7 +63,9 @@
     "app_status": { "$ref": "#/$defs/app_status" },
     "claims": {
       "type": "array",
-      "items": { "$ref": "#/$defs/claim_decision" }
+      "items": { "$ref": "#/$defs/claim_decision" },
+      "uniqueItems": true,
+      "description": "Application claim decisions. Claim ids must be unique within this array; helper APIs enforce id-level uniqueness."
     },
     "final_answer_claim_ids": {
       "type": "array",
@@ -137,7 +139,11 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable application claim id. Each id must be unique within the claims array."
+        },
         "text": { "type": "string", "minLength": 1 },
         "check_ids": {
           "type": "array",

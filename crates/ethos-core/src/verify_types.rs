@@ -1419,6 +1419,47 @@ mod tests {
     }
 
     #[test]
+    fn app_answer_release_decision_rejects_duplicate_claim_ids() {
+        let proof = ProofSummary {
+            proof_status: ProofStatus::PartiallyVerified,
+            request_certified: false,
+            reusable_grounded_check_ids: vec!["v0001".to_string(), "v0002".to_string()],
+            needs_review_check_ids: Vec::new(),
+            proof_limitations: Vec::new(),
+        };
+
+        let duplicate = derive_app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            &proof,
+            vec![
+                AppAnswerClaimInput {
+                    id: "claim-revenue".to_string(),
+                    text: "Revenue grew.".to_string(),
+                    check_ids: vec!["v0001".to_string()],
+                    citation_grounded: None,
+                    question_relevance: AppQuestionRelevance::DirectAnswer,
+                    claim_type: AppClaimType::SourceFact,
+                },
+                AppAnswerClaimInput {
+                    id: "claim-revenue".to_string(),
+                    text: "Revenue increased.".to_string(),
+                    check_ids: vec!["v0002".to_string()],
+                    citation_grounded: None,
+                    question_relevance: AppQuestionRelevance::SupportsAnswer,
+                    claim_type: AppClaimType::SourceFact,
+                },
+            ],
+            "verification_report.json",
+            Vec::new(),
+        )
+        .unwrap_err();
+
+        assert!(duplicate
+            .message()
+            .contains("duplicate claim id: claim-revenue"));
+    }
+
+    #[test]
     fn report_example_round_trips() {
         let json = include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),

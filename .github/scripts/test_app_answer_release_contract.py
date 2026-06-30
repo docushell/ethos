@@ -141,6 +141,19 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
         self.assertEqual("unsupported", unsupported["claim_type"])
         self.assertEqual("cannot_answer_from_sources", unsupported["release_reason"])
 
+    def test_example_claim_ids_are_unique_and_release_lists_are_unambiguous(self) -> None:
+        example = load_json(EXAMPLE)
+        claim_ids = [claim["id"] for claim in example["claims"]]
+        release_ids = (
+            example["final_answer_claim_ids"]
+            + example["review_claim_ids"]
+            + example["blocked_claim_ids"]
+        )
+
+        self.assertEqual(len(claim_ids), len(set(claim_ids)))
+        self.assertEqual(sorted(claim_ids), sorted(release_ids))
+        self.assertEqual(len(release_ids), len(set(release_ids)))
+
     def test_final_answer_ids_are_only_certified_source_facts(self) -> None:
         example = load_json(EXAMPLE)
         claims = claim_by_id(example)
