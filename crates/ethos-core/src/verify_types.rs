@@ -20,6 +20,10 @@
 //! Lives behind `verify-types` (no parser internals) so `ethos-verify` can use these
 //! without ever seeing the canonical model or backend traits.
 
+use std::collections::HashSet;
+use std::error::Error;
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 use crate::codes::WarningCode;
@@ -383,6 +387,242 @@ pub struct ProofSummary {
     pub proof_limitations: Vec<ProofLimitation>,
 }
 
+/// Application-owned relevance label for an answer claim.
+///
+/// Ethos does not infer this label. Wrappers supply it before applying answer-release policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AppQuestionRelevance {
+    /// The grounded evidence directly answers the user question.
+    DirectAnswer,
+    /// The grounded evidence supports the answer but is not sufficient alone.
+    SupportsAnswer,
+    /// The grounded evidence is true but only background for the question.
+    BackgroundOnly,
+    /// The grounded evidence does not support the requested answer.
+    Unrelated,
+}
+
+impl AppQuestionRelevance {
+    /// Stable snake_case label used by wrapper envelopes.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AppQuestionRelevance::DirectAnswer => "direct_answer",
+            AppQuestionRelevance::SupportsAnswer => "supports_answer",
+            AppQuestionRelevance::BackgroundOnly => "background_only",
+            AppQuestionRelevance::Unrelated => "unrelated",
+        }
+    }
+}
+
+/// Application-owned source/synthesis label for an answer claim.
+///
+/// Ethos does not infer this label. Wrappers supply it before applying answer-release policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AppClaimType {
+    /// The claim is directly stated by source evidence.
+    SourceFact,
+    /// The claim combines multiple grounded facts or adds reasoning across them.
+    Synthesis,
+    /// The claim cannot be traced to grounded source evidence.
+    Unsupported,
+}
+
+impl AppClaimType {
+    /// Stable snake_case label used by wrapper envelopes.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AppClaimType::SourceFact => "source_fact",
+            AppClaimType::Synthesis => "synthesis",
+            AppClaimType::Unsupported => "unsupported",
+        }
+    }
+}
+
+/// Application answer release action for a claim.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AppReleaseAction {
+    /// Release the claim in the final answer.
+    ShowFinal,
+    /// Keep the claim in a review surface.
+    NeedsReview,
+    /// Keep the claim out of the final answer.
+    Block,
+}
+
+impl AppReleaseAction {
+    /// Stable snake_case label used by wrapper envelopes.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AppReleaseAction::ShowFinal => "show_final",
+            AppReleaseAction::NeedsReview => "needs_review",
+            AppReleaseAction::Block => "block",
+        }
+    }
+}
+
+/// Stable reason for an application answer release action.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AppReleaseReason {
+    /// The claim is a grounded relevant source fact and can enter the final answer.
+    Certified,
+    /// The claim is grounded and relevant, but is synthesis that needs review.
+    SupportedSynthesisNeedsReview,
+    /// The claim is citation-grounded but not relevant to the user question.
+    GroundedButIrrelevant,
+    /// The sources do not provide a releasable answer claim.
+    CannotAnswerFromSources,
+}
+
+impl AppReleaseReason {
+    /// Stable snake_case label used by wrapper envelopes.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AppReleaseReason::Certified => "certified",
+            AppReleaseReason::SupportedSynthesisNeedsReview => "supported_synthesis_needs_review",
+            AppReleaseReason::GroundedButIrrelevant => "grounded_but_irrelevant",
+            AppReleaseReason::CannotAnswerFromSources => "cannot_answer_from_sources",
+        }
+    }
+}
+
+/// Application-level answer status after applying grounding, relevance, and synthesis policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AppAnswerStatus {
+    /// Every submitted claim is releasable as a grounded relevant source fact.
+    Certified,
+    /// At least one claim is releasable, but some submitted claims are blocked or review-only.
+    PartialCertified,
+    /// No final claim is releasable, but grounded relevant synthesis exists for review.
+    SupportedSynthesisNeedsReview,
+    /// Grounded claims exist, but they are not relevant to the question.
+    GroundedButIrrelevant,
+    /// No relevant grounded source fact is available for final answer release.
+    CannotAnswerFromSources,
+}
+
+impl AppAnswerStatus {
+    /// Stable snake_case label used by wrapper envelopes.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AppAnswerStatus::Certified => "certified",
+            AppAnswerStatus::PartialCertified => "partial_certified",
+            AppAnswerStatus::SupportedSynthesisNeedsReview => "supported_synthesis_needs_review",
+            AppAnswerStatus::GroundedButIrrelevant => "grounded_but_irrelevant",
+            AppAnswerStatus::CannotAnswerFromSources => "cannot_answer_from_sources",
+        }
+    }
+}
+
+/// Caller-supplied claim labels used to derive an application answer release decision.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppAnswerClaimInput {
+    /// Stable application claim id.
+    pub id: String,
+    /// Claim text being considered for release.
+    pub text: String,
+    /// Ethos verification check ids backing this claim.
+    pub check_ids: Vec<String>,
+    /// Optional caller-supplied grounding flag for claims without check ids.
+    pub citation_grounded: Option<bool>,
+    /// App-owned question relevance label.
+    pub question_relevance: AppQuestionRelevance,
+    /// App-owned source/synthesis label.
+    pub claim_type: AppClaimType,
+}
+
+/// Claim-level decision inside an application answer release envelope.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AppAnswerClaimDecision {
+    /// Stable application claim id.
+    pub id: String,
+    /// Claim text being considered for release.
+    pub text: String,
+    /// Ethos verification check ids backing this claim.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub check_ids: Vec<String>,
+    /// Whether the claim's cited Ethos checks are grounded and reusable.
+    pub citation_grounded: bool,
+    /// App-owned question relevance label.
+    pub question_relevance: AppQuestionRelevance,
+    /// App-owned source/synthesis label.
+    pub claim_type: AppClaimType,
+    /// Application release action.
+    pub release_action: AppReleaseAction,
+    /// Stable reason for the release action.
+    pub release_reason: AppReleaseReason,
+}
+
+/// Grounding section embedded in an application answer release decision envelope.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AppAnswerGrounding {
+    /// Application-local pointer to the canonical `verification_report.json` used for audit.
+    pub verification_report_ref: String,
+    /// Product-facing proof status derived from the canonical report.
+    pub proof_status: ProofStatus,
+    /// Whether the request as submitted is certified.
+    pub request_certified: bool,
+    /// Check ids that can be reused in downstream final answers.
+    pub reusable_grounded_check_ids: Vec<String>,
+    /// Check ids that must not be released without review or repair.
+    pub needs_review_check_ids: Vec<String>,
+    /// Limitations that qualify or explain the proof status.
+    pub proof_limitations: Vec<ProofLimitation>,
+}
+
+/// Non-canonical app answer release decision envelope.
+///
+/// This is a wrapper artifact above Ethos grounding. It is not `verification_report.json`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AppAnswerReleaseDecision {
+    /// Artifact type discriminator.
+    pub artifact_type: String,
+    /// Schema version for the wrapper envelope.
+    pub schema_version: String,
+    /// Original user question evaluated by the app-layer relevance policy.
+    pub question: String,
+    /// Derived Ethos proof summary plus the audit report reference.
+    pub grounding: AppAnswerGrounding,
+    /// Application-level answer status.
+    pub app_status: AppAnswerStatus,
+    /// Claim-level release decisions.
+    pub claims: Vec<AppAnswerClaimDecision>,
+    /// Claim ids that may enter the final answer.
+    pub final_answer_claim_ids: Vec<String>,
+    /// Claim ids that should be held for review.
+    pub review_claim_ids: Vec<String>,
+    /// Claim ids that should be blocked from the final answer.
+    pub blocked_claim_ids: Vec<String>,
+    /// Optional application notes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub notes: Vec<String>,
+}
+
+/// Error returned when application answer release inputs are inconsistent.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppAnswerReleaseError {
+    message: String,
+}
+
+impl AppAnswerReleaseError {
+    /// Human-readable validation message.
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+}
+
+impl fmt::Display for AppAnswerReleaseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+impl Error for AppAnswerReleaseError {}
+
 impl VerificationReport {
     /// Derive a product-facing proof summary from this canonical report.
     pub fn proof_summary(&self) -> ProofSummary {
@@ -448,6 +688,102 @@ pub fn is_reusable_grounded_check(report: &VerificationReport, check: &Check) ->
     !report.fingerprint_stale && check.status == CheckStatus::Grounded && !check.semantic_unverified
 }
 
+/// Derive a non-canonical application answer release decision from a proof summary.
+///
+/// The caller supplies relevance and synthesis labels. This helper only applies the release policy
+/// from `docs/app-answer-release-contract.md` and checks that referenced Ethos check ids are known
+/// and reusable before a claim enters the final answer.
+pub fn derive_app_answer_release_decision(
+    question: impl Into<String>,
+    proof: &ProofSummary,
+    claims: Vec<AppAnswerClaimInput>,
+    verification_report_ref: impl Into<String>,
+    notes: Vec<String>,
+) -> Result<AppAnswerReleaseDecision, AppAnswerReleaseError> {
+    let question = question.into();
+    if question.trim().is_empty() {
+        return Err(app_answer_release_error(
+            "question must be a non-empty string",
+        ));
+    }
+    let verification_report_ref = verification_report_ref.into();
+    if verification_report_ref.is_empty() {
+        return Err(app_answer_release_error(
+            "verification_report_ref must be a non-empty string",
+        ));
+    }
+    for note in &notes {
+        if note.is_empty() {
+            return Err(app_answer_release_error(
+                "notes must contain only non-empty strings",
+            ));
+        }
+    }
+
+    let reusable_check_ids: HashSet<&str> = proof
+        .reusable_grounded_check_ids
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let needs_review_check_ids: HashSet<&str> = proof
+        .needs_review_check_ids
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let known_check_ids: HashSet<&str> = reusable_check_ids
+        .union(&needs_review_check_ids)
+        .copied()
+        .collect();
+
+    let mut seen_claim_ids = HashSet::new();
+    let mut decisions = Vec::with_capacity(claims.len());
+    for claim in claims {
+        decisions.push(app_answer_claim_decision(
+            claim,
+            &reusable_check_ids,
+            &known_check_ids,
+            &mut seen_claim_ids,
+        )?);
+    }
+
+    let final_answer_claim_ids = decisions
+        .iter()
+        .filter(|claim| claim.release_action == AppReleaseAction::ShowFinal)
+        .map(|claim| claim.id.clone())
+        .collect();
+    let review_claim_ids = decisions
+        .iter()
+        .filter(|claim| claim.release_action == AppReleaseAction::NeedsReview)
+        .map(|claim| claim.id.clone())
+        .collect();
+    let blocked_claim_ids = decisions
+        .iter()
+        .filter(|claim| claim.release_action == AppReleaseAction::Block)
+        .map(|claim| claim.id.clone())
+        .collect();
+    let app_status = app_answer_status(&decisions);
+
+    Ok(AppAnswerReleaseDecision {
+        artifact_type: "ethos.app_answer_release_decision.v1".to_string(),
+        schema_version: "1.0.0".to_string(),
+        question,
+        grounding: AppAnswerGrounding {
+            verification_report_ref,
+            proof_status: proof.proof_status,
+            request_certified: proof.request_certified,
+            reusable_grounded_check_ids: proof.reusable_grounded_check_ids.clone(),
+            needs_review_check_ids: proof.needs_review_check_ids.clone(),
+            proof_limitations: proof.proof_limitations.clone(),
+        },
+        app_status,
+        claims: decisions,
+        final_answer_claim_ids,
+        review_claim_ids,
+        blocked_claim_ids,
+        notes,
+    })
+}
+
 fn has_capability_limit(report: &VerificationReport) -> bool {
     !report.capability_limits.is_empty()
         || report.warnings.contains(&WarningCode::CapabilityLimited)
@@ -455,6 +791,170 @@ fn has_capability_limit(report: &VerificationReport) -> bool {
             .checks
             .iter()
             .any(|check| check.warnings.contains(&WarningCode::CapabilityLimited))
+}
+
+fn app_answer_claim_decision(
+    claim: AppAnswerClaimInput,
+    reusable_check_ids: &HashSet<&str>,
+    known_check_ids: &HashSet<&str>,
+    seen_claim_ids: &mut HashSet<String>,
+) -> Result<AppAnswerClaimDecision, AppAnswerReleaseError> {
+    if claim.id.is_empty() {
+        return Err(app_answer_release_error(
+            "claim id must be a non-empty string",
+        ));
+    }
+    if !seen_claim_ids.insert(claim.id.clone()) {
+        return Err(app_answer_release_error(format!(
+            "duplicate claim id: {}",
+            claim.id
+        )));
+    }
+    if claim.text.is_empty() {
+        return Err(app_answer_release_error(format!(
+            "claim {} text must be a non-empty string",
+            claim.id
+        )));
+    }
+    let mut seen_check_ids = HashSet::new();
+    for check_id in &claim.check_ids {
+        if check_id.is_empty() {
+            return Err(app_answer_release_error(format!(
+                "claim {} check_ids must contain only non-empty strings",
+                claim.id
+            )));
+        }
+        if !seen_check_ids.insert(check_id.as_str()) {
+            return Err(app_answer_release_error(format!(
+                "claim {} has duplicate check id: {}",
+                claim.id, check_id
+            )));
+        }
+    }
+
+    let citation_grounded = if claim.check_ids.is_empty() {
+        claim.citation_grounded.ok_or_else(|| {
+            app_answer_release_error(format!(
+                "claim {} without check_ids must set citation_grounded",
+                claim.id
+            ))
+        })?
+    } else {
+        let mut computed = true;
+        for check_id in &claim.check_ids {
+            if !known_check_ids.contains(check_id.as_str()) {
+                return Err(app_answer_release_error(format!(
+                    "claim {} references unknown check id: {}",
+                    claim.id, check_id
+                )));
+            }
+            if !reusable_check_ids.contains(check_id.as_str()) {
+                computed = false;
+            }
+        }
+        if let Some(provided) = claim.citation_grounded {
+            if provided != computed {
+                return Err(app_answer_release_error(format!(
+                    "citation_grounded for claim {} conflicts with proof summary",
+                    claim.id
+                )));
+            }
+        }
+        computed
+    };
+    if claim.claim_type == AppClaimType::Unsupported && citation_grounded {
+        return Err(app_answer_release_error(format!(
+            "unsupported claim {} cannot be citation_grounded",
+            claim.id
+        )));
+    }
+
+    let (release_action, release_reason) = app_release_decision(
+        citation_grounded,
+        claim.question_relevance,
+        claim.claim_type,
+    );
+    Ok(AppAnswerClaimDecision {
+        id: claim.id,
+        text: claim.text,
+        check_ids: claim.check_ids,
+        citation_grounded,
+        question_relevance: claim.question_relevance,
+        claim_type: claim.claim_type,
+        release_action,
+        release_reason,
+    })
+}
+
+fn app_release_decision(
+    citation_grounded: bool,
+    question_relevance: AppQuestionRelevance,
+    claim_type: AppClaimType,
+) -> (AppReleaseAction, AppReleaseReason) {
+    if citation_grounded
+        && matches!(
+            question_relevance,
+            AppQuestionRelevance::DirectAnswer | AppQuestionRelevance::SupportsAnswer
+        )
+        && claim_type == AppClaimType::SourceFact
+    {
+        return (AppReleaseAction::ShowFinal, AppReleaseReason::Certified);
+    }
+    if citation_grounded
+        && matches!(
+            question_relevance,
+            AppQuestionRelevance::DirectAnswer | AppQuestionRelevance::SupportsAnswer
+        )
+        && claim_type == AppClaimType::Synthesis
+    {
+        return (
+            AppReleaseAction::NeedsReview,
+            AppReleaseReason::SupportedSynthesisNeedsReview,
+        );
+    }
+    if citation_grounded {
+        return (
+            AppReleaseAction::Block,
+            AppReleaseReason::GroundedButIrrelevant,
+        );
+    }
+    (
+        AppReleaseAction::Block,
+        AppReleaseReason::CannotAnswerFromSources,
+    )
+}
+
+fn app_answer_status(claims: &[AppAnswerClaimDecision]) -> AppAnswerStatus {
+    let has_final = claims
+        .iter()
+        .any(|claim| claim.release_action == AppReleaseAction::ShowFinal);
+    let has_review = claims
+        .iter()
+        .any(|claim| claim.release_action == AppReleaseAction::NeedsReview);
+    let has_blocked = claims
+        .iter()
+        .any(|claim| claim.release_action == AppReleaseAction::Block);
+
+    if has_final && !has_review && !has_blocked {
+        AppAnswerStatus::Certified
+    } else if has_final {
+        AppAnswerStatus::PartialCertified
+    } else if has_review {
+        AppAnswerStatus::SupportedSynthesisNeedsReview
+    } else if claims
+        .iter()
+        .any(|claim| claim.release_reason == AppReleaseReason::GroundedButIrrelevant)
+    {
+        AppAnswerStatus::GroundedButIrrelevant
+    } else {
+        AppAnswerStatus::CannotAnswerFromSources
+    }
+}
+
+fn app_answer_release_error(message: impl Into<String>) -> AppAnswerReleaseError {
+    AppAnswerReleaseError {
+        message: message.into(),
+    }
 }
 
 /// Text normalization modes (config). v1 has exactly these two.
@@ -741,6 +1241,181 @@ mod tests {
             proof.proof_limitations,
             vec![ProofLimitation::SemanticUnverified]
         );
+    }
+
+    #[test]
+    fn app_answer_release_decision_applies_relevance_and_synthesis_policy() {
+        let proof = ProofSummary {
+            proof_status: ProofStatus::PartiallyVerified,
+            request_certified: false,
+            reusable_grounded_check_ids: vec![
+                "v0001".to_string(),
+                "v0002".to_string(),
+                "v0003".to_string(),
+            ],
+            needs_review_check_ids: vec!["v0004".to_string()],
+            proof_limitations: vec![ProofLimitation::NonGroundedChecks],
+        };
+
+        let decision = derive_app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            &proof,
+            vec![
+                AppAnswerClaimInput {
+                    id: "claim-revenue".to_string(),
+                    text: "Revenue grew to $12.4M in Q3 2025.".to_string(),
+                    check_ids: vec!["v0001".to_string()],
+                    citation_grounded: None,
+                    question_relevance: AppQuestionRelevance::DirectAnswer,
+                    claim_type: AppClaimType::SourceFact,
+                },
+                AppAnswerClaimInput {
+                    id: "claim-background".to_string(),
+                    text: "The company opened a European office.".to_string(),
+                    check_ids: vec!["v0002".to_string()],
+                    citation_grounded: None,
+                    question_relevance: AppQuestionRelevance::BackgroundOnly,
+                    claim_type: AppClaimType::SourceFact,
+                },
+                AppAnswerClaimInput {
+                    id: "claim-synthesis".to_string(),
+                    text: "Revenue growth was likely driven by enterprise expansion.".to_string(),
+                    check_ids: vec!["v0001".to_string(), "v0003".to_string()],
+                    citation_grounded: None,
+                    question_relevance: AppQuestionRelevance::SupportsAnswer,
+                    claim_type: AppClaimType::Synthesis,
+                },
+                AppAnswerClaimInput {
+                    id: "claim-margin".to_string(),
+                    text: "Gross margin improved in Q3 2025.".to_string(),
+                    check_ids: vec!["v0004".to_string()],
+                    citation_grounded: None,
+                    question_relevance: AppQuestionRelevance::DirectAnswer,
+                    claim_type: AppClaimType::Unsupported,
+                },
+            ],
+            "reports/q3-verification.json",
+            vec!["application-owned relevance labels".to_string()],
+        )
+        .unwrap();
+
+        assert_eq!(
+            decision.artifact_type,
+            "ethos.app_answer_release_decision.v1"
+        );
+        assert_eq!(decision.app_status, AppAnswerStatus::PartialCertified);
+        assert_eq!(
+            decision.grounding.verification_report_ref,
+            "reports/q3-verification.json"
+        );
+        assert_eq!(decision.final_answer_claim_ids, vec!["claim-revenue"]);
+        assert_eq!(decision.review_claim_ids, vec!["claim-synthesis"]);
+        assert_eq!(
+            decision.blocked_claim_ids,
+            vec!["claim-background", "claim-margin"]
+        );
+        assert_eq!(
+            decision.claims[0].release_reason,
+            AppReleaseReason::Certified
+        );
+        assert!(decision.claims[0].citation_grounded);
+        assert_eq!(
+            decision.claims[1].release_reason,
+            AppReleaseReason::GroundedButIrrelevant
+        );
+        assert_eq!(
+            decision.claims[2].release_action,
+            AppReleaseAction::NeedsReview
+        );
+        assert_eq!(decision.claims[2].check_ids, vec!["v0001", "v0003"]);
+        assert!(!decision.claims[3].citation_grounded);
+        assert_eq!(
+            decision.claims[3].release_reason,
+            AppReleaseReason::CannotAnswerFromSources
+        );
+        assert_eq!(decision.notes, vec!["application-owned relevance labels"]);
+
+        let json = serde_json::to_value(&decision).unwrap();
+        assert_eq!(
+            json["artifact_type"],
+            serde_json::Value::String("ethos.app_answer_release_decision.v1".to_string())
+        );
+        assert_eq!(json["claims"][2]["check_ids"][1], "v0003");
+    }
+
+    #[test]
+    fn app_answer_release_decision_blocks_empty_source_answer() {
+        let proof = ProofSummary {
+            proof_status: ProofStatus::Unverified,
+            request_certified: false,
+            reusable_grounded_check_ids: Vec::new(),
+            needs_review_check_ids: Vec::new(),
+            proof_limitations: Vec::new(),
+        };
+
+        let decision = derive_app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            &proof,
+            Vec::new(),
+            "verification_report.json",
+            Vec::new(),
+        )
+        .unwrap();
+
+        assert_eq!(
+            decision.app_status,
+            AppAnswerStatus::CannotAnswerFromSources
+        );
+        assert!(decision.final_answer_claim_ids.is_empty());
+        assert!(decision.review_claim_ids.is_empty());
+        assert!(decision.blocked_claim_ids.is_empty());
+    }
+
+    #[test]
+    fn app_answer_release_decision_rejects_conflicting_or_unknown_checks() {
+        let proof = ProofSummary {
+            proof_status: ProofStatus::PartiallyVerified,
+            request_certified: false,
+            reusable_grounded_check_ids: vec!["v0001".to_string()],
+            needs_review_check_ids: vec!["v0002".to_string()],
+            proof_limitations: vec![ProofLimitation::NonGroundedChecks],
+        };
+
+        let conflicting = derive_app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            &proof,
+            vec![AppAnswerClaimInput {
+                id: "claim-bad".to_string(),
+                text: "Revenue grew.".to_string(),
+                check_ids: vec!["v0001".to_string()],
+                citation_grounded: Some(false),
+                question_relevance: AppQuestionRelevance::DirectAnswer,
+                claim_type: AppClaimType::SourceFact,
+            }],
+            "verification_report.json",
+            Vec::new(),
+        )
+        .unwrap_err();
+        assert!(conflicting
+            .message()
+            .contains("conflicts with proof summary"));
+
+        let unknown = derive_app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            &proof,
+            vec![AppAnswerClaimInput {
+                id: "claim-unknown".to_string(),
+                text: "Revenue grew.".to_string(),
+                check_ids: vec!["v9999".to_string()],
+                citation_grounded: None,
+                question_relevance: AppQuestionRelevance::DirectAnswer,
+                claim_type: AppClaimType::SourceFact,
+            }],
+            "verification_report.json",
+            Vec::new(),
+        )
+        .unwrap_err();
+        assert!(unknown.message().contains("unknown check id: v9999"));
     }
 
     #[test]

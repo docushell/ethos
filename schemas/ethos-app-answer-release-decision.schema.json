@@ -149,7 +149,7 @@
           "items": { "type": "string", "minLength": 1 },
           "minItems": 1,
           "uniqueItems": true,
-          "description": "Multiple Ethos verification check IDs used by a synthesis claim."
+          "description": "One or more Ethos verification check IDs used by this claim."
         },
         "citation_grounded": { "type": "boolean" },
         "question_relevance": { "$ref": "#/$defs/question_relevance" },

@@ -35,6 +35,7 @@ README = ROOT / "README.md"
 SPEC = ROOT / "SPEC.md"
 
 EXPECTED_TARGET_COMMANDS = [
+    "cargo test --locked -p ethos-doc-core --no-default-features --features verify-types app_answer_release",
     "$(PYTHON) schemas/validate_examples.py",
     "$(PYTHON) .github/scripts/test_app_answer_release_contract.py",
     "$(PYTHON) .github/scripts/claims_gate.py",
@@ -169,6 +170,7 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
         self.assertIn("`schemas/examples/app-answer-release-decision.example.json`", text)
         self.assertIn("not a replacement for `verification_report.json`", normalized)
         self.assertIn("`app_answer_release_decision(...)`", text)
+        self.assertIn("`derive_app_answer_release_decision(...)`", text)
         self.assertIn("`check_ids`", text)
         self.assertIn("Ethos verified citation grounding.", text)
         for token in EXPECTED_APP_STATUSES + EXPECTED_RELEVANCE + EXPECTED_CLAIM_TYPES:
@@ -199,7 +201,6 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
             "gh release",
             "release-candidate-prep",
             "milestone-e-prep",
-            "cargo test",
             "npm",
         ]:
             self.assertNotIn(out_of_scope, block)

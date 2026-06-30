@@ -26,8 +26,9 @@ Applications that want a machine-readable wrapper decision envelope may use
 `schemas/examples/app-answer-release-decision.example.json` shows how to combine a derived Ethos
 proof summary with app-owned relevance and synthesis labels. This envelope is not a replacement for
 `verification_report.json`; it records an application release decision above the Ethos grounding
-result. Python apps can build the same envelope with `app_answer_release_decision(...)` after they
-have supplied relevance and synthesis labels.
+result. Rust apps can build the same envelope with `derive_app_answer_release_decision(...)`, and
+Python apps can build it with `app_answer_release_decision(...)`, after they have supplied
+relevance and synthesis labels.
 
 If a wrapper exposes `invalid_request`, that status is a process or API envelope for malformed
 input, invalid configuration, adapter failure, or usage errors. It is not derived from a
