@@ -345,16 +345,11 @@ fn is_reusable_grounded_check(report: &VerificationReport, check: &Check) -> boo
 
 fn has_capability_limit(report: &VerificationReport) -> bool {
     !report.capability_limits.is_empty()
+        || report.warnings.contains(&WarningCode::CapabilityLimited)
         || report
-            .warnings
+            .checks
             .iter()
-            .any(|warning| *warning == WarningCode::CapabilityLimited)
-        || report.checks.iter().any(|check| {
-            check
-                .warnings
-                .iter()
-                .any(|warning| *warning == WarningCode::CapabilityLimited)
-        })
+            .any(|check| check.warnings.contains(&WarningCode::CapabilityLimited))
 }
 
 fn proof_status_label(status: ProofStatus) -> &'static str {
