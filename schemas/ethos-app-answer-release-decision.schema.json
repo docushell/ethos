@@ -144,6 +144,13 @@
           "minLength": 1,
           "description": "Ethos verification check ID when the claim came from a verification report check."
         },
+        "check_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Multiple Ethos verification check IDs used by a synthesis claim."
+        },
         "citation_grounded": { "type": "boolean" },
         "question_relevance": { "$ref": "#/$defs/question_relevance" },
         "claim_type": { "$ref": "#/$defs/claim_type" },
@@ -151,6 +158,11 @@
         "release_reason": { "$ref": "#/$defs/release_reason" }
       },
       "allOf": [
+        {
+          "not": {
+            "required": ["check_id", "check_ids"]
+          }
+        },
         {
           "if": {
             "properties": { "release_reason": { "const": "certified" } },

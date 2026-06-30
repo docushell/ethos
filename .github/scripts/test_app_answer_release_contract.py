@@ -120,6 +120,7 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
 
         synthesis = claims["claim-growth-driver"]
         self.assertTrue(synthesis["citation_grounded"])
+        self.assertEqual(["v0001", "v0003"], synthesis["check_ids"])
         self.assertEqual("synthesis", synthesis["claim_type"])
         self.assertEqual("needs_review", synthesis["release_action"])
         self.assertEqual("supported_synthesis_needs_review", synthesis["release_reason"])
@@ -167,6 +168,8 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
         self.assertIn("`schemas/ethos-app-answer-release-decision.schema.json`", text)
         self.assertIn("`schemas/examples/app-answer-release-decision.example.json`", text)
         self.assertIn("not a replacement for `verification_report.json`", normalized)
+        self.assertIn("`app_answer_release_decision(...)`", text)
+        self.assertIn("`check_ids`", text)
         self.assertIn("Ethos verified citation grounding.", text)
         for token in EXPECTED_APP_STATUSES + EXPECTED_RELEVANCE + EXPECTED_CLAIM_TYPES:
             self.assertIn(f"`{token}`", text)

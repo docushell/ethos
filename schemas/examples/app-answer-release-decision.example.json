@@ -35,7 +35,7 @@
     {
       "id": "claim-growth-driver",
       "text": "Q3 revenue growth was likely driven by enterprise expansion.",
-      "check_id": "v0003",
+      "check_ids": ["v0001", "v0003"],
       "citation_grounded": true,
       "question_relevance": "supports_answer",
       "claim_type": "synthesis",

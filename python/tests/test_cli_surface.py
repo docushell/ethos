@@ -34,6 +34,7 @@ from ethos_pdf import (
     ParseTimeoutError,
     PdfiumNotFoundError,
     anchor,
+    app_answer_release_decision,
     crop_element,
     parse_pdf_json,
     proof_summary,
@@ -575,6 +576,169 @@ class PythonSurfaceTests(unittest.TestCase):
         self.assertEqual(semantic["reusable_grounded_check_ids"], [])
         self.assertEqual(semantic["needs_review_check_ids"], ["v0001"])
         self.assertEqual(semantic["proof_limitations"], ["semantic_unverified"])
+
+    def test_app_answer_release_decision_applies_relevance_and_synthesis_policy(
+        self,
+    ) -> None:
+        summary = {
+            "proof_status": "partially_verified",
+            "request_certified": False,
+            "reusable_grounded_check_ids": ["v0001", "v0002", "v0003"],
+            "needs_review_check_ids": ["v0004"],
+            "proof_limitations": ["non_grounded_checks"],
+        }
+
+        result = app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            summary,
+            [
+                {
+                    "id": "claim-revenue",
+                    "text": "Revenue grew to $12.4M in Q3 2025.",
+                    "check_id": "v0001",
+                    "question_relevance": "direct_answer",
+                    "claim_type": "source_fact",
+                },
+                {
+                    "id": "claim-background",
+                    "text": "The company opened a European office.",
+                    "check_id": "v0002",
+                    "question_relevance": "background_only",
+                    "claim_type": "source_fact",
+                },
+                {
+                    "id": "claim-synthesis",
+                    "text": "Revenue growth was likely driven by enterprise expansion.",
+                    "check_ids": ["v0001", "v0003"],
+                    "question_relevance": "supports_answer",
+                    "claim_type": "synthesis",
+                },
+                {
+                    "id": "claim-margin",
+                    "text": "Gross margin improved in Q3 2025.",
+                    "check_id": "v0004",
+                    "question_relevance": "direct_answer",
+                    "claim_type": "unsupported",
+                },
+            ],
+            verification_report_ref="reports/q3-verification.json",
+            notes=["application-owned relevance labels"],
+        )
+
+        self.assertEqual(
+            result["artifact_type"],
+            "ethos.app_answer_release_decision.v1",
+        )
+        self.assertEqual(result["app_status"], "partial_certified")
+        self.assertEqual(result["grounding"]["verification_report_ref"], "reports/q3-verification.json")
+        self.assertEqual(result["final_answer_claim_ids"], ["claim-revenue"])
+        self.assertEqual(result["review_claim_ids"], ["claim-synthesis"])
+        self.assertEqual(result["blocked_claim_ids"], ["claim-background", "claim-margin"])
+        self.assertEqual(result["claims"][0]["release_reason"], "certified")
+        self.assertTrue(result["claims"][0]["citation_grounded"])
+        self.assertEqual(result["claims"][1]["release_reason"], "grounded_but_irrelevant")
+        self.assertEqual(result["claims"][2]["release_action"], "needs_review")
+        self.assertEqual(result["claims"][2]["check_ids"], ["v0001", "v0003"])
+        self.assertFalse(result["claims"][3]["citation_grounded"])
+        self.assertEqual(result["claims"][3]["release_reason"], "cannot_answer_from_sources")
+        self.assertEqual(result["notes"], ["application-owned relevance labels"])
+
+    def test_app_answer_release_decision_accepts_verification_report(self) -> None:
+        report = {
+            "all_evidence_grounded": True,
+            "fingerprint_stale": False,
+            "capability_limits": [],
+            "unsupported_claim_kinds": [],
+            "warnings": [],
+            "checks": [
+                {
+                    "id": "v0001",
+                    "status": "grounded",
+                    "semantic_unverified": False,
+                    "warnings": [],
+                }
+            ],
+        }
+
+        result = app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            report,
+            [
+                {
+                    "id": "claim-revenue",
+                    "text": "Revenue grew to $12.4M in Q3 2025.",
+                    "check_id": "v0001",
+                    "question_relevance": "direct_answer",
+                    "claim_type": "source_fact",
+                }
+            ],
+        )
+
+        self.assertEqual(result["app_status"], "certified")
+        self.assertEqual(result["grounding"]["proof_status"], "verified")
+        self.assertEqual(result["final_answer_claim_ids"], ["claim-revenue"])
+
+    def test_app_answer_release_decision_blocks_empty_source_answer(self) -> None:
+        summary = {
+            "proof_status": "unverified",
+            "request_certified": False,
+            "reusable_grounded_check_ids": [],
+            "needs_review_check_ids": [],
+            "proof_limitations": [],
+        }
+
+        result = app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            summary,
+            [],
+        )
+
+        self.assertEqual(result["app_status"], "cannot_answer_from_sources")
+        self.assertEqual(result["final_answer_claim_ids"], [])
+        self.assertEqual(result["review_claim_ids"], [])
+        self.assertEqual(result["blocked_claim_ids"], [])
+
+    def test_app_answer_release_decision_rejects_inconsistent_or_unknown_checks(
+        self,
+    ) -> None:
+        summary = {
+            "proof_status": "partially_verified",
+            "request_certified": False,
+            "reusable_grounded_check_ids": ["v0001"],
+            "needs_review_check_ids": ["v0002"],
+            "proof_limitations": ["non_grounded_checks"],
+        }
+
+        with self.assertRaises(ValueError):
+            app_answer_release_decision(
+                "What was Q3 2025 revenue?",
+                summary,
+                [
+                    {
+                        "id": "claim-bad",
+                        "text": "Revenue grew.",
+                        "check_id": "v0001",
+                        "citation_grounded": False,
+                        "question_relevance": "direct_answer",
+                        "claim_type": "source_fact",
+                    }
+                ],
+            )
+
+        with self.assertRaises(ValueError):
+            app_answer_release_decision(
+                "What was Q3 2025 revenue?",
+                summary,
+                [
+                    {
+                        "id": "claim-unknown",
+                        "text": "Revenue grew.",
+                        "check_id": "v9999",
+                        "question_relevance": "direct_answer",
+                        "claim_type": "source_fact",
+                    }
+                ],
+            )
 
     def test_anchor_maps_source_evidence_refs_and_grounding(self) -> None:
         result = anchor(

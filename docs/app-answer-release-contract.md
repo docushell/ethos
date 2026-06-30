@@ -26,7 +26,8 @@ Applications that want a machine-readable wrapper decision envelope may use
 `schemas/examples/app-answer-release-decision.example.json` shows how to combine a derived Ethos
 proof summary with app-owned relevance and synthesis labels. This envelope is not a replacement for
 `verification_report.json`; it records an application release decision above the Ethos grounding
-result.
+result. Python apps can build the same envelope with `app_answer_release_decision(...)` after they
+have supplied relevance and synthesis labels.
 
 If a wrapper exposes `invalid_request`, that status is a process or API envelope for malformed
 input, invalid configuration, adapter failure, or usage errors. It is not derived from a
@@ -91,6 +92,9 @@ Suggested `release_action` values for a wrapper decision envelope:
 - `show_final`: release the claim in the final answer.
 - `needs_review`: keep the claim in a review surface.
 - `block`: keep the claim out of the final answer.
+
+Synthesis claims that combine multiple grounded facts should carry every referenced Ethos check ID
+in `check_ids`; all referenced checks must be reusable before the synthesis is reviewable.
 
 ## Release Rules
 

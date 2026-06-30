@@ -34,6 +34,7 @@ Public API:
 - `crop_element`
 - `verify`
 - `proof_summary`
+- `app_answer_release_decision`
 - `anchor`
 
 The current module is intentionally thin: it shells out to a caller-provided local `ethos` CLI
@@ -127,6 +128,33 @@ print(summary["proof_status"])
 The summary is not a replacement for the canonical verification report. It deterministically
 derives `proof_status`, `request_certified`, reusable grounded check ids, needs-review check ids,
 and proof limitations from the report that `ethos verify` already emitted.
+
+Use `app_answer_release_decision(...)` when an application has already labeled claim relevance and
+synthesis, and wants the conservative release policy from `docs/app-answer-release-contract.md`:
+
+```python
+from ethos_pdf import app_answer_release_decision, proof_summary
+
+summary = proof_summary(report)
+decision = app_answer_release_decision(
+    "What was Q3 2025 revenue?",
+    summary,
+    [
+        {
+            "id": "claim-revenue",
+            "text": "Revenue grew to $12.4M in Q3 2025.",
+            "check_id": "v0001",
+            "question_relevance": "direct_answer",
+            "claim_type": "source_fact",
+        }
+    ],
+)
+print(decision["app_status"])
+```
+
+The helper does not judge relevance or synthesis. Callers supply those labels; the helper applies
+the release rule and requires referenced Ethos check IDs to be reusable before a claim can enter
+the final answer.
 
 Run the focused tests with:
 
