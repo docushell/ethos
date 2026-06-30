@@ -1,0 +1,62 @@
+{
+  "artifact_type": "ethos.app_answer_release_decision.v1",
+  "schema_version": "1.0.0",
+  "question": "What was Q3 2025 revenue?",
+  "grounding": {
+    "verification_report_ref": "verification_report.json",
+    "proof_status": "partially_verified",
+    "request_certified": false,
+    "reusable_grounded_check_ids": ["v0001", "v0002", "v0003"],
+    "needs_review_check_ids": ["v0004"],
+    "proof_limitations": ["non_grounded_checks"]
+  },
+  "app_status": "partial_certified",
+  "claims": [
+    {
+      "id": "claim-revenue",
+      "text": "Revenue grew to $12.4M in Q3 2025.",
+      "check_ids": ["v0001"],
+      "citation_grounded": true,
+      "question_relevance": "direct_answer",
+      "claim_type": "source_fact",
+      "release_action": "show_final",
+      "release_reason": "certified"
+    },
+    {
+      "id": "claim-office-background",
+      "text": "The company opened a European office.",
+      "check_ids": ["v0002"],
+      "citation_grounded": true,
+      "question_relevance": "background_only",
+      "claim_type": "source_fact",
+      "release_action": "block",
+      "release_reason": "grounded_but_irrelevant"
+    },
+    {
+      "id": "claim-growth-driver",
+      "text": "Q3 revenue growth was likely driven by enterprise expansion.",
+      "check_ids": ["v0001", "v0003"],
+      "citation_grounded": true,
+      "question_relevance": "supports_answer",
+      "claim_type": "synthesis",
+      "release_action": "needs_review",
+      "release_reason": "supported_synthesis_needs_review"
+    },
+    {
+      "id": "claim-margin",
+      "text": "Gross margin improved in Q3 2025.",
+      "check_ids": ["v0004"],
+      "citation_grounded": false,
+      "question_relevance": "direct_answer",
+      "claim_type": "unsupported",
+      "release_action": "block",
+      "release_reason": "cannot_answer_from_sources"
+    }
+  ],
+  "final_answer_claim_ids": ["claim-revenue"],
+  "review_claim_ids": ["claim-growth-driver"],
+  "blocked_claim_ids": ["claim-office-background", "claim-margin"],
+  "notes": [
+    "This app-layer envelope is not verification_report.json; it records release policy above Ethos grounding."
+  ]
+}

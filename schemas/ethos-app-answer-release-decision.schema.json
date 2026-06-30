@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:app-answer-release-decision:1",
+  "title": "Ethos app answer release decision",
+  "description": "Non-canonical wrapper artifact for applications that combine Ethos citation-grounding proof summaries with app-owned question relevance and synthesis policy. This is not verification_report.json and is not emitted by the verifier.",
+  "type": "object",
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "question",
+    "grounding",
+    "app_status",
+    "claims",
+    "final_answer_claim_ids",
+    "review_claim_ids",
+    "blocked_claim_ids"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": { "const": "ethos.app_answer_release_decision.v1" },
+    "schema_version": { "const": "1.0.0" },
+    "question": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Original user question evaluated by the app-layer relevance policy."
+    },
+    "grounding": {
+      "type": "object",
+      "required": [
+        "verification_report_ref",
+        "proof_status",
+        "request_certified",
+        "reusable_grounded_check_ids",
+        "needs_review_check_ids",
+        "proof_limitations"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "verification_report_ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Application-local pointer to the canonical verification_report.json used for audit."
+        },
+        "proof_status": { "$ref": "#/$defs/proof_status" },
+        "request_certified": { "type": "boolean" },
+        "reusable_grounded_check_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "needs_review_check_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "proof_limitations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/proof_limitation" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "app_status": { "$ref": "#/$defs/app_status" },
+    "claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim_decision" },
+      "uniqueItems": true,
+      "description": "Application claim decisions. Claim ids must be unique within this array; helper APIs enforce id-level uniqueness."
+    },
+    "final_answer_claim_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "review_claim_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "blocked_claim_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "proof_status": {
+      "enum": ["verified", "partially_verified", "unverified"]
+    },
+    "proof_limitation": {
+      "enum": [
+        "capability_limited",
+        "stale_fingerprint",
+        "unsupported_claim_kind",
+        "non_grounded_checks",
+        "semantic_unverified"
+      ]
+    },
+    "app_status": {
+      "enum": [
+        "certified",
+        "partial_certified",
+        "supported_synthesis_needs_review",
+        "grounded_but_irrelevant",
+        "cannot_answer_from_sources"
+      ]
+    },
+    "question_relevance": {
+      "enum": ["direct_answer", "supports_answer", "background_only", "unrelated"]
+    },
+    "claim_type": {
+      "enum": ["source_fact", "synthesis", "unsupported"]
+    },
+    "release_action": {
+      "enum": ["show_final", "needs_review", "block"]
+    },
+    "release_reason": {
+      "enum": [
+        "certified",
+        "supported_synthesis_needs_review",
+        "grounded_but_irrelevant",
+        "cannot_answer_from_sources"
+      ]
+    },
+    "claim_decision": {
+      "type": "object",
+      "required": [
+        "id",
+        "text",
+        "citation_grounded",
+        "question_relevance",
+        "claim_type",
+        "release_action",
+        "release_reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable application claim id. Each id must be unique within the claims array."
+        },
+        "text": { "type": "string", "minLength": 1 },
+        "check_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "One or more Ethos verification check IDs used by this claim."
+        },
+        "citation_grounded": { "type": "boolean" },
+        "question_relevance": { "$ref": "#/$defs/question_relevance" },
+        "claim_type": { "$ref": "#/$defs/claim_type" },
+        "release_action": { "$ref": "#/$defs/release_action" },
+        "release_reason": { "$ref": "#/$defs/release_reason" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "release_reason": { "const": "certified" } },
+            "required": ["release_reason"]
+          },
+          "then": {
+            "properties": {
+              "citation_grounded": { "const": true },
+              "question_relevance": { "enum": ["direct_answer", "supports_answer"] },
+              "claim_type": { "const": "source_fact" },
+              "release_action": { "const": "show_final" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "release_reason": { "const": "supported_synthesis_needs_review" }
+            },
+            "required": ["release_reason"]
+          },
+          "then": {
+            "properties": {
+              "citation_grounded": { "const": true },
+              "question_relevance": { "enum": ["direct_answer", "supports_answer"] },
+              "claim_type": { "const": "synthesis" },
+              "release_action": { "const": "needs_review" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "release_reason": { "const": "grounded_but_irrelevant" } },
+            "required": ["release_reason"]
+          },
+          "then": {
+            "properties": {
+              "citation_grounded": { "const": true },
+              "question_relevance": { "enum": ["background_only", "unrelated"] },
+              "release_action": { "const": "block" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "claim_type": { "const": "unsupported" } },
+            "required": ["claim_type"]
+          },
+          "then": {
+            "properties": {
+              "citation_grounded": { "const": false },
+              "release_action": { "const": "block" },
+              "release_reason": { "const": "cannot_answer_from_sources" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "release_reason": { "const": "cannot_answer_from_sources" } },
+            "required": ["release_reason"]
+          },
+          "then": {
+            "properties": {
+              "citation_grounded": { "const": false },
+              "release_action": { "const": "block" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

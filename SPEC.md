@@ -426,6 +426,8 @@ product wording and release policy, but the canonical `VerificationReport` remai
 artifact.
 If a wrapper exposes an `invalid_request` status, it is a process or API envelope for malformed
 input and MUST NOT be derived from a `VerificationReport`.
+Application layers that also need to decide question relevance, synthesis policy, or final answer
+release SHOULD apply `docs/app-answer-release-contract.md` above the Ethos grounding result.
 
 ### 6.3 Evidence anchor rules
 

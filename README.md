@@ -240,6 +240,9 @@ canonical JSON report. Rust callers can derive the same view from
 submitted is not certified. `unverified` means no check is reusable. Final grounded answers should
 be assembled only from reusable grounded checks, and retrieval citations, model-returned evidence
 IDs, or answer text are not proof until checked against a grounding source.
+Apps that also need question relevance or synthesis policy before releasing answer text should
+apply the separate [`app answer release contract`](docs/app-answer-release-contract.md) above the
+Ethos grounding check.
 
 ## Evidence anchoring
 
@@ -384,7 +387,8 @@ The adapter owns the mapping from parser-native structures into Ethos evidence c
 elements, text, tables, regions, fingerprints, and capability declarations. The verifier then
 checks whether caller-provided citations bind to that source evidence. Product layers can use
 `VerificationReport::proof_summary()` for release wording, but the canonical report remains the
-audit artifact.
+audit artifact. Apps that release final answer text should also apply the separate
+[`app answer release contract`](docs/app-answer-release-contract.md).
 
 Start with [`docs/bring-your-own-parser.md`](docs/bring-your-own-parser.md). Use the
 OpenDataLoader adapter as the fuller reference once the minimal `GroundingSource` shape is clear.

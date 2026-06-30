@@ -19,6 +19,7 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: milestone-d-grounding-source-contract
 .PHONY: milestone-d-crop-element-surface-shape-contract
 .PHONY: milestone-d-claim-kind-boundary-contract
+.PHONY: app-answer-release-contract
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -59,6 +60,15 @@ evidence-anchor-v1-contract:
 	$(PYTHON) .github/scripts/test_execution_status.py
 	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_evidence_anchor_v1_contract.py
+	git diff --check
+
+app-answer-release-contract:
+	cargo test --locked -p ethos-doc-core --no-default-features --features verify-types app_answer_release
+	$(MAKE) python-surface-test PYTHON=$(PYTHON)
+	$(PYTHON) schemas/validate_examples.py
+	$(PYTHON) .github/scripts/test_app_answer_release_contract.py
+	$(PYTHON) .github/scripts/claims_gate.py
+	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
 	git diff --check
 
 milestone-d-verify-citations-contract:

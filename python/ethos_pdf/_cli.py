@@ -28,6 +28,20 @@ _DOC_PARSE_FORMATS = frozenset(("json", "markdown", "text"))
 _DEFAULT_CROP_CHECK_ID = "v0001"
 _CAPABILITY_LIMITED = "capability_limited"
 _GROUNDED = "grounded"
+_ANSWER_RELEVANT = frozenset(("direct_answer", "supports_answer"))
+_ANSWER_IRRELEVANT = frozenset(("background_only", "unrelated"))
+_QUESTION_RELEVANCE = _ANSWER_RELEVANT | _ANSWER_IRRELEVANT
+_CLAIM_TYPES = frozenset(("source_fact", "synthesis", "unsupported"))
+_PROOF_STATUSES = frozenset(("verified", "partially_verified", "unverified"))
+_PROOF_LIMITATIONS = frozenset(
+    (
+        "capability_limited",
+        "stale_fingerprint",
+        "unsupported_claim_kind",
+        "non_grounded_checks",
+        "semantic_unverified",
+    )
+)
 
 
 class EthosPythonSurfaceError(Exception):
@@ -683,6 +697,72 @@ def proof_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
     }
 
 
+def app_answer_release_decision(
+    question: str,
+    proof: Mapping[str, Any],
+    claims: Sequence[Mapping[str, Any]],
+    *,
+    verification_report_ref: str = "verification_report.json",
+    notes: Optional[Sequence[str]] = None,
+) -> Dict[str, Any]:
+    """Build a non-canonical app answer release decision envelope.
+
+    The caller owns `question_relevance` and `claim_type` labels. This helper
+    only applies the app-release policy from
+    `docs/app-answer-release-contract.md` against an Ethos proof summary or a
+    canonical verification report. It never judges relevance or synthesis by
+    itself.
+    """
+
+    if not isinstance(question, str) or not question.strip():
+        raise ValueError("question must be a non-empty string")
+    if not isinstance(verification_report_ref, str) or not verification_report_ref:
+        raise ValueError("verification_report_ref must be a non-empty string")
+    if not isinstance(claims, Sequence) or isinstance(claims, (str, bytes)):
+        raise ValueError("claims must be a sequence of mappings")
+
+    grounding = _coerce_proof_summary(proof)
+    reusable = set(grounding["reusable_grounded_check_ids"])
+    needs_review = set(grounding["needs_review_check_ids"])
+
+    seen_claim_ids: set[str] = set()
+    decisions = []
+    for claim in claims:
+        decision = _app_claim_decision(claim, reusable, needs_review)
+        claim_id = decision["id"]
+        if claim_id in seen_claim_ids:
+            raise ValueError(f"duplicate claim id: {claim_id}")
+        seen_claim_ids.add(claim_id)
+        decisions.append(decision)
+    final_ids = [
+        claim["id"] for claim in decisions if claim["release_action"] == "show_final"
+    ]
+    review_ids = [
+        claim["id"] for claim in decisions if claim["release_action"] == "needs_review"
+    ]
+    blocked_ids = [
+        claim["id"] for claim in decisions if claim["release_action"] == "block"
+    ]
+
+    envelope: Dict[str, Any] = {
+        "artifact_type": "ethos.app_answer_release_decision.v1",
+        "schema_version": "1.0.0",
+        "question": question,
+        "grounding": {
+            "verification_report_ref": verification_report_ref,
+            **grounding,
+        },
+        "app_status": _app_status(decisions),
+        "claims": decisions,
+        "final_answer_claim_ids": final_ids,
+        "review_claim_ids": review_ids,
+        "blocked_claim_ids": blocked_ids,
+    }
+    if notes is not None:
+        envelope["notes"] = _string_list(notes, "notes")
+    return envelope
+
+
 def _validate_timeout_seconds(timeout_seconds: Optional[float]) -> None:
     if timeout_seconds is not None and timeout_seconds <= 0:
         raise ValueError("timeout_seconds must be greater than zero when provided")
@@ -733,6 +813,192 @@ def _has_capability_limit(
         and _CAPABILITY_LIMITED in _list_value(check.get("warnings"))
         for check in checks
     )
+
+
+def _coerce_proof_summary(proof: Mapping[str, Any]) -> Dict[str, Any]:
+    if not isinstance(proof, Mapping):
+        raise ValueError("proof must be a verification report or proof summary mapping")
+    if "proof_status" not in proof and "all_evidence_grounded" in proof:
+        proof = proof_summary(proof)
+
+    status = proof.get("proof_status")
+    if status not in _PROOF_STATUSES:
+        raise ValueError("proof_status must be verified, partially_verified, or unverified")
+    request_certified = proof.get("request_certified")
+    if not isinstance(request_certified, bool):
+        raise ValueError("request_certified must be a boolean")
+    reusable = _string_list(
+        proof.get("reusable_grounded_check_ids"),
+        "reusable_grounded_check_ids",
+    )
+    needs_review = _string_list(
+        proof.get("needs_review_check_ids"),
+        "needs_review_check_ids",
+    )
+    limitations = _string_list(proof.get("proof_limitations"), "proof_limitations")
+    unknown_limitations = [
+        limitation for limitation in limitations if limitation not in _PROOF_LIMITATIONS
+    ]
+    if unknown_limitations:
+        raise ValueError(f"unknown proof_limitations: {', '.join(unknown_limitations)}")
+    return {
+        "proof_status": status,
+        "request_certified": request_certified,
+        "reusable_grounded_check_ids": reusable,
+        "needs_review_check_ids": needs_review,
+        "proof_limitations": limitations,
+    }
+
+
+def _app_claim_decision(
+    claim: Mapping[str, Any],
+    reusable_check_ids: set[str],
+    needs_review_check_ids: set[str],
+) -> Dict[str, Any]:
+    if not isinstance(claim, Mapping):
+        raise ValueError("each claim must be a mapping")
+
+    claim_id = _required_string(claim, "id")
+    text = _required_string(claim, "text")
+    relevance = _required_string(claim, "question_relevance")
+    if relevance not in _QUESTION_RELEVANCE:
+        raise ValueError(f"unknown question_relevance for claim {claim_id}: {relevance}")
+    claim_type = _required_string(claim, "claim_type")
+    if claim_type not in _CLAIM_TYPES:
+        raise ValueError(f"unknown claim_type for claim {claim_id}: {claim_type}")
+
+    check_ids = _claim_check_ids(claim, claim_id)
+    citation_grounded = _claim_citation_grounded(
+        claim,
+        claim_id,
+        check_ids,
+        reusable_check_ids,
+        needs_review_check_ids,
+    )
+    if claim_type == "unsupported" and citation_grounded:
+        raise ValueError(f"unsupported claim {claim_id} cannot be citation_grounded")
+
+    release_action, release_reason = _release_decision(
+        citation_grounded,
+        relevance,
+        claim_type,
+    )
+    decision: Dict[str, Any] = {
+        "id": claim_id,
+        "text": text,
+        "citation_grounded": citation_grounded,
+        "question_relevance": relevance,
+        "claim_type": claim_type,
+        "release_action": release_action,
+        "release_reason": release_reason,
+    }
+    if check_ids:
+        decision["check_ids"] = check_ids
+    return decision
+
+
+def _required_string(value: Mapping[str, Any], field: str) -> str:
+    item = value.get(field)
+    if not isinstance(item, str) or not item:
+        raise ValueError(f"{field} must be a non-empty string")
+    return item
+
+
+def _string_list(value: Any, field: str) -> list[str]:
+    if not isinstance(value, (list, tuple)):
+        raise ValueError(f"{field} must be a list of strings")
+    result = []
+    for item in value:
+        if not isinstance(item, str) or not item:
+            raise ValueError(f"{field} must be a list of non-empty strings")
+        result.append(item)
+    if len(set(result)) != len(result):
+        raise ValueError(f"{field} must not contain duplicates")
+    return result
+
+
+def _claim_check_ids(claim: Mapping[str, Any], claim_id: str) -> list[str]:
+    has_check_id = "check_id" in claim
+    has_check_ids = "check_ids" in claim
+    if has_check_id and has_check_ids:
+        raise ValueError(f"claim {claim_id} must use either check_id or check_ids, not both")
+    if has_check_id:
+        return [_required_string(claim, "check_id")]
+    if has_check_ids:
+        check_ids = _string_list(claim.get("check_ids"), "check_ids")
+        if not check_ids:
+            raise ValueError(f"claim {claim_id} check_ids must not be empty")
+        return check_ids
+    return []
+
+
+def _claim_citation_grounded(
+    claim: Mapping[str, Any],
+    claim_id: str,
+    check_ids: Sequence[str],
+    reusable_check_ids: set[str],
+    needs_review_check_ids: set[str],
+) -> bool:
+    provided = claim.get("citation_grounded")
+    if provided is not None and not isinstance(provided, bool):
+        raise ValueError(f"citation_grounded for claim {claim_id} must be a boolean")
+
+    if check_ids:
+        known = reusable_check_ids | needs_review_check_ids
+        unknown = [check_id for check_id in check_ids if check_id not in known]
+        if unknown:
+            raise ValueError(
+                f"claim {claim_id} references unknown check ids: {', '.join(unknown)}"
+            )
+        computed = all(check_id in reusable_check_ids for check_id in check_ids)
+        if provided is not None and provided != computed:
+            raise ValueError(
+                f"citation_grounded for claim {claim_id} conflicts with proof summary"
+            )
+        return computed
+
+    if provided is None:
+        raise ValueError(
+            f"claim {claim_id} without check_id/check_ids must set citation_grounded"
+        )
+    return provided
+
+
+def _release_decision(
+    citation_grounded: bool,
+    relevance: str,
+    claim_type: str,
+) -> tuple[str, str]:
+    if (
+        citation_grounded
+        and relevance in _ANSWER_RELEVANT
+        and claim_type == "source_fact"
+    ):
+        return "show_final", "certified"
+    if (
+        citation_grounded
+        and relevance in _ANSWER_RELEVANT
+        and claim_type == "synthesis"
+    ):
+        return "needs_review", "supported_synthesis_needs_review"
+    if citation_grounded and relevance in _ANSWER_IRRELEVANT:
+        return "block", "grounded_but_irrelevant"
+    return "block", "cannot_answer_from_sources"
+
+
+def _app_status(claims: Sequence[Mapping[str, Any]]) -> str:
+    has_final = any(claim["release_action"] == "show_final" for claim in claims)
+    has_review = any(claim["release_action"] == "needs_review" for claim in claims)
+    has_blocked = any(claim["release_action"] == "block" for claim in claims)
+    if has_final and not has_review and not has_blocked:
+        return "certified"
+    if has_final:
+        return "partial_certified"
+    if has_review:
+        return "supported_synthesis_needs_review"
+    if any(claim["release_reason"] == "grounded_but_irrelevant" for claim in claims):
+        return "grounded_but_irrelevant"
+    return "cannot_answer_from_sources"
 
 
 def _list_value(value: Any) -> Sequence[Any]:
