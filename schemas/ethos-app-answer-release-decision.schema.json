@@ -198,17 +198,27 @@
         },
         {
           "if": {
+            "properties": { "claim_type": { "const": "unsupported" } },
+            "required": ["claim_type"]
+          },
+          "then": {
+            "properties": {
+              "citation_grounded": { "const": false },
+              "release_action": { "const": "block" },
+              "release_reason": { "const": "cannot_answer_from_sources" }
+            }
+          }
+        },
+        {
+          "if": {
             "properties": { "release_reason": { "const": "cannot_answer_from_sources" } },
             "required": ["release_reason"]
           },
           "then": {
             "properties": {
+              "citation_grounded": { "const": false },
               "release_action": { "const": "block" }
-            },
-            "anyOf": [
-              { "properties": { "citation_grounded": { "const": false } } },
-              { "properties": { "claim_type": { "const": "unsupported" } } }
-            ]
+            }
           }
         }
       ]

@@ -193,6 +193,39 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
         self.assertNotIn("check_id", decision["claims"][0])
         self.assertEqual(["v0001"], decision["claims"][0]["check_ids"])
 
+    def test_schema_rejects_grounded_unsupported_claims(self) -> None:
+        schema = load_json(SCHEMA)
+        example = load_json(EXAMPLE)
+        claim = example["claims"][-1]
+        claim["citation_grounded"] = True
+
+        errors = list(Draft202012Validator(schema).iter_errors(example))
+
+        self.assertTrue(
+            any(
+                list(error.absolute_path) == ["claims", 3, "citation_grounded"]
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_schema_requires_cannot_answer_claims_to_be_ungrounded(self) -> None:
+        schema = load_json(SCHEMA)
+        example = load_json(EXAMPLE)
+        claim = example["claims"][0]
+        claim["release_action"] = "block"
+        claim["release_reason"] = "cannot_answer_from_sources"
+
+        errors = list(Draft202012Validator(schema).iter_errors(example))
+
+        self.assertTrue(
+            any(
+                list(error.absolute_path) == ["claims", 0, "citation_grounded"]
+                for error in errors
+            ),
+            errors,
+        )
+
     def test_schema_registry_validates_example(self) -> None:
         text = VALIDATE_EXAMPLES.read_text(encoding="utf-8")
 
