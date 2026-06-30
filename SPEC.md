@@ -229,6 +229,19 @@ Per-check statuses are currently:
 remain, and the evidence is not stale. A grounded report means the requested evidence matched under
 declared rules. It does not mean the full answer is semantically correct.
 
+Consumers MAY derive a proof-status view from the report for UI, CLI summary, or API wrapper use.
+This derived view MUST NOT change the canonical verification report. The derived vocabulary is:
+
+- `verified`: `all_evidence_grounded` is true;
+- `partially_verified`: `all_evidence_grounded` is false, but at least one check is reusable;
+- `unverified`: no check is reusable.
+
+A check is reusable only when `checks[].status` is `grounded`, `checks[].semantic_unverified` is
+false, and `fingerprint_stale` is false. `partially_verified` therefore means "some check IDs are
+reusable"; it does not certify the request as submitted. Derived proof limitations SHOULD surface
+capability limits, stale fingerprints, unsupported claim kinds, non-grounded checks, and
+semantic-unverified checks.
+
 ### 4.5 Evidence anchor request
 
 `evidence_anchor_request.json` is input to `ethos evidence anchor`. It contains an
@@ -408,6 +421,8 @@ Verifier consumers MUST inspect:
 
 Consumers MUST NOT treat a citation string, retrieval chunk, LLM answer, or model-returned evidence
 ID as proof until the evidence has been checked against a trusted grounding source.
+If a wrapper exposes an `invalid_request` status, it is a process or API envelope for malformed
+input and MUST NOT be derived from a `VerificationReport`.
 
 ### 6.3 Evidence anchor rules
 
@@ -557,6 +572,8 @@ Consumer rule:
 4. Treat the answer as evidence-grounded only if `all_evidence_grounded` is true, every supported
    check is `grounded`, `fingerprint_stale` is false, unsupported claim kinds are empty, and no
    capability limit invalidates the intended use.
+5. If deriving partial output, assemble it only from reusable grounded checks; the original request
+   remains uncertified until all required checks pass.
 
 ---
 

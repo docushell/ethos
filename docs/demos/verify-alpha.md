@@ -19,6 +19,7 @@ repeatable `make verify-alpha` path:
 - native Ethos verification can emit deterministic crop descriptor artifacts with `--crop-dir`
 - every demo report is compared against a golden and regenerated twice to check byte-identical output
 - crop descriptor files are regenerated twice, compared byte-for-byte, validated against schema, and checked against the committed descriptor example
+- derived proof status is checked against `verify_citations_v1_contract.json` without adding proof fields to the canonical JSON report
 
 Ethos verifies document evidence for AI systems. The deterministic parser is one grounding
 source; foreign parser output can be another grounding source through an adapter.
@@ -48,8 +49,9 @@ examples/verify/goldens/native_grounded_report.json
 ```
 
 For terminal review, `--format summary` emits a compact text view with the verification config
-hash, declared grounding capabilities, check counts, warnings, and non-grounded check reasons.
-The JSON report remains the canonical artifact.
+hash, derived `proof_status`, `request_certified`, reusable grounded checks, checks that still need
+review, proof limitations, declared grounding capabilities, check counts, warnings, and
+non-grounded check reasons. The JSON report remains the canonical artifact.
 `make verify-alpha` checks this summary path for a native ungrounded citation set.
 
 ## Native Ethos Ungrounded Citations
@@ -86,6 +88,7 @@ Expected outcome:
 - `region` and `other` checks have status `unsupported_claim_kind`
 - `unsupported_claim_kinds` lists `region` and `other`
 - `all_evidence_grounded` is `false`
+- derived `proof_status` is `partially_verified`, meaning the grounded check ID is reusable but the request as submitted is not certified
 
 Golden report:
 
@@ -245,6 +248,11 @@ Exit behavior:
 - `0`: verification completed and all requested evidence is grounded
 - `1`: verification completed, but not all requested evidence is grounded
 - `2`: invalid input, malformed citations, adapter failure, or another usage error
+
+Exit `2` is not a report-derived proof status. Wrappers may expose it as an
+`invalid_request` envelope, but derived report proof status is limited to `verified`,
+`partially_verified`, and `unverified`. `partially_verified` means only the listed reusable
+grounded checks are safe to use in a final grounded answer.
 
 ## Malformed Citation Inputs
 

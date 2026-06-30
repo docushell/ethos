@@ -232,6 +232,14 @@ The command exits `0` and writes a verification report shaped like this:
 }
 ```
 
+`--format summary` adds a derived proof-status view for humans and wrappers without changing the
+canonical JSON report. `proof_status: verified` means the request is certified by
+`all_evidence_grounded`. `partially_verified` means only the listed
+`reusable_grounded_checks` can be reused; the request as submitted is not certified. `unverified`
+means no check is reusable. Final grounded answers should be assembled only from reusable grounded
+checks, and retrieval citations, model-returned evidence IDs, or answer text are not proof until
+checked against a grounding source.
+
 ## Evidence anchoring
 
 Ethos can check whether caller-provided evidence refs bind to source document evidence.
@@ -279,6 +287,10 @@ Exit behavior:
 - `1`: verification completed, but at least one requested evidence check is stale, missing,
   mismatched, unsupported, or capability-blocked
 - `2`: invalid input, malformed citations, adapter failure, or another usage error
+
+Exit `2` is a process/API usage failure, not a `VerificationReport` classification. Wrappers may
+label that envelope `invalid_request`, but report-derived proof status is only `verified`,
+`partially_verified`, or `unverified`.
 
 See `docs/demos/verify-alpha.md` for the full demo matrix.
 
@@ -426,7 +438,7 @@ Report vulnerabilities through GitHub private vulnerability reporting. See `SECU
 | `ModuleNotFoundError: No module named 'jsonschema'` during `make verify-alpha` | Install `jsonschema>=4.18` in the Python environment used by `python3`, then rerun the target. |
 | `cargo build --locked` fails before compiling Ethos | Run from the repository root and keep the committed `Cargo.lock`; dependency or lockfile changes should happen in their own PR. |
 | Rust version errors or unexpected compiler behavior | Run `rustup show`; this repo pins Rust `1.87.0` through `rust-toolchain.toml`. |
-| `ethos verify --fail-on-ungrounded` exits `1` | The command wrote a report, but at least one requested evidence check was stale, missing, mismatched, unsupported, or capability-blocked. Inspect `all_evidence_grounded`, `checks[].status`, `warnings`, and `capability_limits`. |
+| `ethos verify --fail-on-ungrounded` exits `1` | The command wrote a report, but at least one requested evidence check was stale, missing, mismatched, unsupported, or capability-blocked. Inspect `all_evidence_grounded`, `checks[].status`, `warnings`, `capability_limits`, and the summary `proof_status`/`proof_limitations` if using `--format summary`. |
 | Scanned or image-only PDFs do not parse | Base Ethos does not include OCR. These inputs should fail with `ocr_required` until OCR support is explicitly added. |
 | Rendered crop PNGs are missing or skipped | Logical crop descriptor JSON works in the alpha path; rendered PNG crop artifacts require the source PDF path and a configured PDFium runtime. |
 | Release/tag workflow fails | Release, package, hosted, Windows, bundled PDFium, benchmark, and production surfaces are blocked unless a dedicated approval record authorizes the exact surface. |

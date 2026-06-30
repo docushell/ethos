@@ -31,7 +31,11 @@
           "category",
           "all_evidence_grounded",
           "statuses",
-          "reasons"
+          "reasons",
+          "expected_proof_status",
+          "expected_request_certified",
+          "expected_reusable_check_ids",
+          "expected_proof_limitations"
         ],
         "additionalProperties": false,
         "properties": {
@@ -55,6 +59,18 @@
           "reasons": {
             "type": "array",
             "items": { "$ref": "#/$defs/check_reason" }
+          },
+          "expected_proof_status": { "$ref": "#/$defs/proof_status" },
+          "expected_request_certified": { "type": "boolean" },
+          "expected_reusable_check_ids": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/check_id" },
+            "uniqueItems": true
+          },
+          "expected_proof_limitations": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/proof_limitation" },
+            "uniqueItems": true
           }
         }
       }
@@ -100,6 +116,7 @@
   },
   "$defs": {
     "case_name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "check_id": { "type": "string", "pattern": "^v[0-9]{4}$" },
     "check_status": {
       "enum": [
         "grounded",
@@ -131,6 +148,22 @@
         "table_not_found",
         "table_cell_not_found",
         "text_mismatch"
+      ]
+    },
+    "proof_status": {
+      "enum": [
+        "verified",
+        "partially_verified",
+        "unverified"
+      ]
+    },
+    "proof_limitation": {
+      "enum": [
+        "capability_limited",
+        "stale_fingerprint",
+        "unsupported_claim_kind",
+        "non_grounded_checks",
+        "semantic_unverified"
       ]
     },
     "usage_diagnostic_message": {

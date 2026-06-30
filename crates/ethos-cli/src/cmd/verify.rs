@@ -18,6 +18,7 @@ use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+use ethos_core::codes::WarningCode;
 use ethos_core::crop_element::{CropElementDescriptor, CropElementRendering};
 use ethos_core::error::EthosError;
 use ethos_core::fingerprint::is_fingerprint_form;
@@ -149,6 +150,7 @@ fn verification_report_json_bytes(report: &VerificationReport) -> Result<Vec<u8>
 }
 
 fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<u8>, Failure> {
+    let proof = proof_summary(report);
     let mut out = String::new();
     out.push_str("ethos verify summary\n");
     out.push_str(&format!("schema_version: {}\n", report.schema_version));
@@ -164,6 +166,24 @@ fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<
         "fingerprint_stale: {}\n",
         report.fingerprint_stale
     ));
+    out.push_str(&format!(
+        "proof_status: {}\n",
+        proof_status_label(proof.proof_status)
+    ));
+    out.push_str(&format!("request_certified: {}\n", proof.request_certified));
+    out.push_str(&format!(
+        "reusable_grounded_checks: {}\n",
+        string_list(&proof.reusable_grounded_check_ids)
+    ));
+    out.push_str(&format!(
+        "needs_review_checks: {}\n",
+        string_list(&proof.needs_review_check_ids)
+    ));
+    out.push_str(&format!(
+        "proof_limitations: {}\n",
+        list_labels(&proof.proof_limitations, proof_limitation_label)
+    ));
+    out.push_str(&format!("recovery_hint: {}\n", proof_recovery_hint(&proof)));
     if let Some(fingerprint) = report.document_fingerprint.as_deref() {
         out.push_str(&format!("document_fingerprint: {fingerprint}\n"));
     }
@@ -240,6 +260,145 @@ fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<
         }
     }
     Ok(out.into_bytes())
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ProofStatus {
+    Verified,
+    PartiallyVerified,
+    Unverified,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ProofLimitation {
+    CapabilityLimited,
+    StaleFingerprint,
+    UnsupportedClaimKind,
+    NonGroundedChecks,
+    SemanticUnverified,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ProofSummary {
+    proof_status: ProofStatus,
+    request_certified: bool,
+    reusable_grounded_check_ids: Vec<String>,
+    needs_review_check_ids: Vec<String>,
+    proof_limitations: Vec<ProofLimitation>,
+}
+
+fn proof_summary(report: &VerificationReport) -> ProofSummary {
+    let reusable_grounded_check_ids = report
+        .checks
+        .iter()
+        .filter(|check| is_reusable_grounded_check(report, check))
+        .map(|check| check.id.clone())
+        .collect::<Vec<_>>();
+    let needs_review_check_ids = report
+        .checks
+        .iter()
+        .filter(|check| !is_reusable_grounded_check(report, check))
+        .map(|check| check.id.clone())
+        .collect::<Vec<_>>();
+    let request_certified = report.all_evidence_grounded;
+    let proof_status = if request_certified {
+        ProofStatus::Verified
+    } else if reusable_grounded_check_ids.is_empty() {
+        ProofStatus::Unverified
+    } else {
+        ProofStatus::PartiallyVerified
+    };
+
+    let mut proof_limitations = Vec::new();
+    if has_capability_limit(report) {
+        proof_limitations.push(ProofLimitation::CapabilityLimited);
+    }
+    if report.fingerprint_stale {
+        proof_limitations.push(ProofLimitation::StaleFingerprint);
+    }
+    if !report.unsupported_claim_kinds.is_empty() {
+        proof_limitations.push(ProofLimitation::UnsupportedClaimKind);
+    }
+    if report
+        .checks
+        .iter()
+        .any(|check| check.status != CheckStatus::Grounded)
+    {
+        proof_limitations.push(ProofLimitation::NonGroundedChecks);
+    }
+    if report.checks.iter().any(|check| check.semantic_unverified) {
+        proof_limitations.push(ProofLimitation::SemanticUnverified);
+    }
+
+    ProofSummary {
+        proof_status,
+        request_certified,
+        reusable_grounded_check_ids,
+        needs_review_check_ids,
+        proof_limitations,
+    }
+}
+
+fn is_reusable_grounded_check(report: &VerificationReport, check: &Check) -> bool {
+    !report.fingerprint_stale && check.status == CheckStatus::Grounded && !check.semantic_unverified
+}
+
+fn has_capability_limit(report: &VerificationReport) -> bool {
+    !report.capability_limits.is_empty()
+        || report.warnings.contains(&WarningCode::CapabilityLimited)
+        || report
+            .checks
+            .iter()
+            .any(|check| check.warnings.contains(&WarningCode::CapabilityLimited))
+}
+
+fn proof_status_label(status: ProofStatus) -> &'static str {
+    match status {
+        ProofStatus::Verified => "verified",
+        ProofStatus::PartiallyVerified => "partially_verified",
+        ProofStatus::Unverified => "unverified",
+    }
+}
+
+fn proof_limitation_label(limitation: ProofLimitation) -> &'static str {
+    match limitation {
+        ProofLimitation::CapabilityLimited => "capability_limited",
+        ProofLimitation::StaleFingerprint => "stale_fingerprint",
+        ProofLimitation::UnsupportedClaimKind => "unsupported_claim_kind",
+        ProofLimitation::NonGroundedChecks => "non_grounded_checks",
+        ProofLimitation::SemanticUnverified => "semantic_unverified",
+    }
+}
+
+fn proof_recovery_hint(proof: &ProofSummary) -> &'static str {
+    if proof.proof_status == ProofStatus::Verified && proof.proof_limitations.is_empty() {
+        return "none";
+    }
+    if proof.proof_status == ProofStatus::Verified {
+        return "inspect proof_limitations before widening the proof claim";
+    }
+    if proof.proof_status == ProofStatus::PartiallyVerified {
+        return "assemble final output only from reusable_grounded_checks and repair needs_review_checks";
+    }
+    if proof
+        .proof_limitations
+        .contains(&ProofLimitation::StaleFingerprint)
+    {
+        return "refresh citations against the current source fingerprint";
+    }
+    if proof
+        .proof_limitations
+        .contains(&ProofLimitation::CapabilityLimited)
+    {
+        return "use a source with the required grounding capabilities or lower the proof requirement";
+    }
+    if proof
+        .proof_limitations
+        .contains(&ProofLimitation::SemanticUnverified)
+    {
+        return "rewrite semantic claims into literal source-backed citation claims";
+    }
+    "inspect needs_review_checks and repair stale, missing, mismatched, unsupported, or capability-blocked citations"
 }
 
 fn status_label(status: CheckStatus) -> &'static str {
@@ -434,6 +593,14 @@ fn list_labels<T: Copy>(values: &[T], label: fn(T) -> &'static str) -> String {
             .map(|value| label(*value))
             .collect::<Vec<_>>()
             .join(",")
+    }
+}
+
+fn string_list(values: &[String]) -> String {
+    if values.is_empty() {
+        "none".to_string()
+    } else {
+        values.join(",")
     }
 }
 
@@ -814,6 +981,118 @@ mod tests {
             }),
             warnings: Vec::new(),
         }
+    }
+
+    #[test]
+    fn proof_summary_keeps_capability_limit_visible_without_failing_certified_request() {
+        let mut report = crop_report(
+            Some(TEST_DOCUMENT_FINGERPRINT),
+            vec![crop_check(
+                "v0001",
+                &format!("crop-{}.json", "a".repeat(64)),
+                [7392, 5482, 19378, 7226],
+                Some("Hello world"),
+            )],
+        );
+        report.capability_limits = vec![CapabilityLimit::MissingFingerprint];
+        report.warnings = vec![WarningCode::CapabilityLimited];
+
+        let proof = proof_summary(&report);
+
+        assert_eq!(proof.proof_status, ProofStatus::Verified);
+        assert!(proof.request_certified);
+        assert_eq!(proof.reusable_grounded_check_ids, vec!["v0001"]);
+        assert!(proof.needs_review_check_ids.is_empty());
+        assert_eq!(
+            proof.proof_limitations,
+            vec![ProofLimitation::CapabilityLimited]
+        );
+    }
+
+    #[test]
+    fn proof_summary_marks_mixed_reports_as_partially_verified_without_certifying_request() {
+        let grounded = crop_check(
+            "v0001",
+            &format!("crop-{}.json", "a".repeat(64)),
+            [7392, 5482, 19378, 7226],
+            Some("Hello world"),
+        );
+        let mut unsupported = crop_check(
+            "v0002",
+            &format!("crop-{}.json", "b".repeat(64)),
+            [7392, 5482, 19378, 7226],
+            None,
+        );
+        unsupported.status = CheckStatus::UnsupportedClaimKind;
+        unsupported.reason = Some(CheckReason::UnsupportedClaimKind);
+        unsupported.match_method = MatchMethod::None;
+        unsupported.evidence = None;
+        let mut report = crop_report(Some(TEST_DOCUMENT_FINGERPRINT), vec![grounded, unsupported]);
+        report.all_evidence_grounded = false;
+        report.unsupported_claim_kinds = vec!["region".to_string()];
+
+        let proof = proof_summary(&report);
+
+        assert_eq!(proof.proof_status, ProofStatus::PartiallyVerified);
+        assert!(!proof.request_certified);
+        assert_eq!(proof.reusable_grounded_check_ids, vec!["v0001"]);
+        assert_eq!(proof.needs_review_check_ids, vec!["v0002"]);
+        assert_eq!(
+            proof.proof_limitations,
+            vec![
+                ProofLimitation::UnsupportedClaimKind,
+                ProofLimitation::NonGroundedChecks
+            ]
+        );
+    }
+
+    #[test]
+    fn proof_summary_excludes_grounded_checks_when_fingerprint_is_stale() {
+        let mut report = crop_report(
+            Some(TEST_DOCUMENT_FINGERPRINT),
+            vec![crop_check(
+                "v0001",
+                &format!("crop-{}.json", "a".repeat(64)),
+                [7392, 5482, 19378, 7226],
+                Some("Hello world"),
+            )],
+        );
+        report.fingerprint_stale = true;
+        report.all_evidence_grounded = false;
+
+        let proof = proof_summary(&report);
+
+        assert_eq!(proof.proof_status, ProofStatus::Unverified);
+        assert!(!proof.request_certified);
+        assert!(proof.reusable_grounded_check_ids.is_empty());
+        assert_eq!(proof.needs_review_check_ids, vec!["v0001"]);
+        assert_eq!(
+            proof.proof_limitations,
+            vec![ProofLimitation::StaleFingerprint]
+        );
+    }
+
+    #[test]
+    fn proof_summary_excludes_semantic_unverified_grounded_checks() {
+        let mut check = crop_check(
+            "v0001",
+            &format!("crop-{}.json", "a".repeat(64)),
+            [7392, 5482, 19378, 7226],
+            Some("Hello world"),
+        );
+        check.semantic_unverified = true;
+        let mut report = crop_report(Some(TEST_DOCUMENT_FINGERPRINT), vec![check]);
+        report.all_evidence_grounded = false;
+
+        let proof = proof_summary(&report);
+
+        assert_eq!(proof.proof_status, ProofStatus::Unverified);
+        assert!(proof.reusable_grounded_check_ids.is_empty());
+        assert_eq!(proof.needs_review_check_ids, vec!["v0001"]);
+        assert_eq!(
+            proof.proof_limitations,
+            vec![ProofLimitation::SemanticUnverified]
+        );
     }
 
     #[test]
