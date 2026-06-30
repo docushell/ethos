@@ -233,12 +233,13 @@ The command exits `0` and writes a verification report shaped like this:
 ```
 
 `--format summary` adds a derived proof-status view for humans and wrappers without changing the
-canonical JSON report. `proof_status: verified` means the request is certified by
-`all_evidence_grounded`. `partially_verified` means only the listed
-`reusable_grounded_checks` can be reused; the request as submitted is not certified. `unverified`
-means no check is reusable. Final grounded answers should be assembled only from reusable grounded
-checks, and retrieval citations, model-returned evidence IDs, or answer text are not proof until
-checked against a grounding source.
+canonical JSON report. Rust callers can derive the same view from
+`VerificationReport::proof_summary()` in `ethos-doc-core`'s `verify-types` feature.
+`proof_status: verified` means the request is certified by `all_evidence_grounded`.
+`partially_verified` means only the listed `reusable_grounded_checks` can be reused; the request as
+submitted is not certified. `unverified` means no check is reusable. Final grounded answers should
+be assembled only from reusable grounded checks, and retrieval citations, model-returned evidence
+IDs, or answer text are not proof until checked against a grounding source.
 
 ## Evidence anchoring
 
@@ -365,6 +366,28 @@ The deterministic Ethos parser is one grounding source. Foreign parser output ca
 grounding source when an adapter can expose text, pages, regions, fingerprints, and capabilities
 through the `GroundingSource` trait. When a source lacks required evidence metadata, Ethos reports
 that limitation instead of silently upgrading the claim.
+
+## Bring your own parser
+
+Ethos is not limited to DocuShell or to the native Ethos parser. A parser can participate when its
+output is mapped into the parser-neutral `GroundingSource` boundary:
+
+```text
+parser output
+    -> GroundingSource adapter
+    -> citation claims
+    -> ethos verify
+    -> VerificationReport + optional proof_summary()
+```
+
+The adapter owns the mapping from parser-native structures into Ethos evidence concepts: pages,
+elements, text, tables, regions, fingerprints, and capability declarations. The verifier then
+checks whether caller-provided citations bind to that source evidence. Product layers can use
+`VerificationReport::proof_summary()` for release wording, but the canonical report remains the
+audit artifact.
+
+Start with [`docs/bring-your-own-parser.md`](docs/bring-your-own-parser.md). Use the
+OpenDataLoader adapter as the fuller reference once the minimal `GroundingSource` shape is clear.
 
 ## Current capability status
 
