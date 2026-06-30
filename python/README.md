@@ -33,6 +33,7 @@ Public API:
 - `parse_pdf_text`
 - `crop_element`
 - `verify`
+- `proof_summary`
 - `anchor`
 
 The current module is intentionally thin: it shells out to a caller-provided local `ethos` CLI
@@ -110,6 +111,22 @@ Verify exit semantics:
 - exit `0` with JSON returns a report;
 - exit `1` with JSON returns a negative verification report when `fail_on_ungrounded=True`;
 - exit `>=2` raises `EthosCommandError` or a more specific subclass.
+
+Use `proof_summary(report)` when a product or API wrapper needs the same derived status as the Rust
+`VerificationReport::proof_summary()` helper:
+
+```python
+from ethos_pdf import EthosCli, proof_summary
+
+ethos = EthosCli(binary="/path/to/ethos")
+report = ethos.verify("source.ethos.json", citations="citations.json")
+summary = proof_summary(report)
+print(summary["proof_status"])
+```
+
+The summary is not a replacement for the canonical verification report. It deterministically
+derives `proof_status`, `request_certified`, reusable grounded check ids, needs-review check ids,
+and proof limitations from the report that `ethos verify` already emitted.
 
 Run the focused tests with:
 

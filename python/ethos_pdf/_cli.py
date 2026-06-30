@@ -26,6 +26,8 @@ PathLike = Union[str, os.PathLike[str]]
 
 _DOC_PARSE_FORMATS = frozenset(("json", "markdown", "text"))
 _DEFAULT_CROP_CHECK_ID = "v0001"
+_CAPABILITY_LIMITED = "capability_limited"
+_GROUNDED = "grounded"
 
 
 class EthosPythonSurfaceError(Exception):
@@ -621,6 +623,66 @@ def anchor(
     )
 
 
+def proof_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
+    """Derive product-facing proof status from a verification report.
+
+    This mirrors the Rust `VerificationReport::proof_summary()` helper without
+    changing the canonical JSON report. `request_certified` mirrors
+    `all_evidence_grounded`; reusable grounded checks exclude report-level stale
+    fingerprints and claim-level `semantic_unverified` cases.
+    """
+
+    checks = _list_value(report.get("checks"))
+    fingerprint_stale = bool(report.get("fingerprint_stale", False))
+    reusable_grounded_check_ids = []
+    needs_review_check_ids = []
+
+    for check in checks:
+        if not isinstance(check, Mapping):
+            continue
+        check_id = check.get("id")
+        if not isinstance(check_id, str):
+            continue
+        if _is_reusable_grounded_check(check, fingerprint_stale):
+            reusable_grounded_check_ids.append(check_id)
+        else:
+            needs_review_check_ids.append(check_id)
+
+    request_certified = bool(report.get("all_evidence_grounded", False))
+    if request_certified:
+        status = "verified"
+    elif reusable_grounded_check_ids:
+        status = "partially_verified"
+    else:
+        status = "unverified"
+
+    limitations = []
+    if _has_capability_limit(report, checks):
+        limitations.append(_CAPABILITY_LIMITED)
+    if fingerprint_stale:
+        limitations.append("stale_fingerprint")
+    if _list_value(report.get("unsupported_claim_kinds")):
+        limitations.append("unsupported_claim_kind")
+    if any(
+        isinstance(check, Mapping) and check.get("status") != _GROUNDED
+        for check in checks
+    ):
+        limitations.append("non_grounded_checks")
+    if any(
+        isinstance(check, Mapping) and bool(check.get("semantic_unverified", False))
+        for check in checks
+    ):
+        limitations.append("semantic_unverified")
+
+    return {
+        "proof_status": status,
+        "request_certified": request_certified,
+        "reusable_grounded_check_ids": reusable_grounded_check_ids,
+        "needs_review_check_ids": needs_review_check_ids,
+        "proof_limitations": limitations,
+    }
+
+
 def _validate_timeout_seconds(timeout_seconds: Optional[float]) -> None:
     if timeout_seconds is not None and timeout_seconds <= 0:
         raise ValueError("timeout_seconds must be greater than zero when provided")
@@ -647,6 +709,36 @@ def _load_json_stdout(stdout: str, command: Sequence[str]) -> Any:
             command,
             stdout,
         ) from exc
+
+
+def _is_reusable_grounded_check(
+    check: Mapping[str, Any], fingerprint_stale: bool
+) -> bool:
+    return (
+        not fingerprint_stale
+        and check.get("status") == _GROUNDED
+        and not bool(check.get("semantic_unverified", False))
+    )
+
+
+def _has_capability_limit(
+    report: Mapping[str, Any], checks: Sequence[Any]
+) -> bool:
+    if _list_value(report.get("capability_limits")):
+        return True
+    if _CAPABILITY_LIMITED in _list_value(report.get("warnings")):
+        return True
+    return any(
+        isinstance(check, Mapping)
+        and _CAPABILITY_LIMITED in _list_value(check.get("warnings"))
+        for check in checks
+    )
+
+
+def _list_value(value: Any) -> Sequence[Any]:
+    if isinstance(value, list):
+        return value
+    return ()
 
 
 def _decode_utf8(data: bytes, command: Sequence[str], stream: str) -> str:

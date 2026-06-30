@@ -36,6 +36,7 @@ from ethos_pdf import (
     anchor,
     crop_element,
     parse_pdf_json,
+    proof_summary,
     verify,
 )
 
@@ -469,6 +470,111 @@ class PythonSurfaceTests(unittest.TestCase):
                 citations=self.citations,
                 output_format="summary",
             )
+
+    def test_proof_summary_keeps_capability_limit_visible_without_failing_certified_request(
+        self,
+    ) -> None:
+        report = {
+            "all_evidence_grounded": True,
+            "fingerprint_stale": False,
+            "capability_limits": ["missing_fingerprint"],
+            "unsupported_claim_kinds": [],
+            "warnings": ["capability_limited"],
+            "checks": [
+                {
+                    "id": "v0001",
+                    "status": "grounded",
+                    "semantic_unverified": False,
+                    "warnings": [],
+                }
+            ],
+        }
+
+        result = proof_summary(report)
+
+        self.assertEqual(result["proof_status"], "verified")
+        self.assertTrue(result["request_certified"])
+        self.assertEqual(result["reusable_grounded_check_ids"], ["v0001"])
+        self.assertEqual(result["needs_review_check_ids"], [])
+        self.assertEqual(result["proof_limitations"], ["capability_limited"])
+
+    def test_proof_summary_marks_mixed_report_as_partially_verified(self) -> None:
+        report = {
+            "all_evidence_grounded": False,
+            "fingerprint_stale": False,
+            "capability_limits": [],
+            "unsupported_claim_kinds": ["region"],
+            "warnings": [],
+            "checks": [
+                {
+                    "id": "v0001",
+                    "status": "grounded",
+                    "semantic_unverified": False,
+                    "warnings": [],
+                },
+                {
+                    "id": "v0002",
+                    "status": "unsupported_claim_kind",
+                    "semantic_unverified": False,
+                    "warnings": [],
+                },
+            ],
+        }
+
+        result = proof_summary(report)
+
+        self.assertEqual(result["proof_status"], "partially_verified")
+        self.assertFalse(result["request_certified"])
+        self.assertEqual(result["reusable_grounded_check_ids"], ["v0001"])
+        self.assertEqual(result["needs_review_check_ids"], ["v0002"])
+        self.assertEqual(
+            result["proof_limitations"],
+            ["unsupported_claim_kind", "non_grounded_checks"],
+        )
+
+    def test_proof_summary_excludes_stale_and_semantic_grounded_checks(self) -> None:
+        stale_report = {
+            "all_evidence_grounded": False,
+            "fingerprint_stale": True,
+            "capability_limits": [],
+            "unsupported_claim_kinds": [],
+            "warnings": [],
+            "checks": [
+                {
+                    "id": "v0001",
+                    "status": "grounded",
+                    "semantic_unverified": False,
+                    "warnings": [],
+                }
+            ],
+        }
+        semantic_report = {
+            "all_evidence_grounded": False,
+            "fingerprint_stale": False,
+            "capability_limits": [],
+            "unsupported_claim_kinds": [],
+            "warnings": [],
+            "checks": [
+                {
+                    "id": "v0001",
+                    "status": "grounded",
+                    "semantic_unverified": True,
+                    "warnings": [],
+                }
+            ],
+        }
+
+        stale = proof_summary(stale_report)
+        semantic = proof_summary(semantic_report)
+
+        self.assertEqual(stale["proof_status"], "unverified")
+        self.assertEqual(stale["reusable_grounded_check_ids"], [])
+        self.assertEqual(stale["needs_review_check_ids"], ["v0001"])
+        self.assertEqual(stale["proof_limitations"], ["stale_fingerprint"])
+        self.assertEqual(semantic["proof_status"], "unverified")
+        self.assertEqual(semantic["reusable_grounded_check_ids"], [])
+        self.assertEqual(semantic["needs_review_check_ids"], ["v0001"])
+        self.assertEqual(semantic["proof_limitations"], ["semantic_unverified"])
 
     def test_anchor_maps_source_evidence_refs_and_grounding(self) -> None:
         result = anchor(
