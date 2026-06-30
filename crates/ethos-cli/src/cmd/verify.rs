@@ -18,7 +18,6 @@ use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use ethos_core::codes::WarningCode;
 use ethos_core::crop_element::{CropElementDescriptor, CropElementRendering};
 use ethos_core::error::EthosError;
 use ethos_core::fingerprint::is_fingerprint_form;
@@ -29,7 +28,7 @@ use ethos_core::grounding::{
 use ethos_core::model::Document;
 use ethos_core::verify_types::{
     CapabilityLimit, Check, CheckReason, CheckStatus, ClaimKind, EvidenceOptions, MatchMethod,
-    VerificationConfig, VerificationReport,
+    ProofLimitation, ProofStatus, ProofSummary, VerificationConfig, VerificationReport,
 };
 use ethos_grounding_opendataloader_json::OdlJsonSource;
 use ethos_verify::CitationInput;
@@ -150,7 +149,7 @@ fn verification_report_json_bytes(report: &VerificationReport) -> Result<Vec<u8>
 }
 
 fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<u8>, Failure> {
-    let proof = proof_summary(report);
+    let proof = report.proof_summary();
     let mut out = String::new();
     out.push_str("ethos verify summary\n");
     out.push_str(&format!("schema_version: {}\n", report.schema_version));
@@ -166,10 +165,7 @@ fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<
         "fingerprint_stale: {}\n",
         report.fingerprint_stale
     ));
-    out.push_str(&format!(
-        "proof_status: {}\n",
-        proof_status_label(proof.proof_status)
-    ));
+    out.push_str(&format!("proof_status: {}\n", proof.proof_status.as_str()));
     out.push_str(&format!("request_certified: {}\n", proof.request_certified));
     out.push_str(&format!(
         "reusable_grounded_checks: {}\n",
@@ -181,7 +177,7 @@ fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<
     ));
     out.push_str(&format!(
         "proof_limitations: {}\n",
-        list_labels(&proof.proof_limitations, proof_limitation_label)
+        list_labels(&proof.proof_limitations, ProofLimitation::as_str)
     ));
     out.push_str(&format!("recovery_hint: {}\n", proof_recovery_hint(&proof)));
     if let Some(fingerprint) = report.document_fingerprint.as_deref() {
@@ -260,114 +256,6 @@ fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<
         }
     }
     Ok(out.into_bytes())
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ProofStatus {
-    Verified,
-    PartiallyVerified,
-    Unverified,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ProofLimitation {
-    CapabilityLimited,
-    StaleFingerprint,
-    UnsupportedClaimKind,
-    NonGroundedChecks,
-    SemanticUnverified,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct ProofSummary {
-    proof_status: ProofStatus,
-    request_certified: bool,
-    reusable_grounded_check_ids: Vec<String>,
-    needs_review_check_ids: Vec<String>,
-    proof_limitations: Vec<ProofLimitation>,
-}
-
-fn proof_summary(report: &VerificationReport) -> ProofSummary {
-    let reusable_grounded_check_ids = report
-        .checks
-        .iter()
-        .filter(|check| is_reusable_grounded_check(report, check))
-        .map(|check| check.id.clone())
-        .collect::<Vec<_>>();
-    let needs_review_check_ids = report
-        .checks
-        .iter()
-        .filter(|check| !is_reusable_grounded_check(report, check))
-        .map(|check| check.id.clone())
-        .collect::<Vec<_>>();
-    let request_certified = report.all_evidence_grounded;
-    let proof_status = if request_certified {
-        ProofStatus::Verified
-    } else if reusable_grounded_check_ids.is_empty() {
-        ProofStatus::Unverified
-    } else {
-        ProofStatus::PartiallyVerified
-    };
-
-    let mut proof_limitations = Vec::new();
-    if has_capability_limit(report) {
-        proof_limitations.push(ProofLimitation::CapabilityLimited);
-    }
-    if report.fingerprint_stale {
-        proof_limitations.push(ProofLimitation::StaleFingerprint);
-    }
-    if !report.unsupported_claim_kinds.is_empty() {
-        proof_limitations.push(ProofLimitation::UnsupportedClaimKind);
-    }
-    if report
-        .checks
-        .iter()
-        .any(|check| check.status != CheckStatus::Grounded)
-    {
-        proof_limitations.push(ProofLimitation::NonGroundedChecks);
-    }
-    if report.checks.iter().any(|check| check.semantic_unverified) {
-        proof_limitations.push(ProofLimitation::SemanticUnverified);
-    }
-
-    ProofSummary {
-        proof_status,
-        request_certified,
-        reusable_grounded_check_ids,
-        needs_review_check_ids,
-        proof_limitations,
-    }
-}
-
-fn is_reusable_grounded_check(report: &VerificationReport, check: &Check) -> bool {
-    !report.fingerprint_stale && check.status == CheckStatus::Grounded && !check.semantic_unverified
-}
-
-fn has_capability_limit(report: &VerificationReport) -> bool {
-    !report.capability_limits.is_empty()
-        || report.warnings.contains(&WarningCode::CapabilityLimited)
-        || report
-            .checks
-            .iter()
-            .any(|check| check.warnings.contains(&WarningCode::CapabilityLimited))
-}
-
-fn proof_status_label(status: ProofStatus) -> &'static str {
-    match status {
-        ProofStatus::Verified => "verified",
-        ProofStatus::PartiallyVerified => "partially_verified",
-        ProofStatus::Unverified => "unverified",
-    }
-}
-
-fn proof_limitation_label(limitation: ProofLimitation) -> &'static str {
-    match limitation {
-        ProofLimitation::CapabilityLimited => "capability_limited",
-        ProofLimitation::StaleFingerprint => "stale_fingerprint",
-        ProofLimitation::UnsupportedClaimKind => "unsupported_claim_kind",
-        ProofLimitation::NonGroundedChecks => "non_grounded_checks",
-        ProofLimitation::SemanticUnverified => "semantic_unverified",
-    }
 }
 
 fn proof_recovery_hint(proof: &ProofSummary) -> &'static str {
@@ -919,6 +807,7 @@ fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failu
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ethos_core::codes::WarningCode;
     use ethos_core::verify_types::{Check, CheckStatus, Evidence, GroundingMeta, MatchMethod};
 
     const TEST_DOCUMENT_FINGERPRINT: &str =
@@ -997,7 +886,7 @@ mod tests {
         report.capability_limits = vec![CapabilityLimit::MissingFingerprint];
         report.warnings = vec![WarningCode::CapabilityLimited];
 
-        let proof = proof_summary(&report);
+        let proof = report.proof_summary();
 
         assert_eq!(proof.proof_status, ProofStatus::Verified);
         assert!(proof.request_certified);
@@ -1031,7 +920,7 @@ mod tests {
         report.all_evidence_grounded = false;
         report.unsupported_claim_kinds = vec!["region".to_string()];
 
-        let proof = proof_summary(&report);
+        let proof = report.proof_summary();
 
         assert_eq!(proof.proof_status, ProofStatus::PartiallyVerified);
         assert!(!proof.request_certified);
@@ -1060,7 +949,7 @@ mod tests {
         report.fingerprint_stale = true;
         report.all_evidence_grounded = false;
 
-        let proof = proof_summary(&report);
+        let proof = report.proof_summary();
 
         assert_eq!(proof.proof_status, ProofStatus::Unverified);
         assert!(!proof.request_certified);
@@ -1084,7 +973,7 @@ mod tests {
         let mut report = crop_report(Some(TEST_DOCUMENT_FINGERPRINT), vec![check]);
         report.all_evidence_grounded = false;
 
-        let proof = proof_summary(&report);
+        let proof = report.proof_summary();
 
         assert_eq!(proof.proof_status, ProofStatus::Unverified);
         assert!(proof.reusable_grounded_check_ids.is_empty());

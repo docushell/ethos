@@ -421,6 +421,9 @@ Verifier consumers MUST inspect:
 
 Consumers MUST NOT treat a citation string, retrieval chunk, LLM answer, or model-returned evidence
 ID as proof until the evidence has been checked against a trusted grounding source.
+Wrappers MAY use the derived proof summary exposed by `VerificationReport::proof_summary()` for
+product wording and release policy, but the canonical `VerificationReport` remains the audit
+artifact.
 If a wrapper exposes an `invalid_request` status, it is a process or API envelope for malformed
 input and MUST NOT be derived from a `VerificationReport`.
 

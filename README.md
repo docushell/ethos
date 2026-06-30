@@ -233,12 +233,13 @@ The command exits `0` and writes a verification report shaped like this:
 ```
 
 `--format summary` adds a derived proof-status view for humans and wrappers without changing the
-canonical JSON report. `proof_status: verified` means the request is certified by
-`all_evidence_grounded`. `partially_verified` means only the listed
-`reusable_grounded_checks` can be reused; the request as submitted is not certified. `unverified`
-means no check is reusable. Final grounded answers should be assembled only from reusable grounded
-checks, and retrieval citations, model-returned evidence IDs, or answer text are not proof until
-checked against a grounding source.
+canonical JSON report. Rust callers can derive the same view from
+`VerificationReport::proof_summary()` in `ethos-doc-core`'s `verify-types` feature.
+`proof_status: verified` means the request is certified by `all_evidence_grounded`.
+`partially_verified` means only the listed `reusable_grounded_checks` can be reused; the request as
+submitted is not certified. `unverified` means no check is reusable. Final grounded answers should
+be assembled only from reusable grounded checks, and retrieval citations, model-returned evidence
+IDs, or answer text are not proof until checked against a grounding source.
 
 ## Evidence anchoring
 

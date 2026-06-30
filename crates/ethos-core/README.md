@@ -20,6 +20,11 @@ use ethos_core::grounding::*;
 The package name and import name intentionally differ. The package is `ethos-doc-core`; the Rust
 library crate is `ethos_core`.
 
+The `verify-types` feature exposes verification report/config schema types, stable warning codes,
+and the derived `VerificationReport::proof_summary()` helper used by CLI/API wrappers. The helper
+does not change the canonical JSON report; it deterministically labels whether a request is
+certified, partially reusable, or unverified.
+
 ## Publication Boundary
 
 - Public installation from crates.io is available at `0.2.0`.
