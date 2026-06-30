@@ -32,6 +32,7 @@ from ._cli import (
     parse_pdf_json,
     parse_pdf_markdown,
     parse_pdf_text,
+    proof_summary,
     verify,
 )
 
@@ -53,5 +54,6 @@ __all__ = [
     "parse_pdf_json",
     "parse_pdf_markdown",
     "parse_pdf_text",
+    "proof_summary",
     "verify",
 ]
