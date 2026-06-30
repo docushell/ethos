@@ -139,11 +139,6 @@
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "text": { "type": "string", "minLength": 1 },
-        "check_id": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Ethos verification check ID when the claim came from a verification report check."
-        },
         "check_ids": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 },
@@ -158,11 +153,6 @@
         "release_reason": { "$ref": "#/$defs/release_reason" }
       },
       "allOf": [
-        {
-          "not": {
-            "required": ["check_id", "check_ids"]
-          }
-        },
         {
           "if": {
             "properties": { "release_reason": { "const": "certified" } },

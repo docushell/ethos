@@ -595,14 +595,14 @@ class PythonSurfaceTests(unittest.TestCase):
                 {
                     "id": "claim-revenue",
                     "text": "Revenue grew to $12.4M in Q3 2025.",
-                    "check_id": "v0001",
+                    "check_ids": ["v0001"],
                     "question_relevance": "direct_answer",
                     "claim_type": "source_fact",
                 },
                 {
                     "id": "claim-background",
                     "text": "The company opened a European office.",
-                    "check_id": "v0002",
+                    "check_ids": ["v0002"],
                     "question_relevance": "background_only",
                     "claim_type": "source_fact",
                 },
@@ -616,7 +616,7 @@ class PythonSurfaceTests(unittest.TestCase):
                 {
                     "id": "claim-margin",
                     "text": "Gross margin improved in Q3 2025.",
-                    "check_id": "v0004",
+                    "check_ids": ["v0004"],
                     "question_relevance": "direct_answer",
                     "claim_type": "unsupported",
                 },
@@ -635,6 +635,7 @@ class PythonSurfaceTests(unittest.TestCase):
         self.assertEqual(result["review_claim_ids"], ["claim-synthesis"])
         self.assertEqual(result["blocked_claim_ids"], ["claim-background", "claim-margin"])
         self.assertEqual(result["claims"][0]["release_reason"], "certified")
+        self.assertEqual(result["claims"][0]["check_ids"], ["v0001"])
         self.assertTrue(result["claims"][0]["citation_grounded"])
         self.assertEqual(result["claims"][1]["release_reason"], "grounded_but_irrelevant")
         self.assertEqual(result["claims"][2]["release_action"], "needs_review")
@@ -667,7 +668,7 @@ class PythonSurfaceTests(unittest.TestCase):
                 {
                     "id": "claim-revenue",
                     "text": "Revenue grew to $12.4M in Q3 2025.",
-                    "check_id": "v0001",
+                    "check_ids": ["v0001"],
                     "question_relevance": "direct_answer",
                     "claim_type": "source_fact",
                 }
@@ -717,7 +718,7 @@ class PythonSurfaceTests(unittest.TestCase):
                     {
                         "id": "claim-bad",
                         "text": "Revenue grew.",
-                        "check_id": "v0001",
+                        "check_ids": ["v0001"],
                         "citation_grounded": False,
                         "question_relevance": "direct_answer",
                         "claim_type": "source_fact",
@@ -733,7 +734,7 @@ class PythonSurfaceTests(unittest.TestCase):
                     {
                         "id": "claim-unknown",
                         "text": "Revenue grew.",
-                        "check_id": "v9999",
+                        "check_ids": ["v9999"],
                         "question_relevance": "direct_answer",
                         "claim_type": "source_fact",
                     }

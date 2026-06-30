@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import json
+import sys
 import unittest
 from pathlib import Path
 
@@ -33,6 +34,7 @@ VALIDATE_EXAMPLES = ROOT / "schemas/validate_examples.py"
 SCHEMAS_README = ROOT / "schemas/README.md"
 README = ROOT / "README.md"
 SPEC = ROOT / "SPEC.md"
+PYTHON_PACKAGE = ROOT / "python"
 
 EXPECTED_TARGET_COMMANDS = [
     "cargo test --locked -p ethos-doc-core --no-default-features --features verify-types app_answer_release",
@@ -106,6 +108,9 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
         self.assertEqual(EXPECTED_CLAIM_TYPES, schema_enum("claim_type"))
         self.assertEqual(EXPECTED_RELEASE_ACTIONS, schema_enum("release_action"))
         self.assertEqual(EXPECTED_RELEASE_REASONS, schema_enum("release_reason"))
+        claim_properties = load_json(SCHEMA)["$defs"]["claim_decision"]["properties"]
+        self.assertNotIn("check_id", claim_properties)
+        self.assertIn("check_ids", claim_properties)
 
     def test_example_covers_relevance_and_synthesis_failure_modes(self) -> None:
         example = load_json(EXAMPLE)
@@ -114,8 +119,12 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
         self.assertEqual("partial_certified", example["app_status"])
         self.assertEqual("partially_verified", example["grounding"]["proof_status"])
 
+        for claim in claims.values():
+            self.assertNotIn("check_id", claim)
+
         irrelevant = claims["claim-office-background"]
         self.assertTrue(irrelevant["citation_grounded"])
+        self.assertEqual(["v0002"], irrelevant["check_ids"])
         self.assertEqual("background_only", irrelevant["question_relevance"])
         self.assertEqual("block", irrelevant["release_action"])
         self.assertEqual("grounded_but_irrelevant", irrelevant["release_reason"])
@@ -149,6 +158,40 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
 
         for claim_id in example["blocked_claim_ids"]:
             self.assertEqual("block", claims[claim_id]["release_action"])
+
+    def test_python_helper_emits_schema_conformant_decision(self) -> None:
+        if str(PYTHON_PACKAGE) not in sys.path:
+            sys.path.insert(0, str(PYTHON_PACKAGE))
+        from ethos_pdf import app_answer_release_decision
+
+        schema = load_json(SCHEMA)
+        decision = app_answer_release_decision(
+            "What was Q3 2025 revenue?",
+            {
+                "proof_status": "verified",
+                "request_certified": True,
+                "reusable_grounded_check_ids": ["v0001"],
+                "needs_review_check_ids": [],
+                "proof_limitations": [],
+            },
+            [
+                {
+                    "id": "claim-revenue",
+                    "text": "Revenue grew to $12.4M in Q3 2025.",
+                    "check_id": "v0001",
+                    "question_relevance": "direct_answer",
+                    "claim_type": "source_fact",
+                }
+            ],
+        )
+        errors = sorted(
+            Draft202012Validator(schema).iter_errors(decision),
+            key=lambda error: list(error.absolute_path),
+        )
+
+        self.assertEqual([], errors)
+        self.assertNotIn("check_id", decision["claims"][0])
+        self.assertEqual(["v0001"], decision["claims"][0]["check_ids"])
 
     def test_schema_registry_validates_example(self) -> None:
         text = VALIDATE_EXAMPLES.read_text(encoding="utf-8")

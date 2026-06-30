@@ -143,7 +143,7 @@ decision = app_answer_release_decision(
         {
             "id": "claim-revenue",
             "text": "Revenue grew to $12.4M in Q3 2025.",
-            "check_id": "v0001",
+            "check_ids": ["v0001"],
             "question_relevance": "direct_answer",
             "claim_type": "source_fact",
         }

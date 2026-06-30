@@ -15,7 +15,7 @@
     {
       "id": "claim-revenue",
       "text": "Revenue grew to $12.4M in Q3 2025.",
-      "check_id": "v0001",
+      "check_ids": ["v0001"],
       "citation_grounded": true,
       "question_relevance": "direct_answer",
       "claim_type": "source_fact",
@@ -25,7 +25,7 @@
     {
       "id": "claim-office-background",
       "text": "The company opened a European office.",
-      "check_id": "v0002",
+      "check_ids": ["v0002"],
       "citation_grounded": true,
       "question_relevance": "background_only",
       "claim_type": "source_fact",
@@ -45,7 +45,7 @@
     {
       "id": "claim-margin",
       "text": "Gross margin improved in Q3 2025.",
-      "check_id": "v0004",
+      "check_ids": ["v0004"],
       "citation_grounded": false,
       "question_relevance": "direct_answer",
       "claim_type": "unsupported",

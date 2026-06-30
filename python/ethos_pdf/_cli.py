@@ -887,9 +887,7 @@ def _app_claim_decision(
         "release_action": release_action,
         "release_reason": release_reason,
     }
-    if "check_id" in claim:
-        decision["check_id"] = check_ids[0]
-    elif "check_ids" in claim:
+    if check_ids:
         decision["check_ids"] = check_ids
     return decision
 
