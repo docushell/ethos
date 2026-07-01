@@ -16,6 +16,14 @@ public benchmark reports, public benchmark claims, speed, footprint, parser-qual
 the repository for app-answer-release validation only; no public `0.3.0` install wording,
 publication, artifact, tag, npm alignment, or DocuShell integration is approved.
 
+v0.3.0 package/build evidence is recorded in
+`docs/validation/v0-3-0-package-build-evidence-validation-2026-07-01.md`. It records passing local
+Rust candidate package assembly for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.3.0`, a
+passing registry-equivalent Rust consumer check, and a passing local Python wheel
+build/install/helper smoke for `ethos-pdf==0.3.0`. Installable `0.3.0` wording remains blocked; no
+`cargo publish`, PyPI upload, npm publication, GitHub Release artifact publication, tag creation,
+npm alignment, or DocuShell integration is approved by that record.
+
 v0.3.0 release approval decision is recorded in
 `docs/validation/v0-3-0-release-approval-decision-validation-2026-07-01.md`. It accepts the exact
 app-answer-release contract prep packet and authorizes release-candidate source activation on

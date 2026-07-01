@@ -4,6 +4,14 @@ Date: 2026-07-01
 Owner: product / decider
 Status: v0.2.0 public beta/evaluation surfaces are live for the GitHub source repository; Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`; the Python `ethos-pdf` wheel at `0.2.0`; npm `@docushell/ethos-pdf@0.2.1`; and GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts. npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`; use `0.2.1`. v0.3.0 release-candidate source metadata is active in the repository for app-answer-release validation only; no public `0.3.0` install wording, publication, artifact, tag, npm alignment, or DocuShell integration is approved. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
 
+v0.3.0 package/build evidence is recorded in
+`docs/validation/v0-3-0-package-build-evidence-validation-2026-07-01.md`. Rust candidate package
+assembly passed for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.3.0`, the
+registry-equivalent Rust consumer check passed, and the local Python wheel build/install/helper
+smoke passed for `ethos-pdf==0.3.0`. Installable `0.3.0` wording remains blocked, and `cargo
+publish`, PyPI upload, npm publication, GitHub Release artifact publication, tag creation, npm
+alignment, and DocuShell integration remain blocked.
+
 v0.3.0 release approval decision is recorded in
 `docs/validation/v0-3-0-release-approval-decision-validation-2026-07-01.md`. It accepts the exact
 app-answer-release contract release-prep packet and authorizes source activation on

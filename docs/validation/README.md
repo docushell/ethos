@@ -10,6 +10,14 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 package/build evidence is recorded in
+`v0-3-0-package-build-evidence-validation-2026-07-01.md`. It records local Rust candidate package
+assembly for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.3.0`, a passing
+registry-equivalent Rust consumer check, and a passing local Python wheel build/install/helper smoke
+for `ethos-pdf==0.3.0`. Installable `0.3.0` wording remains blocked, and `cargo publish`, PyPI
+upload, npm publication, GitHub Release artifact publication, tag creation, npm alignment, and
+DocuShell integration remain blocked.
+
 v0.3.0 release approval decision is recorded in
 `v0-3-0-release-approval-decision-validation-2026-07-01.md`. It accepts the exact
 app-answer-release contract release-prep packet and authorizes source activation on
