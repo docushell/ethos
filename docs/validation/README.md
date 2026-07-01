@@ -10,6 +10,16 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 publication closeout is recorded in
+`v0-3-0-publication-closeout-validation-2026-07-01.md`. It records successful crates.io
+publication for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.3.0`, successful PyPI
+publication for the exact deterministic `ethos_pdf-0.3.0-py3-none-any.whl`, and live registry
+verification for those bounded Rust/Python package surfaces. GitHub Release artifact upload,
+`npm publish`, public install wording, release/package tag creation, DocuShell integration, hosted
+surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium
+builds, `ethos-doc`, `ethos-rag`, public benchmark reports, and public benchmark claims remain
+blocked pending their separate evidence and approval lanes.
+
 v0.3.0 publication approval decision is recorded in
 `v0-3-0-publication-approval-decision-validation-2026-07-01.md`. It accepts the exact `0.3.0`
 Rust crates.io operator inputs for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`, and the exact

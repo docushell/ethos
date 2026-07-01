@@ -2,7 +2,16 @@
 
 Date: 2026-07-01
 Owner: product / decider
-Status: v0.2.0 public beta/evaluation surfaces are live for the GitHub source repository; Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`; the Python `ethos-pdf` wheel at `0.2.0`; npm `@docushell/ethos-pdf@0.2.1`; and GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts. npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`; use `0.2.1`. v0.3.0 release-candidate source metadata is active in the repository for app-answer-release validation only; no public `0.3.0` install wording, publication, artifact, tag, npm alignment, or DocuShell integration is approved. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1`; npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`. Public `0.3.0` install wording, GitHub Release artifact upload, npm publication/alignment, release/package tags, and DocuShell integration remain blocked pending separate evidence, approval, and closeout records. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+
+v0.3.0 publication closeout is recorded in
+`docs/validation/v0-3-0-publication-closeout-validation-2026-07-01.md`. It records successful
+publication and live registry verification for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`
+at `0.3.0` on crates.io, plus `ethos-pdf==0.3.0` on PyPI as the exact deterministic
+`ethos_pdf-0.3.0-py3-none-any.whl`. GitHub Release artifact upload, `npm publish`, public install
+wording, release/package tag creation, DocuShell integration, hosted surfaces, production
+positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark
+reports, and public benchmark claims remain blocked.
 
 v0.3.0 package/build evidence is recorded in
 `docs/validation/v0-3-0-package-build-evidence-validation-2026-07-01.md`. Rust candidate package
