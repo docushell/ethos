@@ -85,12 +85,17 @@ The v0.3.0 draft CLI artifact evidence record captures
 `7287358475a96e827d536f0d2d250a1c2961ba84`, with macOS arm64 and Linux x64 archive SHA256 values,
 inventory sidecars, archive listings, and smoke sidecars that report `ethos 0.3.0`.
 
+The v0.3.0 artifact publication approval request is recorded in
+`docs/validation/v0-3-0-artifact-publication-approval-request-validation-2026-07-01.md`. It asks
+the decider to accept or reject only the exact macOS arm64 and Linux x64 draft CLI artifact names,
+checksums, workflow evidence, and bounded wording.
+
 Draft artifacts remain CI evidence only. GitHub Release artifact upload remains blocked until a
-separate approval decision and operator closeout pass. npm vendor refresh remains blocked until a
-separate vendor-refresh evidence and approval lane passes. npm publication, release/package tag
-creation, public install wording, and DocuShell integration remain blocked. The public install
-wording remains blocked until the relevant registry, artifact, npm, tag, and wording closeout
-records pass.
+separate approval decision, operator action, and closeout record pass. npm vendor refresh remains
+blocked until a separate vendor-refresh evidence and approval lane passes. npm publication,
+release/package tag creation, public install wording, and DocuShell integration remain blocked.
+The public install wording remains blocked until the relevant registry, artifact, npm, tag, and
+wording closeout records pass.
 
 ### 4. Gather Package Evidence Before Any Publication Decision
 
