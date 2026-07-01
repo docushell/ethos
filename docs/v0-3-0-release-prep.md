@@ -73,12 +73,17 @@ The target runs the workspace Rust test suite, app-answer-release contract guard
 surface checks, 0.3.0 approval and activation guards, public posture checks, claims gates, and
 diff hygiene.
 
-### 3a. Keep The Artifact Workflow Out Of Scope
+### 3a. Prepare CLI Artifact Evidence
 
-The current `.github/workflows/release.yml` artifact workflow remains pinned to the published
-`0.2.x` CLI artifact lane and still smokes `--expected-version "ethos 0.2.0"`. Do not use that
-workflow as evidence for `0.3.0` CLI artifact readiness until a separate CLI artifact lane updates
-the expected version, records package evidence, and closes the release boundary.
+The `.github/workflows/release.yml` artifact workflow is aligned to the v0.3.0 CLI artifact
+evidence lane and smokes `--expected-version "ethos 0.3.0"`. The v0.3.0 CLI artifact evidence
+prep record documents this workflow alignment without running the workflow, publishing artifacts,
+creating tags, refreshing npm vendor payloads, or changing public install wording.
+
+Draft artifacts remain CI evidence only until a later artifact evidence record captures the
+workflow run URL, source commit, macOS arm64 and Linux x64 archive SHA256 values, inventory
+sidecars, and smoke sidecars. GitHub Release artifact upload remains blocked until a separate
+approval decision and operator closeout pass.
 
 ### 4. Gather Package Evidence Before Any Publication Decision
 

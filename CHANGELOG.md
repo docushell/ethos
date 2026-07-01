@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- boundary-exception: align the v0.3.0 draft CLI artifact workflow smoke expectation to
+  `ethos 0.3.0` and record CLI artifact evidence prep while keeping GitHub Release artifact
+  upload, npm vendor refresh, npm publish, public install wording, release/package tags, hosted,
+  production, Windows, bundled PDFium, benchmark, `ethos-doc`, `ethos-rag`, and DocuShell
+  integration blocked pending later evidence and approval lanes.
 - boundary-exception: close v0.3.0 Rust crates.io and Python PyPI publication with exact live
   registry evidence while keeping GitHub Release artifact upload, npm publish, public install
   wording, release/package tags, hosted, production, Windows, bundled PDFium, benchmark,
