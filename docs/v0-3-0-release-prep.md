@@ -73,17 +73,24 @@ The target runs the workspace Rust test suite, app-answer-release contract guard
 surface checks, 0.3.0 approval and activation guards, public posture checks, claims gates, and
 diff hygiene.
 
-### 3a. Prepare CLI Artifact Evidence
+### 3a. Prepare And Record CLI Artifact Evidence
 
 The `.github/workflows/release.yml` artifact workflow is aligned to the v0.3.0 CLI artifact
 evidence lane and smokes `--expected-version "ethos 0.3.0"`. The v0.3.0 CLI artifact evidence
 prep record documents this workflow alignment without running the workflow, publishing artifacts,
 creating tags, refreshing npm vendor payloads, or changing public install wording.
 
-Draft artifacts remain CI evidence only until a later artifact evidence record captures the
-workflow run URL, source commit, macOS arm64 and Linux x64 archive SHA256 values, inventory
-sidecars, and smoke sidecars. GitHub Release artifact upload remains blocked until a separate
-approval decision and operator closeout pass.
+The v0.3.0 draft CLI artifact evidence record captures
+`https://github.com/docushell/ethos/actions/runs/28531102130` on `main`, bound to source commit
+`7287358475a96e827d536f0d2d250a1c2961ba84`, with macOS arm64 and Linux x64 archive SHA256 values,
+inventory sidecars, archive listings, and smoke sidecars that report `ethos 0.3.0`.
+
+Draft artifacts remain CI evidence only. GitHub Release artifact upload remains blocked until a
+separate approval decision and operator closeout pass. npm vendor refresh remains blocked until a
+separate vendor-refresh evidence and approval lane passes. npm publication, release/package tag
+creation, public install wording, and DocuShell integration remain blocked. The public install
+wording remains blocked until the relevant registry, artifact, npm, tag, and wording closeout
+records pass.
 
 ### 4. Gather Package Evidence Before Any Publication Decision
 

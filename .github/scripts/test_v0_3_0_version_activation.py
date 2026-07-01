@@ -195,7 +195,11 @@ class V030VersionActivationTests(unittest.TestCase):
         self.assertIn("`.github/workflows/release.yml` artifact workflow", text)
         self.assertIn('`--expected-version "ethos 0.3.0"`', text)
         self.assertIn("v0.3.0 CLI artifact evidence prep", text)
-        self.assertIn("Draft artifacts remain CI evidence only until a later artifact evidence", text)
+        self.assertIn("v0.3.0 draft CLI artifact evidence", text)
+        self.assertIn("Draft artifacts remain CI evidence only", text)
+        self.assertIn("GitHub Release artifact upload remains blocked", text)
+        self.assertIn("npm vendor refresh remains blocked", text)
+        self.assertIn("public install wording remains blocked", text)
 
 
 if __name__ == "__main__":
