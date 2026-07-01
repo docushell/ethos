@@ -1,0 +1,46 @@
+{
+  "question": "What changed in Q3 2025 revenue?",
+  "verification_report_ref": "verification-report.json",
+  "notes": [
+    "Ethos verified citation grounding; the application supplied relevance and synthesis labels."
+  ],
+  "claims": [
+    {
+      "id": "claim-revenue",
+      "text": "Q3 2025 revenue was $12.4M, up 18% year over year.",
+      "check_ids": [
+        "v0001"
+      ],
+      "question_relevance": "direct_answer",
+      "claim_type": "source_fact"
+    },
+    {
+      "id": "claim-growth-driver",
+      "text": "Q3 revenue growth was likely driven by enterprise expansion.",
+      "check_ids": [
+        "v0001",
+        "v0003"
+      ],
+      "question_relevance": "supports_answer",
+      "claim_type": "synthesis"
+    },
+    {
+      "id": "claim-office-background",
+      "text": "The company opened a European office in September.",
+      "check_ids": [
+        "v0002"
+      ],
+      "question_relevance": "background_only",
+      "claim_type": "source_fact"
+    },
+    {
+      "id": "claim-margin",
+      "text": "Gross margin improved in Q3 2025.",
+      "check_ids": [
+        "v0004"
+      ],
+      "question_relevance": "direct_answer",
+      "claim_type": "unsupported"
+    }
+  ]
+}

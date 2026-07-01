@@ -1,0 +1,15 @@
+{
+  "proof_status": "partially_verified",
+  "request_certified": false,
+  "reusable_grounded_check_ids": [
+    "v0001",
+    "v0002",
+    "v0003"
+  ],
+  "needs_review_check_ids": [
+    "v0004"
+  ],
+  "proof_limitations": [
+    "non_grounded_checks"
+  ]
+}

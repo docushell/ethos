@@ -41,6 +41,7 @@ EXPECTED_TARGET_COMMANDS = [
     "$(MAKE) python-surface-test PYTHON=$(PYTHON)",
     "$(PYTHON) schemas/validate_examples.py",
     "$(PYTHON) .github/scripts/test_app_answer_release_contract.py",
+    "$(PYTHON) .github/scripts/test_app_answer_release_demo.py",
     "$(PYTHON) .github/scripts/claims_gate.py",
     "$(PYTHON) .github/scripts/public_boundary_claims_gate.py",
     "git diff --check",
