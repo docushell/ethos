@@ -21,6 +21,7 @@ RECORD = ROOT / "docs/validation/v0-3-0-version-activation-validation-2026-07-01
 VALIDATION_README = ROOT / "docs/validation/README.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 PUBLIC_RELEASE_CHECKLIST = ROOT / "docs/public-release-checklist.md"
+RELEASE_PREP = ROOT / "docs/v0-3-0-release-prep.md"
 MAKEFILE = ROOT / "Makefile"
 README = ROOT / "README.md"
 CLAIMS = ROOT / "docs/public-boundary-claims.json"
@@ -187,6 +188,14 @@ class V030VersionActivationTests(unittest.TestCase):
         self.assertEqual(1, makefile.count(activation_guard))
         self.assertLess(block.index(decision_guard), block.index(activation_guard))
         self.assertLess(block.index(activation_guard), block.index(claims))
+
+    def test_release_prep_keeps_current_artifact_workflow_out_of_scope(self) -> None:
+        text = normalized(RELEASE_PREP)
+
+        self.assertIn("`.github/workflows/release.yml` artifact workflow", text)
+        self.assertIn('`--expected-version "ethos 0.2.0"`', text)
+        self.assertIn("Do not use that workflow as evidence for `0.3.0` CLI artifact readiness", text)
+        self.assertIn("separate CLI artifact lane", text)
 
 
 if __name__ == "__main__":
