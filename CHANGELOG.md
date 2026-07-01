@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- boundary-exception: activate v0.3.0 release-candidate source versions for Rust workspace and
+  Python package metadata while keeping npm at `0.2.1` and keeping `cargo publish`, PyPI upload,
+  npm publish, GitHub Release artifact publication, release/package tags, installable `0.3.0`
+  wording, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, `ethos-rag`, and
+  DocuShell integration blocked.
+- boundary-exception: record decider approval for v0.3.0 app-answer-release release-candidate
+  source activation while keeping package publication, artifact publication, tag creation, npm
+  alignment, installable `0.3.0` wording, hosted, production, Windows, bundled PDFium, benchmark,
+  `ethos-doc`, `ethos-rag`, and DocuShell integration blocked pending separate evidence records.
 - boundary-exception: record app-answer-release contract release-prep packet for decider review
   while keeping version bump, package publication, tag creation, artifact publication,
   installable `0.3.0` wording, npm publication, hosted, production, Windows, bundled PDFium,

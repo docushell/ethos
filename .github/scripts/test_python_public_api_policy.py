@@ -40,10 +40,12 @@ PUBLIC_API = (
     "ParseTimeoutError",
     "PdfiumNotFoundError",
     "anchor",
+    "app_answer_release_decision",
     "crop_element",
     "parse_pdf_json",
     "parse_pdf_markdown",
     "parse_pdf_text",
+    "proof_summary",
     "verify",
 )
 

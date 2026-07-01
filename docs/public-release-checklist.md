@@ -12,17 +12,34 @@ macOS arm64 and Linux x64 CLI artifacts. npm `@docushell/ethos-pdf@0.2.0` is dep
 it shipped stale CLI binaries that reported `ethos 0.1.2`; use `0.2.1`. Hosted surfaces,
 production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
 public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality,
-`ethos-doc`, and `ethos-rag` remain blocked.
+`ethos-doc`, and `ethos-rag` remain blocked. v0.3.0 release-candidate source metadata is active in
+the repository for app-answer-release validation only; no public `0.3.0` install wording,
+publication, artifact, tag, npm alignment, or DocuShell integration is approved.
+
+v0.3.0 release approval decision is recorded in
+`docs/validation/v0-3-0-release-approval-decision-validation-2026-07-01.md`. It accepts the exact
+app-answer-release contract prep packet and authorizes release-candidate source activation on
+`dev/v0-3-approval-packet` for Rust and Python metadata only. It does not approve package
+publication, tag creation, artifact publication, npm alignment, installable `0.3.0` wording,
+hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained
+PDFium builds, public benchmark claims, `ethos-doc`, `ethos-rag`, or DocuShell integration.
+
+v0.3.0 version activation is recorded in
+`docs/validation/v0-3-0-version-activation-validation-2026-07-01.md`. It moves Rust workspace
+metadata, Rust internal path-dependency pins, `Cargo.lock`, Python package metadata, and
+`ethos_pdf.__version__` to `0.3.0` for app-answer-release candidate validation only. npm remains at
+`0.2.1`, and public install commands remain on the current published `0.2.0` Rust/Python and
+`0.2.1` npm surfaces until separate publication, smoke, and wording closeout records pass.
 
 App-answer-release contract release prep is recorded in
 `docs/validation/app-answer-release-contract-release-prep-validation-2026-07-01.md` for decider
 review only. It proposes `0.3.0` for review, lists the merged contract/schema/helper/demo surfaces,
-and requests Rust, Python, npm, CLI artifact, and tag decisions. It does not approve version bump,
-package publication, tag creation, artifact publication, installable `0.3.0` wording, npm
-publication, hosted surfaces, production positioning, Windows packaged artifacts, bundled
-project-maintained PDFium builds, public benchmark reports, public benchmark claims, `ethos-doc`,
-`ethos-rag`, or DocuShell integration. Those actions remain blocked pending explicit approval and
-later evidence records.
+and requests Rust, Python, npm, CLI artifact, and tag decisions. The later v0.3.0 approval and
+activation records supersede only the source-version blocker; package publication, tag creation,
+artifact publication, installable `0.3.0` wording, npm publication, hosted surfaces, production
+positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public
+benchmark reports, public benchmark claims, `ethos-doc`, `ethos-rag`, and DocuShell integration
+remain blocked pending later evidence records.
 
 v0.2.0 release approval request is recorded in
 `docs/validation/v0-2-0-release-approval-request-validation-2026-06-25.md` for decider review

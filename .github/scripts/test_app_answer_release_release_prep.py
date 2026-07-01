@@ -24,9 +24,7 @@ PUBLIC_RELEASE_CHECKLIST = ROOT / "docs/public-release-checklist.md"
 README = ROOT / "README.md"
 CHANGELOG = ROOT / "CHANGELOG.md"
 MAKEFILE = ROOT / "Makefile"
-PYTHON_INIT = ROOT / "python/ethos_pdf/__init__.py"
 NPM_PACKAGE = ROOT / "packages/npm/ethos-pdf/package.json"
-CARGO_TOML = ROOT / "Cargo.toml"
 
 SOURCE_SHORT = "d386568"
 SOURCE_COMMIT = "d386568ef680f36f4a395543b21d34d2b17baccb"
@@ -150,9 +148,22 @@ class AppAnswerReleaseReleasePrepTests(unittest.TestCase):
         for private in PRIVATE_PATH_MARKERS:
             self.assertNotIn(private, raw)
 
-    def test_current_public_install_surfaces_are_not_bumped(self) -> None:
-        self.assertIn('version = "0.2.0"', read(CARGO_TOML))
-        self.assertIn('__version__ = "0.2.0"', read(PYTHON_INIT))
+    def test_prep_packet_does_not_itself_perform_release_actions(self) -> None:
+        record = normalized(RECORD)
+
+        for required in [
+            "This prep record does not approve a version bump.",
+            "This prep record does not create a release-candidate branch.",
+            "This prep record does not approve `cargo publish`.",
+            "This prep record does not approve PyPI upload.",
+            "This prep record does not approve `npm publish`.",
+            "This prep record does not upload CLI artifacts.",
+            "This prep record does not approve installable `0.3.0` public wording.",
+            "This prep record does not approve DocuShell integration.",
+        ]:
+            self.assertIn(required, record)
+
+    def test_current_public_install_surfaces_remain_on_published_baseline(self) -> None:
         self.assertIn('"version": "0.2.1"', read(NPM_PACKAGE))
         self.assertIn("cargo add ethos-doc-core@0.2.0", read(README))
         self.assertIn("python3 -m pip install ethos-pdf==0.2.0", read(README))
