@@ -33,6 +33,14 @@ install wording, package tags, release tags, npm alignment, GitHub Release artif
 or DocuShell integration; those remain blocked until explicit approval, operator action, and
 closeout records pass.
 
+v0.3.0 publication approval decision is recorded in
+`docs/validation/v0-3-0-publication-approval-decision-validation-2026-07-01.md`. It accepts the
+exact `0.3.0` Rust crates.io operator inputs and the exact deterministic PyPI wheel for later
+operator action after merged-source validation passes. CLI/GitHub Release and npm lanes are
+approved to start evidence work only; actual GitHub Release artifact upload, `npm publish`,
+installable `0.3.0` wording, release/package tag creation, and DocuShell integration remain blocked
+pending exact artifact/npm evidence, later approval records, operator action, and closeout records.
+
 v0.3.0 release approval decision is recorded in
 `docs/validation/v0-3-0-release-approval-decision-validation-2026-07-01.md`. It accepts the exact
 app-answer-release contract prep packet and authorizes release-candidate source activation on
