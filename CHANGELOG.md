@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- boundary-exception: record v0.3.0 Rust crates.io and PyPI publication approval decision for
+  later operator action while keeping actual GitHub Release artifact upload, npm publish,
+  installable `0.3.0` wording, release/package tags, hosted, production, Windows, bundled PDFium,
+  benchmark, `ethos-doc`, `ethos-rag`, and DocuShell integration blocked pending later evidence
+  and closeout records.
 - boundary-exception: request decider review for exact v0.3.0 Rust crates.io publication inputs
   and exact v0.3.0 deterministic PyPI wheel publication inputs while keeping `cargo publish`,
   PyPI upload, npm publish, GitHub Release artifact publication, release/package tags, installable

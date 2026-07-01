@@ -10,6 +10,15 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 publication approval decision is recorded in
+`v0-3-0-publication-approval-decision-validation-2026-07-01.md`. It accepts the exact `0.3.0`
+Rust crates.io operator inputs for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`, and the exact
+deterministic PyPI wheel `ethos_pdf-0.3.0-py3-none-any.whl`, for later operator action after
+merged-source validation passes. CLI/GitHub Release and npm lanes are approved to start evidence
+work only; actual GitHub Release artifact upload, `npm publish`, installable `0.3.0` wording,
+release/package tag creation, and DocuShell integration remain blocked pending exact artifact/npm
+evidence, later approval records, operator action, and closeout records.
+
 v0.3.0 package publication approval request is recorded in
 `v0-3-0-package-publication-approval-request-validation-2026-07-01.md`. It requests decider review
 for the exact `0.3.0` crates.io publication inputs for `ethos-doc-core`, `ethos-verify`, and
