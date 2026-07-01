@@ -41,12 +41,12 @@ SUPPORTED_TARGETS = {
     "darwin:arm64": {
         "binary": "ethos-darwin-arm64",
         "release_asset": "ethos-macos-arm64.tar.gz",
-        "release_asset_sha256": "7da7da71fb0c21b25cd2ffc198480ee80bf9f0c9e70e461cffbdcbdda8d7023c",
+        "release_asset_sha256": "c588ee77bbaf99a7d933673e6cd9db190f5992e47d40955def803435a9f9fc5a",
     },
     "linux:x64": {
         "binary": "ethos-linux-x64",
         "release_asset": "ethos-linux-x64.tar.gz",
-        "release_asset_sha256": "4e260b464dc9557bc31c29fb1d1dfa75311fe12734bc79af4a31e1649797e456",
+        "release_asset_sha256": "00137b20ca2c2a2d2089df1d135920b021b0905d779b1347d134e8a2fb7bfa23",
     },
 }
 
@@ -101,7 +101,9 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertIn("does not bundle PDFium", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
         self.assertIn("QUICKSTART.md", text)
-        self.assertIn("not approved for public publication", text)
+        self.assertIn("current npm package is `@docushell/ethos-pdf@0.2.1`", text)
+        self.assertIn("Version `0.2.0` is deprecated", text)
+        self.assertIn("`ethos 0.2.0`", text)
         self.assertIn("does not include public benchmark reports or claims", normalized)
 
         quickstart = read(QUICKSTART)
