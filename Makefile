@@ -13,7 +13,7 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha evidence-anchor-v1-contract milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep release-candidate-prep v0-2-release-prep light-check package-publication-dry-run-smoke verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha evidence-anchor-v1-contract milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep release-candidate-prep v0-2-release-prep v0-3-release-prep light-check package-publication-dry-run-smoke verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 .PHONY: milestone-d-capability-downgrade-contract
 .PHONY: milestone-d-opendataloader-adapter-shape-contract
 .PHONY: milestone-d-grounding-source-contract
@@ -81,6 +81,19 @@ app-answer-release-release-prep:
 	$(PYTHON) .github/scripts/test_app_answer_release_release_prep.py
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/test_ci_workflow.py
+	git diff --check
+
+v0-3-release-prep:
+	cargo test --locked --workspace
+	$(MAKE) app-answer-release-contract PYTHON=$(PYTHON)
+	$(PYTHON) .github/scripts/test_python_public_api_policy.py
+	$(PYTHON) .github/scripts/test_app_answer_release_release_prep.py
+	$(PYTHON) .github/scripts/test_v0_3_0_release_approval_decision.py
+	$(PYTHON) .github/scripts/test_v0_3_0_version_activation.py
+	$(PYTHON) .github/scripts/test_validation_record_source.py
+	$(PYTHON) .github/scripts/test_public_surface_posture.py
+	$(PYTHON) .github/scripts/claims_gate.py
+	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
 	git diff --check
 
 milestone-d-verify-citations-contract:

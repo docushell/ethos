@@ -10,13 +10,31 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 release approval decision is recorded in
+`v0-3-0-release-approval-decision-validation-2026-07-01.md`. It accepts the exact
+app-answer-release contract release-prep packet and authorizes source activation on
+`dev/v0-3-approval-packet` for the `0.3.0` Rust workspace and Python package metadata only.
+Package publication, tag creation, artifact publication, npm alignment, installable `0.3.0`
+wording, hosted surfaces, production positioning, Windows packaged artifacts, bundled
+project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, public benchmark claims, and
+DocuShell integration remain blocked until separate evidence records and operator decisions pass.
+
+v0.3.0 version activation is recorded in
+`v0-3-0-version-activation-validation-2026-07-01.md`. It moves Rust workspace/package metadata,
+internal path-dependency pins, `Cargo.lock`, Python metadata, and `ethos_pdf.__version__` to
+`0.3.0` for app-answer-release candidate validation only. npm remains at `0.2.1`; public install
+commands remain on the current published `0.2.0` Rust/Python and `0.2.1` npm surfaces. Package
+publication, tag creation, artifact publication, npm alignment, installable `0.3.0` wording, and
+DocuShell integration remain blocked.
+
 App-answer-release contract release prep is recorded in
 `app-answer-release-contract-release-prep-validation-2026-07-01.md` for decider review only. It
 binds the merged source commit and tree, proposed `0.3.0` target version for review, app-release
 source surfaces, package-surface decisions, product boundary wording, non-approvals, retained
-blockers, and guard commands. Version bump, package publication, tag creation, artifact
-publication, installable `0.3.0` wording, npm publication, and DocuShell integration remain
-blocked pending explicit approval and later evidence records.
+blockers, and guard commands. The later v0.3.0 approval and activation records supersede only the
+source-version blocker; package publication, tag creation, artifact publication, installable
+`0.3.0` wording, npm publication, and DocuShell integration remain blocked pending later evidence
+records.
 
 v0.2.0 publication closeout is recorded in
 `v0-2-0-publication-closeout-validation-2026-06-25.md`. It records crates.io publication for
