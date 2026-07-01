@@ -885,6 +885,44 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("python3 .github/scripts/claims_gate.py", text)
         self.assertIn("python3 .github/scripts/test_milestone_b_exit_checklist.py", text)
 
+    def test_v0_3_release_candidate_guards_run_in_pr_ci(self) -> None:
+        text = workflow_text()
+        contract_target = "make app-answer-release-contract PYTHON=python3"
+        policy_guard = "python3 .github/scripts/test_python_public_api_policy.py"
+        release_prep_guard = "python3 .github/scripts/test_app_answer_release_release_prep.py"
+        decision_guard = "python3 .github/scripts/test_v0_3_0_release_approval_decision.py"
+        activation_guard = "python3 .github/scripts/test_v0_3_0_version_activation.py"
+        source_guard = "python3 .github/scripts/test_validation_record_source.py"
+
+        for guard in (
+            policy_guard,
+            release_prep_guard,
+            decision_guard,
+            activation_guard,
+            source_guard,
+            "python3 .github/scripts/public_boundary_claims_gate.py",
+            "python3 .github/scripts/check_release_boundary_paths.py",
+            "python3 .github/scripts/validation_record_integrity.py",
+        ):
+            self.assertIn(guard, text)
+            self.assertEqual(1, text.count(guard), guard)
+
+        self.assertLess(text.index(contract_target), text.index(policy_guard))
+        self.assertLess(text.index(policy_guard), text.index(release_prep_guard))
+        self.assertLess(text.index(release_prep_guard), text.index(decision_guard))
+        self.assertLess(text.index(decision_guard), text.index(activation_guard))
+        self.assertLess(text.index(activation_guard), text.index(source_guard))
+        self.assertLess(text.index(source_guard), text.index("python3 .github/scripts/test_milestone_d_internal_contracts.py"))
+        self.assertLess(
+            text.index("python3 .github/scripts/public_boundary_claims_gate.py"),
+            text.index("python3 .github/scripts/check_release_boundary_paths.py"),
+        )
+        self.assertLess(
+            text.index("python3 .github/scripts/check_release_boundary_paths.py"),
+            text.index("python3 .github/scripts/validation_record_integrity.py"),
+        )
+        self.assertIn("fetch-depth: 0", text)
+
 
 if __name__ == "__main__":
     unittest.main()

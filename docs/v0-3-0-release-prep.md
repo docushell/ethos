@@ -73,6 +73,13 @@ The target runs the workspace Rust test suite, app-answer-release contract guard
 surface checks, 0.3.0 approval and activation guards, public posture checks, claims gates, and
 diff hygiene.
 
+### 3a. Keep The Artifact Workflow Out Of Scope
+
+The current `.github/workflows/release.yml` artifact workflow remains pinned to the published
+`0.2.x` CLI artifact lane and still smokes `--expected-version "ethos 0.2.0"`. Do not use that
+workflow as evidence for `0.3.0` CLI artifact readiness until a separate CLI artifact lane updates
+the expected version, records package evidence, and closes the release boundary.
+
 ### 4. Gather Package Evidence Before Any Publication Decision
 
 Before any public package or artifact decision, record exact evidence for the surfaces that are in

@@ -88,6 +88,16 @@ jobs:
         run: python3 .github/scripts/test_evidence_anchor_v1_contract.py
       - name: App answer release contract target
         run: make app-answer-release-contract PYTHON=python3
+      - name: Python public API policy tests
+        run: python3 .github/scripts/test_python_public_api_policy.py
+      - name: App answer release release-prep tests
+        run: python3 .github/scripts/test_app_answer_release_release_prep.py
+      - name: v0.3.0 release approval decision tests
+        run: python3 .github/scripts/test_v0_3_0_release_approval_decision.py
+      - name: v0.3.0 version activation tests
+        run: python3 .github/scripts/test_v0_3_0_version_activation.py
+      - name: Validation record source tests
+        run: python3 .github/scripts/test_validation_record_source.py
       - name: Milestone D internal contract target tests
         run: python3 .github/scripts/test_milestone_d_internal_contracts.py
       - name: Milestone B closeout validation record tests
@@ -366,8 +376,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - run: python3 .github/scripts/test_public_surface_posture.py
       - run: python3 .github/scripts/claims_gate.py
+      - run: python3 .github/scripts/public_boundary_claims_gate.py
+      - run: python3 .github/scripts/check_release_boundary_paths.py
+      - run: python3 .github/scripts/validation_record_integrity.py
 
   dco:
     runs-on: ubuntu-latest
