@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- boundary-exception: record v0.3.0 Rust package candidate and Python wheel evidence while keeping
+  `cargo publish`, PyPI upload, npm publish, GitHub Release artifact publication, release/package
+  tags, installable `0.3.0` wording, npm alignment, hosted, production, Windows, bundled PDFium,
+  benchmark, `ethos-doc`, `ethos-rag`, and DocuShell integration blocked.
 - boundary-exception: harden v0.3.0 release-candidate CI guards and document the current release
   workflow artifact smoke pin while keeping `cargo publish`, PyPI upload, npm publish, GitHub
   Release artifact publication, release/package tags, installable `0.3.0` wording, hosted,

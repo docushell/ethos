@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import io
 import json
@@ -327,6 +328,7 @@ def add_archive_file(archive: tarfile.TarFile, source: Path, arcname: str) -> No
     info.gid = 0
     info.uname = ""
     info.gname = ""
+    info.mtime = 0
     with source.open("rb") as handle:
         archive.addfile(info, handle)
 
@@ -340,6 +342,7 @@ def add_archive_text(archive: tarfile.TarFile, text: str, arcname: str) -> None:
     info.gid = 0
     info.uname = ""
     info.gname = ""
+    info.mtime = 0
     archive.addfile(info, fileobj=io.BytesIO(data))
 
 
@@ -358,17 +361,19 @@ def assemble_candidate_package(
     crate_path.parent.mkdir(parents=True, exist_ok=True)
     root = f"{package}-{VERSION}"
 
-    with tarfile.open(crate_path, "w:gz") as archive:
-        for rel in file_list:
-            arcname = f"{root}/{rel}"
-            if rel == "Cargo.toml":
-                add_archive_text(archive, generated_manifest(package), arcname)
-            elif rel == "Cargo.toml.orig":
-                add_archive_file(archive, package_dir / "Cargo.toml", arcname)
-            elif rel == "Cargo.lock":
-                add_archive_file(archive, workspace / "Cargo.lock", arcname)
-            else:
-                add_archive_file(archive, package_dir / rel, arcname)
+    with crate_path.open("wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as compressed:
+            with tarfile.open(fileobj=compressed, mode="w") as archive:
+                for rel in file_list:
+                    arcname = f"{root}/{rel}"
+                    if rel == "Cargo.toml":
+                        add_archive_text(archive, generated_manifest(package), arcname)
+                    elif rel == "Cargo.toml.orig":
+                        add_archive_file(archive, package_dir / "Cargo.toml", arcname)
+                    elif rel == "Cargo.lock":
+                        add_archive_file(archive, workspace / "Cargo.lock", arcname)
+                    else:
+                        add_archive_file(archive, package_dir / rel, arcname)
 
     manifest = read_packaged_manifest(crate_path, package)
     record_command(f"assemble candidate package artifact -p {package}", commands, "\n".join(file_list))
