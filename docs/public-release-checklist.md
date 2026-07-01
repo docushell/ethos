@@ -24,6 +24,15 @@ build/install/helper smoke for `ethos-pdf==0.3.0`. Installable `0.3.0` wording r
 `cargo publish`, PyPI upload, npm publication, GitHub Release artifact publication, tag creation,
 npm alignment, or DocuShell integration is approved by that record.
 
+v0.3.0 package publication approval request is recorded in
+`docs/validation/v0-3-0-package-publication-approval-request-validation-2026-07-01.md`. It requests
+decider review for the exact `0.3.0` crates.io publication inputs for `ethos-doc-core`,
+`ethos-verify`, and `ethos-pdf`, plus the exact deterministic PyPI wheel
+`ethos_pdf-0.3.0-py3-none-any.whl`. It does not approve `cargo publish`, PyPI upload, public
+install wording, package tags, release tags, npm alignment, GitHub Release artifact publication,
+or DocuShell integration; those remain blocked until explicit approval, operator action, and
+closeout records pass.
+
 v0.3.0 release approval decision is recorded in
 `docs/validation/v0-3-0-release-approval-decision-validation-2026-07-01.md`. It accepts the exact
 app-answer-release contract prep packet and authorizes release-candidate source activation on

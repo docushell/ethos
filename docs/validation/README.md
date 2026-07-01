@@ -10,6 +10,14 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 package publication approval request is recorded in
+`v0-3-0-package-publication-approval-request-validation-2026-07-01.md`. It requests decider review
+for the exact `0.3.0` crates.io publication inputs for `ethos-doc-core`, `ethos-verify`, and
+`ethos-pdf`, and the exact deterministic PyPI wheel `ethos_pdf-0.3.0-py3-none-any.whl`.
+Actual crates.io publication, PyPI upload, package tag creation, release tag creation, installable
+`0.3.0` wording, npm alignment, GitHub Release artifact publication, and DocuShell integration
+remain blocked pending explicit approval, operator action, and closeout records.
+
 v0.3.0 package/build evidence is recorded in
 `v0-3-0-package-build-evidence-validation-2026-07-01.md`. It records local Rust candidate package
 assembly for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.3.0`, a passing

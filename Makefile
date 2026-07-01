@@ -92,6 +92,7 @@ v0-3-release-prep:
 	$(PYTHON) .github/scripts/test_v0_3_0_version_activation.py
 	$(PYTHON) .github/scripts/test_validation_record_source.py
 	$(PYTHON) .github/scripts/test_v0_3_0_package_build_evidence.py
+	$(PYTHON) .github/scripts/test_v0_3_0_package_publication_approval_request.py
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
