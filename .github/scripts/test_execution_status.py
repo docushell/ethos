@@ -34,12 +34,19 @@ class ExecutionStatusTests(unittest.TestCase):
         text = status_text()
 
         self.assertIn(
-            "Status: v0.2.0 public beta/evaluation surfaces are live for the GitHub source repository; "
-            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`; "
-            "the Python `ethos-pdf` wheel at `0.2.0`; npm `@docushell/ethos-pdf@0.2.1`; "
-            "and GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts.",
+            "Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` "
+            "are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI.",
             text,
         )
+        self.assertIn(
+            "v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` "
+            "macOS arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1`",
+            text,
+        )
+        self.assertIn("Public `0.3.0` install wording", text)
+        self.assertIn("GitHub Release artifact upload", text)
+        self.assertIn("npm publication/alignment", text)
+        self.assertIn("DocuShell integration remain blocked", text)
         self.assertIn(
             "npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries",
             text,
@@ -102,11 +109,14 @@ class ExecutionStatusTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            "v0.2.0 public beta/evaluation surfaces are live for the GitHub source repository",
+            "v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io",
             text,
         )
-        self.assertIn("npm `@docushell/ethos-pdf@0.2.1`", text)
-        self.assertIn("GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts", text)
+        self.assertIn("the Python `ethos-pdf` wheel is live on PyPI", text)
+        self.assertIn("v0.2.0 remains the public CLI artifact baseline", text)
+        self.assertIn("npm remains `@docushell/ethos-pdf@0.2.1`", text)
+        self.assertIn("GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts", text)
+        self.assertIn("docs/validation/v0-3-0-publication-closeout-validation-2026-07-01.md", text)
         self.assertIn("ethos-doc-core", text)
         self.assertIn("ethos-verify", text)
         self.assertIn("ethos-pdf", text)

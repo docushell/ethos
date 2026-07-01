@@ -145,19 +145,23 @@ class MilestoneEPublicEvaluationCurrentStateCloseoutTests(unittest.TestCase):
 
         self.assertIn(CURRENT_README_WORDING, readme_text, str(README))
         self.assertIn(
-            "Status: v0.2.0 public beta/evaluation surfaces are live for the GitHub source repository",
+            "Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` "
+            "are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI.",
             execution_status,
             str(EXECUTION_STATUS),
         )
         self.assertIn(
-            "Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`",
+            "v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` "
+            "macOS arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1`",
             execution_status,
             str(EXECUTION_STATUS),
         )
-        self.assertIn("the Python `ethos-pdf` wheel at `0.2.0`", execution_status, str(EXECUTION_STATUS))
-        self.assertIn("npm `@docushell/ethos-pdf@0.2.1`", execution_status, str(EXECUTION_STATUS))
+        self.assertIn("Public `0.3.0` install wording", execution_status, str(EXECUTION_STATUS))
+        self.assertIn("GitHub Release artifact upload", execution_status, str(EXECUTION_STATUS))
+        self.assertIn("npm publication/alignment", execution_status, str(EXECUTION_STATUS))
+        self.assertIn("DocuShell integration remain blocked", execution_status, str(EXECUTION_STATUS))
         self.assertIn(
-            "GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts",
+            "v0.3.0 publication closeout is recorded",
             execution_status,
             str(EXECUTION_STATUS),
         )
