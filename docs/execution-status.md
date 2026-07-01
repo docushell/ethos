@@ -12,6 +12,15 @@ smoke passed for `ethos-pdf==0.3.0`. Installable `0.3.0` wording remains blocked
 publish`, PyPI upload, npm publication, GitHub Release artifact publication, tag creation, npm
 alignment, and DocuShell integration remain blocked.
 
+v0.3.0 package publication approval request is recorded in
+`docs/validation/v0-3-0-package-publication-approval-request-validation-2026-07-01.md`. It requests
+decider review for the exact `0.3.0` crates.io publication inputs for `ethos-doc-core`,
+`ethos-verify`, and `ethos-pdf`, and the exact deterministic PyPI wheel
+`ethos_pdf-0.3.0-py3-none-any.whl`. Actual crates.io publication, PyPI upload, package tag
+creation, release tag creation, installable `0.3.0` wording, npm alignment, GitHub Release artifact
+publication, and DocuShell integration remain blocked pending explicit approval, operator action,
+and closeout records.
+
 v0.3.0 release approval decision is recorded in
 `docs/validation/v0-3-0-release-approval-decision-validation-2026-07-01.md`. It accepts the exact
 app-answer-release contract release-prep packet and authorizes source activation on
