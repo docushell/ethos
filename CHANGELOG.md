@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- boundary-exception: record app-answer-release contract release-prep packet for decider review
+  while keeping version bump, package publication, tag creation, artifact publication,
+  installable `0.3.0` wording, npm publication, hosted, production, Windows, bundled PDFium,
+  benchmark, `ethos-doc`, `ethos-rag`, and DocuShell integration blocked.
 - boundary-exception: record passing `ethos-doc-core 0.2.0` locked cargo publish dry-run evidence
   while keeping actual `cargo publish`, dependent-crate dry-runs, PyPI upload, npm publish, GitHub
   Release artifact publication, release/package tags, installable `0.2.0` wording, hosted,

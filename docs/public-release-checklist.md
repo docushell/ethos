@@ -14,6 +14,16 @@ production positioning, Windows packaged artifacts, bundled project-maintained P
 public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality,
 `ethos-doc`, and `ethos-rag` remain blocked.
 
+App-answer-release contract release prep is recorded in
+`docs/validation/app-answer-release-contract-release-prep-validation-2026-07-01.md` for decider
+review only. It proposes `0.3.0` for review, lists the merged contract/schema/helper/demo surfaces,
+and requests Rust, Python, npm, CLI artifact, and tag decisions. It does not approve version bump,
+package publication, tag creation, artifact publication, installable `0.3.0` wording, npm
+publication, hosted surfaces, production positioning, Windows packaged artifacts, bundled
+project-maintained PDFium builds, public benchmark reports, public benchmark claims, `ethos-doc`,
+`ethos-rag`, or DocuShell integration. Those actions remain blocked pending explicit approval and
+later evidence records.
+
 v0.2.0 release approval request is recorded in
 `docs/validation/v0-2-0-release-approval-request-validation-2026-06-25.md` for decider review
 only. It does not approve version bump, release-candidate branch creation, package publication,

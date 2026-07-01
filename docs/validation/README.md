@@ -10,6 +10,14 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+App-answer-release contract release prep is recorded in
+`app-answer-release-contract-release-prep-validation-2026-07-01.md` for decider review only. It
+binds the merged source commit and tree, proposed `0.3.0` target version for review, app-release
+source surfaces, package-surface decisions, product boundary wording, non-approvals, retained
+blockers, and guard commands. Version bump, package publication, tag creation, artifact
+publication, installable `0.3.0` wording, npm publication, and DocuShell integration remain
+blocked pending explicit approval and later evidence records.
+
 v0.2.0 publication closeout is recorded in
 `v0-2-0-publication-closeout-validation-2026-06-25.md`. It records crates.io publication for
 `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`; PyPI `ethos-pdf==0.2.0`;
