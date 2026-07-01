@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.0.0",
+  "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "verification_config_sha256": "4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0",
+  "grounding": {
+    "parser": {
+      "name": "app-release-demo",
+      "version": "1.0.0"
+    },
+    "capabilities": {
+      "spans": true,
+      "char_offsets": true,
+      "tables": true,
+      "fingerprint": true,
+      "coordinate_origin": "top-left",
+      "crop_support": false
+    }
+  },
+  "capability_limits": [],
+  "fingerprint_stale": false,
+  "all_evidence_grounded": false,
+  "checks": [
+    {
+      "id": "v0001",
+      "claim": {
+        "kind": "quote",
+        "text": "Q3 2025 revenue was $12.4M, up 18% year over year.",
+        "citation": {
+          "page": "p0001",
+          "element_id": "e0001"
+        }
+      },
+      "status": "grounded",
+      "match_method": "normalized_text",
+      "semantic_unverified": false,
+      "evidence": {
+        "text": "Q3 2025 revenue was $12.4M, up 18% year over year.",
+        "page": "p0001",
+        "bbox": [
+          7200,
+          10100,
+          54000,
+          11500
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "id": "v0002",
+      "claim": {
+        "kind": "quote",
+        "text": "The company opened a European office in September.",
+        "citation": {
+          "page": "p0002",
+          "element_id": "e0007"
+        }
+      },
+      "status": "grounded",
+      "match_method": "normalized_text",
+      "semantic_unverified": false,
+      "evidence": {
+        "text": "The company opened a European office in September.",
+        "page": "p0002",
+        "bbox": [
+          7200,
+          20100,
+          51000,
+          21500
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "id": "v0003",
+      "claim": {
+        "kind": "quote",
+        "text": "Enterprise expansion accounted for most new bookings.",
+        "citation": {
+          "page": "p0001",
+          "element_id": "e0003"
+        }
+      },
+      "status": "grounded",
+      "match_method": "normalized_text",
+      "semantic_unverified": false,
+      "evidence": {
+        "text": "Enterprise expansion accounted for most new bookings.",
+        "page": "p0001",
+        "bbox": [
+          7200,
+          12100,
+          54000,
+          13500
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "id": "v0004",
+      "claim": {
+        "kind": "quote",
+        "text": "Gross margin improved in Q3 2025.",
+        "citation": {
+          "page": "p0003",
+          "element_id": "e0099"
+        }
+      },
+      "status": "not_found",
+      "reason": "element_not_found",
+      "match_method": "none",
+      "semantic_unverified": false,
+      "warnings": []
+    }
+  ],
+  "unsupported_claim_kinds": [],
+  "warnings": []
+}

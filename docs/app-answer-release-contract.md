@@ -30,6 +30,8 @@ result. Rust apps can build the same envelope with `derive_app_answer_release_de
 Python apps can build it with `app_answer_release_decision(...)`, after they have supplied
 relevance and synthesis labels.
 
+For a runnable offline Python reference path, see `examples/app-answer-release/README.md`.
+
 If a wrapper exposes `invalid_request`, that status is a process or API envelope for malformed
 input, invalid configuration, adapter failure, or usage errors. It is not derived from a
 `VerificationReport`.
