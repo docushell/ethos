@@ -16,6 +16,14 @@ positioning, Windows packaged artifacts, bundled project-maintained PDFium build
 reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and
 `ethos-rag` remain blocked.
 
+v0.3.0 CLI artifact evidence prep is recorded in
+`docs/validation/v0-3-0-cli-artifact-evidence-prep-validation-2026-07-01.md`. It aligns the draft
+CLI artifact workflow to smoke `ethos 0.3.0` for macOS arm64 and Linux x64 draft artifacts. It does
+not record a workflow run, artifact bytes, checksums, GitHub Release upload, npm vendor refresh,
+npm publication, release/package tag creation, public install wording, or DocuShell integration.
+GitHub Release artifact upload remains blocked pending later workflow evidence, approval, operator
+action, and closeout records.
+
 v0.3.0 publication closeout is recorded in
 `docs/validation/v0-3-0-publication-closeout-validation-2026-07-01.md`. It records successful
 publication and live registry verification for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`

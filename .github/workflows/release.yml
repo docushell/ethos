@@ -65,7 +65,7 @@ jobs:
         run: |
           python3 .github/scripts/smoke_release_cli_artifact.py \
             --artifact-dir "target/release-artifacts/ethos-${{ matrix.artifact_target }}" \
-            --expected-version "ethos 0.2.0" \
+            --expected-version "ethos 0.3.0" \
             --target "${{ matrix.artifact_target }}" \
             --out "target/release-artifacts/ethos-${{ matrix.artifact_target }}.smoke.json"
       - name: validate draft artifact inventory

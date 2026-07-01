@@ -10,6 +10,14 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 CLI artifact evidence prep is recorded in
+`v0-3-0-cli-artifact-evidence-prep-validation-2026-07-01.md`. It aligns the draft
+`.github/workflows/release.yml` CLI artifact workflow to smoke `ethos 0.3.0` for macOS arm64 and
+Linux x64 draft artifacts. No workflow run, artifact bytes, checksums, GitHub Release upload, npm
+vendor refresh, npm publication, release/package tag creation, public install wording, or
+DocuShell integration is approved by this prep record. GitHub Release artifact upload remains
+blocked pending later workflow evidence, approval, operator action, and closeout records.
+
 v0.3.0 publication closeout is recorded in
 `v0-3-0-publication-closeout-validation-2026-07-01.md`. It records successful crates.io
 publication for `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.3.0`, successful PyPI

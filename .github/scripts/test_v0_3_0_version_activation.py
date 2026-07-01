@@ -189,13 +189,13 @@ class V030VersionActivationTests(unittest.TestCase):
         self.assertLess(block.index(decision_guard), block.index(activation_guard))
         self.assertLess(block.index(activation_guard), block.index(claims))
 
-    def test_release_prep_keeps_current_artifact_workflow_out_of_scope(self) -> None:
+    def test_release_prep_keeps_artifact_workflow_bound_to_separate_evidence_lane(self) -> None:
         text = normalized(RELEASE_PREP)
 
         self.assertIn("`.github/workflows/release.yml` artifact workflow", text)
-        self.assertIn('`--expected-version "ethos 0.2.0"`', text)
-        self.assertIn("Do not use that workflow as evidence for `0.3.0` CLI artifact readiness", text)
-        self.assertIn("separate CLI artifact lane", text)
+        self.assertIn('`--expected-version "ethos 0.3.0"`', text)
+        self.assertIn("v0.3.0 CLI artifact evidence prep", text)
+        self.assertIn("Draft artifacts remain CI evidence only until a later artifact evidence", text)
 
 
 if __name__ == "__main__":

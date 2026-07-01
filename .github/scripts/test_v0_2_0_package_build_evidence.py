@@ -123,11 +123,16 @@ class V020PackageBuildEvidenceTests(unittest.TestCase):
         ):
             self.assertIn(expected, record)
 
-    def test_release_workflow_expects_v0_2_smoke(self) -> None:
-        workflow = read(RELEASE_WORKFLOW)
+    def test_record_captures_historical_v0_2_workflow_smoke(self) -> None:
+        record = normalized(RECORD)
 
-        self.assertIn('--expected-version "ethos 0.2.0"', workflow)
-        self.assertNotIn('--expected-version "ethos 0.1.2"', workflow)
+        self.assertIn('`--expected-version "ethos 0.2.0"`', record)
+        self.assertIn(
+            'python3 .github/scripts/smoke_release_cli_artifact.py --expected-version "ethos 0.2.0" --target macos-arm64',
+            record,
+        )
+        self.assertIn("version_stdout: ethos 0.2.0", record)
+        self.assertNotIn('`--expected-version "ethos 0.1.2"`', record)
 
     def test_boundaries_private_paths_and_v0_2_release_prep_guard(self) -> None:
         raw = read(RECORD)
