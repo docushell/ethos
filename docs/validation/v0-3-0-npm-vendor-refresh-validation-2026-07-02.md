@@ -76,7 +76,7 @@ Candidate metadata:
 
 - package: `@docushell/ethos-pdf@0.3.0`
 - filename: `docushell-ethos-pdf-0.3.0.tgz`
-- npm shasum: `1a90cebd8d52011ea5c41629becdfb37dec73ee7`
+- npm shasum: 1a90cebd8d52011ea5c41629becdfb37dec73ee7
 - tarball SHA256: `1b72ef2fd9415f9edff93319ee2763e8f67cd6168ea00cd64d89a3760101c5fa`
 - integrity:
   `sha512-ZWoIY5BO7O8tzN88ICGvRasmOt7/RSN/xWFM2ONT8lavQqIOuCY/bQjvxnuK9vGpNeogh8X4UXHLLSRKqqHVOQ==`
