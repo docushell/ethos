@@ -11,10 +11,9 @@
 > Ethos is a deterministic document evidence layer for source-grounded verification and
 > citation checking across native Ethos JSON and supported foreign parser outputs. The current
 > beta includes the GitHub source repository, Rust library crates `ethos-doc-core`,
-> `ethos-verify`, and `ethos-pdf` at `0.2.0`, the Python `ethos-pdf` wheel at `0.2.0`, the npm
-> `@docushell/ethos-pdf@0.2.1` package, and GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI
-> artifacts. npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI
-> binaries; use `0.2.1`. PDFium-backed commands use caller-provided PDFium through
+> `ethos-verify`, and `ethos-pdf` at `0.3.0`, the Python `ethos-pdf` wheel at `0.3.0`, the npm
+> `@docushell/ethos-pdf@0.3.0` package, and GitHub Release `v0.3.0` macOS arm64/Linux x64 CLI
+> artifacts. PDFium-backed commands use caller-provided PDFium through
 > `ETHOS_PDFIUM_LIBRARY_PATH`.
 > Current execution status and release-scope notes live in `docs/execution-status.md`;
 > public-release hygiene gates live in `docs/public-release-checklist.md`.
@@ -123,22 +122,22 @@ ethos --help
 To add the currently approved Rust library crates to another Rust project:
 
 ```bash
-cargo add ethos-doc-core@0.2.0
-cargo add ethos-verify@0.2.0
-cargo add ethos-pdf@0.2.0
+cargo add ethos-doc-core@0.3.0
+cargo add ethos-verify@0.3.0
+cargo add ethos-pdf@0.3.0
 ```
 
 To install the Python wrapper from PyPI:
 
 ```bash
-python3 -m pip install ethos-pdf==0.2.0
+python3 -m pip install ethos-pdf==0.3.0
 ```
 
 The Python wheel is a thin wrapper around a caller-provided local `ethos` CLI binary. It does not
 bundle the CLI or PDFium. Install or provide `ethos` separately, and keep
 `ETHOS_PDFIUM_LIBRARY_PATH` set for PDFium-backed commands.
 
-The v0.2.0 Python wrapper includes JSON verification and evidence anchoring through that
+The v0.3.0 Python wrapper includes JSON verification and evidence anchoring through that
 caller-provided CLI:
 
 ```python
@@ -163,7 +162,7 @@ behavior.
 To install the npm CLI package on a supported first-release platform:
 
 ```bash
-npm install -g @docushell/ethos-pdf@0.2.1
+npm install -g @docushell/ethos-pdf@0.3.0
 ethos --version
 ```
 
@@ -174,7 +173,7 @@ platforms fail before invoking a binary. PDFium-backed commands fail until
 Run `ethos doctor` for local setup diagnostics. Run `ethos doctor --require-pdfium` after setting
 `ETHOS_PDFIUM_LIBRARY_PATH` to check whether the configured PDFium is usable by Ethos.
 
-GitHub Release `v0.2.0` also provides evaluation CLI archives for macOS arm64 and Linux x64.
+GitHub Release `v0.3.0` also provides evaluation CLI archives for macOS arm64 and Linux x64.
 
 ## 2-minute PDF parse quickstart
 

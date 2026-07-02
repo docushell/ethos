@@ -2,9 +2,10 @@
 
 Status: release-candidate source activation and closeout tracker. Rust crates, the Python wheel,
 the GitHub Release CLI artifacts, and npm `@docushell/ethos-pdf@0.3.0` are now published or
-closed out for their exact approved surfaces. This document does not approve package tags, release
-tags, DocuShell integration, hosted surfaces, production positioning, or public `0.3.0`
-installability wording.
+closed out for their exact approved surfaces. The exact public `0.3.0` install wording packet is
+approved and closed out for `README.md` and `docs/public-boundary-claims.json`. This document does
+not approve package tags, release tags, DocuShell integration, hosted surfaces, or production
+positioning.
 
 Canonical preparation sentence:
 
@@ -171,9 +172,39 @@ the decider to accept or reject only the exact public `0.3.0` install wording pa
 already-live Rust crates, Python wheel, npm package, and GitHub Release CLI artifacts.
 
 This request does not change `README.md` or `docs/public-boundary-claims.json`. Public `0.3.0`
-install wording remains blocked until a separate approval decision and closeout pass. Package tag
-creation, release tag creation, and DocuShell integration remain blocked until separate evidence
-and closeout lanes pass.
+install wording remains blocked at that historical request stage. The approval decision and
+closeout records below supersede that wording blocker only for the exact public `0.3.0` install
+wording packet. Package tag creation, release tag creation, and DocuShell integration remain
+blocked until separate evidence and closeout lanes pass.
+
+### 3g. Approve Public Install Wording
+
+The v0.3.0 public install wording approval decision is recorded in
+`docs/validation/v0-3-0-public-install-wording-approval-decision-validation-2026-07-02.md`. It
+accepts the exact public `0.3.0` install wording request packet for the already-live Rust crates,
+Python wheel, npm package, and GitHub Release CLI artifacts.
+
+This decision authorizes only the bounded README/public-boundary claims closeout below. Package tag
+creation, release tag creation, DocuShell integration, hosted surfaces, production positioning,
+Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports,
+public benchmark claims, `ethos-doc`, and `ethos-rag` remain blocked until separate evidence and
+closeout lanes pass.
+
+### 3h. Close Public Install Wording
+
+The v0.3.0 public install wording closeout is recorded in
+`docs/validation/v0-3-0-public-install-wording-closeout-validation-2026-07-02.md`. It updates
+`README.md` and `docs/public-boundary-claims.json` to the exact approved public `0.3.0` wording:
+
+- Rust crate install commands use `ethos-doc-core@0.3.0`, `ethos-verify@0.3.0`, and
+  `ethos-pdf@0.3.0`;
+- Python install wording uses `ethos-pdf==0.3.0`;
+- npm install wording uses `@docushell/ethos-pdf@0.3.0`;
+- GitHub Release wording references `v0.3.0` macOS arm64 and Linux x64 CLI archives;
+- PDFium remains caller-provided through `ETHOS_PDFIUM_LIBRARY_PATH`.
+
+This closeout supersedes the public install wording blocker only for the exact accepted wording
+packet. Package tag creation, release tag creation, and DocuShell integration remain blocked.
 
 ### 4. Gather Package Evidence Before Any Publication Decision
 

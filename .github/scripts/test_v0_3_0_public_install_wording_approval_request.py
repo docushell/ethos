@@ -31,8 +31,6 @@ VALIDATION_README = ROOT / "docs/validation/README.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 PUBLIC_RELEASE_CHECKLIST = ROOT / "docs/public-release-checklist.md"
 RELEASE_PREP = ROOT / "docs/v0-3-0-release-prep.md"
-README = ROOT / "README.md"
-CLAIMS = ROOT / "docs/public-boundary-claims.json"
 CHANGELOG = ROOT / "CHANGELOG.md"
 
 SOURCE_SHORT = "7ad3521"
@@ -57,14 +55,6 @@ NPM_INSTALL = "npm install -g @docushell/ethos-pdf@0.3.0"
 GITHUB_RELEASE = (
     "GitHub Release `v0.3.0` also provides evaluation CLI archives for macOS arm64 and Linux x64."
 )
-CURRENT_RUST_INSTALLS = (
-    "cargo add ethos-doc-core@0.2.0",
-    "cargo add ethos-verify@0.2.0",
-    "cargo add ethos-pdf@0.2.0",
-)
-CURRENT_PYTHON_INSTALL = "python3 -m pip install ethos-pdf==0.2.0"
-CURRENT_NPM_INSTALL = "npm install -g @docushell/ethos-pdf@0.2.1"
-CURRENT_RELEASE = "GitHub Release `v0.2.0` also provides evaluation CLI archives"
 PRIVATE_PATH_MARKERS = (
     "/" + "Users/",
     "/" + "private/tmp",
@@ -93,14 +83,6 @@ def read(path: Path) -> str:
 
 def normalized(path: Path) -> str:
     return re.sub(r"\s+", " ", read(path))
-
-
-def normalized_public_readme() -> str:
-    return re.sub(
-        r"\s+",
-        " ",
-        " ".join(line.removeprefix("> ").strip() for line in read(README).splitlines()),
-    )
 
 
 class V030PublicInstallWordingApprovalRequestTests(unittest.TestCase):
@@ -146,23 +128,18 @@ class V030PublicInstallWordingApprovalRequestTests(unittest.TestCase):
         for phrase in FORBIDDEN:
             self.assertNotIn(phrase, record.lower())
 
-    def test_current_public_readme_and_claims_remain_on_0_2_baseline(self) -> None:
-        readme = normalized(README)
-        public_status = normalized_public_readme()
-        claims = json.loads(read(CLAIMS))["surfaces"]["readme"]["claims"]
+    def test_request_preserves_pre_decision_baseline_as_historical_context(self) -> None:
+        record = normalized(RECORD)
 
-        self.assertIn("Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.2.0`", public_status)
-        self.assertIn("the Python `ethos-pdf` wheel at `0.2.0`", public_status)
-        self.assertIn("the npm `@docushell/ethos-pdf@0.2.1` package", public_status)
-        self.assertIn("GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts", public_status)
-
-        for expected in (*CURRENT_RUST_INSTALLS, CURRENT_PYTHON_INSTALL, CURRENT_NPM_INSTALL, CURRENT_RELEASE):
-            self.assertIn(expected, readme)
-            self.assertTrue(any(expected in claim for claim in claims), expected)
-
-        for proposed in (*RUST_INSTALLS, PYTHON_INSTALL, NPM_INSTALL, GITHUB_RELEASE):
-            self.assertNotIn(proposed, readme)
-            self.assertFalse(any(proposed in claim for claim in claims), proposed)
+        for expected in (
+            "Current `README.md` and `docs/public-boundary-claims.json` remain on the already-approved public install baseline while this request is under review",
+            "Rust install commands remain `0.2.0`.",
+            "Python install command remains `ethos-pdf==0.2.0`.",
+            "npm install command remains `@docushell/ethos-pdf@0.2.1`.",
+            "GitHub Release CLI artifact reference remains `v0.2.0`.",
+            "Public `0.3.0` install wording remains blocked until a separate approval decision and closeout pass.",
+        ):
+            self.assertIn(expected, record)
 
     def test_request_is_indexed_and_wired_into_status_docs(self) -> None:
         for path in (
@@ -174,7 +151,7 @@ class V030PublicInstallWordingApprovalRequestTests(unittest.TestCase):
             text = normalized(path)
             self.assertIn(RECORD.name, text)
             self.assertIn("v0.3.0 public install wording approval request", text.lower())
-            self.assertIn("wording remains blocked", text.lower())
+            self.assertIn("historical request stage", text.lower())
             self.assertIn("0.3.0", text)
             self.assertIn("DocuShell integration remain blocked", text)
 
@@ -189,12 +166,17 @@ class V030PublicInstallWordingApprovalRequestTests(unittest.TestCase):
             "$(PYTHON) .github/scripts/test_v0_3_0_public_install_wording_approval_request.py"
         )
         public_surface_guard = "$(PYTHON) .github/scripts/test_public_surface_posture.py"
+        wording_closeout_guard = (
+            "$(PYTHON) .github/scripts/test_v0_3_0_public_install_wording_closeout.py"
+        )
 
         self.assertIn(npm_closeout_guard, block)
         self.assertIn(wording_request_guard, block)
+        self.assertIn(wording_closeout_guard, block)
         self.assertEqual(1, block.count(wording_request_guard))
         self.assertLess(block.index(npm_closeout_guard), block.index(wording_request_guard))
-        self.assertLess(block.index(wording_request_guard), block.index(public_surface_guard))
+        self.assertLess(block.index(wording_request_guard), block.index(wording_closeout_guard))
+        self.assertLess(block.index(wording_closeout_guard), block.index(public_surface_guard))
 
 
 if __name__ == "__main__":

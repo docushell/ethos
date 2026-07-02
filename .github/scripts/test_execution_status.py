@@ -39,19 +39,15 @@ class ExecutionStatusTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            "v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` "
-            "macOS arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1`",
+            "The exact v0.3.0 public install wording packet is approved and closed out",
             text,
         )
-        self.assertIn("Public `0.3.0` install wording", text)
-        self.assertIn("GitHub Release artifact upload", text)
+        self.assertIn("docs/validation/v0-3-0-public-install-wording-approval-decision-validation-2026-07-02.md", text)
+        self.assertIn("docs/validation/v0-3-0-public-install-wording-closeout-validation-2026-07-02.md", text)
+        self.assertIn("GitHub Release `v0.3.0`", text)
         self.assertIn("npm `@docushell/ethos-pdf@0.3.0` is live on npm", text)
         self.assertIn("v0.3.0 npm publication closeout", text)
         self.assertIn("DocuShell integration remain blocked", text)
-        self.assertIn(
-            "npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries",
-            text,
-        )
         self.assertIn("Internal Milestone D source-only closeout remains complete", text)
         self.assertIn(
             "Ethos is pre-alpha. It verifies whether AI citations are grounded in document "
@@ -115,9 +111,10 @@ class ExecutionStatusTests(unittest.TestCase):
         )
         self.assertIn("the Python `ethos-pdf` wheel is live on PyPI", text)
         self.assertIn("npm `@docushell/ethos-pdf@0.3.0` is live on npm", text)
-        self.assertIn("v0.2.0 remains the public CLI artifact baseline", text)
-        self.assertIn("npm remains `@docushell/ethos-pdf@0.2.1`", text)
-        self.assertIn("GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts", text)
+        self.assertIn("The exact v0.3.0 public install wording packet is approved and closed out", text)
+        self.assertIn("GitHub Release `v0.3.0`", text)
+        self.assertIn("macOS arm64/Linux x64 CLI artifacts", text)
+        self.assertIn("`@docushell/ethos-pdf@0.3.0`", text)
         self.assertIn("docs/validation/v0-3-0-publication-closeout-validation-2026-07-01.md", text)
         self.assertIn("ethos-doc-core", text)
         self.assertIn("ethos-verify", text)

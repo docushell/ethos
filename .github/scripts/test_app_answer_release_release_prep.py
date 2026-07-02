@@ -163,13 +163,13 @@ class AppAnswerReleaseReleasePrepTests(unittest.TestCase):
         ]:
             self.assertIn(required, record)
 
-    def test_current_public_install_surfaces_remain_on_published_baseline(self) -> None:
-        self.assertIn("cargo add ethos-doc-core@0.2.0", read(README))
-        self.assertIn("python3 -m pip install ethos-pdf==0.2.0", read(README))
-        self.assertIn("npm install -g @docushell/ethos-pdf@0.2.1", read(README))
-        self.assertNotIn("cargo add ethos-doc-core@0.3.0", read(README))
-        self.assertNotIn("python3 -m pip install ethos-pdf==0.3.0", read(README))
-        self.assertNotIn("npm install -g @docushell/ethos-pdf@0.3.0", read(README))
+    def test_prep_packet_does_not_itself_own_current_public_install_surfaces(self) -> None:
+        record = normalized(RECORD)
+
+        self.assertIn("This prep record does not approve installable `0.3.0` public wording.", record)
+        self.assertIn("cargo add ethos-doc-core@0.3.0", read(README))
+        self.assertIn("python3 -m pip install ethos-pdf==0.3.0", read(README))
+        self.assertIn("npm install -g @docushell/ethos-pdf@0.3.0", read(README))
 
     def test_make_target_runs_scoped_release_prep_guard(self) -> None:
         block = target_block("app-answer-release-release-prep")

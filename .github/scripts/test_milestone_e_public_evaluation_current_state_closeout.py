@@ -52,10 +52,9 @@ CURRENT_README_WORDING = (
     "Ethos is a deterministic document evidence layer for source-grounded verification and "
     "citation checking across native Ethos JSON and supported foreign parser outputs. The current "
     "beta includes the GitHub source repository, Rust library crates `ethos-doc-core`, "
-    "`ethos-verify`, and `ethos-pdf` at `0.2.0`, the Python `ethos-pdf` wheel at `0.2.0`, the "
-    "npm `@docushell/ethos-pdf@0.2.1` package, and GitHub Release `v0.2.0` macOS arm64/Linux x64 "
-    "CLI artifacts. npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI "
-    "binaries; use `0.2.1`. PDFium-backed commands use caller-provided PDFium through "
+    "`ethos-verify`, and `ethos-pdf` at `0.3.0`, the Python `ethos-pdf` wheel at `0.3.0`, the "
+    "npm `@docushell/ethos-pdf@0.3.0` package, and GitHub Release `v0.3.0` macOS arm64/Linux x64 "
+    "CLI artifacts. PDFium-backed commands use caller-provided PDFium through "
     "`ETHOS_PDFIUM_LIBRARY_PATH`."
 )
 APPROVED_SURFACE_LINES = (
@@ -151,13 +150,11 @@ class MilestoneEPublicEvaluationCurrentStateCloseoutTests(unittest.TestCase):
             str(EXECUTION_STATUS),
         )
         self.assertIn(
-            "v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` "
-            "macOS arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1`",
+            "The exact v0.3.0 public install wording packet is approved and closed out",
             execution_status,
             str(EXECUTION_STATUS),
         )
-        self.assertIn("Public `0.3.0` install wording", execution_status, str(EXECUTION_STATUS))
-        self.assertIn("GitHub Release artifact upload", execution_status, str(EXECUTION_STATUS))
+        self.assertIn("GitHub Release `v0.3.0`", execution_status, str(EXECUTION_STATUS))
         self.assertIn(
             "npm `@docushell/ethos-pdf@0.3.0` is live on npm",
             execution_status,
@@ -171,11 +168,6 @@ class MilestoneEPublicEvaluationCurrentStateCloseoutTests(unittest.TestCase):
         self.assertIn("DocuShell integration remain blocked", execution_status, str(EXECUTION_STATUS))
         self.assertIn(
             "v0.3.0 publication closeout is recorded",
-            execution_status,
-            str(EXECUTION_STATUS),
-        )
-        self.assertIn(
-            "npm `@docushell/ethos-pdf@0.2.0` is deprecated",
             execution_status,
             str(EXECUTION_STATUS),
         )
