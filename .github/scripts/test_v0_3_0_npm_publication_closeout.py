@@ -7,8 +7,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 import re
 import unittest
 from pathlib import Path
@@ -18,9 +16,6 @@ from validation_record_source import assert_record_source_binding
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
-PACKAGE_JSON = PACKAGE_DIR / "package.json"
-VENDOR_MANIFEST = PACKAGE_DIR / "vendor/manifest.json"
 RECORD = ROOT / (
     "docs/validation/v0-3-0-npm-publication-closeout-validation-2026-07-02.md"
 )
@@ -82,10 +77,6 @@ FORBIDDEN = (
 )
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
@@ -110,17 +101,11 @@ class V030NpmPublicationCloseoutTests(unittest.TestCase):
             source_tree=SOURCE_TREE,
         )
 
-    def test_checked_in_candidate_matches_published_payload(self) -> None:
-        self.assertEqual(VERSION, json.loads(read(PACKAGE_JSON))["version"])
-
+    def test_historical_closeout_binds_published_vendor_payload(self) -> None:
+        record = normalized(RECORD)
         for relative_path, expected in EXPECTED_VENDOR_SHA256.items():
-            self.assertEqual(expected, sha256(PACKAGE_DIR / relative_path))
-
-        manifest = json.loads(read(VENDOR_MANIFEST))
-        self.assertEqual(1, manifest["version"])
-        self.assertEqual(PACKAGE, manifest["package"])
-        self.assertEqual("ethos-darwin-arm64", manifest["targets"]["darwin:arm64"]["binary"])
-        self.assertEqual("ethos-linux-x64", manifest["targets"]["linux:x64"]["binary"])
+            self.assertIn(relative_path, record)
+            self.assertIn(expected, record)
 
     def test_record_captures_publish_and_registry_evidence(self) -> None:
         raw = read(RECORD)

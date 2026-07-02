@@ -21,6 +21,7 @@ import re
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -134,14 +135,7 @@ class MilestoneEFinalCloseoutRecordTests(unittest.TestCase):
         self.assertLess(block.index(final_guard), block.index("git diff --check"))
 
     def test_ci_runs_final_closeout_record_guard(self) -> None:
-        text = read(CI_WORKFLOW)
-
-        prep_record_guard = "python3 .github/scripts/test_milestone_e_prep_validation_record.py"
-        final_guard = "python3 .github/scripts/test_milestone_e_final_closeout_record.py"
-
-        self.assertIn(final_guard, text)
-        self.assertEqual(1, text.count(final_guard))
-        self.assertLess(text.index(prep_record_guard), text.index(final_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_status_and_roadmap_keep_final_closeout_source_only(self) -> None:
         for path in (ROADMAP, EXECUTION_STATUS):

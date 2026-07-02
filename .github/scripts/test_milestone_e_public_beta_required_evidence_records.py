@@ -21,6 +21,7 @@ import re
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -137,17 +138,7 @@ class MilestoneEPublicBetaRequiredEvidenceRecordTests(unittest.TestCase):
         self.assertLess(block.index(evidence_guard), block.index("git diff --check"))
 
     def test_ci_runs_required_evidence_once_in_order(self) -> None:
-        text = read(CI_WORKFLOW)
-        beta_record = (
-            "python3 .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py"
-        )
-        evidence_guard = "python3 .github/scripts/test_milestone_e_public_beta_required_evidence_records.py"
-        package_guard = "python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py"
-
-        self.assertIn(evidence_guard, text)
-        self.assertEqual(1, text.count(evidence_guard))
-        self.assertLess(text.index(beta_record), text.index(evidence_guard))
-        self.assertLess(text.index(evidence_guard), text.index(package_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_records_avoid_scope_expansion_language(self) -> None:
         for record in RECORDS:

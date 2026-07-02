@@ -914,9 +914,7 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
 
     def test_ci_runs_package_prep_once_in_order(self) -> None:
         text = read(CI_WORKFLOW)
-        beta_record = (
-            "python3 .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py"
-        )
+        frozen_runner = "python3 .github/scripts/run_frozen_record_guards.py"
         package_guard = "python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py"
         package_record = (
             "python3 .github/scripts/test_milestone_e_package_publication_approval_prep_validation_record.py"
@@ -931,7 +929,8 @@ class MilestoneEPackagePublicationApprovalPrepTests(unittest.TestCase):
         self.assertEqual(1, text.count(package_guard))
         self.assertEqual(1, text.count(package_record))
         self.assertEqual(1, text.count(package_prep_approval_record))
-        self.assertLess(text.index(beta_record), text.index(package_guard))
+        self.assertEqual(1, text.count(frozen_runner))
+        self.assertLess(text.index(frozen_runner), text.index(package_guard))
         self.assertLess(text.index(package_guard), text.index(package_record))
         self.assertLess(text.index(package_record), text.index(package_prep_approval_record))
 

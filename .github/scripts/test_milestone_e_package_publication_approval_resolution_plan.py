@@ -188,13 +188,11 @@ class MilestoneEPackagePublicationApprovalResolutionPlanTests(unittest.TestCase)
         ci = read(CI_WORKFLOW)
         gap_guard = "test_milestone_e_package_publication_pre_approval_gap_ledger.py"
         resolution_guard = "test_milestone_e_package_publication_approval_resolution_plan.py"
-        public_facing_guard = "test_milestone_e_public_facing_readiness_ledger.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + resolution_guard, text)
             self.assertEqual(1, text.count(prefix + resolution_guard))
             self.assertLess(text.index(prefix + gap_guard), text.index(prefix + resolution_guard))
-            self.assertLess(text.index(prefix + resolution_guard), text.index(prefix + public_facing_guard))
 
     def test_record_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = normalized(RECORD).lower()

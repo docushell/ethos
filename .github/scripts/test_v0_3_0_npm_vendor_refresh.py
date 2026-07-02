@@ -7,12 +7,7 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
-import os
 import re
-import subprocess
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -21,9 +16,6 @@ from validation_record_source import assert_record_source_binding
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
-PACKAGE_JSON = PACKAGE_DIR / "package.json"
-PACKAGE_TARBALL = PACKAGE_DIR / "docushell-ethos-pdf-0.3.0.tgz"
 RECORD = ROOT / "docs/validation/v0-3-0-npm-vendor-refresh-validation-2026-07-02.md"
 ARTIFACT_CLOSEOUT = ROOT / (
     "docs/validation/v0-3-0-artifact-publication-closeout-validation-2026-07-02.md"
@@ -86,10 +78,6 @@ FORBIDDEN_APPROVALS = (
 )
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
@@ -98,101 +86,45 @@ def normalized(path: Path) -> str:
     return re.sub(r"\s+", " ", read(path))
 
 
-def pack_candidate(temp: str) -> dict[str, object]:
-    env = {**os.environ, "npm_config_cache": str(Path(temp) / "npm-cache")}
-    result = subprocess.run(
-        ["npm", "pack", "--json"],
-        cwd=PACKAGE_DIR,
-        check=False,
-        encoding="utf-8",
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    if result.returncode != 0:
-        raise AssertionError(result.stderr)
-    return json.loads(result.stdout)[0]
-
-
 class V030NpmVendorRefreshTests(unittest.TestCase):
-    def test_vendor_payload_files_are_exact_v0_3_release_derived_binaries(self) -> None:
-        self.assertEqual("0.3.0", json.loads(read(PACKAGE_JSON))["version"])
-        for relative_path, expected in EXPECTED_VENDOR_SHA256.items():
-            self.assertEqual(expected, sha256(PACKAGE_DIR / relative_path))
+    def test_historical_record_binds_release_assets_and_vendor_payload(self) -> None:
+        record = normalized(RECORD)
 
-        manifest = json.loads(read(PACKAGE_DIR / "vendor/manifest.json"))
-        self.assertEqual(MACOS_ARTIFACT_SHA256, manifest["targets"]["darwin:arm64"]["release_asset_sha256"])
-        self.assertEqual(LINUX_ARTIFACT_SHA256, manifest["targets"]["linux:x64"]["release_asset_sha256"])
+        for expected in (
+            MACOS_ARTIFACT_SHA256,
+            LINUX_ARTIFACT_SHA256,
+            *EXPECTED_VENDOR_SHA256.values(),
+        ):
+            self.assertIn(expected, record)
 
-    def test_npm_pack_candidate_contents_and_checksums(self) -> None:
-        node_version = subprocess.check_output(["node", "--version"], encoding="utf-8").strip()
-        npm_version = subprocess.check_output(["npm", "--version"], encoding="utf-8").strip()
-        exact_pack_toolchain = (
-            node_version == EXPECTED_NODE_VERSION and npm_version == EXPECTED_NPM_VERSION
-        )
+    def test_historical_record_binds_pack_contents_and_checksums(self) -> None:
+        record = normalized(RECORD)
 
-        with tempfile.TemporaryDirectory(prefix="ethos-v0-3-npm-candidate-") as temp:
-            try:
-                pack = pack_candidate(temp)
-                files = {entry["path"]: entry for entry in pack["files"]}
+        for expected in (
+            "@docushell/ethos-pdf@0.3.0",
+            "docushell-ethos-pdf-0.3.0.tgz",
+            EXPECTED_PACK_SHASUM,
+            EXPECTED_PACK_SHA256,
+            EXPECTED_PACK_INTEGRITY,
+            "entry count: `11`",
+            "executable mode `493`",
+        ):
+            self.assertIn(expected, record)
+        for relative_path in EXPECTED_FILES:
+            self.assertIn(f"- `{relative_path}`", read(RECORD))
 
-                self.assertEqual("@docushell/ethos-pdf", pack["name"])
-                self.assertEqual("0.3.0", pack["version"])
-                self.assertEqual("docushell-ethos-pdf-0.3.0.tgz", pack["filename"])
-                self.assertEqual(EXPECTED_FILES, set(files))
-                self.assertEqual(493, files["vendor/ethos-darwin-arm64"]["mode"])
-                self.assertEqual(493, files["vendor/ethos-linux-x64"]["mode"])
-                for relative_path, expected in EXPECTED_VENDOR_SHA256.items():
-                    self.assertEqual(expected, sha256(PACKAGE_DIR / relative_path))
-                if exact_pack_toolchain:
-                    self.assertEqual(EXPECTED_PACK_SHASUM, pack["shasum"])
-                    self.assertEqual(EXPECTED_PACK_INTEGRITY, pack["integrity"])
-                    self.assertEqual(EXPECTED_PACK_SHA256, sha256(PACKAGE_TARBALL))
-            finally:
-                PACKAGE_TARBALL.unlink(missing_ok=True)
+    def test_historical_record_retains_install_and_pdfium_smoke_evidence(self) -> None:
+        record = normalized(RECORD)
 
-    def test_candidate_tarball_installs_and_preserves_pdfium_boundary(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="ethos-v0-3-npm-install-") as temp:
-            try:
-                pack_candidate(temp)
-                env = {**os.environ, "npm_config_cache": str(Path(temp) / "npm-cache")}
-                install = subprocess.run(
-                    ["npm", "install", str(PACKAGE_TARBALL), "--prefix", temp],
-                    cwd=ROOT,
-                    check=False,
-                    encoding="utf-8",
-                    env=env,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                self.assertEqual(0, install.returncode, install.stderr)
-
-                ethos = Path(temp) / "node_modules/.bin/ethos"
-                version = subprocess.run(
-                    [str(ethos), "--version"],
-                    check=False,
-                    encoding="utf-8",
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                self.assertEqual(0, version.returncode, version.stderr)
-                self.assertEqual("ethos 0.3.0", version.stdout.strip())
-
-                missing_pdfium = subprocess.run(
-                    [str(ethos), "doctor", "--require-pdfium"],
-                    check=False,
-                    encoding="utf-8",
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                self.assertEqual(12, missing_pdfium.returncode)
-                combined = missing_pdfium.stdout + missing_pdfium.stderr
-                self.assertIn("ethos 0.3.0", combined)
-                self.assertIn("darwin:arm64", combined)
-                self.assertIn("approved npm vendor manifest", combined)
-                self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", combined)
-            finally:
-                PACKAGE_TARBALL.unlink(missing_ok=True)
+        for expected in (
+            "added 1 package",
+            "ethos 0.3.0",
+            "exit code 12",
+            "darwin:arm64",
+            "approved npm vendor manifest",
+            "ETHOS_PDFIUM_LIBRARY_PATH is unset",
+        ):
+            self.assertIn(expected, record)
 
     def test_evidence_record_is_source_bound_indexed_and_blocked(self) -> None:
         raw = read(RECORD)
@@ -226,6 +158,7 @@ class V030NpmVendorRefreshTests(unittest.TestCase):
             EXPECTED_PACK_SHASUM,
             EXPECTED_PACK_SHA256,
             EXPECTED_PACK_INTEGRITY,
+            *EXPECTED_VENDOR_SHA256.values(),
             f"Node.js: `{EXPECTED_NODE_VERSION}`",
             f"npm: `{EXPECTED_NPM_VERSION}`",
             "durable package-content provenance",

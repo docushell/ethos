@@ -1,7 +1,7 @@
 # Bring Your Own Parser
 
-Status: v0.2.0 release-candidate tutorial for parser authors. This document shows the intended trust-layer
-integration shape before any `0.2.0` publication claim is made.
+Status: v0.3 tutorial for parser authors. This document shows the supported trust-layer integration
+shape for the published `0.3` Rust crates.
 
 The integration model is:
 
@@ -15,12 +15,12 @@ Ethos does not become your parser and does not judge full semantic truth.
 
 ## Dependencies
 
-Once the `0.2.0` registry lane is approved and published, a minimal Rust verifier integration uses:
+A minimal Rust verifier integration uses:
 
 ```toml
 [dependencies]
-ethos-doc-core = { version = "0.2", features = ["grounding"] }
-ethos-verify = "0.2"
+ethos-doc-core = { version = "0.3", features = ["grounding"] }
+ethos-verify = "0.3"
 ```
 
 The package name and Rust import name intentionally differ:
@@ -145,7 +145,12 @@ fn main() {
 Parser adapters should:
 
 - return deterministic pages, elements, spans, and tables in stable order;
+- assign stable, non-empty IDs that are unique within each page, element, table, and evidence-ref
+  namespace; reject ambiguous duplicate IDs rather than relying on first-match behavior;
 - use 1-based `PageGeometry.index` for parser-neutral page identity;
+- convert point-space geometry to integer centipoints with
+  `round_half_away_from_zero(points * 100)` and test the half-step cases `0.005 -> 1` and
+  `-0.005 -> -1` against Ethos conformance behavior;
 - declare missing features as capability limits instead of approximating silently;
 - expose a fingerprint when the parser can bind evidence to exact source bytes;
 - keep table-cell text projection distinct from Markdown table rendering;

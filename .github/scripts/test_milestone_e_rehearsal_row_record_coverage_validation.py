@@ -22,6 +22,7 @@ import re
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -172,7 +173,6 @@ class MilestoneERehearsalRowRecordCoverageValidationTests(unittest.TestCase):
         text = record_text()
         readme = VALIDATION_README.read_text(encoding="utf-8")
         make_block = target_block("milestone-e-prep")
-        ci = CI_WORKFLOW.read_text(encoding="utf-8")
         matrix_rows = load_json(MATRIX)["matrix_rows"]
         ledger_rows = load_json(LEDGER)["blocker_rows"]
 
@@ -180,7 +180,6 @@ class MilestoneERehearsalRowRecordCoverageValidationTests(unittest.TestCase):
         self.assertEqual([row["step_id"] for row in ledger_rows], [row["step_id"] for row in ROW_RECORDS])
 
         for row in ROW_RECORDS:
-            guard_command = f"python3 .github/scripts/{row['guard']}"
             make_guard_command = f"$(PYTHON) .github/scripts/{row['guard']}"
             guard_path = ROOT / ".github/scripts" / row["guard"]
             record_path = ROOT / "docs/validation" / row["record"]
@@ -192,7 +191,11 @@ class MilestoneERehearsalRowRecordCoverageValidationTests(unittest.TestCase):
             self.assertIn(row["guard"], text)
             self.assertIn(row["record"], readme)
             self.assertIn(make_guard_command, make_block)
-            self.assertIn(guard_command, ci)
+            assert_frozen_guard_ci_wiring(
+                self,
+                root=ROOT,
+                guard_path=f".github/scripts/{row['guard']}",
+            )
 
     def test_record_keeps_source_only_internal_scope(self) -> None:
         text = normalized_record_text()
@@ -250,21 +253,7 @@ class MilestoneERehearsalRowRecordCoverageValidationTests(unittest.TestCase):
         self.assertLess(block.index(coverage_guard), block.index("git diff --check"))
 
     def test_ci_runs_coverage_guard_once_in_order(self) -> None:
-        text = CI_WORKFLOW.read_text(encoding="utf-8")
-        last_row_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_demo_narrative_index_rehearsal_validation_record.py"
-        )
-        coverage_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_rehearsal_row_record_coverage_validation.py"
-        )
-        prep_record_guard = "python3 .github/scripts/test_milestone_e_prep_validation_record.py"
-
-        self.assertIn(coverage_guard, text)
-        self.assertEqual(1, text.count(coverage_guard))
-        self.assertLess(text.index(last_row_guard), text.index(coverage_guard))
-        self.assertLess(text.index(coverage_guard), text.index(prep_record_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_record_avoids_scope_expansion_language(self) -> None:
         text = normalized_record_text().lower()

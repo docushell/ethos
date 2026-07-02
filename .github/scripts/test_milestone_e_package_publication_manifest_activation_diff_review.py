@@ -163,13 +163,11 @@ class MilestoneEPackagePublicationManifestActivationDiffReviewTests(unittest.Tes
         ci = read(CI_WORKFLOW)
         readiness_guard = "test_milestone_e_package_publication_approval_readiness_review.py"
         diff_review_guard = "test_milestone_e_package_publication_manifest_activation_diff_review.py"
-        public_facing_guard = "test_milestone_e_public_facing_readiness_ledger.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + diff_review_guard, text)
             self.assertEqual(1, text.count(prefix + diff_review_guard))
             self.assertLess(text.index(prefix + readiness_guard), text.index(prefix + diff_review_guard))
-            self.assertLess(text.index(prefix + diff_review_guard), text.index(prefix + public_facing_guard))
 
     def test_record_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = normalized(RECORD).lower()

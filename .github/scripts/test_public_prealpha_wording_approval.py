@@ -21,6 +21,7 @@ import re
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -151,15 +152,7 @@ class PublicPreAlphaWordingApprovalTests(unittest.TestCase):
         self.assertLess(block.index(approval_guard), block.index(schema_validation))
 
     def test_ci_runs_approval_guard(self) -> None:
-        text = read(CI_WORKFLOW)
-        public_surface = "python3 .github/scripts/test_public_surface_posture.py"
-        approval_guard = "python3 .github/scripts/test_public_prealpha_wording_approval.py"
-        milestone_d = "python3 .github/scripts/test_milestone_d_internal_contracts.py"
-
-        self.assertIn(approval_guard, text)
-        self.assertEqual(1, text.count(approval_guard))
-        self.assertLess(text.index(public_surface), text.index(approval_guard))
-        self.assertLess(text.index(approval_guard), text.index(milestone_d))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_approval_surfaces_avoid_scope_expansion_language(self) -> None:
         text = "\n".join(

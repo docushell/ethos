@@ -22,6 +22,7 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -190,15 +191,7 @@ class MilestoneEBlockedOutputAlignmentTests(unittest.TestCase):
         self.assertLess(block.index(blocked_output_guard), block.index("git diff --check"))
 
     def test_ci_runs_blocked_output_guard_once_in_order(self) -> None:
-        text = read(CI_WORKFLOW)
-        public_boundary_guard = "python3 .github/scripts/test_milestone_e_public_boundary_alignment.py"
-        blocked_output_guard = "python3 .github/scripts/test_milestone_e_blocked_output_alignment.py"
-        prep_scope_guard = "python3 .github/scripts/test_milestone_e_prep_scope.py"
-
-        self.assertIn(blocked_output_guard, text)
-        self.assertEqual(1, text.count(blocked_output_guard))
-        self.assertLess(text.index(public_boundary_guard), text.index(blocked_output_guard))
-        self.assertLess(text.index(blocked_output_guard), text.index(prep_scope_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_blocked_output_artifacts_avoid_scope_expansion_language(self) -> None:
         text = "\n".join(

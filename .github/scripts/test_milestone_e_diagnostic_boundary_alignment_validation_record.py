@@ -21,6 +21,7 @@ import re
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -157,17 +158,7 @@ class MilestoneEDiagnosticBoundaryAlignmentValidationRecordTests(unittest.TestCa
         self.assertLess(block.index(record_guard), block.index("git diff --check"))
 
     def test_ci_runs_diagnostic_boundary_record_guard_once_in_order(self) -> None:
-        text = CI_WORKFLOW.read_text(encoding="utf-8")
-        evidence_lane_record = (
-            "python3 .github/scripts/test_milestone_e_evidence_lane_alignment_validation_record.py"
-        )
-        record_guard = (
-            "python3 .github/scripts/test_milestone_e_diagnostic_boundary_alignment_validation_record.py"
-        )
-
-        self.assertIn(record_guard, text)
-        self.assertEqual(1, text.count(record_guard))
-        self.assertLess(text.index(evidence_lane_record), text.index(record_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_record_avoids_scope_expansion_language(self) -> None:
         text = normalized_record_text().lower()

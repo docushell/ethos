@@ -22,6 +22,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import makefile_text, target_block
 
 
@@ -184,11 +185,7 @@ class MilestoneEFixturePromotionCriteriaTests(unittest.TestCase):
         self.assertLess(block.index(criteria_guard), block.index(record_guard))
 
     def test_ci_runs_promotion_criteria_guard_once(self) -> None:
-        text = read(CI_WORKFLOW)
-        command = "python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py"
-
-        self.assertIn(command, text)
-        self.assertEqual(1, text.count(command))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_criteria_avoids_public_launch_posture(self) -> None:
         text = json.dumps(load_json(CRITERIA), sort_keys=True).lower()

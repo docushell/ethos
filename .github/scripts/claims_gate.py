@@ -28,6 +28,7 @@ they appear. Exit 1 on any hit.
 import re
 import sys
 from pathlib import Path
+from typing import Sequence
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -40,6 +41,10 @@ SURFACES = [
     "announcements",
     "bindings",
     "crates/ethos-cli/README.md",
+    "python/README.md",
+    "python/QUICKSTART.md",
+    "packages/npm/ethos-pdf/README.md",
+    "packages/npm/ethos-pdf/QUICKSTART.md",
 ]
 
 BANNED = [
@@ -64,26 +69,46 @@ BANNED = [
 
 SCAN_SUFFIXES = {".md", ".txt", ".html", ".py", ".rs", ".ts", ".js", ".ipynb"}
 
-hits = 0
-for surface in SURFACES:
-    path = ROOT / surface
-    if not path.exists():
-        continue
-    files = [path] if path.is_file() else [
-        p for p in path.rglob("*") if p.is_file() and p.suffix in SCAN_SUFFIXES
-    ]
-    for f in files:
-        try:
-            text = f.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
-            continue
-        for lineno, line in enumerate(text.splitlines(), 1):
-            for pattern, label in BANNED:
-                if pattern.search(line):
-                    print(f"CLAIMS-GATE {f.relative_to(ROOT)}:{lineno}: {label}: {line.strip()[:120]}")
-                    hits += 1
 
-if hits:
-    print(f"\n{hits} banned claim phrase(s). Numbers come from reproducible harness JSON or not at all.")
-    sys.exit(1)
-print("claims gate green")
+def find_claim_hits(
+    root: Path = ROOT, surfaces: Sequence[str] = tuple(SURFACES)
+) -> list[tuple[Path, int, str, str]]:
+    hits: list[tuple[Path, int, str, str]] = []
+    for surface in surfaces:
+        path = root / surface
+        if not path.exists():
+            continue
+        files = [path] if path.is_file() else [
+            p for p in path.rglob("*") if p.is_file() and p.suffix in SCAN_SUFFIXES
+        ]
+        for file_path in files:
+            try:
+                text = file_path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            for lineno, line in enumerate(text.splitlines(), 1):
+                for pattern, label in BANNED:
+                    if pattern.search(line):
+                        hits.append(
+                            (file_path.relative_to(root), lineno, label, line.strip()[:120])
+                        )
+    return hits
+
+
+def main() -> int:
+    hits = find_claim_hits()
+    for path, lineno, label, line in hits:
+        print(f"CLAIMS-GATE {path}:{lineno}: {label}: {line}")
+
+    if hits:
+        print(
+            f"\n{len(hits)} banned claim phrase(s). "
+            "Numbers come from reproducible harness JSON or not at all."
+        )
+        return 1
+    print("claims gate green")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

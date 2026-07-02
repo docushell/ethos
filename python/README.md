@@ -5,10 +5,10 @@ This directory contains the `ethos-pdf` Python package source for Ethos.
 Install the published evaluation wheel from PyPI with:
 
 ```sh
-python3 -m pip install ethos-pdf==0.2.0
+python3 -m pip install ethos-pdf==0.3.0
 ```
 
-`v0.2.0` adds JSON verification and evidence-anchor wrapper calls through a caller-provided
+`v0.3.0` includes JSON verification and evidence-anchor wrapper calls through a caller-provided
 `ethos` CLI binary. The Python wheel does not bundle the CLI or PDFium.
 
 The package exposes a public semver API beginning at `0.1.0` for Python `>=3.8`. Patch releases

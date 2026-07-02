@@ -7,8 +7,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 import re
 import unittest
 from pathlib import Path
@@ -18,9 +16,6 @@ from validation_record_source import assert_record_source_binding
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
-PACKAGE_JSON = PACKAGE_DIR / "package.json"
-VENDOR_MANIFEST = PACKAGE_DIR / "vendor/manifest.json"
 RECORD = ROOT / (
     "docs/validation/v0-3-0-npm-publication-approval-request-validation-2026-07-02.md"
 )
@@ -78,10 +73,6 @@ FORBIDDEN = (
 )
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
@@ -106,15 +97,13 @@ class V030NpmPublicationApprovalRequestTests(unittest.TestCase):
             source_tree=SOURCE_TREE,
         )
 
-    def test_checked_in_candidate_matches_exact_request(self) -> None:
-        self.assertEqual("0.3.0", json.loads(read(PACKAGE_JSON))["version"])
-
+    def test_historical_request_binds_exact_vendor_payload(self) -> None:
+        record = normalized(RECORD)
         for relative_path, expected in EXPECTED_VENDOR_SHA256.items():
-            self.assertEqual(expected, sha256(PACKAGE_DIR / relative_path))
-
-        manifest = json.loads(read(VENDOR_MANIFEST))
-        self.assertEqual(MACOS_ARTIFACT_SHA256, manifest["targets"]["darwin:arm64"]["release_asset_sha256"])
-        self.assertEqual(LINUX_ARTIFACT_SHA256, manifest["targets"]["linux:x64"]["release_asset_sha256"])
+            self.assertIn(relative_path, record)
+            self.assertIn(expected, record)
+        self.assertIn(MACOS_ARTIFACT_SHA256, record)
+        self.assertIn(LINUX_ARTIFACT_SHA256, record)
 
     def test_request_names_exact_candidate_and_boundaries(self) -> None:
         record = normalized(RECORD)

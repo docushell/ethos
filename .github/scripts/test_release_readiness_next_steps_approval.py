@@ -21,6 +21,7 @@ import re
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -122,15 +123,7 @@ class ReleaseReadinessNextStepsApprovalTests(unittest.TestCase):
         self.assertLess(block.index(next_steps_guard), block.index(schema_validation))
 
     def test_ci_runs_next_steps_guard_after_prealpha_wording_guard(self) -> None:
-        text = read(CI_WORKFLOW)
-        wording_guard = "python3 .github/scripts/test_public_prealpha_wording_approval.py"
-        next_steps_guard = "python3 .github/scripts/test_release_readiness_next_steps_approval.py"
-        milestone_d = "python3 .github/scripts/test_milestone_d_internal_contracts.py"
-
-        self.assertIn(next_steps_guard, text)
-        self.assertEqual(1, text.count(next_steps_guard))
-        self.assertLess(text.index(wording_guard), text.index(next_steps_guard))
-        self.assertLess(text.index(next_steps_guard), text.index(milestone_d))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_sequence_docs_avoid_scope_expansion_language(self) -> None:
         text = "\n".join(

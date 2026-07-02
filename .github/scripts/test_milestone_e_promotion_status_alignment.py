@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -256,15 +257,7 @@ class MilestoneEPromotionStatusAlignmentTests(unittest.TestCase):
         self.assertLess(block.index(promotion_guard), block.index("git diff --check"))
 
     def test_ci_runs_promotion_status_guard_once_in_order(self) -> None:
-        text = read(CI_WORKFLOW)
-        diagnostic_guard = "python3 .github/scripts/test_milestone_e_diagnostic_boundary_alignment.py"
-        promotion_guard = "python3 .github/scripts/test_milestone_e_promotion_status_alignment.py"
-        prep_scope_guard = "python3 .github/scripts/test_milestone_e_prep_scope.py"
-
-        self.assertIn(promotion_guard, text)
-        self.assertEqual(1, text.count(promotion_guard))
-        self.assertLess(text.index(diagnostic_guard), text.index(promotion_guard))
-        self.assertLess(text.index(promotion_guard), text.index(prep_scope_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_promotion_status_artifacts_avoid_scope_expansion_language(self) -> None:
         text = "\n".join(

@@ -22,6 +22,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import makefile_text, target_block
 
 
@@ -308,22 +309,7 @@ class MilestoneEInternalTrustLoopUseProtocolTests(unittest.TestCase):
         self.assertLess(block.index(protocol_guard), block.index("git diff --check"))
 
     def test_ci_runs_protocol_guard_once_in_order(self) -> None:
-        text = read(CI_WORKFLOW)
-        walkthrough_guard = (
-            "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py"
-        )
-        protocol_guard = (
-            "python3 .github/scripts/test_milestone_e_internal_trust_loop_use_protocol.py"
-        )
-        walkthrough_record_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_internal_trust_loop_walkthrough_validation_record.py"
-        )
-
-        self.assertIn(protocol_guard, text)
-        self.assertEqual(1, text.count(protocol_guard))
-        self.assertLess(text.index(walkthrough_guard), text.index(protocol_guard))
-        self.assertLess(text.index(protocol_guard), text.index(walkthrough_record_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_protocol_avoids_scope_expansion_language(self) -> None:
         text = json.dumps(load_json(PROTOCOL), sort_keys=True).lower()

@@ -22,6 +22,7 @@ import unittest
 from pathlib import Path
 from typing import Any
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -234,19 +235,7 @@ class MilestoneEPublicBetaApprovalPrepTests(unittest.TestCase):
         self.assertLess(block.index(beta_record), block.index("git diff --check"))
 
     def test_ci_runs_public_beta_prep_once_in_order(self) -> None:
-        text = read(CI_WORKFLOW)
-        lane_record = (
-            "python3 .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py"
-        )
-        beta_guard = "python3 .github/scripts/test_milestone_e_public_beta_approval_prep.py"
-        beta_record = "python3 .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py"
-
-        self.assertIn(beta_guard, text)
-        self.assertIn(beta_record, text)
-        self.assertEqual(1, text.count(beta_guard))
-        self.assertEqual(1, text.count(beta_record))
-        self.assertLess(text.index(lane_record), text.index(beta_guard))
-        self.assertLess(text.index(beta_guard), text.index(beta_record))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_prep_avoids_scope_expansion_language(self) -> None:
         text = json.dumps(load_json(PREP), sort_keys=True).lower()

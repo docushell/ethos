@@ -27,13 +27,10 @@ Vendor assembly:
 - place the approved `ethos-macos-arm64.tar.gz` and `ethos-linux-x64.tar.gz` release archives in
   one local directory;
 - run `npm run prepare:vendor -- <release-artifact-dir>`;
-- the script verifies the archive SHA256 values recorded in `vendor/manifest.json`;
+- the script verifies both the release-archive and extracted-executable SHA256 values recorded in
+  `vendor/manifest.json`;
 - the script extracts the `ethos` executable from each archive and writes
   `vendor/ethos-darwin-arm64` and `vendor/ethos-linux-x64`.
 
-This source package candidate is `@docushell/ethos-pdf@0.3.0` and vendors CLI binaries that report
-`ethos 0.3.0`. npm publication and public `0.3.0` install wording remain blocked until the
-separate npm approval, operator publish, registry smoke, and wording closeout records pass. The
-current published npm package remains `@docushell/ethos-pdf@0.2.1`, which vendors CLI binaries that
-report `ethos 0.2.0`. Version `0.2.0` is deprecated because it shipped stale CLI binaries that
-reported `ethos 0.1.2`.
+The current published npm package is `@docushell/ethos-pdf@0.3.0`. Its vendored CLI binaries report
+`ethos 0.3.0`.

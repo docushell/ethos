@@ -200,11 +200,18 @@ first public release, profile artifact changes require a profile version bump.
 
 ## 11. Conformance (CI)
 
-- Per-PR: c14n idempotence + no-float + key-order property tests; vector tests; deterministic
-  profile validation; same-platform double-parse byte-diff (once the backend lands).
-- Nightly + `contract-change` PRs: cross-platform fingerprint + stable-payload equality on
-  Gate Zero platforms (macOS arm64, Linux x64); Windows x64 joins by Milestone B exit (week 8).
-- Verification reports are themselves determinism-tested (same inputs ⇒ same report bytes).
+- Base CI: c14n idempotence + no-float + key-order property tests; vector tests; deterministic
+  profile validation.
+- Nightly + `contract-change` PRs: the `ethos-core` vectors and `ethos-verify` tests run on
+  macOS arm64, Linux x64, and Windows x64. The public verify-alpha cases execute twice on every
+  matrix runner; report bytes must match within the runner and the parsed reports must match the
+  same tracked goldens on all three platforms.
+- PDFium-backed coverage is conditional on a caller-provided `ETHOS_PDFIUM_LIBRARY_PATH`. A
+  configured runner executes the tracked fixture corpus against its extraction/layout goldens and
+  repeated-run fingerprints, then executes the real CLI parse twice on the focused deterministic
+  fixture and requires byte-identical JSON output. An unconfigured runner reports these checks as
+  deferred; the current workflow does not claim full Gate Zero corpus coverage or cross-platform
+  PDFium parse-byte equality.
 
 ## 12. Versioning
 

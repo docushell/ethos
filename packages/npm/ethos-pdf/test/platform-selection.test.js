@@ -49,24 +49,50 @@ assert.throws(
 const manifest = readVendorManifest();
 assert.strictEqual(manifest.version, 1);
 assert.strictEqual(manifest.package, "@docushell/ethos-pdf");
+assert.strictEqual(manifest.cli_version, "0.3.0");
 validateVendorManifest(manifest);
 for (const [key, binaryName] of SUPPORTED_TARGETS.entries()) {
   assert.strictEqual(manifest.targets[key].binary, binaryName);
   assert.match(manifest.targets[key].release_asset_sha256, /^[a-f0-9]{64}$/);
+  assert.match(manifest.targets[key].binary_sha256, /^[a-f0-9]{64}$/);
 }
 assert.throws(
-  () => validateVendorManifest({ targets: { "linux:x64": manifest.targets["linux:x64"] } }),
+  () => validateVendorManifest({ ...manifest, cli_version: "0.3" }),
+  /CLI version must be exact semver/
+);
+assert.throws(
+  () => validateVendorManifest({ ...manifest, cli_version: undefined }),
+  /CLI version must be exact semver/
+);
+assert.throws(
+  () =>
+    validateVendorManifest({
+      ...manifest,
+      targets: { "linux:x64": manifest.targets["linux:x64"] }
+    }),
   /target mismatch/
 );
 assert.throws(
   () =>
     validateVendorManifest({
+      ...manifest,
       targets: {
         ...manifest.targets,
         "linux:x64": { ...manifest.targets["linux:x64"], release_asset_sha256: "bad" }
       }
     }),
-  /checksum is invalid/
+  /release asset checksum is invalid/
+);
+assert.throws(
+  () =>
+    validateVendorManifest({
+      ...manifest,
+      targets: {
+        ...manifest.targets,
+        "linux:x64": { ...manifest.targets["linux:x64"], binary_sha256: "bad" }
+      }
+    }),
+  /binary checksum is invalid/
 );
 
 const originalError = console.error;

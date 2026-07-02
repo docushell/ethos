@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- boundary-exception: harden next-release npm binary provenance, registry-package wording,
+  parser-neutral dependency enforcement, determinism CI, and release-governance checks without
+  changing Ethos verification semantics or approving DocuShell integration, hosted surfaces,
+  production positioning, Windows artifacts, bundled PDFium, or public benchmark claims.
 - boundary-exception: close existing v0.3.0 GitHub Release tag evidence without creating,
   moving, deleting, or replacing tags while keeping additional release tags or release targets,
   hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, `ethos-rag`, and

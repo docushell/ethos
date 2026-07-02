@@ -22,6 +22,7 @@ import re
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -198,21 +199,7 @@ class MilestoneEPrepScopeStructuredBlockerValidationRecordTests(unittest.TestCas
         self.assertLess(block.index(structured_blocker_guard), block.index("git diff --check"))
 
     def test_ci_runs_structured_blocker_record_guard_once_in_order(self) -> None:
-        text = CI_WORKFLOW.read_text(encoding="utf-8")
-        alignment_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_fixture_candidate_blocker_alignment_validation_record.py"
-        )
-        structured_blocker_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_prep_scope_structured_blocker_validation_record.py"
-        )
-        walkthrough_guard = "python3 .github/scripts/test_milestone_e_internal_trust_loop_walkthrough.py"
-
-        self.assertIn(structured_blocker_guard, text)
-        self.assertEqual(1, text.count(structured_blocker_guard))
-        self.assertLess(text.index(alignment_guard), text.index(structured_blocker_guard))
-        self.assertLess(text.index(structured_blocker_guard), text.index(walkthrough_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_record_avoids_scope_expansion_language(self) -> None:
         text = normalized_record_text().lower()
