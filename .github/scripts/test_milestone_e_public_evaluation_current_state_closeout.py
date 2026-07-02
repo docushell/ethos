@@ -158,7 +158,16 @@ class MilestoneEPublicEvaluationCurrentStateCloseoutTests(unittest.TestCase):
         )
         self.assertIn("Public `0.3.0` install wording", execution_status, str(EXECUTION_STATUS))
         self.assertIn("GitHub Release artifact upload", execution_status, str(EXECUTION_STATUS))
-        self.assertIn("npm publication/alignment", execution_status, str(EXECUTION_STATUS))
+        self.assertIn(
+            "npm `@docushell/ethos-pdf@0.3.0` is live on npm",
+            execution_status,
+            str(EXECUTION_STATUS),
+        )
+        self.assertIn(
+            "v0.3.0 npm publication closeout",
+            execution_status,
+            str(EXECUTION_STATUS),
+        )
         self.assertIn("DocuShell integration remain blocked", execution_status, str(EXECUTION_STATUS))
         self.assertIn(
             "v0.3.0 publication closeout is recorded",

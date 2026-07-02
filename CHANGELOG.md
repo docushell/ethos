@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- boundary-exception: close exact `@docushell/ethos-pdf@0.3.0` npm publication with live registry
+  evidence while keeping public install wording, release/package tags, hosted, production,
+  Windows, bundled PDFium, benchmark, `ethos-doc`, `ethos-rag`, and DocuShell integration blocked
+  pending separate lanes.
 - boundary-exception: approve exact `@docushell/ethos-pdf@0.3.0` npm publication operator action
   while keeping actual `npm publish`, public install wording, registry closeout,
   release/package tags, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`,

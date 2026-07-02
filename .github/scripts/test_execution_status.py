@@ -45,7 +45,8 @@ class ExecutionStatusTests(unittest.TestCase):
         )
         self.assertIn("Public `0.3.0` install wording", text)
         self.assertIn("GitHub Release artifact upload", text)
-        self.assertIn("npm publication/alignment", text)
+        self.assertIn("npm `@docushell/ethos-pdf@0.3.0` is live on npm", text)
+        self.assertIn("v0.3.0 npm publication closeout", text)
         self.assertIn("DocuShell integration remain blocked", text)
         self.assertIn(
             "npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries",
@@ -113,6 +114,7 @@ class ExecutionStatusTests(unittest.TestCase):
             text,
         )
         self.assertIn("the Python `ethos-pdf` wheel is live on PyPI", text)
+        self.assertIn("npm `@docushell/ethos-pdf@0.3.0` is live on npm", text)
         self.assertIn("v0.2.0 remains the public CLI artifact baseline", text)
         self.assertIn("npm remains `@docushell/ethos-pdf@0.2.1`", text)
         self.assertIn("GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts", text)

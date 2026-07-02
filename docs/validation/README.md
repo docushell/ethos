@@ -10,13 +10,23 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 npm publication closeout is recorded in
+`v0-3-0-npm-publication-closeout-validation-2026-07-02.md`. It records live npm registry evidence
+for the exact `@docushell/ethos-pdf@0.3.0` package, including registry latest, dist shasum,
+integrity, tarball URL, file count, unpacked size, signature metadata, and source gitHead. It
+supersedes the npm publication blocker only for that exact package and version. Public `0.3.0`
+install wording, package tag creation, release tag creation, DocuShell integration, hosted
+surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium
+builds, public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag` remain
+blocked pending separate lanes.
+
 v0.3.0 npm publication approval decision is recorded in
 `v0-3-0-npm-publication-approval-decision-validation-2026-07-02.md`. It accepts the exact
 `@docushell/ethos-pdf@0.3.0` npm publication request and authorizes only the later operator
-`npm publish` action for that bounded candidate after merged-source validation passes. It does not
-publish the package; operator publish remains pending. Public `0.3.0` install wording, registry
-closeout, package tag creation, release tag creation, and DocuShell integration remain blocked
-pending separate evidence and closeout records.
+`npm publish` action for that bounded candidate after merged-source validation passes. The later
+npm publication closeout entry above records that this operator action is complete for the exact
+package and version. Public `0.3.0` install wording, package tag creation, release tag creation,
+and DocuShell integration remain blocked pending separate evidence and closeout records.
 
 v0.3.0 npm publication approval request is recorded in
 `v0-3-0-npm-publication-approval-request-validation-2026-07-02.md`. It requests decider review for
