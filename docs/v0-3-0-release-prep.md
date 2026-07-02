@@ -90,10 +90,16 @@ The v0.3.0 artifact publication approval request is recorded in
 the decider to accept or reject only the exact macOS arm64 and Linux x64 draft CLI artifact names,
 checksums, workflow evidence, and bounded wording.
 
-Draft artifacts remain CI evidence only. GitHub Release artifact upload remains blocked until a
-separate approval decision, operator action, and closeout record pass. npm vendor refresh remains
-blocked until a separate vendor-refresh evidence and approval lane passes. npm publication,
-release/package tag creation, public install wording, and DocuShell integration remain blocked.
+The v0.3.0 artifact publication approval decision is recorded in
+`docs/validation/v0-3-0-artifact-publication-approval-decision-validation-2026-07-01.md`. It
+accepts only the exact macOS arm64 and Linux x64 CLI artifact names, checksums, source binding,
+workflow evidence, and bounded wording for later operator attachment to GitHub Release target
+`v0.3.0`.
+
+Draft artifacts remain CI evidence only. GitHub Release artifact upload remains blocked until the
+approved operator action and closeout record pass. npm vendor refresh remains blocked until a
+separate vendor-refresh evidence and approval lane passes. npm publication, package tag creation,
+public install wording, and DocuShell integration remain blocked.
 The public install wording remains blocked until the relevant registry, artifact, npm, tag, and
 wording closeout records pass.
 
