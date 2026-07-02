@@ -22,6 +22,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import makefile_text, target_block
 
 
@@ -327,23 +328,7 @@ class MilestoneEInternalTrustLoopBlockerLedgerTests(unittest.TestCase):
         self.assertLess(block.index(ledger_guard), block.index("git diff --check"))
 
     def test_ci_runs_ledger_guard_once_in_order(self) -> None:
-        text = read(CI_WORKFLOW)
-        matrix_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_internal_trust_loop_rehearsal_evidence_matrix.py"
-        )
-        ledger_guard = (
-            "python3 .github/scripts/test_milestone_e_internal_trust_loop_blocker_ledger.py"
-        )
-        protocol_record_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_internal_trust_loop_use_protocol_validation_record.py"
-        )
-
-        self.assertIn(ledger_guard, text)
-        self.assertEqual(1, text.count(ledger_guard))
-        self.assertLess(text.index(matrix_guard), text.index(ledger_guard))
-        self.assertLess(text.index(ledger_guard), text.index(protocol_record_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_ledger_avoids_scope_expansion_language(self) -> None:
         text = json.dumps(load_json(LEDGER), sort_keys=True).lower()

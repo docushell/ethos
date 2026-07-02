@@ -1,8 +1,13 @@
-# Ethos Schemas — the product contract
+# Ethos Schemas — product contracts and repository records
 
 JSON Schema draft 2020-12. `$id`s use `urn:ethos:schema:<name>:<major>` so schema identity
 survives any package rename (ADR-0006). Changes only via `contract-change` PRs with version
 bumps and downstream sign-off; output-changing heuristics are semver events (PRD §5.1).
+
+## External product contracts
+
+These schemas govern artifacts or configuration that producers and consumers exchange. This is the
+consumer-facing schema surface; compatibility and versioning rules apply to it.
 
 | Schema | Artifact it governs |
 | --- | --- |
@@ -14,9 +19,20 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-app-answer-release-decision.schema.json` | non-canonical app wrapper decision envelope for answer release policy over Ethos proof summaries |
 | `ethos-evidence-anchor-request.schema.json` | evidence refs consumed by `ethos evidence anchor --evidence-refs` |
 | `ethos-evidence-anchor-report.schema.json` | `evidence_anchor_report.json` emitted by `ethos evidence anchor` |
-| `ethos-evidence-anchor-contract.schema.json` | `evidence_anchor` v1 source-only public beta evaluation guard inventory |
 | `ethos-verification-config.schema.json` | verification config (its c14n hash stamps reports) |
 | `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos crop_element` and `ethos verify --crop-dir` |
+| `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
+
+## Internal process and guard schemas
+
+These schemas validate source-tree contract inventories, milestone records, request fixtures, and
+release-governance data. They keep repository evidence deterministic, but they are not supported
+consumer exchange contracts and their presence does not approve a public surface. They remain here
+so the existing validation harness can check all repository JSON without moving paths.
+
+| Schema | Repository record it governs |
+| --- | --- |
+| `ethos-evidence-anchor-contract.schema.json` | `evidence_anchor` v1 source-only public beta evaluation guard inventory |
 | `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |
 | `ethos-verify-citations-contract.schema.json` | Milestone D `verify_citations` v1 source-only contract inventory |
 | `ethos-claim-kind-boundary-contract.schema.json` | Milestone D `claim_kind_boundary` v1 source-only contract inventory |
@@ -38,7 +54,6 @@ bumps and downstream sign-off; output-changing heuristics are semver events (PRD
 | `ethos-milestone-e-package-publication-approval-prep.schema.json` | Milestone E source-only package publication approval prep |
 | `ethos-milestone-e-public-facing-readiness-ledger.schema.json` | Milestone E source-only public-facing readiness current-main ledger |
 | `ethos-milestone-e-public-beta-current-main-refresh-prep.schema.json` | Milestone E source-only public beta current-main refresh prep |
-| `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
 
 Conventions: snake_case keys; `additionalProperties: false` everywhere except the
 runtime-only `diagnostics` envelope field; geometry is integer quanta (no floats anywhere in

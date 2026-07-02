@@ -8,6 +8,10 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const { prepareVendor, sha256File } = require("../scripts/prepare-vendor");
 
+function sha256Text(text) {
+  return crypto.createHash("sha256").update(text).digest("hex");
+}
+
 function writeFixtureArchive(root, assetName, nestedDir, binaryText) {
   const sourceDir = path.join(root, "src", nestedDir);
   fs.mkdirSync(sourceDir, { recursive: true });
@@ -46,11 +50,13 @@ try {
         targets: {
           "darwin:arm64": {
             binary: "ethos-darwin-arm64",
+            binary_sha256: sha256Text("#!/usr/bin/env sh\necho mac\n"),
             release_asset: path.basename(macArchive),
             release_asset_sha256: sha256File(macArchive)
           },
           "linux:x64": {
             binary: "ethos-linux-x64",
+            binary_sha256: sha256Text("#!/usr/bin/env sh\necho linux\n"),
             release_asset: path.basename(linuxArchive),
             release_asset_sha256: sha256File(linuxArchive)
           }
@@ -84,6 +90,7 @@ try {
       targets: {
         "linux:x64": {
           binary: "ethos-linux-x64",
+          binary_sha256: sha256Text("#!/usr/bin/env sh\necho linux\n"),
           release_asset: "ethos-linux-x64.tar.gz",
           release_asset_sha256: crypto.createHash("sha256").update("wrong").digest("hex")
         }
@@ -100,6 +107,53 @@ try {
     /Checksum mismatch/
   );
 
+  const badBinaryManifest = path.join(temp, "bad-binary-manifest.json");
+  fs.writeFileSync(
+    badBinaryManifest,
+    JSON.stringify({
+      targets: {
+        "linux:x64": {
+          binary: "ethos-linux-x64",
+          binary_sha256: crypto.createHash("sha256").update("wrong").digest("hex"),
+          release_asset: "ethos-linux-x64.tar.gz",
+          release_asset_sha256: sha256File(linuxArchive)
+        }
+      }
+    })
+  );
+  assert.throws(
+    () =>
+      prepareVendor({
+        artifactDir: path.join(temp, "artifacts"),
+        vendorDir: path.join(temp, "bad-binary-vendor"),
+        manifestPath: badBinaryManifest
+      }),
+    /Binary checksum mismatch/
+  );
+
+  const missingBinaryChecksumManifest = path.join(temp, "missing-binary-checksum-manifest.json");
+  fs.writeFileSync(
+    missingBinaryChecksumManifest,
+    JSON.stringify({
+      targets: {
+        "linux:x64": {
+          binary: "ethos-linux-x64",
+          release_asset: "ethos-linux-x64.tar.gz",
+          release_asset_sha256: sha256File(linuxArchive)
+        }
+      }
+    })
+  );
+  assert.throws(
+    () =>
+      prepareVendor({
+        artifactDir: path.join(temp, "artifacts"),
+        vendorDir: path.join(temp, "missing-binary-checksum-vendor"),
+        manifestPath: missingBinaryChecksumManifest
+      }),
+    /Binary checksum is missing or invalid/
+  );
+
   const missingManifest = path.join(temp, "missing-manifest.json");
   fs.writeFileSync(
     missingManifest,
@@ -107,6 +161,7 @@ try {
       targets: {
         "linux:x64": {
           binary: "ethos-linux-x64",
+          binary_sha256: sha256Text("#!/usr/bin/env sh\necho linux\n"),
           release_asset: "missing.tar.gz",
           release_asset_sha256: sha256File(linuxArchive)
         }

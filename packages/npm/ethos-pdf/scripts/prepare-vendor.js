@@ -21,6 +21,20 @@ function readManifest(manifestPath = DEFAULT_MANIFEST) {
   return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 }
 
+function verifyBinaryChecksum(targetKey, target, binaryPath) {
+  const expectedSha256 = String(target.binary_sha256 || "");
+  if (!/^[a-f0-9]{64}$/.test(expectedSha256)) {
+    throw new Error(`Binary checksum is missing or invalid for ${targetKey}`);
+  }
+  const actualSha256 = sha256File(binaryPath);
+  if (actualSha256 !== expectedSha256) {
+    throw new Error(
+      `Binary checksum mismatch for ${target.binary}: expected ${expectedSha256}, got ${actualSha256}`
+    );
+  }
+  return true;
+}
+
 function findEthosBinary(root) {
   const stack = [root];
   while (stack.length > 0) {
@@ -79,9 +93,11 @@ function prepareVendor({
     try {
       extractTarGz(archivePath, tempDir);
       const sourceBinary = findEthosBinary(tempDir);
+      verifyBinaryChecksum(targetKey, target, sourceBinary);
       const vendorBinary = path.join(vendorDir, target.binary);
       fs.copyFileSync(sourceBinary, vendorBinary);
       fs.chmodSync(vendorBinary, 0o755);
+      verifyBinaryChecksum(targetKey, target, vendorBinary);
       prepared.push(vendorBinary);
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
@@ -115,5 +131,6 @@ module.exports = {
   main,
   prepareVendor,
   readManifest,
-  sha256File
+  sha256File,
+  verifyBinaryChecksum
 };

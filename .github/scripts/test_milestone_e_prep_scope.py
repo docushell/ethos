@@ -23,6 +23,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -457,10 +458,7 @@ class MilestoneEPrepScopeTests(unittest.TestCase):
             self.assertNotIn(excluded, block)
 
     def test_ci_runs_prep_scope_guard(self) -> None:
-        text = read(CI_WORKFLOW)
-
-        self.assertIn("python3 .github/scripts/test_milestone_e_prep_scope.py", text)
-        self.assertEqual(1, text.count("python3 .github/scripts/test_milestone_e_prep_scope.py"))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_schema_validation_covers_e_prep_json_artifacts(self) -> None:
         validate_examples = read(VALIDATE_EXAMPLES)

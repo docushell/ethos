@@ -23,6 +23,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -221,14 +222,14 @@ class MilestoneEPublicBetaCurrentMainRefreshPrepTests(unittest.TestCase):
 
     def test_make_and_ci_run_refresh_prep_after_readiness_ledger(self) -> None:
         make_block = target_block("milestone-e-prep")
-        ci = read(CI_WORKFLOW)
         readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
         refresh_guard = "test_milestone_e_public_beta_current_main_refresh_prep.py"
+        prefix = "$(PYTHON) .github/scripts/"
 
-        for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
-            self.assertIn(prefix + refresh_guard, text)
-            self.assertEqual(1, text.count(prefix + refresh_guard))
-            self.assertLess(text.index(prefix + readiness_guard), text.index(prefix + refresh_guard))
+        self.assertIn(prefix + refresh_guard, make_block)
+        self.assertEqual(1, make_block.count(prefix + refresh_guard))
+        self.assertLess(make_block.index(prefix + readiness_guard), make_block.index(prefix + refresh_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_refresh_prep_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = json.dumps(load_json(PREP), sort_keys=True).lower()

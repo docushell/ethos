@@ -21,6 +21,7 @@ import re
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -185,25 +186,7 @@ class MilestoneESchemaRegistryAlignmentValidationRecordTests(unittest.TestCase):
         self.assertLess(block.index(record_guard), block.index("git diff --check"))
 
     def test_ci_runs_registry_guards_once_in_order(self) -> None:
-        text = CI_WORKFLOW.read_text(encoding="utf-8")
-        registry_guard = "python3 .github/scripts/test_milestone_e_schema_registry_alignment.py"
-        prep_scope_guard = "python3 .github/scripts/test_milestone_e_prep_scope.py"
-        row_record_guard = (
-            "python3 .github/scripts/test_milestone_e_rehearsal_row_record_coverage_validation.py"
-        )
-        record_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_schema_registry_alignment_validation_record.py"
-        )
-        prep_record_guard = "python3 .github/scripts/test_milestone_e_prep_validation_record.py"
-
-        self.assertIn(registry_guard, text)
-        self.assertEqual(1, text.count(registry_guard))
-        self.assertIn(record_guard, text)
-        self.assertEqual(1, text.count(record_guard))
-        self.assertLess(text.index(registry_guard), text.index(prep_scope_guard))
-        self.assertLess(text.index(row_record_guard), text.index(record_guard))
-        self.assertLess(text.index(record_guard), text.index(prep_record_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_record_avoids_scope_expansion_language(self) -> None:
         text = normalized_record_text().lower()

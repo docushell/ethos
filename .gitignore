@@ -3,6 +3,9 @@
 __pycache__/
 *.pyc
 .DS_Store
+/build/
+*.egg-info/
+packages/npm/ethos-pdf/*.tgz
 benchmarks/results/fixtures/*.json
 benchmarks/results/gate-zero/*
 !benchmarks/results/gate-zero/README.md

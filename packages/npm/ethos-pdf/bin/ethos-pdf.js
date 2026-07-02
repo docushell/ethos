@@ -32,6 +32,9 @@ function readVendorManifest() {
 }
 
 function validateVendorManifest(manifest = readVendorManifest()) {
+  if (!/^\d+\.\d+\.\d+$/.test(String(manifest.cli_version || ""))) {
+    throw new Error("Ethos vendor manifest CLI version must be exact semver.");
+  }
   const targets = manifest.targets || {};
   const expectedKeys = Array.from(SUPPORTED_TARGETS.keys()).sort();
   const manifestKeys = Object.keys(targets).sort();
@@ -47,7 +50,10 @@ function validateVendorManifest(manifest = readVendorManifest()) {
       throw new Error(`Ethos vendor manifest binary mismatch for ${key}.`);
     }
     if (!/^[a-f0-9]{64}$/.test(String(target.release_asset_sha256 || ""))) {
-      throw new Error(`Ethos vendor manifest checksum is invalid for ${key}.`);
+      throw new Error(`Ethos vendor manifest release asset checksum is invalid for ${key}.`);
+    }
+    if (!/^[a-f0-9]{64}$/.test(String(target.binary_sha256 || ""))) {
+      throw new Error(`Ethos vendor manifest binary checksum is invalid for ${key}.`);
     }
   }
   return true;

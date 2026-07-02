@@ -25,6 +25,7 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -269,14 +270,7 @@ class MilestoneESchemaRegistryAlignmentTests(unittest.TestCase):
         self.assertLess(block.index(registry_guard), block.index("git diff --check"))
 
     def test_ci_runs_registry_guard_once_before_scope_guard(self) -> None:
-        text = read(CI_WORKFLOW)
-
-        registry_guard = "python3 .github/scripts/test_milestone_e_schema_registry_alignment.py"
-        prep_scope_guard = "python3 .github/scripts/test_milestone_e_prep_scope.py"
-
-        self.assertIn(registry_guard, text)
-        self.assertEqual(1, text.count(registry_guard))
-        self.assertLess(text.index(registry_guard), text.index(prep_scope_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
 
 if __name__ == "__main__":

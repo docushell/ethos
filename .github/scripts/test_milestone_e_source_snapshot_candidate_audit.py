@@ -22,6 +22,7 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -161,15 +162,7 @@ class MilestoneESourceSnapshotCandidateAuditTests(unittest.TestCase):
         self.assertLess(block.index(audit_guard), block.index(schema_validation))
 
     def test_ci_runs_audit_after_h2_scope_guard(self) -> None:
-        text = read(CI_WORKFLOW)
-        h2_guard = "python3 .github/scripts/test_h2_source_snapshot_scope_approval.py"
-        audit_guard = "python3 .github/scripts/test_milestone_e_source_snapshot_candidate_audit.py"
-        milestone_d = "python3 .github/scripts/test_milestone_d_internal_contracts.py"
-
-        self.assertIn(audit_guard, text)
-        self.assertEqual(1, text.count(audit_guard))
-        self.assertLess(text.index(h2_guard), text.index(audit_guard))
-        self.assertLess(text.index(audit_guard), text.index(milestone_d))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
 
 if __name__ == "__main__":

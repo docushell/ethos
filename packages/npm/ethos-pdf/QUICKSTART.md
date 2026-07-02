@@ -11,24 +11,24 @@ PDFium dynamic library.
 Install the current published npm package with:
 
 ```sh
-npm install -g @docushell/ethos-pdf@0.2.1
+npm install -g @docushell/ethos-pdf@0.3.0
 ```
 
-This source package candidate is `@docushell/ethos-pdf@0.3.0` and vendors CLI binaries that report
-`ethos 0.3.0`. npm publication and public `0.3.0` install wording remain blocked until the
-separate npm approval, operator publish, registry smoke, and wording closeout records pass. Version
-`0.2.0` is deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`.
+The current published npm package is `@docushell/ethos-pdf@0.3.0`. Its vendored CLI binaries report
+`ethos 0.3.0`.
 
 ## Vendor Binary Assembly
 
-Before publication, assemble the package vendor payload from the approved GitHub Release archives:
+To prepare a future package release, assemble its vendor payload from the approved GitHub Release
+archives:
 
 ```sh
 npm run prepare:vendor -- /absolute/path/to/release-assets
 ```
 
 The directory must contain `ethos-macos-arm64.tar.gz` and `ethos-linux-x64.tar.gz`. The assembly
-script verifies the checksums in `vendor/manifest.json` before writing the packaged binaries.
+script verifies the release-archive and extracted-executable checksums in `vendor/manifest.json`
+before writing the packaged binaries.
 
 ## PDFium Setup
 

@@ -55,13 +55,27 @@ class DeterminismWorkflowTests(unittest.TestCase):
         self.assertIn("runs-on: ${{ matrix.os }}", text)
         self.assertIn("cargo test --locked -p ethos-doc-core --all-features", text)
 
-    def test_pdfium_corpus_step_remains_explicitly_configured(self) -> None:
+    def test_parser_neutral_verifier_and_report_goldens_run_on_every_os(self) -> None:
         text = workflow_text()
 
-        self.assertIn("full-corpus fingerprint equality", text)
+        self.assertIn("cargo test --locked -p ethos-verify", text)
+        self.assertIn("verification report repeated-byte and golden equality", text)
+        self.assertIn("examples/verify/check_verify_alpha.py", text)
+        self.assertIn("--ethos-bin", text)
+        self.assertIn("--out-dir", text)
+
+    def test_pdfium_double_parse_is_real_and_explicitly_conditional(self) -> None:
+        text = workflow_text()
+
+        self.assertIn("same-host PDFium double-parse byte equality", text)
         self.assertIn("shell: bash", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
-        self.assertIn("skipped: pinned PDFium runtime is not configured", text)
+        self.assertIn("double_parse_is_byte_identical_when_pdfium_is_configured", text)
+        self.assertIn("-- --exact --nocapture", text)
+        self.assertIn(
+            "deferred: caller-provided PDFium runtime is not configured", text
+        )
+        self.assertNotIn("make -C benchmarks/harness fixtures", text)
 
     def test_matrix_does_not_fail_fast(self) -> None:
         self.assertIn("fail-fast: false", workflow_text())

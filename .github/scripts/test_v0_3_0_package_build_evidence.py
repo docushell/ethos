@@ -298,13 +298,12 @@ class V030PackageBuildEvidenceTests(unittest.TestCase):
             self.assertEqual(crate_file, artifacts[package]["crate_file"])
             self.assertEqual(crate_hash, artifacts[package]["sha256"])
 
-    def test_python_wheel_candidate_is_0_3_0_and_helper_smoke_passes(self) -> None:
+    def test_current_python_wheel_is_0_3_0_and_helper_smoke_passes(self) -> None:
         wheel = self.wheel
 
         self.assertEqual(WHEEL, wheel["wheel"])
-        self.assertEqual(WHEEL_SHA256, wheel["sha256"])
-        for expected in EXPECTED_WHEEL_FILES:
-            self.assertIn(expected, wheel["files"])
+        self.assertRegex(str(wheel["sha256"]), r"^[a-f0-9]{64}$")
+        self.assertEqual(sorted(EXPECTED_WHEEL_FILES), wheel["files"])
         self.assertIn("Name: ethos-pdf", str(wheel["metadata"]))
         self.assertIn("Version: 0.3.0", str(wheel["metadata"]))
         self.assertIn("Requires-Python: >=3.8", str(wheel["metadata"]))
@@ -316,6 +315,24 @@ class V030PackageBuildEvidenceTests(unittest.TestCase):
             ["0.3.0", "EthosCli", "True", "True", "certified", "claim-revenue"],
             wheel["smoke_stdout"],
         )
+
+    def test_historical_record_binds_published_wheel_hash_structure_and_smoke(self) -> None:
+        record = normalized(RECORD)
+
+        for expected in (
+            WHEEL,
+            WHEEL_SHA256,
+            "Successfully built ethos_pdf-0.3.0-py3-none-any.whl",
+            "Successfully installed ethos-pdf-0.3.0",
+            "EthosCli",
+            "proof_summary",
+            "app_answer_release_decision",
+            "app_status: certified",
+            "claim-revenue",
+        ):
+            self.assertIn(expected, record)
+        for expected in EXPECTED_WHEEL_FILES:
+            self.assertIn(expected, read(RECORD))
 
     def test_source_metadata_and_public_install_baseline_remain_split(self) -> None:
         self.assertIn('version = "0.3.0"', read(PYPROJECT))

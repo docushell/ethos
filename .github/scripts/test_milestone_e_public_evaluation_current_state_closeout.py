@@ -22,6 +22,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -185,14 +186,14 @@ class MilestoneEPublicEvaluationCurrentStateCloseoutTests(unittest.TestCase):
 
     def test_make_and_ci_run_closeout_after_current_main_source_approval_before_indexes(self) -> None:
         make_block = target_block("milestone-e-prep")
-        ci = read(CI_WORKFLOW)
         source_approval_guard = "test_milestone_e_public_beta_current_main_source_only_approval.py"
         closeout_guard = "test_milestone_e_public_evaluation_current_state_closeout.py"
+        prefix = "$(PYTHON) .github/scripts/"
 
-        for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
-            self.assertIn(prefix + closeout_guard, text)
-            self.assertEqual(1, text.count(prefix + closeout_guard))
-            self.assertLess(text.index(prefix + source_approval_guard), text.index(prefix + closeout_guard))
+        self.assertIn(prefix + closeout_guard, make_block)
+        self.assertEqual(1, make_block.count(prefix + closeout_guard))
+        self.assertLess(make_block.index(prefix + source_approval_guard), make_block.index(prefix + closeout_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_record_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = normalized(RECORD).lower()

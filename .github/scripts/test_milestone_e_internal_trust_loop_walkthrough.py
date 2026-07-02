@@ -22,6 +22,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import makefile_text, target_block
 
 
@@ -304,21 +305,7 @@ class MilestoneEInternalTrustLoopWalkthroughTests(unittest.TestCase):
         self.assertLess(block.index(walkthrough_guard), block.index("git diff --check"))
 
     def test_ci_runs_walkthrough_guard_once_in_order(self) -> None:
-        text = read(CI_WORKFLOW)
-        criteria_guard = "python3 .github/scripts/test_milestone_e_fixture_promotion_criteria.py"
-        walkthrough_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_internal_trust_loop_walkthrough.py"
-        )
-        criteria_record_guard = (
-            "python3 .github/scripts/"
-            "test_milestone_e_fixture_promotion_criteria_validation_record.py"
-        )
-
-        self.assertIn(walkthrough_guard, text)
-        self.assertEqual(1, text.count(walkthrough_guard))
-        self.assertLess(text.index(criteria_guard), text.index(walkthrough_guard))
-        self.assertLess(text.index(walkthrough_guard), text.index(criteria_record_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_walkthrough_avoids_scope_expansion_language(self) -> None:
         text = json.dumps(load_json(WALKTHROUGH), sort_keys=True).lower()

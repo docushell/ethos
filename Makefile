@@ -20,16 +20,13 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: milestone-d-crop-element-surface-shape-contract
 .PHONY: milestone-d-claim-kind-boundary-contract
 .PHONY: app-answer-release-contract app-answer-release-demo app-answer-release-release-prep
+.PHONY: frozen-record-guards release-state-check registry-surface-check
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
 
 verify-alpha-tree:
-	@tree="$$(cargo tree -p ethos-verify -e normal)"; \
-	printf '%s\n' "$$tree"; \
-	if printf '%s\n' "$$tree" | grep -qiE 'ethos-pdf|ethos-layout|ethos-tables|ethos-render|pdfium'; then \
-		echo "ethos-verify depends on parser internals"; exit 1; \
-	fi
+	$(PYTHON) .github/scripts/check_verify_dependency_boundary.py
 
 verify-alpha: $(ETHOS_BIN)
 	cargo test --locked -p ethos-verify
@@ -211,11 +208,29 @@ milestone-d-internal-contracts:
 light-check:
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
+	$(PYTHON) .github/scripts/test_package_registry_source_consistency.py
+	$(PYTHON) .github/scripts/check_release_state.py --check
+	$(PYTHON) .github/scripts/check_verify_dependency_boundary.py
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/check_release_boundary_paths.py
 	$(PYTHON) .github/scripts/check_golden_change_rationale.py
 	$(PYTHON) .github/scripts/validation_record_integrity.py
 	git diff --check
+
+registry-surface-check:
+	npm test --prefix packages/npm/ethos-pdf
+	$(PYTHON) .github/scripts/test_package_registry_source_consistency.py
+	$(PYTHON) .github/scripts/test_claims_gate_registry_surfaces.py
+	$(PYTHON) .github/scripts/claims_gate.py
+	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
+
+release-state-check:
+	$(PYTHON) .github/scripts/test_release_state.py
+	$(PYTHON) .github/scripts/check_release_state.py --check
+
+frozen-record-guards:
+	$(PYTHON) .github/scripts/test_run_frozen_record_guards.py
+	$(PYTHON) .github/scripts/run_frozen_record_guards.py --python $(PYTHON)
 
 milestone-e-prep:
 	$(MAKE) light-check PYTHON=$(PYTHON)

@@ -21,6 +21,40 @@
         "GitHub Release `v0.3.0` also provides evaluation CLI archives for macOS arm64 and Linux x64.",
         "Windows packaged artifacts, bundled project-maintained PDFium builds, hosted surfaces, public benchmark reports, and launch announcements are tracked as separate release-scope work."
       ]
+    },
+    "python_readme": {
+      "path": "python/README.md",
+      "claims": [
+        "python3 -m pip install ethos-pdf==0.3.0",
+        "`v0.3.0` includes JSON verification and evidence-anchor wrapper calls through a caller-provided `ethos` CLI binary.",
+        "The Python wheel does not bundle the CLI or PDFium."
+      ]
+    },
+    "python_quickstart": {
+      "path": "python/QUICKSTART.md",
+      "claims": [
+        "python3 -m pip install ethos-pdf==0.3.0",
+        "The `ethos-pdf` Python package is a thin wrapper around a caller-provided local `ethos` CLI binary.",
+        "It does not bundle Ethos or PDFium."
+      ]
+    },
+    "npm_readme": {
+      "path": "packages/npm/ethos-pdf/README.md",
+      "claims": [
+        "The current published npm package is `@docushell/ethos-pdf@0.3.0`.",
+        "Its vendored CLI binaries report `ethos 0.3.0`.",
+        "The package is prepared as a binary distribution package.",
+        "PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`."
+      ]
+    },
+    "npm_quickstart": {
+      "path": "packages/npm/ethos-pdf/QUICKSTART.md",
+      "claims": [
+        "npm install -g @docushell/ethos-pdf@0.3.0",
+        "The current published npm package is `@docushell/ethos-pdf@0.3.0`.",
+        "Its vendored CLI binaries report `ethos 0.3.0`.",
+        "The package does not bundle PDFium."
+      ]
     }
   }
 }

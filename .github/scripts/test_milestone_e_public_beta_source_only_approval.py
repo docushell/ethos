@@ -24,6 +24,7 @@ import unittest
 from pathlib import Path
 from typing import Any
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -193,15 +194,15 @@ class MilestoneEPublicBetaSourceOnlyApprovalTests(unittest.TestCase):
 
     def test_make_target_and_ci_run_approval_after_required_evidence(self) -> None:
         block = target_block("milestone-e-prep")
-        ci = read(CI_WORKFLOW)
         evidence_guard = "test_milestone_e_public_beta_required_evidence_records.py"
         approval_guard = "test_milestone_e_public_beta_source_only_approval.py"
         package_guard = "test_milestone_e_package_publication_approval_prep.py"
+        prefix = "$(PYTHON) .github/scripts/"
 
-        for text, prefix in ((block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
-            self.assertIn(prefix + approval_guard, text)
-            self.assertLess(text.index(prefix + evidence_guard), text.index(prefix + approval_guard))
-            self.assertLess(text.index(prefix + approval_guard), text.index(prefix + package_guard))
+        self.assertIn(prefix + approval_guard, block)
+        self.assertLess(block.index(prefix + evidence_guard), block.index(prefix + approval_guard))
+        self.assertLess(block.index(prefix + approval_guard), block.index(prefix + package_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_record_avoids_scope_expansion_language_and_private_paths(self) -> None:
         text = normalized(RECORD).lower()

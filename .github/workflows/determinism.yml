@@ -27,16 +27,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: rustup show
-      # The contract vectors pin exact c14n bytes + sha256 per platform: every platform
-      # asserting the same pinned hashes IS cross-platform byte equality for the
-      # serialization layer. Corpus-level fingerprint comparison joins when the engine
-      # parses the frozen manifest (WS-ENGINE + WS-HARNESS).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install "jsonschema>=4.18"
+      # The contract vectors pin exact c14n bytes + sha256 per platform. The verifier
+      # suite and verify-alpha runner add cross-platform execution of the parser-neutral
+      # verifier, repeated report byte equality, and comparison to tracked goldens.
       - run: cargo test --locked -p ethos-doc-core --all-features
-      - name: full-corpus fingerprint equality
+      - run: cargo test --locked -p ethos-verify
+      - name: verification report repeated-byte and golden equality
+        shell: bash
+        run: |
+          cargo build --locked -p ethos-cli
+          ethos_bin="${GITHUB_WORKSPACE}/target/debug/ethos"
+          if [ "${RUNNER_OS}" = "Windows" ]; then ethos_bin="${ethos_bin}.exe"; fi
+          python examples/verify/check_verify_alpha.py \
+            --repo-root "${GITHUB_WORKSPACE}" \
+            --ethos-bin "${ethos_bin}" \
+            --out-dir "${RUNNER_TEMP}/verify-alpha"
+      - name: same-host PDFium double-parse byte equality
         shell: bash
         run: |
           if [ -n "${ETHOS_PDFIUM_LIBRARY_PATH:-}" ] && [ -f "${ETHOS_PDFIUM_LIBRARY_PATH:-}" ]; then
-            make -C benchmarks/harness fixtures
+            cargo test --locked -p ethos-cli --test pdf_parse \
+              double_parse_is_byte_identical_when_pdfium_is_configured -- --exact --nocapture
           else
-            echo "skipped: pinned PDFium runtime is not configured on this runner"
+            echo "deferred: caller-provided PDFium runtime is not configured on this runner"
           fi

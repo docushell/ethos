@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -307,21 +308,7 @@ class MilestoneEPublicApprovalLaneBlockerTests(unittest.TestCase):
         self.assertLess(block.index(lane_record_guard), block.index("git diff --check"))
 
     def test_ci_runs_lane_guard_once_in_order(self) -> None:
-        text = read(CI_WORKFLOW)
-        required_before_record = (
-            "python3 .github/scripts/test_milestone_e_required_before_alignment_validation_record.py"
-        )
-        lane_guard = "python3 .github/scripts/test_milestone_e_public_approval_lane_blockers.py"
-        lane_record_guard = (
-            "python3 .github/scripts/test_milestone_e_public_approval_lane_blockers_validation_record.py"
-        )
-
-        self.assertIn(lane_guard, text)
-        self.assertIn(lane_record_guard, text)
-        self.assertEqual(1, text.count(lane_guard))
-        self.assertEqual(1, text.count(lane_record_guard))
-        self.assertLess(text.index(required_before_record), text.index(lane_guard))
-        self.assertLess(text.index(lane_guard), text.index(lane_record_guard))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_ledger_avoids_scope_expansion_language(self) -> None:
         text = json.dumps(load_json(LEDGER), sort_keys=True).lower()

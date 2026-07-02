@@ -21,6 +21,7 @@ import re
 import unittest
 from pathlib import Path
 
+from frozen_record_guard_wiring import assert_frozen_guard_ci_wiring
 from makefile_guard import target_block
 
 
@@ -136,24 +137,7 @@ class H2SourceSnapshotScopeApprovalTests(unittest.TestCase):
         self.assertLess(block.index(closeout_guard), block.index(schema_validation))
 
     def test_ci_runs_h2_scope_guard_after_h1_guard(self) -> None:
-        text = read(CI_WORKFLOW)
-        h1_guard = "python3 .github/scripts/test_h1_public_safe_comparison_closeout.py"
-        h2_guard = "python3 .github/scripts/test_h2_source_snapshot_scope_approval.py"
-        audit_guard = "python3 .github/scripts/test_milestone_e_source_snapshot_candidate_audit.py"
-        candidate_guard = "python3 .github/scripts/test_h2_source_snapshot_candidate_evidence.py"
-        closeout_guard = "python3 .github/scripts/test_h2_source_snapshot_closeout.py"
-        milestone_d = "python3 .github/scripts/test_milestone_d_internal_contracts.py"
-
-        self.assertIn(h2_guard, text)
-        self.assertIn(audit_guard, text)
-        self.assertIn(candidate_guard, text)
-        self.assertIn(closeout_guard, text)
-        self.assertEqual(1, text.count(h2_guard))
-        self.assertLess(text.index(h1_guard), text.index(h2_guard))
-        self.assertLess(text.index(h2_guard), text.index(audit_guard))
-        self.assertLess(text.index(audit_guard), text.index(candidate_guard))
-        self.assertLess(text.index(candidate_guard), text.index(closeout_guard))
-        self.assertLess(text.index(closeout_guard), text.index(milestone_d))
+        assert_frozen_guard_ci_wiring(self, root=ROOT, guard_file=__file__)
 
     def test_scope_docs_avoid_scope_expansion_language(self) -> None:
         text = "\n".join(

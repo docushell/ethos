@@ -11,6 +11,10 @@ and optional crop artifacts governed by the JSON Schemas in [`schemas/`](schemas
 read files from a directory and validate JSON Schema draft 2020-12, you can consume Ethos
 artifacts.
 
+[`schemas/README.md`](schemas/README.md) distinguishes consumer-facing product contracts from
+internal process and guard schemas. Internal schemas validate repository governance records; they
+are not EEF exchange contracts and their presence does not approve a public surface.
+
 This document defines the exchange shape and conformance rules for the current Ethos artifact
 family. It does not introduce a hosted API, a new command, a benchmark claim, a production
 guarantee, OCR support, Windows packaged artifacts, bundled project-maintained PDFium, or semantic
@@ -437,6 +441,15 @@ that those refs are still bound to the source.
 
 Evidence-anchor consumers MUST inspect each anchor independently. A non-bound anchor is report
 data. Request/schema/source-shape errors are tool usage errors.
+
+### 6.4 CLI process-error contract
+
+CLI consumers MUST branch on the process exit code before interpreting standard error. Exit `2`
+is a deterministic, plain-text usage diagnostic with the shape `error (usage): <message>`. Coded
+failures at exits `3` through `12` are canonical JSON with the shape
+`{"error":{"code":"<stable_code>","message":"<stable_message>"}}`. Consumers MUST NOT attempt to
+parse exit `2` as JSON or infer a coded error from message text. Exit-code or stderr-shape changes
+are breaking CLI contract changes.
 
 ---
 

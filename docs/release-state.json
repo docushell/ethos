@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-07-02",
+  "release": {
+    "version": "0.3.0",
+    "rust_crates": [
+      "ethos-doc-core",
+      "ethos-verify",
+      "ethos-pdf"
+    ],
+    "python_package": {
+      "name": "ethos-pdf",
+      "version": "0.3.0"
+    },
+    "npm_package": {
+      "name": "@docushell/ethos-pdf",
+      "version": "0.3.0"
+    },
+    "github_release": {
+      "tag": "v0.3.0",
+      "version": "0.3.0",
+      "artifacts": [
+        "macOS arm64",
+        "Linux x64"
+      ]
+    },
+    "package_tags": [
+      "ethos-package-ethos-doc-core-0.3.0",
+      "ethos-package-ethos-verify-0.3.0",
+      "ethos-package-ethos-pdf-0.3.0"
+    ],
+    "pdfium_environment": "ETHOS_PDFIUM_LIBRARY_PATH"
+  },
+  "closed_lanes": {
+    "rust_python_publication": "docs/validation/v0-3-0-publication-closeout-validation-2026-07-01.md",
+    "github_release_artifacts": "docs/validation/v0-3-0-artifact-publication-closeout-validation-2026-07-02.md",
+    "npm_publication": "docs/validation/v0-3-0-npm-publication-closeout-validation-2026-07-02.md",
+    "public_install_wording": "docs/validation/v0-3-0-public-install-wording-closeout-validation-2026-07-02.md",
+    "package_tags": "docs/validation/v0-3-0-package-tag-closeout-validation-2026-07-02.md",
+    "release_tag": "docs/validation/v0-3-0-release-tag-closeout-validation-2026-07-02.md"
+  },
+  "blocked_lanes": [
+    "additional release tags or release targets",
+    "DocuShell integration",
+    "hosted surfaces",
+    "production positioning",
+    "Windows packaged artifacts",
+    "bundled project-maintained PDFium builds",
+    "public benchmark reports and claims",
+    "speed, footprint, parser-quality, and table-quality claims",
+    "ethos-doc",
+    "ethos-rag"
+  ]
+}

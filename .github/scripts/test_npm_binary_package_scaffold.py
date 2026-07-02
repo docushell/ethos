@@ -17,14 +17,17 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
+from shutil import copytree
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from shutil import copytree
+
+from check_release_boundary_paths import HEAVY_EXACT, is_heavy
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,14 +43,29 @@ VENDOR_MANIFEST = PACKAGE_DIR / "vendor" / "manifest.json"
 SUPPORTED_TARGETS = {
     "darwin:arm64": {
         "binary": "ethos-darwin-arm64",
+        "binary_sha256": "777e1fb243425a46b83b63ed92fbf7cb810f59cfedd81cfe671cf791410c20dc",
         "release_asset": "ethos-macos-arm64.tar.gz",
         "release_asset_sha256": "efb163f140bf4afffd1caeb396f79e42f484591c3e90a86810ca6c0f0c209c96",
     },
     "linux:x64": {
         "binary": "ethos-linux-x64",
+        "binary_sha256": "b416993fc38e6f794611b8b71789ed85af18eb6aa63fef380d9ae7738661f154",
         "release_asset": "ethos-linux-x64.tar.gz",
         "release_asset_sha256": "b549ba5968e04b7679a8d3e879cd45d27f3e9a6fd226eee5c270a4e4f5c01405",
     },
+}
+EXPECTED_PACKAGE_FILES = {
+    "LICENSE",
+    "NOTICE",
+    "QUICKSTART.md",
+    "README.md",
+    "bin/ethos-pdf.js",
+    "package.json",
+    "scripts/postinstall.js",
+    "scripts/prepare-vendor.js",
+    "vendor/ethos-darwin-arm64",
+    "vendor/ethos-linux-x64",
+    "vendor/manifest.json",
 }
 
 
@@ -55,7 +73,22 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 class NpmBinaryPackageScaffoldTests(unittest.TestCase):
+    def test_vendor_bytes_are_release_boundary_paths(self) -> None:
+        for path in (
+            "packages/npm/ethos-pdf/vendor/ethos-darwin-arm64",
+            "packages/npm/ethos-pdf/vendor/ethos-linux-x64",
+            "packages/npm/ethos-pdf/vendor/manifest.json",
+        ):
+            self.assertTrue(is_heavy(path), path)
+
+        self.assertNotIn("python/pyproject.toml", HEAVY_EXACT)
+        self.assertTrue(is_heavy("pyproject.toml"))
+
     def test_package_metadata_is_bounded_to_supported_release_targets(self) -> None:
         package = json.loads(read(PACKAGE_JSON))
 
@@ -75,9 +108,15 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
 
         self.assertEqual(1, manifest["version"])
         self.assertEqual("@docushell/ethos-pdf", manifest["package"])
+        self.assertEqual("0.3.0", manifest["cli_version"])
         self.assertEqual(SUPPORTED_TARGETS, manifest["targets"])
         for target in manifest["targets"].values():
             self.assertRegex(target["release_asset_sha256"], r"^[a-f0-9]{64}$")
+            self.assertRegex(target["binary_sha256"], r"^[a-f0-9]{64}$")
+            self.assertEqual(
+                target["binary_sha256"],
+                sha256(PACKAGE_DIR / "vendor" / target["binary"]),
+            )
 
     def test_platform_selection_is_exact_and_rejects_windows(self) -> None:
         result = subprocess.run(
@@ -101,11 +140,9 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertIn("does not bundle PDFium", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
         self.assertIn("QUICKSTART.md", text)
-        self.assertIn("source package candidate is `@docushell/ethos-pdf@0.3.0`", text)
-        self.assertIn("current published npm package remains `@docushell/ethos-pdf@0.2.1`", text)
-        self.assertIn("Version `0.2.0` is deprecated", text)
+        self.assertIn("current published npm package is `@docushell/ethos-pdf@0.3.0`", text)
         self.assertIn("`ethos 0.3.0`", text)
-        self.assertIn("npm publication and public `0.3.0` install wording remain blocked", text)
+        self.assertIn("release-archive and extracted-executable SHA256 values", text)
         self.assertIn("does not include public benchmark reports or claims", normalized)
 
         quickstart = read(QUICKSTART)
@@ -145,9 +182,7 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         pack = json.loads(result.stdout)[0]
         files = {entry["path"] for entry in pack["files"]}
-        self.assertIn("vendor/manifest.json", files)
-        self.assertIn("vendor/ethos-darwin-arm64", files)
-        self.assertIn("vendor/ethos-linux-x64", files)
+        self.assertEqual(EXPECTED_PACKAGE_FILES, files)
         self.assertNotIn("vendor/ethos-win32-x64", files)
 
 

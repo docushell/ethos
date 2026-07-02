@@ -31,6 +31,7 @@ HEAVY_PREFIXES = (
     "profiles/",
     "schemas/",
     "docs/validation/",
+    "packages/npm/ethos-pdf/vendor/",
 )
 HEAVY_EXACT = {
     "Cargo.toml",
@@ -44,7 +45,6 @@ HEAVY_EXACT = {
     "docs/RELEASE_OPERATOR_RUNBOOK.md",
     "packages/npm/ethos-pdf/package.json",
     "packages/npm/ethos-pdf/vendor/manifest.json",
-    "python/pyproject.toml",
 }
 HEAVY_SUFFIXES = (
     "Cargo.toml",
