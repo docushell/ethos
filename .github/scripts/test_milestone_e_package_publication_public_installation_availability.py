@@ -58,10 +58,9 @@ CURRENT_README_WORDING = (
     "Ethos is a deterministic document evidence layer for source-grounded verification and "
     "citation checking across native Ethos JSON and supported foreign parser outputs. The current "
     "beta includes the GitHub source repository, Rust library crates `ethos-doc-core`, "
-    "`ethos-verify`, and `ethos-pdf` at `0.2.0`, the Python `ethos-pdf` wheel at `0.2.0`, the "
-    "npm `@docushell/ethos-pdf@0.2.1` package, and GitHub Release `v0.2.0` macOS arm64/Linux x64 "
-    "CLI artifacts. npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI "
-    "binaries; use `0.2.1`. PDFium-backed commands use caller-provided PDFium through "
+    "`ethos-verify`, and `ethos-pdf` at `0.3.0`, the Python `ethos-pdf` wheel at `0.3.0`, the "
+    "npm `@docushell/ethos-pdf@0.3.0` package, and GitHub Release `v0.3.0` macOS arm64/Linux x64 "
+    "CLI artifacts. PDFium-backed commands use caller-provided PDFium through "
     "`ETHOS_PDFIUM_LIBRARY_PATH`."
 )
 BOUNDED_INSTALLATION_WORDING = (
@@ -89,9 +88,9 @@ INSTALL_COMMANDS = (
     "cargo add ethos-pdf@0.1.0",
 )
 CURRENT_INSTALL_COMMANDS = (
-    "cargo add ethos-doc-core@0.2.0",
-    "cargo add ethos-verify@0.2.0",
-    "cargo add ethos-pdf@0.2.0",
+    "cargo add ethos-doc-core@0.3.0",
+    "cargo add ethos-verify@0.3.0",
+    "cargo add ethos-pdf@0.3.0",
 )
 FORBIDDEN_SCOPE_EXPANSION = [
     "public reports are approved",
@@ -173,9 +172,9 @@ class MilestoneEPackagePublicationPublicInstallationAvailabilityTests(unittest.T
         self.assertIn(CURRENT_README_WORDING, readme)
         for command in CURRENT_INSTALL_COMMANDS:
             self.assertIn(command, readme)
-        self.assertIn("npm install -g @docushell/ethos-pdf@0.2.1", readme)
-        self.assertIn("python3 -m pip install ethos-pdf==0.2.0", readme)
-        self.assertIn("GitHub Release `v0.2.0`", readme)
+        self.assertIn("npm install -g @docushell/ethos-pdf@0.3.0", readme)
+        self.assertIn("python3 -m pip install ethos-pdf==0.3.0", readme)
+        self.assertIn("GitHub Release `v0.3.0`", readme)
         self.assertIn("macOS arm64/Linux x64 CLI artifacts", readme)
         self.assertIn("Windows packaged artifacts", readme)
         self.assertIn("bundled project-maintained PDFium builds", readme)

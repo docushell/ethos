@@ -25,17 +25,6 @@ RELEASE_PREP = ROOT / "docs/v0-3-0-release-prep.md"
 MAKEFILE = ROOT / "Makefile"
 README = ROOT / "README.md"
 CLAIMS = ROOT / "docs/public-boundary-claims.json"
-INSTALL_WORDING_SURFACES = (
-    ROOT / "README.md",
-    ROOT / "python/README.md",
-    ROOT / "python/QUICKSTART.md",
-    ROOT / "packages/npm/ethos-pdf/README.md",
-    ROOT / "packages/npm/ethos-pdf/QUICKSTART.md",
-    ROOT / "crates/ethos-core/README.md",
-    ROOT / "crates/ethos-verify/README.md",
-    ROOT / "crates/ethos-pdf/README.md",
-    ROOT / "adapters/grounding/opendataloader-json/README.md",
-)
 CARGO = ROOT / "Cargo.toml"
 CARGO_LOCK = ROOT / "Cargo.lock"
 CLI_CARGO = ROOT / "crates/ethos-cli/Cargo.toml"
@@ -52,7 +41,7 @@ NPM_PUBLIC_BASELINE = "0.2.1"
 RELEASE_CANDIDATE_SENTENCE = (
     "v0.3.0 source versions are activated for app-answer-release contract validation."
 )
-FORBIDDEN_INSTALL_WORDING = (
+CURRENT_INSTALL_WORDING = (
     "cargo add ethos-doc-core@0.3.0",
     "cargo add ethos-verify@0.3.0",
     "cargo add ethos-pdf@0.3.0",
@@ -122,26 +111,18 @@ class V030VersionActivationTests(unittest.TestCase):
         self.assertIn(npm["version"], {NPM_PUBLIC_BASELINE, VERSION})
         self.assertIn("npm remains at `0.2.1`", normalized(RECORD))
 
-    def test_public_install_commands_remain_on_current_published_baseline(self) -> None:
+    def test_public_install_commands_now_follow_later_public_wording_closeout(self) -> None:
         readme = read(README)
         claims = json.loads(read(CLAIMS))["surfaces"]["readme"]["claims"]
         joined_claims = "\n".join(claims)
 
-        for expected in (
-            f"cargo add ethos-doc-core@{RUST_PYTHON_PUBLIC_BASELINE}",
-            f"cargo add ethos-verify@{RUST_PYTHON_PUBLIC_BASELINE}",
-            f"cargo add ethos-pdf@{RUST_PYTHON_PUBLIC_BASELINE}",
-            f"python3 -m pip install ethos-pdf=={RUST_PYTHON_PUBLIC_BASELINE}",
-            f"npm install -g @docushell/ethos-pdf@{NPM_PUBLIC_BASELINE}",
-        ):
+        for expected in CURRENT_INSTALL_WORDING:
             self.assertIn(expected, readme)
             self.assertIn(expected, joined_claims)
 
-        for forbidden in FORBIDDEN_INSTALL_WORDING:
-            self.assertNotIn(forbidden, readme)
-            self.assertNotIn(forbidden, joined_claims)
-            for path in INSTALL_WORDING_SURFACES:
-                self.assertNotIn(forbidden, read(path), str(path))
+        record = normalized(RECORD)
+        self.assertIn("public install commands remain on the current published `0.2.0`", record)
+        self.assertIn("No `0.3.0` registry install wording is approved", record)
 
     def test_activation_record_declares_release_candidate_wording_only(self) -> None:
         record = normalized(RECORD)

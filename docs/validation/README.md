@@ -10,13 +10,33 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 public install wording closeout is recorded in
+`v0-3-0-public-install-wording-closeout-validation-2026-07-02.md`. It updates `README.md` and
+`docs/public-boundary-claims.json` to the exact approved public `0.3.0` wording across the
+already-live Rust crates, Python wheel, npm package, and GitHub Release CLI artifacts. The exact
+public `0.3.0` install wording packet is approved and closed out for those surfaces. It
+supersedes the public install wording blocker only for that exact wording packet. Package tag
+creation, release tag creation, DocuShell integration, hosted surfaces, production positioning,
+Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports,
+public benchmark claims, `ethos-doc`, and `ethos-rag` remain blocked pending separate lanes.
+
+v0.3.0 public install wording approval decision is recorded in
+`v0-3-0-public-install-wording-approval-decision-validation-2026-07-02.md`. It accepts the exact
+public `0.3.0` install wording request packet and authorizes only the bounded
+README/public-boundary claims closeout above. Package tag creation, release tag creation,
+DocuShell integration, hosted surfaces, production positioning, Windows packaged artifacts,
+bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims,
+`ethos-doc`, and `ethos-rag` remain blocked pending separate lanes.
+
 v0.3.0 public install wording approval request is recorded in
 `v0-3-0-public-install-wording-approval-request-validation-2026-07-02.md`. It requests decider
 review for exact public `0.3.0` install wording across the already-live Rust crates, Python wheel,
 npm package, and GitHub Release CLI artifacts. It does not change `README.md` or
 `docs/public-boundary-claims.json`; public `0.3.0` install wording remains blocked until a
-separate approval decision and closeout pass. Package tag creation, release tag creation,
-DocuShell integration, hosted surfaces, production positioning, Windows packaged artifacts,
+separate approval decision and closeout pass at that historical request stage. The approval
+decision and closeout records above supersede that wording blocker only for the exact public
+`0.3.0` install wording packet. Package tag creation, release tag creation, DocuShell integration,
+hosted surfaces, production positioning, Windows packaged artifacts,
 bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims,
 `ethos-doc`, and `ethos-rag` remain blocked pending separate lanes.
 
