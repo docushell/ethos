@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- boundary-exception: request decider review for exact `@docushell/ethos-pdf@0.3.0` npm
+  publication inputs while keeping `npm publish`, public install wording, release/package tags,
+  hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, `ethos-rag`, and
+  DocuShell integration blocked pending a later approval decision, operator action, registry
+  smoke, and closeout lanes.
 - boundary-exception: refresh the `@docushell/ethos-pdf@0.3.0` npm source package candidate from
   published v0.3.0 GitHub Release CLI artifacts while keeping npm publish, public install wording,
   package tags, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, `ethos-rag`,

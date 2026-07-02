@@ -10,6 +10,14 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 npm publication approval request is recorded in
+`v0-3-0-npm-publication-approval-request-validation-2026-07-02.md`. It requests decider review for
+only the exact `@docushell/ethos-pdf@0.3.0` npm candidate, tarball metadata, vendor payload
+checksums, supported platforms, installed CLI smoke, and caller-provided PDFium boundary. It does
+not approve `npm publish`; npm publication remains blocked pending an explicit approval decision,
+operator action with npm credentials, registry smoke, and closeout record. Public `0.3.0` install
+wording, package tag creation, release tag creation, and DocuShell integration remain blocked.
+
 v0.3.0 npm vendor refresh is recorded in
 `v0-3-0-npm-vendor-refresh-validation-2026-07-02.md`. It refreshes the
 `@docushell/ethos-pdf@0.3.0` source package candidate from the published GitHub Release `v0.3.0`

@@ -123,6 +123,19 @@ This refresh does not approve `npm publish`. It does not approve public `0.3.0` 
 npm publication, package tag creation, public install wording, and DocuShell integration remain
 blocked until separate approval, operator, registry-smoke, tag, and wording closeout records pass.
 
+### 3c. Request npm Publication Approval
+
+The v0.3.0 npm publication approval request is recorded in
+`docs/validation/v0-3-0-npm-publication-approval-request-validation-2026-07-02.md`. It asks the
+decider to accept or reject only the exact `@docushell/ethos-pdf@0.3.0` npm candidate, tarball
+metadata, vendor payload checksums, supported platforms, installed CLI smoke, and caller-provided
+PDFium boundary.
+
+This request does not approve `npm publish`. npm publication remains blocked until a separate
+approval decision record passes and an operator publishes with npm credentials. Public `0.3.0`
+install wording, package tag creation, release tag creation, and DocuShell integration remain
+blocked until separate closeout lanes pass.
+
 ### 4. Gather Package Evidence Before Any Publication Decision
 
 Before any public package or artifact decision, record exact evidence for the surfaces that are in
