@@ -10,19 +10,28 @@ crates.io, and the Python `ethos-pdf` wheel is live on PyPI. v0.2.0 remains the 
 baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64 CLI artifacts, and npm remains
 `@docushell/ethos-pdf@0.2.1`; npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped
 stale CLI binaries that reported `ethos 0.1.2`. Public `0.3.0` install wording, GitHub Release
-artifact upload, npm publication/alignment, release/package tags, and DocuShell integration remain
-blocked pending separate evidence, approval, and closeout records. Hosted surfaces, production
-positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark
-reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and
-`ethos-rag` remain blocked.
+artifact upload, npm publication/alignment, package tags, and DocuShell integration remain blocked
+pending their separate evidence, operator action, and closeout records. The exact GitHub Release
+target `v0.3.0` is accepted only by the artifact-publication approval decision below. Hosted
+surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium
+builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality,
+table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+
+v0.3.0 artifact publication approval decision is recorded in
+`docs/validation/v0-3-0-artifact-publication-approval-decision-validation-2026-07-01.md`. It
+accepts the exact macOS arm64 and Linux x64 CLI artifact names, checksums, source binding,
+workflow evidence, and bounded wording for later operator attachment to GitHub Release target
+`v0.3.0`. GitHub Release artifact upload remains blocked pending operator action and closeout;
+npm vendor refresh, npm publication, package tag creation, public install wording, and DocuShell
+integration remain blocked.
 
 v0.3.0 artifact publication approval request is recorded in
 `docs/validation/v0-3-0-artifact-publication-approval-request-validation-2026-07-01.md`. It
 requests decider review for only the exact macOS arm64 and Linux x64 draft CLI artifacts and
 sidecars from workflow run `28531102130`, bound by the v0.3.0 draft CLI artifact evidence record.
-GitHub Release artifact upload remains blocked pending an explicit approval decision, operator
-action, and closeout record; npm vendor refresh, npm publication, release/package tag creation,
-public install wording, and DocuShell integration remain blocked.
+GitHub Release artifact upload remains blocked pending the recorded approval decision's operator
+action and closeout record; npm vendor refresh, npm publication, package tag creation, public
+install wording, and DocuShell integration remain blocked.
 
 v0.3.0 draft CLI artifact evidence is recorded in
 `docs/validation/v0-3-0-draft-artifact-evidence-validation-2026-07-01.md`. It records green
