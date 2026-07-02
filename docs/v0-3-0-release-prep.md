@@ -111,6 +111,18 @@ blocked.
 The public install wording remains blocked until the relevant registry, artifact, npm, tag, and
 wording closeout records pass.
 
+### 3b. Refresh npm Vendor Candidate
+
+The v0.3.0 npm vendor refresh is recorded in
+`docs/validation/v0-3-0-npm-vendor-refresh-validation-2026-07-02.md`. It refreshes the
+`@docushell/ethos-pdf@0.3.0` source package candidate from the published GitHub Release `v0.3.0`
+macOS arm64 and Linux x64 CLI artifacts, records exact vendor binary and npm tarball evidence, and
+validates local install smoke with `ethos 0.3.0`.
+
+This refresh does not approve `npm publish`. It does not approve public `0.3.0` install wording.
+npm publication, package tag creation, public install wording, and DocuShell integration remain
+blocked until separate approval, operator, registry-smoke, tag, and wording closeout records pass.
+
 ### 4. Gather Package Evidence Before Any Publication Decision
 
 Before any public package or artifact decision, record exact evidence for the surfaces that are in

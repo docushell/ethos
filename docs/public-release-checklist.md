@@ -7,16 +7,25 @@ or launch announcement. It is intentionally stricter than the day-to-day enginee
 
 Ethos v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on
 crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.3.0` now contains
-closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. v0.2.0
-remains the public CLI artifact baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64
-artifacts, and npm remains `@docushell/ethos-pdf@0.2.1`; npm `@docushell/ethos-pdf@0.2.0` is
-deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`. Public `0.3.0`
-install wording, npm publication/alignment, package tags, and DocuShell integration remain blocked
-pending their separate evidence, operator action, and closeout records. The exact GitHub Release
-artifact closeout is limited to the approved `v0.3.0` release assets below. Hosted surfaces,
-production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds,
-public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality,
-`ethos-doc`, and `ethos-rag` remain blocked.
+closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. The npm
+source package candidate is refreshed as `@docushell/ethos-pdf@0.3.0`. v0.2.0 remains the public
+CLI artifact baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts, and npm
+remains `@docushell/ethos-pdf@0.2.1` for public install wording until a later wording closeout; npm
+`@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries that reported
+`ethos 0.1.2`. Public `0.3.0` install wording, npm publication/alignment, package tags, and
+DocuShell integration remain blocked pending their separate evidence, operator action, and closeout
+records. The exact GitHub Release artifact closeout is limited to the approved `v0.3.0` release
+assets below. Hosted surfaces, production positioning, Windows packaged artifacts, bundled
+project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed,
+footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+
+v0.3.0 npm vendor refresh is recorded in
+`docs/validation/v0-3-0-npm-vendor-refresh-validation-2026-07-02.md`. It refreshes the
+`@docushell/ethos-pdf@0.3.0` source package candidate from the published GitHub Release `v0.3.0`
+macOS arm64 and Linux x64 CLI artifacts, records exact vendor binary and npm tarball evidence, and
+validates local install smoke with `ethos 0.3.0`. npm publication, package tag creation, public
+`0.3.0` install wording, and DocuShell integration remain blocked pending separate approval,
+operator, registry-smoke, and closeout lanes.
 
 v0.3.0 artifact publication closeout is recorded in
 `docs/validation/v0-3-0-artifact-publication-closeout-validation-2026-07-02.md`. It records

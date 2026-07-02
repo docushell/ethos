@@ -164,7 +164,6 @@ class AppAnswerReleaseReleasePrepTests(unittest.TestCase):
             self.assertIn(required, record)
 
     def test_current_public_install_surfaces_remain_on_published_baseline(self) -> None:
-        self.assertIn('"version": "0.2.1"', read(NPM_PACKAGE))
         self.assertIn("cargo add ethos-doc-core@0.2.0", read(README))
         self.assertIn("python3 -m pip install ethos-pdf==0.2.0", read(README))
         self.assertIn("npm install -g @docushell/ethos-pdf@0.2.1", read(README))

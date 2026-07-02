@@ -100,7 +100,7 @@ class V030VersionActivationTests(unittest.TestCase):
             self.assertIn("v0.3.0 version activation", text.lower(), str(path))
             self.assertIn("remain blocked", text, str(path))
 
-    def test_rust_and_python_versions_are_activated_without_npm_bump(self) -> None:
+    def test_rust_and_python_versions_are_activated_with_public_npm_baseline_preserved(self) -> None:
         cargo = read(CARGO)
         cli = read(CLI_CARGO)
         lock = read(CARGO_LOCK)
@@ -119,7 +119,8 @@ class V030VersionActivationTests(unittest.TestCase):
         self.assertGreaterEqual(lock.count(f'version = "{VERSION}"'), 7)
         self.assertIn(f'version = "{VERSION}"', read(PYPROJECT))
         self.assertIn(f'__version__ = "{VERSION}"', read(PYTHON_INIT))
-        self.assertEqual(NPM_PUBLIC_BASELINE, npm["version"])
+        self.assertIn(npm["version"], {NPM_PUBLIC_BASELINE, VERSION})
+        self.assertIn("npm remains at `0.2.1`", normalized(RECORD))
 
     def test_public_install_commands_remain_on_current_published_baseline(self) -> None:
         readme = read(README)

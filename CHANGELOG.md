@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- boundary-exception: refresh the `@docushell/ethos-pdf@0.3.0` npm source package candidate from
+  published v0.3.0 GitHub Release CLI artifacts while keeping npm publish, public install wording,
+  package tags, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, `ethos-rag`,
+  and DocuShell integration blocked pending separate lanes.
 - boundary-exception: close exact v0.3.0 macOS arm64 and Linux x64 GitHub Release CLI artifact
   publication with published asset evidence while keeping npm vendor refresh, npm publish, public
   install wording, package tags, hosted, production, Windows, bundled PDFium, benchmark,

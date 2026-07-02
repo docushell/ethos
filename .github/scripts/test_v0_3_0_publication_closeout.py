@@ -187,7 +187,7 @@ class V030PublicationCloseoutTests(unittest.TestCase):
         raw = read(RECORD)
         lower = normalized(RECORD).lower()
 
-        self.assertEqual("0.2.1", json.loads(read(NPM_PACKAGE))["version"])
+        self.assertIn(json.loads(read(NPM_PACKAGE))["version"], {"0.2.1", "0.3.0"})
         for expected in (
             "Public installation wording may be updated only in a separate bounded docs lane.",
             "GitHub Release artifact publication remains blocked pending exact v0.3.0 artifact evidence and",

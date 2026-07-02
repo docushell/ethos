@@ -163,7 +163,8 @@ class V030PublicationApprovalDecisionTests(unittest.TestCase):
             self.assertNotIn(marker, raw)
 
     def test_source_surface_remains_bounded_before_operator_publication(self) -> None:
-        self.assertEqual("0.2.1", json.loads(read(NPM_PACKAGE))["version"])
+        self.assertIn("No `npm publish` command is authorized by this decision record.", normalized(RECORD))
+        self.assertIn(json.loads(read(NPM_PACKAGE))["version"], {"0.2.1", "0.3.0"})
 
         for manifest in (
             ROOT / "crates/ethos-core/Cargo.toml",

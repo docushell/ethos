@@ -29,12 +29,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_DIR = ROOT / "packages/npm/ethos-pdf"
-PACKAGE_TARBALL = PACKAGE_DIR / "docushell-ethos-pdf-0.1.2.tgz"
-RECORD = ROOT / "docs/validation/patch-0-1-2-npm-vendor-refresh-validation-2026-06-24.md"
+PACKAGE_TARBALL = PACKAGE_DIR / "docushell-ethos-pdf-0.3.0.tgz"
+RECORD = ROOT / "docs/validation/v0-3-0-npm-vendor-refresh-validation-2026-07-02.md"
 VALIDATION_README = ROOT / "docs/validation/README.md"
-SOURCE_SHORT = "2323398"
-SOURCE_COMMIT = "23233986035e0f4a20295b24a9cfafafe65aa117"
-SOURCE_TREE = "750551f51094f0bc9625c781b8cc978431e431c3"
+SOURCE_SHORT = "8e20db3"
+SOURCE_COMMIT = "8e20db3c796f051925b059f62c294f41f981bcfa"
+SOURCE_TREE = "7f528ace4993e21e457aefb5a0aa65ed40297c6c"
 EXPECTED_FILES = {
     "LICENSE",
     "NOTICE",
@@ -49,14 +49,14 @@ EXPECTED_FILES = {
     "vendor/manifest.json",
 }
 EXPECTED_VENDOR_SHA256 = {
-    "vendor/ethos-darwin-arm64": "47c2f4aaac6cb6a1ca5cf1d9a0cc1f897ef00c48cdd8549455de70f0fbc6bcc1",
-    "vendor/ethos-linux-x64": "e75122f2954efbde6b8c07a98601b8d4a3b7a06647891a9e60d6aef4046649c3",
-    "vendor/manifest.json": "d557e081b946be0f839b17b8593027e31267b668498e202372026020f68a97a1",
+    "vendor/ethos-darwin-arm64": "777e1fb243425a46b83b63ed92fbf7cb810f59cfedd81cfe671cf791410c20dc",
+    "vendor/ethos-linux-x64": "b416993fc38e6f794611b8b71789ed85af18eb6aa63fef380d9ae7738661f154",
+    "vendor/manifest.json": "e313b42e49b258171611935455fd9e70bad7ce61c409df63ab90aaa2732a46af",
 }
-EXPECTED_PACK_SHASUM = "39b85d74f588666bfbf69e423a189c2039743de4"
-EXPECTED_PACK_SHA256 = "77cbc9c79dd60cc16073690a186e149ecbaabacce035fb0bd3603b267ce64112"
+EXPECTED_PACK_SHASUM = "1a90cebd8d52011ea5c41629becdfb37dec73ee7"
+EXPECTED_PACK_SHA256 = "1b72ef2fd9415f9edff93319ee2763e8f67cd6168ea00cd64d89a3760101c5fa"
 EXPECTED_PACK_INTEGRITY = (
-    "sha512-3loga13tnAkUkjuOrjKjpA0D3Cm5lW6Al8OwTyRx7NGMt6EB4gMpZOoaSCPjZWchYv7as1uPaEnZyOqrmFOPxg=="
+    "sha512-ZWoIY5BO7O8tzN88ICGvRasmOt7/RSN/xWFM2ONT8lavQqIOuCY/bQjvxnuK9vGpNeogh8X4UXHLLSRKqqHVOQ=="
 )
 EVIDENCE_PACK_SHASUM = EXPECTED_PACK_SHASUM
 EVIDENCE_PACK_SHA256 = EXPECTED_PACK_SHA256
@@ -108,8 +108,8 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
                 files = {entry["path"]: entry for entry in pack["files"]}
 
                 self.assertEqual("@docushell/ethos-pdf", pack["name"])
-                self.assertEqual("0.1.2", pack["version"])
-                self.assertEqual("docushell-ethos-pdf-0.1.2.tgz", pack["filename"])
+                self.assertEqual("0.3.0", pack["version"])
+                self.assertEqual("docushell-ethos-pdf-0.3.0.tgz", pack["filename"])
                 self.assertEqual(EXPECTED_FILES, set(files))
                 self.assertEqual(493, files["vendor/ethos-darwin-arm64"]["mode"])
                 self.assertEqual(493, files["vendor/ethos-linux-x64"]["mode"])
@@ -127,8 +127,8 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
         readme = normalized(VALIDATION_README)
 
         self.assertIn(f"Validated source HEAD before this record: `{SOURCE_SHORT}`", read(RECORD))
-        self.assertIn(f"npm vendor refresh source commit: `{SOURCE_COMMIT}`", record)
-        self.assertIn(f"npm vendor refresh source tree: `{SOURCE_TREE}`", record)
+        self.assertIn(f"v0.3.0 npm vendor refresh source commit: `{SOURCE_COMMIT}`", record)
+        self.assertIn(f"v0.3.0 npm vendor refresh source tree: `{SOURCE_TREE}`", record)
         self.assertIn(EVIDENCE_PACK_SHASUM, record)
         self.assertIn(EVIDENCE_PACK_SHA256, record)
         self.assertIn(EVIDENCE_PACK_INTEGRITY, record)
@@ -136,13 +136,13 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
         self.assertIn(f"npm: `{EXPECTED_NPM_VERSION}`", record)
         self.assertIn("durable package-content provenance", record)
         self.assertIn("per-file vendor SHA256 values as the durable content binding", record)
-        self.assertIn("ethos 0.1.2", record)
-        self.assertIn("exit code `12`", record)
+        self.assertIn("ethos 0.3.0", record)
+        self.assertIn("exit code 12", record)
         self.assertIn("npm publication remains blocked", record)
-        self.assertIn("Public installation wording remains blocked", record)
+        self.assertIn("Public `0.3.0` install wording remains blocked", record)
         self.assertNotIn("npm publication approved", record.lower())
         self.assertIn(RECORD.name, readme)
-        self.assertIn("patch 0.1.2 npm vendor refresh validation", readme)
+        self.assertIn("v0.3.0 npm vendor refresh", readme)
 
     def test_candidate_tarball_installs_and_preserves_pdfium_boundary(self) -> None:
         with tempfile.TemporaryDirectory(prefix="ethos-npm-install-") as temp:
@@ -178,7 +178,7 @@ class NpmTarballCandidateEvidenceTests(unittest.TestCase):
                     stderr=subprocess.PIPE,
                 )
                 self.assertEqual(0, version.returncode, version.stderr)
-                self.assertEqual("ethos 0.1.2", version.stdout.strip())
+                self.assertEqual("ethos 0.3.0", version.stdout.strip())
 
                 dummy_pdf = Path(temp) / "dummy.pdf"
                 dummy_pdf.write_text("%PDF-1.4\n%%EOF\n", encoding="utf-8")

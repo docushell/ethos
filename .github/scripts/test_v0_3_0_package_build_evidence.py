@@ -320,7 +320,8 @@ class V030PackageBuildEvidenceTests(unittest.TestCase):
     def test_source_metadata_and_public_install_baseline_remain_split(self) -> None:
         self.assertIn('version = "0.3.0"', read(PYPROJECT))
         self.assertIn('__version__ = "0.3.0"', read(PY_INIT))
-        self.assertEqual("0.2.1", json.loads(read(NPM_PACKAGE))["version"])
+        self.assertIn("- npm package metadata remains `@docushell/ethos-pdf@0.2.1`", read(RECORD))
+        self.assertIn(json.loads(read(NPM_PACKAGE))["version"], {"0.2.1", "0.3.0"})
 
     def test_record_keeps_publication_artifact_npm_and_docushell_boundaries_blocked(self) -> None:
         raw = read(RECORD)
