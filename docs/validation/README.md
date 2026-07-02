@@ -10,6 +10,16 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 public install wording approval request is recorded in
+`v0-3-0-public-install-wording-approval-request-validation-2026-07-02.md`. It requests decider
+review for exact public `0.3.0` install wording across the already-live Rust crates, Python wheel,
+npm package, and GitHub Release CLI artifacts. It does not change `README.md` or
+`docs/public-boundary-claims.json`; public `0.3.0` install wording remains blocked until a
+separate approval decision and closeout pass. Package tag creation, release tag creation,
+DocuShell integration, hosted surfaces, production positioning, Windows packaged artifacts,
+bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims,
+`ethos-doc`, and `ethos-rag` remain blocked pending separate lanes.
+
 v0.3.0 npm publication closeout is recorded in
 `v0-3-0-npm-publication-closeout-validation-2026-07-02.md`. It records live npm registry evidence
 for the exact `@docushell/ethos-pdf@0.3.0` package, including registry latest, dist shasum,

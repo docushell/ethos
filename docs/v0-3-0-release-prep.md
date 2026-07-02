@@ -163,6 +163,18 @@ This closeout supersedes the npm publication blocker only for the exact package 
 creation, and DocuShell integration remain blocked until separate evidence and closeout lanes
 pass.
 
+### 3f. Request Public Install Wording Approval
+
+The v0.3.0 public install wording approval request is recorded in
+`docs/validation/v0-3-0-public-install-wording-approval-request-validation-2026-07-02.md`. It asks
+the decider to accept or reject only the exact public `0.3.0` install wording packet for the
+already-live Rust crates, Python wheel, npm package, and GitHub Release CLI artifacts.
+
+This request does not change `README.md` or `docs/public-boundary-claims.json`. Public `0.3.0`
+install wording remains blocked until a separate approval decision and closeout pass. Package tag
+creation, release tag creation, and DocuShell integration remain blocked until separate evidence
+and closeout lanes pass.
+
 ### 4. Gather Package Evidence Before Any Publication Decision
 
 Before any public package or artifact decision, record exact evidence for the surfaces that are in
