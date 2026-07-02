@@ -82,13 +82,18 @@ def boundary_errors(package: dict[str, Any]) -> list[str]:
 
 
 def load_metadata() -> dict[str, Any]:
-    result = subprocess.run(
-        ["cargo", "metadata", "--locked", "--format-version", "1", "--no-deps"],
-        cwd=ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            ["cargo", "metadata", "--locked", "--format-version", "1", "--no-deps"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        raise SystemExit(
+            "cargo is required to check the ethos-verify dependency boundary"
+        ) from None
     return json.loads(result.stdout)
 
 

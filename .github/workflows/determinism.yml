@@ -46,10 +46,16 @@ jobs:
             --repo-root "${GITHUB_WORKSPACE}" \
             --ethos-bin "${ethos_bin}" \
             --out-dir "${RUNNER_TEMP}/verify-alpha"
-      - name: same-host PDFium double-parse byte equality
+      - name: configured PDFium fixture corpus and double-parse equality
         shell: bash
         run: |
           if [ -n "${ETHOS_PDFIUM_LIBRARY_PATH:-}" ] && [ -f "${ETHOS_PDFIUM_LIBRARY_PATH:-}" ]; then
+            ethos_bin="${GITHUB_WORKSPACE}/target/debug/ethos"
+            if [ "${RUNNER_OS}" = "Windows" ]; then ethos_bin="${ethos_bin}.exe"; fi
+            python benchmarks/harness/run_fixtures.py \
+              --repo-root "${GITHUB_WORKSPACE}" \
+              --ethos-bin "${ethos_bin}" \
+              --out "${RUNNER_TEMP}/fixture-baseline.json"
             cargo test --locked -p ethos-cli --test pdf_parse \
               double_parse_is_byte_identical_when_pdfium_is_configured -- --exact --nocapture
           else

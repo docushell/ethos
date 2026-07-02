@@ -207,9 +207,11 @@ first public release, profile artifact changes require a profile version bump.
   matrix runner; report bytes must match within the runner and the parsed reports must match the
   same tracked goldens on all three platforms.
 - PDFium-backed coverage is conditional on a caller-provided `ETHOS_PDFIUM_LIBRARY_PATH`. A
-  configured runner executes the real CLI parse twice on the same PDF and requires byte-identical
-  JSON output. An unconfigured runner reports this check as deferred; the current workflow does
-  not claim cross-platform PDFium parse-byte equality.
+  configured runner executes the tracked fixture corpus against its extraction/layout goldens and
+  repeated-run fingerprints, then executes the real CLI parse twice on the focused deterministic
+  fixture and requires byte-identical JSON output. An unconfigured runner reports these checks as
+  deferred; the current workflow does not claim full Gate Zero corpus coverage or cross-platform
+  PDFium parse-byte equality.
 
 ## 12. Versioning
 

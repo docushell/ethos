@@ -21,6 +21,9 @@ import copy
 import importlib.util
 import unittest
 from pathlib import Path
+from unittest import mock
+
+from makefile_guard import target_block
 
 
 SCRIPT = Path(__file__).with_name("check_verify_dependency_boundary.py")
@@ -139,6 +142,24 @@ class VerifyDependencyBoundaryTests(unittest.TestCase):
                 package["dependencies"][0][field] = value
 
                 self.assertIn(expected_errors[field], CHECK.boundary_errors(package))
+
+    def test_missing_cargo_has_a_concise_actionable_error(self) -> None:
+        with mock.patch.object(
+            CHECK.subprocess,
+            "run",
+            side_effect=FileNotFoundError("cargo"),
+        ):
+            with self.assertRaisesRegex(
+                SystemExit,
+                "cargo is required to check the ethos-verify dependency boundary",
+            ):
+                CHECK.load_metadata()
+
+    def test_light_check_stays_toolchain_free_while_verify_target_enforces_policy(self) -> None:
+        policy_command = "$(PYTHON) .github/scripts/check_verify_dependency_boundary.py"
+
+        self.assertNotIn(policy_command, target_block("light-check"))
+        self.assertIn(policy_command, target_block("verify-alpha-tree"))
 
 
 if __name__ == "__main__":

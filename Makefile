@@ -210,7 +210,6 @@ light-check:
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
 	$(PYTHON) .github/scripts/test_package_registry_source_consistency.py
 	$(PYTHON) .github/scripts/check_release_state.py --check
-	$(PYTHON) .github/scripts/check_verify_dependency_boundary.py
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/check_release_boundary_paths.py
 	$(PYTHON) .github/scripts/check_golden_change_rationale.py

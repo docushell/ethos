@@ -32,6 +32,8 @@ function readVendorManifest() {
 }
 
 function validateVendorManifest(manifest = readVendorManifest()) {
+  // Vendored bytes are hashed during vendor assembly and npm test/CI. Avoid
+  // rehashing the executable on every launcher invocation.
   if (!/^\d+\.\d+\.\d+$/.test(String(manifest.cli_version || ""))) {
     throw new Error("Ethos vendor manifest CLI version must be exact semver.");
   }

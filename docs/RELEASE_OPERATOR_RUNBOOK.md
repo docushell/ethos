@@ -50,6 +50,19 @@ make release-notice-draft
 python3 .github/scripts/validate_release_artifact_inventory.py target/release-artifacts/*.inventory.json
 ```
 
+## Version Activation and Registry Wording
+
+Treat package metadata and its registry-rendered documentation as one activation change. In the
+same pull request that changes `pyproject.toml` or `packages/npm/ethos-pdf/package.json`, update the
+matching Python/npm README and quickstart install pins plus `docs/public-boundary-claims.json`.
+Run `make registry-surface-check PYTHON=python3` before approval.
+
+Activation makes the source-tree documentation name a version that is not public until the
+operator completes publication and registry smoke checks. Keep that interval short: do not merge
+the activation pull request until the approved publication window and operator are ready. If the
+registry action cannot proceed, do not weaken the consistency gate or publish mixed-version
+wording; stop and record the blocked activation state.
+
 ## Promotion Gate
 
 Before creating or updating any public GitHub Release, package registry entry, or public release

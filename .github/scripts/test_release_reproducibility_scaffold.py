@@ -77,6 +77,19 @@ class ReleaseReproducibilityScaffoldTests(unittest.TestCase):
         self.assertIn("npm publication as blocked", runbook)
         self.assertNotIn("@docushell/ethos-pdf@0.1.0` surfaces", combined)
 
+    def test_version_activation_keeps_registry_metadata_and_wording_atomic(self) -> None:
+        runbook = normalized(OPERATOR_RUNBOOK)
+
+        for expected in (
+            "Treat package metadata and its registry-rendered documentation as one activation change.",
+            "pyproject.toml",
+            "packages/npm/ethos-pdf/package.json",
+            "docs/public-boundary-claims.json",
+            "make registry-surface-check PYTHON=python3",
+            "do not merge the activation pull request until the approved publication window",
+        ):
+            self.assertIn(expected, runbook)
+
 
 if __name__ == "__main__":
     unittest.main()

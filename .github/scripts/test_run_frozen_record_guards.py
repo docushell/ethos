@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 import tempfile
@@ -24,7 +25,20 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from run_frozen_record_guards import ManifestError, load_manifest, run_guards
+from check_release_boundary_paths import is_heavy
+from run_frozen_record_guards import (
+    DEFAULT_MANIFEST,
+    ROOT,
+    ManifestError,
+    load_manifest,
+    run_guards,
+)
+
+
+EXPECTED_DEFAULT_GUARD_COUNT = 68
+EXPECTED_DEFAULT_INVENTORY_SHA256 = (
+    "20a6e04922130f705e409c1ee10da401969ab56321333f23e84097932e7484df"
+)
 
 
 class FrozenRecordGuardRunnerTests(unittest.TestCase):
@@ -45,6 +59,20 @@ class FrozenRecordGuardRunnerTests(unittest.TestCase):
         self.manifest.write_text(
             json.dumps({"schema_version": 1, "guards": guards}),
             encoding="utf-8",
+        )
+
+    def test_repository_manifest_inventory_is_pinned_and_boundary_guarded(self) -> None:
+        guards = load_manifest(ROOT, DEFAULT_MANIFEST)
+        labels = [label for label, _ in guards]
+        inventory_sha256 = hashlib.sha256(
+            "\n".join(labels).encode("utf-8")
+        ).hexdigest()
+
+        self.assertEqual(EXPECTED_DEFAULT_GUARD_COUNT, len(labels))
+        self.assertEqual(EXPECTED_DEFAULT_INVENTORY_SHA256, inventory_sha256)
+        self.assertTrue(
+            is_heavy(DEFAULT_MANIFEST.relative_to(ROOT).as_posix()),
+            "the frozen guard inventory must require a boundary-exception review",
         )
 
     def test_empty_manifest_is_rejected(self) -> None:

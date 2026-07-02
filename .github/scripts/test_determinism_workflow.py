@@ -64,18 +64,20 @@ class DeterminismWorkflowTests(unittest.TestCase):
         self.assertIn("--ethos-bin", text)
         self.assertIn("--out-dir", text)
 
-    def test_pdfium_double_parse_is_real_and_explicitly_conditional(self) -> None:
+    def test_pdfium_fixture_corpus_and_double_parse_are_explicitly_conditional(self) -> None:
         text = workflow_text()
 
-        self.assertIn("same-host PDFium double-parse byte equality", text)
+        self.assertIn("configured PDFium fixture corpus and double-parse equality", text)
         self.assertIn("shell: bash", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
+        self.assertIn("benchmarks/harness/run_fixtures.py", text)
+        self.assertIn('--out "${RUNNER_TEMP}/fixture-baseline.json"', text)
         self.assertIn("double_parse_is_byte_identical_when_pdfium_is_configured", text)
         self.assertIn("-- --exact --nocapture", text)
         self.assertIn(
             "deferred: caller-provided PDFium runtime is not configured", text
         )
-        self.assertNotIn("make -C benchmarks/harness fixtures", text)
+        self.assertNotIn("full-corpus fingerprint equality", text)
 
     def test_matrix_does_not_fail_fast(self) -> None:
         self.assertIn("fail-fast: false", workflow_text())
