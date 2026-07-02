@@ -176,13 +176,11 @@ class MilestoneEPackagePublicationPublicInstallationWordingReviewTests(unittest.
         ci = read(CI_WORKFLOW)
         evidence_guard = "test_milestone_e_package_publication_registry_assembly_evidence_review.py"
         wording_guard = "test_milestone_e_package_publication_public_installation_wording_review.py"
-        public_facing_guard = "test_milestone_e_public_facing_readiness_ledger.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + wording_guard, text)
             self.assertEqual(1, text.count(prefix + wording_guard))
             self.assertLess(text.index(prefix + evidence_guard), text.index(prefix + wording_guard))
-            self.assertLess(text.index(prefix + wording_guard), text.index(prefix + public_facing_guard))
 
     def test_record_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = normalized(RECORD).lower()

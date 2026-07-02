@@ -146,9 +146,7 @@ class MilestoneEPackagePublicationApprovalPrepValidationRecordTests(unittest.Tes
 
     def test_ci_runs_package_record_guard_once_in_order(self) -> None:
         text = CI_WORKFLOW.read_text(encoding="utf-8")
-        beta_record = (
-            "python3 .github/scripts/test_milestone_e_public_beta_approval_prep_validation_record.py"
-        )
+        frozen_runner = "python3 .github/scripts/run_frozen_record_guards.py"
         package_guard = "python3 .github/scripts/test_milestone_e_package_publication_approval_prep.py"
         record_guard = (
             "python3 .github/scripts/test_milestone_e_package_publication_approval_prep_validation_record.py"
@@ -156,7 +154,8 @@ class MilestoneEPackagePublicationApprovalPrepValidationRecordTests(unittest.Tes
 
         self.assertIn(record_guard, text)
         self.assertEqual(1, text.count(record_guard))
-        self.assertLess(text.index(beta_record), text.index(package_guard))
+        self.assertEqual(1, text.count(frozen_runner))
+        self.assertLess(text.index(frozen_runner), text.index(package_guard))
         self.assertLess(text.index(package_guard), text.index(record_guard))
 
     def test_record_avoids_scope_expansion_language(self) -> None:

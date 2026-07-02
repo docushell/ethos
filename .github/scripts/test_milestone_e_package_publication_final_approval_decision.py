@@ -212,13 +212,11 @@ class MilestoneEPackagePublicationFinalApprovalDecisionTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         request_guard = "test_milestone_e_package_publication_final_approval_request.py"
         decision_guard = "test_milestone_e_package_publication_final_approval_decision.py"
-        readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + decision_guard, text)
             self.assertEqual(1, text.count(prefix + decision_guard))
             self.assertLess(text.index(prefix + request_guard), text.index(prefix + decision_guard))
-            self.assertLess(text.index(prefix + decision_guard), text.index(prefix + readiness_guard))
 
     def test_record_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = normalized(RECORD).lower()

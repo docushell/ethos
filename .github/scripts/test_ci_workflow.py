@@ -18,8 +18,11 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
+
+from makefile_guard import target_block
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -34,6 +37,13 @@ def workflow_text() -> str:
 def frozen_guard_paths() -> list[str]:
     payload = json.loads(FROZEN_GUARDS.read_text(encoding="utf-8"))
     return payload["guards"]
+
+
+def active_package_guard_names(text: str) -> list[str]:
+    return re.findall(
+        r"test_milestone_e_package_publication_[A-Za-z0-9_]+\.py",
+        text,
+    )
 
 
 class CiWorkflowTests(unittest.TestCase):
@@ -77,6 +87,30 @@ class CiWorkflowTests(unittest.TestCase):
         )
         for guard in frozen_guard_paths():
             self.assertNotIn(f"python3 {guard}", text, guard)
+
+    def test_active_package_guard_sequence_matches_make_and_follows_frozen_runner(self) -> None:
+        text = workflow_text()
+        make_guards = active_package_guard_names(target_block("milestone-e-prep"))
+        ci_guards = active_package_guard_names(text)
+
+        self.assertTrue(make_guards)
+        self.assertEqual(len(make_guards), len(set(make_guards)))
+        self.assertEqual(make_guards, ci_guards)
+
+        frozen_runner = "python3 .github/scripts/run_frozen_record_guards.py"
+        first_command = f"python3 .github/scripts/{ci_guards[0]}"
+        last_command = f"python3 .github/scripts/{ci_guards[-1]}"
+        gate_zero = "python3 benchmarks/harness/test_run_gate_zero.py"
+        self.assertLess(text.index(frozen_runner), text.index(first_command))
+        self.assertLess(text.index(last_command), text.index(gate_zero))
+
+        make_tail = (
+            "$(PYTHON) .github/scripts/"
+            "test_milestone_e_public_facing_readiness_ledger.py"
+        )
+        make_last = f"$(PYTHON) .github/scripts/{make_guards[-1]}"
+        make_block = target_block("milestone-e-prep")
+        self.assertLess(make_block.index(make_last), make_block.index(make_tail))
 
     def test_current_release_state_is_tested_and_checked(self) -> None:
         text = workflow_text()

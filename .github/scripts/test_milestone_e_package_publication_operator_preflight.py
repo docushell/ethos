@@ -150,13 +150,11 @@ class MilestoneEPackagePublicationOperatorPreflightTests(unittest.TestCase):
         ci = read(CI_WORKFLOW)
         binding_guard = "test_milestone_e_package_publication_tag_binding_refresh.py"
         operator_guard = "test_milestone_e_package_publication_operator_preflight.py"
-        readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + operator_guard, text)
             self.assertEqual(1, text.count(prefix + operator_guard))
             self.assertLess(text.index(prefix + binding_guard), text.index(prefix + operator_guard))
-            self.assertLess(text.index(prefix + operator_guard), text.index(prefix + readiness_guard))
 
     def test_record_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = normalized(RECORD).lower()

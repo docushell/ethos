@@ -164,13 +164,11 @@ class MilestoneEPackagePublicationDependentRegistryActionApprovalTests(unittest.
         ci = read(CI_WORKFLOW)
         evidence_guard = "test_milestone_e_package_publication_registry_action_evidence.py"
         approval_guard = "test_milestone_e_package_publication_dependent_registry_action_approval.py"
-        readiness_guard = "test_milestone_e_public_facing_readiness_ledger.py"
 
         for text, prefix in ((make_block, "$(PYTHON) .github/scripts/"), (ci, "python3 .github/scripts/")):
             self.assertIn(prefix + approval_guard, text)
             self.assertEqual(1, text.count(prefix + approval_guard))
             self.assertLess(text.index(prefix + evidence_guard), text.index(prefix + approval_guard))
-            self.assertLess(text.index(prefix + approval_guard), text.index(prefix + readiness_guard))
 
     def test_record_avoids_scope_expansion_language_or_private_paths(self) -> None:
         lower = normalized(RECORD).lower()
