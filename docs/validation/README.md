@@ -10,6 +10,15 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 package tag closeout is recorded in
+`v0-3-0-package-tag-closeout-validation-2026-07-02.md`. It records the completed annotated package
+tag operator action and remote tag evidence for `ethos-package-ethos-doc-core-0.3.0`,
+`ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`, all dereferencing to the
+approved package tag source commit. Package tag creation closeout is complete only for those three
+v0.3.0 package tags. DocuShell integration, hosted surfaces, production positioning, Windows
+packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public
+benchmark claims, `ethos-doc`, and `ethos-rag` remain blocked pending separate lanes.
+
 v0.3.0 package tag approval decision is recorded in
 `v0-3-0-package-tag-approval-decision-validation-2026-07-02.md`. It accepts the exact v0.3.0
 package tag creation request for `ethos-package-ethos-doc-core-0.3.0`,
