@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- boundary-exception: close exact v0.3.0 macOS arm64 and Linux x64 GitHub Release CLI artifact
+  publication with published asset evidence while keeping npm vendor refresh, npm publish, public
+  install wording, package tags, hosted, production, Windows, bundled PDFium, benchmark,
+  `ethos-doc`, `ethos-rag`, and DocuShell integration blocked pending separate lanes.
 - boundary-exception: approve exact v0.3.0 macOS arm64 and Linux x64 GitHub Release CLI artifact
   publication for later operator upload while keeping upload, npm vendor refresh, npm publish,
   public install wording, package tags, hosted, production, Windows, bundled PDFium, benchmark,

@@ -99,6 +99,7 @@ v0-3-release-prep:
 	$(PYTHON) .github/scripts/test_v0_3_0_draft_artifact_evidence.py
 	$(PYTHON) .github/scripts/test_v0_3_0_artifact_publication_approval_request.py
 	$(PYTHON) .github/scripts/test_v0_3_0_artifact_publication_approval_decision.py
+	$(PYTHON) .github/scripts/test_v0_3_0_artifact_publication_closeout.py
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py

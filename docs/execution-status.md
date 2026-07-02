@@ -1,8 +1,16 @@
 # Ethos Execution Status
 
-Date: 2026-07-01
+Date: 2026-07-02
 Owner: product / decider
-Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1`; npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`. Public `0.3.0` install wording, actual GitHub Release artifact upload, npm publication/alignment, package tags, and DocuShell integration remain blocked pending their separate evidence, operator action, and closeout records. The exact GitHub Release target `v0.3.0` is accepted only by the artifact-publication approval decision below. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.3.0` now contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1`; npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`. Public `0.3.0` install wording, npm publication/alignment, package tags, and DocuShell integration remain blocked pending their separate evidence, operator action, and closeout records. The exact GitHub Release artifact closeout is limited to the approved `v0.3.0` release assets below. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+
+v0.3.0 artifact publication closeout is recorded in
+`docs/validation/v0-3-0-artifact-publication-closeout-validation-2026-07-02.md`. It records
+GitHub Release `v0.3.0` at source commit `4aa8b8bf25685f9cd6691669ea791a38ecc1a84a` with exact
+macOS arm64 and Linux x64 CLI artifact names, checksums, sidecars, bounded release body, and
+caller-provided PDFium posture. It supersedes the GitHub Release artifact upload blocker only for
+those exact assets; npm vendor refresh, npm publication, package tag creation, public install
+wording, and DocuShell integration remain blocked.
 
 v0.3.0 artifact publication approval decision is recorded in
 `docs/validation/v0-3-0-artifact-publication-approval-decision-validation-2026-07-01.md`. It
