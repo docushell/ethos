@@ -8,16 +8,27 @@ or launch announcement. It is intentionally stricter than the day-to-day enginee
 Ethos v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on
 crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.3.0` now contains
 closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. The npm
-source package candidate is refreshed as `@docushell/ethos-pdf@0.3.0`. v0.2.0 remains the public
+source package candidate is refreshed as `@docushell/ethos-pdf@0.3.0`, and the v0.3.0 npm
+publication approval request is recorded for decider review only. v0.2.0 remains the public
 CLI artifact baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts, and npm
 remains `@docushell/ethos-pdf@0.2.1` for public install wording until a later wording closeout; npm
 `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries that reported
 `ethos 0.1.2`. Public `0.3.0` install wording, npm publication/alignment, package tags, and
-DocuShell integration remain blocked pending their separate evidence, operator action, and closeout
-records. The exact GitHub Release artifact closeout is limited to the approved `v0.3.0` release
+DocuShell integration remain blocked pending their separate approval decision, operator action,
+registry-smoke, tag, wording, and closeout records. The exact GitHub Release artifact closeout is
+limited to the approved `v0.3.0` release
 assets below. Hosted surfaces, production positioning, Windows packaged artifacts, bundled
 project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed,
 footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+
+v0.3.0 npm publication approval request is recorded in
+`docs/validation/v0-3-0-npm-publication-approval-request-validation-2026-07-02.md`. It requests
+decider review for only the exact `@docushell/ethos-pdf@0.3.0` npm candidate, tarball metadata,
+vendor payload checksums, supported platforms, installed CLI smoke, and caller-provided PDFium
+boundary. It does not approve `npm publish`; npm publication remains blocked pending an explicit
+approval decision, operator action with npm credentials, registry smoke, and closeout record.
+Public `0.3.0` install wording, package tag creation, release tag creation, and DocuShell
+integration remain blocked.
 
 v0.3.0 npm vendor refresh is recorded in
 `docs/validation/v0-3-0-npm-vendor-refresh-validation-2026-07-02.md`. It refreshes the
