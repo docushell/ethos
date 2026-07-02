@@ -9,16 +9,27 @@ Ethos v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pd
 crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.3.0` now contains
 closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. npm
 `@docushell/ethos-pdf@0.3.0` is live on npm, and the v0.3.0 npm publication closeout is recorded.
-v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64
-artifacts, and npm remains `@docushell/ethos-pdf@0.2.1` for public install wording until a later
-wording closeout; npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI
-binaries that reported `ethos 0.1.2`. Public `0.3.0` install wording, package tags, release tags,
-and DocuShell integration remain blocked pending their separate tag, wording, and closeout records.
-The exact GitHub Release artifact closeout is limited to the approved `v0.3.0` release assets
-below, and the exact npm publication closeout is limited to `@docushell/ethos-pdf@0.3.0`. Hosted
+A v0.3.0 public install wording approval request is recorded, but `README.md` and public-boundary
+claims remain on the current `0.2.x` install baseline until a separate approval decision and
+closeout pass. v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` macOS
+arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1` for public install wording
+until that later wording closeout; npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped
+stale CLI binaries that reported `ethos 0.1.2`. Public `0.3.0` install wording, package tags,
+release tags, and DocuShell integration remain blocked pending their separate tag, wording, and
+closeout records. The exact GitHub Release artifact closeout is limited to the approved `v0.3.0`
+release assets below, and the exact npm publication closeout is limited to
+`@docushell/ethos-pdf@0.3.0`. Hosted
 surfaces, production positioning, Windows packaged
 artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed,
 footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+
+v0.3.0 public install wording approval request is recorded in
+`docs/validation/v0-3-0-public-install-wording-approval-request-validation-2026-07-02.md`. It
+requests decider review for exact public `0.3.0` install wording across the already-live Rust
+crates, Python wheel, npm package, and GitHub Release CLI artifacts. It does not change
+`README.md` or `docs/public-boundary-claims.json`; public `0.3.0` install wording remains blocked
+until a separate approval decision and closeout pass. Package tag creation, release tag creation,
+and DocuShell integration remain blocked pending separate evidence and closeout records.
 
 v0.3.0 npm publication closeout is recorded in
 `docs/validation/v0-3-0-npm-publication-closeout-validation-2026-07-02.md`. It records live npm
