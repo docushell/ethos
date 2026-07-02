@@ -219,6 +219,20 @@ public wording, or approve DocuShell integration. Package tag creation remains b
 separate approval decision, operator action, and closeout record. DocuShell integration remain
 blocked pending separate evidence and closeout records.
 
+### 3j. Approve Package Tag Operator Action
+
+The v0.3.0 package tag approval decision is recorded in
+`docs/validation/v0-3-0-package-tag-approval-decision-validation-2026-07-02.md`. It accepts the
+exact v0.3.0 package tag creation request for `ethos-package-ethos-doc-core-0.3.0`,
+`ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`, bound to the package tag
+source commit and tree.
+
+This decision does not create or push package tags, move or replace GitHub Release tag `v0.3.0`,
+change public wording, or approve DocuShell integration. Package tag creation remains a separate
+operator action after this decision is merged and validation passes on merged source. Package tag
+creation remains blocked until the approved operator action and closeout record pass. DocuShell
+integration remain blocked pending separate evidence and closeout records.
+
 ### 4. Gather Package Evidence Before Any Publication Decision
 
 Before any public package or artifact decision, record exact evidence for the surfaces that are in
