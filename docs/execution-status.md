@@ -4,6 +4,16 @@ Date: 2026-07-02
 Owner: product / decider
 Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.3.0` contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. npm `@docushell/ethos-pdf@0.3.0` is live on npm, and the v0.3.0 npm publication closeout is recorded. The exact v0.3.0 public install wording packet is approved and closed out: `README.md` and `docs/public-boundary-claims.json` now use the approved `0.3.0` public sentence, Rust crate install commands, Python wheel install command, npm install command, GitHub Release wording, and caller-provided PDFium boundary. Package tags, release tags, and DocuShell integration remain blocked pending separate evidence, approval, and closeout records. The exact GitHub Release artifact closeout is limited to the approved `v0.3.0` release assets below, the exact npm publication closeout is limited to `@docushell/ethos-pdf@0.3.0`, and the public install wording closeout is limited to the exact wording below. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
 
+v0.3.0 package tag approval request is recorded in
+`docs/validation/v0-3-0-package-tag-approval-request-validation-2026-07-02.md`. It requests
+decider review for exact package tag creation for `ethos-package-ethos-doc-core-0.3.0`,
+`ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`, bound to the package
+publication request source commit and tree. This request does not create package tags, move or
+replace GitHub Release tag `v0.3.0`, change public wording, or approve DocuShell integration.
+Package tag creation remains blocked pending a separate approval decision, operator action, and
+closeout record. DocuShell integration remain blocked pending separate evidence and closeout
+records.
+
 v0.3.0 public install wording closeout is recorded in
 `docs/validation/v0-3-0-public-install-wording-closeout-validation-2026-07-02.md`. It updates
 `README.md` and `docs/public-boundary-claims.json` to the exact approved public `0.3.0` wording:
