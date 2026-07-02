@@ -136,6 +136,17 @@ approval decision record passes and an operator publishes with npm credentials. 
 install wording, package tag creation, release tag creation, and DocuShell integration remain
 blocked until separate closeout lanes pass.
 
+### 3d. Approve npm Publication Operator Action
+
+The v0.3.0 npm publication approval decision is recorded in
+`docs/validation/v0-3-0-npm-publication-approval-decision-validation-2026-07-02.md`. It accepts
+the exact `@docushell/ethos-pdf@0.3.0` npm publication request and authorizes only the later
+operator `npm publish` action for that bounded candidate after merged-source validation passes.
+
+This decision does not publish the npm package; operator publish remains pending. Public `0.3.0`
+install wording, registry closeout, package tag creation, release tag creation, and DocuShell
+integration remain blocked until separate evidence and closeout lanes pass.
+
 ### 4. Gather Package Evidence Before Any Publication Decision
 
 Before any public package or artifact decision, record exact evidence for the surfaces that are in

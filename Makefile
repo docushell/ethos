@@ -104,6 +104,7 @@ v0-3-release-prep:
 	npm test --prefix packages/npm/ethos-pdf
 	$(PYTHON) .github/scripts/test_v0_3_0_npm_vendor_refresh.py
 	$(PYTHON) .github/scripts/test_v0_3_0_npm_publication_approval_request.py
+	$(PYTHON) .github/scripts/test_v0_3_0_npm_publication_approval_decision.py
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
