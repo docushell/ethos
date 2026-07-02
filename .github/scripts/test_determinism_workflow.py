@@ -24,7 +24,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/determinism.yml"
+GIT_ATTRIBUTES = ROOT / ".gitattributes"
 REQUIRED_MATRIX_OS = {"macos-14", "ubuntu-latest", "windows-latest"}
+PINNED_OPENDATALOADER_FIXTURE_ATTRIBUTE = (
+    "fixtures/foreign/opendataloader/real/opendataloader-output.json text eol=lf"
+)
 
 
 def workflow_text() -> str:
@@ -39,6 +43,11 @@ def matrix_os_values(text: str) -> set[str]:
 
 
 class DeterminismWorkflowTests(unittest.TestCase):
+    def test_hashed_opendataloader_fixture_is_pinned_to_lf(self) -> None:
+        attributes = GIT_ATTRIBUTES.read_text(encoding="utf-8").splitlines()
+
+        self.assertIn(PINNED_OPENDATALOADER_FIXTURE_ATTRIBUTE, attributes)
+
     def test_matrix_includes_gate_zero_platforms_and_windows_preflight(self) -> None:
         self.assertEqual(matrix_os_values(workflow_text()), REQUIRED_MATRIX_OS)
 
