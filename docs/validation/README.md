@@ -10,6 +10,14 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 npm publication approval decision is recorded in
+`v0-3-0-npm-publication-approval-decision-validation-2026-07-02.md`. It accepts the exact
+`@docushell/ethos-pdf@0.3.0` npm publication request and authorizes only the later operator
+`npm publish` action for that bounded candidate after merged-source validation passes. It does not
+publish the package; operator publish remains pending. Public `0.3.0` install wording, registry
+closeout, package tag creation, release tag creation, and DocuShell integration remain blocked
+pending separate evidence and closeout records.
+
 v0.3.0 npm publication approval request is recorded in
 `v0-3-0-npm-publication-approval-request-validation-2026-07-02.md`. It requests decider review for
 only the exact `@docushell/ethos-pdf@0.3.0` npm candidate, tarball metadata, vendor payload
