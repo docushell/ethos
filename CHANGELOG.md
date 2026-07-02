@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- boundary-exception: close exact v0.3.0 package tag creation with remote tag evidence while
+  keeping additional release tags or release targets, hosted, production, Windows, bundled PDFium,
+  benchmark, `ethos-doc`, `ethos-rag`, and DocuShell integration blocked pending separate lanes.
 - boundary-exception: approve exact v0.3.0 package tag creation for later operator tag creation
   while keeping actual package tag creation, additional release tags or release targets, hosted,
   production, Windows, bundled PDFium, benchmark, `ethos-doc`, `ethos-rag`, and DocuShell

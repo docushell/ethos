@@ -233,6 +233,17 @@ operator action after this decision is merged and validation passes on merged so
 creation remains blocked until the approved operator action and closeout record pass. DocuShell
 integration remain blocked pending separate evidence and closeout records.
 
+### 3k. Close Package Tag Creation
+
+The v0.3.0 package tag closeout is recorded in
+`docs/validation/v0-3-0-package-tag-closeout-validation-2026-07-02.md`. It records completed
+annotated package tag creation and remote tag evidence for `ethos-package-ethos-doc-core-0.3.0`,
+`ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`, all dereferencing to the
+approved package tag source commit.
+
+Package tag creation closeout is complete for those exact three v0.3.0 package tags. Release tags
+and DocuShell integration remain blocked pending separate evidence and closeout records.
+
 ### 4. Gather Package Evidence Before Any Publication Decision
 
 Before any public package or artifact decision, record exact evidence for the surfaces that are in
