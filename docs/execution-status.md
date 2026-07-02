@@ -2,15 +2,22 @@
 
 Date: 2026-07-02
 Owner: product / decider
-Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.3.0` contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. npm `@docushell/ethos-pdf@0.3.0` is live on npm, and the v0.3.0 npm publication closeout is recorded. The exact v0.3.0 public install wording packet is approved and closed out: `README.md` and `docs/public-boundary-claims.json` now use the approved `0.3.0` public sentence, Rust crate install commands, Python wheel install command, npm install command, GitHub Release wording, and caller-provided PDFium boundary. Package tag creation closeout is complete for the exact v0.3.0 package tags `ethos-package-ethos-doc-core-0.3.0`, `ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`. Release tags and DocuShell integration remain blocked pending separate evidence, approval, and closeout records. The exact GitHub Release artifact closeout is limited to the approved `v0.3.0` release assets below, the exact npm publication closeout is limited to `@docushell/ethos-pdf@0.3.0`, the public install wording closeout is limited to the exact wording below, and the package tag closeout is limited to the exact three package tags below. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.3.0` contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. npm `@docushell/ethos-pdf@0.3.0` is live on npm, and the v0.3.0 npm publication closeout is recorded. The exact v0.3.0 public install wording packet is approved and closed out: `README.md` and `docs/public-boundary-claims.json` now use the approved `0.3.0` public sentence, Rust crate install commands, Python wheel install command, npm install command, GitHub Release wording, and caller-provided PDFium boundary. Package tag creation closeout is complete for the exact v0.3.0 package tags `ethos-package-ethos-doc-core-0.3.0`, `ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`. Release tag closeout is complete for existing GitHub Release tag `v0.3.0`. Additional release tags or release targets remain blocked. DocuShell integration remain blocked pending separate evidence and closeout records. The exact GitHub Release artifact closeout is limited to the approved `v0.3.0` release assets below, the exact npm publication closeout is limited to `@docushell/ethos-pdf@0.3.0`, the public install wording closeout is limited to the exact wording below, the package tag closeout is limited to the exact three package tags below, and the release tag closeout is limited to the existing `v0.3.0` GitHub Release tag below. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+
+v0.3.0 release tag closeout is recorded in
+`docs/validation/v0-3-0-release-tag-closeout-validation-2026-07-02.md`. It reconciles the existing
+GitHub Release tag `v0.3.0` with the artifact publication closeout and package tag closeout
+records. Release tag closeout is complete for existing GitHub Release tag `v0.3.0`. Additional
+release tags or release targets remain blocked. DocuShell integration remain blocked pending
+separate evidence and closeout records.
 
 v0.3.0 package tag closeout is recorded in
 `docs/validation/v0-3-0-package-tag-closeout-validation-2026-07-02.md`. It records completed
 annotated package tag creation and remote tag evidence for `ethos-package-ethos-doc-core-0.3.0`,
 `ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`, all dereferencing to the
 approved package tag source commit. Package tag creation closeout is complete for those exact
-three v0.3.0 package tags. Release tags and DocuShell integration remain blocked pending separate
-evidence and closeout records.
+three v0.3.0 package tags. Additional release tags or release targets remain blocked. DocuShell
+integration remain blocked pending separate evidence and closeout records.
 
 v0.3.0 package tag approval decision is recorded in
 `docs/validation/v0-3-0-package-tag-approval-decision-validation-2026-07-02.md`. It accepts the
