@@ -47,7 +47,15 @@ RELEASE_KEYS = {
     "pdfium_environment",
 }
 PACKAGE_KEYS = {"name", "version"}
-GITHUB_RELEASE_KEYS = {"tag", "version", "artifacts"}
+GITHUB_RELEASE_KEYS = {
+    "tag",
+    "version",
+    "name",
+    "latest",
+    "notes",
+    "platforms",
+    "assets",
+}
 REQUIRED_CLOSED_LANES = (
     "rust_python_publication",
     "github_release_artifacts",
@@ -55,6 +63,7 @@ REQUIRED_CLOSED_LANES = (
     "public_install_wording",
     "package_tags",
     "release_tag",
+    "release_metadata",
 )
 SEMVER = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 LANE_ID = re.compile(r"[a-z][a-z0-9_]*")
@@ -116,8 +125,8 @@ def load_release_state(root: Path, path: Path) -> dict[str, object]:
     except (OSError, json.JSONDecodeError) as error:
         raise ReleaseStateError(f"cannot read release state {path}: {error}") from error
     state = dict(_exact_keys(raw, TOP_LEVEL_KEYS, "release state"))
-    if state["schema_version"] != 1:
-        raise ReleaseStateError("schema_version must be 1")
+    if state["schema_version"] != 2:
+        raise ReleaseStateError("schema_version must be 2")
 
     as_of = _string(state["as_of"], "as_of")
     try:
@@ -147,7 +156,24 @@ def load_release_state(root: Path, path: Path) -> dict[str, object]:
     github = _exact_keys(release["github_release"], GITHUB_RELEASE_KEYS, "release.github_release")
     if github["version"] != version or github["tag"] != f"v{version}":
         raise ReleaseStateError("GitHub release version and tag must match release.version")
-    _unique_strings(github["artifacts"], "release.github_release.artifacts")
+    if github["name"] != f"Release v{version}":
+        raise ReleaseStateError("GitHub release name must match release.version")
+    if github["latest"] is not True:
+        raise ReleaseStateError("the current GitHub release must be marked latest")
+    notes = _string(github["notes"], "release.github_release.notes")
+    notes_path = PurePosixPath(notes)
+    if (
+        notes_path.is_absolute()
+        or ".." in notes_path.parts
+        or notes_path.parts[:2] != ("docs", "releases")
+        or notes_path.suffix != ".md"
+        or not root.joinpath(*notes_path.parts).is_file()
+    ):
+        raise ReleaseStateError(
+            "release.github_release.notes must name an existing docs/releases/*.md file"
+        )
+    _unique_strings(github["platforms"], "release.github_release.platforms")
+    _unique_strings(github["assets"], "release.github_release.assets")
 
     package_tags = _unique_strings(release["package_tags"], "release.package_tags")
     expected_tags = [f"ethos-package-{crate}-{version}" for crate in rust_crates]
@@ -194,7 +220,7 @@ def render_current_status(state: Mapping[str, object]) -> str:
     assert isinstance(python_package, dict)
     assert isinstance(npm_package, dict)
     assert isinstance(github, dict)
-    artifacts = "/".join(github["artifacts"])
+    platforms = "/".join(github["platforms"])
     package_tags = _human_join([f"`{tag}`" for tag in release["package_tags"]])
     blockers = _human_join(list(state["blocked_lanes"]))
     closed = state["closed_lanes"]
@@ -203,8 +229,9 @@ def render_current_status(state: Mapping[str, object]) -> str:
     status = (
         f"Status: v{version} Rust library crates {_human_join(rust_crates)} are live on crates.io, "
         f"and the Python `{python_package['name']}` wheel is live on PyPI. Its released version is "
-        f"`{python_package['version']}`. GitHub Release "
-        f"`{github['tag']}` contains closed-out {artifacts} CLI artifacts for evaluation with "
+        f"`{python_package['version']}`. GitHub Release `{github['tag']}` is marked as the "
+        "repository's latest release and contains closed-out "
+        f"{platforms} CLI artifacts for evaluation with "
         f"caller-provided PDFium through `{release['pdfium_environment']}`. npm "
         f"`{npm_package['name']}@{npm_package['version']}` is live on npm. The exact v{version} "
         f"public install wording packet is approved and closed out. Package-tag creation for "

@@ -120,6 +120,10 @@ class CiWorkflowTests(unittest.TestCase):
             1,
             text.count("python3 .github/scripts/check_release_state.py --check"),
         )
+        self.assertEqual(
+            1,
+            text.count("python3 .github/scripts/test_github_release_metadata.py"),
+        )
 
     def test_verify_portability_uses_metadata_policy_not_a_name_blocklist(self) -> None:
         text = workflow_text()

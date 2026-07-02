@@ -10,6 +10,14 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 final GitHub Release metadata closeout is recorded in
+`v0-3-0-release-metadata-closeout-validation-2026-07-03.md`. It records that GitHub Release
+`v0.3.0` is the repository's latest release, its live body matches `docs/releases/v0.3.0.md`, and
+its exact eight approved assets remain unchanged. The canonical notes explain that the inventory
+sidecars preserve pre-publication CI provenance; their draft/blocked fields do not describe the
+current GitHub Release state. Additional release targets and all retained public boundaries remain
+blocked.
+
 v0.3.0 release tag closeout is recorded in
 `v0-3-0-release-tag-closeout-validation-2026-07-02.md`. It reconciles the existing GitHub Release
 tag `v0.3.0` with the artifact publication closeout and package tag closeout records. Release tag

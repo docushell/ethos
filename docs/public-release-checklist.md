@@ -6,12 +6,18 @@ or launch announcement. It is intentionally stricter than the day-to-day enginee
 ## Current Status
 
 <!-- BEGIN GENERATED CURRENT RELEASE STATE -->
-Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. Its released version is `0.3.0`. GitHub Release `v0.3.0` contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. npm `@docushell/ethos-pdf@0.3.0` is live on npm. The exact v0.3.0 public install wording packet is approved and closed out. Package-tag creation for `ethos-package-ethos-doc-core-0.3.0`, `ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0` is closed out, and the existing release tag is closed out.
+Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. Its released version is `0.3.0`. GitHub Release `v0.3.0` is marked as the repository's latest release and contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. npm `@docushell/ethos-pdf@0.3.0` is live on npm. The exact v0.3.0 public install wording packet is approved and closed out. Package-tag creation for `ethos-package-ethos-doc-core-0.3.0`, `ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0` is closed out, and the existing release tag is closed out.
 
-Current closeout records: [rust python publication](validation/v0-3-0-publication-closeout-validation-2026-07-01.md); [github release artifacts](validation/v0-3-0-artifact-publication-closeout-validation-2026-07-02.md); [npm publication](validation/v0-3-0-npm-publication-closeout-validation-2026-07-02.md); [public install wording](validation/v0-3-0-public-install-wording-closeout-validation-2026-07-02.md); [package tags](validation/v0-3-0-package-tag-closeout-validation-2026-07-02.md); [release tag](validation/v0-3-0-release-tag-closeout-validation-2026-07-02.md).
+Current closeout records: [rust python publication](validation/v0-3-0-publication-closeout-validation-2026-07-01.md); [github release artifacts](validation/v0-3-0-artifact-publication-closeout-validation-2026-07-02.md); [npm publication](validation/v0-3-0-npm-publication-closeout-validation-2026-07-02.md); [public install wording](validation/v0-3-0-public-install-wording-closeout-validation-2026-07-02.md); [package tags](validation/v0-3-0-package-tag-closeout-validation-2026-07-02.md); [release tag](validation/v0-3-0-release-tag-closeout-validation-2026-07-02.md); [release metadata](validation/v0-3-0-release-metadata-closeout-validation-2026-07-03.md).
 
 Still blocked: additional release tags or release targets, DocuShell integration, hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports and claims, speed, footprint, parser-quality, and table-quality claims, ethos-doc, and ethos-rag.
 <!-- END GENERATED CURRENT RELEASE STATE -->
+
+v0.3.0 final GitHub Release metadata closeout is recorded in
+`docs/validation/v0-3-0-release-metadata-closeout-validation-2026-07-03.md`. GitHub Release
+`v0.3.0` is the repository's latest release, and its live body matches the canonical final notes in
+`docs/releases/v0.3.0.md`. The exact eight approved assets remain unchanged. The published
+inventory sidecars preserve pre-publication CI provenance rather than current publication state.
 
 v0.3.0 release tag closeout is recorded in
 `docs/validation/v0-3-0-release-tag-closeout-validation-2026-07-02.md`. It reconciles the existing

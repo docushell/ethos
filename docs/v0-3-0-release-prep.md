@@ -256,6 +256,18 @@ This closeout does not create, move, delete, or replace tags. Additional release
 targets remain blocked. DocuShell integration remain blocked pending separate evidence and
 closeout records.
 
+### 3m. Close Final GitHub Release Metadata
+
+The v0.3.0 final GitHub Release metadata closeout is recorded in
+`docs/validation/v0-3-0-release-metadata-closeout-validation-2026-07-03.md`. It corrects the staged
+publication state left by the original `--latest=false` release creation: GitHub Release `v0.3.0`
+is now the repository's latest release, and its body matches `docs/releases/v0.3.0.md`.
+
+The exact eight approved assets remain unchanged. The final notes explain that the published
+inventory sidecars preserve pre-publication CI provenance rather than the current publication
+state. The live metadata checker verifies the latest pointer, release body, draft/prerelease state,
+and exact asset set.
+
 ### 4. Gather Package Evidence Before Any Publication Decision
 
 Before any public package or artifact decision, record exact evidence for the surfaces that are in
