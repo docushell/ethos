@@ -41,12 +41,12 @@ SUPPORTED_TARGETS = {
     "darwin:arm64": {
         "binary": "ethos-darwin-arm64",
         "release_asset": "ethos-macos-arm64.tar.gz",
-        "release_asset_sha256": "c588ee77bbaf99a7d933673e6cd9db190f5992e47d40955def803435a9f9fc5a",
+        "release_asset_sha256": "efb163f140bf4afffd1caeb396f79e42f484591c3e90a86810ca6c0f0c209c96",
     },
     "linux:x64": {
         "binary": "ethos-linux-x64",
         "release_asset": "ethos-linux-x64.tar.gz",
-        "release_asset_sha256": "00137b20ca2c2a2d2089df1d135920b021b0905d779b1347d134e8a2fb7bfa23",
+        "release_asset_sha256": "b549ba5968e04b7679a8d3e879cd45d27f3e9a6fd226eee5c270a4e4f5c01405",
     },
 }
 
@@ -101,9 +101,11 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertIn("does not bundle PDFium", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
         self.assertIn("QUICKSTART.md", text)
-        self.assertIn("current npm package is `@docushell/ethos-pdf@0.2.1`", text)
+        self.assertIn("source package candidate is `@docushell/ethos-pdf@0.3.0`", text)
+        self.assertIn("current published npm package remains `@docushell/ethos-pdf@0.2.1`", text)
         self.assertIn("Version `0.2.0` is deprecated", text)
-        self.assertIn("`ethos 0.2.0`", text)
+        self.assertIn("`ethos 0.3.0`", text)
+        self.assertIn("npm publication and public `0.3.0` install wording remain blocked", text)
         self.assertIn("does not include public benchmark reports or claims", normalized)
 
         quickstart = read(QUICKSTART)

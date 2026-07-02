@@ -10,6 +10,14 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 npm vendor refresh is recorded in
+`v0-3-0-npm-vendor-refresh-validation-2026-07-02.md`. It refreshes the
+`@docushell/ethos-pdf@0.3.0` source package candidate from the published GitHub Release `v0.3.0`
+macOS arm64 and Linux x64 CLI artifacts, records exact vendor binary and npm tarball evidence, and
+validates local install smoke with `ethos 0.3.0`. npm publication, package tag creation, public
+`0.3.0` install wording, and DocuShell integration remain blocked pending separate approval,
+operator, registry-smoke, and closeout lanes.
+
 v0.3.0 artifact publication closeout is recorded in
 `v0-3-0-artifact-publication-closeout-validation-2026-07-02.md`. It records GitHub Release
 `v0.3.0` at the approved source commit with the exact macOS arm64 and Linux x64 CLI artifact

@@ -31,6 +31,9 @@ Vendor assembly:
 - the script extracts the `ethos` executable from each archive and writes
   `vendor/ethos-darwin-arm64` and `vendor/ethos-linux-x64`.
 
-The current npm package is `@docushell/ethos-pdf@0.2.1`, which vendors CLI binaries that report
-`ethos 0.2.0`. Version `0.2.0` is deprecated because it shipped stale CLI binaries that reported
-`ethos 0.1.2`.
+This source package candidate is `@docushell/ethos-pdf@0.3.0` and vendors CLI binaries that report
+`ethos 0.3.0`. npm publication and public `0.3.0` install wording remain blocked until the
+separate npm approval, operator publish, registry smoke, and wording closeout records pass. The
+current published npm package remains `@docushell/ethos-pdf@0.2.1`, which vendors CLI binaries that
+report `ethos 0.2.0`. Version `0.2.0` is deprecated because it shipped stale CLI binaries that
+reported `ethos 0.1.2`.

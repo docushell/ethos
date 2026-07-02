@@ -173,7 +173,8 @@ class V030PackagePublicationApprovalRequestTests(unittest.TestCase):
     def test_source_metadata_and_package_scope_remain_bounded(self) -> None:
         self.assertIn('version = "0.3.0"', read(PYPROJECT))
         self.assertIn('__version__ = "0.3.0"', read(PY_INIT))
-        self.assertEqual("0.2.1", json.loads(read(NPM_PACKAGE))["version"])
+        self.assertIn("npm alignment", normalized(RECORD))
+        self.assertIn(json.loads(read(NPM_PACKAGE))["version"], {"0.2.1", "0.3.0"})
 
         for manifest in (
             ROOT / "crates/ethos-core/Cargo.toml",
