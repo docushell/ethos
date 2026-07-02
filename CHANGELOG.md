@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- boundary-exception: close existing v0.3.0 GitHub Release tag evidence without creating,
+  moving, deleting, or replacing tags while keeping additional release tags or release targets,
+  hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`, `ethos-rag`, and
+  DocuShell integration blocked pending separate lanes.
 - boundary-exception: close exact v0.3.0 package tag creation with remote tag evidence while
   keeping additional release tags or release targets, hosted, production, Windows, bundled PDFium,
   benchmark, `ethos-doc`, `ethos-rag`, and DocuShell integration blocked pending separate lanes.

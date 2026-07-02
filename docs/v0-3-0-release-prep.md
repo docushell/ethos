@@ -4,8 +4,8 @@ Status: release-candidate source activation and closeout tracker. Rust crates, t
 the GitHub Release CLI artifacts, and npm `@docushell/ethos-pdf@0.3.0` are now published or
 closed out for their exact approved surfaces. The exact public `0.3.0` install wording packet is
 approved and closed out for `README.md` and `docs/public-boundary-claims.json`. This document does
-not approve package tags, release tags, DocuShell integration, hosted surfaces, or production
-positioning.
+not approve additional release tags or release targets, DocuShell integration, hosted surfaces, or
+production positioning.
 
 Canonical preparation sentence:
 
@@ -241,8 +241,20 @@ annotated package tag creation and remote tag evidence for `ethos-package-ethos-
 `ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`, all dereferencing to the
 approved package tag source commit.
 
-Package tag creation closeout is complete for those exact three v0.3.0 package tags. Release tags
-and DocuShell integration remain blocked pending separate evidence and closeout records.
+Package tag creation closeout is complete for those exact three v0.3.0 package tags. Additional
+release tags or release targets remain blocked. DocuShell integration remain blocked pending
+separate evidence and closeout records.
+
+### 3l. Close Existing GitHub Release Tag
+
+The v0.3.0 release tag closeout is recorded in
+`docs/validation/v0-3-0-release-tag-closeout-validation-2026-07-02.md`. It reconciles the existing
+GitHub Release tag `v0.3.0` with the artifact publication closeout and package tag closeout
+records. Release tag closeout is complete for existing GitHub Release tag `v0.3.0`.
+
+This closeout does not create, move, delete, or replace tags. Additional release tags or release
+targets remain blocked. DocuShell integration remain blocked pending separate evidence and
+closeout records.
 
 ### 4. Gather Package Evidence Before Any Publication Decision
 

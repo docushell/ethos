@@ -10,6 +10,15 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 release tag closeout is recorded in
+`v0-3-0-release-tag-closeout-validation-2026-07-02.md`. It reconciles the existing GitHub Release
+tag `v0.3.0` with the artifact publication closeout and package tag closeout records. Release tag
+closeout is complete for existing GitHub Release tag `v0.3.0`; this closeout does not create,
+move, delete, or replace tags. Additional release tags or release targets, DocuShell integration,
+hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained
+PDFium builds, public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag`
+remain blocked pending separate lanes.
+
 v0.3.0 package tag closeout is recorded in
 `v0-3-0-package-tag-closeout-validation-2026-07-02.md`. It records the completed annotated package
 tag operator action and remote tag evidence for `ethos-package-ethos-doc-core-0.3.0`,
