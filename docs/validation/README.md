@@ -10,6 +10,17 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 package tag approval request is recorded in
+`v0-3-0-package-tag-approval-request-validation-2026-07-02.md`. It requests decider review for
+the exact package tag names `ethos-package-ethos-doc-core-0.3.0`,
+`ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`, bound to the package
+publication request source commit and tree. This request does not create package tags, move or
+replace GitHub Release tag `v0.3.0`, change public wording, or approve DocuShell integration.
+Package tag creation, additional release tags or release targets, DocuShell integration, hosted
+surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium
+builds, public benchmark reports, public benchmark claims, `ethos-doc`, and `ethos-rag` remain
+blocked pending separate lanes.
+
 v0.3.0 public install wording closeout is recorded in
 `v0-3-0-public-install-wording-closeout-validation-2026-07-02.md`. It updates `README.md` and
 `docs/public-boundary-claims.json` to the exact approved public `0.3.0` wording across the

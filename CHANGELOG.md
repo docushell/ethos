@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- boundary-exception: request decider review for exact v0.3.0 package tags while keeping package
+  tag creation, additional release tags or release targets, hosted, production, Windows, bundled
+  PDFium, benchmark, `ethos-doc`, `ethos-rag`, and DocuShell integration blocked pending separate
+  lanes.
 - boundary-exception: close exact public `0.3.0` install wording in README and public-boundary
   claims across live Rust, Python, npm, and GitHub Release evaluation surfaces while keeping
   release/package tags, hosted, production, Windows, bundled PDFium, benchmark, `ethos-doc`,

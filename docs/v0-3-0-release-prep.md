@@ -206,6 +206,19 @@ The v0.3.0 public install wording closeout is recorded in
 This closeout supersedes the public install wording blocker only for the exact accepted wording
 packet. Package tag creation, release tag creation, and DocuShell integration remain blocked.
 
+### 3i. Request Package Tag Approval
+
+The v0.3.0 package tag approval request is recorded in
+`docs/validation/v0-3-0-package-tag-approval-request-validation-2026-07-02.md`. It requests
+decider review for exact package tag creation for `ethos-package-ethos-doc-core-0.3.0`,
+`ethos-package-ethos-verify-0.3.0`, and `ethos-package-ethos-pdf-0.3.0`, bound to the package
+publication request source commit and tree.
+
+This request does not create package tags, move or replace GitHub Release tag `v0.3.0`, change
+public wording, or approve DocuShell integration. Package tag creation remains blocked pending a
+separate approval decision, operator action, and closeout record. DocuShell integration remain
+blocked pending separate evidence and closeout records.
+
 ### 4. Gather Package Evidence Before Any Publication Decision
 
 Before any public package or artifact decision, record exact evidence for the surfaces that are in
