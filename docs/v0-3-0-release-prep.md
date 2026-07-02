@@ -1,8 +1,10 @@
 # Ethos v0.3.0 Release Preparation
 
-Status: release-candidate source activation record. This document does not approve `cargo
-publish`, PyPI upload, `npm publish`, GitHub Release creation, package tags, release tags, CLI
-artifact publication, DocuShell integration, or public `0.3.0` installability wording.
+Status: release-candidate source activation and closeout tracker. Rust crates, the Python wheel,
+the GitHub Release CLI artifacts, and npm `@docushell/ethos-pdf@0.3.0` are now published or
+closed out for their exact approved surfaces. This document does not approve package tags, release
+tags, DocuShell integration, hosted surfaces, production positioning, or public `0.3.0`
+installability wording.
 
 Canonical preparation sentence:
 
@@ -143,9 +145,23 @@ The v0.3.0 npm publication approval decision is recorded in
 the exact `@docushell/ethos-pdf@0.3.0` npm publication request and authorizes only the later
 operator `npm publish` action for that bounded candidate after merged-source validation passes.
 
-This decision does not publish the npm package; operator publish remains pending. Public `0.3.0`
-install wording, registry closeout, package tag creation, release tag creation, and DocuShell
-integration remain blocked until separate evidence and closeout lanes pass.
+This decision did not itself publish the npm package. The later npm publication closeout below
+records that the approved operator action is complete for the exact package and version. Public
+`0.3.0` install wording, package tag creation, release tag creation, and DocuShell integration
+remain blocked until separate evidence and closeout lanes pass.
+
+### 3e. Close npm Publication
+
+The v0.3.0 npm publication closeout is recorded in
+`docs/validation/v0-3-0-npm-publication-closeout-validation-2026-07-02.md`. It records live npm
+registry evidence for the exact `@docushell/ethos-pdf@0.3.0` package, including registry latest,
+dist shasum, integrity, tarball URL, file count, unpacked size, signature metadata, source
+gitHead, and the caller-provided PDFium boundary.
+
+This closeout supersedes the npm publication blocker only for the exact package and version
+`@docushell/ethos-pdf@0.3.0`. Public `0.3.0` install wording, package tag creation, release tag
+creation, and DocuShell integration remain blocked until separate evidence and closeout lanes
+pass.
 
 ### 4. Gather Package Evidence Before Any Publication Decision
 

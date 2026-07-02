@@ -2,15 +2,23 @@
 
 Date: 2026-07-02
 Owner: product / decider
-Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.3.0` now contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. The npm source package candidate is refreshed as `@docushell/ethos-pdf@0.3.0`, and the v0.3.0 npm publication approval decision is recorded with operator publish still pending. v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1` for public install wording until a later wording closeout; npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`. Public `0.3.0` install wording, npm publication/alignment, registry closeout, package tags, release tags, and DocuShell integration remain blocked pending their separate operator action, registry-smoke, tag, wording, and closeout records. The exact GitHub Release artifact closeout is limited to the approved `v0.3.0` release assets below. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.3.0` now contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium. npm `@docushell/ethos-pdf@0.3.0` is live on npm, and the v0.3.0 npm publication closeout is recorded. v0.2.0 remains the public CLI artifact baseline with GitHub Release `v0.2.0` macOS arm64/Linux x64 artifacts, and npm remains `@docushell/ethos-pdf@0.2.1` for public install wording until a later wording closeout; npm `@docushell/ethos-pdf@0.2.0` is deprecated because it shipped stale CLI binaries that reported `ethos 0.1.2`. Public `0.3.0` install wording, package tags, release tags, and DocuShell integration remain blocked pending their separate tag, wording, and closeout records. The exact GitHub Release artifact closeout is limited to the approved `v0.3.0` release assets below, and the exact npm publication closeout is limited to `@docushell/ethos-pdf@0.3.0`. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. Hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports, public benchmark claims, speed, footprint, parser-quality, table-quality, `ethos-doc`, and `ethos-rag` remain blocked.
+
+v0.3.0 npm publication closeout is recorded in
+`docs/validation/v0-3-0-npm-publication-closeout-validation-2026-07-02.md`. It records live npm
+registry evidence for the exact `@docushell/ethos-pdf@0.3.0` package, including registry latest,
+dist shasum, integrity, tarball URL, file count, unpacked size, signature metadata, and source
+gitHead. It supersedes the npm publication blocker only for that exact package and version. Public
+`0.3.0` install wording, package tag creation, release tag creation, and DocuShell integration
+remain blocked pending separate evidence and closeout records.
 
 v0.3.0 npm publication approval decision is recorded in
 `docs/validation/v0-3-0-npm-publication-approval-decision-validation-2026-07-02.md`. It accepts
 the exact `@docushell/ethos-pdf@0.3.0` npm publication request and authorizes only the later
 operator `npm publish` action for that bounded candidate after merged-source validation passes.
-It does not publish the package; operator publish remains pending. Public `0.3.0` install wording,
-registry closeout, package tag creation, release tag creation, and DocuShell integration remain
-blocked pending separate evidence and closeout records.
+That operator action is now closed out by the npm publication closeout record above. Public
+`0.3.0` install wording, package tag creation, release tag creation, and DocuShell integration
+remain blocked pending separate evidence and closeout records.
 
 v0.3.0 npm publication approval request is recorded in
 `docs/validation/v0-3-0-npm-publication-approval-request-validation-2026-07-02.md`. It requests
