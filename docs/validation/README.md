@@ -10,6 +10,14 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
+v0.3.0 artifact publication closeout is recorded in
+`v0-3-0-artifact-publication-closeout-validation-2026-07-02.md`. It records GitHub Release
+`v0.3.0` at the approved source commit with the exact macOS arm64 and Linux x64 CLI artifact
+assets, checksums, sidecars, bounded release body, and caller-provided PDFium posture. It
+supersedes the GitHub Release artifact upload blocker only for those exact published assets; npm
+vendor refresh, npm publication, package tag creation, public install wording, and DocuShell
+integration remain blocked pending separate evidence and approval lanes.
+
 v0.3.0 artifact publication approval decision is recorded in
 `v0-3-0-artifact-publication-approval-decision-validation-2026-07-01.md`. It accepts the exact
 macOS arm64 and Linux x64 CLI artifact names, checksums, source binding, workflow evidence, and

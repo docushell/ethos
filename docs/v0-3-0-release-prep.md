@@ -96,10 +96,18 @@ accepts only the exact macOS arm64 and Linux x64 CLI artifact names, checksums, 
 workflow evidence, and bounded wording for later operator attachment to GitHub Release target
 `v0.3.0`.
 
-Draft artifacts remain CI evidence only. GitHub Release artifact upload remains blocked until the
-approved operator action and closeout record pass. npm vendor refresh remains blocked until a
-separate vendor-refresh evidence and approval lane passes. npm publication, package tag creation,
-public install wording, and DocuShell integration remain blocked.
+The v0.3.0 artifact publication closeout is recorded in
+`docs/validation/v0-3-0-artifact-publication-closeout-validation-2026-07-02.md`. It records
+GitHub Release `v0.3.0` at source commit `4aa8b8bf25685f9cd6691669ea791a38ecc1a84a` with exact
+macOS arm64 and Linux x64 CLI artifact names, checksums, sidecars, bounded release body, and
+caller-provided PDFium posture.
+
+Before that closeout, Draft artifacts remain CI evidence only. GitHub Release artifact upload
+remains blocked until the approved operator action and closeout record pass. The closeout
+supersedes that blocker only for the exact approved `v0.3.0` release assets. npm vendor refresh
+remains blocked until a separate vendor-refresh evidence and approval lane passes. npm
+publication, package tag creation, public install wording, and DocuShell integration remain
+blocked.
 The public install wording remains blocked until the relevant registry, artifact, npm, tag, and
 wording closeout records pass.
 
