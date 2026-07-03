@@ -64,6 +64,8 @@ jobs:
         run: python3 .github/scripts/test_release_state.py
       - name: current release state check
         run: python3 .github/scripts/check_release_state.py --check
+      - name: GitHub release metadata checker tests
+        run: python3 .github/scripts/test_github_release_metadata.py
       - name: readiness gate tests
         run: python3 .github/scripts/test_readiness_gate.py
       - name: Gate Zero evidence preflight tests

@@ -20,7 +20,7 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: milestone-d-crop-element-surface-shape-contract
 .PHONY: milestone-d-claim-kind-boundary-contract
 .PHONY: app-answer-release-contract app-answer-release-demo app-answer-release-release-prep
-.PHONY: frozen-record-guards release-state-check registry-surface-check
+.PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -109,6 +109,8 @@ v0-3-release-prep:
 	$(PYTHON) .github/scripts/test_v0_3_0_package_tag_approval_decision.py
 	$(PYTHON) .github/scripts/test_v0_3_0_package_tag_closeout.py
 	$(PYTHON) .github/scripts/test_v0_3_0_release_tag_closeout.py
+	$(PYTHON) .github/scripts/test_github_release_metadata.py
+	$(PYTHON) .github/scripts/test_v0_3_0_release_metadata_closeout.py
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
@@ -225,7 +227,11 @@ registry-surface-check:
 
 release-state-check:
 	$(PYTHON) .github/scripts/test_release_state.py
+	$(PYTHON) .github/scripts/test_github_release_metadata.py
 	$(PYTHON) .github/scripts/check_release_state.py --check
+
+release-live-state-check: release-state-check
+	$(PYTHON) .github/scripts/check_github_release_metadata.py --repo docushell/ethos
 
 frozen-record-guards:
 	$(PYTHON) .github/scripts/test_run_frozen_record_guards.py

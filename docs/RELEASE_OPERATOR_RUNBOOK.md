@@ -1,7 +1,7 @@
 # Release Operator Runbook
 
-Ethos is public beta evaluation for source, Rust crate, Python wheel, macOS arm64 CLI artifact,
-Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.1.1` surfaces. This runbook describes the
+Ethos is public beta evaluation for source, Rust crates, Python wheel, macOS arm64 CLI artifact,
+Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.3.0` surfaces. This runbook describes the
 operator checks required before any public promotion. It does not authorize new GitHub Release
 artifacts, new package publication, hosted surfaces, production positioning, Windows packaged
 artifacts, bundled project-maintained PDFium builds, or benchmark reports.
@@ -66,7 +66,7 @@ wording; stop and record the blocked activation state.
 ## Promotion Gate
 
 Before creating or updating any public GitHub Release, package registry entry, or public release
-notes for `v0.1.1`, the operator needs an approval record that binds:
+notes for a target release, the operator needs an approval record that binds:
 
 - exact source commit;
 - artifact names and platform targets;
@@ -76,3 +76,17 @@ notes for `v0.1.1`, the operator needs an approval record that binds:
 - exact public wording.
 
 If any item is missing, stop at draft-artifact evidence and do not publish.
+
+## Final GitHub Release Metadata Promotion
+
+Creating a release with `--latest=false` is allowed only while later public surfaces are still
+blocked. After the intended current release closes all approved publication and wording lanes, the
+operator must:
+
+1. update the release body from its canonical `docs/releases/vX.Y.Z.md` file;
+2. explicitly mark the release latest;
+3. run `make release-live-state-check PYTHON=python3`;
+4. record the live latest tag, body, asset set, draft status, and prerelease status in a closeout
+   record.
+
+Do not infer latest-release state from tag existence, version order, or a successful asset upload.

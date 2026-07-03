@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- boundary-exception: correct v0.3.0 final GitHub Release notes and latest-release intent, add a
+  live metadata checker for the latest pointer, body, status, and asset set, and preserve the exact
+  approved draft-inventory provenance without replacing published assets or widening release scope.
 - boundary-exception: harden next-release npm binary provenance, registry-package wording,
   parser-neutral dependency enforcement, determinism CI, and release-governance checks without
   changing Ethos verification semantics or approving DocuShell integration, hosted surfaces,

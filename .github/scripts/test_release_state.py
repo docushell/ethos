@@ -41,6 +41,7 @@ RECORD_NAMES = {
     "public_install_wording": "wording.md",
     "package_tags": "package-tags.md",
     "release_tag": "release-tag.md",
+    "release_metadata": "release-metadata.md",
 }
 
 
@@ -55,7 +56,7 @@ class ReleaseStateTests(unittest.TestCase):
             (validation / name).write_text("record\n", encoding="utf-8")
         self.path = self.root / "docs/release-state.json"
         self.state = {
-            "schema_version": 1,
+            "schema_version": 2,
             "as_of": "2026-07-02",
             "release": {
                 "version": "0.3.0",
@@ -68,7 +69,11 @@ class ReleaseStateTests(unittest.TestCase):
                 "github_release": {
                     "tag": "v0.3.0",
                     "version": "0.3.0",
-                    "artifacts": ["macOS arm64", "Linux x64"],
+                    "name": "Release v0.3.0",
+                    "latest": True,
+                    "notes": "docs/releases/v0.3.0.md",
+                    "platforms": ["macOS arm64", "Linux x64"],
+                    "assets": ["ethos-macos-arm64.tar.gz", "ethos-linux-x64.tar.gz"],
                 },
                 "package_tags": [
                     "ethos-package-ethos-doc-core-0.3.0",
@@ -82,6 +87,9 @@ class ReleaseStateTests(unittest.TestCase):
             },
             "blocked_lanes": ["DocuShell integration", "hosted surfaces"],
         }
+        releases = self.root / "docs/releases"
+        releases.mkdir(parents=True)
+        (releases / "v0.3.0.md").write_text("release notes\n", encoding="utf-8")
 
     def write_state(self, state: object | None = None) -> None:
         self.path.write_text(json.dumps(state or self.state), encoding="utf-8")
@@ -95,6 +103,7 @@ class ReleaseStateTests(unittest.TestCase):
 
         self.assertEqual(first, second)
         self.assertIn("v0.3.0 Rust library crates", first)
+        self.assertIn("marked as the repository's latest release", first)
         self.assertIn("`@docushell/ethos-pdf@0.3.0` is live on npm", first)
         self.assertIn("DocuShell integration", first)
         for path in self.state["closed_lanes"].values():
@@ -125,6 +134,22 @@ class ReleaseStateTests(unittest.TestCase):
         self.write_state(state)
 
         with self.assertRaisesRegex(ReleaseStateError, "stable MAJOR.MINOR.PATCH"):
+            load_release_state(self.root, self.path)
+
+    def test_current_github_release_must_be_latest(self) -> None:
+        state = deepcopy(self.state)
+        state["release"]["github_release"]["latest"] = False
+        self.write_state(state)
+
+        with self.assertRaisesRegex(ReleaseStateError, "must be marked latest"):
+            load_release_state(self.root, self.path)
+
+    def test_github_release_notes_must_be_tracked_under_docs_releases(self) -> None:
+        state = deepcopy(self.state)
+        state["release"]["github_release"]["notes"] = "README.md"
+        self.write_state(state)
+
+        with self.assertRaisesRegex(ReleaseStateError, "docs/releases"):
             load_release_state(self.root, self.path)
 
     def test_missing_record_is_rejected(self) -> None:
