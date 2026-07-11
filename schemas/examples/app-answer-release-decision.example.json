@@ -1,6 +1,6 @@
 {
   "artifact_type": "ethos.app_answer_release_decision.v1",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "question": "What was Q3 2025 revenue?",
   "grounding": {
     "verification_report_ref": "verification_report.json",
@@ -19,6 +19,7 @@
       "citation_grounded": true,
       "question_relevance": "direct_answer",
       "claim_type": "source_fact",
+      "claim_support": "supported",
       "release_action": "show_final",
       "release_reason": "certified"
     },
@@ -29,6 +30,7 @@
       "citation_grounded": true,
       "question_relevance": "background_only",
       "claim_type": "source_fact",
+      "claim_support": "supported",
       "release_action": "block",
       "release_reason": "grounded_but_irrelevant"
     },
@@ -39,6 +41,7 @@
       "citation_grounded": true,
       "question_relevance": "supports_answer",
       "claim_type": "synthesis",
+      "claim_support": "supported",
       "release_action": "needs_review",
       "release_reason": "supported_synthesis_needs_review"
     },
@@ -48,7 +51,7 @@
       "check_ids": ["v0004"],
       "citation_grounded": false,
       "question_relevance": "direct_answer",
-      "claim_type": "unsupported",
+      "claim_support": "unsupported",
       "release_action": "block",
       "release_reason": "cannot_answer_from_sources"
     }

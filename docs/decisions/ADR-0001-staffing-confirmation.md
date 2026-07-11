@@ -22,3 +22,14 @@ Week 0 is not exited until this ADR is Accepted and the schedule is recomputed i
 Accepted outcome: `IMPLEMENTATION_PLAN.md` v2.2 and `docs/roadmap.md` use a reduced-staff schedule with one active implementation lane plus 0.25 benchmark/devrel support. Gate Zero moves to week 8, the first A-C checkpoint moves to week 22, and the public-beta checkpoint moves to week 40.
 
 Release-2-horizon scope sheds first. Node beta and MCP experimental work require either a staffed bindings/infra owner or an explicit release-scope ADR before any public claim includes those surfaces.
+
+## Addendum (2026-07-10)
+
+- Schedule check, one month after kickoff: v0.3.0 (crates, wheel, npm, CLI artifacts) is published
+  and closed out under the reduced-staff schedule. The week-8 Gate Zero and week-22/week-40
+  checkpoints stand as recomputed; no further recompute is triggered by this addendum.
+- Clarification on the Node boundary: npm `@docushell/ethos-pdf@0.3.0` is a **binary distribution
+  package** that vendors approved CLI binaries only. It is not the "Node beta" this ADR gates — no
+  JS API, Node SDK, N-API, or WASM binding surface exists. Any future JS API surface still
+  requires a staffed bindings/infra owner or an explicit release-scope ADR before public claims
+  include it.

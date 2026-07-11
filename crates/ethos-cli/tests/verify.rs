@@ -243,6 +243,29 @@ fn verify_alpha_schema_report_example_matches_cli_output() {
 }
 
 #[test]
+fn hardened_schema_report_example_matches_cli_output() {
+    let root = repo_root();
+    let report = parse_success(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("schemas/examples/citations.example.json")
+            .to_str()
+            .unwrap(),
+        "--config",
+        root.join("schemas/examples/verification-config.hardened.example.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    let expected =
+        json_file(root.join("schemas/examples/verification-report.hardened.example.json"));
+
+    assert_eq!(report, expected);
+}
+
+#[test]
 fn verify_alpha_demo_reports_match_goldens() {
     for (name, args, expected_path) in verify_alpha_report_cases() {
         let args = args.iter().map(String::as_str).collect::<Vec<_>>();
@@ -1100,8 +1123,8 @@ fn opendataloader_verify_adapter_produces_capability_aware_report() {
     assert_eq!(report["checks"][1]["status"], "grounded");
     assert_eq!(report["checks"][1]["match_method"], "table_cell_lookup");
     assert_eq!(report["checks"][1]["evidence"]["text"], "$12.4M");
-    assert_eq!(report["checks"][2]["status"], "mismatch");
-    assert_eq!(report["checks"][2]["reason"], "text_mismatch");
+    assert_eq!(report["checks"][2]["status"], "capability_blocked");
+    assert_eq!(report["checks"][2]["reason"], "unknown_coordinate_origin");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 

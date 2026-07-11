@@ -68,12 +68,25 @@
           "missing_tables",
           "missing_fingerprint",
           "unknown_coordinate_origin",
-          "missing_crop_support"
+          "missing_crop_support",
+          "missing_structure"
         ]
       },
       "uniqueItems": true
     },
     "all_evidence_grounded": { "type": "boolean" },
+    "dispersion": {
+      "type": "object",
+      "required": ["grounded_checks", "elements", "pages", "unmapped_grounded_checks"],
+      "additionalProperties": false,
+      "properties": {
+        "grounded_checks": { "type": "integer", "minimum": 0 },
+        "elements": { "type": "integer", "minimum": 0 },
+        "pages": { "type": "integer", "minimum": 0 },
+        "unmapped_grounded_checks": { "type": "integer", "minimum": 0 },
+        "sections": { "type": "integer", "minimum": 0 }
+      }
+    },
     "checks": {
       "type": "array",
       "items": {
@@ -128,6 +141,43 @@
             "type": "boolean",
             "description": "True whenever grounding the claim would require semantic judgment beyond the declared match method (e.g. paraphrase, arithmetic, cross-region synthesis). Such checks can never make all_evidence_grounded true."
           },
+          "resolved_element_ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "uniqueItems": true
+          },
+          "provenance": {
+            "type": "object",
+            "required": ["status"],
+            "additionalProperties": false,
+            "properties": {
+              "status": { "enum": ["available", "capability_limited", "not_applicable"] },
+              "heading_path": { "type": "array", "items": { "type": "string" } },
+              "element_role": { "type": "string" },
+              "previous_element_id": { "type": "string" },
+              "next_element_id": { "type": "string" }
+            }
+          },
+          "context_echo": {
+            "type": "object",
+            "required": ["before", "match", "after"],
+            "additionalProperties": false,
+            "properties": {
+              "before": { "type": "string" },
+              "match": { "type": "string" },
+              "after": { "type": "string" },
+              "element_boundary": {
+                "type": "object",
+                "required": ["offset", "left_element_id", "right_element_id"],
+                "additionalProperties": false,
+                "properties": {
+                  "offset": { "type": "integer", "minimum": 0 },
+                  "left_element_id": { "type": "string" },
+                  "right_element_id": { "type": "string" }
+                }
+              }
+            }
+          },
           "evidence": {
             "type": "object",
             "description": "What was found at the citation target. Page-only presence checks synthesize bbox as the full page extent. crop_ref is an opaque audit pointer emitted only when the verification config requests crops and the GroundingSource declares crop_support.",
@@ -154,6 +204,31 @@
       "items": { "$ref": "#/$defs/warning_code" }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "anyOf": [
+          { "required": ["dispersion"] },
+          {
+            "properties": {
+              "checks": {
+                "contains": {
+                  "anyOf": [
+                    { "required": ["resolved_element_ids"] },
+                    { "required": ["provenance"] },
+                    { "required": ["context_echo"] }
+                  ]
+                }
+              }
+            },
+            "required": ["checks"]
+          }
+        ]
+      },
+      "then": { "properties": { "schema_version": { "const": "1.1.0" } } },
+      "else": { "properties": { "schema_version": { "const": "1.0.0" } } }
+    }
+  ],
   "$defs": {
     "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "bbox": { "type": "array", "items": { "type": "integer" }, "minItems": 4, "maxItems": 4 },
@@ -172,6 +247,7 @@
         "span_not_found",
         "page_not_found",
         "bbox_not_found",
+        "locator_conflict",
         "missing_page_for_bbox",
         "missing_table_cell_locator",
         "table_not_found",

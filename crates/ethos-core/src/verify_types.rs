@@ -29,6 +29,9 @@ use serde::{Deserialize, Serialize};
 use crate::codes::WarningCode;
 use crate::grounding::{Capabilities, ParserIdentity};
 
+/// Verification report/config version emitted when deterministic hardening fields are enabled.
+pub const HARDENED_VERIFICATION_SCHEMA_VERSION: &str = "1.1.0";
+
 /// Structured capability limitations that caused `capability_limited` warnings.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -45,6 +48,8 @@ pub enum CapabilityLimit {
     UnknownCoordinateOrigin,
     /// Source cannot produce crop references.
     MissingCropSupport,
+    /// Source cannot expose deterministic structural provenance.
+    MissingStructure,
 }
 
 /// Claim kinds. `Region` and `Other` appear only in citations/reports as unsupported non-v1
@@ -119,6 +124,9 @@ pub enum CheckReason {
     PageNotFound,
     /// Bbox locator did not resolve to a grounding element.
     BboxNotFound,
+    /// Citation supplied conflicting primary locators or a supplemental page that
+    /// disagrees with the resolved target.
+    LocatorConflict,
     /// Bbox locator did not include a page locator.
     MissingPageForBbox,
     /// Table-cell citation did not include both table id and cell address.
@@ -230,6 +238,79 @@ pub struct Evidence {
     pub crop_ref: Option<String>,
 }
 
+/// Availability of structural provenance for a resolved check target.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProvenanceStatus {
+    /// Structural provenance was provided by the grounding source.
+    Available,
+    /// The target has an element identity, but the grounding source exposes no structure.
+    CapabilityLimited,
+    /// The resolved target has no element identity.
+    NotApplicable,
+}
+
+/// Structural source context echoed for one verification check.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CheckProvenance {
+    /// Whether structural provenance was available.
+    pub status: ProvenanceStatus,
+    /// Heading texts from the top-level section to the nearest containing heading.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub heading_path: Vec<String>,
+    /// Source-defined element role.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub element_role: Option<String>,
+    /// Previous element in canonical reading order.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub previous_element_id: Option<String>,
+    /// Next element in canonical reading order.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_element_id: Option<String>,
+}
+
+/// A source-element boundary inside a context echo.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContextBoundary {
+    /// Unicode-scalar offset in `before + match + after` immediately before the boundary.
+    pub offset: u32,
+    /// Element on the left side of the boundary.
+    pub left_element_id: String,
+    /// Element on the right side of the boundary.
+    pub right_element_id: String,
+}
+
+/// Bounded source text around the deterministic literal match.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContextEcho {
+    /// Source text before the match, bounded by config.
+    pub before: String,
+    /// Original source text that satisfied the literal matcher.
+    #[serde(rename = "match")]
+    pub matched: String,
+    /// Source text after the match, bounded by config.
+    pub after: String,
+    /// Boundary marker when the match target was a sanctioned adjacent-element join.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub element_boundary: Option<ContextBoundary>,
+}
+
+/// Deterministic arithmetic over reusable grounded checks.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EvidenceDispersion {
+    /// Number of reusable grounded checks.
+    pub grounded_checks: u32,
+    /// Number of distinct resolved source elements.
+    pub elements: u32,
+    /// Number of distinct source pages.
+    pub pages: u32,
+    /// Reusable grounded checks whose target had no element identity.
+    pub unmapped_grounded_checks: u32,
+    /// Distinct top-level sections, present only when complete provenance is available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sections: Option<u32>,
+}
+
 /// One verification check (`v0001`…).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Check {
@@ -252,6 +333,15 @@ pub struct Check {
     /// Echoed evidence, when configured.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub evidence: Option<Evidence>,
+    /// Resolved source element ids, emitted only by the hardened report profile.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resolved_element_ids: Vec<String>,
+    /// Structural context, emitted only when requested by the hardened report profile.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<CheckProvenance>,
+    /// Bounded source context, emitted only when requested by the hardened report profile.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_echo: Option<ContextEcho>,
     /// Per-check warnings.
     pub warnings: Vec<WarningCode>,
 }
@@ -285,6 +375,9 @@ pub struct VerificationReport {
     pub all_evidence_grounded: bool,
     /// All checks, `v%04d` in input order.
     pub checks: Vec<Check>,
+    /// Deterministic evidence dispersion, emitted only when requested.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dispersion: Option<EvidenceDispersion>,
     /// Claim kinds present in input but unsupported. Non-empty ⇒ gate is false.
     pub unsupported_claim_kinds: Vec<String>,
     /// Report-level warnings (capability downgrades land here).
@@ -426,11 +519,39 @@ pub enum AppClaimType {
     /// The claim combines multiple grounded facts or adds reasoning across them.
     Synthesis,
     /// The claim cannot be traced to grounded source evidence.
+    #[deprecated(note = "use AppClaimSupport::Unsupported")]
     Unsupported,
+}
+
+/// Application-owned judgment of whether claim meaning is faithful to grounded evidence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AppClaimSupport {
+    /// Claim meaning is supported by the grounded evidence.
+    Supported,
+    /// Claim meaning is not supported by the grounded evidence.
+    Unsupported,
+    /// Claim meaning contradicts the grounded evidence.
+    Contradicted,
+    /// No semantic support review has been performed.
+    NotEvaluated,
+}
+
+impl AppClaimSupport {
+    /// Stable snake_case label used by wrapper envelopes.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AppClaimSupport::Supported => "supported",
+            AppClaimSupport::Unsupported => "unsupported",
+            AppClaimSupport::Contradicted => "contradicted",
+            AppClaimSupport::NotEvaluated => "not_evaluated",
+        }
+    }
 }
 
 impl AppClaimType {
     /// Stable snake_case label used by wrapper envelopes.
+    #[allow(deprecated)]
     pub fn as_str(self) -> &'static str {
         match self {
             AppClaimType::SourceFact => "source_fact",
@@ -473,6 +594,12 @@ pub enum AppReleaseReason {
     SupportedSynthesisNeedsReview,
     /// The claim is citation-grounded but not relevant to the user question.
     GroundedButIrrelevant,
+    /// Semantic support has not been evaluated, so the claim must wait for review.
+    ClaimSupportNotEvaluated,
+    /// Grounded citations do not support the claim meaning.
+    UnsupportedClaim,
+    /// Grounded evidence contradicts the claim meaning.
+    ContradictedClaim,
     /// The sources do not provide a releasable answer claim.
     CannotAnswerFromSources,
 }
@@ -484,6 +611,9 @@ impl AppReleaseReason {
             AppReleaseReason::Certified => "certified",
             AppReleaseReason::SupportedSynthesisNeedsReview => "supported_synthesis_needs_review",
             AppReleaseReason::GroundedButIrrelevant => "grounded_but_irrelevant",
+            AppReleaseReason::ClaimSupportNotEvaluated => "claim_support_not_evaluated",
+            AppReleaseReason::UnsupportedClaim => "unsupported_claim",
+            AppReleaseReason::ContradictedClaim => "contradicted_claim",
             AppReleaseReason::CannotAnswerFromSources => "cannot_answer_from_sources",
         }
     }
@@ -501,6 +631,10 @@ pub enum AppAnswerStatus {
     SupportedSynthesisNeedsReview,
     /// Grounded claims exist, but they are not relevant to the question.
     GroundedButIrrelevant,
+    /// At least one claim awaits semantic support review and none can be released.
+    ClaimSupportNeedsReview,
+    /// Claims were blocked because grounded evidence did not support or contradicted them.
+    ClaimSupportRejected,
     /// No relevant grounded source fact is available for final answer release.
     CannotAnswerFromSources,
 }
@@ -513,6 +647,8 @@ impl AppAnswerStatus {
             AppAnswerStatus::PartialCertified => "partial_certified",
             AppAnswerStatus::SupportedSynthesisNeedsReview => "supported_synthesis_needs_review",
             AppAnswerStatus::GroundedButIrrelevant => "grounded_but_irrelevant",
+            AppAnswerStatus::ClaimSupportNeedsReview => "claim_support_needs_review",
+            AppAnswerStatus::ClaimSupportRejected => "claim_support_rejected",
             AppAnswerStatus::CannotAnswerFromSources => "cannot_answer_from_sources",
         }
     }
@@ -533,6 +669,9 @@ pub struct AppAnswerClaimInput {
     pub question_relevance: AppQuestionRelevance,
     /// App-owned source/synthesis label.
     pub claim_type: AppClaimType,
+    /// Optional during the legacy migration window; absent means `not_evaluated` unless
+    /// legacy `claim_type=unsupported` maps it to `unsupported`.
+    pub claim_support: Option<AppClaimSupport>,
 }
 
 /// Claim-level decision inside an application answer release envelope.
@@ -550,7 +689,10 @@ pub struct AppAnswerClaimDecision {
     /// App-owned question relevance label.
     pub question_relevance: AppQuestionRelevance,
     /// App-owned source/synthesis label.
-    pub claim_type: AppClaimType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub claim_type: Option<AppClaimType>,
+    /// App-owned semantic support judgment. Ethos transports but never computes this label.
+    pub claim_support: AppClaimSupport,
     /// Application release action.
     pub release_action: AppReleaseAction,
     /// Stable reason for the release action.
@@ -765,7 +907,7 @@ pub fn derive_app_answer_release_decision(
 
     Ok(AppAnswerReleaseDecision {
         artifact_type: "ethos.app_answer_release_decision.v1".to_string(),
-        schema_version: "1.0.0".to_string(),
+        schema_version: "1.1.0".to_string(),
         question,
         grounding: AppAnswerGrounding {
             verification_report_ref,
@@ -862,17 +1004,33 @@ fn app_answer_claim_decision(
         }
         computed
     };
-    if claim.claim_type == AppClaimType::Unsupported && citation_grounded {
-        return Err(app_answer_release_error(format!(
-            "unsupported claim {} cannot be citation_grounded",
-            claim.id
-        )));
-    }
+    #[allow(deprecated)]
+    let (claim_type, claim_support) = if claim.claim_type == AppClaimType::Unsupported {
+        if claim.claim_support == Some(AppClaimSupport::Supported) {
+            return Err(app_answer_release_error(format!(
+                "legacy unsupported claim {} conflicts with claim_support supported",
+                claim.id
+            )));
+        }
+        (
+            None,
+            match claim.claim_support {
+                Some(AppClaimSupport::Contradicted) => AppClaimSupport::Contradicted,
+                _ => AppClaimSupport::Unsupported,
+            },
+        )
+    } else {
+        (
+            Some(claim.claim_type),
+            claim.claim_support.unwrap_or(AppClaimSupport::NotEvaluated),
+        )
+    };
 
     let (release_action, release_reason) = app_release_decision(
         citation_grounded,
         claim.question_relevance,
-        claim.claim_type,
+        claim_type,
+        claim_support,
     );
     Ok(AppAnswerClaimDecision {
         id: claim.id,
@@ -880,7 +1038,8 @@ fn app_answer_claim_decision(
         check_ids: claim.check_ids,
         citation_grounded,
         question_relevance: claim.question_relevance,
-        claim_type: claim.claim_type,
+        claim_type,
+        claim_support,
         release_action,
         release_reason,
     })
@@ -889,14 +1048,36 @@ fn app_answer_claim_decision(
 fn app_release_decision(
     citation_grounded: bool,
     question_relevance: AppQuestionRelevance,
-    claim_type: AppClaimType,
+    claim_type: Option<AppClaimType>,
+    claim_support: AppClaimSupport,
 ) -> (AppReleaseAction, AppReleaseReason) {
+    if !citation_grounded {
+        return (
+            AppReleaseAction::Block,
+            AppReleaseReason::CannotAnswerFromSources,
+        );
+    }
+    match claim_support {
+        AppClaimSupport::Unsupported => {
+            return (AppReleaseAction::Block, AppReleaseReason::UnsupportedClaim);
+        }
+        AppClaimSupport::Contradicted => {
+            return (AppReleaseAction::Block, AppReleaseReason::ContradictedClaim);
+        }
+        AppClaimSupport::NotEvaluated => {
+            return (
+                AppReleaseAction::NeedsReview,
+                AppReleaseReason::ClaimSupportNotEvaluated,
+            );
+        }
+        AppClaimSupport::Supported => {}
+    }
     if citation_grounded
         && matches!(
             question_relevance,
             AppQuestionRelevance::DirectAnswer | AppQuestionRelevance::SupportsAnswer
         )
-        && claim_type == AppClaimType::SourceFact
+        && claim_type == Some(AppClaimType::SourceFact)
     {
         return (AppReleaseAction::ShowFinal, AppReleaseReason::Certified);
     }
@@ -905,7 +1086,7 @@ fn app_release_decision(
             question_relevance,
             AppQuestionRelevance::DirectAnswer | AppQuestionRelevance::SupportsAnswer
         )
-        && claim_type == AppClaimType::Synthesis
+        && claim_type == Some(AppClaimType::Synthesis)
     {
         return (
             AppReleaseAction::NeedsReview,
@@ -918,10 +1099,7 @@ fn app_release_decision(
             AppReleaseReason::GroundedButIrrelevant,
         );
     }
-    (
-        AppReleaseAction::Block,
-        AppReleaseReason::CannotAnswerFromSources,
-    )
+    unreachable!("grounded supported claims have a known relevance/type policy outcome")
 }
 
 fn app_answer_status(claims: &[AppAnswerClaimDecision]) -> AppAnswerStatus {
@@ -940,7 +1118,21 @@ fn app_answer_status(claims: &[AppAnswerClaimDecision]) -> AppAnswerStatus {
     } else if has_final {
         AppAnswerStatus::PartialCertified
     } else if has_review {
-        AppAnswerStatus::SupportedSynthesisNeedsReview
+        if claims
+            .iter()
+            .any(|claim| claim.release_reason == AppReleaseReason::ClaimSupportNotEvaluated)
+        {
+            AppAnswerStatus::ClaimSupportNeedsReview
+        } else {
+            AppAnswerStatus::SupportedSynthesisNeedsReview
+        }
+    } else if claims.iter().any(|claim| {
+        matches!(
+            claim.release_reason,
+            AppReleaseReason::UnsupportedClaim | AppReleaseReason::ContradictedClaim
+        )
+    }) {
+        AppAnswerStatus::ClaimSupportRejected
     } else if claims
         .iter()
         .any(|claim| claim.release_reason == AppReleaseReason::GroundedButIrrelevant)
@@ -1009,6 +1201,31 @@ pub struct EvidenceOptions {
     pub include_crops: bool,
 }
 
+/// Optional deterministic hardening fields for verification reports.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HardeningOptions {
+    /// Include structural provenance on checks.
+    #[serde(default)]
+    pub include_provenance: bool,
+    /// Include bounded context around grounded quote/value matches.
+    #[serde(default)]
+    pub include_context_echo: bool,
+    /// Include report-level evidence dispersion arithmetic.
+    #[serde(default)]
+    pub include_dispersion: bool,
+    /// Number of Unicode scalar values included on each side of a context match.
+    #[serde(default)]
+    pub context_window_chars: u32,
+}
+
+impl HardeningOptions {
+    /// True when the config requests any hardened report field.
+    pub fn enabled(self) -> bool {
+        self.include_provenance || self.include_context_echo || self.include_dispersion
+    }
+}
+
 /// The verification config (`urn:ethos:schema:verification-config:1`). Its c14n hash is
 /// `verification_config_sha256` in reports — comparable runs share the hash.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1030,6 +1247,9 @@ pub struct VerificationConfig {
     /// Evidence echo options.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub evidence: Option<EvidenceOptions>,
+    /// Deterministic report hardening options. Absent in the byte-compatible default profile.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hardening: Option<HardeningOptions>,
 }
 
 impl VerificationConfig {
@@ -1058,6 +1278,7 @@ impl VerificationConfig {
                 include_text: true,
                 include_crops: false,
             }),
+            hardening: None,
         }
     }
 }
@@ -1086,6 +1307,9 @@ mod tests {
             match_method: MatchMethod::ExactText,
             semantic_unverified: semantic,
             evidence: None,
+            resolved_element_ids: Vec::new(),
+            provenance: None,
+            context_echo: None,
             warnings: vec![],
         }
     }
@@ -1118,6 +1342,7 @@ mod tests {
             fingerprint_stale: false,
             all_evidence_grounded: true,
             checks,
+            dispersion: None,
             unsupported_claim_kinds: Vec::new(),
             warnings: Vec::new(),
         }
@@ -1244,6 +1469,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn app_answer_release_decision_applies_relevance_and_synthesis_policy() {
         let proof = ProofSummary {
             proof_status: ProofStatus::PartiallyVerified,
@@ -1268,6 +1494,7 @@ mod tests {
                     citation_grounded: None,
                     question_relevance: AppQuestionRelevance::DirectAnswer,
                     claim_type: AppClaimType::SourceFact,
+                    claim_support: Some(AppClaimSupport::Supported),
                 },
                 AppAnswerClaimInput {
                     id: "claim-background".to_string(),
@@ -1276,6 +1503,7 @@ mod tests {
                     citation_grounded: None,
                     question_relevance: AppQuestionRelevance::BackgroundOnly,
                     claim_type: AppClaimType::SourceFact,
+                    claim_support: Some(AppClaimSupport::Supported),
                 },
                 AppAnswerClaimInput {
                     id: "claim-synthesis".to_string(),
@@ -1284,6 +1512,7 @@ mod tests {
                     citation_grounded: None,
                     question_relevance: AppQuestionRelevance::SupportsAnswer,
                     claim_type: AppClaimType::Synthesis,
+                    claim_support: Some(AppClaimSupport::Supported),
                 },
                 AppAnswerClaimInput {
                     id: "claim-margin".to_string(),
@@ -1292,6 +1521,7 @@ mod tests {
                     citation_grounded: None,
                     question_relevance: AppQuestionRelevance::DirectAnswer,
                     claim_type: AppClaimType::Unsupported,
+                    claim_support: None,
                 },
             ],
             "reports/q3-verification.json",
@@ -1344,6 +1574,108 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
+    fn app_answer_release_claim_support_fails_closed_and_migrates_legacy_unsupported() {
+        let proof = ProofSummary {
+            proof_status: ProofStatus::Verified,
+            request_certified: true,
+            reusable_grounded_check_ids: vec!["v0001".to_string()],
+            needs_review_check_ids: Vec::new(),
+            proof_limitations: Vec::new(),
+        };
+
+        let rejected = derive_app_answer_release_decision(
+            "May the request be approved?",
+            &proof,
+            vec![AppAnswerClaimInput {
+                id: "claim-drift".into(),
+                text: "The request will be approved.".into(),
+                check_ids: vec!["v0001".into()],
+                citation_grounded: None,
+                question_relevance: AppQuestionRelevance::DirectAnswer,
+                claim_type: AppClaimType::SourceFact,
+                claim_support: Some(AppClaimSupport::Contradicted),
+            }],
+            "verification_report.json",
+            Vec::new(),
+        )
+        .unwrap();
+        assert!(rejected.claims[0].citation_grounded);
+        assert_eq!(rejected.claims[0].release_action, AppReleaseAction::Block);
+        assert_eq!(
+            rejected.claims[0].release_reason,
+            AppReleaseReason::ContradictedClaim
+        );
+        assert_eq!(rejected.app_status, AppAnswerStatus::ClaimSupportRejected);
+
+        let unevaluated = derive_app_answer_release_decision(
+            "May the request be approved?",
+            &proof,
+            vec![AppAnswerClaimInput {
+                id: "claim-pending".into(),
+                text: "The request may be approved.".into(),
+                check_ids: vec!["v0001".into()],
+                citation_grounded: None,
+                question_relevance: AppQuestionRelevance::DirectAnswer,
+                claim_type: AppClaimType::SourceFact,
+                claim_support: None,
+            }],
+            "verification_report.json",
+            Vec::new(),
+        )
+        .unwrap();
+        assert_eq!(
+            unevaluated.claims[0].release_action,
+            AppReleaseAction::NeedsReview
+        );
+        assert_eq!(
+            unevaluated.claims[0].claim_support,
+            AppClaimSupport::NotEvaluated
+        );
+
+        let legacy = derive_app_answer_release_decision(
+            "May the request be approved?",
+            &proof,
+            vec![AppAnswerClaimInput {
+                id: "claim-legacy".into(),
+                text: "The request will be approved.".into(),
+                check_ids: vec!["v0001".into()],
+                citation_grounded: None,
+                question_relevance: AppQuestionRelevance::DirectAnswer,
+                claim_type: AppClaimType::Unsupported,
+                claim_support: None,
+            }],
+            "verification_report.json",
+            Vec::new(),
+        )
+        .unwrap();
+        assert_eq!(legacy.claims[0].claim_type, None);
+        assert_eq!(legacy.claims[0].claim_support, AppClaimSupport::Unsupported);
+        assert_eq!(legacy.claims[0].release_action, AppReleaseAction::Block);
+
+        let conflict = derive_app_answer_release_decision(
+            "May the request be approved?",
+            &proof,
+            vec![AppAnswerClaimInput {
+                id: "claim-conflict".into(),
+                text: "The request will be approved.".into(),
+                check_ids: vec!["v0001".into()],
+                citation_grounded: None,
+                question_relevance: AppQuestionRelevance::DirectAnswer,
+                claim_type: AppClaimType::Unsupported,
+                claim_support: Some(AppClaimSupport::Supported),
+            }],
+            "verification_report.json",
+            Vec::new(),
+        )
+        .unwrap_err();
+        assert!(conflict
+            .message()
+            .contains("conflicts with claim_support supported"));
+    }
+
+    #[test]
+    #[allow(deprecated)]
     fn app_answer_release_decision_reproduces_documented_example() {
         let expected: serde_json::Value = serde_json::from_str(include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -1373,6 +1705,7 @@ mod tests {
                     citation_grounded: Some(true),
                     question_relevance: AppQuestionRelevance::DirectAnswer,
                     claim_type: AppClaimType::SourceFact,
+                    claim_support: Some(AppClaimSupport::Supported),
                 },
                 AppAnswerClaimInput {
                     id: "claim-office-background".to_string(),
@@ -1381,6 +1714,7 @@ mod tests {
                     citation_grounded: Some(true),
                     question_relevance: AppQuestionRelevance::BackgroundOnly,
                     claim_type: AppClaimType::SourceFact,
+                    claim_support: Some(AppClaimSupport::Supported),
                 },
                 AppAnswerClaimInput {
                     id: "claim-growth-driver".to_string(),
@@ -1390,6 +1724,7 @@ mod tests {
                     citation_grounded: Some(true),
                     question_relevance: AppQuestionRelevance::SupportsAnswer,
                     claim_type: AppClaimType::Synthesis,
+                    claim_support: Some(AppClaimSupport::Supported),
                 },
                 AppAnswerClaimInput {
                     id: "claim-margin".to_string(),
@@ -1398,6 +1733,7 @@ mod tests {
                     citation_grounded: Some(false),
                     question_relevance: AppQuestionRelevance::DirectAnswer,
                     claim_type: AppClaimType::Unsupported,
+                    claim_support: None,
                 },
             ],
             "verification_report.json",
@@ -1459,6 +1795,7 @@ mod tests {
                 citation_grounded: Some(false),
                 question_relevance: AppQuestionRelevance::DirectAnswer,
                 claim_type: AppClaimType::SourceFact,
+                claim_support: Some(AppClaimSupport::Supported),
             }],
             "verification_report.json",
             Vec::new(),
@@ -1478,6 +1815,7 @@ mod tests {
                 citation_grounded: None,
                 question_relevance: AppQuestionRelevance::DirectAnswer,
                 claim_type: AppClaimType::SourceFact,
+                claim_support: Some(AppClaimSupport::Supported),
             }],
             "verification_report.json",
             Vec::new(),
@@ -1507,6 +1845,7 @@ mod tests {
                     citation_grounded: None,
                     question_relevance: AppQuestionRelevance::DirectAnswer,
                     claim_type: AppClaimType::SourceFact,
+                    claim_support: Some(AppClaimSupport::Supported),
                 },
                 AppAnswerClaimInput {
                     id: "claim-revenue".to_string(),
@@ -1515,6 +1854,7 @@ mod tests {
                     citation_grounded: None,
                     question_relevance: AppQuestionRelevance::SupportsAnswer,
                     claim_type: AppClaimType::SourceFact,
+                    claim_support: Some(AppClaimSupport::Supported),
                 },
             ],
             "verification_report.json",

@@ -76,6 +76,7 @@ PAIRS = [
     ]),
     ("ethos-verification-report.schema.json", [
         EXAMPLES / "verification-report.example.json",
+        EXAMPLES / "verification-report.hardened.example.json",
         EXAMPLES / "verification-report-negative.example.json",
     ]),
     ("ethos-app-answer-release-decision.schema.json", [
@@ -91,7 +92,10 @@ PAIRS = [
     ("ethos-evidence-anchor-contract.schema.json", [
         ROOT / "examples" / "verify" / "evidence_anchor_v1_contract.json",
     ]),
-    ("ethos-verification-config.schema.json", [EXAMPLES / "verification-config.example.json"]),
+    ("ethos-verification-config.schema.json", [
+        EXAMPLES / "verification-config.example.json",
+        EXAMPLES / "verification-config.hardened.example.json",
+    ]),
     ("ethos-crop-descriptor.schema.json", [EXAMPLES / "crop-descriptor.example.json"]),
     ("ethos-crop-element-request.schema.json", [
         EXAMPLES / "crop-element-request.example.json",

@@ -598,6 +598,7 @@ class PythonSurfaceTests(unittest.TestCase):
                     "check_ids": ["v0001"],
                     "question_relevance": "direct_answer",
                     "claim_type": "source_fact",
+                    "claim_support": "supported",
                 },
                 {
                     "id": "claim-background",
@@ -605,6 +606,7 @@ class PythonSurfaceTests(unittest.TestCase):
                     "check_ids": ["v0002"],
                     "question_relevance": "background_only",
                     "claim_type": "source_fact",
+                    "claim_support": "supported",
                 },
                 {
                     "id": "claim-synthesis",
@@ -612,6 +614,7 @@ class PythonSurfaceTests(unittest.TestCase):
                     "check_ids": ["v0001", "v0003"],
                     "question_relevance": "supports_answer",
                     "claim_type": "synthesis",
+                    "claim_support": "supported",
                 },
                 {
                     "id": "claim-margin",
@@ -644,6 +647,83 @@ class PythonSurfaceTests(unittest.TestCase):
         self.assertEqual(result["claims"][3]["release_reason"], "cannot_answer_from_sources")
         self.assertEqual(result["notes"], ["application-owned relevance labels"])
 
+    def test_app_answer_release_claim_support_fails_closed_and_migrates_legacy(self) -> None:
+        summary = {
+            "proof_status": "verified",
+            "request_certified": True,
+            "reusable_grounded_check_ids": ["v0001"],
+            "needs_review_check_ids": [],
+            "proof_limitations": [],
+        }
+
+        contradicted = app_answer_release_decision(
+            "May the request be approved?",
+            summary,
+            [
+                {
+                    "id": "claim-drift",
+                    "text": "The request will be approved.",
+                    "check_ids": ["v0001"],
+                    "question_relevance": "direct_answer",
+                    "claim_type": "source_fact",
+                    "claim_support": "contradicted",
+                }
+            ],
+        )
+        self.assertTrue(contradicted["claims"][0]["citation_grounded"])
+        self.assertEqual(contradicted["claims"][0]["release_action"], "block")
+        self.assertEqual(contradicted["app_status"], "claim_support_rejected")
+
+        unevaluated = app_answer_release_decision(
+            "May the request be approved?",
+            summary,
+            [
+                {
+                    "id": "claim-pending",
+                    "text": "The request may be approved.",
+                    "check_ids": ["v0001"],
+                    "question_relevance": "direct_answer",
+                    "claim_type": "source_fact",
+                }
+            ],
+        )
+        self.assertEqual(unevaluated["claims"][0]["claim_support"], "not_evaluated")
+        self.assertEqual(unevaluated["claims"][0]["release_action"], "needs_review")
+        self.assertEqual(unevaluated["app_status"], "claim_support_needs_review")
+
+        legacy = app_answer_release_decision(
+            "May the request be approved?",
+            summary,
+            [
+                {
+                    "id": "claim-legacy",
+                    "text": "The request will be approved.",
+                    "check_ids": ["v0001"],
+                    "question_relevance": "direct_answer",
+                    "claim_type": "unsupported",
+                }
+            ],
+        )
+        self.assertNotIn("claim_type", legacy["claims"][0])
+        self.assertEqual(legacy["claims"][0]["claim_support"], "unsupported")
+        self.assertEqual(legacy["claims"][0]["release_action"], "block")
+
+        with self.assertRaisesRegex(ValueError, "conflicts with claim_support supported"):
+            app_answer_release_decision(
+                "May the request be approved?",
+                summary,
+                [
+                    {
+                        "id": "claim-conflict",
+                        "text": "The request will be approved.",
+                        "check_ids": ["v0001"],
+                        "question_relevance": "direct_answer",
+                        "claim_type": "unsupported",
+                        "claim_support": "supported",
+                    }
+                ],
+            )
+
     def test_app_answer_release_decision_accepts_verification_report(self) -> None:
         report = {
             "all_evidence_grounded": True,
@@ -671,6 +751,7 @@ class PythonSurfaceTests(unittest.TestCase):
                     "check_ids": ["v0001"],
                     "question_relevance": "direct_answer",
                     "claim_type": "source_fact",
+                    "claim_support": "supported",
                 }
             ],
         )
@@ -722,6 +803,7 @@ class PythonSurfaceTests(unittest.TestCase):
                         "citation_grounded": False,
                         "question_relevance": "direct_answer",
                         "claim_type": "source_fact",
+                        "claim_support": "supported",
                     }
                 ],
             )
@@ -737,6 +819,7 @@ class PythonSurfaceTests(unittest.TestCase):
                         "check_ids": ["v9999"],
                         "question_relevance": "direct_answer",
                         "claim_type": "source_fact",
+                        "claim_support": "supported",
                     }
                 ],
             )
@@ -761,6 +844,7 @@ class PythonSurfaceTests(unittest.TestCase):
                         "check_ids": ["v0001"],
                         "question_relevance": "direct_answer",
                         "claim_type": "source_fact",
+                        "claim_support": "supported",
                     },
                     {
                         "id": "claim-revenue",
@@ -768,6 +852,7 @@ class PythonSurfaceTests(unittest.TestCase):
                         "check_ids": ["v0002"],
                         "question_relevance": "supports_answer",
                         "claim_type": "source_fact",
+                        "claim_support": "supported",
                     },
                 ],
             )

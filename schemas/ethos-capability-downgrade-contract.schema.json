@@ -139,7 +139,8 @@
         "missing_char_offsets",
         "missing_tables",
         "unknown_coordinate_origin",
-        "missing_crop_support"
+        "missing_crop_support",
+        "missing_structure"
       ]
     },
     "report_warning": {
@@ -160,6 +161,7 @@
         "span_not_found",
         "page_not_found",
         "bbox_not_found",
+        "locator_conflict",
         "missing_page_for_bbox",
         "missing_table_cell_locator",
         "table_not_found",

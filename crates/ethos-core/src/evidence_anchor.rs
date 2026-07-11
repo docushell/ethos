@@ -23,12 +23,36 @@
 use serde::{Deserialize, Serialize};
 
 use crate::grounding::{Capabilities, ParserIdentity};
-use crate::verify_types::CapabilityLimit;
+use crate::verify_types::{CapabilityLimit, CheckProvenance, ContextEcho};
 
 /// Request artifact type for evidence anchoring.
 pub const EVIDENCE_ANCHOR_REQUEST_ARTIFACT_TYPE: &str = "ethos.evidence_anchor_request.v1";
 /// Report artifact type for evidence anchoring.
 pub const EVIDENCE_ANCHOR_REPORT_ARTIFACT_TYPE: &str = "ethos.evidence_anchor_report.v1";
+/// Evidence-anchor request/report version when deterministic report options are enabled.
+pub const HARDENED_EVIDENCE_ANCHOR_SCHEMA_VERSION: &str = "1.1.0";
+
+/// Optional deterministic report fields for evidence anchoring.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EvidenceAnchorReportOptions {
+    /// Include structural provenance when the resolved target has an element identity.
+    #[serde(default)]
+    pub include_provenance: bool,
+    /// Include bounded context around matched text.
+    #[serde(default)]
+    pub include_context_echo: bool,
+    /// Number of Unicode scalar values included on each side of a context match.
+    #[serde(default)]
+    pub context_window_chars: u32,
+}
+
+impl EvidenceAnchorReportOptions {
+    /// True when any optional report field is requested.
+    pub fn enabled(self) -> bool {
+        self.include_provenance || self.include_context_echo
+    }
+}
 
 /// Evidence-anchor request envelope.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -43,6 +67,9 @@ pub struct EvidenceAnchorRequest {
     pub source_fingerprint: Option<String>,
     /// Caller-provided evidence refs in deterministic input order.
     pub evidence_refs: Vec<EvidenceRef>,
+    /// Optional deterministic report fields. Absent in the byte-compatible v1 shape.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub report_options: Option<EvidenceAnchorReportOptions>,
 }
 
 /// One caller-provided evidence reference.
@@ -205,6 +232,15 @@ pub struct EvidenceAnchor {
     pub checks: AnchorChecks,
     /// Capability limits that affected this anchor.
     pub capability_limits: Vec<CapabilityLimit>,
+    /// Resolved source element ids, emitted only when report options are enabled.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resolved_element_ids: Vec<String>,
+    /// Structural context, emitted only when requested.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<CheckProvenance>,
+    /// Bounded matched-source context, emitted only when requested.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_echo: Option<ContextEcho>,
 }
 
 /// Rollup status for one evidence anchor.

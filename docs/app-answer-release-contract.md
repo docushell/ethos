@@ -1,7 +1,7 @@
 # App Answer Release Contract
 
-Status: source-only guidance for products, APIs, and UI layers that consume Ethos verification
-reports.
+Status: implemented application-layer contract for products, APIs, and UI layers that consume
+Ethos verification reports.
 
 This document defines how an application should decide what answer text it may show after Ethos
 checks citation grounding. It does not add a new verifier status, JSON report field, command,
@@ -28,7 +28,7 @@ proof summary with app-owned relevance and synthesis labels. This envelope is no
 `verification_report.json`; it records an application release decision above the Ethos grounding
 result. Rust apps can build the same envelope with `derive_app_answer_release_decision(...)`, and
 Python apps can build it with `app_answer_release_decision(...)`, after they have supplied
-relevance and synthesis labels.
+relevance, synthesis, and claim-support labels.
 
 For a runnable offline Python reference path, see `examples/app-answer-release/README.md`.
 
@@ -36,15 +36,16 @@ If a wrapper exposes `invalid_request`, that status is a process or API envelope
 input, invalid configuration, adapter failure, or usage errors. It is not derived from a
 `VerificationReport`.
 
-## Three Axes
+## Four Axes
 
-Application answer release decisions should keep three axes separate.
+Application answer release decisions should keep four axes separate.
 
 | Axis | Owner | Question |
 | --- | --- | --- |
 | Citation grounding | Ethos | Does the cited evidence ID, quote, value, table cell, or target exist and match the trusted source evidence? |
 | Question relevance | Application | Does the grounded evidence actually answer or support the user's question? |
 | Synthesis level | Application | Is the claim directly stated by the source, or is it an inference across multiple grounded facts? |
+| Claim support | Application or reviewer | Does the grounded evidence support, fail to support, or contradict the answer claim? |
 
 Ethos is strongest on citation grounding. It does not know the user's question unless a wrapper
 adds that context above the verifier, and it does not silently convert grounded snippets into a
@@ -81,11 +82,25 @@ Suggested `question_relevance` values:
 - `background_only`: the grounded evidence is true but not responsive to the question.
 - `unrelated`: the grounded evidence does not support the requested answer.
 
-Suggested `claim_type` values:
+`claim_type` values:
 
 - `source_fact`: the claim is directly stated by source evidence.
 - `synthesis`: the claim combines multiple grounded facts or adds reasoning across them.
-- `unsupported`: the claim cannot be traced to grounded source evidence.
+
+`claim_support` values:
+
+- `supported`: an application evaluator or reviewer determined that the evidence supports the
+  claim.
+- `unsupported`: the evidence does not support the claim.
+- `contradicted`: the evidence conflicts with the claim.
+- `not_evaluated`: no semantic support decision has been made. This is the default when callers
+  omit `claim_support`, and it fails closed to `needs_review`.
+
+`claim_type` describes the statement; `claim_support` describes its relationship to the evidence.
+They must not be collapsed into one label. The legacy input `claim_type: unsupported` remains
+accepted during the 1.1 migration window and maps to `claim_support: unsupported`; it is omitted
+from the decision output. Combining that legacy value with `claim_support: supported` is an input
+error.
 
 These labels may come from application policy, a reviewed model output schema, human review, or a
 separate evaluator. They are outside the canonical Ethos verification report.
@@ -112,6 +127,8 @@ A conservative first application policy is:
 | `partial_certified` | At least one claim is `certified`, and at least one requested claim is blocked or review-only. | Show only certified claims; disclose that the answer is partial. |
 | `supported_synthesis_needs_review` | Citation grounding is true, `question_relevance` is `direct_answer` or `supports_answer`, and `claim_type` is `synthesis`. | Keep out of the main answer unless the product explicitly allows reviewed synthesis. |
 | `grounded_but_irrelevant` | Citation grounding is true, but `question_relevance` is `background_only` or `unrelated`. | Block from the final answer. |
+| `claim_support_needs_review` | Citation grounding is true, but `claim_support` is `not_evaluated`. | Keep out of the final answer pending semantic review. |
+| `claim_support_rejected` | Citation grounding is true, but `claim_support` is `unsupported` or `contradicted`. | Block from the final answer. |
 | `cannot_answer_from_sources` | No relevant grounded source facts are available. | Say that the sources do not support an answer. |
 
 This preserves the strict Ethos rule that grounded citations are necessary, while avoiding the
@@ -124,6 +141,8 @@ Applications that use Ethos as a release gate should:
 - build verification requests from trusted source maps or parser artifacts, not from model-returned
   citation IDs alone;
 - pass the original user question into the application gate that labels relevance and synthesis;
+- require `claim_support: supported` before releasing a claim as final;
+- treat omitted semantic review as `not_evaluated`, never as implicit support;
 - release final answer text from certified source facts by default;
 - put synthesis in a separate review surface unless the product has an explicit synthesis policy;
 - treat retrieval citations, chunks, and model-selected evidence IDs as candidates, not proof;

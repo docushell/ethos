@@ -106,6 +106,21 @@ pub struct GroundingElement {
     pub text: Option<String>,
 }
 
+/// Deterministic structural context for one source element.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GroundingProvenance {
+    /// Heading texts from the top-level section to the nearest containing heading.
+    pub heading_path: Vec<String>,
+    /// Source-defined element role.
+    pub element_role: String,
+    /// Previous element in canonical reading order, when present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub previous_element_id: Option<String>,
+    /// Next element in canonical reading order, when present.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_element_id: Option<String>,
+}
+
 /// Optional span with char offsets (capability `spans` / `char_offsets`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GroundingSpan {
@@ -172,6 +187,11 @@ pub trait GroundingSource {
     fn pages(&self) -> Vec<PageGeometry>;
     /// Elements in the source's canonical order.
     fn elements(&self) -> Vec<GroundingElement>;
+    /// Structural context for an element, when the source can provide it.
+    /// Returning `None` is an explicit capability limitation; callers must not infer structure.
+    fn structural_provenance(&self, _element_id: &str) -> Option<GroundingProvenance> {
+        None
+    }
     /// Spans, when capability `spans` is true. Default: none.
     fn spans(&self) -> Vec<GroundingSpan> {
         Vec::new()

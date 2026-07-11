@@ -1,0 +1,91 @@
+{
+  "all_evidence_grounded": true,
+  "capability_limits": [],
+  "checks": [
+    {
+      "claim": {
+        "citation": {
+          "element_id": "e000002",
+          "page": "p0001"
+        },
+        "kind": "quote",
+        "text": "Revenue grew to $12.4M in Q3 2025"
+      },
+      "context_echo": {
+        "after": ", driven by enterprise expansion.",
+        "before": "",
+        "match": "Revenue grew to $12.4M in Q3 2025"
+      },
+      "evidence": {
+        "bbox": [7200, 10100, 54000, 11500],
+        "page": "p0001",
+        "text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion."
+      },
+      "id": "v0001",
+      "match_method": "normalized_text_contains",
+      "provenance": {
+        "element_role": "text_block",
+        "heading_path": ["Q3 Financial Summary"],
+        "next_element_id": "e000003",
+        "previous_element_id": "e000001",
+        "status": "available"
+      },
+      "resolved_element_ids": ["e000002"],
+      "semantic_unverified": false,
+      "status": "grounded",
+      "warnings": []
+    },
+    {
+      "claim": {
+        "citation": {
+          "cell": {
+            "col": 1,
+            "row": 1
+          },
+          "table_id": "t0001"
+        },
+        "kind": "table_cell",
+        "text": "$12.4M"
+      },
+      "evidence": {
+        "bbox": [30600, 16500, 54000, 20000],
+        "page": "p0001",
+        "text": "$12.4M"
+      },
+      "id": "v0002",
+      "match_method": "table_cell_lookup",
+      "provenance": {
+        "status": "not_applicable"
+      },
+      "semantic_unverified": false,
+      "status": "grounded",
+      "warnings": []
+    }
+  ],
+  "dispersion": {
+    "elements": 1,
+    "grounded_checks": 2,
+    "pages": 1,
+    "unmapped_grounded_checks": 1
+  },
+  "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "fingerprint_stale": false,
+  "grounding": {
+    "capabilities": {
+      "char_offsets": true,
+      "coordinate_origin": "top-left",
+      "crop_support": false,
+      "fingerprint": true,
+      "spans": true,
+      "tables": true
+    },
+    "parser": {
+      "name": "ethos",
+      "version": "0.1.0"
+    }
+  },
+  "schema_version": "1.1.0",
+  "unsupported_claim_kinds": [],
+  "verification_config_sha256": "70cc82cc7583d9c32ee33d1c8988a6bfe98130de8c0c5bef4de9a834bcbd23c4",
+  "warnings": []
+}

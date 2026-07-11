@@ -100,6 +100,22 @@ fn request_with_fingerprint(source_fingerprint: &str, evidence_refs: Value) -> P
     )
 }
 
+fn hardened_request(evidence_refs: Value) -> PathBuf {
+    temp_json(
+        "hardened-request",
+        serde_json::json!({
+            "artifact_type": "ethos.evidence_anchor_request.v1",
+            "schema_version": "1.1.0",
+            "report_options": {
+                "include_provenance": true,
+                "include_context_echo": true,
+                "context_window_chars": 12
+            },
+            "evidence_refs": evidence_refs
+        }),
+    )
+}
+
 #[test]
 fn help_lists_evidence_anchor() {
     let output = run_ethos(&["--help"]);
@@ -194,6 +210,43 @@ fn native_page_text_bbox_and_table_cell_bind() {
     assert_eq!(anchors[1]["achieved_anchor_level"], "text");
     assert_eq!(anchors[2]["achieved_anchor_level"], "text_bbox");
     assert_eq!(anchors[3]["achieved_anchor_level"], "table_cell");
+}
+
+#[test]
+fn hardened_anchor_emits_native_provenance_and_context() {
+    let request = hardened_request(serde_json::json!([
+        {
+            "evidence_id": "ev_text",
+            "evidence_kind": "text",
+            "required_anchor_level": "text",
+            "locator": { "element_id": "e000002" },
+            "expected_text": "Revenue   grew to $12.4M in Q3 2025"
+        }
+    ]));
+    let report = parse_success(&[
+        "evidence",
+        "anchor",
+        document_example().to_str().unwrap(),
+        "--evidence-refs",
+        request.to_str().unwrap(),
+    ]);
+
+    assert_eq!(report["schema_version"], "1.1.0");
+    let anchor = &report["anchors"][0];
+    assert_eq!(anchor["anchor_status"], "bound");
+    assert_eq!(
+        anchor["resolved_element_ids"],
+        serde_json::json!(["e000002"])
+    );
+    assert_eq!(anchor["provenance"]["status"], "available");
+    assert_eq!(
+        anchor["provenance"]["heading_path"],
+        serde_json::json!(["Q3 Financial Summary"])
+    );
+    assert_eq!(
+        anchor["context_echo"]["match"],
+        "Revenue grew to $12.4M in Q3 2025"
+    );
 }
 
 #[test]

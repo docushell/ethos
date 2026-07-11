@@ -16,5 +16,6 @@ Every closing PRD §15 open question gets an ADR here. Output-changing merges re
 | 0009 | G3 geometry fingerprint policy | Accepted |
 | 0010 | Deterministic table candidates | Accepted |
 | 0012 | Deterministic evidence anchoring boundary | Accepted |
+| 0013 | Caller-provided PDFium beta posture | Proposed |
 
 Format: Status / Date / Governs, Context, Decision, Consequences. Statuses: Proposed → Accepted | Rejected | Superseded-by-NNNN.

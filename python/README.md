@@ -129,8 +129,9 @@ The summary is not a replacement for the canonical verification report. It deter
 derives `proof_status`, `request_certified`, reusable grounded check ids, needs-review check ids,
 and proof limitations from the report that `ethos verify` already emitted.
 
-Use `app_answer_release_decision(...)` when an application has already labeled claim relevance and
-synthesis, and wants the conservative release policy from `docs/app-answer-release-contract.md`:
+Use `app_answer_release_decision(...)` when an application has already labeled claim relevance,
+synthesis, and support, and wants the conservative release policy from
+`docs/app-answer-release-contract.md`:
 
 ```python
 from ethos_pdf import app_answer_release_decision, proof_summary
@@ -146,16 +147,18 @@ decision = app_answer_release_decision(
             "check_ids": ["v0001"],
             "question_relevance": "direct_answer",
             "claim_type": "source_fact",
+            "claim_support": "supported",
         }
     ],
 )
 print(decision["app_status"])
 ```
 
-The helper does not judge relevance or synthesis. Callers supply those labels; the helper applies
-the release rule and requires referenced Ethos check IDs to be reusable before a claim can enter
-the final answer. It also rejects duplicate claim IDs so `final_answer_claim_ids`,
-`review_claim_ids`, and `blocked_claim_ids` stay unambiguous.
+The helper does not judge relevance, synthesis, or claim support. Callers supply those labels; the
+helper applies the release rule and requires referenced Ethos check IDs to be reusable before a
+claim can enter the final answer. For a grounded claim, missing `claim_support` becomes
+`not_evaluated` and requires review. The helper also rejects duplicate claim IDs so
+`final_answer_claim_ids`, `review_claim_ids`, and `blocked_claim_ids` stay unambiguous.
 
 Run the focused tests with:
 

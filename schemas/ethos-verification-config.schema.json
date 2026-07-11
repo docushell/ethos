@@ -59,6 +59,53 @@
         "include_text": { "type": "boolean", "description": "Echo found evidence text into the report." },
         "include_crops": { "type": "boolean", "description": "Crop-aware L2 evidence (Milestone D; requires crop_support capability)." }
       }
+    },
+    "hardening": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include_provenance": { "type": "boolean", "default": false },
+        "include_context_echo": { "type": "boolean", "default": false },
+        "include_dispersion": { "type": "boolean", "default": false },
+        "context_window_chars": { "type": "integer", "minimum": 0, "maximum": 4096, "default": 0 }
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["hardening"],
+        "properties": {
+          "hardening": {
+            "anyOf": [
+              { "required": ["include_provenance"], "properties": { "include_provenance": { "const": true } } },
+              { "required": ["include_context_echo"], "properties": { "include_context_echo": { "const": true } } },
+              { "required": ["include_dispersion"], "properties": { "include_dispersion": { "const": true } } }
+            ]
+          }
+        }
+      },
+      "then": { "properties": { "schema_version": { "const": "1.1.0" } } },
+      "else": { "properties": { "schema_version": { "const": "1.0.0" } } }
+    },
+    {
+      "if": {
+        "required": ["hardening"],
+        "properties": {
+          "hardening": {
+            "required": ["include_context_echo"],
+            "properties": { "include_context_echo": { "const": true } }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "hardening": {
+            "required": ["context_window_chars"],
+            "properties": { "context_window_chars": { "minimum": 1 } }
+          }
+        }
+      }
+    }
+  ]
 }

@@ -8,13 +8,48 @@
   "additionalProperties": false,
   "properties": {
     "artifact_type": { "const": "ethos.evidence_anchor_request.v1" },
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "enum": ["1.0.0", "1.1.0"] },
     "source_fingerprint": { "$ref": "#/$defs/fingerprint" },
+    "report_options": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include_provenance": { "type": "boolean", "default": false },
+        "include_context_echo": { "type": "boolean", "default": false },
+        "context_window_chars": { "type": "integer", "minimum": 0, "maximum": 4096, "default": 0 }
+      }
+    },
     "evidence_refs": {
       "type": "array",
       "items": { "$ref": "#/$defs/evidence_ref" }
     }
   },
+  "allOf": [
+    {
+      "if": { "required": ["report_options"] },
+      "then": { "properties": { "schema_version": { "const": "1.1.0" } } },
+      "else": { "properties": { "schema_version": { "const": "1.0.0" } } }
+    },
+    {
+      "if": {
+        "required": ["report_options"],
+        "properties": {
+          "report_options": {
+            "required": ["include_context_echo"],
+            "properties": { "include_context_echo": { "const": true } }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "report_options": {
+            "required": ["context_window_chars"],
+            "properties": { "context_window_chars": { "minimum": 1 } }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "bbox": {

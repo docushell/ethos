@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- docs: add a "catch a fabricated citation in 60 seconds" README lead demo over checked-in JSON
+  fixtures (no PDFium required), preserving every existing public-boundary claim string and
+  adding no new capability, benchmark, parser-quality, or production claims.
+- tooling: add `scripts/fetch-pdfium.sh`, an optional operator helper that downloads only the
+  exact pinned `bblanchon/pdfium-binaries` release recorded in `docs/pdfium-profile.md`, verifies
+  the recorded archive and runtime-library sha256 values fail-closed, and prints the
+  `ETHOS_PDFIUM_LIBRARY_PATH` export line; the `ethos` binary still never downloads or installs
+  libraries, and PDFium remains caller-provided and unbundled.
+- decisions: record ADR-0013 (caller-provided PDFium beta posture) reconciling the shipped
+  v0.3.0 no-PDFium-distribution posture with ADR-0002's phase model; re-scope the Phase 2
+  blocker to bundled, Windows-with-PDFium, and hosted surfaces; add an ADR-0001 addendum
+  confirming the reduced-staff schedule and clarifying that the npm binary distribution package
+  is not the gated "Node beta" surface.
+- docs: add `docs/v0-3-1-release-prep.md` scoping a docs/tooling/decision-record patch release;
+  version activation, DocuShell integration, hosted surfaces, production positioning, Windows
+  artifacts, bundled PDFium, and public benchmark claims remain blocked in their separate lanes.
 - boundary-exception: correct v0.3.0 final GitHub Release notes and latest-release intent, add a
   live metadata checker for the latest pointer, body, status, and asset set, and preserve the exact
   approved draft-inventory provenance without replacing published assets or widening release scope.

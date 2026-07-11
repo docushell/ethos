@@ -26,10 +26,10 @@ does not change the canonical JSON report; it deterministically labels whether a
 certified, partially reusable, or unverified.
 
 The same feature also exposes `derive_app_answer_release_decision(...)` for applications that have
-already labeled question relevance and synthesis. That helper builds the non-canonical app answer
-release envelope documented in `docs/app-answer-release-contract.md`; it does not replace
-`verification_report.json`, does not judge relevance itself, and rejects duplicate claim IDs before
-building release lists.
+already labeled question relevance, synthesis, and claim support. That helper builds the
+non-canonical app answer release envelope documented in `docs/app-answer-release-contract.md`; it
+does not replace `verification_report.json`, does not judge those labels itself, and rejects
+duplicate claim IDs before building release lists.
 
 ## Publication Boundary
 

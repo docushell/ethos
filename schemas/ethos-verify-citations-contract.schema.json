@@ -143,6 +143,7 @@
         "span_not_found",
         "page_not_found",
         "bbox_not_found",
+        "locator_conflict",
         "missing_page_for_bbox",
         "missing_table_cell_locator",
         "table_not_found",
