@@ -2,6 +2,38 @@
 
 ## Unreleased
 
+- integration: complete NIP-1.5 with DocuShell's worker-only native PDF crop projection,
+  deterministic source-bound crop bundles, public artifact routing, fail-closed PDFium handling,
+  and rendered citation-region inspection in Evidence Chat.
+- integration: complete NIP-1.4 with DocuShell's fail-closed answer-release gate, v1.1
+  `claim_support` policy, deterministic contract-fixture coverage, and explicit review/rejection
+  states above canonical citation grounding.
+- integration: complete NIP-1.3 with DocuShell's worker-only OpenDataLoader citation-verification lane, stored canonical reports, deterministic citation emission, preserved exit-1 reports, and fail-closed verifier errors.
+- integration: complete NIP-1.2 by sha256-pinning the public v0.3.0 Linux x64 CLI and caller-provided PDFium in DocuShell's worker-only image, with deterministic offline install and fail-closed checksum/platform tests.
+- planning: add `NEXT_IMPLEMENTATION_PLAN.md` (NIP-1), the canonical next-steps plan covering
+  DocuShell first-consumer integration, the trust benchmark study, citation emission adapters,
+  install-friction work, the CI Action, and governance right-sizing, with a task-level progress
+  ledger; rework `AGENTS.md` so implementing agents read the plan first. This plan approves
+  engineering work and internal evidence only — public wording, benchmark claims, hosted
+  surfaces, and production positioning remain in their existing approval lanes.
+- planning: revise NIP-1 to v1.1 by decider decision — deprioritize `ethos-mcp` (NIP-2) to P2,
+  promote citation emission (NIP-4) and install-friction (NIP-5) to P0, and switch the execution
+  model to AI-agent implementation with human review/decider/operator gates, replacing week-based
+  pacing with agent-day estimates in the progress ledger.
+- docs: add `docs/integrations/docushell.md` (NIP-1.1), the first-consumer integration contract
+  binding DocuShell to public Ethos surfaces only, with version pins, compatibility promises,
+  and worker-lane rules; add `docs/integrations/docushell-friction-log.md` (NIP-1.6) seeded with
+  the first three dispositioned friction entries (TypeScript report types, PDFium image wiring,
+  CLI vendoring bookkeeping).
+- governance: add `docs/release-lane-v2.md` (NIP-7.1, accepted 2026-07-19): routine release
+  trains produce exactly one prep doc and one closeout record; the full multi-record v1 lane is
+  retained for first-of-class surfaces only; a smoothness rule limits human gates across the
+  whole pipeline to PR review, registry publish, and public-wording changes.
+- docs: rewrite `CONTRIBUTING.md` (NIP-7.3) as the single idea-to-release process page — a
+  five-step first-PR quickstart, a three-requirement PR bar (tests, CHANGELOG line, DCO
+  sign-off), project invariants as a CI-enforced reference table, and a maintainer release
+  summary — so external contributors and AI agents can contribute without reading the internal
+  governance apparatus.
 - docs: add a "catch a fabricated citation in 60 seconds" README lead demo over checked-in JSON
   fixtures (no PDFium required), preserving every existing public-boundary claim string and
   adding no new capability, benchmark, parser-quality, or production claims.

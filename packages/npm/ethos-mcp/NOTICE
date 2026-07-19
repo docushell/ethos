@@ -1,0 +1,4 @@
+Ethos npm binary package
+
+This package is prepared from the Ethos source repository. It contains no bundled PDFium build in
+the first release-prep scope.

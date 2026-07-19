@@ -1,49 +1,90 @@
 # Contributing to Ethos
 
-## DCO — required on every commit
+Thanks for being here. Ethos is open source (Apache-2.0) and contributions are welcome — code,
+fixtures, docs, adapters, bug reports, and design ideas all count. This page is the entire
+process, from first idea to shipped release. There is no other process document you need to read.
 
-Ethos uses the [Developer Certificate of Origin](https://developercertificate.org/) (no CLA).
-Every commit must carry a `Signed-off-by:` line matching the author (`git commit -s`). CI
-rejects unsigned commits.
+## The whole process at a glance
 
-## Ground rules (enforced in review and CI)
-
-1. **Fixtures before heuristics.** Any PR that adds or changes a heuristic ships its fixtures
-   in the same PR. Reviewers reject otherwise. See `fixtures/README.md`.
-2. **Contracts change by labeled PR only.** Schemas, the c14n spec, error/warning codes, and
-   the deterministic profile change only via PRs labeled `contract-change` with a version bump
-   and downstream sign-off. Output-changing heuristics are semver events with CHANGELOG entries.
-3. **Determinism failures are never retried into green.** A flaky fingerprint IS the bug.
-4. **No network in base crates.** No `std::net`, no network-capable dependencies (`reqwest`,
-   `hyper`, `ureq`, `curl`, …) in base crates. Three CI layers enforce this; don't fight them.
-5. **License allowlist.** Base dependencies: Apache-2.0, MIT, BSD-2/3, ISC, Zlib,
-   Unicode-DFS-2016, CC0-1.0, MPL-2.0. Copyleft/source-available/custom-condition: denied
-   (ADR-0004). Exceptions require an ADR before merge.
-6. **Claims discipline.** No "#1", no superlatives, no speed/quality claims anywhere in docs
-   or announcements without a reproducible benchmark behind them. CI greps for banned phrases.
-7. **No OCR/VLM/ML dependencies in base.** Optional enrichment lives behind non-default
-   features or separate packages.
-8. **`ethos-verify` stays parser-agnostic.** It compiles against the `GroundingSource` trait
-   module alone — never against parser internals. CI proves it.
-
-## Branch discipline
-
-One branch per lane: `ws/<lane>-<milestone>` (e.g. `ws/contracts-a`), merged via PR only.
-Every PR must pass: schema validation, fixture suite, same-platform double-parse byte-diff,
-clippy/fmt/deny, c14n property tests, and the rules above.
-
-## Local checks
-
-```bash
-cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo deny check
-cargo test --workspace
-python3 schemas/validate_examples.py     # schema/example validation
-python3 fixtures/validate_fixtures.py    # fixture manifest/hash validation
+```
+idea ──► GitHub Discussion or issue ──► PR ──► CI green + one review ──► merge ──► next release train
 ```
 
-## Good first contributions
+Three human gates exist in the entire pipeline — everything else is automated CI:
 
-Fixture contributions are the best entry point — see `fixtures/README.md`. Issues labeled
-`good-first-issue` are maintained as part of the monthly community funnel review.
+1. **PR review** — one maintainer approval.
+2. **Registry publish** — a human runs `cargo publish` / `npm publish` / PyPI upload.
+3. **Public claims** — changes to README claim strings need maintainer sign-off (honesty gate).
+
+Nothing waits on anything else. If CI is green and a reviewer approves, it merges.
+
+## Your first contribution in five steps
+
+```bash
+# 1. Fork and clone, then build (Rust 1.87+, see rust-toolchain.toml)
+cargo build --locked --workspace
+
+# 2. Run the tests
+cargo test --locked --workspace
+make verify-alpha            # the golden-path demo suite
+
+# 3. Make your change on any descriptively named branch
+# 4. Add one line to CHANGELOG.md under "## Unreleased"
+# 5. Commit with sign-off and open a PR
+git commit -s -m "fix: ..."
+```
+
+A PR needs exactly three things: **tests pass**, **a CHANGELOG line**, and **DCO sign-off**
+(`git commit -s` — we use the [Developer Certificate of Origin](https://developercertificate.org/),
+no CLA). CI checks everything else automatically and tells you what to fix.
+
+Good entry points: fixture contributions (`fixtures/README.md`), issues labeled
+`good-first-issue`, framework adapters (`adapters/`), and docs fixes. If you're an AI agent,
+read `NEXT_IMPLEMENTATION_PLAN.md` and pick a ledger task.
+
+## Ideas and design changes
+
+Open a GitHub Discussion or issue first for anything user-visible — a quick "here's what I want
+to do, here's why" is enough. Small fixes can go straight to PR. Architecture-level decisions
+get a short ADR in `docs/decisions/` (copy an existing one; they're one page).
+
+## Project invariants (CI enforces these — you don't need to memorize them)
+
+| Invariant | What it means for your PR |
+| --- | --- |
+| Determinism is a contract | Same input + pinned profile ⇒ byte-identical output. New artifacts need a double-run byte-diff test. A flaky fingerprint is the bug — never retry into green. |
+| Fixtures before heuristics | A PR that adds/changes a heuristic ships its fixtures in the same PR. |
+| Fail closed | Missing capability ⇒ explicit warning/downgrade, never a silent pass. |
+| Contracts change by labeled PR | Schemas, c14n spec, error codes, deterministic profile: label the PR `contract-change` + version bump. |
+| No network in base crates | No `std::net` or network deps in base crates; CI enforces. |
+| License allowlist | Apache-2.0, MIT, BSD-2/3, ISC, Zlib, Unicode-DFS-2016, CC0-1.0, MPL-2.0. No copyleft (ADR-0004). |
+| Claims discipline | No superlatives or unearned speed/quality claims anywhere; CI greps for them. Numbers require a reproducible benchmark. |
+| Parser-agnostic verify | `ethos-verify` compiles against `GroundingSource` only, never parser internals; CI proves it. |
+| No OCR/ML in base | Optional enrichment lives behind non-default features or separate packages. |
+
+Local pre-flight (optional — CI runs all of it anyway):
+
+```bash
+cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings
+cargo deny check
+python3 schemas/validate_examples.py && python3 fixtures/validate_fixtures.py
+```
+
+## How a release ships (maintainer side)
+
+Releases follow `docs/release-lane-v2.md`: a release train is one version across all surfaces,
+and it produces exactly **two documents** — one prep doc (scope + gate checklist) and one
+closeout record (versions, hashes, evidence). When the checklist is green, a maintainer bumps
+the version, tags, publishes to crates.io/PyPI/npm/GitHub Releases, and writes the closeout.
+No approval queues, no waiting. First-of-class surfaces (first hosted service, first bundled
+PDFium, first Windows artifact, breaking report-schema changes) get extra review because they
+change what users can rely on — everything else rides the routine train.
+
+Your merged PR ships in the next train; the CHANGELOG line you wrote becomes the release note.
+
+## Community
+
+- Questions and design ideas: GitHub Discussions.
+- Bugs and parser failures: issues (templates provided). Security: `SECURITY.md` (private).
+- Response target: median first maintainer response under 48 hours.
+- Code of conduct: `CODE_OF_CONDUCT.md`. Roles and decision-making: `GOVERNANCE.md`.
