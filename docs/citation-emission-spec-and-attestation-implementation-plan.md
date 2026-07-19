@@ -1,6 +1,7 @@
 # Implementation Plan: Citation Emission Spec v1 and Verification Attestation v1
 
-Status: proposal — not approved, not scheduled. Follows the milestone-d contract pattern.
+Status: Part A implemented by NIP-4.1 on 2026-07-19; Part B remains a proposal. Follows the
+milestone-d contract pattern.
 Companion to `docs/derived-value-v1-and-normalization-v2-implementation-plan.md`; neither
 part here depends on that plan, and the two parts here are independent of each other.
 
@@ -406,8 +407,8 @@ Open questions to resolve before implementation, not silently:
 1. Report `schema_version` discipline for the additive `attestation` field — align with
    the derived-value plan's identical question against `docs/v0-2-x-compatibility-policy.md`.
 2. Keep or drop the constant `replay` string field (§B.2) — pure taste, decide in review.
-3. Should the emission spec's native id patterns be hard constraints in the model-facing
-   schema (this doc's position) or advisory (looser for foreign adapters by default)?
-   Position taken: hard for native, documented relaxation for foreign — reverse only with
-   a concrete foreign-adapter integrator in hand.
+3. Resolved by NIP-4.1: source IDs are bounded non-blank strings in the model-facing schema;
+   hydration applies the selected `GroundingSource` namespace. DocuShell's concrete
+   OpenDataLoader integration showed that a native-only schema would require contract forks and
+   violate the parser-agnostic-first rule.
 4. Whether `--format summary` mentions attestation (cosmetic; default: yes, one line).

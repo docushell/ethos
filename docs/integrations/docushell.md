@@ -40,6 +40,7 @@ Pinned versions (update on every DocuShell bump):
 | PDFium (caller-provided) | `chromium/7881` (PDFium 151.0.7881.0, Linux x64) | 2026-07-19 — installed by the same image, `ETHOS_PDFIUM_LIBRARY_PATH` set at build |
 | Report schema | as shipped in v0.3.0 | 2026-07-19 |
 | Grounding adapter | `opendataloader-json` | 2026-07-19 |
+| Citation emission callback | v1.0.0 (not yet consumed) | 2026-07-19 — frozen by NIP-4.1; DocuShell adoption and any package pin wait for NIP-4.2 |
 
 ### Consumer Dockerfile pattern (from the NIP-1.2 integration; friction entry FR-3)
 

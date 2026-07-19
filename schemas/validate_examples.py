@@ -70,6 +70,12 @@ PAIRS = [
         EXAMPLES / "citations.example.json",
         EXAMPLES / "citations-array.example.json",
     ]),
+    ("ethos-llm-citation-output.schema.json", [
+        EXAMPLES / "llm-citation-output.example.json",
+        ROOT / "examples" / "citation-emission" / "model-output.grounded.json",
+        ROOT / "examples" / "citation-emission" / "model-output.fabricated-quote.json",
+        ROOT / "examples" / "citation-emission" / "model-output.dangling-id.json",
+    ]),
     ("ethos-security-report.schema.json", [
         EXAMPLES / "security-report.example.json",
         EXAMPLES / "security-report.full.example.json",

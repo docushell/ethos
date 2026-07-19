@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- contracts: freeze NIP-4.1 citation-emission v1 as an independently versioned, parser-neutral
+  model/callback schema with fail-closed hydration fixtures and double-run verification-report
+  determinism coverage.
 - integration: close NIP-1.6 after auditing and dispositioning all eight DocuShell integration
   friction entries gathered across NIP-1.1–1.5, while keeping unresolved Ethos product gaps
   explicitly open against their owning roadmap tasks.

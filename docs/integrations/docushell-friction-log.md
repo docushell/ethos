@@ -80,7 +80,9 @@ converts foreign-parser retrieval/evidence records into that schema. DocuShell h
 a small deterministic mapping from its emitted evidence refs to quote/table-cell claims.
 Disposition: fix-in-ethos → NIP-4.1/NIP-4.2 (freeze the emission schema and ship public helpers);
 keep the DocuShell mapping limited to the existing public citation/report contracts until then.
-Status: open
+Status: open (NIP-4.1 froze citation-emission callback schema v1.0.0 on 2026-07-19. DocuShell
+does not consume it yet, so there is no consumer package bump in this task; the public helper and
+consumer adoption remain assigned to NIP-4.2.)
 
 ### FR-7 — Type drift hid the answer-release v1.1 support axis
 Date: 2026-07-19 · Found during: NIP-1.4 implementation (answer-release gate)

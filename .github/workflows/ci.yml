@@ -88,6 +88,8 @@ jobs:
         run: python3 .github/scripts/test_public_surface_posture.py
       - name: Evidence anchor v1 contract guard tests
         run: python3 .github/scripts/test_evidence_anchor_v1_contract.py
+      - name: Citation emission v1 contract
+        run: make citation-emission-v1-contract
       - name: App answer release contract target
         run: make app-answer-release-contract PYTHON=python3
       - name: Python public API policy tests

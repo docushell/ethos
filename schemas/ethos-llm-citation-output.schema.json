@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:llm-citation-output:1",
+  "title": "Ethos LLM citation output",
+  "description": "Application-layer structured output emitted by a model or framework callback before deterministic hydration into ethos-citations. It is versioned independently from verification reports and deliberately excludes fingerprints and bounding boxes.",
+  "type": "object",
+  "required": ["schema_version", "answer", "claims"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "answer": { "type": "string", "pattern": "\\S" },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/claim" }
+    }
+  },
+  "$defs": {
+    "source_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "\\S",
+      "description": "An identifier copied from the retrieval context. Its namespace and stricter syntax belong to the selected GroundingSource."
+    },
+    "text": { "type": "string", "pattern": "\\S" },
+    "cell": {
+      "type": "object",
+      "required": ["row", "col"],
+      "additionalProperties": false,
+      "properties": {
+        "row": { "type": "integer", "minimum": 0 },
+        "col": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "text_locator": {
+      "oneOf": [
+        {
+          "required": ["element_id"],
+          "not": { "anyOf": [{ "required": ["span_id"] }, { "required": ["table_id"] }] }
+        },
+        {
+          "required": ["span_id"],
+          "not": { "anyOf": [{ "required": ["element_id"] }, { "required": ["table_id"] }] }
+        },
+        {
+          "required": ["page"],
+          "not": {
+            "anyOf": [
+              { "required": ["element_id"] },
+              { "required": ["span_id"] },
+              { "required": ["table_id"] }
+            ]
+          }
+        }
+      ]
+    },
+    "quote": {
+      "type": "object",
+      "required": ["kind", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "quote" },
+        "text": { "$ref": "#/$defs/text" },
+        "page": { "$ref": "#/$defs/source_id" },
+        "element_id": { "$ref": "#/$defs/source_id" },
+        "span_id": { "$ref": "#/$defs/source_id" }
+      },
+      "allOf": [{ "$ref": "#/$defs/text_locator" }]
+    },
+    "value": {
+      "type": "object",
+      "required": ["kind", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "value" },
+        "text": { "$ref": "#/$defs/text" },
+        "page": { "$ref": "#/$defs/source_id" },
+        "element_id": { "$ref": "#/$defs/source_id" },
+        "span_id": { "$ref": "#/$defs/source_id" }
+      },
+      "allOf": [{ "$ref": "#/$defs/text_locator" }]
+    },
+    "presence": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "presence" },
+        "page": { "$ref": "#/$defs/source_id" },
+        "element_id": { "$ref": "#/$defs/source_id" },
+        "span_id": { "$ref": "#/$defs/source_id" }
+      },
+      "allOf": [{ "$ref": "#/$defs/text_locator" }]
+    },
+    "table_cell": {
+      "type": "object",
+      "required": ["kind", "text", "table_id", "cell"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "const": "table_cell" },
+        "text": { "$ref": "#/$defs/text" },
+        "page": { "$ref": "#/$defs/source_id" },
+        "table_id": { "$ref": "#/$defs/source_id" },
+        "cell": { "$ref": "#/$defs/cell" }
+      }
+    },
+    "claim": {
+      "oneOf": [
+        { "$ref": "#/$defs/quote" },
+        { "$ref": "#/$defs/value" },
+        { "$ref": "#/$defs/presence" },
+        { "$ref": "#/$defs/table_cell" }
+      ]
+    }
+  }
+}
