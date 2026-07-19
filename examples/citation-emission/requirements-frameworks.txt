@@ -1,0 +1,3 @@
+# Example-only dependencies. Ethos itself does not depend on either framework.
+langchain-core==1.4.9
+llama-index-core==0.14.23

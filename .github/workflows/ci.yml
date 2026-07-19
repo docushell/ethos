@@ -210,6 +210,17 @@ jobs:
           cargo check --locked -p ethos-doc-core --no-default-features --features grounding
           cargo check --locked -p ethos-doc-core --no-default-features --features verify-types
 
+  rag-framework-examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: rustup show
+      - run: pip install -r examples/citation-emission/requirements-frameworks.txt
+      - run: make rag-framework-examples
+
   schema-validate:
     runs-on: ubuntu-latest
     steps:

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- examples: add NIP-4.3 pinned, model-free LangChain and LlamaIndex retrieval-to-verification
+  walkthroughs with exit-1 preservation and double-run artifact checks.
 - python: add NIP-4.2 dependency-free LangChain/LlamaIndex citation-emission helpers with strict
   retrieval metadata, fail-closed source-vocabulary hydration, and byte-stable JSON output.
 - contracts: freeze NIP-4.1 citation-emission v1 as an independently versioned, parser-neutral

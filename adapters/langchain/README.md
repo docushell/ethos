@@ -16,6 +16,6 @@ Exact table coordinates may be supplied as `table_cells` objects with `table_id`
 `col`. The helper rejects missing/mixed fingerprints, malformed metadata, and model IDs absent
 from the retrieved records. It does not infer stable IDs from LangChain's numeric `page` metadata.
 
-See `python/README.md#citation-emission` for the complete API and failure boundary. NIP-4.3 owns
-the pinned runnable end-to-end example; this directory intentionally adds no framework runtime
-dependency.
+See `python/README.md#citation-emission` for the complete API and failure boundary, and
+`examples/langchain-rag/README.md` for the pinned offline end-to-end walkthrough. This directory
+intentionally adds no framework runtime dependency.

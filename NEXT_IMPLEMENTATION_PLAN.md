@@ -420,7 +420,7 @@ Est. = agent-days (see §6.0). Human-gate tasks marked (gate).
 | NIP-3.4 | P0 | not_started | 0.5 | NIP-3.3 | | | decider gate |
 | NIP-4.1 | P0 | done | 0.5 | — | 2026-07-19 | `docs/citation-emission-spec.md` | Independently versioned v1 schema; parser-neutral source IDs; grounded/fabricated/OOV/conflict fixtures; hydration and reports double-run byte-identical |
 | NIP-4.2 | P0 | done | 1.5 | NIP-4.1 | 2026-07-19 | `python/README.md#citation-emission` | Pure-Python duck-typed LangChain/LlamaIndex adapters; strict retrieval metadata and OOV rejection; emission/hydration artifacts double-run byte-identical; no framework, CLI, PDFium, or network dependency |
-| NIP-4.3 | P0 | not_started | 1 | NIP-4.2 | | | |
+| NIP-4.3 | P0 | done | 1 | NIP-4.2 | 2026-07-19 | `examples/README.md` | Native framework objects with exact core-package pins; recorded retrieval/model fixtures need no API keys; grounded exit 0 and fabricated exit 1 reports/citations double-run byte-identical; local walkthrough guard completed in under 4 seconds |
 | NIP-4.4 | P0 | not_started | 0.5 | NIP-4.3 | | | claims gate |
 | NIP-4.5 | P0 | not_started | 1 | NIP-4.1 | | | from friction FR-1 |
 | NIP-5.1 | P0 | not_started | 1 | — | | | includes FR-2/FR-3 doc fix |

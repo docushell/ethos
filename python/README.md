@@ -210,6 +210,10 @@ rejected; helpers never repair, drop, or infer a locator. This validates citatio
 retrieval provenance only—verification still requires `ethos verify`, and grounding is not a
 semantic-truth judgment.
 
+Runnable, provider-free walkthroughs are in `examples/langchain-rag/README.md` and
+`examples/llamaindex-rag/README.md`. Both preserve the verifier's intentional exit-`1` report for
+a fabricated citation and require no model API key.
+
 Run the focused tests with:
 
 ```sh
