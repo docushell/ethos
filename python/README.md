@@ -28,6 +28,7 @@ Public API:
 - `CorruptPdfError`
 - `ParseTimeoutError`
 - `EthosOutputError`
+- `CitationEmissionError`
 - `parse_pdf_json`
 - `parse_pdf_markdown`
 - `parse_pdf_text`
@@ -36,12 +37,19 @@ Public API:
 - `proof_summary`
 - `app_answer_release_decision`
 - `anchor`
+- `build_citation_emission`
+- `build_langchain_context`
+- `build_llamaindex_context`
+- `citation_json_bytes`
+- `emit_langchain_citations`
+- `emit_llamaindex_citations`
+- `hydrate_citations`
 
-The current module is intentionally thin: it shells out to a caller-provided local `ethos` CLI
+The CLI wrapper remains intentionally thin: it shells out to a caller-provided local `ethos` CLI
 binary and returns `ethos doc parse` output, source-bound `ethos crop_element` JSON, `ethos verify`
-JSON reports, or `ethos evidence anchor` JSON reports. It can pass caller-provided source PDF and
-crop artifact directory arguments for rendered crop artifacts. It does not bundle PDFium, does not
-publish hosted surfaces, and does not expand parser behavior. The Rust CLI remains the source of
+JSON reports, or `ethos evidence anchor` JSON reports. The citation-emission helpers below are pure
+Python and do not invoke that binary. The wheel does not bundle PDFium, does not publish hosted
+surfaces, and does not expand parser behavior. The Rust CLI remains the verification source of
 truth.
 
 The package name is historical continuity naming. JSON verification and evidence-anchor calls do
@@ -159,6 +167,48 @@ helper applies the release rule and requires referenced Ethos check IDs to be re
 claim can enter the final answer. For a grounded claim, missing `claim_support` becomes
 `not_evaluated` and requires review. The helper also rejects duplicate claim IDs so
 `final_answer_claim_ids`, `review_claim_ids`, and `blocked_claim_ids` stay unambiguous.
+
+## Citation emission
+
+The source API prepared under NIP-4.2 builds the independently versioned citation-emission v1
+artifact and hydrates it into verifier input. Registry publication remains a human release action.
+No CLI, PDFium, LangChain, or LlamaIndex package is imported by these helpers.
+
+Retrieval objects must carry an explicit Ethos metadata contract. Each object's `metadata` mapping
+must contain one `document_fingerprint` and at least one source locator in `page_refs`,
+`element_refs`, `span_refs`, or `table_cells`. Reference fields are arrays of non-blank IDs.
+`table_cells` entries have exactly `table_id`, `row`, and `col`. All records in one call must use
+the same fingerprint. Numeric framework page indexes and other aliases are deliberately ignored;
+copy stable source IDs into these fields rather than asking the helper to guess.
+
+For an existing LangChain retrieval result:
+
+```python
+from ethos_pdf import citation_json_bytes, emit_langchain_citations
+
+documents = retriever.invoke(question)
+# Each Document.metadata follows the explicit contract above.
+claims = structured_model_output["claims"]
+citations = emit_langchain_citations(
+    documents,
+    structured_model_output["answer"],
+    claims,
+)
+citations_bytes = citation_json_bytes(citations)
+```
+
+Use `emit_llamaindex_citations(nodes, answer, claims)` for `TextNode` or `NodeWithScore` results.
+Both adapters are duck typed and accept mapping equivalents, so applications do not add an Ethos
+framework dependency. `build_langchain_context` and `build_llamaindex_context` expose the trusted
+retrieval vocabulary separately; `build_citation_emission` builds model-facing v1 output; and
+`hydrate_citations` joins the two when an application needs separate callback and hydration steps.
+
+Every malformed claim, missing or mixed fingerprint, unshown source ID, unexposed table cell, and
+configured claim-limit violation raises `CitationEmissionError`. Its stable `code` plus optional
+`claim_index` or `record_index` can be returned to a structured-output retry. The whole batch is
+rejected; helpers never repair, drop, or infer a locator. This validates citation structure and
+retrieval provenance only—verification still requires `ethos verify`, and grounding is not a
+semantic-truth judgment.
 
 Run the focused tests with:
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- python: add NIP-4.2 dependency-free LangChain/LlamaIndex citation-emission helpers with strict
+  retrieval metadata, fail-closed source-vocabulary hydration, and byte-stable JSON output.
 - contracts: freeze NIP-4.1 citation-emission v1 as an independently versioned, parser-neutral
   model/callback schema with fail-closed hydration fixtures and double-run verification-report
   determinism coverage.

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,6 +28,11 @@ from makefile_guard import makefile_text, target_block
 
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "python"))
+
+from ethos_pdf.emit import citation_json_bytes, hydrate_citations  # noqa: E402
+
+
 SCHEMA = ROOT / "schemas/ethos-llm-citation-output.schema.json"
 CITATIONS_SCHEMA = ROOT / "schemas/ethos-citations.schema.json"
 DOCUMENT = ROOT / "schemas/examples/document.example.json"
@@ -41,66 +47,6 @@ CI_WORKFLOW = ROOT / ".github/workflows/ci.yml"
 
 def load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def canonical_fixture_bytes(value: dict) -> bytes:
-    return (json.dumps(value, ensure_ascii=True, indent=2) + "\n").encode("utf-8")
-
-
-def hydrate(emission: dict, context: dict) -> dict:
-    pages = set(context["pages"])
-    elements = set(context["elements"])
-    spans = set(context["spans"])
-    table_cells = {
-        (entry["table_id"], entry["row"], entry["col"])
-        for entry in context["table_cells"]
-    }
-    claims = []
-    for index, emitted in enumerate(emission["claims"], 1):
-        citation = {}
-        if "page" in emitted:
-            if emitted["page"] not in pages:
-                raise ValueError(f"claim {index}: out_of_vocabulary page {emitted['page']}")
-            citation["page"] = emitted["page"]
-        if "element_id" in emitted:
-            if emitted["element_id"] not in elements:
-                raise ValueError(
-                    f"claim {index}: out_of_vocabulary element_id {emitted['element_id']}"
-                )
-            citation["element_id"] = emitted["element_id"]
-        if "span_id" in emitted:
-            if emitted["span_id"] not in spans:
-                raise ValueError(f"claim {index}: out_of_vocabulary span_id {emitted['span_id']}")
-            citation["span_id"] = emitted["span_id"]
-        if "table_id" in emitted:
-            cell = emitted["cell"]
-            locator = (emitted["table_id"], cell["row"], cell["col"])
-            if locator not in table_cells:
-                raise ValueError(
-                    f"claim {index}: out_of_vocabulary table_cell "
-                    f"{emitted['table_id']}[{cell['row']},{cell['col']}]"
-                )
-            citation["table_id"] = emitted["table_id"]
-            citation["cell"] = {"row": cell["row"], "col": cell["col"]}
-
-        primary_count = sum(
-            key in citation for key in ["element_id", "span_id", "table_id"]
-        )
-        if primary_count > 1:
-            raise ValueError(f"claim {index}: locator_conflict")
-        if primary_count == 0 and "page" not in citation:
-            raise ValueError(f"claim {index}: locator_missing")
-
-        claim = {"kind": emitted["kind"]}
-        if "text" in emitted:
-            claim["text"] = emitted["text"]
-        claim["citation"] = citation
-        claims.append(claim)
-
-    return {
-        "document_fingerprint": context["document_fingerprint"],
-        "claims": claims,
-    }
 
 
 class CitationEmissionV1ContractTests(unittest.TestCase):
@@ -194,8 +140,8 @@ class CitationEmissionV1ContractTests(unittest.TestCase):
     def test_hydration_is_byte_identical_and_matches_committed_fixtures(self) -> None:
         for stem in ["grounded", "fabricated-quote"]:
             emission = load_json(EXAMPLES / f"model-output.{stem}.json")
-            first = canonical_fixture_bytes(hydrate(emission, self.context))
-            second = canonical_fixture_bytes(hydrate(emission, self.context))
+            first = citation_json_bytes(hydrate_citations(emission, self.context))
+            second = citation_json_bytes(hydrate_citations(emission, self.context))
             self.assertEqual(first, second)
             self.assertEqual((EXAMPLES / f"hydrated.{stem}.json").read_bytes(), first)
             self.assertEqual(
@@ -207,9 +153,9 @@ class CitationEmissionV1ContractTests(unittest.TestCase):
     def test_dangling_id_fails_closed_before_verification(self) -> None:
         with self.assertRaisesRegex(
             ValueError,
-            r"claim 1: out_of_vocabulary element_id e999999",
+            r"claim 1: out_of_vocabulary: element_id e999999 was not shown",
         ):
-            hydrate(load_json(EXAMPLES / "model-output.dangling-id.json"), self.context)
+            hydrate_citations(load_json(EXAMPLES / "model-output.dangling-id.json"), self.context)
 
     def test_verification_reports_are_byte_identical_across_runs(self) -> None:
         cases = [

@@ -80,9 +80,11 @@ converts foreign-parser retrieval/evidence records into that schema. DocuShell h
 a small deterministic mapping from its emitted evidence refs to quote/table-cell claims.
 Disposition: fix-in-ethos → NIP-4.1/NIP-4.2 (freeze the emission schema and ship public helpers);
 keep the DocuShell mapping limited to the existing public citation/report contracts until then.
-Status: open (NIP-4.1 froze citation-emission callback schema v1.0.0 on 2026-07-19. DocuShell
-does not consume it yet, so there is no consumer package bump in this task; the public helper and
-consumer adoption remain assigned to NIP-4.2.)
+Status: resolved (2026-07-19, NIP-4.1 froze citation-emission callback schema v1.0.0 and NIP-4.2
+added the dependency-free `ethos_pdf.emit` public helpers with LangChain/LlamaIndex retrieval
+adapters, fail-closed vocabulary hydration, and deterministic JSON bytes. DocuShell's existing
+mapping remains contract-compatible and does not need a package change merely to close the
+missing-Ethos-helper gap.)
 
 ### FR-7 — Type drift hid the answer-release v1.1 support axis
 Date: 2026-07-19 · Found during: NIP-1.4 implementation (answer-release gate)
@@ -103,10 +105,12 @@ What happened: the public crop contract accepts only a native Ethos document, wh
 bound evidence comes from OpenDataLoader. Producing a source-bound crop therefore requires a
 second native parse of the same PDF plus conservative text/table mapping; ambiguous mappings
 must remain unavailable rather than being guessed.
-Disposition: fix-in-ethos → NIP-4.1/NIP-4.2 follow-up (define whether a public foreign-evidence
-to native-element projection helper belongs beside citation emission); interim behavior and its
-fail-closed mapping rules are documented in `docs/integrations/docushell.md`.
-Status: open
+Disposition: document/decider follow-up. NIP-4.2 keeps citation emission parser-neutral and does
+not project foreign evidence into native crop elements: source-ID hydration is exact, while crop
+projection would require a distinct parser-aware matching contract. The interim fail-closed
+mapping remains documented in `docs/integrations/docushell.md`; adding a projection surface needs
+a future ledger task/decision rather than an implicit expansion of citation emission.
+Status: open (explicitly out of NIP-4.2's narrow emission-helper scope)
 
 ---
 
@@ -114,4 +118,4 @@ Status: open
 
 | Total entries | fix-in-ethos | document | wontfix | resolved |
 | --- | --- | --- | --- | --- |
-| 8 | 5 | 3 | 0 | 3 |
+| 8 | 5 | 3 | 0 | 4 |

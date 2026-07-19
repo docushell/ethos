@@ -108,6 +108,12 @@ locator fixtures plus deterministic hydrated outputs. `make citation-emission-v1
 validates the schemas, hydrates twice byte-identically, and verifies grounded/fabricated outputs
 twice byte-identically.
 
+The reference pure-Python implementation is `ethos_pdf.emit`. Its LangChain and LlamaIndex
+helpers are duck typed and require each retrieval record's metadata to carry
+`document_fingerprint` plus at least one of `page_refs`, `element_refs`, `span_refs`, or exact
+`table_cells`. They do not import either framework, invoke the Ethos CLI, load PDFium, infer
+aliases, or perform network operations. See `python/README.md#citation-emission`.
+
 ## Failure policy
 
 | Signal | Meaning | Required application action |

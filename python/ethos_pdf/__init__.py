@@ -36,6 +36,16 @@ from ._cli import (
     proof_summary,
     verify,
 )
+from .emit import (
+    CitationEmissionError,
+    build_citation_emission,
+    build_langchain_context,
+    build_llamaindex_context,
+    citation_json_bytes,
+    emit_langchain_citations,
+    emit_llamaindex_citations,
+    hydrate_citations,
+)
 
 __version__ = "0.3.0"
 
@@ -50,9 +60,17 @@ __all__ = [
     "InvalidPdfError",
     "ParseTimeoutError",
     "PdfiumNotFoundError",
+    "CitationEmissionError",
     "anchor",
     "app_answer_release_decision",
+    "build_citation_emission",
+    "build_langchain_context",
+    "build_llamaindex_context",
+    "citation_json_bytes",
     "crop_element",
+    "emit_langchain_citations",
+    "emit_llamaindex_citations",
+    "hydrate_citations",
     "parse_pdf_json",
     "parse_pdf_markdown",
     "parse_pdf_text",
