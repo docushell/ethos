@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- integration: close NIP-1.6 after auditing and dispositioning all eight DocuShell integration
+  friction entries gathered across NIP-1.1–1.5, while keeping unresolved Ethos product gaps
+  explicitly open against their owning roadmap tasks.
 - integration: complete NIP-1.5 with DocuShell's worker-only native PDF crop projection,
   deterministic source-bound crop bundles, public artifact routing, fail-closed PDFium handling,
   and rendered citation-region inspection in Evidence Chat.

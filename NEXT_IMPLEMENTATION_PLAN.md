@@ -412,7 +412,7 @@ Est. = agent-days (see §6.0). Human-gate tasks marked (gate).
 | NIP-1.3 | P0 | done | 1 | NIP-1.2 | 2026-07-19 | `docs/integrations/docushell.md#parse-job-verification-lane-nip-13` | Stored canonical report; exit 1 preserved; missing capability/exit >=2 fail closed |
 | NIP-1.4 | P0 | done | 1 | NIP-1.3 | 2026-07-19 | `docs/integrations/docushell.md#answer-release-gate-nip-14` | v1.1 claim-support labels; official fixture reproduced deterministically; missing support held for review |
 | NIP-1.5 | P0 | blocked | 0.5 | NIP-1.2 | 2026-07-19 | `docs/integrations/docushell.md#crop-inspection-lane-nip-15` | Implementation, deterministic tests, narrow suites, and affected builds pass; required `npm run acceptance:parse-pdf:real` cannot start without operator-provided `API_KEY`/`DOCUSHELL_API_KEY` |
-| NIP-1.6 | P0 | in_progress | ongoing | NIP-1.1 | 2026-07-19 | `docs/integrations/docushell-friction-log.md` | FR-1..FR-8 recorded; FR-3/FR-4/FR-5 resolved |
+| NIP-1.6 | P0 | done | ongoing | NIP-1.1 | 2026-07-19 | `docs/integrations/docushell-friction-log.md` | FR-1..FR-8 recorded and dispositioned; FR-3/FR-4/FR-5 resolved; remaining product gaps assigned to NIP-4/NIP-5 |
 | NIP-1.7 | P0 | not_started | 0.5 | NIP-1.4, NIP-1.5, NIP-1.6 | | | decider reviews (gate) |
 | NIP-3.1 | P0 | not_started | 2 | — | | | human spot-check pass (gate) |
 | NIP-3.2 | P0 | not_started | 1 | NIP-3.1 | | | judge spend approval (gate) |

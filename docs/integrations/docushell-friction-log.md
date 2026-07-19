@@ -1,9 +1,10 @@
 # DocuShell Integration Friction Log (NIP-1.6)
 
-Status: open — required deliverable of `NEXT_IMPLEMENTATION_PLAN.md` §NIP-1.
-Every point of confusion, missing capability, or manual step hit while integrating Ethos into
-DocuShell is recorded here. Because DocuShell uses public surfaces only, every entry is friction
-an external adopter would also hit.
+Collection status: complete for NIP-1.1–1.5 (NIP-1.6 done 2026-07-19). Open entry statuses below
+are dispositioned Ethos product gaps, not missing decisions; they remain assigned to their owning
+roadmap tasks. Every point of confusion, missing capability, or manual step hit while integrating
+Ethos into DocuShell is recorded here. Because DocuShell uses public surfaces only, every entry
+is friction an external adopter would also hit.
 
 ## Entry format
 
