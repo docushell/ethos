@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- build: remove unused Cargo Deny license allowances and document the unavoidable transitive
+  `wit-bindgen` duplicate so release hygiene runs without warnings.
 - boundary-exception: remove completed release and milestone records together with their retired
   validation guards; preserve the compact current-release closeout summary required by release-state validation.
 - boundary-exception: retire the completed temporary next-implementation ledger and kickoff

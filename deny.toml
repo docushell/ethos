@@ -10,25 +10,22 @@ yanked = "deny"
 
 [licenses]
 version = 2
-# ADR-0004 allowlist. Unicode-3.0 is the Unicode-DFS-2016 successor and is permitted per
-# the ADR's intent (permissive Unicode data licenses).
+# ADR-0004 allowlist. Keep this limited to licenses present in the resolved dependency graph.
 allow = [
     "Apache-2.0",
     "MIT",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "ISC",
-    "Zlib",
-    "Unicode-DFS-2016",
     "Unicode-3.0",
-    "CC0-1.0",
-    "MPL-2.0",
 ]
 confidence-threshold = 0.93
 # GPL/AGPL/LGPL/source-available/custom-condition are denied by omission from the allowlist.
 
 [bans]
 multiple-versions = "warn"
+# `getrandom` currently brings both WASI preview dependency trees, which require distinct
+# `wit-bindgen` versions. This is transitive development tooling only and has no runtime surface.
+skip = [
+    { name = "wit-bindgen", version = "0.51.0" },
+]
 wildcards = "deny"
 # Invariant 5a: network-capable crates are rejected in the base dependency tree.
 # Sandbox IPC (Milestone D, ethos-pdf subprocess mode) gets its own reviewed exception ADR.
