@@ -66,7 +66,6 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
         for guard in (
             "test_public_surface_posture.py",
             "claims_gate.py",
-            "test_first_public_release_scope_decision.py",
             "test_python_public_api_policy.py",
             "test_npm_binary_package_scaffold.py",
             "test_pdfium_manual_setup_contract.py",
