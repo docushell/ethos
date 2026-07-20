@@ -22,8 +22,8 @@ From acceptance of this document:
 
 **A routine release train produces exactly two governance documents:**
 
-1. **One release prep doc** — `docs/v<version>-release-prep.md` (existing house pattern, e.g.
-   `docs/v0-3-1-release-prep.md`): included scope, explicit non-scope, canonical release
+1. **One release prep doc** — `docs/v<version>-release-prep.md` (current pilot:
+   `docs/v0-4-0-release-prep.md`): included scope, explicit non-scope, canonical release
    sentence, and the gate checklist that must pass before publication.
 2. **One closeout record** — `docs/validation/v<version>-release-closeout-<date>.md`: versions
    published per surface (crates.io / PyPI / npm / GitHub Release), artifact sha256 values,

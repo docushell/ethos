@@ -115,8 +115,8 @@ class RagFrameworkExampleTests(unittest.TestCase):
             if line and not line.startswith("#")
         ]
         self.assertEqual([
-            "langchain-core==1.4.9",
-            "llama-index-core==0.14.23",
+            "langchain-core==0.3.86",
+            "llama-index-core==0.14.16",
         ], lines)
         self.assertNotIn("requirements-frameworks", (ROOT / "pyproject.toml").read_text())
 

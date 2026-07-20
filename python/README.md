@@ -60,6 +60,10 @@ PDFium-backed parse and crop paths require caller-provided PDFium through
 the wrapper raises `PdfiumNotFoundError` and preserves the underlying CLI stderr so callers can show
 the setup guidance from `QUICKSTART.md` or `docs/pdfium-manual-setup.md`.
 
+Python wheels do not run post-install hooks. Run `python -m ethos_pdf` after installation to print
+the paved `scripts/fetch-pdfium.sh` setup path; the command prints guidance only and never downloads
+or changes PDFium.
+
 ## Exceptions
 
 All wrapper-owned exceptions inherit from `EthosPythonSurfaceError`.

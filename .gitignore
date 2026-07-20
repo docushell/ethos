@@ -1,6 +1,7 @@
 /target
 **/*.rs.bk
 __pycache__/
+**/node_modules/
 *.pyc
 .pytest_cache/
 .DS_Store

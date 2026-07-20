@@ -1,0 +1,46 @@
+{
+  "corpus_id": "ethos-synthetic-trust-v1",
+  "first_review": {
+    "date": "2026-07-20",
+    "method": "generator invariants plus executable Ethos status/reason comparison over all 200 checks",
+    "reviewer": "implementation agent",
+    "status": "complete"
+  },
+  "human_spot_check": {
+    "checks": [
+      "synthetic-01/01", "synthetic-01/03", "synthetic-02/04", "synthetic-02/05",
+      "synthetic-03/07", "synthetic-03/09", "synthetic-04/10", "synthetic-04/01",
+      "synthetic-05/03", "synthetic-05/04", "synthetic-06/05", "synthetic-06/07",
+      "synthetic-07/09", "synthetic-07/10", "synthetic-08/01", "synthetic-08/03",
+      "synthetic-09/04", "synthetic-09/05", "synthetic-10/07", "synthetic-10/09",
+      "synthetic-11/10", "synthetic-11/01", "synthetic-12/03", "synthetic-12/04",
+      "synthetic-13/05", "synthetic-13/07", "synthetic-14/09", "synthetic-14/10",
+      "synthetic-15/01", "synthetic-15/03", "synthetic-16/04", "synthetic-16/05",
+      "synthetic-17/07", "synthetic-17/09", "synthetic-18/10", "synthetic-18/01",
+      "synthetic-19/03", "synthetic-19/04", "synthetic-20/05", "synthetic-20/07"
+    ],
+    "category_counts": {
+      "capability-limited": 5,
+      "fabricated-quote": 6,
+      "grounded": 6,
+      "paraphrase-drift": 6,
+      "split-quote": 6,
+      "stale-fingerprint": 5,
+      "wrong-page": 6
+    },
+    "date": "2026-07-20",
+    "decision_counts": {"agree": 40, "corrected": 0},
+    "declaration": "I manually inspected the sampled checks against their born-digital PDFs and agree with all 40 labels.",
+    "minimum_percent": 20,
+    "required_checks": 40,
+    "reviewer": "Ethos dev team",
+    "sample_rule": "two checks per document, deterministically balanced across all seven required categories",
+    "status": "complete"
+  },
+  "second_review": {
+    "date": "2026-07-20",
+    "method": "human spot-check of 40/200 checks (20 percent), balanced across all required categories",
+    "reviewer": "Ethos dev team",
+    "status": "complete"
+  }
+}

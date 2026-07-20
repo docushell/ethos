@@ -14,7 +14,9 @@ caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.
 Installing this package must not require PDFium. PDFium-backed commands fail until
 `ETHOS_PDFIUM_LIBRARY_PATH` points to a caller-provided PDFium dynamic library. See
 `QUICKSTART.md` in this package and `docs/pdfium-manual-setup.md` in the Ethos source repository
-for the setup contract.
+for the setup contract. When the variable is unset, postinstall prints the
+`scripts/fetch-pdfium.sh` path and the follow-up `ethos doctor --require-pdfium` check; it never
+downloads PDFium.
 
 Runtime behavior:
 

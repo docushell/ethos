@@ -28,16 +28,20 @@ generated-from-schema artifact, so consumer types can silently drift from `schem
 Disposition: fix-in-ethos → candidate new task (generate TS types from the JSON Schemas and
 publish, e.g. `@docushell/ethos-types`, or ship a `.d.ts` in the existing npm package). Add to
 NIP-4 scope when picked up.
-Status: open
+Status: resolved (2026-07-19, NIP-4.5 generates report and citation-emission declarations from
+the canonical schemas, includes them in the existing `@docushell/ethos-pdf` release candidate,
+and compiles the packaged report type against DocuShell's actual evidence interface)
 
 ### FR-2 — Caller-provided PDFium must be hand-wired into the consumer image
 Date: 2026-07-19 · Found during: NIP-1.2 design (worker image)
 What happened: vendoring the CLI is not enough for parse/crop paths; the consumer must also
 replicate the `scripts/fetch-pdfium.sh` pin logic inside its Docker build and export
 `ETHOS_PDFIUM_LIBRARY_PATH`. Two artifacts to pin, two failure modes to debug.
-Disposition: fix-in-ethos → NIP-5 (`ethos doctor` + ADR-0015 bundling proposal); interim:
-document a copy-paste Dockerfile snippet in `docs/pdfium-manual-setup.md`.
-Status: open
+Disposition: fix-in-ethos → NIP-5.1 (`ethos doctor` + pinned fetch path) and NIP-5.2
+(ADR-0015 bundling proposal).
+Status: resolved for the caller-provided path (2026-07-19, NIP-5.1 adds identical CLI/package
+guidance, executable sha256-pinned fetch tooling, and a copy-paste Linux x64 worker stage in
+`docs/pdfium-manual-setup.md`; opt-in bundling remains a separate NIP-5.2 decision)
 
 ### FR-3 — CLI vendoring requires manual sha256 bookkeeping; no container base layer
 Date: 2026-07-19 · Found during: NIP-1.2 design (worker image)
@@ -95,7 +99,8 @@ decision until it manually compared the repository fixture.
 Disposition: fix-in-ethos → NIP-4.5 together with FR-1 (publish generated TypeScript schema types
 and versioned contract fixtures); interim DocuShell test copies the v1.1 fixture and compares the
 complete decision deterministically.
-Status: open
+Status: resolved (2026-07-19, NIP-4.5 declarations include the `1.1.0` support axis and compile
+against DocuShell's aligned answer-release interface)
 
 ---
 
@@ -114,8 +119,35 @@ Status: open (explicitly out of NIP-4.2's narrow emission-helper scope)
 
 ---
 
+### FR-9 — Naive schema compilation widened conditional contracts
+Date: 2026-07-19 · Found during: NIP-4.5 TypeScript declaration generation
+What happened: the schema compiler represented the verification report's conditional version
+rule as an open root object and reduced citation locator exclusivity to empty object unions. A
+naively generated declaration would therefore accept invalid extra fields and locator-free
+claims even though the JSON Schemas reject them.
+Disposition: fix-in-ethos → NIP-4.5 (project the report's allowed schema versions and expand the
+three exclusive locator alternatives before deterministic declaration compilation; runtime JSON
+Schema validation remains authoritative).
+Status: resolved (2026-07-19, strict negative compile fixture rejects unknown report versions and
+locator-free claims; generated declarations are byte-identical across two runs)
+
+---
+
+### FR-10 — DocuShell requires schema-optional answer-release notes
+Date: 2026-07-19 · Found during: NIP-4.5 consumer compatibility compilation
+What happened: the generated `EthosAppAnswerReleaseDecision` correctly represents `notes` as
+optional, but DocuShell's hand-maintained interface requires `notes: string[]`. A valid canonical
+decision that omits notes therefore cannot be assigned to the consumer type.
+Disposition: document (align DocuShell's mirror to `notes?: string[]`, then compile the packaged
+report and answer-release declarations against `packages/evidence`).
+Status: resolved (2026-07-19, DocuShell's mirror now uses `notes?: string[]`; the packaged
+verification-report and answer-release declarations compile against the actual consumer types,
+and the focused evidence suite passes)
+
+---
+
 ## Closeout summary (filled at NIP-1.7)
 
 | Total entries | fix-in-ethos | document | wontfix | resolved |
 | --- | --- | --- | --- | --- |
-| 8 | 5 | 3 | 0 | 4 |
+| 10 | 5 | 5 | 0 | 8 |

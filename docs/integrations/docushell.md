@@ -16,9 +16,10 @@ surface, that is an Ethos product gap — it goes into the
 - DocuShell: private npm-workspaces monorepo (Next.js apps + Express/BullMQ services).
 - Integration point: `services/parse-pdf` (Express API + worker; OpenDataLoader hybrid backend
   `docling-fast`), plus the evidence layer in `packages/evidence`.
-- DocuShell already mirrors Ethos verification-report and answer-release types in TypeScript
+- DocuShell currently mirrors Ethos verification-report and answer-release types in TypeScript
   (`packages/evidence/src/ethos-answer-release.ts`, `openai-chat-evidence.ts`) and implements
-  the release policy from `docs/app-answer-release-contract.md`.
+  the release policy from `docs/app-answer-release-contract.md`. NIP-4.5 adds schema-generated
+  declarations to the v0.4.0 npm candidate so that mirror can be retired after publication.
 
 ## Surfaces DocuShell consumes (all public)
 
@@ -30,6 +31,7 @@ surface, that is an Ethos product gap — it goes into the
 | Evidence anchoring | `ethos evidence anchor` JSON reports. |
 | Crops | `ethos crop_element` descriptors + rendered crop artifacts (PDFium-backed). |
 | Answer release | `proof_summary` + `app_answer_release_decision` semantics per `docs/app-answer-release-contract.md`. |
+| TypeScript declarations | Schema-generated verification-report, citation-emission, and app answer-release declarations in the `@docushell/ethos-pdf` package's root type entry. Runtime JSON Schema validation remains authoritative. |
 | Exit codes / errors | Stable exit-code and JSON error-envelope contract as documented for the CLI and Python wrapper (0 grounded; 1 ungrounded with report; ≥2 error — fail closed). |
 
 Pinned versions (update on every DocuShell bump):
@@ -40,7 +42,8 @@ Pinned versions (update on every DocuShell bump):
 | PDFium (caller-provided) | `chromium/7881` (PDFium 151.0.7881.0, Linux x64) | 2026-07-19 — installed by the same image, `ETHOS_PDFIUM_LIBRARY_PATH` set at build |
 | Report schema | as shipped in v0.3.0 | 2026-07-19 |
 | Grounding adapter | `opendataloader-json` | 2026-07-19 |
-| Citation emission callback | v1.0.0 (not yet consumed) | 2026-07-19 — frozen by NIP-4.1; DocuShell adoption and any package pin wait for NIP-4.2 |
+| Citation emission callback | v1.0.0 (not yet consumed) | 2026-07-19 — frozen by NIP-4.1; Python helpers delivered by NIP-4.2 |
+| TypeScript declarations | v0.4.0 candidate (not published) | 2026-07-19 — generated and package-tested by NIP-4.5; DocuShell adoption waits for the human-operated npm release |
 
 ### Consumer Dockerfile pattern (from the NIP-1.2 integration; friction entry FR-3)
 

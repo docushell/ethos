@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import os
 import stat
+import subprocess
+import sys
 import tempfile
 import textwrap
 import unittest
@@ -159,6 +161,26 @@ else:
 
 
 class PythonSurfaceTests(unittest.TestCase):
+    def test_module_prints_pdfium_setup_guidance(self) -> None:
+        result = subprocess.run(
+            [sys.executable, "-m", "ethos_pdf"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stderr, "")
+        for required in [
+            "scripts/fetch-pdfium.sh",
+            "ETHOS_PDFIUM_LIBRARY_PATH export",
+            "ethos doctor --require-pdfium",
+            "pinned archive and runtime sha256 values",
+            "never runs automatically",
+            "docs/pdfium-manual-setup.md",
+        ]:
+            self.assertIn(required, result.stdout)
+
     def setUp(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
         self.root = Path(self.tempdir.name)

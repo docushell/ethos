@@ -1,7 +1,7 @@
 # Ethos Next Implementation Plan (NIP-1)
 
 Status: **active — this is the canonical "what to build next" document.**
-Created: 2026-07-19. Revised: 2026-07-19 (v1.2). Owner: product / decider.
+Created: 2026-07-19. Revised: 2026-07-20 (v1.3). Owner: product / decider.
 Supersedes nothing; complements `IMPLEMENTATION_PLAN.md` (historical milestone plan A–F) and
 `docs/roadmap.md` (milestone/closeout record). Where those documents describe *how Ethos got
 here*, this document describes *what to do next and in what order*.
@@ -23,6 +23,10 @@ accepted (NIP-7.1 done). `CONTRIBUTING.md` rewritten as the single idea-to-relea
 with an external-contributor fast path (NIP-7.3 done). "Blocked" in historical docs is
 reinterpreted: honesty gates (no unearned claims) remain as automated checks; approval-queue
 blockers are retired.
+
+Revision v1.3 (2026-07-20, decider): NIP-5.1 validation accepts the committed isolated macOS
+`env -i` install smoke in place of a clean-VM transcript. Platform-specific artifact tasks retain
+their own target-platform validation requirements.
 
 ---
 
@@ -70,8 +74,10 @@ What exists and is shipped:
   --fail-on-ungrounded` → `ethos crop_element` → `ethos evidence anchor`, deterministic and
   golden-tested (`make verify-alpha`).
 - The OpenDataLoader-style JSON grounding adapter (foreign-parser verification path).
-- v0.3.1 prep (`docs/v0-3-1-release-prep.md`): README 60-second demo, `scripts/fetch-pdfium.sh`,
-  ADR-0013. **Land this first if not yet landed.**
+- v0.4.0 release train (`docs/v0-4-0-release-prep.md`): the accumulated next-minor verification,
+  citation-emission, integration, adoption-tooling, and governance work. Source versions remain
+  `0.3.0` until the release gates pass; the prep note explicitly excludes the P2-gated MCP
+  prototype from activation and publication.
 
 What is honestly true about adoption: registry downloads are at mirror-bot baseline, there are no
 known external users, and there is one maintainer (ADR-0001). The strategy below is written for
@@ -357,7 +363,9 @@ artifact. Additional per-workstream:
 - NIP-3: full one-command repro from a clean checkout of the bench repo; manifest pins resolve.
 - NIP-4: both examples run end-to-end offline in CI via fixtures; <30-min walkthrough timed once;
   generated TS types compile against DocuShell's `packages/evidence` usage (FR-1 evidence).
-- NIP-5: clean-VM install transcript committed as evidence; `ethos doctor` exit codes tested.
+- NIP-5.1: isolated install transcript from a fresh home and `env -i` environment committed as
+  evidence; `ethos doctor` exit codes tested. Later platform-specific artifact tasks must still
+  validate on their target platforms.
 - NIP-6: Action integration test in a scratch repo; annotation snapshot committed.
 - NIP-8: wasm build reproducible; page works with JS-disabled fallback message.
 - NIP-9: adapter fixtures include at least one real (consented, license-clean) scanned document.
@@ -412,25 +420,25 @@ Est. = agent-days (see §6.0). Human-gate tasks marked (gate).
 | NIP-1.3 | P0 | done | 1 | NIP-1.2 | 2026-07-19 | `docs/integrations/docushell.md#parse-job-verification-lane-nip-13` | Stored canonical report; exit 1 preserved; missing capability/exit >=2 fail closed |
 | NIP-1.4 | P0 | done | 1 | NIP-1.3 | 2026-07-19 | `docs/integrations/docushell.md#answer-release-gate-nip-14` | v1.1 claim-support labels; official fixture reproduced deterministically; missing support held for review |
 | NIP-1.5 | P0 | blocked | 0.5 | NIP-1.2 | 2026-07-19 | `docs/integrations/docushell.md#crop-inspection-lane-nip-15` | Implementation, deterministic tests, narrow suites, and affected builds pass; required `npm run acceptance:parse-pdf:real` cannot start without operator-provided `API_KEY`/`DOCUSHELL_API_KEY` |
-| NIP-1.6 | P0 | done | ongoing | NIP-1.1 | 2026-07-19 | `docs/integrations/docushell-friction-log.md` | FR-1..FR-8 recorded and dispositioned; FR-3/FR-4/FR-5 resolved; remaining product gaps assigned to NIP-4/NIP-5 |
+| NIP-1.6 | P0 | done | ongoing | NIP-1.1 | 2026-07-19 | `docs/integrations/docushell-friction-log.md` | FR-1..FR-10 recorded and dispositioned; FR-1/FR-7/FR-10 resolved by NIP-4.5; remaining product gaps assigned to NIP-5 or explicit follow-up |
 | NIP-1.7 | P0 | not_started | 0.5 | NIP-1.4, NIP-1.5, NIP-1.6 | | | decider reviews (gate) |
-| NIP-3.1 | P0 | not_started | 2 | — | | | human spot-check pass (gate) |
+| NIP-3.1 | P0 | done | 2 | — | 2026-07-20 | `fixtures/trust-benchmark/LABELING_GUIDE.md`; `fixtures/trust-benchmark/review-record.json`; `fixtures/trust-benchmark/v1/manifest.json` | Deterministic 20-document/200-check corpus and sibling `ethos-bench` harness pass; all labels executable-reviewed, and the Ethos dev team agreed with the balanced 40-check (20%) human spot-check without corrections. |
 | NIP-3.2 | P0 | not_started | 1 | NIP-3.1 | | | judge spend approval (gate) |
 | NIP-3.3 | P0 | not_started | 1 | NIP-3.2 | | | |
 | NIP-3.4 | P0 | not_started | 0.5 | NIP-3.3 | | | decider gate |
 | NIP-4.1 | P0 | done | 0.5 | — | 2026-07-19 | `docs/citation-emission-spec.md` | Independently versioned v1 schema; parser-neutral source IDs; grounded/fabricated/OOV/conflict fixtures; hydration and reports double-run byte-identical |
 | NIP-4.2 | P0 | done | 1.5 | NIP-4.1 | 2026-07-19 | `python/README.md#citation-emission` | Pure-Python duck-typed LangChain/LlamaIndex adapters; strict retrieval metadata and OOV rejection; emission/hydration artifacts double-run byte-identical; no framework, CLI, PDFium, or network dependency |
-| NIP-4.3 | P0 | done | 1 | NIP-4.2 | 2026-07-19 | `examples/README.md` | Native framework objects with exact core-package pins; recorded retrieval/model fixtures need no API keys; grounded exit 0 and fabricated exit 1 reports/citations double-run byte-identical; local walkthrough guard completed in under 4 seconds |
-| NIP-4.4 | P0 | not_started | 0.5 | NIP-4.3 | | | claims gate |
-| NIP-4.5 | P0 | not_started | 1 | NIP-4.1 | | | from friction FR-1 |
-| NIP-5.1 | P0 | not_started | 1 | — | | | includes FR-2/FR-3 doc fix |
-| NIP-5.2 | P0 | not_started | 0.5 | NIP-5.1 | | | ADR-0015 proposal (gate) |
-| NIP-5.3 | P0 | not_started | 1.5 | — | | | verify-only Windows first |
+| NIP-4.3 | P0 | done | 1 | NIP-4.2 | 2026-07-19 | `examples/README.md` | Native framework objects with resolvable exact core-package pins; Python 3.12 clean-environment install and model-free double-run suite pass in under 7 seconds with grounded exit 0 and fabricated exit 1 artifacts byte-identical |
+| NIP-4.4 | P0 | dropped | 0.5 | NIP-4.3 | 2026-07-19 | `adapters/langchain/README.md`; `adapters/llamaindex/README.md` | Decider deferred framework-owned listings on 2026-07-19; adapters and walkthroughs remain available in Ethos, and the prepared upstream patches may be revisited after v0.4.0 |
+| NIP-4.5 | P0 | done | 1 | NIP-4.1 | 2026-07-19 | `packages/npm/ethos-pdf/types/index.d.ts` | Schema-generated report, emission, and answer-release declarations ship in the npm candidate; strict fixtures, double-run generation, package tests, actual DocuShell type compatibility, and focused consumer tests pass |
+| NIP-5.1 | P0 | done | 1 | — | 2026-07-20 | `docs/validation/nip-5-1-pdfium-install-smoke-2026-07-19.md` | Isolated fresh-home `env -i` macOS fetch, doctor, and byte-identical parse accepted by the decider under plan revision v1.3 |
+| NIP-5.2 | P0 | done | 0.5 | NIP-5.1 | 2026-07-20 | `docs/decisions/ADR-0015-opt-in-bundled-pdfium-artifacts.md`; `docs/validation/nip-5-2-ethos-full-build-evidence-2026-07-20.md` | Proposed only: deterministic macOS/Linux candidates and notices verified; publication remains blocked pending ADR acceptance and target-platform smoke |
+| NIP-5.3 | P0 | blocked | 1.5 | — | 2026-07-20 | `docs/validation/nip-5-3-windows-verify-draft-2026-07-20.md` | Implementation, deterministic packaging tests, and Windows cross-target check pass; actual `.exe` link/smoke requires the new `windows-latest` job because this macOS host has no `link.exe` or Windows runtime |
 | NIP-6.1 | P1 | not_started | 1 | — | | | separate Action repo |
 | NIP-6.2 | P1 | not_started | 0.5 | NIP-6.1 | | | |
 | NIP-6.3 | P1 | not_started | 0.5 | NIP-6.2 | | | claims gate |
 | NIP-7.1 | P0 | done | 0.5 | — | 2026-07-19 | `docs/release-lane-v2.md` | accepted by decider |
-| NIP-7.2 | P0 | not_started | 0.5 | NIP-7.1 | | | pilot on next release train |
+| NIP-7.2 | P0 | in_progress | 0.5 | NIP-7.1 | 2026-07-19 | `docs/v0-4-0-release-prep.md` | v0.4.0 pilot prep opened; release validation, version activation, publication, and closeout remain |
 | NIP-7.3 | P1 | done | 0.5 | NIP-7.1 | 2026-07-19 | `CONTRIBUTING.md` | validate with first contributor during NIP-7.2 |
 | NIP-2.1 | P2 | not_started | 0.5 | all P0/P1 done | | | deprioritized 2026-07-19 |
 | NIP-2.2 | P2 | not_started | 2 | NIP-2.1 | | | |

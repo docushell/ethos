@@ -25,7 +25,7 @@ use crate::{write_output, DoctorArgs, Failure, INTERNAL_PDFIUM_LOAD_PROBE_ENV};
 
 const DOCTOR_PDFIUM_PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 const PDFIUM_SETUP_GUIDANCE: &str =
-    "Run ethos doctor for setup diagnostics, run ethos doctor --require-pdfium after setting it, and see docs/pdfium-manual-setup.md.";
+    "PDFium setup command: scripts/fetch-pdfium.sh. Run it from an Ethos source checkout, apply the printed ETHOS_PDFIUM_LIBRARY_PATH export, then run ethos doctor --require-pdfium. The script verifies pinned archive and runtime sha256 values and never runs automatically. See docs/pdfium-manual-setup.md.";
 // Keep packaged-target reporting single-sourced with the npm vendor payload. If the packaging
 // layout moves, update this include rather than adding a second release target list.
 const NPM_VENDOR_MANIFEST: &str =
@@ -69,7 +69,8 @@ fn pdfium_status() -> PdfiumStatus {
         Ok(()) => PdfiumStatus {
             kind: PdfiumStatusKind::Usable,
             env_set: true,
-            message: "configured PDFium is usable by Ethos".to_string(),
+            message: "configured PDFium is usable by Ethos and matches the pinned runtime sha256"
+                .to_string(),
         },
         Err(Failure::Ethos(error)) => PdfiumStatus::warning(
             true,

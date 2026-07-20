@@ -35,7 +35,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifact", required=True)
     parser.add_argument("--checksum", required=True)
-    parser.add_argument("--target", required=True, choices=("macos-arm64", "linux-x64"))
+    parser.add_argument(
+        "--target", required=True, choices=("macos-arm64", "linux-x64", "windows-x64")
+    )
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
 
@@ -47,6 +49,7 @@ def main() -> int:
     if artifact_hash not in checksum_text:
         raise SystemExit("artifact checksum file does not contain computed SHA256")
 
+    windows = args.target == "windows-x64"
     manifest = {
         "schema": "ethos.release_artifact_inventory.v1",
         "status": "draft_not_release_ready",
@@ -55,8 +58,15 @@ def main() -> int:
         "artifact": artifact.name,
         "sha256": artifact_hash,
         "pdfium_policy": "caller-provided",
+        "pdfium_included": False,
+        "artifact_scope": "verify-only" if windows else "cli-caller-provided-pdfium",
         "publication": "blocked",
-        "required_notices": ["LICENSE", "NOTICE", "docs/pdfium-manual-setup.md"],
+        "required_notices": [
+            "LICENSE",
+            "NOTICE",
+            "docs/pdfium-manual-setup.md",
+            *(["VERIFY-QUICKSTART.txt"] if windows else []),
+        ],
     }
     out.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return 0

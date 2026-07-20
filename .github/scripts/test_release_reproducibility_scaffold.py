@@ -58,6 +58,9 @@ class ReleaseReproducibilityScaffoldTests(unittest.TestCase):
         self.assertIn('"publication": "blocked"', writer)
         self.assertIn("macos-arm64", validator)
         self.assertIn("linux-x64", validator)
+        self.assertIn("windows-x64", validator)
+        self.assertIn('"artifact_scope": "verify-only" if windows', writer)
+        self.assertIn('"pdfium_included": False', writer)
         self.assertIn("malformed sha256", validator)
 
     def test_patch_release_artifact_refresh_prep_stays_bounded(self) -> None:
@@ -66,7 +69,7 @@ class ReleaseReproducibilityScaffoldTests(unittest.TestCase):
         normalized_notices = normalized(RELEASE_NOTICES)
         combined = f"{runbook}\n{notices}"
 
-        self.assertIn("@docushell/ethos-pdf@0.1.1", runbook)
+        self.assertIn("@docushell/ethos-pdf@0.3.0", runbook)
         self.assertIn("Patch 0.1.1 Artifact Refresh Prep", runbook)
         self.assertIn("ethos 0.1.1", runbook)
         self.assertIn("ethos 0.1.1", notices)

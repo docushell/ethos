@@ -2,8 +2,24 @@
 
 ## Unreleased
 
-- examples: add NIP-4.3 pinned, model-free LangChain and LlamaIndex retrieval-to-verification
-  walkthroughs with exit-1 preservation and double-run artifact checks.
+- benchmark: add NIP-3.1's deterministic 20-document, 200-check synthetic trust corpus,
+  labeling guide, verifier label harness, and explicit pending human-review gate.
+- distribution: add NIP-5.3 deterministic Windows x64 verify-only draft packaging, bundled
+  fixtures, cross-target compilation, and fail-closed no-PDFium smoke coverage.
+- boundary-exception: add the non-publishable NIP-5.2 ADR-0015 opt-in `ethos-full` proposal with
+  deterministic, fail-closed macOS arm64/Linux x64 candidate evidence and complete PDFium
+  notices while retaining the caller-provided release posture pending decider acceptance.
+- install: make NIP-5.1's caller-provided PDFium path executable and sha256-checked through
+  `ethos doctor`, aligned Python/npm guidance, and a copy-paste Linux x64 consumer stage.
+- npm: add NIP-4.5 schema-generated verification-report, citation-emission, and app
+  answer-release TypeScript declarations to `@docushell/ethos-pdf`, with conditional-contract
+  projection, strict consumer compilation, and double-run byte-identical generation tests.
+- release: reclassify the accumulated next-release train as v0.4.0, replace the obsolete narrow
+  v0.3.1 prep with a scope-honest Release Lane v2 pilot, and keep the P2-gated MCP prototype
+  explicitly excluded from activation and publication.
+- examples: add NIP-4.3 resolvably pinned, model-free LangChain and LlamaIndex
+  retrieval-to-verification walkthroughs with exit-1 preservation and double-run artifact
+  checks.
 - python: add NIP-4.2 dependency-free LangChain/LlamaIndex citation-emission helpers with strict
   retrieval metadata, fail-closed source-vocabulary hydration, and byte-stable JSON output.
 - contracts: freeze NIP-4.1 citation-emission v1 as an independently versioned, parser-neutral
@@ -57,9 +73,6 @@
   blocker to bundled, Windows-with-PDFium, and hosted surfaces; add an ADR-0001 addendum
   confirming the reduced-staff schedule and clarifying that the npm binary distribution package
   is not the gated "Node beta" surface.
-- docs: add `docs/v0-3-1-release-prep.md` scoping a docs/tooling/decision-record patch release;
-  version activation, DocuShell integration, hosted surfaces, production positioning, Windows
-  artifacts, bundled PDFium, and public benchmark claims remain blocked in their separate lanes.
 - boundary-exception: correct v0.3.0 final GitHub Release notes and latest-release intent, add a
   live metadata checker for the latest pointer, body, status, and asset set, and preserve the exact
   approved draft-inventory provenance without replacing published assets or widening release scope.

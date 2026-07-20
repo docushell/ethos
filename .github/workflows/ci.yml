@@ -50,6 +50,12 @@ jobs:
         run: make layout-evaluator-alpha
       - name: Python surface tests
         run: PYTHONPATH=python python3 -m unittest discover -s python/tests
+      - name: ethos-full deterministic candidate contract
+        run: make ethos-full-candidate-contract
+      - name: Windows verify-only candidate contract
+        run: make windows-verify-candidate-contract
+      - name: npm package test dependencies
+        run: npm ci --prefix packages/npm/ethos-pdf --ignore-scripts
       - name: npm package integrity tests
         run: npm test --prefix packages/npm/ethos-pdf
       - name: registry package source consistency tests

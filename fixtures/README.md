@@ -12,7 +12,13 @@ fixtures/
   security/    # hidden/off-page/low-contrast text, annotations, actions, scripts, links
   failure/     # corrupt, encrypted, password, image-only, oversized, rotated
   foreign/     # pinned third-party parser outputs plus their source files and manifests
+  trust-benchmark/ # Ethos-authored NIP-3 verifier/judge comparison corpus
 ```
+
+`trust-benchmark/v1/` is separately generated and pinned because it pairs born-digital PDFs with
+canonical grounding documents and labeled citation checks rather than parser-stage goldens. Run
+`make trust-benchmark-corpus`; orchestration from the sibling benchmark checkout is
+`make trust-corpus ETHOS_REPO=../ethos`.
 
 Each fixture is a directory: the PDF, a `fixture.json` (provenance, license, what it
 exercises, expected codes), and goldens added per pipeline stage as lanes land

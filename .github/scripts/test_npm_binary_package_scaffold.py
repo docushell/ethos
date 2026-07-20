@@ -63,6 +63,10 @@ EXPECTED_PACKAGE_FILES = {
     "package.json",
     "scripts/postinstall.js",
     "scripts/prepare-vendor.js",
+    "types/answer-release.d.ts",
+    "types/citation-emission.d.ts",
+    "types/index.d.ts",
+    "types/verification-report.d.ts",
     "vendor/ethos-darwin-arm64",
     "vendor/ethos-linux-x64",
     "vendor/manifest.json",
@@ -96,6 +100,8 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertRegex(package["version"], r"^\d+\.\d+\.\d+$")
         self.assertEqual("Apache-2.0", package["license"])
         self.assertEqual({"ethos": "./bin/ethos-pdf.js"}, package["bin"])
+        self.assertEqual("./types/index.d.ts", package["types"])
+        self.assertIn("types/", package["files"])
         self.assertIn("vendor/", package["files"])
         self.assertEqual(["darwin", "linux"], package["os"])
         self.assertEqual(["arm64", "x64"], package["cpu"])

@@ -29,7 +29,7 @@ REQUIRED = {
     "pdfium_policy": "caller-provided",
     "publication": "blocked",
 }
-TARGETS = {"macos-arm64", "linux-x64"}
+TARGETS = {"macos-arm64", "linux-x64", "windows-x64"}
 
 
 def validate(path: Path) -> None:
@@ -39,6 +39,13 @@ def validate(path: Path) -> None:
             raise AssertionError(f"{path}: expected {key}={value!r}")
     if data.get("target") not in TARGETS:
         raise AssertionError(f"{path}: unsupported target")
+    expected_scope = (
+        "verify-only" if data["target"] == "windows-x64" else "cli-caller-provided-pdfium"
+    )
+    if data.get("artifact_scope") != expected_scope:
+        raise AssertionError(f"{path}: expected artifact_scope={expected_scope!r}")
+    if data.get("pdfium_included") is not False:
+        raise AssertionError(f"{path}: PDFium must not be bundled")
     sha = data.get("sha256")
     if not isinstance(sha, str) or len(sha) != 64 or not all(c in "0123456789abcdef" for c in sha):
         raise AssertionError(f"{path}: malformed sha256")
@@ -46,6 +53,8 @@ def validate(path: Path) -> None:
     for required in ("LICENSE", "NOTICE", "docs/pdfium-manual-setup.md"):
         if required not in notices:
             raise AssertionError(f"{path}: missing notice requirement {required}")
+    if data["target"] == "windows-x64" and "VERIFY-QUICKSTART.txt" not in notices:
+        raise AssertionError(f"{path}: missing Windows quickstart requirement")
 
 
 def main(argv: list[str]) -> int:
