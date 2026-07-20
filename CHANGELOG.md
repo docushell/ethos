@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- benchmark: prepare NIP-3.2's dated two-model, five-run LLM citation-judge study with a fixed
-  prompt, deterministic offline evidence, cost/latency capture, and fail-closed spend controls.
+- benchmark: complete NIP-3.2's dated two-model, five-run LLM citation-judge study with 200
+  schema-valid live records, cost/latency capture, and an internal-only result pending report
+  generation and claim audit.
 - benchmark: add NIP-3.1's deterministic 20-document, 200-check synthetic trust corpus,
   labeling guide, verifier label harness, and explicit pending human-review gate.
 - distribution: add NIP-5.3 deterministic Windows x64 verify-only draft packaging, bundled
