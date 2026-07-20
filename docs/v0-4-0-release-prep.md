@@ -1,8 +1,8 @@
 # Ethos v0.4.0 Release Preparation
 
-Status: **in progress** — release-lane-v2 pilot for the accumulated next-minor work.
-Current source/package metadata remains `0.3.0`; version activation and publication are not
-approved by this document.
+Status: **release candidate prepared** — source/package metadata is activated at `0.4.0`; human
+PR review, CI, registry publication, tag/GitHub Release actions, and closeout remain pending.
+Public installation wording remains on the actually published `0.3.0` surfaces.
 
 Canonical preparation sentence:
 
@@ -31,8 +31,6 @@ positioning, benchmark claims, or changes to `README.md` / `docs/public-boundary
 - Adoption and operator tooling originally prepared for the abandoned v0.3.1 patch scope:
   the README fixture demo, caller-run pinned PDFium fetch helper, ADR-0013, and related decision
   amendments. PDFium remains caller-provided and is never downloaded automatically by Ethos.
-- NIP-5.3 verify-only Windows x64 draft artifact: deterministic ZIP, bundled JSON verification
-  fixtures, no PDFium DLL, and target-runner smoke evidence required before publication.
 - Release Lane v2 governance and contributor guidance, with this document serving as the one
   prep note for the v0.4.0 train.
 
@@ -48,6 +46,11 @@ The source tree also contains the Proposed ADR-0015 and its deterministic `ethos
 builder/evidence. The proposal does not activate bundled PDFium: no `ethos-full` archive enters
 the v0.4.0 artifact set unless the decider accepts the ADR and this prep scope is updated in a
 reviewed change.
+
+The NIP-5.3 verify-only Windows x64 implementation and draft workflow remain in source, but the
+Windows package is skipped as a v0.4.0 publication surface. It is a first-of-class artifact and
+cannot ship until its `windows-latest` double-build and target-runtime smoke pass. A later
+closeout must list it as skipped unless that evidence lands before publication.
 
 Before the v0.4.0 release candidate is frozen, the release diff must verify that no build,
 workspace, packaging, or documentation path accidentally presents this prototype as shipped.
@@ -68,30 +71,39 @@ workspace, packaging, or documentation path accidentally presents this prototype
 
 ### 1. Scope and compatibility
 
-- [ ] Review the complete `main...dev/v0-4-0` diff against this included/non-scope inventory.
-- [ ] Confirm all report/config/evidence `1.0.0` compatibility and `1.1.0` migration fixtures.
-- [ ] Confirm `ethos-verify` depends only on `GroundingSource`, not parser internals.
-- [ ] Confirm `packages/npm/ethos-mcp` is absent from release builds and publication commands.
-- [ ] Resolve or explicitly carry every open release-relevant friction-log entry.
+- [x] Reviewed the complete `main...dev/v0-4-0` diff against this included/non-scope inventory.
+- [x] Confirmed report/config/evidence `1.0.0` compatibility and `1.1.0` migration fixtures.
+- [x] Confirmed `ethos-verify` depends only on the feature-limited `ethos-core`
+      `GroundingSource`/verification types, not parser or PDF internals.
+- [x] Confirmed `packages/npm/ethos-mcp` is absent from the Rust workspace, release workflow,
+      and v0.4.0 publication commands; its metadata remains at `0.3.0`.
+- [x] Reviewed the friction log: FR-1–FR-7 and FR-9–FR-10 are resolved; FR-8 is explicitly
+      carried as a future parser-aware crop-projection task, with the current mapping fail-closed.
 
 ### 2. Validation
 
-- [ ] `cargo build --locked --workspace`
-- [ ] `cargo test --locked --workspace`
-- [ ] `make verify-alpha`
-- [ ] `.github/scripts/public_boundary_claims_gate.py`
-- [ ] Citation-emission and framework-example offline/double-run tests.
-- [ ] Relevant DocuShell Mocha suites and affected workspace builds for integration changes.
-- [ ] Dependency/license checks, including the no-AGPL and base-crate network boundaries.
-- [ ] Windows x64 draft builds twice byte-identically and passes its verify-only smoke on the
-      Windows runner.
+- [x] `cargo build --locked --workspace`
+- [x] `cargo test --locked --workspace`
+- [x] `make verify-alpha`
+- [x] `.github/scripts/claims_gate.py` and `.github/scripts/public_boundary_claims_gate.py`
+- [x] Citation-emission and pinned framework-example offline/double-run tests.
+- [x] Relevant DocuShell Mocha suites (29 passing) and `@docushell/docs` production build.
+- [x] `cargo deny check licenses bans sources`; no denied licenses or sources, and no AGPL.
+- [x] Built the `ethos-doc-core` crate package plus the Python sdist/wheel, and inspected the npm
+      tarball with `npm pack --dry-run`. Dependent Rust crates remain gated on publishing
+      `ethos-doc-core 0.4.0` first, as required by crates.io dependency ordering.
+- [x] NIP-7.3 cold-start check: this release pass followed `AGENTS.md` → active plan → one prep
+      document without creating per-artifact ceremony records.
+- [ ] Windows x64 double-build/runtime smoke remains a NIP-5.3 blocker; Windows is skipped from
+      the v0.4.0 publication set unless the `windows-latest` evidence passes before release.
 
 ### 3. Version activation
 
-After the scope and validation gates pass, update the lockstep release surfaces from `0.3.0` to
-`0.4.0` in a reviewed version-activation change. Public install wording must continue to name
-only the already-published `0.3.0` artifacts until a human publishes v0.4.0 and approves the
-corresponding wording change.
+The lockstep Rust, Python, and `@docushell/ethos-pdf` source metadata is activated at `0.4.0`,
+and draft artifact workflow smoke expectations are aligned to `ethos 0.4.0`. The npm vendor
+manifest remains truthfully bound to the currently vendored `0.3.0` binaries until the human
+artifact/vendor-refresh step. Public install wording continues to name only the published
+`0.3.0` artifacts until a human publishes v0.4.0 and approves the corresponding wording change.
 
 ### 4. Human-operated publication and closeout
 

@@ -438,7 +438,7 @@ Est. = agent-days (see §6.0). Human-gate tasks marked (gate).
 | NIP-6.2 | P1 | not_started | 0.5 | NIP-6.1 | | | |
 | NIP-6.3 | P1 | not_started | 0.5 | NIP-6.2 | | | claims gate |
 | NIP-7.1 | P0 | done | 0.5 | — | 2026-07-19 | `docs/release-lane-v2.md` | accepted by decider |
-| NIP-7.2 | P0 | in_progress | 0.5 | NIP-7.1 | 2026-07-19 | `docs/v0-4-0-release-prep.md` | v0.4.0 pilot prep opened; release validation, version activation, publication, and closeout remain |
+| NIP-7.2 | P0 | blocked | 0.5 | NIP-7.1 | 2026-07-20 | `docs/v0-4-0-release-prep.md`; `.github/scripts/test_v0_4_0_version_activation.py` | Agent preflight and version activation complete; Windows is explicitly skipped unless its first-of-class target smoke passes. Release completion now requires PR/CI review, human registry/tag/GitHub Release actions, and the single v2 closeout record. |
 | NIP-7.3 | P1 | done | 0.5 | NIP-7.1 | 2026-07-19 | `CONTRIBUTING.md` | validate with first contributor during NIP-7.2 |
 | NIP-2.1 | P2 | not_started | 0.5 | all P0/P1 done | | | deprioritized 2026-07-19 |
 | NIP-2.2 | P2 | not_started | 2 | NIP-2.1 | | | |

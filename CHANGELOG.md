@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- release: activate v0.4.0 source/package metadata and complete the Release Lane v2 pilot
+  preflight while keeping publication, public wording, and Windows artifact gates explicit.
 - benchmark: record the NIP-3.4 internal claim-audit packet for decider review without changing
   approved public claim strings.
 - benchmark: record NIP-3.3's deterministic internal trust-judge report and retain the publication
