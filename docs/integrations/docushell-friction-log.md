@@ -161,4 +161,4 @@ bound, 38/38 verification checks grounded, all artifact downloads successful, an
 
 | Total entries | fix-in-ethos | document | wontfix | resolved |
 | --- | --- | --- | --- | --- |
-| 11 | 5 | 6 | 0 | 9 |
+| 11 | 5 | 6 | 0 | 10 |
