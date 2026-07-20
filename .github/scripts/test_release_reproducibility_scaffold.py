@@ -44,7 +44,8 @@ class ReleaseReproducibilityScaffoldTests(unittest.TestCase):
 
         self.assertIn("rustup show", text)
         self.assertIn("cargo build --locked --release -p ethos-cli", text)
-        self.assertIn("tar -C", text)
+        self.assertIn("build_release_cli_archive.py", text)
+        self.assertNotIn('tar -C "$(dirname "$out")" -czf', text)
         self.assertIn("shasum -a 256", text)
         self.assertIn("ethos-${{ matrix.artifact_target }}", text)
 

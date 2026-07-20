@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- boundary-exception: normalize CLI release archive metadata and gzip headers so repeated macOS arm64 and Linux
+  x64 candidate builds are byte-identical before npm vendoring or publication.
 - build: remove unused Cargo Deny license allowances and document the unavoidable transitive
   `wit-bindgen` duplicate so release hygiene runs without warnings.
 - boundary-exception: remove completed release and milestone records together with their retired
