@@ -201,6 +201,35 @@ jobs:
       - name: Gate Zero harness tests
         run: python3 benchmarks/harness/test_run_gate_zero.py
 
+  verify-action-dogfood:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Accept the grounded README fixture
+        id: grounded
+        uses: ./actions/verify
+        with:
+          source: schemas/examples/document.example.json
+          citations: examples/verify/native_grounded_citations.json
+          report: target/action-dogfood/grounded.json
+      - name: Reject the fabricated README fixture
+        id: fabricated
+        continue-on-error: true
+        uses: ./actions/verify
+        with:
+          source: schemas/examples/document.example.json
+          citations: examples/verify/native_ungrounded_citations.json
+          report: target/action-dogfood/fabricated.json
+      - name: Assert the expected verification outcomes
+        if: always()
+        shell: bash
+        env:
+          GROUNDED_OUTCOME: ${{ steps.grounded.outcome }}
+          FABRICATED_OUTCOME: ${{ steps.fabricated.outcome }}
+        run: |
+          test "$GROUNDED_OUTCOME" = "success"
+          test "$FABRICATED_OUTCOME" = "failure"
+
   verify-portability:
     # Invariant 4: ethos-verify compiles against the grounding trait module alone and
     # its dependency tree never contains parser internals.

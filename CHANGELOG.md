@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- ci: dogfood the in-repository verification Action against the README grounded and fabricated
+  fixtures, asserting both expected outcomes so allowed failure cannot hide a regression.
 - integration: close NIP-1's DocuShell first-consumer lane with accepted source bindings, real-PDF
   acceptance, complete friction dispositions, and no public wording changes.
 - ci: add an in-repository, checksum-pinned Ethos verification Action with deterministic

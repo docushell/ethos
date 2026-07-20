@@ -181,6 +181,20 @@ class VerifyActionTests(unittest.TestCase):
         example = readme.split("```yaml\n", 1)[1].split("```", 1)[0]
         self.assertLessEqual(len(example.strip().splitlines()), 10)
 
+    def test_ci_dogfoods_both_readme_fixtures_and_asserts_failure(self) -> None:
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        dogfood = workflow.split("  verify-action-dogfood:\n", 1)[1].split(
+            "\n  verify-portability:", 1
+        )[0]
+        self.assertEqual(2, dogfood.count("uses: ./actions/verify"))
+        self.assertIn("schemas/examples/document.example.json", dogfood)
+        self.assertIn("examples/verify/native_grounded_citations.json", dogfood)
+        self.assertIn("examples/verify/native_ungrounded_citations.json", dogfood)
+        self.assertIn("continue-on-error: true", dogfood)
+        self.assertIn("if: always()", dogfood)
+        self.assertIn('test "$GROUNDED_OUTCOME" = "success"', dogfood)
+        self.assertIn('test "$FABRICATED_OUTCOME" = "failure"', dogfood)
+
 
 if __name__ == "__main__":
     unittest.main()
