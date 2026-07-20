@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- ci: bind registry-facing install checks to the published release-state versions rather than
+  ahead-of-publication candidate metadata, and make the DocuShell source binding externally
+  verifiable without treating its commit as an Ethos repository object.
 - benchmark: accept merged NIP-3.3 full comparison evidence at `ethos-bench` merge `5945fce` and
   the complete NIP-3.4 internal claim-audit packet at merge `9287671`, closing the internal trust
   benchmark workstream while keeping every public comparative claim gated.

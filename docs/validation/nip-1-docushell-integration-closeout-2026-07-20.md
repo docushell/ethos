@@ -5,8 +5,8 @@ current DocuShell integration blocker.
 
 ## Source Binding
 
-- Ethos source: `15c7c4a5235a9c25732ba9138c26ec0c465105a7`
-- DocuShell integration source: `74cf59984587d742e592ca32b508f842b91fe217`
+- Ethos source: `69a28f3089e484648142e9072528a0a6658a84f5`
+- DocuShell integration source: [74cf59984587d742e592ca32b508f842b91fe217](https://github.com/docushell/docushell/commit/74cf59984587d742e592ca32b508f842b91fe217)
   (`codex/nip-1-2-docushell-vendoring`)
 - Public Ethos CLI consumed by DocuShell: `0.3.0`, Linux x64 archive and executable sha256-pinned
 - Caller-provided PDFium: Chromium profile `7881` / PDFium `151.0.7881.0`, Linux x64
