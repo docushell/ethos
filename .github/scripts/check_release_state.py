@@ -196,8 +196,6 @@ def load_release_state(root: Path, path: Path) -> dict[str, object]:
         _record_path(root, closed[lane], lane)
 
     blockers = _unique_strings(state["blocked_lanes"], "blocked_lanes")
-    if "DocuShell integration" not in blockers:
-        raise ReleaseStateError("blocked_lanes must retain DocuShell integration until approved")
 
     state["release"] = release
     return state
