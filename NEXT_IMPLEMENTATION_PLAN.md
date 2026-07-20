@@ -294,15 +294,17 @@ manual URL hunting; fresh Windows machine → working `verify` on fixtures in �
 
 ### NIP-6 (P1) — `ethos-verify` CI Action
 
-**Goal:** the retention socket. A GitHub Action (separate `docushell/ethos-verify-action` repo)
-that runs `ethos verify --fail-on-ungrounded` on PR-supplied evidence/citation artifacts and
-annotates the PR with per-check statuses.
+**Goal:** the retention socket. A GitHub Action under `actions/verify/` in this repository that
+runs `ethos verify --fail-on-ungrounded` on PR-supplied evidence/citation artifacts and annotates
+the PR with per-check statuses. The decider selected the in-repository Action on 2026-07-20 to
+keep its versioning and maintenance with Ethos; a dedicated Marketplace repository is deferred
+until external demand exists.
 
 | Task | Description |
 | --- | --- |
-| NIP-6.1 | Action v0: pin CLI artifact by sha256, accept source/citations/grounding inputs, emit PR annotations from the report JSON, fail on exit 1/≥2. |
+| NIP-6.1 | In-repository Action v0: pin CLI artifact by sha256, accept source/citations/grounding inputs, emit PR annotations from the report JSON, fail on exit 1/≥2. |
 | NIP-6.2 | Dogfood: this repo's own CI runs the Action on the README demo fixtures (the "we gate ourselves" story). |
-| NIP-6.3 | Marketplace listing after wording passes the claims gate. |
+| NIP-6.3 | Marketplace listing deferred by the decider until external demand justifies a dedicated Action repository. |
 
 **Acceptance criteria:** a third-party repo can add ≤10 lines of workflow YAML and see a
 fabricated-citation PR fail with a readable annotation.
@@ -434,9 +436,9 @@ Est. = agent-days (see §6.0). Human-gate tasks marked (gate).
 | NIP-5.1 | P0 | done | 1 | — | 2026-07-20 | `docs/validation/nip-5-1-pdfium-install-smoke-2026-07-19.md` | Isolated fresh-home `env -i` macOS fetch, doctor, and byte-identical parse accepted by the decider under plan revision v1.3 |
 | NIP-5.2 | P0 | done | 0.5 | NIP-5.1 | 2026-07-20 | `docs/decisions/ADR-0015-opt-in-bundled-pdfium-artifacts.md`; `docs/validation/nip-5-2-ethos-full-build-evidence-2026-07-20.md` | Proposed only: deterministic macOS/Linux candidates and notices verified; publication remains blocked pending ADR acceptance and target-platform smoke |
 | NIP-5.3 | P0 | blocked | 1.5 | — | 2026-07-20 | `docs/validation/nip-5-3-windows-verify-draft-2026-07-20.md` | Implementation, deterministic packaging tests, and Windows cross-target check pass; actual `.exe` link/smoke requires the new `windows-latest` job because this macOS host has no `link.exe` or Windows runtime |
-| NIP-6.1 | P1 | blocked | 1 | — | 2026-07-20 | | Required separate `docushell/ethos-verify-action` repository is absent; implementation awaits a human-created repository or explicit local-repository path and visibility decision. |
+| NIP-6.1 | P1 | done | 1 | — | 2026-07-20 | `actions/verify/README.md`; `actions/verify/tests/fixtures/ungrounded.annotations.txt` | In-repository Linux x64 Action pins the public CLI archive and binary SHA256 values, maps report checks to deterministic annotations, preserves exit 1/≥2 failure, and passes the scratch-repository integration contract. |
 | NIP-6.2 | P1 | not_started | 0.5 | NIP-6.1 | | | |
-| NIP-6.3 | P1 | not_started | 0.5 | NIP-6.2 | | | claims gate |
+| NIP-6.3 | P1 | dropped | 0.5 | NIP-6.2 | 2026-07-20 | | Decider deferred Marketplace publication until external demand justifies a dedicated repository. |
 | NIP-7.1 | P0 | done | 0.5 | — | 2026-07-19 | `docs/release-lane-v2.md` | accepted by decider |
 | NIP-7.2 | P0 | blocked | 0.5 | NIP-7.1 | 2026-07-20 | `docs/v0-4-0-release-prep.md`; `.github/scripts/test_v0_4_0_version_activation.py` | Agent preflight and version activation complete; Windows is explicitly skipped unless its first-of-class target smoke passes. Release completion now requires PR/CI review, human registry/tag/GitHub Release actions, and the single v2 closeout record. |
 | NIP-7.3 | P1 | done | 0.5 | NIP-7.1 | 2026-07-19 | `CONTRIBUTING.md` | validate with first contributor during NIP-7.2 |

@@ -100,6 +100,8 @@ jobs:
         run: make app-answer-release-contract PYTHON=python3
       - name: Python public API policy tests
         run: python3 .github/scripts/test_python_public_api_policy.py
+      - name: Ethos verify Action contract tests
+        run: make ethos-verify-action-contract PYTHON=python3
       - name: v0.4.0 version activation tests
         run: python3 .github/scripts/test_v0_4_0_version_activation.py
       - name: Validation record source tests

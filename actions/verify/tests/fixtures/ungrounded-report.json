@@ -1,0 +1,21 @@
+{
+  "all_evidence_grounded": false,
+  "capability_limits": [
+    "missing_fingerprint"
+  ],
+  "checks": [
+    {
+      "claim": {
+        "citation": {
+          "element_id": "e000001"
+        },
+        "kind": "quote",
+        "text": "The document states that lunar revenue doubled."
+      },
+      "id": "v0001",
+      "reason": "text_mismatch",
+      "status": "mismatch"
+    }
+  ],
+  "schema_version": "1.0.0"
+}

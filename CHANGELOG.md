@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- ci: add an in-repository, checksum-pinned Ethos verification Action with deterministic
+  pull-request annotations and fail-closed exit handling.
 - release: activate v0.4.0 source/package metadata and complete the Release Lane v2 pilot
   preflight while keeping publication, public wording, and Windows artifact gates explicit.
 - benchmark: record the NIP-3.4 internal claim-audit packet for decider review without changing
