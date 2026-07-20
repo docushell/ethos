@@ -1,7 +1,7 @@
 # Ethos Next Implementation Plan (NIP-1)
 
 Status: **active — this is the canonical "what to build next" document.**
-Created: 2026-07-19. Revised: 2026-07-20 (v1.3). Owner: product / decider.
+Created: 2026-07-19. Revised: 2026-07-20 (v1.5). Owner: product / decider.
 Supersedes nothing; complements `IMPLEMENTATION_PLAN.md` (historical milestone plan A–F) and
 `docs/roadmap.md` (milestone/closeout record). Where those documents describe *how Ethos got
 here*, this document describes *what to do next and in what order*.
@@ -28,6 +28,17 @@ Revision v1.3 (2026-07-20, decider): NIP-5.1 validation accepts the committed is
 `env -i` install smoke in place of a clean-VM transcript. Platform-specific artifact tasks retain
 their own target-platform validation requirements.
 
+Revision v1.4 (2026-07-20, corrective audit): source metadata state is reconciled after v0.4.0
+candidate activation; NIP-3.2–3.4 are reopened pending durable raw evidence and the full promised
+Ethos-versus-judge metrics; NIP-6.1–6.2 are returned to `in_progress` until their branch commits
+pass remote CI. Routine release gates are distinguished from separately authorized benchmark
+spend, ADR, and public-claim decisions.
+
+Revision v1.5 (2026-07-20, decider): `ethos-bench` workflow automation is explicitly deferred and
+does not gate Ethos delivery. Merged, reviewed sibling evidence plus the required local validation
+is sufficient for sibling-owned benchmark tasks until that repository adopts workflows. NIP-3.2
+is complete at `ethos-bench` merge `a733411`; NIP-3.3 becomes the active P0 implementation task.
+
 ---
 
 ## 0. How to use this document
@@ -37,8 +48,11 @@ their own target-platform validation requirements.
 1. Read §2 (operating rules) fully before writing code. They are non-negotiable repo invariants.
 2. Open the Progress Ledger (§7). Select the first task that is `not_started` or `in_progress`,
    ordered by priority (P0 → P1 → P2), whose `Depends on` entries are all `done`.
-3. Implement against the task's **Acceptance criteria** and **Validation** commands in §5. A task
-   is not done until every listed validation command passes locally and in CI.
+3. Implement against the task's **Acceptance criteria** and **Validation** commands in §5. An
+   Ethos-repository task is not done until every listed validation command passes locally and in
+   Ethos CI. Sibling-owned benchmark tasks follow the sibling repository's current process:
+   reviewed merge plus required local validation is sufficient while `ethos-bench` workflows are
+   deferred. Adding sibling workflows is future maintenance, not an Ethos roadmap dependency.
 4. **Update the Progress Ledger row when you finish**: set status, date, and an evidence link
    (PR, validation record, or command output committed under `docs/validation/`). This is
    mandatory — the ledger is the single source of truth for NIP-1 progress. Stale ledgers are
@@ -75,9 +89,10 @@ What exists and is shipped:
   golden-tested (`make verify-alpha`).
 - The OpenDataLoader-style JSON grounding adapter (foreign-parser verification path).
 - v0.4.0 release train (`docs/v0-4-0-release-prep.md`): the accumulated next-minor verification,
-  citation-emission, integration, adoption-tooling, and governance work. Source versions remain
-  `0.3.0` until the release gates pass; the prep note explicitly excludes the P2-gated MCP
-  prototype from activation and publication.
+  citation-emission, integration, adoption-tooling, and governance work. Candidate source metadata
+  is activated at `0.4.0`, while public install wording and published artifacts remain at `0.3.0`
+  until the release gates pass. The prep note explicitly excludes the P2-gated MCP prototype from
+  activation and publication.
 
 What is honestly true about adoption: registry downloads are at mirror-bot baseline, there are no
 known external users, and there is one maintainer (ADR-0001). The strategy below is written for
@@ -113,11 +128,12 @@ Empty surfaces reserved but unbuilt: `crates/ethos-mcp` (deprioritized to P2 by 
    retain: decider approvals, all registry-facing operator actions (cargo/npm/PyPI publish, tag
    pushes, GitHub Release edits), and public-wording changes. An agent must never execute a
    registry action or edit approved claim strings, even if credentials are available.
-9. **Smoothness rule (v1.2).** From first idea to final release there are exactly three human
-   gates: PR review, registry publish, public-wording changes. No task, PR, or release waits on
-   any other approval, record, or ceremony. If you find yourself writing a request/decision/
-   evidence document chain for routine work, stop — that pattern is retired. Honesty gates
-   (claims CI, determinism CI) are automated checks, not queues.
+9. **Smoothness rule (v1.2, clarified v1.4).** The routine idea-to-release lane has exactly three
+   recurring human gates: PR review, registry publish, and public-wording changes. Separately
+   scoped work may require a one-time authorization before it enters that lane — for example paid
+   benchmark spend or acceptance of an ADR — but must not create a request/decision/evidence chain
+   for routine implementation. Honesty gates (claims CI, determinism CI) are automated checks, not
+   queues. Public benchmark wording remains part of the public-wording gate.
 
 ---
 
@@ -245,8 +261,8 @@ and internal report; the decider approves public wording separately.
 | Task | Description |
 | --- | --- |
 | NIP-3.1 | Labeled corpus: extend `fixtures/` with ≥200 citation checks over ≥20 born-digital documents — grounded, fabricated-quote, wrong-page, paraphrase-drift, split-quote, stale-fingerprint, and capability-limited cases. Labels reviewed twice (AI-generated labels require one human spot-check pass over a ≥20% sample); labeling guide committed. Runs in the `ethos-bench` sibling repo per `docs/benchmark-ownership.md`, fixtures live here. |
-| NIP-3.2 | Judge harness: 2–3 pinned LLM judges (one frontier, one small/cheap) with a fixed citation-checking prompt; N=5 runs each for variance; cost/latency capture. Judge API runs are a human-triggered operation (spend approval), prepared end-to-end by the agent. |
-| NIP-3.3 | Report generator: JSON results + auto-generated table with repro commands; internal snapshot first (dev-labeled per benchmark cadence rules). |
+| NIP-3.2 | Judge harness: 2–3 pinned LLM judges (one frontier, one small/cheap) with a fixed citation-checking prompt; N=5 runs each for variance; cost/latency capture. Judge API runs are a human-triggered operation (spend approval), prepared end-to-end by the agent. The exact internal raw result used downstream must be retained as auditable evidence; a hash without reconstructable bytes is insufficient. |
+| NIP-3.3 | Report generator: JSON results + auto-generated Ethos-versus-judge table covering confusion matrices, grounded/ungrounded precision and recall, cost per 1,000 citations, latency, and run-to-run variance, with repro commands; internal snapshot first (dev-labeled per benchmark cadence rules). |
 | NIP-3.4 | Claim-audit packet for the decider: proposed public wording, with the honest cells included (where judges beat Ethos, e.g. paraphrase tolerance, say so — that boundary is the semantic-truth line Ethos already disclaims). |
 
 **Acceptance criteria:** `make trust-bench` (or ethos-bench equivalent) reproduces all numbers
@@ -298,7 +314,9 @@ manual URL hunting; fresh Windows machine → working `verify` on fixtures in �
 runs `ethos verify --fail-on-ungrounded` on PR-supplied evidence/citation artifacts and annotates
 the PR with per-check statuses. The decider selected the in-repository Action on 2026-07-20 to
 keep its versioning and maintenance with Ethos; a dedicated Marketplace repository is deferred
-until external demand exists.
+until external demand exists. Action dogfood exercises the current wrapper against its pinned
+published CLI; current-candidate verifier behavior is independently gated by workspace and
+determinism CI. Reconcile the Action pin after a new CLI release is published.
 
 | Task | Description |
 | --- | --- |
@@ -383,9 +401,10 @@ decider, and operator. Consequences for planning:
 
 - Estimates are in **agent-days**: one focused AI working session producing a reviewable PR,
   including tests and CHANGELOG entry. Implementation is rarely the bottleneck.
-- The critical path is **human gates**: PR review, decider sign-offs (NIP-7.1, NIP-3.4, ADRs),
-  spend approvals (NIP-3.2 judge runs), and registry operator actions. Batch them: one review
-  session can clear several agent PRs.
+- The routine release critical path is the three §2 rule 9 gates: PR review, registry operator
+  actions, and public-wording review. One-time workstream authorizations such as benchmark spend
+  and ADR acceptance happen before their affected implementation enters that lane; they are not
+  additional per-release ceremony.
 - Agents must respect §2 rule 8 (no registry actions, no claim-string edits) and the ledger
   protocol (§0.1) without exception.
 - Calendar guidance at this model: **P0 ≈ 3–4 calendar weeks** (≈15 agent-days of
@@ -425,9 +444,9 @@ Est. = agent-days (see §6.0). Human-gate tasks marked (gate).
 | NIP-1.6 | P0 | done | ongoing | NIP-1.1 | 2026-07-20 | `docs/integrations/docushell-friction-log.md` | FR-1..FR-11 recorded and dispositioned; FR-11 records the already-documented Redis acceptance prerequisite; remaining product gaps retain explicit owners. |
 | NIP-1.7 | P0 | done | 0.5 | NIP-1.4, NIP-1.5, NIP-1.6 | 2026-07-20 | `docs/validation/nip-1-docushell-integration-closeout-2026-07-20.md` | Decider accepted the source-bound closeout, real acceptance, and all friction dispositions; the current execution-status integration blocker is cleared without public wording changes. |
 | NIP-3.1 | P0 | done | 2 | — | 2026-07-20 | `fixtures/trust-benchmark/LABELING_GUIDE.md`; `fixtures/trust-benchmark/review-record.json`; `fixtures/trust-benchmark/v1/manifest.json` | Deterministic 20-document/200-check corpus and sibling `ethos-bench` harness pass; all labels executable-reviewed, and the Ethos dev team agreed with the balanced 40-check (20%) human spot-check without corrections. |
-| NIP-3.2 | P0 | done | 1 | NIP-3.1 | 2026-07-20 | `../ethos-bench/benchmarks/trust/judges.lock.json`; `../ethos-bench/src/ethos_bench/trust_judges.py`; `../ethos-bench/benchmarks/results/trust/judge-results.json` | Live 200-call run completed under approved $5.00 ceiling: 200 schema-valid records, 100 per judge, five 40-record runs, measured cost $1.079924; output remains internal pending NIP-3.3 report generation and NIP-3.4 claim audit. |
-| NIP-3.3 | P0 | done | 1 | NIP-3.2 | 2026-07-20 | `../ethos-bench/src/ethos_bench/trust_report.py`; `../ethos-bench/target/trust-judge-report.json`; `../ethos-bench/target/trust-judge-report.md` | Deterministic internal JSON/Markdown report generated from the 200 live records; per-judge/category agreement, capability-limited counts, five-run variance, hashes, and reproduction commands included; publication remains blocked for NIP-3.4 claim audit. |
-| NIP-3.4 | P0 | done | 0.5 | NIP-3.3 | 2026-07-20 | `../ethos-bench/benchmarks/trust/nip-3.4-claim-audit.md`; `../ethos-bench/src/ethos_bench/trust_claim_audit.py` | Approved packet prepared with proposed bounded wording, all honest category cells, judge variance, semantic-truth boundary, provenance hashes, reproduction commands, and explicit decider decisions; no approved public claim strings changed. |
+| NIP-3.2 | P0 | done | 1 | NIP-3.1 | 2026-07-20 | `../ethos-bench/benchmarks/trust/judges.lock.json`; `../ethos-bench/src/ethos_bench/trust_judges.py`; `../ethos-bench/benchmarks/results/trust/judge-results.json`; `../ethos-bench/tests/test_trust_live_evidence.py`; `ethos-bench#a733411` | PR #7 merged the exact live result and its full-file hash, schema, model/run/document/judgment coverage, cost, internal-only state, and credential-field audit. All 37 sibling tests, smoke commands, the 20-document/200-check corpus, and double-run report regeneration passed locally. No paid rerun is required. |
+| NIP-3.3 | P0 | done | 1 | NIP-3.2 | 2026-07-20 | `../ethos-bench/src/ethos_bench/trust_ethos.py`; `../ethos-bench/src/ethos_bench/trust_report.py`; `../ethos-bench/benchmarks/results/trust/ethos-results.json`; `../ethos-bench/benchmarks/results/trust/comparison-report.json`; `../ethos-bench/benchmarks/results/trust/comparison-report.md`; `ethos-bench#5945fce` | PR #8 merged the source/binary-bound Ethos 0.4.0 baseline, raw confusion matrices, grounded/ungrounded precision and recall, cost per 1,000 citations, observed latency/run variance, category cells, and deterministic reports. All 46 tests, smoke commands, the real 20-document/200-check corpus, and byte-identical report regeneration passed on the merged tree. Timing remains descriptive across different environments and supports no speed claim. |
+| NIP-3.4 | P0 | done | 0.5 | NIP-3.3 | 2026-07-20 | `../ethos-bench/benchmarks/trust/nip-3.4-claim-audit.md`; `../ethos-bench/src/ethos_bench/trust_claim_audit.py`; `../ethos-bench/tests/test_trust_claim_audit.py`; `ethos-bench#9287671` | PR #9 merged the complete-comparison claim-audit packet with all three confusion matrices, all 21 category cells, exact provenance hashes, and explicit exclusions for cross-environment latency, local-compute cost comparisons, rankings, semantic truth, parser quality, speed, footprint, and production claims. All 50 sibling tests, smoke commands, tracked-artifact hash binding, and byte-identical regeneration passed on the merged tree. Approved public claim strings remain unchanged; any publication still requires the separate public-wording lane. |
 | NIP-4.1 | P0 | done | 0.5 | — | 2026-07-19 | `docs/citation-emission-spec.md` | Independently versioned v1 schema; parser-neutral source IDs; grounded/fabricated/OOV/conflict fixtures; hydration and reports double-run byte-identical |
 | NIP-4.2 | P0 | done | 1.5 | NIP-4.1 | 2026-07-19 | `python/README.md#citation-emission` | Pure-Python duck-typed LangChain/LlamaIndex adapters; strict retrieval metadata and OOV rejection; emission/hydration artifacts double-run byte-identical; no framework, CLI, PDFium, or network dependency |
 | NIP-4.3 | P0 | done | 1 | NIP-4.2 | 2026-07-19 | `examples/README.md` | Native framework objects with resolvable exact core-package pins; Python 3.12 clean-environment install and model-free double-run suite pass in under 7 seconds with grounded exit 0 and fabricated exit 1 artifacts byte-identical |
@@ -436,8 +455,8 @@ Est. = agent-days (see §6.0). Human-gate tasks marked (gate).
 | NIP-5.1 | P0 | done | 1 | — | 2026-07-20 | `docs/validation/nip-5-1-pdfium-install-smoke-2026-07-19.md` | Isolated fresh-home `env -i` macOS fetch, doctor, and byte-identical parse accepted by the decider under plan revision v1.3 |
 | NIP-5.2 | P0 | done | 0.5 | NIP-5.1 | 2026-07-20 | `docs/decisions/ADR-0015-opt-in-bundled-pdfium-artifacts.md`; `docs/validation/nip-5-2-ethos-full-build-evidence-2026-07-20.md` | Proposed only: deterministic macOS/Linux candidates and notices verified; publication remains blocked pending ADR acceptance and target-platform smoke |
 | NIP-5.3 | P0 | blocked | 1.5 | — | 2026-07-20 | `docs/validation/nip-5-3-windows-verify-draft-2026-07-20.md` | Implementation, deterministic packaging tests, and Windows cross-target check pass; actual `.exe` link/smoke requires the new `windows-latest` job because this macOS host has no `link.exe` or Windows runtime |
-| NIP-6.1 | P1 | done | 1 | — | 2026-07-20 | `actions/verify/README.md`; `actions/verify/tests/fixtures/ungrounded.annotations.txt` | In-repository Linux x64 Action pins the public CLI archive and binary SHA256 values, maps report checks to deterministic annotations, preserves exit 1/≥2 failure, and passes the scratch-repository integration contract. |
-| NIP-6.2 | P1 | done | 0.5 | NIP-6.1 | 2026-07-20 | `.github/workflows/ci.yml`; `actions/verify/tests/test_action.py` | Dedicated Linux CI job runs the in-repository Action against both canonical README fixtures, requires the grounded case to pass and the fabricated case to fail, and preserves readable Action annotations. |
+| NIP-6.1 | P1 | in_progress | 1 | — | 2026-07-20 | `actions/verify/README.md`; `actions/verify/tests/fixtures/ungrounded.annotations.txt` | Local contract passes. Completion waits for these branch commits to pass remote PR CI, as required by §0.1; the Action intentionally pins the currently published CLI. |
+| NIP-6.2 | P1 | in_progress | 0.5 | NIP-6.1 | 2026-07-20 | `.github/workflows/ci.yml`; `actions/verify/tests/test_action.py` | Dogfood wiring is implemented locally and explicitly validates the released-CLI consumer path. Completion waits for the actual GitHub job; current-candidate verifier behavior is separately covered by workspace/determinism CI. |
 | NIP-6.3 | P1 | dropped | 0.5 | NIP-6.2 | 2026-07-20 | | Decider deferred Marketplace publication until external demand justifies a dedicated repository. |
 | NIP-7.1 | P0 | done | 0.5 | — | 2026-07-19 | `docs/release-lane-v2.md` | accepted by decider |
 | NIP-7.2 | P0 | blocked | 0.5 | NIP-7.1 | 2026-07-20 | `docs/v0-4-0-release-prep.md`; `.github/scripts/test_v0_4_0_version_activation.py` | Agent preflight and version activation complete; Windows is explicitly skipped unless its first-of-class target smoke passes. Release completion now requires PR/CI review, human registry/tag/GitHub Release actions, and the single v2 closeout record. |

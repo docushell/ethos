@@ -10,11 +10,39 @@ Current closeout records: [rust python publication](validation/v0-3-0-publicatio
 Still blocked: additional release tags or release targets, hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports and claims, speed, footprint, parser-quality, and table-quality claims, ethos-doc, and ethos-rag.
 <!-- END GENERATED CURRENT RELEASE STATE -->
 
+The generated block above is the sole current public-release authority in this historical ledger.
+Sections below preserve dated milestone and wording records for auditability; version statements
+inside them describe their recorded point in time and are not the current release state unless the
+generated block explicitly repeats them. Candidate source metadata is currently `0.4.0`, while the
+published public baseline remains `0.3.0`.
+
 The NIP-1 DocuShell first-consumer integration closeout is accepted in
 `docs/validation/nip-1-docushell-integration-closeout-2026-07-20.md`. The worker-only public CLI,
 foreign-grounding verification, answer-release, and crop-inspection lanes passed focused and real
 born-digital PDF acceptance. This clears the current DocuShell integration blocker without making
 DocuShell adoption, production, parser-quality, or semantic-truth claims.
+
+NIP-3.2 internal judge evidence is durably retained in the sibling `ethos-bench` repository at
+merge `a733411`, with the exact live result hash, coverage, internal-only state, and credential
+field audit guarded by its local suite. Per the active plan's v1.5 decider clarification,
+`ethos-bench` workflow automation is deferred and does not gate Ethos delivery. Public benchmark
+reports, comparative wording, and all associated claims remain governed by the existing Ethos
+claim-audit and public-wording boundaries.
+
+NIP-3.3's internal Ethos-versus-judge comparison is merged in `ethos-bench` at `5945fce`. It
+contains a source/binary-bound Ethos 0.4.0 baseline, confusion matrices, grounded/ungrounded
+precision and recall, cost per 1,000 citations, descriptive latency variance, category cells, and
+deterministic report evidence. The measurements remain internal; different latency environments
+support no speed claim, and NIP-3.4 claim audit plus the public-wording lane still control any
+external comparative wording.
+
+NIP-3.4's internal claim-audit packet is merged in `ethos-bench` at `9287671`. It is generated
+from the complete NIP-3.3 comparison and retains all three confusion matrices, all 21 category
+cells, and source/binary/input hashes while excluding cross-environment latency, local-compute
+cost comparisons, rankings, semantic-truth, parser-quality, speed, footprint, and production
+claims from proposed wording. All 50 sibling tests, smoke commands, hash binding, and
+byte-identical regeneration pass on the merged tree. This closes the internal NIP-3 workstream,
+not the public-wording lane: no approved public claim string or publication state has changed.
 
 v0.3.0 final GitHub Release metadata closeout is recorded in
 `docs/validation/v0-3-0-release-metadata-closeout-validation-2026-07-03.md`. GitHub Release
@@ -517,7 +545,7 @@ It records the future package tag creation review boundary while creating no pac
 selecting no package publication version; package tag creation, public installation, and package
 publication remain blocked.
 
-## Current Reality
+## Historical Milestone Reality (superseded by the generated current-release block)
 
 The repository is in public beta/evaluation for the approved source, package, and CLI artifact surfaces, and production positioning remains blocked. Real parsing and real alpha verification exist. They are narrow, fixture-backed, and now have an accepted internal Gate Zero decision for roadmap control. That decision is not a public benchmark report, release approval, package approval, production approval, or claim approval.
 
@@ -692,7 +720,10 @@ The patch `0.1.2` artifact publication closeout in `docs/validation/patch-0-1-2-
 
 The patch `0.1.2` npm vendor refresh in `docs/validation/patch-0-1-2-npm-vendor-refresh-validation-2026-06-24.md` refreshes the checked-in `@docushell/ethos-pdf@0.1.2` vendor payload from the published GitHub Release `v0.1.2` assets and records local pack/install smoke evidence. npm publication remains blocked, public installation wording remains blocked, registry publication remains blocked, and the public install baseline remains `0.1.1` until separate approval, operator, registry, and wording closeout lanes pass.
 
-| Work item | Current status | Remaining blocker |
+The table below is a historical milestone snapshot. Its package-version cells are retained as
+landed evidence and must not be read as the current public release inventory.
+
+| Work item | Historical status | Remaining blocker |
 | --- | --- | --- |
 | PDFium Phase 1 profile | Landed: pinned profile, V8/XFA-disabled state, platform hashes, runtime library hashes, and provenance are recorded | Phase 2 project-maintained builds still block Public Beta |
 | PDFium loader/runtime checks | Landed: missing/mismatched version, artifact, and runtime library hashes fail deterministically | Release packaging and operator setup path still need hardening |
@@ -708,6 +739,10 @@ The patch `0.1.2` npm vendor refresh in `docs/validation/patch-0-1-2-npm-vendor-
 | WS-HARNESS readiness | Partially landed: readiness path is green for frozen corpus/hardware and pinned competitors, Gate Zero evidence preflight validates the current `ethos-bench` handoff, and gates fail closed if those records regress | Public-safe comparison report flow, release/package approval, claim-wording approval, and future evidence-refresh workflow still need hardening |
 | Determinism workflow | Landed: macOS arm64, Linux x64, and Windows x64 matrix entries run core contract tests; PDFium-backed corpus work stays gated on an explicitly configured pinned runtime; static workflow tests guard the matrix | Windows PDFium runtime provisioning and broader cross-platform corpus validation remain future work |
 
-## PM Rule
+## Historical PM Rule (superseded; exact wording retained for audit only)
+
+The following exact sentence was approved for the earlier `0.1.2` surface. It is retained without
+editing because approved claim strings are immutable outside their approval lane. It is not the
+current public wording; use the generated v0.3.0 release state at the top of this file.
 
 Public language may use this exact approved sentence on the current source, Rust crate, Python wheel, npm package, macOS arm64 CLI artifact, and Linux x64 CLI artifact evaluation surfaces: "Ethos is a deterministic document evidence layer for source-grounded verification and citation checking across native Ethos JSON and supported foreign parser outputs. The current beta includes the GitHub source repository, Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` at `0.1.2`, the Python `ethos-pdf` wheel at `0.1.2`, the npm `@docushell/ethos-pdf@0.1.2` package, and GitHub Release `v0.1.2` macOS arm64/Linux x64 CLI artifacts. PDFium-backed commands use caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`." All wording beyond that sentence still requires claim-audit and decider review for the exact surface. Do not describe Ethos as having public benchmark validation, production readiness, broad parser completeness, speed, footprint, parser-quality, or table-quality claims. Hosted surfaces, Windows packaged artifacts, bundled project-maintained PDFium builds, `ethos-doc`, and `ethos-rag` remain blocked. Internal parser work should proceed only when it supports accepted evidence paths or the trust layer; the product-differentiating path remains verification and grounding first, with parser expansion serving that path.

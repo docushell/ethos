@@ -201,7 +201,9 @@ jobs:
       - name: Gate Zero harness tests
         run: python3 benchmarks/harness/test_run_gate_zero.py
 
-  verify-action-dogfood:
+  released-cli-action-dogfood:
+    # This validates the current Action wrapper against its checksum-pinned public
+    # CLI. Current-source verifier behavior is covered by the test and determinism jobs.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

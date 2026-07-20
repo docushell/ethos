@@ -20,6 +20,8 @@ inputs:
 runs:
   using: composite
   steps:
+    # Consumer path: intentionally install the last published CLI. Candidate-source
+    # verification is a separate repository CI responsibility until v0.4.0 publishes.
     - name: Install pinned Ethos CLI
       shell: bash
       env:

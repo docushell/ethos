@@ -183,7 +183,7 @@ class VerifyActionTests(unittest.TestCase):
 
     def test_ci_dogfoods_both_readme_fixtures_and_asserts_failure(self) -> None:
         workflow = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
-        dogfood = workflow.split("  verify-action-dogfood:\n", 1)[1].split(
+        dogfood = workflow.split("  released-cli-action-dogfood:\n", 1)[1].split(
             "\n  verify-portability:", 1
         )[0]
         self.assertEqual(2, dogfood.count("uses: ./actions/verify"))

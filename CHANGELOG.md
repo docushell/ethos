@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- benchmark: accept merged NIP-3.3 full comparison evidence at `ethos-bench` merge `5945fce` and
+  the complete NIP-3.4 internal claim-audit packet at merge `9287671`, closing the internal trust
+  benchmark workstream while keeping every public comparative claim gated.
+- benchmark: prepare NIP-3.3's source/binary-bound Ethos 0.4.0 baseline and deterministic internal
+  comparison covering confusion matrices, precision/recall, cost per 1,000 citations, and
+  descriptive latency variance while explicitly supporting no public or cross-system speed claim.
+- planning: accept merged NIP-3.2 sibling evidence under the current review-plus-local-validation
+  process, explicitly defer `ethos-bench` workflows outside the Ethos critical path, and activate
+  the full NIP-3.3 comparison report as the next P0 task.
+- corrective-audit: reopen incomplete NIP-3 benchmark and NIP-6 remote-CI ledger rows, reconcile
+  candidate/public version authority and governance wording, distinguish released-CLI Action
+  dogfood from candidate verification, and keep the quarantined MCP prototype outside the active
+  implementation lane.
 - ci: dogfood the in-repository verification Action against the README grounded and fabricated
   fixtures, asserting both expected outcomes so allowed failure cannot hide a regression.
 - integration: close NIP-1's DocuShell first-consumer lane with accepted source bindings, real-PDF
