@@ -1,7 +1,7 @@
 # NIP-1 DocuShell Integration Closeout — 2026-07-20
 
-Status: **prepared for decider review**. The implementation and validation evidence is complete;
-the execution-status blocker remains until the decider accepts this record.
+Status: **accepted and complete**. The decider accepted this record on 2026-07-20 and cleared the
+current DocuShell integration blocker.
 
 ## Source Binding
 
@@ -84,5 +84,6 @@ The Ethos task baseline also passed at the bound source: `cargo build --locked -
 
 ## Decider Review
 
-- [ ] Accept this record and clear the DocuShell integration blocker in `docs/execution-status.md`.
+- [x] Accepted 2026-07-20; clear the DocuShell integration blocker in
+      `docs/execution-status.md`.
 - [ ] Amendments required: —

@@ -10,10 +10,11 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
-NIP-1 DocuShell first-consumer integration closeout is prepared in
+NIP-1 DocuShell first-consumer integration closeout is accepted and complete in
 `nip-1-docushell-integration-closeout-2026-07-20.md`. It binds the public Ethos/PDFium versions,
 worker-only verification and crop lanes, focused tests, real born-digital PDF acceptance, and all
-eleven friction dispositions. Decider review remains before the execution-status blocker clears.
+eleven friction dispositions. The decider accepted the record and cleared the current integration
+blocker on 2026-07-20.
 
 NIP-5.3 Windows verify-only draft evidence is recorded in
 `nip-5-3-windows-verify-draft-2026-07-20.md`. Implementation, deterministic fixture packaging,

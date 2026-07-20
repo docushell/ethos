@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- integration: prepare the NIP-1 DocuShell first-consumer closeout with source bindings, real-PDF
-  acceptance, and complete friction dispositions for decider review.
+- integration: close NIP-1's DocuShell first-consumer lane with accepted source bindings, real-PDF
+  acceptance, complete friction dispositions, and no public wording changes.
 - ci: add an in-repository, checksum-pinned Ethos verification Action with deterministic
   pull-request annotations and fail-closed exit handling.
 - release: activate v0.4.0 source/package metadata and complete the Release Lane v2 pilot
