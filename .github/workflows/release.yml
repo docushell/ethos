@@ -24,6 +24,8 @@ jobs:
         run: python3 .github/scripts/test_npm_binary_package_scaffold.py
       - name: PDFium manual setup contract tests
         run: python3 .github/scripts/test_pdfium_manual_setup_contract.py
+      - name: deterministic CLI archive tests
+        run: python3 .github/scripts/test_build_release_cli_archive.py
       - name: Windows verify-only candidate contract tests
         run: python3 .github/scripts/test_windows_verify_candidate.py
 
@@ -54,7 +56,9 @@ jobs:
           cp target/release/ethos "$out/ethos"
           cp LICENSE NOTICE "$out/"
           cp docs/pdfium-manual-setup.md "$out/"
-          tar -C "$(dirname "$out")" -czf "$out.${{ matrix.archive_ext }}" "$(basename "$out")"
+          python3 .github/scripts/build_release_cli_archive.py \
+            --artifact-dir "$out" \
+            --out "$out.${{ matrix.archive_ext }}"
           shasum -a 256 "$out.${{ matrix.archive_ext }}" > "$out.${{ matrix.archive_ext }}.sha256"
           python3 .github/scripts/write_release_artifact_inventory.py \
             --artifact "$out.${{ matrix.archive_ext }}" \

@@ -47,6 +47,9 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
         self.assertIn("build-windows-verify-candidate.py", text)
         self.assertIn("Windows candidate archives differ", text)
         self.assertIn("write_release_artifact_inventory.py", text)
+        self.assertIn("build_release_cli_archive.py", text)
+        self.assertNotIn('tar -C "$(dirname "$out")" -czf', text)
+        self.assertIn("test_build_release_cli_archive.py", text)
         self.assertIn("smoke_release_cli_artifact.py", text)
         self.assertIn('--expected-version "ethos 0.4.0"', text)
         self.assertIn("--target \"${{ matrix.artifact_target }}\"", text)
@@ -69,6 +72,7 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
             "test_python_public_api_policy.py",
             "test_npm_binary_package_scaffold.py",
             "test_pdfium_manual_setup_contract.py",
+            "test_build_release_cli_archive.py",
             "test_windows_verify_candidate.py",
         ):
             self.assertIn(guard, text)

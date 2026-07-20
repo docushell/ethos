@@ -149,6 +149,8 @@ v0-4-release-prep:
 	$(MAKE) citation-emission-v1-contract PYTHON=$(PYTHON)
 	$(MAKE) python-surface-test PYTHON=$(PYTHON)
 	npm test --prefix packages/npm/ethos-pdf
+	$(PYTHON) .github/scripts/test_build_release_cli_archive.py
+	$(PYTHON) .github/scripts/test_release_artifact_workflow_prep.py
 	$(PYTHON) .github/scripts/test_v0_4_0_version_activation.py
 	$(MAKE) release-hygiene PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/claims_gate.py
