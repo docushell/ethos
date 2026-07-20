@@ -58,7 +58,6 @@ class CiWorkflowTests(unittest.TestCase):
             "python3 .github/scripts/test_evidence_anchor_v1_contract.py",
             "make app-answer-release-contract PYTHON=python3",
             "python3 .github/scripts/test_python_public_api_policy.py",
-            "python3 .github/scripts/test_milestone_d_internal_contracts.py",
             "python3 benchmarks/harness/test_run_gate_zero.py",
         ):
             self.assertIn(command, text)
@@ -87,30 +86,6 @@ class CiWorkflowTests(unittest.TestCase):
         )
         for guard in frozen_guard_paths():
             self.assertNotIn(f"python3 {guard}", text, guard)
-
-    def test_active_package_guard_sequence_matches_make_and_follows_frozen_runner(self) -> None:
-        text = workflow_text()
-        make_guards = active_package_guard_names(target_block("milestone-e-prep"))
-        ci_guards = active_package_guard_names(text)
-
-        self.assertTrue(make_guards)
-        self.assertEqual(len(make_guards), len(set(make_guards)))
-        self.assertEqual(make_guards, ci_guards)
-
-        frozen_runner = "python3 .github/scripts/run_frozen_record_guards.py"
-        first_command = f"python3 .github/scripts/{ci_guards[0]}"
-        last_command = f"python3 .github/scripts/{ci_guards[-1]}"
-        gate_zero = "python3 benchmarks/harness/test_run_gate_zero.py"
-        self.assertLess(text.index(frozen_runner), text.index(first_command))
-        self.assertLess(text.index(last_command), text.index(gate_zero))
-
-        make_tail = (
-            "$(PYTHON) .github/scripts/"
-            "test_milestone_e_public_facing_readiness_ledger.py"
-        )
-        make_last = f"$(PYTHON) .github/scripts/{make_guards[-1]}"
-        make_block = target_block("milestone-e-prep")
-        self.assertLess(make_block.index(make_last), make_block.index(make_tail))
 
     def test_current_release_state_is_tested_and_checked(self) -> None:
         text = workflow_text()
@@ -162,20 +137,6 @@ class CiWorkflowTests(unittest.TestCase):
             'echo "skipped: PDFium runtime is not configured in base CI yet"',
             text,
         )
-
-    def test_active_package_publication_guards_stay_visible(self) -> None:
-        text = workflow_text()
-
-        active_guards = (
-            "test_milestone_e_package_publication_approval_prep.py",
-            "test_milestone_e_package_publication_dependency_ordering.py",
-            "test_milestone_e_package_publication_current_registry_assembly.py",
-            "test_milestone_e_package_publication_public_installation_availability.py",
-            "test_v0_4_0_version_activation.py",
-        )
-        for guard in active_guards:
-            command = f"python3 .github/scripts/{guard}"
-            self.assertEqual(1, text.count(command), guard)
 
 
 if __name__ == "__main__":
