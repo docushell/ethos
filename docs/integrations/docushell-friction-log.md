@@ -146,8 +146,19 @@ and the focused evidence suite passes)
 
 ---
 
+### FR-11 — Real acceptance requires the documented Redis prerequisite
+Date: 2026-07-20 · Found during: NIP-1.5 real-PDF acceptance
+What happened: starting `npm run dev:all` from a stopped local environment exited when Redis was
+not listening on port 6379. `CLAUDE.md` already lists local Redis as a development prerequisite;
+after starting an ephemeral Redis instance, the unchanged stack completed the acceptance run.
+Disposition: document (existing `CLAUDE.md` prerequisite is sufficient; no product change).
+Status: resolved (2026-07-20, real born-digital PDF acceptance passed 1/1 with 38/38 anchors
+bound, 38/38 verification checks grounded, all artifact downloads successful, and zero failures)
+
+---
+
 ## Closeout summary (filled at NIP-1.7)
 
 | Total entries | fix-in-ethos | document | wontfix | resolved |
 | --- | --- | --- | --- | --- |
-| 10 | 5 | 5 | 0 | 8 |
+| 11 | 5 | 6 | 0 | 9 |
