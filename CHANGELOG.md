@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- planning: drop the remaining P2 NIP-2, NIP-8, and NIP-9 workstreams from the current
+  implementation plan by decider decision; retain them only as unapproved candidates requiring
+  fresh scope and priority in a future release plan.
 - ci: close NIP-5.3 and NIP-6.1–6.2 against green Windows x64 build/runtime smoke,
   macOS/Linux/Windows verification determinism, and released-CLI Action dogfood evidence while
   retaining the separate public Windows artifact and Action publication boundaries.

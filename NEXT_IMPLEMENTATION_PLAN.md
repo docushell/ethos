@@ -1,7 +1,7 @@
 # Ethos Next Implementation Plan (NIP-1)
 
 Status: **active — this is the canonical "what to build next" document.**
-Created: 2026-07-19. Revised: 2026-07-20 (v1.5). Owner: product / decider.
+Created: 2026-07-19. Revised: 2026-07-20 (v1.6). Owner: product / decider.
 Supersedes nothing; complements `IMPLEMENTATION_PLAN.md` (historical milestone plan A–F) and
 `docs/roadmap.md` (milestone/closeout record). Where those documents describe *how Ethos got
 here*, this document describes *what to do next and in what order*.
@@ -38,6 +38,11 @@ Revision v1.5 (2026-07-20, decider): `ethos-bench` workflow automation is explic
 does not gate Ethos delivery. Merged, reviewed sibling evidence plus the required local validation
 is sufficient for sibling-owned benchmark tasks until that repository adopts workflows. NIP-3.2
 is complete at `ethos-bench` merge `a733411`; NIP-3.3 becomes the active P0 implementation task.
+
+Revision v1.6 (2026-07-20, decider): the remaining P2 workstreams — `ethos-mcp` (NIP-2), the
+WASM verify playground (NIP-8), and scanned-document adapters (NIP-9) — are dropped from this
+implementation plan. They are neither implemented nor approved; each may be reconsidered only
+through a future release-planning decision with fresh scope and priority.
 
 ---
 
@@ -177,8 +182,9 @@ Consequences:
   benchmark that answers "why not LLM-as-a-judge?" (NIP-3), citation emission so real pipelines
   can feed `verify` (NIP-4), a one-step install (NIP-5), and right-sized governance (NIP-7).
 - **P1** — The CI retention socket (NIP-6) and the contributor on-ramp (NIP-7.3).
-- **P2** — Widen the funnel only after the above: `ethos-mcp` (NIP-2, deprioritized by decider),
-  WASM playground (NIP-8), scanned-document path via foreign parsers (NIP-9).
+- **P2** — Deferred out of this plan by the 2026-07-20 decider decision: `ethos-mcp` (NIP-2),
+  WASM playground (NIP-8), and scanned-document path via foreign parsers (NIP-9). These are
+  unapproved future-release candidates, not active Ethos work.
 
 ---
 
@@ -217,11 +223,11 @@ the release policy; friction log has all entries dispositioned; closeout record 
 
 ---
 
-### NIP-2 (P2 — deprioritized) — `ethos-mcp` v0: the agent surface
+### NIP-2 (P2 — dropped from this plan) — `ethos-mcp` v0: the agent surface
 
-> **Decider decision 2026-07-19: do not start this workstream before P0 and P1 are complete.**
-> Rationale: prove the loop with the first real consumer (DocuShell) and remove trial-killing
-> friction before adding new surfaces. Scope below is preserved unchanged for when it unblocks.
+> **Decider decision 2026-07-20: dropped from this implementation plan.** The workstream is not
+> implemented or approved. The scope below is retained only as historical planning context and
+> requires a fresh release-planning decision before any task is started.
 
 **Goal:** a local MCP (Model Context Protocol) server exposing the trust loop to AI agents:
 `verify`, `evidence_anchor`, `crop_element`, `doc_parse` (parse optional, PDFium-gated).
@@ -344,7 +350,10 @@ docs tested on one first-time contributor or one cold-start agent run.
 
 ---
 
-### NIP-8 (P2) — WASM verify playground
+### NIP-8 (P2 — dropped from this plan) — WASM verify playground
+
+> **Decider decision 2026-07-20:** deferred to a future release-planning decision. This
+> playground is not implemented, approved, or part of the current Ethos release scope.
 
 **Goal:** in-browser `verify` over pasted/attached JSON — the 10-second "aha" with zero install.
 Verification is JSON-only (no PDFium), so `ethos-verify` compiles to wasm32 with modest effort.
@@ -356,7 +365,10 @@ fixtures preloaded; NIP-8.3 ADR + decider review before anything is published.
 
 ---
 
-### NIP-9 (P2) — Scanned documents via foreign parsers (not native OCR)
+### NIP-9 (P2 — dropped from this plan) — Scanned documents via foreign parsers (not native OCR)
+
+> **Decider decision 2026-07-20:** deferred to a future release-planning decision. This adapter
+> work is not implemented, approved, or part of the current Ethos release scope.
 
 **Goal:** scanned/image-only PDFs enter the trust loop through OCR-capable foreign parsers
 (Docling first) with explicit capability downgrades — Ethos does **not** build OCR (PRD
@@ -420,8 +432,8 @@ NIP-3.1 ──► NIP-3.2 ──► NIP-3.3 ──► NIP-3.4 (decider gate for 
 NIP-4.1 ──► NIP-4.2 ──► NIP-4.3 ──► NIP-4.4 (claims gate); NIP-4.5 after NIP-4.1
 NIP-5.1 ──► NIP-5.2(ADR) ──► NIP-5.3
 NIP-6.1 ──► NIP-6.2 ──► NIP-6.3
-P2 workstreams (NIP-2, NIP-8, NIP-9) start only when all P0/P1 tasks are done or explicitly
-dropped by the decider.
+P2 workstreams NIP-2, NIP-8, and NIP-9 are dropped from this plan by the 2026-07-20 decider
+decision. They require fresh scope and priority in a future release plan before work starts.
 ```
 
 Parallelism guidance: with AI implementation, NIP-1, NIP-3.1, NIP-4.1, and NIP-5.1 can run as
@@ -461,17 +473,17 @@ Est. = agent-days (see §6.0). Human-gate tasks marked (gate).
 | NIP-7.1 | P0 | done | 0.5 | — | 2026-07-19 | `docs/release-lane-v2.md` | accepted by decider |
 | NIP-7.2 | P0 | blocked | 0.5 | NIP-7.1 | 2026-07-20 | `docs/v0-4-0-release-prep.md`; `.github/scripts/test_v0_4_0_version_activation.py` | Agent preflight and version activation complete; Windows is explicitly skipped unless its first-of-class target smoke passes. Release completion now requires PR/CI review, human registry/tag/GitHub Release actions, and the single v2 closeout record. |
 | NIP-7.3 | P1 | done | 0.5 | NIP-7.1 | 2026-07-19 | `CONTRIBUTING.md` | validate with first contributor during NIP-7.2 |
-| NIP-2.1 | P2 | not_started | 0.5 | all P0/P1 done | | | deprioritized 2026-07-19 |
-| NIP-2.2 | P2 | not_started | 2 | NIP-2.1 | | | |
-| NIP-2.3 | P2 | not_started | 1 | NIP-2.2 | | | |
-| NIP-2.4 | P2 | not_started | 0.5 | NIP-2.2 | | | |
-| NIP-2.5 | P2 | not_started | 0.5 | NIP-2.3, NIP-2.4, NIP-7.1 | | | |
-| NIP-8.1 | P2 | not_started | 1.5 | all P0/P1 done | | | |
-| NIP-8.2 | P2 | not_started | 0.5 | NIP-8.1 | | | |
-| NIP-8.3 | P2 | not_started | 0.5 | NIP-8.2 | | | decider gate |
-| NIP-9.1 | P2 | not_started | 1 | all P0/P1 done | | | |
-| NIP-9.2 | P2 | not_started | 0.5 | NIP-9.1 | | | |
-| NIP-9.3 | P2 | not_started | 0.5 | NIP-9.2 | | | |
+| NIP-2.1 | P2 | dropped | 0.5 | all P0/P1 done | 2026-07-20 | | Decider deferred NIP-2 to a future release-planning decision; not implemented or approved. |
+| NIP-2.2 | P2 | dropped | 2 | NIP-2.1 | 2026-07-20 | | Decider deferred NIP-2 to a future release-planning decision; not implemented or approved. |
+| NIP-2.3 | P2 | dropped | 1 | NIP-2.2 | 2026-07-20 | | Decider deferred NIP-2 to a future release-planning decision; not implemented or approved. |
+| NIP-2.4 | P2 | dropped | 0.5 | NIP-2.2 | 2026-07-20 | | Decider deferred NIP-2 to a future release-planning decision; not implemented or approved. |
+| NIP-2.5 | P2 | dropped | 0.5 | NIP-2.3, NIP-2.4, NIP-7.1 | 2026-07-20 | | Decider deferred NIP-2 to a future release-planning decision; not implemented or approved. |
+| NIP-8.1 | P2 | dropped | 1.5 | all P0/P1 done | 2026-07-20 | | Decider deferred NIP-8 to a future release-planning decision; not implemented or approved. |
+| NIP-8.2 | P2 | dropped | 0.5 | NIP-8.1 | 2026-07-20 | | Decider deferred NIP-8 to a future release-planning decision; not implemented or approved. |
+| NIP-8.3 | P2 | dropped | 0.5 | NIP-8.2 | 2026-07-20 | | Decider deferred NIP-8 to a future release-planning decision; no publication approval was granted. |
+| NIP-9.1 | P2 | dropped | 1 | all P0/P1 done | 2026-07-20 | | Decider deferred NIP-9 to a future release-planning decision; not implemented or approved. |
+| NIP-9.2 | P2 | dropped | 0.5 | NIP-9.1 | 2026-07-20 | | Decider deferred NIP-9 to a future release-planning decision; not implemented or approved. |
+| NIP-9.3 | P2 | dropped | 0.5 | NIP-9.2 | 2026-07-20 | | Decider deferred NIP-9 to a future release-planning decision; not implemented or approved. |
 
 ---
 
