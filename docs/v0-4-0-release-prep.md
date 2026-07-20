@@ -1,8 +1,11 @@
 # Ethos v0.4.0 Release Preparation
 
-Status: **release candidate prepared** — source/package metadata is activated at `0.4.0`; human
-PR review, CI, registry publication, tag/GitHub Release actions, and closeout remain pending.
-Public installation wording remains on the actually published `0.3.0` surfaces.
+Status: **merged release candidate — final publication preparation in progress.** Source/package
+metadata is activated at `0.4.0`; PR #223 is merged at main commit `525f50a`, and post-merge CI
+run `29729605736` passed. Final main-bound release artifacts, registry publication, tag/GitHub
+Release actions, final artifact hashes, and closeout remain pending. The v0.4.0 release-note
+wording is approved, while public installation wording remains on the actually published
+`0.3.0` surfaces until publication.
 
 Canonical preparation sentence:
 
@@ -25,9 +28,9 @@ positioning, benchmark claims, or changes to `README.md` / `docs/public-boundary
 - Citation-emission contract `1.0.0` (NIP-4.1), dependency-free Python LangChain/LlamaIndex
   emission helpers (NIP-4.2), and model-free framework walkthroughs (NIP-4.3), including
   fail-closed hydration and double-run byte-identical artifact checks.
-- DocuShell first-consumer integration contracts and friction findings for NIP-1.1–1.6. The
-  private DocuShell implementation remains versioned and validated in its own repository; this
-  release does not publish DocuShell or make public adoption claims about it.
+- DocuShell first-consumer integration contracts, friction findings, and closeout for
+  NIP-1.1–1.7. The private DocuShell implementation remains versioned and validated in its own
+  repository; this release does not publish DocuShell or make public adoption claims about it.
 - Adoption and operator tooling originally prepared for the abandoned v0.3.1 patch scope:
   the README fixture demo, caller-run pinned PDFium fetch helper, ADR-0013, and related decision
   amendments. PDFium remains caller-provided and is never downloaded automatically by Ethos.
@@ -37,10 +40,10 @@ positioning, benchmark claims, or changes to `README.md` / `docs/public-boundary
 ## Carried but Not Activated as a Release Surface
 
 The source tree contains an unpublished `packages/npm/ethos-mcp` prototype inherited from work
-that predates the active NIP priority decision. NIP-2 remains P2-gated until all P0/P1 work is
-done or the decider explicitly changes that dependency. The prototype is therefore excluded
-from v0.4.0 package publication, release claims, and release validation. Keeping its commits in
-the branch does not activate or approve the surface.
+that predates the active NIP priority decision. NIP-2 was dropped from this implementation plan
+by the 2026-07-20 decider decision and requires fresh scope and priority in a future release plan.
+The prototype is therefore excluded from v0.4.0 package publication, release claims, and release
+validation. Keeping its commits in the source tree does not activate or approve the surface.
 
 The source tree also contains the Proposed ADR-0015 and its deterministic `ethos-full` candidate
 builder/evidence. The proposal does not activate bundled PDFium: no `ethos-full` archive enters
@@ -48,17 +51,18 @@ the v0.4.0 artifact set unless the decider accepts the ADR and this prep scope i
 reviewed change.
 
 The NIP-5.3 verify-only Windows x64 implementation and draft workflow remain in source, but the
-Windows package is skipped as a v0.4.0 publication surface. It is a first-of-class artifact and
-cannot ship until its `windows-latest` double-build and target-runtime smoke pass. A later
-closeout must list it as skipped unless that evidence lands before publication.
+Windows package is skipped as a v0.4.0 publication surface. Its `windows-latest` double-build,
+target-runtime smoke, and cross-platform determinism checks passed, completing the implementation
+task. Public Windows packaging remains a separate first-of-class release decision under Release
+Lane v1 and was not approved for this train. The v0.4.0 closeout must list Windows as skipped.
 
-Before the v0.4.0 release candidate is frozen, the release diff must verify that no build,
-workspace, packaging, or documentation path accidentally presents this prototype as shipped.
+The release-diff review confirmed that no build, workspace, packaging, or documentation path
+accidentally presents this prototype as shipped.
 
 ## Explicit Non-Scope
 
 - `ethos-mcp` activation or npm publication; any `crates/ethos-mcp` implementation;
-- version activation and lockstep package-version changes until their reviewed release step;
+- additional version or lockstep package-metadata changes outside a reviewed release step;
 - crates.io, PyPI, npm, tag, or GitHub Release operator actions;
 - public wording changes or public benchmark results and comparative claims;
 - hosted or network-served surfaces, production positioning, or a WASM playground;
@@ -112,6 +116,10 @@ A human operator runs all registry publishes, tag pushes, and GitHub Release cha
 actual published surfaces, versions, hashes, commands, wording disposition, and deviations in
 the single `docs/validation/v0-4-0-release-closeout-<date>.md` record required by Release Lane
 v2. Skipped surfaces must be recorded rather than silently implied.
+
+The exact public release wording in `docs/releases/v0.4.0.md` was approved by the human decider
+on 2026-07-20. Final archive hashes must be inserted from the release workflow run bound to the
+final merged `main` commit before publication.
 
 ## Product Boundary
 
