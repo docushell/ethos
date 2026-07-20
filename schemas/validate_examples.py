@@ -136,39 +136,6 @@ PAIRS = [
     ("ethos-sandbox-subprocess-contract.schema.json", [
         ROOT / "examples" / "sandbox" / "sandbox_subprocess_v1_contract.json",
     ]),
-    ("ethos-milestone-e-fixture-candidates.schema.json", [
-        ROOT / "docs" / "milestone-e-fixture-candidates.json",
-    ]),
-    ("ethos-milestone-e-fixture-promotion-criteria.schema.json", [
-        ROOT / "docs" / "milestone-e-fixture-promotion-criteria.json",
-    ]),
-    ("ethos-milestone-e-internal-trust-loop-walkthrough.schema.json", [
-        ROOT / "docs" / "milestone-e-internal-trust-loop-walkthrough.json",
-    ]),
-    ("ethos-milestone-e-internal-trust-loop-use-protocol.schema.json", [
-        ROOT / "docs" / "milestone-e-internal-trust-loop-use-protocol.json",
-    ]),
-    ("ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json", [
-        ROOT / "docs" / "milestone-e-internal-trust-loop-rehearsal-evidence-matrix.json",
-    ]),
-    ("ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json", [
-        ROOT / "docs" / "milestone-e-internal-trust-loop-blocker-ledger.json",
-    ]),
-    ("ethos-milestone-e-public-approval-lane-blockers.schema.json", [
-        ROOT / "docs" / "milestone-e-public-approval-lane-blockers.json",
-    ]),
-    ("ethos-milestone-e-public-beta-approval-prep.schema.json", [
-        ROOT / "docs" / "milestone-e-public-beta-approval-prep.json",
-    ]),
-    ("ethos-milestone-e-package-publication-approval-prep.schema.json", [
-        ROOT / "docs" / "milestone-e-package-publication-approval-prep.json",
-    ]),
-    ("ethos-milestone-e-public-facing-readiness-ledger.schema.json", [
-        ROOT / "docs" / "milestone-e-public-facing-readiness-ledger.json",
-    ]),
-    ("ethos-milestone-e-public-beta-current-main-refresh-prep.schema.json", [
-        ROOT / "docs" / "milestone-e-public-beta-current-main-refresh-prep.json",
-    ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
 ]
 

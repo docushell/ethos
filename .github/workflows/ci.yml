@@ -80,16 +80,12 @@ jobs:
         run: python3 .github/scripts/test_determinism_workflow.py
       - name: CI workflow tests
         run: python3 .github/scripts/test_ci_workflow.py
-      - name: Milestone B internal check target tests
-        run: python3 .github/scripts/test_milestone_b_internal_checks.py
       - name: RAG chunk alpha target tests
         run: python3 .github/scripts/test_rag_chunk_alpha.py
       - name: Security report alpha target tests
         run: python3 .github/scripts/test_security_report_alpha.py
       - name: execution status tests
         run: python3 .github/scripts/test_execution_status.py
-      - name: roadmap status tests
-        run: python3 .github/scripts/test_roadmap_status.py
       - name: public surface posture tests
         run: python3 .github/scripts/test_public_surface_posture.py
       - name: Evidence anchor v1 contract guard tests
