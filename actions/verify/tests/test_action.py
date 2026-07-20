@@ -32,6 +32,8 @@ from unittest import mock
 ACTION = Path(__file__).resolve().parents[1]
 ROOT = ACTION.parents[1]
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
+PUBLISHED_LINUX_ARCHIVE_SHA256 = "b549ba5968e04b7679a8d3e879cd45d27f3e9a6fd226eee5c270a4e4f5c01405"
+PUBLISHED_LINUX_BINARY_SHA256 = "b416993fc38e6f794611b8b71789ed85af18eb6aa63fef380d9ae7738661f154"
 sys.path.insert(0, str(ACTION))
 
 import install_cli  # noqa: E402
@@ -173,10 +175,14 @@ class VerifyActionTests(unittest.TestCase):
     def test_action_is_pinned_and_example_is_short(self) -> None:
         action = (ACTION / "action.yml").read_text(encoding="utf-8")
         readme = (ACTION / "README.md").read_text(encoding="utf-8")
-        manifest = json.loads((ROOT / "packages/npm/ethos-pdf/vendor/manifest.json").read_text())
-        linux = manifest["targets"]["linux:x64"]
-        self.assertIn(linux["release_asset_sha256"], action)
-        self.assertIn(linux["binary_sha256"], action)
+        release_state = json.loads((ROOT / "docs/release-state.json").read_text(encoding="utf-8"))
+        published_version = release_state["release"]["npm_package"]["version"]
+        self.assertIn(
+            f"releases/download/v{published_version}/ethos-linux-x64.tar.gz",
+            action,
+        )
+        self.assertIn(PUBLISHED_LINUX_ARCHIVE_SHA256, action)
+        self.assertIn(PUBLISHED_LINUX_BINARY_SHA256, action)
         self.assertNotIn("cli-path", action)
         example = readme.split("```yaml\n", 1)[1].split("```", 1)[0]
         self.assertLessEqual(len(example.strip().splitlines()), 10)
