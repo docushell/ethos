@@ -7,6 +7,11 @@ Release actions, final artifact hashes, and closeout remain pending. The v0.4.0 
 wording is approved, while public installation wording remains on the actually published
 `0.3.0` surfaces until publication.
 
+The release scope may be amended before tagging only through an explicitly scoped, reviewed PR.
+Any implementation change invalidates earlier final-artifact hashes and requires fresh full CI,
+release-artifact, determinism, and release-wording review on the resulting `main`. Feature work is
+not tracked in a separate implementation ledger.
+
 Canonical preparation sentence:
 
 > v0.4.0 prepares the accumulated verification-hardening, report-contract, citation-emission,
@@ -25,11 +30,11 @@ positioning, benchmark claims, or changes to `README.md` / `docs/public-boundary
 - Additive `1.1.0` verification-config, verification-report, evidence-anchor request/report,
   and application answer-release contracts. The `1.0.0` forms remain accepted where their
   contracts permit; compatibility and migration behavior must remain fixture-backed.
-- Citation-emission contract `1.0.0` (NIP-4.1), dependency-free Python LangChain/LlamaIndex
-  emission helpers (NIP-4.2), and model-free framework walkthroughs (NIP-4.3), including
+- Citation-emission contract `1.0.0`, dependency-free Python LangChain/LlamaIndex emission
+  helpers, and model-free framework walkthroughs, including
   fail-closed hydration and double-run byte-identical artifact checks.
-- DocuShell first-consumer integration contracts, friction findings, and closeout for
-  NIP-1.1–1.7. The private DocuShell implementation remains versioned and validated in its own
+- DocuShell first-consumer integration contracts, friction findings, and accepted closeout. The
+  private DocuShell implementation remains versioned and validated in its own
   repository; this release does not publish DocuShell or make public adoption claims about it.
 - Adoption and operator tooling originally prepared for the abandoned v0.3.1 patch scope:
   the README fixture demo, caller-run pinned PDFium fetch helper, ADR-0013, and related decision
@@ -40,8 +45,8 @@ positioning, benchmark claims, or changes to `README.md` / `docs/public-boundary
 ## Carried but Not Activated as a Release Surface
 
 The source tree contains an unpublished `packages/npm/ethos-mcp` prototype inherited from work
-that predates the active NIP priority decision. NIP-2 was dropped from this implementation plan
-by the 2026-07-20 decider decision and requires fresh scope and priority in a future release plan.
+that predates the current release scope. The MCP surface was deferred by the 2026-07-20 decider
+decision and requires fresh scope and priority in a future release plan.
 The prototype is therefore excluded from v0.4.0 package publication, release claims, and release
 validation. Keeping its commits in the source tree does not activate or approve the surface.
 
@@ -50,8 +55,8 @@ builder/evidence. The proposal does not activate bundled PDFium: no `ethos-full`
 the v0.4.0 artifact set unless the decider accepts the ADR and this prep scope is updated in a
 reviewed change.
 
-The NIP-5.3 verify-only Windows x64 implementation and draft workflow remain in source, but the
-Windows package is skipped as a v0.4.0 publication surface. Its `windows-latest` double-build,
+The verify-only Windows x64 implementation and draft workflow remain in source, but the Windows
+package is skipped as a v0.4.0 publication surface. Its `windows-latest` double-build,
 target-runtime smoke, and cross-platform determinism checks passed, completing the implementation
 task. Public Windows packaging remains a separate first-of-class release decision under Release
 Lane v1 and was not approved for this train. The v0.4.0 closeout must list Windows as skipped.
@@ -68,7 +73,7 @@ accidentally presents this prototype as shipped.
 - hosted or network-served surfaces, production positioning, or a WASM playground;
 - bundled/project-maintained PDFium distribution and Windows-with-PDFium artifacts;
 - `ethos-rag`, native OCR, or scanned-document support claims;
-- NIP-3 trust-benchmark publication and NIP-6 CI Action publication;
+- trust-benchmark publication and CI Action Marketplace publication;
 - any silent weakening of verification, capability, determinism, or licensing guardrails.
 
 ## Release Gates
@@ -96,7 +101,7 @@ accidentally presents this prototype as shipped.
 - [x] Built the `ethos-doc-core` crate package plus the Python sdist/wheel, and inspected the npm
       tarball with `npm pack --dry-run`. Dependent Rust crates remain gated on publishing
       `ethos-doc-core 0.4.0` first, as required by crates.io dependency ordering.
-- [x] NIP-7.3 cold-start check: this release pass followed `AGENTS.md` → active plan → one prep
+- [x] Contributor cold-start check: this release pass followed `AGENTS.md` and one release-prep
       document without creating per-artifact ceremony records.
 - [x] Windows x64 double-build/runtime smoke passed in release run `29728642038`, and the full
       macOS/Linux/Windows verification determinism matrix passed in run `29728692721`. Public

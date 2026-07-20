@@ -9,7 +9,7 @@
 ## Context
 
 The base crates, wheel, npm package, and current CLI archives keep PDFium caller-provided under
-ADR-0013. NIP-5.1 reduced setup to a pinned fetch command, but a user must still install PDFium,
+ADR-0013. The pinned fetch command reduced setup friction, but a user must still install PDFium,
 export its path, and retain the runtime beside Ethos. That remains an obstacle between a fresh
 install and a first parse.
 
@@ -71,7 +71,7 @@ runtime path, or an archive/runtime hash mismatch are fatal.
 
 ## Evidence and Size
 
-NIP-5.2 feasibility evidence is recorded in
+Feasibility evidence is recorded in
 `docs/validation/nip-5-2-ethos-full-build-evidence-2026-07-20.md`. Using the published `0.3.0`
 CLI binaries as packaging fixtures and the pinned Phase 1 runtimes produced:
 

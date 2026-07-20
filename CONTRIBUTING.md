@@ -40,7 +40,7 @@ no CLA). CI checks everything else automatically and tells you what to fix.
 
 Good entry points: fixture contributions (`fixtures/README.md`), issues labeled
 `good-first-issue`, framework adapters (`adapters/`), and docs fixes. If you're an AI agent,
-read `NEXT_IMPLEMENTATION_PLAN.md` and pick a ledger task.
+read `AGENTS.md` and work only from the explicitly scoped issue, PR, or decider request.
 
 ## Ideas and design changes
 

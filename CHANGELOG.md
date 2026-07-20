@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- planning: retire the completed temporary next-implementation ledger and kickoff prompt, move
+  v0.4.0 publication tracking wholly into the accepted release-prep/closeout lane, and direct new
+  work through explicit issues or decider requests while preserving historical evidence IDs.
 - release: begin v0.4.0 post-merge finalization, reconcile the dropped MCP and deliberately
   skipped Windows publication boundaries, and record approved bounded release-note wording
   without changing currently approved public install claims.

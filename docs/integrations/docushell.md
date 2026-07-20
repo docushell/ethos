@@ -1,6 +1,6 @@
 # Integration Contract: DocuShell (first consumer)
 
-Status: active. Created: 2026-07-19. Plan reference: `NEXT_IMPLEMENTATION_PLAN.md` §NIP-1.
+Status: active. Created: 2026-07-19. Integration closeout accepted 2026-07-20.
 This document is the template for future `docs/integrations/<consumer>.md` files.
 
 ## Why this document exists
@@ -18,8 +18,9 @@ surface, that is an Ethos product gap — it goes into the
   `docling-fast`), plus the evidence layer in `packages/evidence`.
 - DocuShell currently mirrors Ethos verification-report and answer-release types in TypeScript
   (`packages/evidence/src/ethos-answer-release.ts`, `openai-chat-evidence.ts`) and implements
-  the release policy from `docs/app-answer-release-contract.md`. NIP-4.5 adds schema-generated
-  declarations to the v0.4.0 npm candidate so that mirror can be retired after publication.
+  the release policy from `docs/app-answer-release-contract.md`. The v0.4.0 candidate adds
+  schema-generated declarations to the npm candidate so that mirror can be retired after
+  publication.
 
 ## Surfaces DocuShell consumes (all public)
 
@@ -38,14 +39,14 @@ Pinned versions (update on every DocuShell bump):
 
 | Item | Version | Pinned at |
 | --- | --- | --- |
-| `ethos` CLI artifact | v0.3.0 (Linux x64) | 2026-07-19 — vendored in the DocuShell parse-pdf worker image (NIP-1.2, `docker/parse-pdf/ethos-vendor.json`) |
+| `ethos` CLI artifact | v0.3.0 (Linux x64) | 2026-07-19 — vendored in the DocuShell parse-pdf worker image (`docker/parse-pdf/ethos-vendor.json`) |
 | PDFium (caller-provided) | `chromium/7881` (PDFium 151.0.7881.0, Linux x64) | 2026-07-19 — installed by the same image, `ETHOS_PDFIUM_LIBRARY_PATH` set at build |
 | Report schema | as shipped in v0.3.0 | 2026-07-19 |
 | Grounding adapter | `opendataloader-json` | 2026-07-19 |
-| Citation emission callback | v1.0.0 (not yet consumed) | 2026-07-19 — frozen by NIP-4.1; Python helpers delivered by NIP-4.2 |
-| TypeScript declarations | v0.4.0 candidate (not published) | 2026-07-19 — generated and package-tested by NIP-4.5; DocuShell adoption waits for the human-operated npm release |
+| Citation emission callback | v1.0.0 (not yet consumed) | 2026-07-19 — frozen contract with delivered Python helpers |
+| TypeScript declarations | v0.4.0 candidate (not published) | 2026-07-19 — generated and package-tested; DocuShell adoption waits for the human-operated npm release |
 
-### Consumer Dockerfile pattern (from the NIP-1.2 integration; friction entry FR-3)
+### Consumer Dockerfile pattern (friction entry FR-3)
 
 DocuShell vendors both artifacts in a dedicated build stage with sha256 pins duplicated into a
 consumer-side manifest (`docker/parse-pdf/ethos-vendor.json`), verified before extraction and
@@ -72,9 +73,8 @@ ENV ETHOS_PDFIUM_LIBRARY_PATH=/opt/ethos/pdfium/lib/libpdfium.so
 
 Pins to duplicate into the consumer manifest: the CLI release-asset and binary sha256 values
 (the same values recorded in `packages/npm/ethos-pdf/vendor/manifest.json`) and the PDFium
-archive/library sha256 values from `docs/pdfium-profile.md` / `scripts/fetch-pdfium.sh`. Until
-NIP-5 ships `ethos doctor` and a published pin manifest, consumers must re-sync these by hand on
-every version bump (friction entries FR-2/FR-3/FR-4).
+archive/library sha256 values from `docs/pdfium-profile.md` / `scripts/fetch-pdfium.sh`.
+Consumers must re-sync these pins by hand on every version bump (friction entries FR-2/FR-3/FR-4).
 
 ## Compatibility promise (Ethos → DocuShell and all consumers)
 
@@ -95,7 +95,7 @@ every version bump (friction entries FR-2/FR-3/FR-4).
 - Reports are stored with the job record so status/download routes can serve them under the
   existing ownership/expiry checks; crop artifacts follow DocuShell's retention/purge windows.
 
-### Parse-job verification lane (NIP-1.3)
+### Parse-job verification lane
 
 After OpenDataLoader produces JSON, the parse worker deterministically projects its selected
 evidence refs into quote/table-cell citations and runs the public CLI with
@@ -113,7 +113,7 @@ The worker stores only the canonical report as a companion artifact; its checks 
 submitted claims, and the deterministic citation input is tested byte-identically across runs.
 This verifies citation grounding, not the semantic truth of parser text.
 
-### Answer-release gate (NIP-1.4)
+### Answer-release gate
 
 The server-owned Evidence Chat answer path derives `proof_summary` from the canonical Ethos
 report, maps reusable check IDs back to stable application claim IDs, and then applies
@@ -133,7 +133,7 @@ The DocuShell fixture test reproduces the checked-in Ethos
 byte-identical JSON across two runs. The canonical verification report remains the grounding
 audit artifact; the answer-release envelope records application policy above it.
 
-### Crop inspection lane (NIP-1.5)
+### Crop inspection lane
 
 Evidence-required parse jobs render inspectable citation crops while the original PDF is still
 available in the parse worker. Because the public `crop_element` contract accepts native Ethos
@@ -163,11 +163,11 @@ The integration test runs crop production twice over identical inputs and compar
 bundle bytes, checks request-reference compatibility with Ethos's committed schema example, and
 covers partial mapping plus missing-PDFium failure behavior.
 
-## Sequenced work
+## Integration history
 
-Tracked in `NEXT_IMPLEMENTATION_PLAN.md` §NIP-1 (NIP-1.2 vendored CLI → NIP-1.3 verify lane →
-NIP-1.4 answer-release gate → NIP-1.5 crop inspection → NIP-1.6 friction log → NIP-1.7
-closeout). DocuShell-side tickets should mirror these IDs.
+The vendored CLI, verification lane, answer-release gate, crop inspection, friction log, and
+closeout were completed in sequence. The dated validation record retains their historical task
+IDs and evidence bindings.
 
 ## Friction log process
 

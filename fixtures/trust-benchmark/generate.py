@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the deterministic NIP-3.1 synthetic trust corpus."""
+"""Generate the deterministic synthetic trust corpus."""
 
 from __future__ import annotations
 
