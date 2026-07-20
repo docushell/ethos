@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- benchmark: record NIP-3.3's deterministic internal trust-judge report and retain the publication
+  block pending the NIP-3.4 claim-audit packet.
 - benchmark: complete NIP-3.2's dated two-model, five-run LLM citation-judge study with 200
   schema-valid live records, cost/latency capture, and an internal-only result pending report
   generation and claim audit.
