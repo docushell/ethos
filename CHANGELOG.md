@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- ci: close NIP-5.3 and NIP-6.1–6.2 against green Windows x64 build/runtime smoke,
+  macOS/Linux/Windows verification determinism, and released-CLI Action dogfood evidence while
+  retaining the separate public Windows artifact and Action publication boundaries.
 - ci: bind registry-facing install checks to the published release-state versions rather than
   ahead-of-publication candidate metadata, and make the DocuShell source binding externally
   verifiable without treating its commit as an Ethos repository object; remove the accepted

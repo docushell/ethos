@@ -94,8 +94,9 @@ workspace, packaging, or documentation path accidentally presents this prototype
       `ethos-doc-core 0.4.0` first, as required by crates.io dependency ordering.
 - [x] NIP-7.3 cold-start check: this release pass followed `AGENTS.md` → active plan → one prep
       document without creating per-artifact ceremony records.
-- [ ] Windows x64 double-build/runtime smoke remains a NIP-5.3 blocker; Windows is skipped from
-      the v0.4.0 publication set unless the `windows-latest` evidence passes before release.
+- [x] Windows x64 double-build/runtime smoke passed in release run `29728642038`, and the full
+      macOS/Linux/Windows verification determinism matrix passed in run `29728692721`. Public
+      Windows artifact publication remains a separate first-of-class release decision.
 
 ### 3. Version activation
 

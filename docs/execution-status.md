@@ -44,6 +44,13 @@ claims from proposed wording. All 50 sibling tests, smoke commands, hash binding
 byte-identical regeneration pass on the merged tree. This closes the internal NIP-3 workstream,
 not the public-wording lane: no approved public claim string or publication state has changed.
 
+NIP-5.3 and NIP-6.1–6.2 completed their remote validation on PR #223 source `a9c1ced`. Release
+run `29728642038` produced byte-identical Windows verify-only candidates and passed real `.exe`
+smoke plus inventory validation; determinism run `29728692721` passed the verification matrix on
+macOS, Linux, and Windows. PR CI run `29728324553` passed the checksum-pinned released-CLI Action
+contract and grounded/fabricated dogfood outcomes. These results close the implementation tasks;
+they do not publish the Action or a Windows artifact and do not change approved public wording.
+
 v0.3.0 final GitHub Release metadata closeout is recorded in
 `docs/validation/v0-3-0-release-metadata-closeout-validation-2026-07-03.md`. GitHub Release
 `v0.3.0` is the repository's latest release, and its live body matches the canonical final notes in
