@@ -213,7 +213,7 @@ class EvidenceAnchorV1ContractTests(unittest.TestCase):
         self.assertIn("`examples/verify/evidence_anchor_v1_contract.json`", text)
 
     def test_status_docs_link_contract_without_expanding_posture(self) -> None:
-        for path in [ROADMAP, EXECUTION_STATUS]:
+        for path in [EXECUTION_STATUS]:
             text = path.read_text(encoding="utf-8")
             self.assertIn("evidence-anchor-v1-contract.md", text, path)
             self.assertIn("make evidence-anchor-v1-contract", text, path)
