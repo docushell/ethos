@@ -13,9 +13,18 @@ python3 -m pip install ethos-pdf==0.3.0
 
 PDF-backed parse and crop commands require a caller-provided PDFium dynamic library.
 
-1. Install or build PDFium for your platform.
-2. Set `ETHOS_PDFIUM_LIBRARY_PATH` to the dynamic library path.
-3. Point the Python wrapper at a local `ethos` binary or ensure `ethos` is on `PATH`.
+From an Ethos source checkout, run `scripts/fetch-pdfium.sh`, apply the export it prints, and run
+`ethos doctor --require-pdfium`. The fetch script verifies the pinned archive and runtime sha256
+values and never runs automatically.
+
+Python wheels cannot run post-install hooks. Run this after wheel installation to print the same
+setup path:
+
+```sh
+python -m ethos_pdf
+```
+
+Point the Python wrapper at a local `ethos` binary or ensure `ethos` is on `PATH`.
 
 Example:
 

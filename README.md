@@ -28,6 +28,32 @@ inspection.
 One native parser. No JVM. No Python ML stack. No GPU. No OCR model in the base install.
 Same input, same pinned profile, same stable payload projection and fingerprint.
 
+## Catch a fabricated citation in 60 seconds
+
+Conversion tools stop at output. Ethos checks whether cited evidence actually exists in the
+source. This works on checked-in JSON fixtures and does not require PDFium:
+
+```bash
+cargo build --locked -p ethos-cli
+
+# One fabricated quote, one citation to a missing element - both get caught:
+./target/debug/ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/native_ungrounded_citations.json \
+  --fail-on-ungrounded
+# exit 1: "Operating margin was 99%" is not supported by the source evidence
+
+# Correct citations against the same source verify cleanly:
+./target/debug/ethos verify schemas/examples/document.example.json \
+  --citations examples/verify/native_grounded_citations.json \
+  --fail-on-ungrounded
+# exit 0: all requested evidence is grounded
+```
+
+The failing run still writes a full verification report naming each check's status
+(`grounded`, `not_found`, `mismatch`, `stale_fingerprint`, `capability_limited`), so the negative
+result is auditable evidence, not just a nonzero exit code. This demonstrates evidence grounding
+over checked-in fixtures; it is not a semantic-correctness or parser-quality claim.
+
 ## Why Ethos?
 
 Many document tools focus on converting files into text, Markdown, or structured elements. Ethos
@@ -100,6 +126,7 @@ Prerequisites:
 - Python 3 for demo and schema-validation targets
 - `jsonschema>=4.18` in the Python environment used for `make verify-alpha`
 - caller-provided local PDFium through `ETHOS_PDFIUM_LIBRARY_PATH` only for PDFium-backed paths
+  (`scripts/fetch-pdfium.sh` can fetch the exact pinned evaluation archive; see the quickstart)
 
 From a source checkout:
 
@@ -180,6 +207,16 @@ GitHub Release `v0.3.0` also provides evaluation CLI archives for macOS arm64 an
 This source-checkout quickstart uses a generated, license-clean born-digital fixture. PDFium remains
 caller-provided through `ETHOS_PDFIUM_LIBRARY_PATH`; Ethos checks whether the configured PDFium is
 usable by Ethos, and does not download, install, repair, or vet untrusted dynamic libraries.
+
+The optional helper `scripts/fetch-pdfium.sh` keeps that boundary while removing the setup
+friction: it downloads only the exact pinned `bblanchon/pdfium-binaries` release recorded in
+`docs/pdfium-profile.md`, verifies the recorded archive sha256 before extraction and the recorded
+runtime library sha256 after, then prints the `ETHOS_PDFIUM_LIBRARY_PATH` export line. Any hash
+mismatch is fatal.
+
+```bash
+scripts/fetch-pdfium.sh   # optional: fetch + verify the pinned evaluation PDFium
+```
 
 ```bash
 cargo build --locked -p ethos-cli
@@ -466,6 +503,7 @@ Report vulnerabilities through GitHub private vulnerability reporting. See `SECU
 | Rust version errors or unexpected compiler behavior | Run `rustup show`; this repo pins Rust `1.87.0` through `rust-toolchain.toml`. |
 | `ethos verify --fail-on-ungrounded` exits `1` | The command wrote a report, but at least one requested evidence check was stale, missing, mismatched, unsupported, or capability-blocked. Inspect `all_evidence_grounded`, `checks[].status`, `warnings`, `capability_limits`, and the summary `proof_status`/`proof_limitations` if using `--format summary`. |
 | Scanned or image-only PDFs do not parse | Base Ethos does not include OCR. These inputs should fail with `ocr_required` until OCR support is explicitly added. |
+| Need a PDFium library for evaluation | Run `scripts/fetch-pdfium.sh`. It downloads the exact pinned archive recorded in `docs/pdfium-profile.md`, verifies both recorded sha256 values, and prints the `ETHOS_PDFIUM_LIBRARY_PATH` export line. |
 | Rendered crop PNGs are missing or skipped | Logical crop descriptor JSON works in the alpha path; rendered PNG crop artifacts require the source PDF path and a configured PDFium runtime. |
 | Release/tag workflow fails | Release, package, hosted, Windows, bundled PDFium, benchmark, and production surfaces are blocked unless a dedicated approval record authorizes the exact surface. |
 

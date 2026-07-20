@@ -22,13 +22,14 @@ use ethos_core::crop_element::{CropElementDescriptor, CropElementRendering};
 use ethos_core::error::EthosError;
 use ethos_core::fingerprint::is_fingerprint_form;
 use ethos_core::grounding::{
-    Capabilities, CoordinateOrigin, GroundingElement, GroundingSource, GroundingSpan,
-    GroundingTable, PageGeometry, ParserIdentity,
+    Capabilities, CoordinateOrigin, GroundingElement, GroundingProvenance, GroundingSource,
+    GroundingSpan, GroundingTable, PageGeometry, ParserIdentity,
 };
 use ethos_core::model::Document;
 use ethos_core::verify_types::{
     CapabilityLimit, Check, CheckReason, CheckStatus, ClaimKind, EvidenceOptions, MatchMethod,
     ProofLimitation, ProofStatus, ProofSummary, VerificationConfig, VerificationReport,
+    HARDENED_VERIFICATION_SCHEMA_VERSION,
 };
 use ethos_grounding_opendataloader_json::OdlJsonSource;
 use ethos_verify::CitationInput;
@@ -316,6 +317,7 @@ fn check_reason_label(reason: CheckReason) -> &'static str {
         CheckReason::SpanNotFound => "span_not_found",
         CheckReason::PageNotFound => "page_not_found",
         CheckReason::BboxNotFound => "bbox_not_found",
+        CheckReason::LocatorConflict => "locator_conflict",
         CheckReason::MissingPageForBbox => "missing_page_for_bbox",
         CheckReason::MissingTableCellLocator => "missing_table_cell_locator",
         CheckReason::TableNotFound => "table_not_found",
@@ -367,6 +369,10 @@ fn check_diagnostic(check: &Check) -> String {
         Some(CheckReason::BboxNotFound) => {
             "bbox locator did not resolve to a containing grounding element".to_string()
         }
+        Some(CheckReason::LocatorConflict) => {
+            "citation locators conflict; provide one primary locator and an optional agreeing page"
+                .to_string()
+        }
         Some(CheckReason::MissingPageForBbox) => {
             "bbox locator requires page unless another target locator is present".to_string()
         }
@@ -395,6 +401,7 @@ fn capability_limit_label(limit: CapabilityLimit) -> &'static str {
         CapabilityLimit::MissingFingerprint => "missing_fingerprint",
         CapabilityLimit::UnknownCoordinateOrigin => "unknown_coordinate_origin",
         CapabilityLimit::MissingCropSupport => "missing_crop_support",
+        CapabilityLimit::MissingStructure => "missing_structure",
     }
 }
 
@@ -534,6 +541,10 @@ impl GroundingSource for NativeCropSource<'_> {
 
     fn elements(&self) -> Vec<GroundingElement> {
         self.document.elements()
+    }
+
+    fn structural_provenance(&self, element_id: &str) -> Option<GroundingProvenance> {
+        self.document.structural_provenance(element_id)
     }
 
     fn spans(&self) -> Vec<GroundingSpan> {
@@ -762,10 +773,15 @@ fn validate_citation_input(
 }
 
 fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failure> {
-    if config.schema_version != ethos_core::SCHEMA_VERSION {
+    let hardening_enabled = config.hardening.is_some_and(|options| options.enabled());
+    let expected_schema_version = if hardening_enabled {
+        HARDENED_VERIFICATION_SCHEMA_VERSION
+    } else {
+        ethos_core::SCHEMA_VERSION
+    };
+    if config.schema_version != expected_schema_version {
         return Err(Failure::Usage(format!(
-            "verification config schema_version must be {}",
-            ethos_core::SCHEMA_VERSION
+            "verification config schema_version must be {expected_schema_version}"
         )));
     }
     if config.claim_kinds.is_empty() {
@@ -800,6 +816,14 @@ fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failu
         return Err(Failure::Usage(
             "verification config max_checks must be at least 1".to_string(),
         ));
+    }
+    if let Some(hardening) = config.hardening {
+        if hardening.include_context_echo && !(1..=4096).contains(&hardening.context_window_chars) {
+            return Err(Failure::Usage(
+                "verification config context_window_chars must be between 1 and 4096 when context echo is enabled"
+                    .to_string(),
+            ));
+        }
     }
     Ok(())
 }
@@ -838,6 +862,7 @@ mod tests {
             fingerprint_stale: false,
             all_evidence_grounded: true,
             checks,
+            dispersion: None,
             unsupported_claim_kinds: Vec::new(),
             warnings: Vec::new(),
         }
@@ -868,6 +893,9 @@ mod tests {
                 bbox: Some(bbox),
                 crop_ref: Some(crop_ref.to_string()),
             }),
+            resolved_element_ids: Vec::new(),
+            provenance: None,
+            context_echo: None,
             warnings: Vec::new(),
         }
     }
@@ -1064,6 +1092,9 @@ mod tests {
                         bbox: Some([7392, 5482, 19378, 7226]),
                         crop_ref: Some("crop-old.json".to_string()),
                     }),
+                    resolved_element_ids: Vec::new(),
+                    provenance: None,
+                    context_echo: None,
                     warnings: Vec::new(),
                 },
                 Check {
@@ -1090,9 +1121,13 @@ mod tests {
                         bbox: Some([0, 0, 100, 100]),
                         crop_ref: None,
                     }),
+                    resolved_element_ids: Vec::new(),
+                    provenance: None,
+                    context_echo: None,
                     warnings: Vec::new(),
                 },
             ],
+            dispersion: None,
             unsupported_claim_kinds: Vec::new(),
             warnings: Vec::new(),
         };

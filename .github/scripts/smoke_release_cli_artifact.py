@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -26,7 +27,16 @@ from pathlib import Path
 from typing import Dict, Optional
 
 
-REQUIRED_FILES = ("ethos", "LICENSE", "NOTICE", "pdfium-manual-setup.md")
+UNIX_REQUIRED_FILES = ("ethos", "LICENSE", "NOTICE", "pdfium-manual-setup.md")
+WINDOWS_REQUIRED_FILES = (
+    "ethos.exe",
+    "LICENSE",
+    "NOTICE",
+    "PDFIUM-MANUAL-SETUP.md",
+    "VERIFY-QUICKSTART.txt",
+    "verify-example/document.json",
+    "verify-example/citations.json",
+)
 PDFIUM_MESSAGE = (
     "PDFium not found: set ETHOS_PDFIUM_LIBRARY_PATH to the caller-provided "
     "PDFium dynamic library path. Run ethos doctor for setup diagnostics, run "
@@ -51,11 +61,12 @@ def require(condition: bool, message: str) -> None:
 
 
 def smoke_artifact(artifact_dir: Path, expected_version: str, target: str) -> Dict[str, object]:
-    for required in REQUIRED_FILES:
+    required_files = WINDOWS_REQUIRED_FILES if target == "windows-x64" else UNIX_REQUIRED_FILES
+    for required in required_files:
         path = artifact_dir / required
         require(path.is_file(), f"artifact is missing required file: {required}")
 
-    ethos = artifact_dir / "ethos"
+    ethos = artifact_dir / ("ethos.exe" if target == "windows-x64" else "ethos")
     version = run([str(ethos), "--version"])
     require(version.returncode == 0, f"ethos --version failed: {version.stderr}")
     require(
@@ -89,23 +100,45 @@ def smoke_artifact(artifact_dir: Path, expected_version: str, target: str) -> Di
         PDFIUM_MESSAGE in missing_pdfium.stderr,
         "missing PDFium smoke did not include the setup guidance",
     )
-    return {
+    evidence = {
         "schema": "ethos.release_artifact_smoke.v1",
         "target": target,
         "artifact_dir": artifact_dir.name,
-        "required_files": list(REQUIRED_FILES),
+        "required_files": list(required_files),
         "version_stdout": version.stdout.strip(),
         "help_command_groups": ["doc", "rag", "security", "verify", "fingerprint"],
         "missing_pdfium_exit_code": missing_pdfium.returncode,
         "missing_pdfium_message": PDFIUM_MESSAGE,
     }
+    if target == "windows-x64":
+        verify_command = [
+            str(ethos),
+            "verify",
+            str(artifact_dir / "verify-example/document.json"),
+            "--citations",
+            str(artifact_dir / "verify-example/citations.json"),
+            "--fail-on-ungrounded",
+        ]
+        first = run(verify_command)
+        second = run(verify_command)
+        require(first.returncode == 0, f"Windows verify smoke failed: {first.stderr}")
+        require(second.returncode == 0, f"Windows verify repeat failed: {second.stderr}")
+        require(first.stdout == second.stdout, "Windows verify output was not byte-identical")
+        evidence["artifact_scope"] = "verify-only"
+        evidence["verification_exit_code"] = first.returncode
+        evidence["verification_stdout_sha256"] = hashlib.sha256(
+            first.stdout.encode("utf-8")
+        ).hexdigest()
+    return evidence
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifact-dir", required=True)
     parser.add_argument("--expected-version", default="ethos 0.1.1")
-    parser.add_argument("--target", required=True, choices=("macos-arm64", "linux-x64"))
+    parser.add_argument(
+        "--target", required=True, choices=("macos-arm64", "linux-x64", "windows-x64")
+    )
     parser.add_argument("--out")
     args = parser.parse_args()
 

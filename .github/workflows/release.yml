@@ -26,6 +26,8 @@ jobs:
         run: python3 .github/scripts/test_npm_binary_package_scaffold.py
       - name: PDFium manual setup contract tests
         run: python3 .github/scripts/test_pdfium_manual_setup_contract.py
+      - name: Windows verify-only candidate contract tests
+        run: python3 .github/scripts/test_windows_verify_candidate.py
 
   cli-draft-artifacts:
     needs: preflight
@@ -65,7 +67,7 @@ jobs:
         run: |
           python3 .github/scripts/smoke_release_cli_artifact.py \
             --artifact-dir "target/release-artifacts/ethos-${{ matrix.artifact_target }}" \
-            --expected-version "ethos 0.3.0" \
+            --expected-version "ethos 0.4.0" \
             --target "${{ matrix.artifact_target }}" \
             --out "target/release-artifacts/ethos-${{ matrix.artifact_target }}.smoke.json"
       - name: validate draft artifact inventory
@@ -78,3 +80,35 @@ jobs:
             target/release-artifacts/*.sha256
             target/release-artifacts/*.inventory.json
             target/release-artifacts/*.smoke.json
+
+  windows-verify-draft-artifact:
+    needs: preflight
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show
+      - name: build Windows x64 CLI
+        run: cargo build --locked --release -p ethos-cli
+      - name: assemble deterministic verify-only candidates twice
+        run: |
+          python scripts/build-windows-verify-candidate.py --ethos-binary target/release/ethos.exe --version 0.4.0 --out-dir target/release-artifacts/run1
+          python scripts/build-windows-verify-candidate.py --ethos-binary target/release/ethos.exe --version 0.4.0 --out-dir target/release-artifacts/run2
+          python -c "from pathlib import Path; a=Path('target/release-artifacts/run1/ethos-windows-x64.zip').read_bytes(); b=Path('target/release-artifacts/run2/ethos-windows-x64.zip').read_bytes(); assert a == b, 'Windows candidate archives differ'"
+      - name: extract Windows candidate for smoke
+        run: python -m zipfile -e target/release-artifacts/run1/ethos-windows-x64.zip target/release-artifacts/extracted
+      - name: write Windows draft inventory
+        run: |
+          python .github/scripts/write_release_artifact_inventory.py --artifact target/release-artifacts/run1/ethos-windows-x64.zip --checksum target/release-artifacts/run1/ethos-windows-x64.zip.sha256 --target windows-x64 --out target/release-artifacts/run1/ethos-windows-x64.inventory.json
+      - name: smoke Windows verify-only artifact
+        run: |
+          python .github/scripts/smoke_release_cli_artifact.py --artifact-dir target/release-artifacts/extracted/ethos-windows-x64 --expected-version "ethos 0.4.0" --target windows-x64 --out target/release-artifacts/run1/ethos-windows-x64.smoke.json
+      - name: validate Windows draft inventory
+        run: python .github/scripts/validate_release_artifact_inventory.py target/release-artifacts/run1/ethos-windows-x64.inventory.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ethos-cli-draft-windows-x64
+          path: |
+            target/release-artifacts/run1/*.zip
+            target/release-artifacts/run1/*.sha256
+            target/release-artifacts/run1/*.inventory.json
+            target/release-artifacts/run1/*.smoke.json

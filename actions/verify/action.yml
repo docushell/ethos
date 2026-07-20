@@ -1,0 +1,50 @@
+name: Ethos citation verification
+description: Verify citation grounding with a checksum-pinned Ethos CLI.
+
+inputs:
+  source:
+    description: Path to an Ethos document or supported grounding-source JSON file.
+    required: true
+  citations:
+    description: Path to the citation claims JSON file.
+    required: true
+  grounding:
+    description: Grounding source adapter (native or opendataloader-json).
+    required: false
+    default: native
+  report:
+    description: Path for the canonical verification report.
+    required: false
+    default: ethos-verification-report.json
+
+runs:
+  using: composite
+  steps:
+    # Consumer path: intentionally install the last published CLI. Candidate-source
+    # verification is a separate repository CI responsibility until v0.4.0 publishes.
+    - name: Install pinned Ethos CLI
+      shell: bash
+      env:
+        ETHOS_ACTION_ARCHIVE_URL: https://github.com/docushell/ethos/releases/download/v0.3.0/ethos-linux-x64.tar.gz
+        ETHOS_ACTION_ARCHIVE_SHA256: b549ba5968e04b7679a8d3e879cd45d27f3e9a6fd226eee5c270a4e4f5c01405
+        ETHOS_ACTION_BINARY_SHA256: b416993fc38e6f794611b8b71789ed85af18eb6aa63fef380d9ae7738661f154
+      run: |
+        python3 "$GITHUB_ACTION_PATH/install_cli.py" \
+          --url "$ETHOS_ACTION_ARCHIVE_URL" \
+          --archive-sha256 "$ETHOS_ACTION_ARCHIVE_SHA256" \
+          --binary-sha256 "$ETHOS_ACTION_BINARY_SHA256" \
+          --out "$RUNNER_TEMP/ethos-action/ethos"
+    - name: Verify citation grounding
+      shell: bash
+      env:
+        ETHOS_ACTION_SOURCE: ${{ inputs.source }}
+        ETHOS_ACTION_CITATIONS: ${{ inputs.citations }}
+        ETHOS_ACTION_GROUNDING: ${{ inputs.grounding }}
+        ETHOS_ACTION_REPORT: ${{ inputs.report }}
+      run: |
+        python3 "$GITHUB_ACTION_PATH/run_verify.py" \
+          --ethos "$RUNNER_TEMP/ethos-action/ethos" \
+          --source "$ETHOS_ACTION_SOURCE" \
+          --citations "$ETHOS_ACTION_CITATIONS" \
+          --grounding "$ETHOS_ACTION_GROUNDING" \
+          --report "$ETHOS_ACTION_REPORT"

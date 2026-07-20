@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "artifact_type": { "const": "ethos.evidence_anchor_report.v1" },
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "enum": ["1.0.0", "1.1.0"] },
     "source_fingerprint": { "$ref": "#/$defs/fingerprint" },
     "grounding": {
       "type": "object",
@@ -53,6 +53,25 @@
       "items": { "$ref": "#/$defs/anchor" }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "anchors": {
+            "contains": {
+              "anyOf": [
+                { "required": ["resolved_element_ids"] },
+                { "required": ["provenance"] },
+                { "required": ["context_echo"] }
+              ]
+            }
+          }
+        },
+        "required": ["anchors"]
+      },
+      "then": { "properties": { "schema_version": { "const": "1.1.0" } } }
+    }
+  ],
   "$defs": {
     "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "capability_limit": {
@@ -62,7 +81,8 @@
         "missing_tables",
         "missing_fingerprint",
         "unknown_coordinate_origin",
-        "missing_crop_support"
+        "missing_crop_support",
+        "missing_structure"
       ]
     },
     "checks": {
@@ -119,10 +139,49 @@
           "enum": ["none", "page", "text", "bbox", "text_bbox", "table_cell"]
         },
         "checks": { "$ref": "#/$defs/checks" },
+        "resolved_element_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "provenance": { "$ref": "#/$defs/provenance" },
+        "context_echo": { "$ref": "#/$defs/context_echo" },
         "capability_limits": {
           "type": "array",
           "items": { "$ref": "#/$defs/capability_limit" },
           "uniqueItems": true
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["status"],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "enum": ["available", "capability_limited", "not_applicable"] },
+        "heading_path": { "type": "array", "items": { "type": "string" } },
+        "element_role": { "type": "string" },
+        "previous_element_id": { "type": "string" },
+        "next_element_id": { "type": "string" }
+      }
+    },
+    "context_echo": {
+      "type": "object",
+      "required": ["before", "match", "after"],
+      "additionalProperties": false,
+      "properties": {
+        "before": { "type": "string" },
+        "match": { "type": "string" },
+        "after": { "type": "string" },
+        "element_boundary": {
+          "type": "object",
+          "required": ["offset", "left_element_id", "right_element_id"],
+          "additionalProperties": false,
+          "properties": {
+            "offset": { "type": "integer", "minimum": 0 },
+            "left_element_id": { "type": "string" },
+            "right_element_id": { "type": "string" }
+          }
         }
       }
     }

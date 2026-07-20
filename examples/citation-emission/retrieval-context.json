@@ -1,0 +1,13 @@
+{
+  "document_fingerprint": "sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3",
+  "pages": ["p0001"],
+  "elements": ["e000001", "e000002", "e000003"],
+  "spans": [],
+  "table_cells": [
+    {
+      "table_id": "t0001",
+      "row": 1,
+      "col": 1
+    }
+  ]
+}

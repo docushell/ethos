@@ -135,7 +135,8 @@ class AppAnswerReleaseDemoTests(unittest.TestCase):
 
         unsupported = claims["claim-margin"]
         self.assertFalse(unsupported["citation_grounded"])
-        self.assertEqual("unsupported", unsupported["claim_type"])
+        self.assertNotIn("claim_type", unsupported)
+        self.assertEqual("unsupported", unsupported["claim_support"])
         self.assertEqual("block", unsupported["release_action"])
         self.assertEqual("cannot_answer_from_sources", unsupported["release_reason"])
 

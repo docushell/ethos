@@ -176,6 +176,15 @@ class ReleaseStateTests(unittest.TestCase):
         with self.assertRaisesRegex(ReleaseStateError, "must not contain duplicates"):
             load_release_state(self.root, self.path)
 
+    def test_approved_blocker_may_be_removed(self) -> None:
+        state = deepcopy(self.state)
+        state["blocked_lanes"].remove("DocuShell integration")
+        self.write_state(state)
+
+        rendered = render_marked_block(load_release_state(self.root, self.path))
+
+        self.assertNotIn("DocuShell integration", rendered)
+
     def test_write_then_check_repairs_only_marked_region(self) -> None:
         self.write_state()
         block = render_marked_block(load_release_state(self.root, self.path))

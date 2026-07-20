@@ -10,7 +10,7 @@ Status: v0.3.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-
 
 Current closeout records: [rust python publication](validation/v0-3-0-publication-closeout-validation-2026-07-01.md); [github release artifacts](validation/v0-3-0-artifact-publication-closeout-validation-2026-07-02.md); [npm publication](validation/v0-3-0-npm-publication-closeout-validation-2026-07-02.md); [public install wording](validation/v0-3-0-public-install-wording-closeout-validation-2026-07-02.md); [package tags](validation/v0-3-0-package-tag-closeout-validation-2026-07-02.md); [release tag](validation/v0-3-0-release-tag-closeout-validation-2026-07-02.md); [release metadata](validation/v0-3-0-release-metadata-closeout-validation-2026-07-03.md).
 
-Still blocked: additional release tags or release targets, DocuShell integration, hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports and claims, speed, footprint, parser-quality, and table-quality claims, ethos-doc, and ethos-rag.
+Still blocked: additional release tags or release targets, hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports and claims, speed, footprint, parser-quality, and table-quality claims, ethos-doc, and ethos-rag.
 <!-- END GENERATED CURRENT RELEASE STATE -->
 
 v0.3.0 final GitHub Release metadata closeout is recorded in

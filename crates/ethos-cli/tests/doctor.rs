@@ -60,7 +60,8 @@ fn pdfium_configured() -> Option<PathBuf> {
 }
 
 fn assert_pdfium_setup_guidance(message: &str) {
-    assert!(message.contains("ethos doctor"));
+    assert!(message.contains("scripts/fetch-pdfium.sh"));
+    assert!(message.contains("sha256"));
     assert!(message.contains("ethos doctor --require-pdfium"));
     assert!(message.contains("docs/pdfium-manual-setup.md"));
 }
@@ -93,6 +94,7 @@ fn doctor_warns_and_succeeds_when_pdfium_is_unset() {
     assert!(stdout.contains("ETHOS_PDFIUM_LIBRARY_PATH: unset"));
     assert!(stdout.contains("PDFium"));
     assert!(stdout.contains("warning"));
+    assert_pdfium_setup_guidance(&stdout);
     if cfg!(all(target_os = "macos", target_arch = "aarch64"))
         || cfg!(all(target_os = "linux", target_arch = "x86_64"))
     {
@@ -144,6 +146,10 @@ fn doctor_reports_non_library_file_as_unusable_without_crashing_main_process() {
     assert!(stdout.contains("configured PDFium is not usable by Ethos"));
     let error: Value = serde_json::from_slice(&output.stderr).expect("stderr is error JSON");
     assert_eq!(error["error"]["code"], "internal_error");
+    assert!(error["error"]["message"]
+        .as_str()
+        .unwrap()
+        .contains("pinned phase 1 profile"));
     assert_pdfium_setup_guidance(error["error"]["message"].as_str().unwrap());
 }
 
@@ -166,4 +172,5 @@ fn doctor_require_pdfium_succeeds_when_real_pdfium_is_configured() {
     );
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("configured PDFium is usable by Ethos"));
+    assert!(stdout.contains("matches the pinned runtime sha256"));
 }

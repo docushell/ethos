@@ -15,6 +15,7 @@ consumer-facing schema surface; compatibility and versioning rules apply to it.
 | `ethos-chunks.schema.json` | `chunks.jsonl` — one self-describing RAG chunk per line |
 | `ethos-security-report.schema.json` | `security_report.json` |
 | `ethos-citations.schema.json` | citation input consumed by `ethos verify --citations` |
+| `ethos-llm-citation-output.schema.json` | independently versioned model/framework callback output hydrated into verifier citation input; see `docs/citation-emission-spec.md` |
 | `ethos-verification-report.schema.json` | `verification_report.json` |
 | `ethos-app-answer-release-decision.schema.json` | non-canonical app wrapper decision envelope for answer release policy over Ethos proof summaries |
 | `ethos-evidence-anchor-request.schema.json` | evidence refs consumed by `ethos evidence anchor --evidence-refs` |

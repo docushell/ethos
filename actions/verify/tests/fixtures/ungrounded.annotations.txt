@@ -1,0 +1,2 @@
+::error file=document.json,title=Ethos citation v0001::mismatch (text_mismatch): The document states that lunar revenue doubled.
+::warning file=document.json,title=Ethos capability limited::missing_fingerprint

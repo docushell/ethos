@@ -171,7 +171,7 @@ class CiWorkflowTests(unittest.TestCase):
             "test_milestone_e_package_publication_dependency_ordering.py",
             "test_milestone_e_package_publication_current_registry_assembly.py",
             "test_milestone_e_package_publication_public_installation_availability.py",
-            "test_v0_3_0_version_activation.py",
+            "test_v0_4_0_version_activation.py",
         )
         for guard in active_guards:
             command = f"python3 .github/scripts/{guard}"

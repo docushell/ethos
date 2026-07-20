@@ -59,15 +59,21 @@ EXPECTED_APP_STATUSES = [
     "partial_certified",
     "supported_synthesis_needs_review",
     "grounded_but_irrelevant",
+    "claim_support_needs_review",
+    "claim_support_rejected",
     "cannot_answer_from_sources",
 ]
 EXPECTED_RELEVANCE = ["direct_answer", "supports_answer", "background_only", "unrelated"]
-EXPECTED_CLAIM_TYPES = ["source_fact", "synthesis", "unsupported"]
+EXPECTED_CLAIM_TYPES = ["source_fact", "synthesis"]
+EXPECTED_CLAIM_SUPPORT = ["supported", "unsupported", "contradicted", "not_evaluated"]
 EXPECTED_RELEASE_ACTIONS = ["show_final", "needs_review", "block"]
 EXPECTED_RELEASE_REASONS = [
     "certified",
     "supported_synthesis_needs_review",
     "grounded_but_irrelevant",
+    "claim_support_not_evaluated",
+    "unsupported_claim",
+    "contradicted_claim",
     "cannot_answer_from_sources",
 ]
 
@@ -92,11 +98,19 @@ def claim_inputs(example: dict) -> list[dict]:
         "citation_grounded",
         "question_relevance",
         "claim_type",
+        "claim_support",
     ]
-    return [
+    inputs = [
         {field: claim[field] for field in fields if field in claim}
         for claim in example["claims"]
     ]
+    for claim in inputs:
+        if "claim_type" not in claim and claim.get("claim_support") in {
+            "unsupported",
+            "contradicted",
+        }:
+            claim["claim_type"] = "unsupported"
+    return inputs
 
 
 def normalized_markdown(path: Path) -> str:
@@ -122,6 +136,7 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
         self.assertEqual(EXPECTED_APP_STATUSES, schema_enum("app_status"))
         self.assertEqual(EXPECTED_RELEVANCE, schema_enum("question_relevance"))
         self.assertEqual(EXPECTED_CLAIM_TYPES, schema_enum("claim_type"))
+        self.assertEqual(EXPECTED_CLAIM_SUPPORT, schema_enum("claim_support"))
         self.assertEqual(EXPECTED_RELEASE_ACTIONS, schema_enum("release_action"))
         self.assertEqual(EXPECTED_RELEASE_REASONS, schema_enum("release_reason"))
         claim_properties = load_json(SCHEMA)["$defs"]["claim_decision"]["properties"]
@@ -154,7 +169,8 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
 
         unsupported = claims["claim-margin"]
         self.assertFalse(unsupported["citation_grounded"])
-        self.assertEqual("unsupported", unsupported["claim_type"])
+        self.assertNotIn("claim_type", unsupported)
+        self.assertEqual("unsupported", unsupported["claim_support"])
         self.assertEqual("cannot_answer_from_sources", unsupported["release_reason"])
 
     def test_example_claim_ids_are_unique_and_release_lists_are_unambiguous(self) -> None:
@@ -210,6 +226,7 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
                     "check_id": "v0001",
                     "question_relevance": "direct_answer",
                     "claim_type": "source_fact",
+                    "claim_support": "supported",
                 }
             ],
         )
@@ -241,21 +258,20 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
 
         self.assertEqual(example, decision)
 
-    def test_schema_rejects_grounded_unsupported_claims(self) -> None:
+    def test_schema_allows_grounded_unsupported_claims_only_as_blocked(self) -> None:
         schema = load_json(SCHEMA)
         example = load_json(EXAMPLE)
         claim = example["claims"][-1]
         claim["citation_grounded"] = True
+        claim["release_reason"] = "unsupported_claim"
 
         errors = list(Draft202012Validator(schema).iter_errors(example))
 
-        self.assertTrue(
-            any(
-                list(error.absolute_path) == ["claims", 3, "citation_grounded"]
-                for error in errors
-            ),
-            errors,
-        )
+        self.assertEqual([], errors)
+
+        claim["release_action"] = "show_final"
+        errors = list(Draft202012Validator(schema).iter_errors(example))
+        self.assertTrue(errors)
 
     def test_schema_requires_cannot_answer_claims_to_be_ungrounded(self) -> None:
         schema = load_json(SCHEMA)
@@ -273,6 +289,16 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
             ),
             errors,
         )
+
+    def test_schema_allows_unevaluated_support_when_citation_is_not_grounded(self) -> None:
+        schema = load_json(SCHEMA)
+        example = load_json(EXAMPLE)
+        claim = example["claims"][-1]
+        claim["claim_support"] = "not_evaluated"
+
+        errors = list(Draft202012Validator(schema).iter_errors(example))
+
+        self.assertEqual([], errors)
 
     def test_schema_registry_validates_example(self) -> None:
         text = VALIDATE_EXAMPLES.read_text(encoding="utf-8")
@@ -298,7 +324,12 @@ class AppAnswerReleaseContractTests(unittest.TestCase):
         self.assertIn("`derive_app_answer_release_decision(...)`", text)
         self.assertIn("`check_ids`", text)
         self.assertIn("Ethos verified citation grounding.", text)
-        for token in EXPECTED_APP_STATUSES + EXPECTED_RELEVANCE + EXPECTED_CLAIM_TYPES:
+        for token in (
+            EXPECTED_APP_STATUSES
+            + EXPECTED_RELEVANCE
+            + EXPECTED_CLAIM_TYPES
+            + EXPECTED_CLAIM_SUPPORT
+        ):
             self.assertIn(f"`{token}`", text)
 
     def test_readme_and_spec_point_to_contract(self) -> None:

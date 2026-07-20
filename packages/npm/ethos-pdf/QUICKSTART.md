@@ -32,8 +32,10 @@ before writing the packaged binaries.
 
 ## PDFium Setup
 
-1. Install or build PDFium for your platform.
-2. Set `ETHOS_PDFIUM_LIBRARY_PATH` to the dynamic library path before running PDF-backed commands.
+From an Ethos source checkout, run `scripts/fetch-pdfium.sh`, apply the export it prints, and run
+`ethos doctor --require-pdfium`. The fetch script verifies the pinned archive and runtime sha256
+values and never runs automatically. The package repeats this guidance as a non-blocking
+postinstall warning when `ETHOS_PDFIUM_LIBRARY_PATH` is unset.
 
 Example:
 

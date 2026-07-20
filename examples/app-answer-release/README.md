@@ -15,7 +15,7 @@ verification-report.json
 
 The demo does not call an LLM, does not use DocuShell UI code, and does not ask Ethos to judge
 question relevance or synthesis. Ethos derives the grounding summary. The application supplies the
-original question plus `question_relevance` and `claim_type` labels.
+original question plus `question_relevance`, `claim_type`, and `claim_support` labels.
 
 ## Run
 
@@ -41,4 +41,5 @@ The command prints the decision envelope and exits non-zero if it differs from
 - `claim-revenue`: certified source fact, released into the final answer.
 - `claim-growth-driver`: grounded synthesis, kept for review.
 - `claim-office-background`: grounded but irrelevant, blocked.
-- `claim-margin`: unsupported by reusable grounded evidence, blocked.
+- `claim-margin`: legacy `claim_type: unsupported` input migrates to
+  `claim_support: unsupported` and is blocked.

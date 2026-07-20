@@ -56,9 +56,10 @@ It writes a planning bundle under `target/release-notice-draft/`:
 
 The draft bundle is intentionally marked `draft_not_release_ready`.
 
-The release-prep workflow may also create CI-only draft CLI artifact archives for macOS arm64 and
-Linux x64. Patch `0.1.1` archives must smoke as `ethos 0.1.1`. Those archives must include SHA256
-checksums and an
+The release-prep workflow may also create CI-only draft CLI artifact archives for macOS arm64,
+Linux x64, and verify-only Windows x64. The Windows ZIP bundles no PDFium and includes its
+verification quickstart and fixtures. Patch `0.1.1` archives must smoke as `ethos 0.1.1`. All
+draft archives must include SHA256 checksums and an
 `ethos.release_artifact_inventory.v1` inventory marked `draft_not_release_ready` and
 `publication: blocked`.
 

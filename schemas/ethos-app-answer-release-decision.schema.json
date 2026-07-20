@@ -18,7 +18,7 @@
   "additionalProperties": false,
   "properties": {
     "artifact_type": { "const": "ethos.app_answer_release_decision.v1" },
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "const": "1.1.0" },
     "question": {
       "type": "string",
       "minLength": 1,
@@ -106,6 +106,8 @@
         "partial_certified",
         "supported_synthesis_needs_review",
         "grounded_but_irrelevant",
+        "claim_support_needs_review",
+        "claim_support_rejected",
         "cannot_answer_from_sources"
       ]
     },
@@ -113,7 +115,10 @@
       "enum": ["direct_answer", "supports_answer", "background_only", "unrelated"]
     },
     "claim_type": {
-      "enum": ["source_fact", "synthesis", "unsupported"]
+      "enum": ["source_fact", "synthesis"]
+    },
+    "claim_support": {
+      "enum": ["supported", "unsupported", "contradicted", "not_evaluated"]
     },
     "release_action": {
       "enum": ["show_final", "needs_review", "block"]
@@ -123,6 +128,9 @@
         "certified",
         "supported_synthesis_needs_review",
         "grounded_but_irrelevant",
+        "claim_support_not_evaluated",
+        "unsupported_claim",
+        "contradicted_claim",
         "cannot_answer_from_sources"
       ]
     },
@@ -133,7 +141,7 @@
         "text",
         "citation_grounded",
         "question_relevance",
-        "claim_type",
+        "claim_support",
         "release_action",
         "release_reason"
       ],
@@ -155,6 +163,7 @@
         "citation_grounded": { "type": "boolean" },
         "question_relevance": { "$ref": "#/$defs/question_relevance" },
         "claim_type": { "$ref": "#/$defs/claim_type" },
+        "claim_support": { "$ref": "#/$defs/claim_support" },
         "release_action": { "$ref": "#/$defs/release_action" },
         "release_reason": { "$ref": "#/$defs/release_reason" }
       },
@@ -169,6 +178,7 @@
               "citation_grounded": { "const": true },
               "question_relevance": { "enum": ["direct_answer", "supports_answer"] },
               "claim_type": { "const": "source_fact" },
+              "claim_support": { "const": "supported" },
               "release_action": { "const": "show_final" }
             }
           }
@@ -185,6 +195,7 @@
               "citation_grounded": { "const": true },
               "question_relevance": { "enum": ["direct_answer", "supports_answer"] },
               "claim_type": { "const": "synthesis" },
+              "claim_support": { "const": "supported" },
               "release_action": { "const": "needs_review" }
             }
           }
@@ -198,20 +209,54 @@
             "properties": {
               "citation_grounded": { "const": true },
               "question_relevance": { "enum": ["background_only", "unrelated"] },
+              "claim_support": { "const": "supported" },
               "release_action": { "const": "block" }
             }
           }
         },
         {
           "if": {
-            "properties": { "claim_type": { "const": "unsupported" } },
-            "required": ["claim_type"]
+            "properties": {
+              "claim_support": { "const": "not_evaluated" },
+              "citation_grounded": { "const": true }
+            },
+            "required": ["claim_support", "citation_grounded"]
           },
           "then": {
             "properties": {
-              "citation_grounded": { "const": false },
+              "citation_grounded": { "const": true },
+              "release_action": { "const": "needs_review" },
+              "release_reason": { "const": "claim_support_not_evaluated" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "claim_support": { "const": "unsupported" },
+              "citation_grounded": { "const": true }
+            },
+            "required": ["claim_support", "citation_grounded"]
+          },
+          "then": {
+            "properties": {
               "release_action": { "const": "block" },
-              "release_reason": { "const": "cannot_answer_from_sources" }
+              "release_reason": { "const": "unsupported_claim" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "claim_support": { "const": "contradicted" },
+              "citation_grounded": { "const": true }
+            },
+            "required": ["claim_support", "citation_grounded"]
+          },
+          "then": {
+            "properties": {
+              "release_action": { "const": "block" },
+              "release_reason": { "const": "contradicted_claim" }
             }
           }
         },

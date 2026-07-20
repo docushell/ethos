@@ -32,6 +32,7 @@ _ANSWER_RELEVANT = frozenset(("direct_answer", "supports_answer"))
 _ANSWER_IRRELEVANT = frozenset(("background_only", "unrelated"))
 _QUESTION_RELEVANCE = _ANSWER_RELEVANT | _ANSWER_IRRELEVANT
 _CLAIM_TYPES = frozenset(("source_fact", "synthesis", "unsupported"))
+_CLAIM_SUPPORT = frozenset(("supported", "unsupported", "contradicted", "not_evaluated"))
 _PROOF_STATUSES = frozenset(("verified", "partially_verified", "unverified"))
 _PROOF_LIMITATIONS = frozenset(
     (
@@ -746,7 +747,7 @@ def app_answer_release_decision(
 
     envelope: Dict[str, Any] = {
         "artifact_type": "ethos.app_answer_release_decision.v1",
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "question": question,
         "grounding": {
             "verification_report_ref": verification_report_ref,
@@ -875,25 +876,41 @@ def _app_claim_decision(
         reusable_check_ids,
         needs_review_check_ids,
     )
-    if claim_type == "unsupported" and citation_grounded:
-        raise ValueError(f"unsupported claim {claim_id} cannot be citation_grounded")
+    claim_support = claim.get("claim_support")
+    if claim_support is not None and claim_support not in _CLAIM_SUPPORT:
+        raise ValueError(f"unknown claim_support for claim {claim_id}: {claim_support}")
+    output_claim_type: Optional[str] = claim_type
+    if claim_type == "unsupported":
+        if claim_support == "supported":
+            raise ValueError(
+                f"legacy unsupported claim {claim_id} conflicts with claim_support supported"
+            )
+        output_claim_type = None
+        claim_support = (
+            "contradicted" if claim_support == "contradicted" else "unsupported"
+        )
+    elif claim_support is None:
+        claim_support = "not_evaluated"
 
     release_action, release_reason = _release_decision(
         citation_grounded,
         relevance,
-        claim_type,
+        output_claim_type,
+        claim_support,
     )
     decision: Dict[str, Any] = {
         "id": claim_id,
         "text": text,
         "citation_grounded": citation_grounded,
         "question_relevance": relevance,
-        "claim_type": claim_type,
+        "claim_support": claim_support,
         "release_action": release_action,
         "release_reason": release_reason,
     }
     if check_ids:
         decision["check_ids"] = check_ids
+    if output_claim_type is not None:
+        decision["claim_type"] = output_claim_type
     return decision
 
 
@@ -967,8 +984,17 @@ def _claim_citation_grounded(
 def _release_decision(
     citation_grounded: bool,
     relevance: str,
-    claim_type: str,
+    claim_type: Optional[str],
+    claim_support: str,
 ) -> tuple[str, str]:
+    if not citation_grounded:
+        return "block", "cannot_answer_from_sources"
+    if claim_support == "unsupported":
+        return "block", "unsupported_claim"
+    if claim_support == "contradicted":
+        return "block", "contradicted_claim"
+    if claim_support == "not_evaluated":
+        return "needs_review", "claim_support_not_evaluated"
     if (
         citation_grounded
         and relevance in _ANSWER_RELEVANT
@@ -981,9 +1007,9 @@ def _release_decision(
         and claim_type == "synthesis"
     ):
         return "needs_review", "supported_synthesis_needs_review"
-    if citation_grounded and relevance in _ANSWER_IRRELEVANT:
+    if relevance in _ANSWER_IRRELEVANT:
         return "block", "grounded_but_irrelevant"
-    return "block", "cannot_answer_from_sources"
+    raise ValueError("grounded supported claim has no release-policy outcome")
 
 
 def _app_status(claims: Sequence[Mapping[str, Any]]) -> str:
@@ -995,7 +1021,17 @@ def _app_status(claims: Sequence[Mapping[str, Any]]) -> str:
     if has_final:
         return "partial_certified"
     if has_review:
+        if any(
+            claim["release_reason"] == "claim_support_not_evaluated"
+            for claim in claims
+        ):
+            return "claim_support_needs_review"
         return "supported_synthesis_needs_review"
+    if any(
+        claim["release_reason"] in ("unsupported_claim", "contradicted_claim")
+        for claim in claims
+    ):
+        return "claim_support_rejected"
     if any(claim["release_reason"] == "grounded_but_irrelevant" for claim in claims):
         return "grounded_but_irrelevant"
     return "cannot_answer_from_sources"

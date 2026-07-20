@@ -70,12 +70,19 @@ PAIRS = [
         EXAMPLES / "citations.example.json",
         EXAMPLES / "citations-array.example.json",
     ]),
+    ("ethos-llm-citation-output.schema.json", [
+        EXAMPLES / "llm-citation-output.example.json",
+        ROOT / "examples" / "citation-emission" / "model-output.grounded.json",
+        ROOT / "examples" / "citation-emission" / "model-output.fabricated-quote.json",
+        ROOT / "examples" / "citation-emission" / "model-output.dangling-id.json",
+    ]),
     ("ethos-security-report.schema.json", [
         EXAMPLES / "security-report.example.json",
         EXAMPLES / "security-report.full.example.json",
     ]),
     ("ethos-verification-report.schema.json", [
         EXAMPLES / "verification-report.example.json",
+        EXAMPLES / "verification-report.hardened.example.json",
         EXAMPLES / "verification-report-negative.example.json",
     ]),
     ("ethos-app-answer-release-decision.schema.json", [
@@ -91,7 +98,10 @@ PAIRS = [
     ("ethos-evidence-anchor-contract.schema.json", [
         ROOT / "examples" / "verify" / "evidence_anchor_v1_contract.json",
     ]),
-    ("ethos-verification-config.schema.json", [EXAMPLES / "verification-config.example.json"]),
+    ("ethos-verification-config.schema.json", [
+        EXAMPLES / "verification-config.example.json",
+        EXAMPLES / "verification-config.hardened.example.json",
+    ]),
     ("ethos-crop-descriptor.schema.json", [EXAMPLES / "crop-descriptor.example.json"]),
     ("ethos-crop-element-request.schema.json", [
         EXAMPLES / "crop-element-request.example.json",

@@ -467,6 +467,42 @@ impl crate::grounding::GroundingSource for Document {
             .collect()
     }
 
+    fn structural_provenance(
+        &self,
+        element_id: &str,
+    ) -> Option<crate::grounding::GroundingProvenance> {
+        let position = self
+            .payload
+            .elements
+            .iter()
+            .position(|element| element.id == element_id)?;
+        let element = self.payload.elements.get(position)?;
+        let mut headings: Vec<(u8, String)> = Vec::new();
+        for candidate in self.payload.elements.iter().take(position + 1) {
+            let Some(level) = candidate.heading_level else {
+                continue;
+            };
+            let Some(text) = candidate.text.as_deref() else {
+                continue;
+            };
+            headings.retain(|(existing_level, _)| *existing_level < level);
+            headings.push((level, text.to_string()));
+        }
+        Some(crate::grounding::GroundingProvenance {
+            heading_path: headings.into_iter().map(|(_, text)| text).collect(),
+            element_role: element.element_type.as_str().to_string(),
+            previous_element_id: position
+                .checked_sub(1)
+                .and_then(|index| self.payload.elements.get(index))
+                .map(|element| element.id.clone()),
+            next_element_id: self
+                .payload
+                .elements
+                .get(position + 1)
+                .map(|element| element.id.clone()),
+        })
+    }
+
     fn element_by_id(&self, id: &str) -> Option<crate::grounding::GroundingElement> {
         self.payload
             .elements
@@ -479,14 +515,19 @@ impl crate::grounding::GroundingSource for Document {
         self.payload
             .spans
             .iter()
-            .map(|s| crate::grounding::GroundingSpan {
-                id: s.id.clone(),
-                page: s.page.clone(),
-                bbox: s.bbox.to_array(),
-                text: s.text.clone(),
-                element: None,
-                char_start: s.char_start,
-                char_end: s.char_end,
+            .map(|span| crate::grounding::GroundingSpan {
+                id: span.id.clone(),
+                page: span.page.clone(),
+                bbox: span.bbox.to_array(),
+                text: span.text.clone(),
+                element: self
+                    .payload
+                    .elements
+                    .iter()
+                    .find(|element| element.span_refs.contains(&span.id))
+                    .map(|element| element.id.clone()),
+                char_start: span.char_start,
+                char_end: span.char_end,
             })
             .collect()
     }
@@ -651,6 +692,15 @@ mod tests {
         let (_, doc) = example();
         doc.verify_integrity()
             .expect("example hashes must be real (regenerated, not fake)");
+    }
+
+    #[test]
+    fn native_grounding_spans_preserve_element_ownership() {
+        let (_, doc) = example();
+        let spans = crate::grounding::GroundingSource::spans(&doc);
+
+        assert_eq!(spans[0].element.as_deref(), Some("e000001"));
+        assert_eq!(spans[1].element.as_deref(), Some("e000002"));
     }
 
     #[test]

@@ -28,6 +28,7 @@ Public API:
 - `CorruptPdfError`
 - `ParseTimeoutError`
 - `EthosOutputError`
+- `CitationEmissionError`
 - `parse_pdf_json`
 - `parse_pdf_markdown`
 - `parse_pdf_text`
@@ -36,12 +37,19 @@ Public API:
 - `proof_summary`
 - `app_answer_release_decision`
 - `anchor`
+- `build_citation_emission`
+- `build_langchain_context`
+- `build_llamaindex_context`
+- `citation_json_bytes`
+- `emit_langchain_citations`
+- `emit_llamaindex_citations`
+- `hydrate_citations`
 
-The current module is intentionally thin: it shells out to a caller-provided local `ethos` CLI
+The CLI wrapper remains intentionally thin: it shells out to a caller-provided local `ethos` CLI
 binary and returns `ethos doc parse` output, source-bound `ethos crop_element` JSON, `ethos verify`
-JSON reports, or `ethos evidence anchor` JSON reports. It can pass caller-provided source PDF and
-crop artifact directory arguments for rendered crop artifacts. It does not bundle PDFium, does not
-publish hosted surfaces, and does not expand parser behavior. The Rust CLI remains the source of
+JSON reports, or `ethos evidence anchor` JSON reports. The citation-emission helpers below are pure
+Python and do not invoke that binary. The wheel does not bundle PDFium, does not publish hosted
+surfaces, and does not expand parser behavior. The Rust CLI remains the verification source of
 truth.
 
 The package name is historical continuity naming. JSON verification and evidence-anchor calls do
@@ -51,6 +59,10 @@ PDFium-backed parse and crop paths require caller-provided PDFium through
 `ETHOS_PDFIUM_LIBRARY_PATH`. Importing `ethos_pdf` does not require PDFium. If PDFium is missing,
 the wrapper raises `PdfiumNotFoundError` and preserves the underlying CLI stderr so callers can show
 the setup guidance from `QUICKSTART.md` or `docs/pdfium-manual-setup.md`.
+
+Python wheels do not run post-install hooks. Run `python -m ethos_pdf` after installation to print
+the paved `scripts/fetch-pdfium.sh` setup path; the command prints guidance only and never downloads
+or changes PDFium.
 
 ## Exceptions
 
@@ -129,8 +141,9 @@ The summary is not a replacement for the canonical verification report. It deter
 derives `proof_status`, `request_certified`, reusable grounded check ids, needs-review check ids,
 and proof limitations from the report that `ethos verify` already emitted.
 
-Use `app_answer_release_decision(...)` when an application has already labeled claim relevance and
-synthesis, and wants the conservative release policy from `docs/app-answer-release-contract.md`:
+Use `app_answer_release_decision(...)` when an application has already labeled claim relevance,
+synthesis, and support, and wants the conservative release policy from
+`docs/app-answer-release-contract.md`:
 
 ```python
 from ethos_pdf import app_answer_release_decision, proof_summary
@@ -146,16 +159,64 @@ decision = app_answer_release_decision(
             "check_ids": ["v0001"],
             "question_relevance": "direct_answer",
             "claim_type": "source_fact",
+            "claim_support": "supported",
         }
     ],
 )
 print(decision["app_status"])
 ```
 
-The helper does not judge relevance or synthesis. Callers supply those labels; the helper applies
-the release rule and requires referenced Ethos check IDs to be reusable before a claim can enter
-the final answer. It also rejects duplicate claim IDs so `final_answer_claim_ids`,
-`review_claim_ids`, and `blocked_claim_ids` stay unambiguous.
+The helper does not judge relevance, synthesis, or claim support. Callers supply those labels; the
+helper applies the release rule and requires referenced Ethos check IDs to be reusable before a
+claim can enter the final answer. For a grounded claim, missing `claim_support` becomes
+`not_evaluated` and requires review. The helper also rejects duplicate claim IDs so
+`final_answer_claim_ids`, `review_claim_ids`, and `blocked_claim_ids` stay unambiguous.
+
+## Citation emission
+
+The source API prepared under NIP-4.2 builds the independently versioned citation-emission v1
+artifact and hydrates it into verifier input. Registry publication remains a human release action.
+No CLI, PDFium, LangChain, or LlamaIndex package is imported by these helpers.
+
+Retrieval objects must carry an explicit Ethos metadata contract. Each object's `metadata` mapping
+must contain one `document_fingerprint` and at least one source locator in `page_refs`,
+`element_refs`, `span_refs`, or `table_cells`. Reference fields are arrays of non-blank IDs.
+`table_cells` entries have exactly `table_id`, `row`, and `col`. All records in one call must use
+the same fingerprint. Numeric framework page indexes and other aliases are deliberately ignored;
+copy stable source IDs into these fields rather than asking the helper to guess.
+
+For an existing LangChain retrieval result:
+
+```python
+from ethos_pdf import citation_json_bytes, emit_langchain_citations
+
+documents = retriever.invoke(question)
+# Each Document.metadata follows the explicit contract above.
+claims = structured_model_output["claims"]
+citations = emit_langchain_citations(
+    documents,
+    structured_model_output["answer"],
+    claims,
+)
+citations_bytes = citation_json_bytes(citations)
+```
+
+Use `emit_llamaindex_citations(nodes, answer, claims)` for `TextNode` or `NodeWithScore` results.
+Both adapters are duck typed and accept mapping equivalents, so applications do not add an Ethos
+framework dependency. `build_langchain_context` and `build_llamaindex_context` expose the trusted
+retrieval vocabulary separately; `build_citation_emission` builds model-facing v1 output; and
+`hydrate_citations` joins the two when an application needs separate callback and hydration steps.
+
+Every malformed claim, missing or mixed fingerprint, unshown source ID, unexposed table cell, and
+configured claim-limit violation raises `CitationEmissionError`. Its stable `code` plus optional
+`claim_index` or `record_index` can be returned to a structured-output retry. The whole batch is
+rejected; helpers never repair, drop, or infer a locator. This validates citation structure and
+retrieval provenance only—verification still requires `ethos verify`, and grounding is not a
+semantic-truth judgment.
+
+Runnable, provider-free walkthroughs are in `examples/langchain-rag/README.md` and
+`examples/llamaindex-rag/README.md`. Both preserve the verifier's intentional exit-`1` report for
+a fabricated citation and require no model API key.
 
 Run the focused tests with:
 

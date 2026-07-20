@@ -32,23 +32,25 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use ethos_core::codes::WarningCode;
 use ethos_core::evidence_anchor::{
     AnchorChecks, AnchorLevel, AnchorStatus, BboxCheck, CoordinateProfile, EvidenceAnchor,
-    EvidenceAnchorGrounding, EvidenceAnchorReport, EvidenceAnchorRequest, EvidenceKind,
-    EvidenceRef, FingerprintCheck, PageCheck, TableCellCheck, TextCheck, TextNormalizationProfile,
-    EVIDENCE_ANCHOR_REPORT_ARTIFACT_TYPE,
+    EvidenceAnchorGrounding, EvidenceAnchorReport, EvidenceAnchorReportOptions,
+    EvidenceAnchorRequest, EvidenceKind, EvidenceRef, FingerprintCheck, PageCheck, TableCellCheck,
+    TextCheck, TextNormalizationProfile, EVIDENCE_ANCHOR_REPORT_ARTIFACT_TYPE,
+    HARDENED_EVIDENCE_ANCHOR_SCHEMA_VERSION,
 };
 use ethos_core::grounding::{
     CoordinateOrigin, GroundingCell, GroundingElement, GroundingSource, GroundingSpan,
     GroundingTable, PageGeometry,
 };
 use ethos_core::verify_types::{
-    compute_all_evidence_grounded, CapabilityLimit, Check, CheckReason, CheckStatus, Claim,
-    ClaimKind, Evidence, GroundingMeta, MatchMethod, TextNormalization, VerificationConfig,
-    VerificationReport,
+    compute_all_evidence_grounded, CapabilityLimit, Check, CheckProvenance, CheckReason,
+    CheckStatus, Claim, ClaimKind, ContextBoundary, ContextEcho, Evidence, EvidenceDispersion,
+    GroundingMeta, MatchMethod, ProvenanceStatus, TextNormalization, VerificationConfig,
+    VerificationReport, HARDENED_VERIFICATION_SCHEMA_VERSION,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -116,11 +118,23 @@ pub fn anchor_evidence(
     let anchors = request
         .evidence_refs
         .iter()
-        .map(|evidence_ref| anchor_one(&index, fingerprint_check, evidence_ref))
+        .map(|evidence_ref| {
+            anchor_one(
+                source,
+                &index,
+                fingerprint_check,
+                evidence_ref,
+                request.report_options,
+            )
+        })
         .collect();
     Ok(EvidenceAnchorReport {
         artifact_type: EVIDENCE_ANCHOR_REPORT_ARTIFACT_TYPE.to_string(),
-        schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+        schema_version: if request.report_options.is_some() {
+            HARDENED_EVIDENCE_ANCHOR_SCHEMA_VERSION.to_string()
+        } else {
+            ethos_core::SCHEMA_VERSION.to_string()
+        },
         source_fingerprint,
         grounding,
         anchors,
@@ -133,9 +147,22 @@ fn validate_anchor_request(request: &EvidenceAnchorRequest) -> Result<(), Eviden
             "evidence anchor request artifact_type is not supported",
         ));
     }
-    if request.schema_version != ethos_core::SCHEMA_VERSION {
+    let options_enabled = request.report_options.is_some();
+    let expected_schema_version = if options_enabled {
+        HARDENED_EVIDENCE_ANCHOR_SCHEMA_VERSION
+    } else {
+        ethos_core::SCHEMA_VERSION
+    };
+    if request.schema_version != expected_schema_version {
         return Err(EvidenceAnchorError::new(
             "evidence anchor request schema_version is not supported",
+        ));
+    }
+    if request.report_options.is_some_and(|options| {
+        options.include_context_echo && !(1..=4096).contains(&options.context_window_chars)
+    }) {
+        return Err(EvidenceAnchorError::new(
+            "context_window_chars must be between 1 and 4096 when context echo is enabled",
         ));
     }
     let mut ids = std::collections::BTreeSet::new();
@@ -301,9 +328,11 @@ fn fingerprint_check(
 }
 
 fn anchor_one(
+    source: &dyn GroundingSource,
     index: &SourceIndex,
     fingerprint: FingerprintCheck,
     evidence_ref: &EvidenceRef,
+    report_options: Option<EvidenceAnchorReportOptions>,
 ) -> EvidenceAnchor {
     let mut checks = AnchorChecks {
         fingerprint,
@@ -380,13 +409,36 @@ fn anchor_one(
     let achieved_anchor_level =
         achieved_anchor_level(evidence_ref, achieved_page, text_ok, bbox_ok, table_ok);
     let anchor_status = anchor_status(evidence_ref, &checks, &capability_limits);
-    anchor_result(
+    let mut result = anchor_result(
         evidence_ref,
         anchor_status,
         achieved_anchor_level,
         checks,
         capability_limits,
-    )
+    );
+    if anchor_status == AnchorStatus::Bound {
+        if let Some(options) = report_options.filter(|options| options.enabled()) {
+            if let Some(target) =
+                resolve_anchor_target(index, evidence_ref, page.page_id.as_deref())
+            {
+                result.resolved_element_ids = target.element_ids.clone();
+                if options.include_provenance {
+                    result.provenance = Some(check_provenance(source, &target));
+                }
+                if options.include_context_echo {
+                    let config = VerificationConfig::default_v1();
+                    result.context_echo = context_echo(
+                        ClaimKind::Quote,
+                        evidence_ref.expected_text.as_deref(),
+                        &target,
+                        &config,
+                        options.context_window_chars,
+                    );
+                }
+            }
+        }
+    }
+    result
 }
 
 fn anchor_result(
@@ -404,6 +456,9 @@ fn anchor_result(
         achieved_anchor_level,
         checks,
         capability_limits,
+        resolved_element_ids: Vec::new(),
+        provenance: None,
+        context_echo: None,
     }
 }
 
@@ -523,6 +578,71 @@ fn resolve_text(
             TextCheck::NotFound
         },
     }
+}
+
+fn resolve_anchor_target(
+    index: &SourceIndex,
+    evidence_ref: &EvidenceRef,
+    page_id: Option<&str>,
+) -> Option<FoundTarget> {
+    if let Some(span_id) = evidence_ref.locator.span_id.as_deref() {
+        return index.span(span_id).map(target_from_span);
+    }
+    if let Some(element_id) = evidence_ref.locator.element_id.as_deref() {
+        return index
+            .element_by_id
+            .get(element_id)
+            .and_then(|position| {
+                index
+                    .elements
+                    .get(*position)
+                    .map(|element| (*position, element))
+            })
+            .map(|(position, element)| target_from_element(element, Some(position)));
+    }
+    if let (Some(table_id), Some(cell_ref)) = (
+        evidence_ref.locator.table_id.as_deref(),
+        evidence_ref.locator.cell,
+    ) {
+        return index.table(table_id).and_then(|table| {
+            table
+                .cells
+                .iter()
+                .find(|cell| table_cell_covers(cell, cell_ref.row, cell_ref.col))
+                .map(|cell| target_from_cell(&table.page, cell))
+        });
+    }
+    if let (Some(page_id), Some(bbox)) = (page_id, evidence_ref.locator.bbox) {
+        let tolerance = VerificationConfig::default_v1()
+            .matching
+            .bbox_containment_tolerance_q
+            .unwrap_or(0);
+        return index
+            .elements
+            .iter()
+            .enumerate()
+            .filter(|(_, element)| {
+                element.page == page_id && contains_bbox(element.bbox, bbox, tolerance)
+            })
+            .min_by_key(|(position, element)| (bbox_area(element.bbox), *position))
+            .map(|(position, element)| target_from_element(element, Some(position)));
+    }
+    let expected = evidence_ref.expected_text.as_deref()?;
+    let page_id = page_id?;
+    if let Some((position, element)) = index.elements.iter().enumerate().find(|(_, element)| {
+        element.page == page_id
+            && element
+                .text
+                .as_deref()
+                .is_some_and(|actual| text_check(expected, actual) == TextCheck::Matched)
+    }) {
+        return Some(target_from_element(element, Some(position)));
+    }
+    index
+        .spans
+        .iter()
+        .find(|span| span.page == page_id && text_check(expected, &span.text) == TextCheck::Matched)
+        .map(target_from_span)
 }
 
 fn resolve_bbox(
@@ -654,6 +774,7 @@ fn capability_limit_order(limit: CapabilityLimit) -> u8 {
         CapabilityLimit::MissingFingerprint => 3,
         CapabilityLimit::UnknownCoordinateOrigin => 4,
         CapabilityLimit::MissingCropSupport => 5,
+        CapabilityLimit::MissingStructure => 6,
     }
 }
 
@@ -815,12 +936,7 @@ pub fn verify_claims(
     let (citation_fingerprint, claims) = citations.into_parts();
     let index = SourceIndex::new(source);
     let source_fingerprint = source.fingerprint();
-    let capability_limits = capability_limits_for(index.capabilities, config);
-    let warnings = if capability_limits.is_empty() {
-        Vec::new()
-    } else {
-        vec![WarningCode::CapabilityLimited]
-    };
+    let mut capability_limits = capability_limits_for(index.capabilities, config);
     let fingerprint_stale = config.staleness.require_fingerprint_match
         && matches!(
             (citation_fingerprint.as_deref(), source_fingerprint.as_deref()),
@@ -834,6 +950,7 @@ pub fn verify_claims(
         && source_fingerprint.is_some();
     let include_text = config.evidence.is_some_and(|e| e.include_text);
     let include_crops = config.evidence.is_some_and(|e| e.include_crops);
+    let hardening = config.hardening.filter(|options| options.enabled());
     let mut unsupported = Vec::new();
     let checks: Vec<Check> = claims
         .into_iter()
@@ -851,14 +968,47 @@ pub fn verify_claims(
                     citation_fingerprint_missing,
                     include_text,
                     include_crops,
+                    emit_hardening: hardening.is_some(),
+                    include_provenance: hardening.is_some_and(|o| o.include_provenance),
+                    include_context_echo: hardening.is_some_and(|o| o.include_context_echo),
+                    context_window_chars: hardening.map_or(0, |o| o.context_window_chars),
                 },
                 &mut unsupported,
             )
         })
         .collect();
 
+    if checks.iter().any(|check| {
+        check
+            .provenance
+            .as_ref()
+            .is_some_and(|provenance| provenance.status == ProvenanceStatus::CapabilityLimited)
+    }) && !capability_limits.contains(&CapabilityLimit::MissingStructure)
+    {
+        capability_limits.push(CapabilityLimit::MissingStructure);
+    }
+    let warnings = if capability_limits.is_empty() {
+        Vec::new()
+    } else {
+        vec![WarningCode::CapabilityLimited]
+    };
+    let dispersion = hardening
+        .filter(|options| options.include_dispersion)
+        .map(|options| {
+            evidence_dispersion(
+                source,
+                &checks,
+                fingerprint_stale,
+                options.include_provenance,
+            )
+        });
+
     VerificationReport {
-        schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+        schema_version: if hardening.is_some() {
+            HARDENED_VERIFICATION_SCHEMA_VERSION.to_string()
+        } else {
+            ethos_core::SCHEMA_VERSION.to_string()
+        },
         document_fingerprint: source_fingerprint,
         verification_config_sha256: config_sha256,
         grounding: GroundingMeta {
@@ -873,6 +1023,7 @@ pub fn verify_claims(
             fingerprint_stale,
         ),
         checks,
+        dispersion,
         unsupported_claim_kinds: unsupported,
         warnings,
     }
@@ -885,6 +1036,10 @@ struct CheckContext {
     citation_fingerprint_missing: bool,
     include_text: bool,
     include_crops: bool,
+    emit_hardening: bool,
+    include_provenance: bool,
+    include_context_echo: bool,
+    context_window_chars: u32,
 }
 
 fn check_claim(
@@ -908,6 +1063,9 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            resolved_element_ids: Vec::new(),
+            provenance: None,
+            context_echo: None,
             warnings,
         };
     }
@@ -922,6 +1080,9 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            resolved_element_ids: Vec::new(),
+            provenance: None,
+            context_echo: None,
             warnings,
         };
     }
@@ -940,6 +1101,9 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            resolved_element_ids: Vec::new(),
+            provenance: None,
+            context_echo: None,
             warnings,
         };
     }
@@ -953,6 +1117,9 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            resolved_element_ids: Vec::new(),
+            provenance: None,
+            context_echo: None,
             warnings,
         };
     }
@@ -967,6 +1134,9 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            resolved_element_ids: Vec::new(),
+            provenance: None,
+            context_echo: None,
             warnings,
         };
     }
@@ -980,6 +1150,9 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            resolved_element_ids: Vec::new(),
+            provenance: None,
+            context_echo: None,
             warnings,
         };
     }
@@ -995,6 +1168,9 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                resolved_element_ids: Vec::new(),
+                provenance: None,
+                context_echo: None,
                 warnings,
             };
         }
@@ -1007,6 +1183,9 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                resolved_element_ids: Vec::new(),
+                provenance: None,
+                context_echo: None,
                 warnings,
             };
         }
@@ -1020,18 +1199,58 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                resolved_element_ids: Vec::new(),
+                provenance: None,
+                context_echo: None,
                 warnings,
             };
         }
     };
 
-    if let Some(adjacent_target) = adjacent_quote_target(index, &claim, &target, config) {
-        target = adjacent_target;
+    match adjacent_quote_target(index, &claim, &target, config) {
+        Ok(Some(adjacent_target)) => target = adjacent_target,
+        Ok(None) => {}
+        Err(reason) => {
+            push_warning(&mut warnings, WarningCode::CapabilityLimited);
+            return Check {
+                id: check_id,
+                claim,
+                status: CheckStatus::CapabilityBlocked,
+                reason: Some(reason),
+                match_method: MatchMethod::None,
+                semantic_unverified: false,
+                evidence: None,
+                resolved_element_ids: Vec::new(),
+                provenance: None,
+                context_echo: None,
+                warnings,
+            };
+        }
     }
 
     let evidence = make_evidence(source, &target, context.include_text, context.include_crops);
     let (status, match_method, reason) =
         check_resolved_claim(claim.kind, claim.text.as_deref(), &target, config);
+    let provenance = context
+        .include_provenance
+        .then(|| check_provenance(source, &target));
+    if provenance
+        .as_ref()
+        .is_some_and(|provenance| provenance.status == ProvenanceStatus::CapabilityLimited)
+    {
+        push_warning(&mut warnings, WarningCode::CapabilityLimited);
+    }
+    let context_echo = (context.include_context_echo && status == CheckStatus::Grounded)
+        .then(|| {
+            context_echo(
+                claim.kind,
+                claim.text.as_deref(),
+                &target,
+                config,
+                context.context_window_chars,
+            )
+        })
+        .flatten();
     Check {
         id: check_id,
         claim,
@@ -1040,6 +1259,12 @@ fn check_claim(
         match_method,
         semantic_unverified: false,
         evidence,
+        resolved_element_ids: context
+            .emit_hardening
+            .then(|| target.element_ids.clone())
+            .unwrap_or_default(),
+        provenance,
+        context_echo,
         warnings,
     }
 }
@@ -1122,6 +1347,8 @@ struct FoundTarget {
     text: Option<String>,
     from_table_cell: bool,
     element_index: Option<usize>,
+    element_ids: Vec<String>,
+    element_boundary_char: Option<u32>,
 }
 
 /// Per-run grounding snapshot used to avoid cloning full entity collections per claim.
@@ -1220,26 +1447,35 @@ fn resolve_target(
     claim: &Claim,
     config: &VerificationConfig,
 ) -> TargetResolution {
-    if claim.kind == ClaimKind::TableCell
+    let table_locator = claim.kind == ClaimKind::TableCell
         || claim.citation.table_id.is_some()
-        || claim.citation.cell.is_some()
-    {
-        return resolve_table_cell(index, claim);
+        || claim.citation.cell.is_some();
+    let primary_locator_count = usize::from(table_locator)
+        + usize::from(claim.citation.span_id.is_some())
+        + usize::from(claim.citation.element_id.is_some())
+        + usize::from(claim.citation.bbox.is_some());
+    if primary_locator_count > 1 {
+        return TargetResolution::Invalid(CheckReason::LocatorConflict);
+    }
+
+    if table_locator {
+        return enforce_supplemental_page(resolve_table_cell(index, claim), claim);
     }
 
     if let Some(span_id) = claim.citation.span_id.as_deref() {
         if !index.capabilities.spans {
             return TargetResolution::CapabilityBlocked(CheckReason::MissingSpanCapability);
         }
-        return index
+        let resolution = index
             .span(span_id)
             .map(target_from_span)
             .map(TargetResolution::Found)
             .unwrap_or(TargetResolution::NotFound(CheckReason::SpanNotFound));
+        return enforce_supplemental_page(resolution, claim);
     }
 
     if let Some(element_id) = claim.citation.element_id.as_deref() {
-        return index
+        let resolution = index
             .element_by_id
             .get(element_id)
             .and_then(|position| {
@@ -1251,6 +1487,7 @@ fn resolve_target(
             .map(|(position, element)| target_from_element(element, Some(position)))
             .map(TargetResolution::Found)
             .unwrap_or(TargetResolution::NotFound(CheckReason::ElementNotFound));
+        return enforce_supplemental_page(resolution, claim);
     }
 
     if let (Some(page), Some(bbox)) = (claim.citation.page.as_deref(), claim.citation.bbox) {
@@ -1287,12 +1524,26 @@ fn resolve_target(
                     text: None,
                     from_table_cell: false,
                     element_index: None,
+                    element_ids: Vec::new(),
+                    element_boundary_char: None,
                 })
             })
             .unwrap_or(TargetResolution::NotFound(CheckReason::PageNotFound));
     }
 
     TargetResolution::NotFound(CheckReason::MissingLocator)
+}
+
+fn enforce_supplemental_page(resolution: TargetResolution, claim: &Claim) -> TargetResolution {
+    let Some(expected_page) = claim.citation.page.as_deref() else {
+        return resolution;
+    };
+    match resolution {
+        TargetResolution::Found(target) if target.page.as_deref() != Some(expected_page) => {
+            TargetResolution::Invalid(CheckReason::LocatorConflict)
+        }
+        other => other,
+    }
 }
 
 fn target_from_element(element: &GroundingElement, element_index: Option<usize>) -> FoundTarget {
@@ -1302,6 +1553,8 @@ fn target_from_element(element: &GroundingElement, element_index: Option<usize>)
         text: element.text.clone(),
         from_table_cell: false,
         element_index,
+        element_ids: vec![element.id.clone()],
+        element_boundary_char: None,
     }
 }
 
@@ -1312,6 +1565,8 @@ fn target_from_span(span: &GroundingSpan) -> FoundTarget {
         text: Some(span.text.clone()),
         from_table_cell: false,
         element_index: None,
+        element_ids: span.element.iter().cloned().collect(),
+        element_boundary_char: None,
     }
 }
 
@@ -1354,6 +1609,8 @@ fn target_from_cell(page: &str, cell: &GroundingCell) -> FoundTarget {
         text: Some(cell.text.clone()),
         from_table_cell: true,
         element_index: None,
+        element_ids: Vec::new(),
+        element_boundary_char: None,
     }
 }
 
@@ -1362,30 +1619,37 @@ fn adjacent_quote_target(
     claim: &Claim,
     target: &FoundTarget,
     config: &VerificationConfig,
-) -> Option<FoundTarget> {
+) -> Result<Option<FoundTarget>, CheckReason> {
     if claim.kind != ClaimKind::Quote {
-        return None;
+        return Ok(None);
     }
-    let expected = claim.text.as_deref()?;
+    let Some(expected) = claim.text.as_deref() else {
+        return Ok(None);
+    };
     if target
         .text
         .as_deref()
         .is_some_and(|actual| text_matches(ClaimKind::Quote, expected, actual, config))
     {
-        return None;
+        return Ok(None);
     }
 
     if claim.citation.bbox.is_some() {
-        return None;
+        return Ok(None);
     }
 
     if claim.citation.element_id.is_some() {
         if let Some(position) = target.element_index {
-            return adjacent_text_pair_for_element(index, position, expected, config);
+            if index.capabilities.coordinate_origin == CoordinateOrigin::Unknown {
+                return Err(CheckReason::UnknownCoordinateOrigin);
+            }
+            return Ok(adjacent_text_pair_for_element(
+                index, position, expected, config,
+            ));
         }
     }
 
-    None
+    Ok(None)
 }
 
 fn adjacent_text_pair_for_element(
@@ -1437,6 +1701,13 @@ fn adjacent_text_pair_target(
         text: Some(joined),
         from_table_cell: false,
         element_index: None,
+        element_ids: vec![first.id.clone(), second.id.clone()],
+        element_boundary_char: Some(match config.matching.text_normalization {
+            TextNormalization::None => first_text.chars().count() as u32,
+            TextNormalization::CollapseWhitespace => {
+                normalize_quote(first_text).chars().count() as u32
+            }
+        }),
     })
 }
 
@@ -1473,6 +1744,261 @@ fn union_bbox(left: [i64; 4], right: [i64; 4]) -> [i64; 4] {
         left[2].max(right[2]),
         left[3].max(right[3]),
     ]
+}
+
+fn check_provenance(source: &dyn GroundingSource, target: &FoundTarget) -> CheckProvenance {
+    let Some(element_id) = target.element_ids.first() else {
+        return CheckProvenance {
+            status: ProvenanceStatus::NotApplicable,
+            heading_path: Vec::new(),
+            element_role: None,
+            previous_element_id: None,
+            next_element_id: None,
+        };
+    };
+    let Some(provenance) = source.structural_provenance(element_id) else {
+        return CheckProvenance {
+            status: ProvenanceStatus::CapabilityLimited,
+            heading_path: Vec::new(),
+            element_role: None,
+            previous_element_id: None,
+            next_element_id: None,
+        };
+    };
+    if target
+        .element_ids
+        .iter()
+        .skip(1)
+        .any(|element_id| source.structural_provenance(element_id).is_none())
+    {
+        return CheckProvenance {
+            status: ProvenanceStatus::CapabilityLimited,
+            heading_path: Vec::new(),
+            element_role: None,
+            previous_element_id: None,
+            next_element_id: None,
+        };
+    }
+    CheckProvenance {
+        status: ProvenanceStatus::Available,
+        heading_path: provenance.heading_path,
+        element_role: Some(provenance.element_role),
+        previous_element_id: provenance.previous_element_id,
+        next_element_id: provenance.next_element_id,
+    }
+}
+
+struct MappedText {
+    text: String,
+    byte_starts: Vec<usize>,
+    byte_ends: Vec<usize>,
+}
+
+fn mapped_text(input: &str, normalization: TextNormalization, case_sensitive: bool) -> MappedText {
+    let chars: Vec<(char, usize, usize)> = input
+        .char_indices()
+        .map(|(start, ch)| (ch, start, start + ch.len_utf8()))
+        .collect();
+    let mut units: Vec<(char, usize, usize)> = Vec::new();
+    match normalization {
+        TextNormalization::None => units.extend(chars),
+        TextNormalization::CollapseWhitespace => {
+            let mut whitespace: Option<(usize, usize)> = None;
+            for (ch, start, end) in chars {
+                if ch.is_ascii_whitespace() {
+                    if !units.is_empty() {
+                        whitespace = Some(match whitespace {
+                            Some((first, _)) => (first, end),
+                            None => (start, end),
+                        });
+                    }
+                    continue;
+                }
+                if let Some((ws_start, ws_end)) = whitespace.take() {
+                    units.push((' ', ws_start, ws_end));
+                }
+                units.push((ch, start, end));
+            }
+        }
+    }
+
+    let mut text = String::new();
+    let mut byte_starts = Vec::new();
+    let mut byte_ends = Vec::new();
+    for (ch, start, end) in units {
+        if case_sensitive {
+            push_mapped_char(&mut text, &mut byte_starts, &mut byte_ends, ch, start, end);
+        } else {
+            for lower in ch.to_lowercase() {
+                push_mapped_char(
+                    &mut text,
+                    &mut byte_starts,
+                    &mut byte_ends,
+                    lower,
+                    start,
+                    end,
+                );
+            }
+        }
+    }
+    MappedText {
+        text,
+        byte_starts,
+        byte_ends,
+    }
+}
+
+fn push_mapped_char(
+    output: &mut String,
+    byte_starts: &mut Vec<usize>,
+    byte_ends: &mut Vec<usize>,
+    ch: char,
+    start: usize,
+    end: usize,
+) {
+    output.push(ch);
+    for _ in 0..ch.len_utf8() {
+        byte_starts.push(start);
+        byte_ends.push(end);
+    }
+}
+
+fn matched_source_range(
+    kind: ClaimKind,
+    expected: &str,
+    actual: &str,
+    config: &VerificationConfig,
+) -> Option<(usize, usize)> {
+    let expected = mapped_text(
+        expected,
+        config.matching.text_normalization,
+        config.matching.case_sensitive,
+    );
+    let actual = mapped_text(
+        actual,
+        config.matching.text_normalization,
+        config.matching.case_sensitive,
+    );
+    let start = if kind == ClaimKind::Quote {
+        actual.text.find(&expected.text)?
+    } else if actual.text == expected.text {
+        0
+    } else {
+        return None;
+    };
+    let end = start.checked_add(expected.text.len())?;
+    if start == end {
+        return None;
+    }
+    Some((
+        *actual.byte_starts.get(start)?,
+        *actual.byte_ends.get(end - 1)?,
+    ))
+}
+
+fn context_echo(
+    kind: ClaimKind,
+    expected: Option<&str>,
+    target: &FoundTarget,
+    config: &VerificationConfig,
+    window_chars: u32,
+) -> Option<ContextEcho> {
+    if !matches!(kind, ClaimKind::Quote | ClaimKind::Value) {
+        return None;
+    }
+    let expected = expected?;
+    let actual = target.text.as_deref()?;
+    let (start, end) = matched_source_range(kind, expected, actual, config)?;
+    let before_all = actual.get(..start)?;
+    let matched = actual.get(start..end)?.to_string();
+    let after_all = actual.get(end..)?;
+    let before = take_last_chars(before_all, window_chars as usize);
+    let after = take_first_chars(after_all, window_chars as usize);
+    let echo_start = before_all
+        .chars()
+        .count()
+        .saturating_sub(before.chars().count());
+    let echo_len = before.chars().count() + matched.chars().count() + after.chars().count();
+    let element_boundary = target.element_boundary_char.and_then(|boundary| {
+        let boundary = boundary as usize;
+        (boundary >= echo_start && boundary <= echo_start + echo_len).then(|| ContextBoundary {
+            offset: (boundary - echo_start) as u32,
+            left_element_id: target.element_ids.first().cloned().unwrap_or_default(),
+            right_element_id: target.element_ids.get(1).cloned().unwrap_or_default(),
+        })
+    });
+    Some(ContextEcho {
+        before,
+        matched,
+        after,
+        element_boundary,
+    })
+}
+
+fn take_last_chars(input: &str, limit: usize) -> String {
+    let count = input.chars().count();
+    input.chars().skip(count.saturating_sub(limit)).collect()
+}
+
+fn take_first_chars(input: &str, limit: usize) -> String {
+    input.chars().take(limit).collect()
+}
+
+fn evidence_dispersion(
+    source: &dyn GroundingSource,
+    checks: &[Check],
+    fingerprint_stale: bool,
+    provenance_requested: bool,
+) -> EvidenceDispersion {
+    let reusable: Vec<&Check> = if fingerprint_stale {
+        Vec::new()
+    } else {
+        checks
+            .iter()
+            .filter(|check| check.status == CheckStatus::Grounded && !check.semantic_unverified)
+            .collect()
+    };
+    let mut element_ids = BTreeSet::new();
+    let mut pages = BTreeSet::new();
+    let mut sections = BTreeSet::new();
+    let mut sections_complete = provenance_requested;
+    let mut unmapped = 0_u32;
+    for check in &reusable {
+        if check.resolved_element_ids.is_empty() {
+            unmapped = unmapped.saturating_add(1);
+            if provenance_requested {
+                sections_complete = false;
+            }
+        } else {
+            element_ids.extend(check.resolved_element_ids.iter().cloned());
+        }
+        if let Some(page) = check
+            .evidence
+            .as_ref()
+            .and_then(|evidence| evidence.page.as_ref())
+        {
+            pages.insert(page.clone());
+        }
+        if provenance_requested {
+            for element_id in &check.resolved_element_ids {
+                match source.structural_provenance(element_id) {
+                    Some(provenance) => {
+                        if let Some(section) = provenance.heading_path.first() {
+                            sections.insert(section.clone());
+                        }
+                    }
+                    None => sections_complete = false,
+                }
+            }
+        }
+    }
+    EvidenceDispersion {
+        grounded_checks: reusable.len() as u32,
+        elements: element_ids.len() as u32,
+        pages: pages.len() as u32,
+        unmapped_grounded_checks: unmapped,
+        sections: sections_complete.then_some(sections.len() as u32),
+    }
 }
 
 fn make_evidence(
@@ -1563,16 +2089,20 @@ pub fn normalize_quote(input: &str) -> String {
 mod tests {
     use super::*;
     use ethos_core::grounding::{
-        Capabilities, GroundingCell, GroundingElement, GroundingSpan, GroundingTable, PageGeometry,
-        ParserIdentity,
+        Capabilities, GroundingCell, GroundingElement, GroundingProvenance, GroundingSpan,
+        GroundingTable, PageGeometry, ParserIdentity,
     };
-    use ethos_core::verify_types::{CapabilityLimit, CellRef, Citation, Claim};
+    use ethos_core::verify_types::{
+        CapabilityLimit, CellRef, Citation, Claim, HardeningOptions,
+        HARDENED_VERIFICATION_SCHEMA_VERSION,
+    };
 
     #[derive(Clone)]
     struct TestSource {
         caps: Capabilities,
         fingerprint: Option<String>,
         crop_ref: Option<String>,
+        structure: bool,
     }
 
     impl Default for TestSource {
@@ -1591,6 +2121,7 @@ mod tests {
                         .into(),
                 ),
                 crop_ref: None,
+                structure: true,
             }
         }
     }
@@ -1639,6 +2170,17 @@ mod tests {
                 },
             ]
         }
+        fn structural_provenance(&self, element_id: &str) -> Option<GroundingProvenance> {
+            if !self.structure || element_id != "e000002" {
+                return None;
+            }
+            Some(GroundingProvenance {
+                heading_path: vec!["Results".into()],
+                element_role: "text_block".into(),
+                previous_element_id: Some("e000001".into()),
+                next_element_id: Some("e000003".into()),
+            })
+        }
         fn spans(&self) -> Vec<GroundingSpan> {
             vec![GroundingSpan {
                 id: "s000002".into(),
@@ -1686,6 +2228,7 @@ mod tests {
 
     struct ElementSource {
         elements: Vec<GroundingElement>,
+        coordinate_origin: CoordinateOrigin,
     }
 
     impl GroundingSource for ElementSource {
@@ -1703,7 +2246,7 @@ mod tests {
                 char_offsets: true,
                 tables: true,
                 fingerprint: true,
-                coordinate_origin: CoordinateOrigin::TopLeft,
+                coordinate_origin: self.coordinate_origin,
                 crop_support: false,
             }
         }
@@ -1767,6 +2310,19 @@ mod tests {
         verify_claims(source, input(source, claims), cfg, "0".repeat(64))
     }
 
+    fn hardened_config() -> VerificationConfig {
+        let mut config = VerificationConfig::default_v1();
+        config.schema_version = HARDENED_VERIFICATION_SCHEMA_VERSION.to_string();
+        config.config_version = "hardened-v1".to_string();
+        config.hardening = Some(HardeningOptions {
+            include_provenance: true,
+            include_context_echo: true,
+            include_dispersion: true,
+            context_window_chars: 12,
+        });
+        config
+    }
+
     fn element(id: &str, page: &str, bbox: [i64; 4], text: Option<&str>) -> GroundingElement {
         GroundingElement {
             id: id.into(),
@@ -1778,7 +2334,18 @@ mod tests {
     }
 
     fn verify_elements(elements: Vec<GroundingElement>, claims: Vec<Claim>) -> VerificationReport {
-        let source = ElementSource { elements };
+        verify_elements_with_origin(elements, claims, CoordinateOrigin::TopLeft)
+    }
+
+    fn verify_elements_with_origin(
+        elements: Vec<GroundingElement>,
+        claims: Vec<Claim>,
+        coordinate_origin: CoordinateOrigin,
+    ) -> VerificationReport {
+        let source = ElementSource {
+            elements,
+            coordinate_origin,
+        };
         let cfg = VerificationConfig::default_v1();
         let citations = CitationInput::Envelope(CitationEnvelope {
             document_fingerprint: source.fingerprint(),
@@ -1833,6 +2400,165 @@ mod tests {
     }
 
     #[test]
+    fn hardened_report_emits_provenance_context_and_dispersion() {
+        let source = TestSource::default();
+        let config = hardened_config();
+        let report = verify_with_config(
+            &source,
+            vec![claim(
+                ClaimKind::Quote,
+                Some("Revenue   grew to $12.4M in Q3 2025"),
+                Citation {
+                    element_id: Some("e000002".into()),
+                    ..Default::default()
+                },
+            )],
+            &config,
+        );
+
+        assert_eq!(report.schema_version, HARDENED_VERIFICATION_SCHEMA_VERSION);
+        let check = &report.checks[0];
+        assert_eq!(check.resolved_element_ids, vec!["e000002"]);
+        let provenance = check.provenance.as_ref().unwrap();
+        assert_eq!(provenance.status, ProvenanceStatus::Available);
+        assert_eq!(provenance.heading_path, vec!["Results"]);
+        assert_eq!(provenance.element_role.as_deref(), Some("text_block"));
+        let echo = check.context_echo.as_ref().unwrap();
+        assert_eq!(echo.before, "");
+        assert_eq!(echo.matched, "Revenue grew to $12.4M in Q3 2025");
+        assert_eq!(echo.after, ", driven by ");
+        assert!(echo.element_boundary.is_none());
+        assert_eq!(
+            report.dispersion,
+            Some(EvidenceDispersion {
+                grounded_checks: 1,
+                elements: 1,
+                pages: 1,
+                unmapped_grounded_checks: 0,
+                sections: Some(1),
+            })
+        );
+    }
+
+    #[test]
+    fn hardened_report_marks_missing_structure_without_invalidating_grounding() {
+        let source = TestSource {
+            structure: false,
+            ..TestSource::default()
+        };
+        let config = hardened_config();
+        let report = verify_with_config(
+            &source,
+            vec![claim(
+                ClaimKind::Quote,
+                Some("Revenue grew"),
+                Citation {
+                    element_id: Some("e000002".into()),
+                    ..Default::default()
+                },
+            )],
+            &config,
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(
+            report.checks[0].provenance.as_ref().map(|p| p.status),
+            Some(ProvenanceStatus::CapabilityLimited)
+        );
+        assert!(report
+            .capability_limits
+            .contains(&CapabilityLimit::MissingStructure));
+        assert_eq!(report.dispersion.as_ref().and_then(|d| d.sections), None);
+    }
+
+    #[test]
+    fn hardened_split_quote_preserves_both_elements_and_marks_boundary() {
+        let mut config = hardened_config();
+        config.hardening.as_mut().unwrap().include_provenance = false;
+        let source = ElementSource {
+            elements: vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "split-b",
+                    "p0001",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            coordinate_origin: CoordinateOrigin::TopLeft,
+        };
+        let citations = CitationInput::Envelope(CitationEnvelope {
+            document_fingerprint: source.fingerprint(),
+            claims: vec![claim(
+                ClaimKind::Quote,
+                Some("trust loop verifies grounded"),
+                Citation {
+                    element_id: Some("split-a".into()),
+                    ..Default::default()
+                },
+            )],
+        });
+        let report = verify_claims(&source, citations, &config, "0".repeat(64));
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(
+            report.checks[0].resolved_element_ids,
+            vec!["split-a", "split-b"]
+        );
+        let boundary = report.checks[0]
+            .context_echo
+            .as_ref()
+            .and_then(|echo| echo.element_boundary.as_ref())
+            .unwrap();
+        assert_eq!(boundary.left_element_id, "split-a");
+        assert_eq!(boundary.right_element_id, "split-b");
+        assert_eq!(report.dispersion.as_ref().unwrap().elements, 2);
+    }
+
+    #[test]
+    fn context_echo_chooses_first_repeated_match() {
+        let mut config = hardened_config();
+        config.hardening.as_mut().unwrap().include_provenance = false;
+        config.hardening.as_mut().unwrap().include_dispersion = false;
+        config.hardening.as_mut().unwrap().context_window_chars = 20;
+        let source = ElementSource {
+            elements: vec![element(
+                "repeat",
+                "p0001",
+                [100, 100, 700, 200],
+                Some("first target then target"),
+            )],
+            coordinate_origin: CoordinateOrigin::TopLeft,
+        };
+        let report = verify_claims(
+            &source,
+            CitationInput::Envelope(CitationEnvelope {
+                document_fingerprint: source.fingerprint(),
+                claims: vec![claim(
+                    ClaimKind::Quote,
+                    Some("target"),
+                    Citation {
+                        element_id: Some("repeat".into()),
+                        ..Default::default()
+                    },
+                )],
+            }),
+            &config,
+            "0".repeat(64),
+        );
+
+        let echo = report.checks[0].context_echo.as_ref().unwrap();
+        assert_eq!(echo.before, "first ");
+        assert_eq!(echo.matched, "target");
+        assert_eq!(echo.after, " then target");
+    }
+
+    #[test]
     fn quote_claim_grounds_across_adjacent_element_text_fragments() {
         let report = verify_elements(
             vec![
@@ -1876,6 +2602,179 @@ mod tests {
             report.checks[0].evidence.as_ref().and_then(|e| e.bbox),
             Some([100, 100, 700, 200])
         );
+    }
+
+    #[test]
+    fn conflicting_primary_locators_and_supplemental_pages_fail_closed() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![
+                claim(
+                    ClaimKind::Quote,
+                    Some("Revenue grew"),
+                    Citation {
+                        page: Some("p9999".into()),
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                ),
+                claim(
+                    ClaimKind::Presence,
+                    None,
+                    Citation {
+                        span_id: Some("s000002".into()),
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                ),
+                claim(
+                    ClaimKind::TableCell,
+                    Some("$12.4M"),
+                    Citation {
+                        page: Some("p9999".into()),
+                        table_id: Some("t0001".into()),
+                        cell: Some(CellRef { row: 1, col: 1 }),
+                        ..Default::default()
+                    },
+                ),
+            ],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        for check in &report.checks {
+            assert_eq!(check.status, CheckStatus::Error);
+            assert_eq!(check.reason, Some(CheckReason::LocatorConflict));
+        }
+    }
+
+    #[test]
+    fn agreeing_supplemental_pages_still_ground() {
+        let source = TestSource::default();
+        let report = verify(
+            &source,
+            vec![
+                claim(
+                    ClaimKind::Quote,
+                    Some("Revenue grew"),
+                    Citation {
+                        page: Some("p0001".into()),
+                        element_id: Some("e000002".into()),
+                        ..Default::default()
+                    },
+                ),
+                claim(
+                    ClaimKind::Presence,
+                    None,
+                    Citation {
+                        page: Some("p0001".into()),
+                        span_id: Some("s000002".into()),
+                        ..Default::default()
+                    },
+                ),
+            ],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert!(report
+            .checks
+            .iter()
+            .all(|check| check.status == CheckStatus::Grounded));
+    }
+
+    #[test]
+    fn split_quote_requires_known_coordinates_for_adjacent_join() {
+        let report = verify_elements_with_origin(
+            vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "split-b",
+                    "p0001",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    element_id: Some("split-a".into()),
+                    ..Default::default()
+                },
+            )],
+            CoordinateOrigin::Unknown,
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::CapabilityBlocked);
+        assert_eq!(
+            report.checks[0].reason,
+            Some(CheckReason::UnknownCoordinateOrigin)
+        );
+        assert!(report.checks[0]
+            .warnings
+            .contains(&WarningCode::CapabilityLimited));
+    }
+
+    #[test]
+    fn single_element_quote_does_not_require_known_coordinates() {
+        let report = verify_elements_with_origin(
+            vec![element(
+                "only",
+                "p0001",
+                [100, 100, 700, 200],
+                Some("The complete grounded quote"),
+            )],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The complete grounded quote"),
+                Citation {
+                    element_id: Some("only".into()),
+                    ..Default::default()
+                },
+            )],
+            CoordinateOrigin::Unknown,
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+    }
+
+    #[test]
+    fn adjacent_join_never_crosses_pages() {
+        let report = verify_elements(
+            vec![
+                element(
+                    "split-a",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "split-b",
+                    "p0002",
+                    [400, 100, 700, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    element_id: Some("split-a".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
     }
 
     #[test]
@@ -2620,6 +3519,7 @@ mod tests {
             },
             fingerprint: None,
             crop_ref: None,
+            structure: false,
         };
         let report = verify(
             &source,

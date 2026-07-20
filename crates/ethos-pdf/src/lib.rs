@@ -29,7 +29,9 @@
 
 use std::collections::{BTreeMap, HashSet};
 use std::env;
-use std::ffi::{c_char, c_int, c_ulong, c_void, CString};
+#[cfg(unix)]
+use std::ffi::CString;
+use std::ffi::{c_char, c_int, c_ulong, c_void};
 use std::path::{Path, PathBuf};
 use std::ptr;
 use std::slice;
