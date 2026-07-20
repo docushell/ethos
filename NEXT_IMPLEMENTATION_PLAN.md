@@ -434,7 +434,7 @@ Est. = agent-days (see §6.0). Human-gate tasks marked (gate).
 | NIP-5.1 | P0 | done | 1 | — | 2026-07-20 | `docs/validation/nip-5-1-pdfium-install-smoke-2026-07-19.md` | Isolated fresh-home `env -i` macOS fetch, doctor, and byte-identical parse accepted by the decider under plan revision v1.3 |
 | NIP-5.2 | P0 | done | 0.5 | NIP-5.1 | 2026-07-20 | `docs/decisions/ADR-0015-opt-in-bundled-pdfium-artifacts.md`; `docs/validation/nip-5-2-ethos-full-build-evidence-2026-07-20.md` | Proposed only: deterministic macOS/Linux candidates and notices verified; publication remains blocked pending ADR acceptance and target-platform smoke |
 | NIP-5.3 | P0 | blocked | 1.5 | — | 2026-07-20 | `docs/validation/nip-5-3-windows-verify-draft-2026-07-20.md` | Implementation, deterministic packaging tests, and Windows cross-target check pass; actual `.exe` link/smoke requires the new `windows-latest` job because this macOS host has no `link.exe` or Windows runtime |
-| NIP-6.1 | P1 | not_started | 1 | — | | | separate Action repo |
+| NIP-6.1 | P1 | blocked | 1 | — | 2026-07-20 | | Required separate `docushell/ethos-verify-action` repository is absent; implementation awaits a human-created repository or explicit local-repository path and visibility decision. |
 | NIP-6.2 | P1 | not_started | 0.5 | NIP-6.1 | | | |
 | NIP-6.3 | P1 | not_started | 0.5 | NIP-6.2 | | | claims gate |
 | NIP-7.1 | P0 | done | 0.5 | — | 2026-07-19 | `docs/release-lane-v2.md` | accepted by decider |
