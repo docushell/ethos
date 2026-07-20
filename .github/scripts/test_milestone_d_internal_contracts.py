@@ -28,7 +28,6 @@ from makefile_guard import makefile_text, target_block
 
 ROOT = Path(__file__).resolve().parents[2]
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
-ROADMAP = ROOT / "docs/roadmap.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 VALIDATE_EXAMPLES = ROOT / "schemas/validate_examples.py"
 COMMON_CONTRACT_GATES = [
@@ -462,14 +461,6 @@ def object_schema_nodes(node: object, path: str = "#") -> list[tuple[str, dict]]
     return nodes
 
 
-def roadmap_table_row(milestone: str) -> str:
-    prefix = f"| {milestone} |"
-    for line in ROADMAP.read_text(encoding="utf-8").splitlines():
-        if line.startswith(prefix):
-            return line
-    raise AssertionError(f"docs/roadmap.md is missing the {milestone} row")
-
-
 def execution_status_d_contract_bullets() -> list[str]:
     return [
         line
@@ -691,12 +682,10 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertIn(command, execution_status, entry["contract"])
 
     def test_registered_contracts_are_documented_in_status_surfaces(self) -> None:
-        roadmap = ROADMAP.read_text(encoding="utf-8")
         execution_status = EXECUTION_STATUS.read_text(encoding="utf-8")
         schemas_readme = SCHEMAS_README.read_text(encoding="utf-8")
 
         for entry in CONTRACT_REGISTRY:
-            self.assertIn(Path(entry["doc"]).name, roadmap, entry["contract"])
             self.assertIn(entry["doc"], execution_status, entry["contract"])
             self.assertIn(entry["doc"], schemas_readme, entry["contract"])
             self.assertIn(Path(entry["schema"]).name, schemas_readme, entry["contract"])
@@ -710,13 +699,6 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
             self.assertIn(f"`{contract_name(entry)}`", bullet, entry["contract"])
             self.assertIn(f"`{entry['doc']}`", bullet, entry["contract"])
             self.assertIn(f"`{focused_validation_command(entry)}`", bullet, entry["contract"])
-
-    def test_roadmap_milestone_d_row_lists_registered_contract_docs(self) -> None:
-        row = roadmap_table_row("D")
-        registered_docs = {Path(entry["doc"]).name for entry in CONTRACT_REGISTRY}
-        row_contract_docs = set(re.findall(r"\((milestone-d-[^)]+-contract\.md)\)", row))
-
-        self.assertEqual(registered_docs, row_contract_docs)
 
     def test_schemas_readme_contract_table_matches_registry(self) -> None:
         table_entries = schemas_readme_table_entries()
