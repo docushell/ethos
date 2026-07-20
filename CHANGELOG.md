@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- release: begin v0.4.0 post-merge finalization, reconcile the dropped MCP and deliberately
+  skipped Windows publication boundaries, and record approved bounded release-note wording
+  without changing currently approved public install claims.
 - planning: drop the remaining P2 NIP-2, NIP-8, and NIP-9 workstreams from the current
   implementation plan by decider decision; retain them only as unapproved candidates requiring
   fresh scope and priority in a future release plan.
