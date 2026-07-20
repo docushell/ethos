@@ -1,7 +1,8 @@
 # NIP-5.1 PDFium install smoke — 2026-07-19
 
 Acceptance: the decider accepted this isolated macOS `env -i` smoke on 2026-07-20 as sufficient
-for NIP-5.1 under `NEXT_IMPLEMENTATION_PLAN.md` revision v1.3. Later platform-specific artifact
+for the install-friction task under the then-active July 2026 implementation-plan revision v1.3,
+now retired and preserved in Git history. Later platform-specific artifact
 tasks retain their own target-platform validation requirements.
 
 Environment: macOS 26.5.1 arm64. The smoke used `env -i`, a fresh `HOME`, and a fresh PDFium

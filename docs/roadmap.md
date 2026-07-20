@@ -9,6 +9,11 @@ layer that includes a deterministic parser, not a parser that may later add veri
 
 Current PM status and blockers: `docs/execution-status.md`.
 
+Current work is selected through explicit issues or decider requests. Release-specific scope and
+gates live in the current `docs/v<version>-release-prep.md`. The temporary July 2026 next-work
+ledger has been retired; its completed and deferred decisions remain available in Git history and
+dated validation records rather than acting as an ongoing developer queue.
+
 Milestone C has an internal source-tree artifact-validation closeout for the
 current RAG chunk and security-report trust-loop checks. The canonical status
 tracker records the current pre-alpha validation posture plus the remaining

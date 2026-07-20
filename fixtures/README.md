@@ -12,7 +12,7 @@ fixtures/
   security/    # hidden/off-page/low-contrast text, annotations, actions, scripts, links
   failure/     # corrupt, encrypted, password, image-only, oversized, rotated
   foreign/     # pinned third-party parser outputs plus their source files and manifests
-  trust-benchmark/ # Ethos-authored NIP-3 verifier/judge comparison corpus
+  trust-benchmark/ # Ethos-authored verifier/judge comparison corpus
 ```
 
 `trust-benchmark/v1/` is separately generated and pinned because it pairs born-digital PDFs with

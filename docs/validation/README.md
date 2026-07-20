@@ -10,28 +10,28 @@ in `docs/public-release-checklist.md`.
 
 Records:
 
-NIP-1 DocuShell first-consumer integration closeout is accepted and complete in
+The DocuShell first-consumer integration closeout is accepted and complete in
 `nip-1-docushell-integration-closeout-2026-07-20.md`. It binds the public Ethos/PDFium versions,
 worker-only verification and crop lanes, focused tests, real born-digital PDF acceptance, and all
 eleven friction dispositions. The decider accepted the record and cleared the current integration
 blocker on 2026-07-20.
 
-NIP-5.3 Windows verify-only draft evidence is recorded in
+Historical Windows verify-only draft evidence is recorded in
 `nip-5-3-windows-verify-draft-2026-07-20.md`. Implementation, deterministic fixture packaging,
-and Windows cross-target checking pass; the task remains blocked until a Windows x64 runner links
-and executes the real candidate, records its checksum/inventory, and passes the verify/no-PDFium
-smoke.
+and Windows cross-target checking pass. Later Windows x64 runner evidence completed the real
+candidate execution, checksum/inventory validation, and verify/no-PDFium smoke; publication
+remains a separate first-of-class decision.
 
-NIP-5.2 `ethos-full` proposal build evidence is recorded in
+The `ethos-full` proposal build evidence is recorded in
 `nip-5-2-ethos-full-build-evidence-2026-07-20.md`. It records byte-identical macOS arm64 and
 Linux x64 candidate archives, complete PDFium notices, exact sizes and hashes, a real macOS
 double-parse smoke, and the required Linux target-smoke/publication blockers while ADR-0015
 remains Proposed.
 
-NIP-5.1 isolated PDFium install evidence is recorded in
+The isolated PDFium install evidence is recorded in
 `nip-5-1-pdfium-install-smoke-2026-07-19.md`. It records the fresh-home `env -i` fetch, runtime
 hash verification, doctor check, and byte-identical macOS parse accepted by the decider under
-`NEXT_IMPLEMENTATION_PLAN.md` revision v1.3.
+the then-active July 2026 implementation-plan revision, now retired and preserved in Git history.
 
 v0.3.0 final GitHub Release metadata closeout is recorded in
 `v0-3-0-release-metadata-closeout-validation-2026-07-03.md`. It records that GitHub Release

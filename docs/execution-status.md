@@ -16,35 +16,36 @@ inside them describe their recorded point in time and are not the current releas
 generated block explicitly repeats them. Candidate source metadata is currently `0.4.0`, while the
 published public baseline remains `0.3.0`.
 
-The NIP-1 DocuShell first-consumer integration closeout is accepted in
+The DocuShell first-consumer integration closeout is accepted in
 `docs/validation/nip-1-docushell-integration-closeout-2026-07-20.md`. The worker-only public CLI,
 foreign-grounding verification, answer-release, and crop-inspection lanes passed focused and real
 born-digital PDF acceptance. This clears the current DocuShell integration blocker without making
 DocuShell adoption, production, parser-quality, or semantic-truth claims.
 
-NIP-3.2 internal judge evidence is durably retained in the sibling `ethos-bench` repository at
+Internal judge evidence is durably retained in the sibling `ethos-bench` repository at
 merge `a733411`, with the exact live result hash, coverage, internal-only state, and credential
-field audit guarded by its local suite. Per the active plan's v1.5 decider clarification,
+field audit guarded by its local suite. Per the 2026-07-20 decider clarification,
 `ethos-bench` workflow automation is deferred and does not gate Ethos delivery. Public benchmark
 reports, comparative wording, and all associated claims remain governed by the existing Ethos
 claim-audit and public-wording boundaries.
 
-NIP-3.3's internal Ethos-versus-judge comparison is merged in `ethos-bench` at `5945fce`. It
+The internal Ethos-versus-judge comparison is merged in `ethos-bench` at `5945fce`. It
 contains a source/binary-bound Ethos 0.4.0 baseline, confusion matrices, grounded/ungrounded
 precision and recall, cost per 1,000 citations, descriptive latency variance, category cells, and
 deterministic report evidence. The measurements remain internal; different latency environments
-support no speed claim, and NIP-3.4 claim audit plus the public-wording lane still control any
+support no speed claim, and the claim audit plus public-wording lane still control any
 external comparative wording.
 
-NIP-3.4's internal claim-audit packet is merged in `ethos-bench` at `9287671`. It is generated
-from the complete NIP-3.3 comparison and retains all three confusion matrices, all 21 category
+The internal claim-audit packet is merged in `ethos-bench` at `9287671`. It is generated
+from the complete comparison and retains all three confusion matrices, all 21 category
 cells, and source/binary/input hashes while excluding cross-environment latency, local-compute
 cost comparisons, rankings, semantic-truth, parser-quality, speed, footprint, and production
 claims from proposed wording. All 50 sibling tests, smoke commands, hash binding, and
-byte-identical regeneration pass on the merged tree. This closes the internal NIP-3 workstream,
+byte-identical regeneration pass on the merged tree. This closes the internal benchmark workstream,
 not the public-wording lane: no approved public claim string or publication state has changed.
 
-NIP-5.3 and NIP-6.1–6.2 completed their remote validation on PR #223 source `a9c1ced`. Release
+The Windows verify-only implementation and CI Action completed remote validation on PR #223
+source `a9c1ced`. Release
 run `29728642038` produced byte-identical Windows verify-only candidates and passed real `.exe`
 smoke plus inventory validation; determinism run `29728692721` passed the verification matrix on
 macOS, Linux, and Windows. PR CI run `29728324553` passed the checksum-pinned released-CLI Action

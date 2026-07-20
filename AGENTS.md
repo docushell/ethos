@@ -1,18 +1,18 @@
 # Agent instructions
 
-**Implementing anything in this repository? Read `NEXT_IMPLEMENTATION_PLAN.md` first.**
-It is the canonical "what to build next" document: pick the highest-priority unblocked task from
-its Progress Ledger (§7), follow its operating rules (§2), and update the ledger row when you
-finish. Do not start new workstreams that are not in that plan without a decider note.
+**Implementing anything in this repository? Start from an explicitly scoped issue, PR, or decider
+request.** For release-specific work, read the current `docs/v<version>-release-prep.md` before
+writing code. Do not infer a new public surface or workstream from historical planning records.
 
 Other authoritative context, in reading order:
 
-1. `NEXT_IMPLEMENTATION_PLAN.md` — active plan, task ledger, guardrails.
+1. The scoped issue, PR, or decider request; for a release train, its
+   `docs/v<version>-release-prep.md`.
 2. `docs/execution-status.md` — current release state and explicit blockers.
 3. `README.md` + `docs/public-boundary-claims.json` — approved public wording; never edit claim
    strings without the approval lane.
 4. `SPEC.md`, `docs/determinism-contract.md`, `docs/decisions/` (ADRs) — contracts and decisions.
-5. `IMPLEMENTATION_PLAN.md`, `docs/roadmap.md` — historical milestone plan and closeout record.
+5. `docs/roadmap.md`, `IMPLEMENTATION_PLAN.md` — public direction and historical milestones.
 
 Hard rules that apply to every change: determinism is a contract (byte-identical output under a
 pinned profile — add double-run tests for new artifacts); fail closed on missing capability;

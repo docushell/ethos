@@ -1,7 +1,7 @@
-# Release Lane v2 (NIP-7.1)
+# Release Lane v2
 
 Status: **Accepted** (2026-07-19, decider direction: keep the process smooth end-to-end).
-Created: 2026-07-19. Owner: product / decider. Plan reference: `NEXT_IMPLEMENTATION_PLAN.md` §NIP-7.
+Created: 2026-07-19. Owner: product / decider.
 
 **Smoothness rule:** a routine release train never waits on ceremony. When the prep doc's gate
 checklist is green, the train ships. The only human moments in the pipeline are PR review, the
@@ -66,13 +66,13 @@ outside one.
 
 ## Pilot
 
-The next release train (carrying NIP-5 install-friction work and any landed NIP-1/NIP-4
-deliverables) is the pilot (NIP-7.2). Success criteria: exactly two governance documents, no
-loss of evidence quality (closeout contains per-surface versions, hashes, and commands), decider
-review time reduced.
+The v0.4.0 release train is the pilot. Success criteria: exactly two governance documents, no
+loss of evidence quality (the closeout contains per-surface versions, hashes, and commands), and
+reduced decider review time. Publication is tracked in `docs/v0-4-0-release-prep.md` and its
+eventual single closeout record, independently of any feature-planning ledger.
 
 ## Decider sign-off
 
-- [x] Accepted: 2026-07-19, per decider direction recorded in NIP-1 revision v1.2 (process must
-  stay smooth from idea to release; no ceremony blockers).
+- [x] Accepted: 2026-07-19, per decider direction that the process stay smooth from idea to
+  release without ceremony blockers.
 - [ ] Amendments required: —

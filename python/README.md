@@ -174,7 +174,7 @@ claim can enter the final answer. For a grounded claim, missing `claim_support` 
 
 ## Citation emission
 
-The source API prepared under NIP-4.2 builds the independently versioned citation-emission v1
+The source API builds the independently versioned citation-emission v1
 artifact and hydrates it into verifier input. Registry publication remains a human release action.
 No CLI, PDFium, LangChain, or LlamaIndex package is imported by these helpers.
 

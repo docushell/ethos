@@ -1,6 +1,6 @@
 # Windows x64 Verify-Only Draft
 
-Status: NIP-5.3 draft artifact contract. No Windows artifact is published or approved by this
+Status: draft artifact contract. No Windows artifact is published or approved by this
 document.
 
 The Windows x64 archive provides the JSON citation-verification path without bundling PDFium.
@@ -29,7 +29,7 @@ The deterministic ZIP contains:
 
 It contains no PDFium DLL. `ethos doc parse` therefore exits with the stable missing-capability
 code `12` unless a caller separately configures `ETHOS_PDFIUM_LIBRARY_PATH`. Windows-with-PDFium
-packaging remains outside NIP-5.3 and follows the ADR-0015 decision.
+packaging remains outside this verify-only contract and follows the ADR-0015 decision.
 
 ## Build and Validation
 
