@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- boundary-exception: remove completed release and milestone records together with their retired
+  validation guards; preserve the compact current-release closeout summary required by release-state validation.
 - boundary-exception: retire the completed temporary next-implementation ledger and kickoff
   prompt, move v0.4.0 publication tracking wholly into the accepted release-prep/closeout lane,
   and remove active-plan wording from the validation index and accepted PDFium install record

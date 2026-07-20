@@ -18,8 +18,6 @@ jobs:
         run: python3 .github/scripts/test_public_surface_posture.py
       - name: claims gate
         run: python3 .github/scripts/claims_gate.py
-      - name: first public release scope decision tests
-        run: python3 .github/scripts/test_first_public_release_scope_decision.py
       - name: Python public API policy tests
         run: python3 .github/scripts/test_python_public_api_policy.py
       - name: npm binary package scaffold tests
@@ -70,8 +68,6 @@ jobs:
             --expected-version "ethos 0.4.0" \
             --target "${{ matrix.artifact_target }}" \
             --out "target/release-artifacts/ethos-${{ matrix.artifact_target }}.smoke.json"
-      - name: validate draft artifact inventory
-        run: python3 .github/scripts/validate_release_artifact_inventory.py target/release-artifacts/*.inventory.json
       - uses: actions/upload-artifact@v4
         with:
           name: ethos-cli-draft-${{ matrix.artifact_target }}

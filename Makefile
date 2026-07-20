@@ -477,7 +477,6 @@ package-publication-dry-run-smoke:
 	cargo package --list --locked --offline -p ethos-doc-core --allow-dirty
 	cargo check --locked --offline -p ethos-verify
 	cargo check --locked --offline -p ethos-pdf
-	$(PYTHON) .github/scripts/test_milestone_e_package_publication_dry_run_smoke.py
 	git diff --check
 
 verify-rendered-crops: $(ETHOS_BIN)
