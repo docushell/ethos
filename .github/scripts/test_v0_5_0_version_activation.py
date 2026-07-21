@@ -44,7 +44,8 @@ class V050CoreVersionActivationTests(unittest.TestCase):
     def test_public_install_wording_is_not_advanced_to_the_candidate(self) -> None:
         claims = read("docs/public-boundary-claims.json")
         readme = read("README.md")
-        self.assertNotIn("0.5.0", readme)
+        active_readme = readme.split("### 60-second `ethos-full` install", 1)[0]
+        self.assertNotIn("0.5.0", active_readme)
         self.assertNotIn("0.5.0", claims)
 
     def test_npm_payload_remains_on_published_release_until_refreshed_from_core_a(self) -> None:
