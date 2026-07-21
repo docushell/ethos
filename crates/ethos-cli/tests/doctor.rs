@@ -98,7 +98,7 @@ fn doctor_warns_and_succeeds_when_pdfium_is_unset() {
     if cfg!(all(target_os = "macos", target_arch = "aarch64"))
         || cfg!(all(target_os = "linux", target_arch = "x86_64"))
     {
-        assert!(stdout.contains("packaged target: supported by the approved npm vendor manifest"));
+        assert!(stdout.contains("packaged target: supported by the v0.4 npm CLI package"));
     }
 }
 

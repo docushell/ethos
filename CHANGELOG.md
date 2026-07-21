@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- release: remove the CLI's compile-time npm vendor-manifest inclusion so the final CLI artifact
+  and npm vendor checksums are not self-referential.
 - boundary-exception: refresh the v0.4.0 npm vendor payload from the final byte-identical
   macOS arm64/Linux x64 CLI archive builds without rebuilding those publication artifacts.
 - ci: keep the verification Action checksum-pinned to the published v0.3.0 CLI while npm
