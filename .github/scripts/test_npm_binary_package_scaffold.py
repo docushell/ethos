@@ -43,15 +43,15 @@ VENDOR_MANIFEST = PACKAGE_DIR / "vendor" / "manifest.json"
 SUPPORTED_TARGETS = {
     "darwin:arm64": {
         "binary": "ethos-darwin-arm64",
-        "binary_sha256": "9231e6fab8e859b409c0a9f03d1284fd97cb4b324b8c6ed3cbf0a7a1fee4c5a2",
+        "binary_sha256": "7d0fb5407d35acc29387c1573a362c54090410e11a8072a3cd2d541195b2a84b",
         "release_asset": "ethos-macos-arm64.tar.gz",
-        "release_asset_sha256": "e32432b84d859cceca74a7a7e7b3a57cf94d61bcc545b3da0da13d8c9e4a09ce",
+        "release_asset_sha256": "719f092101bb1e4cfeebc9507155b15739642f0b891664bd0d9f8a05d9688ba5",
     },
     "linux:x64": {
         "binary": "ethos-linux-x64",
-        "binary_sha256": "55b685d29176f93b82984e61e4f52ea89a1839f513b1597ff519f19e20524d41",
+        "binary_sha256": "2136dcd349a7b3f73f8df83a1b1e35819f9832043eb264b3eaea341697b739ed",
         "release_asset": "ethos-linux-x64.tar.gz",
-        "release_asset_sha256": "e94e7c4154b695227a94648f6fb1e4d9e3cb89c2dbae26c70ce55ec93dd1f218",
+        "release_asset_sha256": "616be562306d64a293554ca4695f19deb6e135dd328e88598a80e76f6f8fb3cd",
     },
 }
 EXPECTED_PACKAGE_FILES = {
