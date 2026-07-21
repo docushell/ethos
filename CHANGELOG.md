@@ -7,6 +7,7 @@
 - ci: index the v0.4.0 validation closeout and bind it to the existing source commit, and align
   the Python public API policy with the released Evidence Handle Bridge exports.
 - ci: repin the verification Action to the published v0.4.0 Linux release archive and binary.
+- ci: make the release workflow dispatch trigger explicit for GitHub registration.
 - Fix Evidence Handle Bridge projection for real verification reports, stale evidence, structured state fields, strict contexts, and inert model prose.
 - Render complete HTML proof diagnostics with canonical schema labels and expanded variant coverage.
 - Cover the full verify-batch request boundary, foreign-grounding, config, and crop-rejection matrix.
