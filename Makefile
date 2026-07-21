@@ -20,7 +20,7 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: milestone-d-crop-element-surface-shape-contract
 .PHONY: milestone-d-claim-kind-boundary-contract
 .PHONY: app-answer-release-contract app-answer-release-demo app-answer-release-release-prep
-.PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check v0-5-performance-record
+.PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check v0-5-performance-record v0-5-npm-b-activation-contract
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -81,6 +81,9 @@ v0-5-performance-record:
 	@test -n "$(V0_4_ETHOS_BIN)" && test -n "$(V0_5_ETHOS_BIN)" && test -n "$(V0_5_PERFORMANCE_OUT)" || (echo "set V0_4_ETHOS_BIN, V0_5_ETHOS_BIN, and V0_5_PERFORMANCE_OUT"; exit 2)
 	$(PYTHON) scripts/measure-v0-5-performance.py --baseline-bin "$(V0_4_ETHOS_BIN)" --candidate-bin "$(V0_5_ETHOS_BIN)" --out "$(V0_5_PERFORMANCE_OUT)"
 	$(PYTHON) scripts/validate-v0-5-performance.py --record "$(V0_5_PERFORMANCE_OUT)" --baseline-bin "$(V0_4_ETHOS_BIN)" --candidate-bin "$(V0_5_ETHOS_BIN)" --source schemas/examples/document.example.json --citations examples/verify/native_grounded_citations.json
+
+v0-5-npm-b-activation-contract:
+	$(PYTHON) .github/scripts/test_validate_npm_b_activation.py
 
 windows-verify-candidate-contract:
 	$(PYTHON) .github/scripts/test_windows_verify_candidate.py
@@ -157,6 +160,7 @@ v0-5-release-prep:
 	$(PYTHON) .github/scripts/test_build_release_cli_archive.py
 	$(PYTHON) .github/scripts/test_release_artifact_workflow_prep.py
 	$(PYTHON) .github/scripts/test_v0_5_0_version_activation.py
+	$(MAKE) v0-5-npm-b-activation-contract PYTHON=$(PYTHON)
 	$(PYTHON) scripts/test_measure_v0_5_performance.py
 	$(MAKE) release-hygiene PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/claims_gate.py

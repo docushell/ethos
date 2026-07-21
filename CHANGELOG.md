@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a fail-closed validator binding future npm B activation to frozen v0.5.0 core-A target-smoke evidence.
+
 - Recompute source and citation fixture hashes when validating v0.5 performance evidence.
 
 - Add independent validation for v0.5 internal performance evidence and threshold derivations.
