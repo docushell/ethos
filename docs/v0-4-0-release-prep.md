@@ -1,11 +1,11 @@
 # Ethos v0.4.0 Release Preparation
 
-Status: **merged release candidate — final publication preparation in progress.** Source/package
-metadata is activated at `0.4.0`; PR #223 is merged at main commit `525f50a`, and post-merge CI
-run `29729605736` passed. Final main-bound release artifacts, registry publication, tag/GitHub
-Release actions, final artifact hashes, and closeout remain pending. The v0.4.0 release-note
-wording is approved, while public installation wording remains on the actually published
-`0.3.0` surfaces until publication.
+Status: **closed.** GitHub Release `v0.4.0` was published on 2026-07-21 from source commit
+`e73477e427d2384bdb3b6b913578411325d3d107` (annotated tag object
+`6041b2ed5617f923e5d226f1f69bb184d70d5fce`). The final macOS arm64 and Linux x64 caller-provided
+PDFium archives and their checksum, inventory, and smoke sidecars are recorded in
+`docs/validation/v0-4-0-release-closeout-summary.md`. Windows and `ethos-full` were skipped;
+neither is a published v0.4.0 surface.
 
 The release scope may be amended before tagging only through an explicitly scoped, reviewed PR.
 Any implementation change invalidates earlier final-artifact hashes and requires fresh full CI,

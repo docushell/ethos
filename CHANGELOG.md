@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- release: reconcile the published v0.4.0 baseline, accept the bounded v0.5.0
+  `ethos-full` exception, and establish the v0.5.0 four-deliverable release scope.
+
+## 0.4.0 - 2026-07-21
+
 - boundary-exception: refresh the v0.4.0 npm vendor payload from the final stable, byte-identical
   macOS arm64/Linux x64 CLI archives after removing the manifest checksum self-reference.
 - release: remove the CLI's compile-time npm vendor-manifest inclusion so the final CLI artifact

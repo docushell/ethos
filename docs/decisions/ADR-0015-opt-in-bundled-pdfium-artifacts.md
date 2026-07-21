@@ -1,6 +1,6 @@
 # ADR-0015: Opt-In Bundled PDFium Artifacts
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-20
 - Decider: Product / Gate Zero decider
 - Governs: optional `ethos-full` macOS arm64 and Linux x64 archives; ADR-0002 and ADR-0013
@@ -24,9 +24,9 @@ Phase 1 runtime with its complete license material. This proposal recommends the
 standalone `ethos-full` class only. It does not make that recommendation active while this ADR is
 Proposed.
 
-## Proposed Decision
+## Decision
 
-If accepted, this ADR amends ADR-0013 only as follows:
+This accepted ADR amends ADR-0013 only as follows:
 
 1. Add optional `ethos-full-<version>-macos-arm64.tar.gz` and
    `ethos-full-<version>-linux-x64.tar.gz` standalone archives. Base crates, wheels, npm packages,
@@ -46,7 +46,7 @@ If accepted, this ADR amends ADR-0013 only as follows:
 5. Require target-platform smoke before publication: `ethos --version`, `ethos doctor
    --require-pdfium`, and two byte-identical parses of the pinned license-clean fixture. A build
    on one platform is not evidence for the other.
-6. Treat every candidate as non-publishable until this ADR is Accepted and the v0.4.0 release
+6. Treat every candidate as non-publishable until this ADR is Accepted and the v0.5.0 release
    lane explicitly includes the artifact. Preparing candidates, checksums, and evidence does not
    authorize uploads, tags, release edits, or public wording.
 7. Revisit Phase 2 independently. Acceptance of this narrow Phase 1 redistribution exception
