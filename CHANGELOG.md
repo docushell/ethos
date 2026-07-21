@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- boundary-exception: refresh the v0.4.0 npm vendor payload from the final stable, byte-identical
+  macOS arm64/Linux x64 CLI archives after removing the manifest checksum self-reference.
 - release: remove the CLI's compile-time npm vendor-manifest inclusion so the final CLI artifact
   and npm vendor checksums are not self-referential.
 - boundary-exception: refresh the v0.4.0 npm vendor payload from the final byte-identical
