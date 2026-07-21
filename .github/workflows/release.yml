@@ -28,6 +28,10 @@ jobs:
         run: python3 .github/scripts/test_build_release_cli_archive.py
       - name: Windows verify-only candidate contract tests
         run: python3 .github/scripts/test_windows_verify_candidate.py
+      - name: ethos-full candidate contract tests
+        run: python3 .github/scripts/test_ethos_full_candidate.py
+      - name: ethos-full smoke helper tests
+        run: python3 .github/scripts/test_smoke_ethos_full_candidate.py
 
   cli-draft-artifacts:
     needs: preflight
@@ -80,6 +84,49 @@ jobs:
             target/release-artifacts/*.sha256
             target/release-artifacts/*.inventory.json
             target/release-artifacts/*.smoke.json
+
+  ethos-full-release-candidate:
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - artifact_target: macos-arm64
+            os: macos-14
+          - artifact_target: linux-x64
+            os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show
+      - name: build CLI
+        run: cargo build --locked --release -p ethos-cli
+      - name: download profile-pinned PDFium and build candidates twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python3 -c "import tomllib; print(tomllib.load(open('Cargo.toml','rb'))['workspace']['package']['version'])")
+          pdfium_archive="target/release-artifacts/pdfium-${{ matrix.artifact_target }}.tgz"
+          url=$(python3 -c "import json, urllib.parse; p=json.load(open('profiles/ethos-deterministic-v1.json')); b=p['backend']; base,tag=b['distribution']['release_url'].rsplit('/tag/',1); print(f\"{base}/download/{urllib.parse.quote(tag, safe='')}/{b['platform_artifacts']['${{ matrix.artifact_target }}']['name']}\")")
+          mkdir -p target/release-artifacts/run1 target/release-artifacts/run2
+          curl -fL --retry 3 --output "$pdfium_archive" "$url"
+          for run in run1 run2; do
+            python3 scripts/build-ethos-full-candidate.py --target "${{ matrix.artifact_target }}" --version "$version" --ethos-binary target/release/ethos --pdfium-archive "$pdfium_archive" --out-dir "target/release-artifacts/$run"
+          done
+          cmp target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz target/release-artifacts/run2/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz
+          cmp target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz.sha256 target/release-artifacts/run2/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz.sha256
+          cmp target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".inventory.json target/release-artifacts/run2/ethos-full-"$version"-"${{ matrix.artifact_target }}".inventory.json
+          mkdir target/release-artifacts/extracted
+          tar -xzf target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz -C target/release-artifacts/extracted
+          python3 .github/scripts/smoke_ethos_full_candidate.py --root target/release-artifacts/extracted/ethos-full-"$version"-"${{ matrix.artifact_target }}" --expected-version "ethos $version" --fixture fixtures/synthetic/simple-text/document.pdf --out target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".smoke.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ethos-full-candidate-${{ matrix.artifact_target }}
+          path: |
+            target/release-artifacts/run1/*.tar.gz
+            target/release-artifacts/run1/*.sha256
+            target/release-artifacts/run1/*.inventory.json
+            target/release-artifacts/run1/*.smoke.json
 
   windows-verify-draft-artifact:
     needs: preflight
