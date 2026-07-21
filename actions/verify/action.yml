@@ -20,14 +20,14 @@ inputs:
 runs:
   using: composite
   steps:
-    # Consumer path: intentionally install the last published CLI. Candidate-source
-    # verification is a separate repository CI responsibility until v0.4.0 publishes.
+    # Consumer path: install the last published CLI. Candidate-source verification is
+    # a separate repository CI responsibility.
     - name: Install pinned Ethos CLI
       shell: bash
       env:
-        ETHOS_ACTION_ARCHIVE_URL: https://github.com/docushell/ethos/releases/download/v0.3.0/ethos-linux-x64.tar.gz
-        ETHOS_ACTION_ARCHIVE_SHA256: b549ba5968e04b7679a8d3e879cd45d27f3e9a6fd226eee5c270a4e4f5c01405
-        ETHOS_ACTION_BINARY_SHA256: b416993fc38e6f794611b8b71789ed85af18eb6aa63fef380d9ae7738661f154
+        ETHOS_ACTION_ARCHIVE_URL: https://github.com/docushell/ethos/releases/download/v0.4.0/ethos-linux-x64.tar.gz
+        ETHOS_ACTION_ARCHIVE_SHA256: 616be562306d64a293554ca4695f19deb6e135dd328e88598a80e76f6f8fb3cd
+        ETHOS_ACTION_BINARY_SHA256: 2136dcd349a7b3f73f8df83a1b1e35819f9832043eb264b3eaea341697b739ed
       run: |
         python3 "$GITHUB_ACTION_PATH/install_cli.py" \
           --url "$ETHOS_ACTION_ARCHIVE_URL" \

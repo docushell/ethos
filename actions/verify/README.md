@@ -14,7 +14,7 @@ supplied source representation; it does not establish semantic truth.
 
 The Action writes `ethos-verification-report.json`, fails on ungrounded citations (CLI exit `1`),
 and fails on operational errors (CLI exit `>=2`). It supports GitHub-hosted Linux x64 runners;
-other platforms fail explicitly. The Action downloads only the fixed v0.3.0 Linux x64 release
+other platforms fail explicitly. The Action downloads only the fixed v0.4.0 Linux x64 release
 archive and verifies both its archive and executable SHA256 values before execution.
 
 Pin the Action itself to a full Ethos commit SHA. Marketplace publication is deferred; this
