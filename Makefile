@@ -156,6 +156,7 @@ v0-5-release-prep:
 	$(PYTHON) .github/scripts/test_build_release_cli_archive.py
 	$(PYTHON) .github/scripts/test_release_artifact_workflow_prep.py
 	$(PYTHON) .github/scripts/test_v0_5_0_version_activation.py
+	$(PYTHON) scripts/test_measure_v0_5_performance.py
 	$(MAKE) release-hygiene PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
