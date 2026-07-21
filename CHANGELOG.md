@@ -19,6 +19,7 @@
   no publication or public install wording change.
 - docs: add a future-gated ethos-full quick install, symlink-safe launcher guidance, and macOS
   Gatekeeper quarantine handling.
+- test: execute the ethos-full launcher through an external symlink and bound symlink hops.
 - Fix Evidence Handle Bridge projection for real verification reports, stale evidence, structured state fields, strict contexts, and inert model prose.
 - Render complete HTML proof diagnostics with canonical schema labels and expanded variant coverage.
 - Cover the full verify-batch request boundary, foreign-grounding, config, and crop-rejection matrix.

@@ -135,11 +135,13 @@ macOS arm64 or Linux x64 archive and its published SHA-256 file, verify the chec
 and put its launcher on your `PATH`:
 
 ```bash
-curl -LO https://github.com/docushell/ethos/releases/download/v0.5.0/ethos-full-0.5.0-<target>.tar.gz
-curl -LO https://github.com/docushell/ethos/releases/download/v0.5.0/ethos-full-0.5.0-<target>.tar.gz.sha256
-shasum -a 256 -c ethos-full-0.5.0-<target>.tar.gz.sha256
-tar -xzf ethos-full-0.5.0-<target>.tar.gz
-sudo ln -sf "$PWD/ethos-full-0.5.0-<target>/ethos" /usr/local/bin/ethos
+target=macos-arm64  # use linux-x64 on Linux
+archive="ethos-full-0.5.0-${target}.tar.gz"
+curl -LO "https://github.com/docushell/ethos/releases/download/v0.5.0/${archive}"
+curl -LO "https://github.com/docushell/ethos/releases/download/v0.5.0/${archive}.sha256"
+shasum -a 256 -c "${archive}.sha256"
+tar -xzf "${archive}"
+sudo ln -sf "$PWD/ethos-full-0.5.0-${target}/ethos" /usr/local/bin/ethos
 ethos --version
 ```
 
@@ -152,7 +154,7 @@ On macOS, Gatekeeper may add a quarantine attribute to browser-downloaded archiv
 archive is refused to launch, remove that attribute from the extracted directory before retrying:
 
 ```bash
-xattr -dr com.apple.quarantine ethos-full-0.5.0-<target>
+xattr -dr com.apple.quarantine "ethos-full-0.5.0-${target}"
 ```
 
 This is an unsigned-artifact workaround; signing and notarization are separate future release

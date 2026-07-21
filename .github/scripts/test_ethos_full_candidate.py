@@ -26,7 +26,7 @@ class EthosFullCandidateTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.work = Path(self.temp.name)
         self.binary = self.work / "ethos-bin"
-        self.binary.write_bytes(b"fixture ethos binary\n")
+        self.binary.write_bytes(b"#!/bin/sh\nprintf '%s\\n' \"$ETHOS_PDFIUM_LIBRARY_PATH\"\n")
         self.binary.chmod(0o755)
         self.runtime = b"fixture pdfium runtime\n"
         self.pdfium_archive = self.work / "pdfium.tgz"
@@ -157,6 +157,22 @@ class EthosFullCandidateTests(unittest.TestCase):
             self.assertIn('ETHOS_PDFIUM_LIBRARY_PATH="$root/lib/libpdfium.dylib"', launcher)
             self.assertIn('while [ -L "$source" ]; do', launcher)
             self.assertIn('source=$(readlink "$source")', launcher)
+            self.assertIn('hops=$((hops + 1))', launcher)
+
+    def test_launcher_resolves_external_symlink_to_archive_runtime(self) -> None:
+        output_dir = self.work / "output"
+        subprocess.run(self.command(output_dir), cwd=ROOT, check=True, capture_output=True, text=True)
+        archive_path = output_dir / "ethos-full-test-macos-arm64.tar.gz"
+        extracted = self.work / "extracted"
+        with tarfile.open(archive_path, "r:gz") as archive:
+            archive.extractall(extracted)
+        root = extracted / "ethos-full-test-macos-arm64"
+        link_dir = self.work / "bin"
+        link_dir.mkdir()
+        link = link_dir / "ethos"
+        link.symlink_to(root / "ethos")
+        result = subprocess.run([str(link)], check=True, capture_output=True, text=True)
+        self.assertEqual(str((root / "lib/libpdfium.dylib").resolve()), result.stdout.strip())
 
     def test_hash_mismatch_fails_closed(self) -> None:
         self.write_pdfium_archive(b"wrong runtime\n", include_pdfium_notice=True)
