@@ -83,6 +83,11 @@ enum Command {
     Verify(VerifyArgs),
     /// Verify many citation requests against one loaded grounding source
     VerifyBatch(VerifyBatchArgs),
+    /// Render a deterministic human-readable proof report
+    Report {
+        #[command(subcommand)]
+        command: ReportCommand,
+    },
     /// Recompute and check a document fingerprint
     Fingerprint(FingerprintArgs),
     /// Diagnose local Ethos and caller-provided PDFium setup
@@ -225,6 +230,24 @@ enum SecurityCommand {
 enum EvidenceCommand {
     /// Check caller-provided evidence refs against source evidence
     Anchor(EvidenceAnchorArgs),
+}
+
+#[derive(Subcommand)]
+enum ReportCommand {
+    /// Render a verification report as self-contained HTML
+    Html(ReportHtmlArgs),
+}
+
+#[derive(Args)]
+pub(crate) struct ReportHtmlArgs {
+    /// Canonical verification report JSON.
+    pub(crate) input: PathBuf,
+    /// Destination HTML file.
+    #[arg(long)]
+    pub(crate) out: PathBuf,
+    /// Safe relative prefix used only for existing crop references.
+    #[arg(long)]
+    pub(crate) crop_root: Option<String>,
 }
 
 #[derive(Args)]
@@ -417,6 +440,7 @@ fn run(cli: Cli) -> Result<(), Failure> {
         } => cmd::evidence::evidence_anchor(args),
         Command::Verify(args) => cmd::verify::verify(args),
         Command::VerifyBatch(args) => cmd::verify::verify_batch(args),
+        Command::Report { command: ReportCommand::Html(args) } => cmd::report::html(args),
         Command::Fingerprint(args) => cmd::doc::fingerprint(args),
         Command::Doctor(args) => cmd::doctor::doctor(args),
         Command::CropElement(args) => cmd::crop::crop_element(args),

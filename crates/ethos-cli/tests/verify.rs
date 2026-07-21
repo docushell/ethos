@@ -2883,3 +2883,46 @@ fn case_insensitive_config_allows_literal_case_difference() {
     );
     assert_eq!(report["all_evidence_grounded"], true);
 }
+
+#[test]
+fn report_html_renders_supported_report_deterministically_and_escapes_content() {
+    let root = repo_root();
+    let mut report = json_file(root.join("schemas/examples/verification-report.example.json"));
+    report["grounding"]["parser"]["name"] = serde_json::json!("parser<script>&\"'");
+    report["checks"][0]["claim"]["text"] = serde_json::json!("claim<script>&\"'");
+    let input = temp_json("html-report", &serde_json::to_string(&report).unwrap());
+    let first = temp_output("html-report-first");
+    let second = temp_output("html-report-second");
+    for output in [&first, &second] {
+        let result = run_ethos(&["report", "html", input.to_str().unwrap(), "--out", output.to_str().unwrap()]);
+        assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+        assert!(result.stdout.is_empty());
+    }
+    let html = std::fs::read(&first).unwrap();
+    assert_eq!(html, std::fs::read(&second).unwrap());
+    let text = String::from_utf8(html).unwrap();
+    assert!(text.starts_with("<!doctype html>"));
+    assert!(text.contains("Ethos verifies citation grounding, not semantic truth"));
+    assert!(text.contains("parser&lt;script&gt;&amp;&quot;&#39;"));
+    assert!(text.contains("claim&lt;script&gt;&amp;&quot;&#39;"));
+    assert!(!text.contains("<script"));
+}
+
+#[test]
+fn report_html_rejects_unsupported_schema_and_unsafe_crop_root_without_output() {
+    let root = repo_root();
+    let mut report = json_file(root.join("schemas/examples/verification-report.example.json"));
+    report["schema_version"] = serde_json::json!("9.9.9");
+    let input = temp_json("unsupported-html-report", &serde_json::to_string(&report).unwrap());
+    let output = temp_output("unsupported-html-output");
+    let result = run_ethos(&["report", "html", input.to_str().unwrap(), "--out", output.to_str().unwrap()]);
+    assert_eq!(result.status.code(), Some(2));
+    assert!(!output.exists());
+    let valid = root.join("schemas/examples/verification-report.example.json");
+    for root in ["/crops", "../crops", "crops//x", "crops\\x", "https://x", "crops?x", "crops#x"] {
+        let output = temp_output("unsafe-crop-root");
+        let result = run_ethos(&["report", "html", valid.to_str().unwrap(), "--out", output.to_str().unwrap(), "--crop-root", root]);
+        assert_eq!(result.status.code(), Some(2), "{root}");
+        assert!(!output.exists());
+    }
+}

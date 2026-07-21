@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- report: add deterministic, self-contained HTML proof reports with supported-schema checks,
+  escaped report content, and fail-closed crop-root validation.
 - verify: add buffered, atomic `verify-batch` NDJSON verification against one validated source,
   with canonical per-line reports and aggregate ungrounded exit semantics.
 - release: reconcile the published v0.4.0 baseline, accept the bounded v0.5.0
