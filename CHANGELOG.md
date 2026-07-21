@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- verify: add buffered, atomic `verify-batch` NDJSON verification against one validated source,
+  with canonical per-line reports and aggregate ungrounded exit semantics.
 - release: reconcile the published v0.4.0 baseline, accept the bounded v0.5.0
   `ethos-full` exception, and establish the v0.5.0 four-deliverable release scope.
 
