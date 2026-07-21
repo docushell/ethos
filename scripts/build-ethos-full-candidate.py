@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build deterministic, non-publishable ethos-full proposal archives."""
+"""Build deterministic, non-publishable ethos-full release-candidate archives."""
 
 from __future__ import annotations
 
@@ -19,7 +19,8 @@ TARGETS = {
     "macos-arm64": "lib/libpdfium.dylib",
     "linux-x64": "lib/libpdfium.so",
 }
-STATUS = "proposal_evidence_not_release_ready"
+STATUS = "release_candidate_pending_target_smoke"
+PUBLICATION = "not_publishable_pending_release_gates"
 
 
 def fail(message: str) -> NoReturn:
@@ -176,7 +177,7 @@ def build(args: argparse.Namespace) -> tuple[Path, Path, Path]:
     manifest = {
         "schema": "ethos.full_candidate_manifest.v1",
         "status": STATUS,
-        "publication": "blocked_pending_adr_0015",
+        "publication": PUBLICATION,
         "artifact_class": "ethos-full",
         "target": args.target,
         "version": args.version,
@@ -213,7 +214,7 @@ def build(args: argparse.Namespace) -> tuple[Path, Path, Path]:
     inventory = {
         "schema": "ethos.full_candidate_inventory.v1",
         "status": STATUS,
-        "publication": "blocked_pending_adr_0015",
+        "publication": PUBLICATION,
         "artifact": archive_path.name,
         "sha256": archive_hash,
         "size_bytes": archive_path.stat().st_size,

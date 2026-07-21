@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- packaging: promote the deterministic `ethos-full` builder from ADR proposal evidence to a
+  v0.5 release candidate pending required target smoke and release gates.
 - examples: add a deterministic, model-free Evidence Handle Bridge walkthrough bound to a
   recorded verification report.
 - python: add Evidence Handle Bridge v1 trusted contexts and v2 structured model citations with

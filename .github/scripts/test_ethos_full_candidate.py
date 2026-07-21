@@ -137,8 +137,8 @@ class EthosFullCandidateTests(unittest.TestCase):
                 self.assertIn(required, names)
             manifest = json.load(archive.extractfile(f"{root}/artifact-manifest.json"))
             launcher = archive.extractfile(f"{root}/ethos").read().decode("utf-8")
-            self.assertEqual("proposal_evidence_not_release_ready", manifest["status"])
-            self.assertEqual("blocked_pending_adr_0015", manifest["publication"])
+            self.assertEqual("release_candidate_pending_target_smoke", manifest["status"])
+            self.assertEqual("not_publishable_pending_release_gates", manifest["publication"])
             self.assertIn('ETHOS_PDFIUM_LIBRARY_PATH="$root/lib/libpdfium.dylib"', launcher)
 
     def test_hash_mismatch_fails_closed(self) -> None:
