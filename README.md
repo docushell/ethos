@@ -128,6 +128,36 @@ Prerequisites:
 - caller-provided local PDFium through `ETHOS_PDFIUM_LIBRARY_PATH` only for PDFium-backed paths
   (`scripts/fetch-pdfium.sh` can fetch the exact pinned evaluation archive; see the quickstart)
 
+### 60-second `ethos-full` install (when v0.5.0 is published)
+
+The optional `ethos-full` archive is the shortest path to a local PDF-capable CLI. Download the
+macOS arm64 or Linux x64 archive and its published SHA-256 file, verify the checksum, extract it,
+and put its launcher on your `PATH`:
+
+```bash
+curl -LO https://github.com/docushell/ethos/releases/download/v0.5.0/ethos-full-0.5.0-<target>.tar.gz
+curl -LO https://github.com/docushell/ethos/releases/download/v0.5.0/ethos-full-0.5.0-<target>.tar.gz.sha256
+shasum -a 256 -c ethos-full-0.5.0-<target>.tar.gz.sha256
+tar -xzf ethos-full-0.5.0-<target>.tar.gz
+sudo ln -sf "$PWD/ethos-full-0.5.0-<target>/ethos" /usr/local/bin/ethos
+ethos --version
+```
+
+The launcher resolves symlinks before locating its bundled runtime, so a `/usr/local/bin/ethos`
+link works without adding the extracted archive directory to `PATH`. The archive includes the
+caller-provided-PDFium runtime for this optional surface; the base CLI, Python, and npm surfaces
+remain caller-PDFium as described below.
+
+On macOS, Gatekeeper may add a quarantine attribute to browser-downloaded archives. If a trusted
+archive is refused to launch, remove that attribute from the extracted directory before retrying:
+
+```bash
+xattr -dr com.apple.quarantine ethos-full-0.5.0-<target>
+```
+
+This is an unsigned-artifact workaround; signing and notarization are separate future release
+work and are not implied by this instruction.
+
 From a source checkout:
 
 ```bash

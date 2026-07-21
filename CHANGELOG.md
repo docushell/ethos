@@ -17,6 +17,8 @@
 - perf: emit compact one-request-per-line NDJSON for the v0.5 batch benchmark runner.
 - boundary-exception: refresh the v0.5.0 npm B payload from frozen core-A target-smoke evidence;
   no publication or public install wording change.
+- docs: add a future-gated ethos-full quick install, symlink-safe launcher guidance, and macOS
+  Gatekeeper quarantine handling.
 - Fix Evidence Handle Bridge projection for real verification reports, stale evidence, structured state fields, strict contexts, and inert model prose.
 - Render complete HTML proof diagnostics with canonical schema labels and expanded variant coverage.
 - Cover the full verify-batch request boundary, foreign-grounding, config, and crop-rejection matrix.
