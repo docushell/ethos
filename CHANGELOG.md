@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- boundary-exception: refresh the v0.4.0 npm vendor payload from the final byte-identical
+  macOS arm64/Linux x64 CLI archive builds without rebuilding those publication artifacts.
 - ci: keep the verification Action checksum-pinned to the published v0.3.0 CLI while npm
   candidate vendor metadata advances to v0.4.0.
 - boundary-exception: refresh the v0.4.0 npm vendor manifest and macOS arm64/Linux x64 binaries
