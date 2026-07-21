@@ -83,7 +83,12 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as temporary:
         requests = Path(temporary) / "requests.ndjson"
-        requests.write_bytes((args.citations.read_bytes().rstrip(b"\n") + b"\n") * 32)
+        citation_request = json.dumps(
+            json.loads(args.citations.read_text(encoding="utf-8")),
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+        requests.write_bytes((citation_request + b"\n") * 32)
         batch_command = [str(args.candidate_bin), "verify-batch", str(args.source), "--citations-ndjson", str(requests)]
         expected_batch = (expected.rstrip(b"\n") + b"\n") * 32
         run_individual_32(candidate_command, expected)  # non-recorded setup
