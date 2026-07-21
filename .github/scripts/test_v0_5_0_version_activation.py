@@ -50,8 +50,11 @@ class V050CoreVersionActivationTests(unittest.TestCase):
     def test_npm_payload_remains_on_published_release_until_refreshed_from_core_a(self) -> None:
         manifest = json.loads(read("packages/npm/ethos-pdf/vendor/manifest.json"))
         package = json.loads(read("packages/npm/ethos-pdf/package.json"))
+        lock = json.loads(read("packages/npm/ethos-pdf/package-lock.json"))
         self.assertEqual(PUBLISHED_NPM_PAYLOAD, manifest["cli_version"])
         self.assertEqual(PUBLISHED_NPM_PAYLOAD, package["version"])
+        self.assertEqual(PUBLISHED_NPM_PAYLOAD, lock["version"])
+        self.assertEqual(PUBLISHED_NPM_PAYLOAD, lock["packages"][""].get("version"))
 
     def test_mcp_prototype_remains_excluded(self) -> None:
         cargo = read("Cargo.toml")
