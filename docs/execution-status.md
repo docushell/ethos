@@ -3,9 +3,9 @@
 Date: 2026-07-20
 Owner: product / decider
 <!-- BEGIN GENERATED CURRENT RELEASE STATE -->
-Status: v0.5.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. GitHub Release `v0.5.0` is live with closed-out macOS arm64/Linux x64 caller-PDFium and optional `ethos-full` artifacts, checksums, inventories, and smoke evidence. npm `@docushell/ethos-pdf@0.5.0` is live on npm. The v0.5.0 publication and release-tag closeout is recorded in `validation/v0-5-0-release-closeout-summary.md`.
+Status: v0.4.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. Its released version is `0.4.0`. GitHub Release `v0.4.0` is marked as the repository's latest release and contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. npm `@docushell/ethos-pdf@0.4.0` is live on npm. The exact v0.4.0 public install wording packet is approved and closed out. Package-tag creation for `ethos-package-ethos-doc-core-0.4.0`, `ethos-package-ethos-verify-0.4.0`, and `ethos-package-ethos-pdf-0.4.0` is closed out, and the existing release tag is closed out.
 
-Current closeout record: [v0.5.0 release publication and artifact closeout](validation/v0-5-0-release-closeout-summary.md).
+Current closeout records: [rust python publication](validation/v0-4-0-release-closeout-summary.md); [github release artifacts](validation/v0-4-0-release-closeout-summary.md); [npm publication](validation/v0-4-0-release-closeout-summary.md); [public install wording](validation/v0-4-0-release-closeout-summary.md); [package tags](validation/v0-4-0-release-closeout-summary.md); [release tag](validation/v0-4-0-release-closeout-summary.md); [release metadata](validation/v0-4-0-release-closeout-summary.md).
 
 Still blocked: additional release tags or release targets, hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports and claims, speed, footprint, parser-quality, and table-quality claims, ethos-doc, and ethos-rag.
 <!-- END GENERATED CURRENT RELEASE STATE -->
@@ -13,7 +13,7 @@ Still blocked: additional release tags or release targets, hosted surfaces, prod
 The generated block above is the sole current public-release authority in this historical ledger.
 Sections below preserve dated milestone and wording records for auditability; version statements
 inside them describe their recorded point in time and are not the current release state unless the
-generated block explicitly repeats them. The published public baseline is `0.5.0`.
+generated block explicitly repeats them. The published public baseline is `0.4.0`.
 
 The DocuShell first-consumer integration closeout is accepted in
 `docs/validation/nip-1-docushell-integration-closeout-2026-07-20.md`. The worker-only public CLI,
