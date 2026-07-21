@@ -72,11 +72,19 @@ def validate(evidence: Path, package_root: Path, expected_version: str = "0.5.0"
         archive_hash = digest(paths["archive"])
         if inventory.get("sha256") != archive_hash or not HEX64.fullmatch(str(inventory.get("sha256", ""))):
             fail(f"{target} inventory archive hash mismatch")
+        if inventory.get("size_bytes") != paths["archive"].stat().st_size:
+            fail(f"{target} inventory archive size mismatch")
         checksum = paths["checksum"].read_text(encoding="utf-8")
         if checksum != f"{archive_hash}  {paths['archive'].name}\n":
             fail(f"{target} checksum is not canonical")
         smoke = load(paths["smoke"])
-        if smoke.get("schema") != "ethos.full_candidate_smoke.v1" or smoke.get("target") != target or smoke.get("archive_sha256") != archive_hash or smoke.get("version_stdout") != expected_version:
+        if (
+            smoke.get("schema") != "ethos.full_candidate_smoke.v1"
+            or smoke.get("target") != target
+            or smoke.get("archive_sha256") != archive_hash
+            or smoke.get("archive_size_bytes") != paths["archive"].stat().st_size
+            or smoke.get("version_stdout") != expected_version
+        ):
             fail(f"{target} smoke evidence does not bind the frozen candidate")
     package = load(package_root / "package.json")
     lock = load(package_root / "package-lock.json")

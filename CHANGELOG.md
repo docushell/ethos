@@ -5,6 +5,7 @@
 - Add a fail-closed validator binding future npm B activation to frozen v0.5.0 core-A target-smoke evidence.
 - Run the npm B activation boundary contract in pull-request CI.
 - Keep the npm package lockfile in the published-version hold until core-A refresh.
+- Bind npm B evidence to candidate archive sizes as well as hashes.
 
 - Recompute source and citation fixture hashes when validating v0.5 performance evidence.
 
