@@ -5,6 +5,7 @@
 - Activate v0.5.0 core Rust and Python candidate metadata in lockstep while retaining the
   published v0.4.0 npm payload and public install wording until the frozen-A payload refresh.
 - Reconcile stale public install wording to the closed v0.4.0 release baseline.
+- Validate `ethos-full` archive, checksum, and inventory binding before target-host extraction.
 
 - verify: add black-box coverage for `verify-batch` canonical per-line equivalence, ordering,
   repeat determinism, aggregate exit semantics, and invalid-input atomicity.

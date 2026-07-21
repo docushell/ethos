@@ -120,6 +120,11 @@ class EthosFullCandidateTests(unittest.TestCase):
             (first / "ethos-full-test-macos-arm64.inventory.json").read_bytes(),
             (second / "ethos-full-test-macos-arm64.inventory.json").read_bytes(),
         )
+        inventory = json.loads((first / "ethos-full-test-macos-arm64.inventory.json").read_text())
+        self.assertEqual(first_archive.name, inventory["artifact"])
+        self.assertEqual(sha256(first_archive.read_bytes()), inventory["sha256"])
+        self.assertEqual(first_archive.stat().st_size, inventory["size_bytes"])
+        self.assertEqual("macos-arm64", inventory["target"])
 
         root = "ethos-full-test-macos-arm64"
         with tarfile.open(first_archive, "r:gz") as archive:

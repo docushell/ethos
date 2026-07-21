@@ -120,9 +120,7 @@ jobs:
           cmp target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz target/release-artifacts/run2/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz
           cmp target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz.sha256 target/release-artifacts/run2/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz.sha256
           cmp target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".inventory.json target/release-artifacts/run2/ethos-full-"$version"-"${{ matrix.artifact_target }}".inventory.json
-          mkdir target/release-artifacts/extracted
-          tar -xzf target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz -C target/release-artifacts/extracted
-          python3 .github/scripts/smoke_ethos_full_candidate.py --root target/release-artifacts/extracted/ethos-full-"$version"-"${{ matrix.artifact_target }}" --expected-version "ethos $version" --fixture fixtures/synthetic/simple-text/document.pdf --out target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".smoke.json
+          python3 .github/scripts/smoke_ethos_full_candidate.py --archive target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz --checksum target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".tar.gz.sha256 --inventory target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".inventory.json --extract-dir target/release-artifacts/extracted --expected-version "ethos $version" --fixture fixtures/synthetic/simple-text/document.pdf --out target/release-artifacts/run1/ethos-full-"$version"-"${{ matrix.artifact_target }}".smoke.json
       - uses: actions/upload-artifact@v4
         with:
           name: ethos-full-candidate-${{ matrix.artifact_target }}
