@@ -51,7 +51,7 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
         self.assertNotIn('tar -C "$(dirname "$out")" -czf', text)
         self.assertIn("test_build_release_cli_archive.py", text)
         self.assertIn("smoke_release_cli_artifact.py", text)
-        self.assertIn('--expected-version "ethos 0.4.0"', text)
+        self.assertIn('--expected-version "ethos ${{ steps.version.outputs.value }}"', text)
         self.assertIn("--target \"${{ matrix.artifact_target }}\"", text)
         self.assertIn("*.smoke.json", text)
         self.assertIn("validate_release_artifact_inventory.py", text)

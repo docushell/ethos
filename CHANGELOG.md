@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Activate v0.5.0 core Rust and Python candidate metadata in lockstep while retaining the
+  published v0.4.0 npm payload and public install wording until the frozen-A payload refresh.
+- Reconcile stale public install wording to the closed v0.4.0 release baseline.
+
 - verify: add black-box coverage for `verify-batch` canonical per-line equivalence, ordering,
   repeat determinism, aggregate exit semantics, and invalid-input atomicity.
 - packaging: promote the deterministic `ethos-full` builder from ADR proposal evidence to a
