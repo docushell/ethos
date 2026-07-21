@@ -28,7 +28,7 @@ class ValidateNpmBActivationTests(unittest.TestCase):
             inventory = root / f"{target}.inventory.json"
             inventory.write_text(json.dumps({"schema": "ethos.full_candidate_inventory.v1", "status": "release_candidate_pending_target_smoke", "publication": "not_publishable_pending_release_gates", "target": target, "sha256": digest, "size_bytes": archive.stat().st_size}), encoding="utf-8")
             smoke = root / f"{target}.smoke.json"
-            smoke.write_text(json.dumps({"schema": "ethos.full_candidate_smoke.v1", "target": target, "archive_sha256": digest, "archive_size_bytes": archive.stat().st_size, "version_stdout": version}), encoding="utf-8")
+            smoke.write_text(json.dumps({"schema": "ethos.full_candidate_smoke.v1", "target": target, "archive_sha256": digest, "archive_size_bytes": archive.stat().st_size, "version_stdout": f"ethos {version}"}), encoding="utf-8")
             targets[target] = {"archive": archive.name, "checksum": checksum.name, "inventory": inventory.name, "smoke": smoke.name}
         evidence = root / "evidence.json"
         evidence.write_text(json.dumps({"schema": "ethos.npm_b_activation_evidence.v1", "core_version": version, "core_commit": "a" * 40, "targets": targets}), encoding="utf-8")

@@ -140,7 +140,19 @@ def wrapper(runtime_path: str) -> bytes:
     return (
         "#!/bin/sh\n"
         "set -eu\n"
-        'root=$(CDPATH= cd -P -- "$(dirname "$0")" && pwd)\n'
+        'source=$0\n'
+        'hops=0\n'
+        'while [ -L "$source" ]; do\n'
+        '  hops=$((hops + 1))\n'
+        '  [ "$hops" -le 40 ] || { echo "ethos launcher: symlink chain exceeds 40 hops" >&2; exit 1; }\n'
+        '  source_dir=$(CDPATH= cd -P -- "$(dirname "$source")" && pwd)\n'
+        '  source=$(readlink "$source")\n'
+        '  case "$source" in\n'
+        '    /*) ;;\n'
+        '    *) source="$source_dir/$source" ;;\n'
+        '  esac\n'
+        'done\n'
+        'root=$(CDPATH= cd -P -- "$(dirname "$source")" && pwd)\n'
         f'export ETHOS_PDFIUM_LIBRARY_PATH="$root/{runtime_path}"\n'
         'exec "$root/bin/ethos" "$@"\n'
     ).encode("utf-8")

@@ -83,7 +83,7 @@ def validate(evidence: Path, package_root: Path, expected_version: str = "0.5.0"
             or smoke.get("target") != target
             or smoke.get("archive_sha256") != archive_hash
             or smoke.get("archive_size_bytes") != paths["archive"].stat().st_size
-            or smoke.get("version_stdout") != expected_version
+            or smoke.get("version_stdout") != f"ethos {expected_version}"
         ):
             fail(f"{target} smoke evidence does not bind the frozen candidate")
     package = load(package_root / "package.json")

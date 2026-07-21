@@ -22,6 +22,7 @@ class RunnerTests(unittest.TestCase):
     b=root/v; b.write_text(FAKE); b.chmod(0o755); bins.append(b)
    out=root/"record.json"; log=root/"calls.log"; env=dict(os.environ,ETHOS_PERF_TEST_LOG=str(log)); r=subprocess.run(["python3",str(RUNNER),"--baseline-bin",str(bins[0]),"--candidate-bin",str(bins[1]),"--source",str(source),"--citations",str(citations),"--out",str(out)],capture_output=True,text=True,env=env)
    self.assertEqual(0,r.returncode,r.stderr); record=json.loads(out.read_text()); self.assertTrue(record["derived"]["passed"]); self.assertEqual(30,len(record["single_request_cold_ns"]["baseline"])); self.assertEqual(10,len(record["batch_32_ns"]["individual_processes"])); self.assertEqual(10,len(record["batch_32_ns"]["batch_process"])); self.assertEqual({"os","os_release","architecture","cpu"},set(record["environment"]))
+   self.assertIn("verify-batch", calls[-1])
    calls=log.read_text().splitlines(); cold=calls[1:61]; self.assertEqual(["0.4.0:verify","0.5.0:verify","0.5.0:verify","0.4.0:verify"],cold[:4])
  def test_rejects_wrong_version(self):
   with tempfile.TemporaryDirectory() as d:

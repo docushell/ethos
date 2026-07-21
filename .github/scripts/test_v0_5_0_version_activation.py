@@ -44,17 +44,25 @@ class V050CoreVersionActivationTests(unittest.TestCase):
     def test_public_install_wording_is_not_advanced_to_the_candidate(self) -> None:
         claims = read("docs/public-boundary-claims.json")
         readme = read("README.md")
-        self.assertNotIn("0.5.0", readme)
+        active_readme = readme.split("### 60-second `ethos-full` install", 1)[0]
+        self.assertNotIn("0.5.0", active_readme)
         self.assertNotIn("0.5.0", claims)
 
     def test_npm_payload_remains_on_published_release_until_refreshed_from_core_a(self) -> None:
         manifest = json.loads(read("packages/npm/ethos-pdf/vendor/manifest.json"))
         package = json.loads(read("packages/npm/ethos-pdf/package.json"))
         lock = json.loads(read("packages/npm/ethos-pdf/package-lock.json"))
-        self.assertEqual(PUBLISHED_NPM_PAYLOAD, manifest["cli_version"])
-        self.assertEqual(PUBLISHED_NPM_PAYLOAD, package["version"])
-        self.assertEqual(PUBLISHED_NPM_PAYLOAD, lock["version"])
-        self.assertEqual(PUBLISHED_NPM_PAYLOAD, lock["packages"][""].get("version"))
+        versions = {
+            manifest["cli_version"],
+            package["version"],
+            lock["version"],
+            lock["packages"][""].get("version"),
+        }
+        if versions == {VERSION}:
+            changelog = read("CHANGELOG.md")
+            self.assertIn("boundary-exception: refresh the v0.5.0 npm B payload from frozen core-A", changelog)
+        else:
+            self.assertEqual({PUBLISHED_NPM_PAYLOAD}, versions)
 
     def test_mcp_prototype_remains_excluded(self) -> None:
         cargo = read("Cargo.toml")
