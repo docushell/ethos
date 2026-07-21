@@ -98,8 +98,10 @@ jobs:
         run: python3 .github/scripts/test_python_public_api_policy.py
       - name: Ethos verify Action contract tests
         run: make ethos-verify-action-contract PYTHON=python3
-      - name: v0.4.0 version activation tests
-        run: python3 .github/scripts/test_v0_4_0_version_activation.py
+      - name: v0.5.0 core version activation tests
+        run: python3 .github/scripts/test_v0_5_0_version_activation.py
+      - name: v0.5.0 npm B activation boundary tests
+        run: python3 .github/scripts/test_validate_npm_b_activation.py
       - name: Validation record source tests
         run: python3 .github/scripts/test_validation_record_source.py
       - name: frozen closed-lane record guards

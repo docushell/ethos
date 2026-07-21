@@ -1,7 +1,10 @@
 import type {
   EthosAppAnswerReleaseDecision,
   EthosCitationClaim,
+  EthosEvidenceHandleCitationClaim,
+  EthosEvidenceHandleContext,
   EthosLlmCitationOutput,
+  EthosLlmCitationOutputV2,
   EthosVerificationReport,
 } from "../types";
 
@@ -67,6 +70,29 @@ const emission: EthosLlmCitationOutput = {
   claims: [claim],
 };
 
+const evidenceContext: EthosEvidenceHandleContext = {
+  artifact_type: "ethos.evidence_handle_context.v1",
+  schema_version: "1.0.0",
+  document_fingerprint: `sha256:${"0".repeat(64)}`,
+  evidence: [{
+    evidence_id: "evidence-1",
+    locator: { element_id: "element-1", page: "page-1" },
+    display: "Paragraph 1",
+  }],
+};
+
+const evidenceHandleClaim: EthosEvidenceHandleCitationClaim = {
+  kind: "quote",
+  text: "Grounded text",
+  evidence_id: "evidence-1",
+};
+
+const evidenceHandleEmission: EthosLlmCitationOutputV2 = {
+  schema_version: "2.0.0",
+  answer: "An answer with an evidence handle citation.",
+  claims: [evidenceHandleClaim],
+};
+
 // These accesses mirror the fields DocuShell's evidence policy consumes.
 report.checks.map((check) => ({
   id: check.id,
@@ -75,6 +101,8 @@ report.checks.map((check) => ({
   warnings: check.warnings,
 }));
 emission.claims.map((item) => item.kind);
+evidenceContext.evidence.map((item) => item.evidence_id);
+evidenceHandleEmission.claims.map((item) => item.evidence_id);
 answerRelease.claims.map((item) => item.claim_support);
 
 // @ts-expect-error citation claims fail closed when no locator is present.

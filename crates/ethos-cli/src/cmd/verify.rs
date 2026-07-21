@@ -16,6 +16,7 @@
 
 use std::collections::BTreeMap;
 use std::collections::HashSet;
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
 use ethos_core::crop_element::{CropElementDescriptor, CropElementRendering};
@@ -40,7 +41,7 @@ use crate::cmd::crop_artifacts::{
 };
 use crate::{
     default_max_input_bytes, read_document, read_file_limited, write_output, Failure, VerifyArgs,
-    VerifyOutputFormat,
+    VerifyBatchArgs, VerifyOutputFormat,
 };
 
 pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
@@ -121,6 +122,151 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     };
 
     write_report(args.out, args.format, report, args.fail_on_ungrounded)
+}
+
+/// Verify an all-or-nothing NDJSON batch. Source/configuration validation happens once before
+/// any report is rendered or output is written.
+pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
+    let max_input_bytes = default_max_input_bytes();
+    let citations = parse_batch_citations(&args.citations_ndjson, max_input_bytes)?;
+    let config = load_batch_config(args.config.as_deref(), max_input_bytes)?;
+    if config
+        .evidence
+        .as_ref()
+        .is_some_and(|evidence| evidence.include_crops)
+    {
+        return Err(Failure::Usage(
+            "verify-batch does not support crop evidence".to_string(),
+        ));
+    }
+    for citation in &citations {
+        validate_citation_input(citation, &config)?;
+    }
+    let config_value =
+        serde_json::to_value(&config).map_err(|e| EthosError::internal(e.to_string()))?;
+    let config_sha256 =
+        ethos_core::c14n::sha256_hex(&config_value).map_err(|e| EthosError::internal(e.message))?;
+
+    let reports = match args.grounding.as_deref() {
+        None => {
+            let document = read_document(&args.input)?;
+            batch_reports(&document, citations, &config, &config_sha256)
+        }
+        Some("opendataloader-json") => {
+            let bytes = read_file_limited(&args.input, max_input_bytes)?;
+            let text = String::from_utf8(bytes)
+                .map_err(|_| Failure::Usage("grounding input is not UTF-8".to_string()))?;
+            let source = OdlJsonSource::from_json_str(&text)
+                .map_err(|e| Failure::Usage(format!("opendataloader-json adapter: {e}")))?;
+            batch_reports(&source, citations, &config, &config_sha256)
+        }
+        Some(other) => {
+            return Err(Failure::Usage(format!(
+                "unknown grounding adapter '{other}' (available: opendataloader-json)"
+            )))
+        }
+    };
+
+    let mut output = Vec::new();
+    let mut any_ungrounded = false;
+    for report in reports {
+        any_ungrounded |= !report.all_evidence_grounded;
+        let mut line = verification_report_json_bytes(&report)?;
+        line.pop(); // The ordinary report framing newline becomes NDJSON framing below.
+        output.extend_from_slice(&line);
+        output.push(b'\n');
+    }
+    write_batch_output(args.out, &output)?;
+    if args.fail_on_ungrounded && any_ungrounded {
+        return Err(Failure::Ungrounded);
+    }
+    Ok(())
+}
+
+fn write_batch_output(out: Option<PathBuf>, bytes: &[u8]) -> Result<(), Failure> {
+    let Some(path) = out else {
+        return write_output(None, bytes);
+    };
+    let parent = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let mut temporary = tempfile::NamedTempFile::new_in(parent)
+        .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
+    temporary
+        .write_all(bytes)
+        .and_then(|_| temporary.as_file().sync_all())
+        .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
+    temporary
+        .persist(&path)
+        .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
+    Ok(())
+}
+
+fn parse_batch_citations(path: &Path, max_input_bytes: u64) -> Result<Vec<CitationInput>, Failure> {
+    let bytes = read_file_limited(path, max_input_bytes)?;
+    let text = std::str::from_utf8(&bytes)
+        .map_err(|_| Failure::Usage("citations NDJSON is not UTF-8".to_string()))?;
+    if text.is_empty() {
+        return Err(Failure::Usage(
+            "citations NDJSON must contain 1 to 1024 requests".to_string(),
+        ));
+    }
+    let mut citations = Vec::new();
+    for (index, line) in text.split('\n').enumerate() {
+        let line = line.strip_suffix('\r').unwrap_or(line);
+        if line.is_empty() {
+            if index + 1 == text.split('\n').count() {
+                continue;
+            }
+            return Err(Failure::Usage(
+                "citations NDJSON must not contain blank lines".to_string(),
+            ));
+        }
+        let citation: CitationInput = serde_json::from_str(line).map_err(|_| {
+            Failure::Usage(format!(
+                "citations NDJSON line {} does not match the canonical citation input shape",
+                index + 1
+            ))
+        })?;
+        citations.push(citation);
+    }
+    if citations.is_empty() || citations.len() > 1024 {
+        return Err(Failure::Usage(
+            "citations NDJSON must contain 1 to 1024 requests".to_string(),
+        ));
+    }
+    Ok(citations)
+}
+
+fn load_batch_config(
+    path: Option<&Path>,
+    max_input_bytes: u64,
+) -> Result<VerificationConfig, Failure> {
+    let config = match path {
+        Some(path) => {
+            serde_json::from_slice(&read_file_limited(path, max_input_bytes)?).map_err(|_| {
+                Failure::Usage("verification config does not match the schema".to_string())
+            })?
+        }
+        None => VerificationConfig::default_v1(),
+    };
+    validate_verification_config(&config)?;
+    Ok(config)
+}
+
+fn batch_reports(
+    source: &dyn GroundingSource,
+    citations: Vec<CitationInput>,
+    config: &VerificationConfig,
+    config_sha256: &str,
+) -> Vec<VerificationReport> {
+    citations
+        .into_iter()
+        .map(|citation| {
+            ethos_verify::verify_claims(source, citation, config, config_sha256.to_string())
+        })
+        .collect()
 }
 
 fn write_report(

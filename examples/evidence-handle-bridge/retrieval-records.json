@@ -1,0 +1,4 @@
+[
+  {"document_fingerprint":"sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3","evidence_id":"ev-revenue","locator":{"page":"p0001","element_id":"e000002"},"display":"Revenue"},
+  {"document_fingerprint":"sha256:b5d30710d0c25cc38d8dec924ecaf57ae4f81276dd5dc14d75cb3b5b6bde62d3","evidence_id":"ev-q3-revenue","locator":{"table_id":"t0001","cell":{"row":1,"col":1}},"display":"Q3 revenue"}
+]

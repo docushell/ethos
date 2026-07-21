@@ -28,6 +28,8 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 EMISSION_SCHEMA_VERSION = "1.0.0"
+EVIDENCE_HANDLE_CONTEXT_SCHEMA_VERSION = "1.0.0"
+EVIDENCE_HANDLE_EMISSION_SCHEMA_VERSION = "2.0.0"
 DEFAULT_MAX_CLAIMS = 256
 _SOURCE_ID_LIMIT = 256
 _CLAIM_KINDS = frozenset(("quote", "value", "presence", "table_cell"))
@@ -166,6 +168,138 @@ def hydrate_citations(
         "document_fingerprint": trusted["document_fingerprint"],
         "claims": claims,
     }
+
+
+def build_evidence_handle_context(records: Iterable[Mapping[str, Any]]) -> Dict[str, Any]:
+    """Build a trusted single-document evidence-handle context without locator inference."""
+    items = _materialize_records(records)
+    fingerprint = None
+    evidence = []
+    seen = set()
+    for index, record in enumerate(items, 1):
+        if not isinstance(record, Mapping) or set(record) - {"document_fingerprint", "evidence_id", "locator", "display", "excerpt"}:
+            raise CitationEmissionError("invalid_evidence_record", "record fields do not match context v1", record_index=index)
+        current = record.get("document_fingerprint")
+        _require_nonblank(current, "document_fingerprint", code="missing_document_fingerprint", record_index=index)
+        if _FINGERPRINT.fullmatch(current) is None:
+            raise CitationEmissionError("invalid_document_fingerprint", "expected sha256 fingerprint", record_index=index)
+        if fingerprint is None: fingerprint = current
+        elif fingerprint != current: raise CitationEmissionError("mixed_document_fingerprints", "all evidence must name one document", record_index=index)
+        evidence_id = record.get("evidence_id")
+        _require_source_id(evidence_id, "evidence_id", record_index=index)
+        if evidence_id in seen: raise CitationEmissionError("duplicate_evidence_id", "evidence_id must be unique", record_index=index)
+        seen.add(evidence_id)
+        locator = _validate_handle_locator(record.get("locator"), index)
+        item = {"evidence_id": evidence_id, "locator": locator}
+        for field, limit in (("display", 512), ("excerpt", 4096)):
+            if field in record:
+                _require_nonblank(record[field], field, code="invalid_evidence_record", record_index=index)
+                if len(record[field]) > limit: raise CitationEmissionError("invalid_evidence_record", f"{field} exceeds {limit} characters", record_index=index)
+                item[field] = record[field]
+        evidence.append(item)
+    if not evidence:
+        raise CitationEmissionError("evidence_limit_exceeded", "context must contain 1 to 1024 evidence entries")
+    if len(evidence) > 1024: raise CitationEmissionError("evidence_limit_exceeded", "received more than 1024 evidence entries")
+    return {"artifact_type": "ethos.evidence_handle_context.v1", "schema_version": EVIDENCE_HANDLE_CONTEXT_SCHEMA_VERSION, "document_fingerprint": fingerprint, "evidence": evidence}
+
+
+def build_evidence_citation_emission(answer: str, claims: Iterable[Mapping[str, Any]]) -> Dict[str, Any]:
+    """Build model output v2 whose handles are opaque and non-authoritative until hydration."""
+    payload = {"schema_version": EVIDENCE_HANDLE_EMISSION_SCHEMA_VERSION, "answer": answer, "claims": _copy_claims(claims)}
+    _validate_handle_emission(payload)
+    return payload
+
+
+def hydrate_evidence_citations(emission: Mapping[str, Any], context: Mapping[str, Any]) -> Dict[str, Any]:
+    """Resolve every model handle solely through a validated trusted context."""
+    _validate_handle_emission(emission)
+    validated = _validate_handle_context(context)
+    claims = []
+    for index, claim in enumerate(emission["claims"], 1):
+        locator = validated.get(claim["evidence_id"])
+        if locator is None:
+            raise CitationEmissionError("out_of_vocabulary", "evidence_id was not shown", claim_index=index)
+        item = {"kind": claim["kind"], "citation": dict(locator)}
+        if "text" in claim: item["text"] = claim["text"]
+        claims.append(item)
+    return {"document_fingerprint": context["document_fingerprint"], "claims": claims}
+
+
+def project_evidence_states(
+    context: Mapping[str, Any], emission: Mapping[str, Any], report: Mapping[str, Any]
+) -> Dict[str, Any]:
+    """Project noncanonical handle states only from a report bound to trusted hydration."""
+    hydrated = hydrate_evidence_citations(emission, context)
+    _validate_projection_report(report)
+    if report.get("document_fingerprint") != hydrated["document_fingerprint"]:
+        raise CitationEmissionError("report_context_mismatch", "report fingerprint does not bind the context")
+    checks = report.get("checks")
+    if not isinstance(checks, list) or len(checks) != len(hydrated["claims"]):
+        raise CitationEmissionError("report_context_mismatch", "report checks do not match hydrated claims")
+    supported = []
+    for index, (check, claim) in enumerate(zip(checks, hydrated["claims"]), 1):
+        if not isinstance(check, Mapping) or check.get("id") != f"v{index:04d}" or check.get("claim") != claim:
+            raise CitationEmissionError("report_context_mismatch", "report check order or claim differs from hydration")
+        if not isinstance(check.get("semantic_unverified"), bool) or not isinstance(check.get("status"), str):
+            raise CitationEmissionError("invalid_report", "report check is malformed")
+        if check["status"] != "unsupported_claim_kind": supported.append(check)
+    recomputed = bool(supported) and all(check["status"] == "grounded" for check in supported) and all(not check["semantic_unverified"] for check in checks) and not report.get("unsupported_claim_kinds", []) and not report["fingerprint_stale"]
+    if report.get("all_evidence_grounded") is not recomputed:
+        raise CitationEmissionError("invalid_report", "report all_evidence_grounded is inconsistent")
+    by_handle = {entry["evidence_id"]: [] for entry in context["evidence"]}
+    for index, (claim, check) in enumerate(zip(emission["claims"], checks), 1):
+        by_handle[claim["evidence_id"]].append((index, check))
+    states = []
+    for entry in context["evidence"]:
+        linked = by_handle[entry["evidence_id"]]
+        verified = bool(linked) and not report["fingerprint_stale"] and all(check["status"] == "grounded" and not check["semantic_unverified"] for _, check in linked)
+        item = {
+            "evidence_id": entry["evidence_id"],
+            "retrieved": True,
+            "cited": bool(linked),
+            "verified": verified,
+            "claim_indexes": [index for index, _ in linked],
+            "check_ids": [check["id"] for _, check in linked],
+            "check_statuses": [check["status"] for _, check in linked],
+        }
+        if "display" in entry: item["display"] = entry["display"]
+        states.append(item)
+    return {"document_fingerprint": hydrated["document_fingerprint"], "all_evidence_grounded": recomputed, "states": states}
+
+
+def _validate_projection_report(report: Mapping[str, Any]) -> None:
+    required = {"schema_version", "document_fingerprint", "verification_config_sha256", "grounding", "capability_limits", "fingerprint_stale", "all_evidence_grounded", "checks", "unsupported_claim_kinds", "warnings"}
+    allowed = required | {"dispersion"}
+    if not isinstance(report, Mapping) or not required <= set(report) or set(report) - allowed:
+        raise CitationEmissionError("invalid_report", "report fields do not match the verification-report schema")
+    if report["schema_version"] not in {"1.0.0", "1.1.0"} or not _FINGERPRINT.fullmatch(report["document_fingerprint"]):
+        raise CitationEmissionError("unsupported_report", "report schema or fingerprint is unsupported")
+    if not isinstance(report["verification_config_sha256"], str) or re.fullmatch(r"[0-9a-f]{64}", report["verification_config_sha256"]) is None:
+        raise CitationEmissionError("invalid_report", "verification config hash is invalid")
+    grounding = report["grounding"]
+    parser_allowed = {"name", "version", "adapter", "adapter_version"}
+    if not isinstance(grounding, Mapping) or set(grounding) != {"parser", "capabilities"} or not isinstance(grounding["parser"], Mapping) or not {"name", "version"} <= set(grounding["parser"]) or set(grounding["parser"]) - parser_allowed or not all(isinstance(grounding["parser"][key], str) for key in grounding["parser"]):
+        raise CitationEmissionError("invalid_report", "grounding metadata is invalid")
+    if not isinstance(grounding["capabilities"], Mapping) or not isinstance(report["capability_limits"], list) or not isinstance(report["unsupported_claim_kinds"], list) or not isinstance(report["warnings"], list) or not isinstance(report["fingerprint_stale"], bool) or not isinstance(report["all_evidence_grounded"], bool):
+        raise CitationEmissionError("invalid_report", "report metadata has invalid types")
+    statuses = {"grounded", "not_found", "mismatch", "stale", "unsupported_claim_kind", "capability_blocked", "error"}
+    methods = {"exact_text", "normalized_text", "exact_text_contains", "normalized_text_contains", "table_cell_lookup", "bbox_containment", "presence_only", "none"}
+    reasons = {"missing_locator", "missing_required_text", "unsupported_claim_kind", "stale_fingerprint", "missing_source_fingerprint", "missing_citation_fingerprint", "missing_span_capability", "missing_table_capability", "unknown_coordinate_origin", "element_not_found", "span_not_found", "page_not_found", "bbox_not_found", "locator_conflict", "missing_page_for_bbox", "missing_table_cell_locator", "table_not_found", "table_cell_not_found", "text_mismatch"}
+    if not isinstance(report["checks"], list):
+        raise CitationEmissionError("invalid_report", "checks must be a list")
+    hardened = "dispersion" in report
+    for index, check in enumerate(report["checks"], 1):
+        required_check = {"id", "claim", "status", "match_method", "semantic_unverified", "warnings"}
+        allowed_check = required_check | {"reason", "resolved_element_ids", "provenance", "context_echo", "evidence"}
+        if not isinstance(check, Mapping) or not required_check <= set(check) or set(check) - allowed_check or check["id"] != f"v{index:04d}" or check["status"] not in statuses or check["match_method"] not in methods or not isinstance(check["semantic_unverified"], bool) or not isinstance(check["warnings"], list) or not isinstance(check["claim"], Mapping):
+            raise CitationEmissionError("invalid_report", "check does not match the verification-report schema")
+        if check["status"] == "grounded" and "reason" in check:
+            raise CitationEmissionError("invalid_report", "grounded check must not contain a reason")
+        if check["status"] != "grounded" and check.get("reason") not in reasons:
+            raise CitationEmissionError("invalid_report", "non-grounded check must contain a reason")
+        hardened = hardened or bool(set(check) & {"resolved_element_ids", "provenance", "context_echo"})
+    if hardened != (report["schema_version"] == "1.1.0"):
+        raise CitationEmissionError("invalid_report", "report version does not match hardened fields")
 
 
 def emit_langchain_citations(
@@ -478,6 +612,57 @@ def _validate_context(context: Mapping[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _validate_handle_locator(locator: Any, index: int) -> Dict[str, Any]:
+    if not isinstance(locator, Mapping): raise CitationEmissionError("invalid_locator", "locator must be a mapping", record_index=index)
+    allowed = {"page", "element_id", "span_id", "table_id", "cell"}
+    if set(locator) - allowed: raise CitationEmissionError("invalid_locator", "locator contains forbidden fields", record_index=index)
+    anchors = ("element_id", "span_id", "table_id")
+    primary = sum(field in locator for field in anchors)
+    if primary > 1 or (primary == 0 and "page" not in locator): raise CitationEmissionError("invalid_locator", "locator must contain exactly one primary anchor", record_index=index)
+    if "table_id" in locator:
+        cell = locator.get("cell")
+        if not isinstance(cell, Mapping) or set(cell) != {"row", "col"}: raise CitationEmissionError("invalid_locator", "table locator requires cell", record_index=index)
+        for axis in ("row", "col"):
+            if isinstance(cell[axis], bool) or not isinstance(cell[axis], int) or cell[axis] < 0: raise CitationEmissionError("invalid_locator", f"cell.{axis} must be non-negative", record_index=index)
+    elif "cell" in locator: raise CitationEmissionError("invalid_locator", "cell requires table_id", record_index=index)
+    for field in ("page", "element_id", "span_id", "table_id"):
+        if field in locator: _require_source_id(locator[field], field, record_index=index)
+    result = dict(locator)
+    if isinstance(result.get("cell"), Mapping): result["cell"] = dict(result["cell"])
+    return result
+
+
+def _validate_handle_context(context: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
+    if not isinstance(context, Mapping) or set(context) != {"artifact_type", "schema_version", "document_fingerprint", "evidence"}:
+        raise CitationEmissionError("invalid_evidence_context", "context fields do not match v1")
+    if context["artifact_type"] != "ethos.evidence_handle_context.v1" or context["schema_version"] != EVIDENCE_HANDLE_CONTEXT_SCHEMA_VERSION:
+        raise CitationEmissionError("unsupported_schema_version", "expected evidence context 1.0.0")
+    if not isinstance(context["evidence"], list) or any(not isinstance(entry, Mapping) for entry in context["evidence"]):
+        raise CitationEmissionError("invalid_evidence_context", "evidence must be a list of records")
+    allowed_entry = {"evidence_id", "locator", "display", "excerpt"}
+    if any(set(entry) - allowed_entry for entry in context["evidence"]):
+        raise CitationEmissionError("invalid_evidence_context", "evidence entry contains forbidden fields")
+    rebuilt = build_evidence_handle_context([{**entry, "document_fingerprint": context["document_fingerprint"]} for entry in context["evidence"]])
+    return {entry["evidence_id"]: entry["locator"] for entry in rebuilt["evidence"]}
+
+
+def _validate_handle_emission(emission: Mapping[str, Any]) -> None:
+    if not isinstance(emission, Mapping) or set(emission) != {"schema_version", "answer", "claims"} or emission["schema_version"] != EVIDENCE_HANDLE_EMISSION_SCHEMA_VERSION:
+        raise CitationEmissionError("unsupported_schema_version", "expected evidence citation output 2.0.0")
+    _require_nonblank(emission["answer"], "answer", code="invalid_emission")
+    claims = emission["claims"]
+    if not isinstance(claims, list) or not 1 <= len(claims) <= DEFAULT_MAX_CLAIMS: raise CitationEmissionError("invalid_claims", "claims must contain 1 to 256 entries")
+    for index, claim in enumerate(claims, 1):
+        if not isinstance(claim, Mapping) or set(claim) - {"kind", "text", "evidence_id"} or not {"kind", "evidence_id"} <= set(claim):
+            raise CitationEmissionError("invalid_claim", "claim fields do not match v2", claim_index=index)
+        if claim.get("kind") not in _CLAIM_KINDS: raise CitationEmissionError("invalid_claim", "unsupported kind", claim_index=index)
+        _require_source_id(claim.get("evidence_id"), "evidence_id", claim_index=index)
+        if claim["kind"] == "presence":
+            if "text" in claim: raise CitationEmissionError("invalid_claim", "presence must not contain text", claim_index=index)
+        elif "text" not in claim: raise CitationEmissionError("invalid_claim", "text is required", claim_index=index)
+        else: _require_nonblank(claim["text"], "text", claim_index=index)
+
+
 def _require_shown(value: str, vocabulary: frozenset, field: str, claim_index: int) -> None:
     if value not in vocabulary:
         raise CitationEmissionError(
@@ -528,10 +713,14 @@ def _require_source_id(
 __all__ = [
     "CitationEmissionError",
     "build_citation_emission",
+    "build_evidence_handle_context",
+    "build_evidence_citation_emission",
     "build_langchain_context",
     "build_llamaindex_context",
     "citation_json_bytes",
     "emit_langchain_citations",
     "emit_llamaindex_citations",
     "hydrate_citations",
+    "hydrate_evidence_citations",
+    "project_evidence_states",
 ]

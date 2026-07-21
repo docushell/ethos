@@ -5,10 +5,10 @@ This directory contains the `ethos-pdf` Python package source for Ethos.
 Install the published evaluation wheel from PyPI with:
 
 ```sh
-python3 -m pip install ethos-pdf==0.3.0
+python3 -m pip install ethos-pdf==0.4.0
 ```
 
-`v0.3.0` includes JSON verification and evidence-anchor wrapper calls through a caller-provided
+`v0.4.0` includes JSON verification and evidence-anchor wrapper calls through a caller-provided
 `ethos` CLI binary. The Python wheel does not bundle the CLI or PDFium.
 
 The package exposes a public semver API beginning at `0.1.0` for Python `>=3.8`. Patch releases
@@ -217,6 +217,22 @@ semantic-truth judgment.
 Runnable, provider-free walkthroughs are in `examples/langchain-rag/README.md` and
 `examples/llamaindex-rag/README.md`. Both preserve the verifier's intentional exit-`1` report for
 a fabricated citation and require no model API key.
+
+### Evidence Handle Bridge
+
+The v2 bridge exposes opaque `evidence_id` values to a structured model callback while trusted
+application code retains canonical locators and the document fingerprint. Build a context with
+`build_evidence_handle_context`, validate structured output with
+`build_evidence_citation_emission`, hydrate with `hydrate_evidence_citations`, and project
+`retrieved`, `cited`, and `verified` booleans with `project_evidence_states`.
+
+Only structured `claims[].evidence_id` values are citations. The `answer` string is untrusted
+prose: never infer a citation from handle-shaped text, make it clickable, or give it verified
+styling. Badges, links, and statuses must come only from structured claims plus projected state.
+Unknown handle-shaped prose stays inert or is removed by a deterministic presentation sanitizer.
+A model can name a fabricated or conflicting handle in prose even when its structured claims are
+valid. Display labels and excerpts are untrusted presentation/context fields, carry no proof
+authority, and must be escaped or deterministically sanitized before rendering.
 
 Run the focused tests with:
 

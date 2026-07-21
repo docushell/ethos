@@ -51,7 +51,7 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
         self.assertNotIn('tar -C "$(dirname "$out")" -czf', text)
         self.assertIn("test_build_release_cli_archive.py", text)
         self.assertIn("smoke_release_cli_artifact.py", text)
-        self.assertIn('--expected-version "ethos 0.4.0"', text)
+        self.assertIn('--expected-version "ethos ${{ steps.version.outputs.value }}"', text)
         self.assertIn("--target \"${{ matrix.artifact_target }}\"", text)
         self.assertIn("*.smoke.json", text)
         self.assertIn("validate_release_artifact_inventory.py", text)
@@ -74,8 +74,27 @@ class ReleaseArtifactWorkflowPrepTests(unittest.TestCase):
             "test_pdfium_manual_setup_contract.py",
             "test_build_release_cli_archive.py",
             "test_windows_verify_candidate.py",
+            "test_ethos_full_candidate.py",
+            "test_smoke_ethos_full_candidate.py",
         ):
             self.assertIn(guard, text)
+
+    def test_ethos_full_candidate_job_is_target_limited_and_nonpublishing(self) -> None:
+        text = read(WORKFLOW)
+        start = text.index("  ethos-full-release-candidate:")
+        end = text.index("  windows-verify-draft-artifact:", start)
+        job = text[start:end]
+        self.assertIn("macos-arm64", job)
+        self.assertIn("linux-x64", job)
+        self.assertNotIn("windows", job)
+        self.assertIn("curl -fL --retry 3", job)
+        self.assertIn("profiles/ethos-deterministic-v1.json", job)
+        self.assertIn("build-ethos-full-candidate.py", job)
+        self.assertEqual(3, job.count("cmp target/release-artifacts/run1"))
+        self.assertIn("smoke_ethos_full_candidate.py", job)
+        self.assertIn("fixtures/synthetic/simple-text/document.pdf", job)
+        self.assertNotIn("gh release", job)
+        self.assertNotIn("publish", job)
 
     def test_inventory_writer_and_validator_accept_draft_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

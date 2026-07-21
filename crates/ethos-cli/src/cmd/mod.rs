@@ -20,5 +20,6 @@ pub(crate) mod doc;
 pub(crate) mod doctor;
 pub(crate) mod evidence;
 pub(crate) mod rag;
+pub(crate) mod report;
 pub(crate) mod security;
 pub(crate) mod verify;

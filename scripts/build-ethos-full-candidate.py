@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build deterministic, non-publishable ethos-full proposal archives."""
+"""Build deterministic, non-publishable ethos-full release-candidate archives."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import json
 import re
 import stat
 import tarfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import NoReturn
 
 
@@ -19,7 +19,8 @@ TARGETS = {
     "macos-arm64": "lib/libpdfium.dylib",
     "linux-x64": "lib/libpdfium.so",
 }
-STATUS = "proposal_evidence_not_release_ready"
+STATUS = "release_candidate_pending_target_smoke"
+PUBLICATION = "not_publishable_pending_release_gates"
 
 
 def fail(message: str) -> NoReturn:
@@ -73,9 +74,24 @@ def read_pdfium_archive(
         with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:gz") as archive:
             members: dict[str, tarfile.TarInfo] = {}
             for member in archive.getmembers():
-                if member.name in members:
-                    fail(f"duplicate PDFium archive entry: {member.name}")
-                members[member.name] = member
+                name = member.name.rstrip("/") if member.isdir() else member.name
+                path_parts = PurePosixPath(name).parts
+                if not name or name.startswith("/") or any(part in {"", ".", ".."} for part in path_parts):
+                    fail(f"unsafe PDFium archive entry: {member.name}")
+                if name in members:
+                    fail(f"duplicate PDFium archive entry: {name}")
+                if member.isdir():
+                    if name not in {"include", "lib", "licenses"}:
+                        fail(f"unexpected PDFium archive directory: {name}")
+                elif not member.isfile():
+                    fail(f"PDFium archive entry must be a regular file: {name}")
+                elif not (
+                    name in {"LICENSE", "README.md", "VERSION", runtime_relpath}
+                    or (name.startswith("include/") and name.endswith(".h"))
+                    or (name.startswith("licenses/") and name.endswith(".txt"))
+                ):
+                    fail(f"unexpected PDFium archive file: {name}")
+                members[name] = member
 
             def regular_file(name: str, label: str) -> bytes:
                 member = members.get(name)
@@ -102,6 +118,10 @@ def read_pdfium_archive(
         fail(f"invalid PDFium archive {path}: {error}")
     if "pdfium.txt" not in notices:
         fail("PDFium archive must include licenses/pdfium.txt")
+    for name in notices:
+        parts = Path(name).parts
+        if not name or Path(name).is_absolute() or any(part in {"", ".", ".."} for part in parts):
+            fail(f"unsafe PDFium notice path: {name}")
     return runtime, package_license, notices
 
 
@@ -141,6 +161,7 @@ def build(args: argparse.Namespace) -> tuple[Path, Path, Path]:
     if not ethos_path.stat().st_mode & stat.S_IXUSR:
         fail(f"Ethos binary is not executable: {ethos_path}")
     runtime_relpath = TARGETS[args.target]
+    archive_bytes = read_required(pdfium_archive, "PDFium archive")
     runtime, pdfium_license, license_files = read_pdfium_archive(
         pdfium_archive, expected_archive_hash, runtime_relpath
     )
@@ -176,11 +197,18 @@ def build(args: argparse.Namespace) -> tuple[Path, Path, Path]:
     manifest = {
         "schema": "ethos.full_candidate_manifest.v1",
         "status": STATUS,
-        "publication": "blocked_pending_adr_0015",
+        "publication": PUBLICATION,
         "artifact_class": "ethos-full",
         "target": args.target,
         "version": args.version,
         "launcher": "ethos",
+        "input_sha256": {
+            "profile": sha256_bytes(read_required(profile_path, "profile")),
+            "ethos_binary": sha256_bytes(ethos),
+            "pdfium_archive": sha256_bytes(archive_bytes),
+            "project_license": sha256_bytes(project_license),
+            "project_notice": sha256_bytes(project_notice),
+        },
         "pdfium": {
             "phase": backend.get("phase"),
             "version": backend.get("version"),
@@ -213,7 +241,7 @@ def build(args: argparse.Namespace) -> tuple[Path, Path, Path]:
     inventory = {
         "schema": "ethos.full_candidate_inventory.v1",
         "status": STATUS,
-        "publication": "blocked_pending_adr_0015",
+        "publication": PUBLICATION,
         "artifact": archive_path.name,
         "sha256": archive_hash,
         "size_bytes": archive_path.stat().st_size,

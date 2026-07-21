@@ -7,7 +7,9 @@ const { generateTypes } = require("../dev/generate-types");
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const EXPECTED_FILES = [
   "answer-release.d.ts",
+  "citation-emission-v2.d.ts",
   "citation-emission.d.ts",
+  "evidence-handle-context.d.ts",
   "index.d.ts",
   "verification-report.d.ts",
 ];

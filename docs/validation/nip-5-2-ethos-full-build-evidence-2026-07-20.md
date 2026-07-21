@@ -1,7 +1,8 @@
 # NIP-5.2 `ethos-full` Build Evidence — 2026-07-20
 
-Status: proposal evidence only. ADR-0015 remains Proposed; publication, release-workflow
-activation, registry actions, tags, GitHub Release changes, and public wording remain blocked.
+Status: superseded feasibility evidence. ADR-0015 is Accepted for the v0.5.0 release candidate;
+publication, target smoke, release gates, registry actions, tags, GitHub Release changes, and
+public wording remain blocked until the accepted candidate passes them.
 
 ## Inputs
 
@@ -34,8 +35,8 @@ archive and adjacent inventory.
 
 Every archive contains the project license/NOTICE, upstream PDFium package license, all files
 from the upstream `licenses/` directory, the verified runtime, a relative-path launcher, and a
-canonical manifest marked `proposal_evidence_not_release_ready` and
-`blocked_pending_adr_0015`.
+canonical manifest marked as proposal evidence. The v0.5 builder now produces a separate
+release-candidate status and remains non-publishable pending target smoke and release gates.
 
 ## Smoke and Fail-Closed Evidence
 

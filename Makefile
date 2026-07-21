@@ -13,14 +13,14 @@ COMPARE_RENDERED_CROPS_LEFT ?= $(VERIFY_RENDERED_CROPS_OUT)/run1
 COMPARE_RENDERED_CROPS_RIGHT ?= $(VERIFY_RENDERED_CROPS_OUT)/run2
 LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
-.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha evidence-anchor-v1-contract citation-emission-v1-contract rag-framework-examples trust-benchmark-corpus ethos-full-candidate-contract windows-verify-candidate-contract ethos-verify-action-contract milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep release-candidate-prep v0-2-release-prep v0-3-release-prep v0-4-release-prep light-check package-publication-dry-run-smoke verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
+.PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha evidence-anchor-v1-contract citation-emission-v1-contract rag-framework-examples trust-benchmark-corpus ethos-full-candidate-contract windows-verify-candidate-contract ethos-verify-action-contract milestone-d-verify-citations-contract milestone-d-crop-element-contract milestone-d-sandbox-subprocess-contract milestone-d-internal-contracts milestone-e-prep release-candidate-prep v0-2-release-prep v0-3-release-prep v0-5-release-prep light-check package-publication-dry-run-smoke verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test milestone-b-internal-checks milestone-c-internal-checks release-hygiene release-advisory third-party-license-manifest release-notice-draft
 .PHONY: milestone-d-capability-downgrade-contract
 .PHONY: milestone-d-opendataloader-adapter-shape-contract
 .PHONY: milestone-d-grounding-source-contract
 .PHONY: milestone-d-crop-element-surface-shape-contract
 .PHONY: milestone-d-claim-kind-boundary-contract
 .PHONY: app-answer-release-contract app-answer-release-demo app-answer-release-release-prep
-.PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check
+.PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check v0-5-performance-record v0-5-npm-b-activation-contract
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -76,6 +76,14 @@ trust-benchmark-corpus: $(ETHOS_BIN)
 
 ethos-full-candidate-contract:
 	$(PYTHON) .github/scripts/test_ethos_full_candidate.py
+
+v0-5-performance-record:
+	@test -n "$(V0_4_ETHOS_BIN)" && test -n "$(V0_5_ETHOS_BIN)" && test -n "$(V0_5_PERFORMANCE_OUT)" || (echo "set V0_4_ETHOS_BIN, V0_5_ETHOS_BIN, and V0_5_PERFORMANCE_OUT"; exit 2)
+	$(PYTHON) scripts/measure-v0-5-performance.py --baseline-bin "$(V0_4_ETHOS_BIN)" --candidate-bin "$(V0_5_ETHOS_BIN)" --out "$(V0_5_PERFORMANCE_OUT)"
+	$(PYTHON) scripts/validate-v0-5-performance.py --record "$(V0_5_PERFORMANCE_OUT)" --baseline-bin "$(V0_4_ETHOS_BIN)" --candidate-bin "$(V0_5_ETHOS_BIN)" --source schemas/examples/document.example.json --citations examples/verify/native_grounded_citations.json
+
+v0-5-npm-b-activation-contract:
+	$(PYTHON) .github/scripts/test_validate_npm_b_activation.py
 
 windows-verify-candidate-contract:
 	$(PYTHON) .github/scripts/test_windows_verify_candidate.py
@@ -142,7 +150,7 @@ v0-3-release-prep:
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py
 	git diff --check
 
-v0-4-release-prep:
+v0-5-release-prep:
 	cargo build --locked --workspace
 	cargo test --locked --workspace
 	$(MAKE) verify-alpha PYTHON=$(PYTHON)
@@ -151,7 +159,9 @@ v0-4-release-prep:
 	npm test --prefix packages/npm/ethos-pdf
 	$(PYTHON) .github/scripts/test_build_release_cli_archive.py
 	$(PYTHON) .github/scripts/test_release_artifact_workflow_prep.py
-	$(PYTHON) .github/scripts/test_v0_4_0_version_activation.py
+	$(PYTHON) .github/scripts/test_v0_5_0_version_activation.py
+	$(MAKE) v0-5-npm-b-activation-contract PYTHON=$(PYTHON)
+	$(PYTHON) scripts/test_measure_v0_5_performance.py
 	$(MAKE) release-hygiene PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/public_boundary_claims_gate.py

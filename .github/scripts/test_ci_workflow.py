@@ -69,6 +69,7 @@ class CiWorkflowTests(unittest.TestCase):
             "npm test --prefix packages/npm/ethos-pdf",
             "python3 .github/scripts/test_package_registry_source_consistency.py",
             "python3 .github/scripts/test_claims_gate_registry_surfaces.py",
+            "python3 .github/scripts/test_validate_npm_b_activation.py",
             "python3 .github/scripts/claims_gate.py",
             "python3 .github/scripts/public_boundary_claims_gate.py",
             "python3 .github/scripts/check_release_boundary_paths.py",

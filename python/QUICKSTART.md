@@ -6,7 +6,7 @@ It does not bundle Ethos or PDFium.
 Install the published evaluation wheel from PyPI with:
 
 ```sh
-python3 -m pip install ethos-pdf==0.3.0
+python3 -m pip install ethos-pdf==0.4.0
 ```
 
 ## PDFium Setup
@@ -43,3 +43,7 @@ On Linux the library is typically named `libpdfium.so`; on macOS it is typically
 
 Importing `ethos_pdf` does not require PDFium. If a PDF-backed CLI command reports missing PDFium,
 the wrapper raises `PdfiumNotFoundError` and preserves the CLI stderr for display to the caller.
+
+For Evidence Handle Bridge v2, treat only structured `claims[].evidence_id` values as citations.
+Never turn handle-shaped model answer prose into links or verified badges; render those only from
+trusted context plus `project_evidence_states` output.

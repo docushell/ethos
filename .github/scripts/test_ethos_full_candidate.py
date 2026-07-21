@@ -34,7 +34,7 @@ class EthosFullCandidateTests(unittest.TestCase):
         self.profile = self.work / "profile.json"
         self.write_profile(sha256(self.runtime))
 
-    def write_pdfium_archive(self, runtime: bytes, include_pdfium_notice: bool) -> None:
+    def write_pdfium_archive(self, runtime: bytes, include_pdfium_notice: bool, extras=None) -> None:
         files = {
             "LICENSE": b"PDFium package license\n",
             "lib/libpdfium.dylib": runtime,
@@ -50,6 +50,8 @@ class EthosFullCandidateTests(unittest.TestCase):
                         info.size = len(data)
                         info.mtime = 0
                         archive.addfile(info, io.BytesIO(data))
+                    for info, data in extras or []:
+                        archive.addfile(info, io.BytesIO(data) if data is not None else None)
 
     def write_profile(self, runtime_hash: str) -> None:
         self.profile.write_text(
@@ -120,6 +122,11 @@ class EthosFullCandidateTests(unittest.TestCase):
             (first / "ethos-full-test-macos-arm64.inventory.json").read_bytes(),
             (second / "ethos-full-test-macos-arm64.inventory.json").read_bytes(),
         )
+        inventory = json.loads((first / "ethos-full-test-macos-arm64.inventory.json").read_text())
+        self.assertEqual(first_archive.name, inventory["artifact"])
+        self.assertEqual(sha256(first_archive.read_bytes()), inventory["sha256"])
+        self.assertEqual(first_archive.stat().st_size, inventory["size_bytes"])
+        self.assertEqual("macos-arm64", inventory["target"])
 
         root = "ethos-full-test-macos-arm64"
         with tarfile.open(first_archive, "r:gz") as archive:
@@ -137,8 +144,10 @@ class EthosFullCandidateTests(unittest.TestCase):
                 self.assertIn(required, names)
             manifest = json.load(archive.extractfile(f"{root}/artifact-manifest.json"))
             launcher = archive.extractfile(f"{root}/ethos").read().decode("utf-8")
-            self.assertEqual("proposal_evidence_not_release_ready", manifest["status"])
-            self.assertEqual("blocked_pending_adr_0015", manifest["publication"])
+            self.assertEqual("release_candidate_pending_target_smoke", manifest["status"])
+            self.assertEqual("not_publishable_pending_release_gates", manifest["publication"])
+            self.assertEqual(sha256(self.binary.read_bytes()), manifest["input_sha256"]["ethos_binary"])
+            self.assertEqual(sha256(self.pdfium_archive.read_bytes()), manifest["input_sha256"]["pdfium_archive"])
             self.assertIn('ETHOS_PDFIUM_LIBRARY_PATH="$root/lib/libpdfium.dylib"', launcher)
 
     def test_hash_mismatch_fails_closed(self) -> None:
@@ -158,6 +167,34 @@ class EthosFullCandidateTests(unittest.TestCase):
         )
         self.assertNotEqual(0, result.returncode)
         self.assertIn("must include licenses/pdfium.txt", result.stderr)
+
+    def test_link_and_special_members_fail_closed(self) -> None:
+        for name, member_type in (("licenses/link.txt", tarfile.SYMTYPE), ("licenses/device.txt", tarfile.CHRTYPE)):
+            with self.subTest(member_type=member_type):
+                info = tarfile.TarInfo(name)
+                info.type = member_type
+                info.linkname = "licenses/pdfium.txt"
+                self.write_pdfium_archive(self.runtime, True, [(info, None)])
+                self.write_profile(sha256(self.runtime))
+                result = subprocess.run(self.command(self.work / f"out-{member_type!r}"), cwd=ROOT, capture_output=True, text=True)
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn("must be a regular file", result.stderr)
+
+    def test_unsafe_duplicate_and_unexpected_members_fail_closed(self) -> None:
+        cases = []
+        unsafe = tarfile.TarInfo("../escape.txt"); unsafe.size = 1
+        cases.append((unsafe, b"x", "unsafe PDFium archive entry"))
+        duplicate = tarfile.TarInfo("LICENSE"); duplicate.size = 1
+        cases.append((duplicate, b"x", "duplicate PDFium archive entry"))
+        unexpected = tarfile.TarInfo("payload.bin"); unexpected.size = 1
+        cases.append((unexpected, b"x", "unexpected PDFium archive file"))
+        for info, data, diagnostic in cases:
+            with self.subTest(diagnostic=diagnostic):
+                self.write_pdfium_archive(self.runtime, True, [(info, data)])
+                self.write_profile(sha256(self.runtime))
+                result = subprocess.run(self.command(self.work / f"out-{diagnostic[:6]}"), cwd=ROOT, capture_output=True, text=True)
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn(diagnostic, result.stderr)
 
 
 if __name__ == "__main__":

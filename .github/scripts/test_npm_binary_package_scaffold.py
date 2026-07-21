@@ -65,6 +65,8 @@ EXPECTED_PACKAGE_FILES = {
     "scripts/prepare-vendor.js",
     "types/answer-release.d.ts",
     "types/citation-emission.d.ts",
+    "types/citation-emission-v2.d.ts",
+    "types/evidence-handle-context.d.ts",
     "types/index.d.ts",
     "types/verification-report.d.ts",
     "vendor/ethos-darwin-arm64",
@@ -146,8 +148,8 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertIn("does not bundle PDFium", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
         self.assertIn("QUICKSTART.md", text)
-        self.assertIn("current published npm package is `@docushell/ethos-pdf@0.3.0`", text)
-        self.assertIn("`ethos 0.3.0`", text)
+        self.assertIn("current published npm package is `@docushell/ethos-pdf@0.4.0`", text)
+        self.assertIn("`ethos 0.4.0`", text)
         self.assertIn("release-archive and extracted-executable SHA256 values", text)
         self.assertIn("does not include public benchmark reports or claims", normalized)
 

@@ -32,8 +32,8 @@ from unittest import mock
 ACTION = Path(__file__).resolve().parents[1]
 ROOT = ACTION.parents[1]
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
-PUBLISHED_LINUX_ARCHIVE_SHA256 = "b549ba5968e04b7679a8d3e879cd45d27f3e9a6fd226eee5c270a4e4f5c01405"
-PUBLISHED_LINUX_BINARY_SHA256 = "b416993fc38e6f794611b8b71789ed85af18eb6aa63fef380d9ae7738661f154"
+PUBLISHED_LINUX_ARCHIVE_SHA256 = "616be562306d64a293554ca4695f19deb6e135dd328e88598a80e76f6f8fb3cd"
+PUBLISHED_LINUX_BINARY_SHA256 = "2136dcd349a7b3f73f8df83a1b1e35819f9832043eb264b3eaea341697b739ed"
 sys.path.insert(0, str(ACTION))
 
 import install_cli  # noqa: E402

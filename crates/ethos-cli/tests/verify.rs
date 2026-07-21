@@ -92,6 +92,16 @@ fn json_file(path: impl AsRef<Path>) -> Value {
     serde_json::from_slice(&bytes).expect("JSON fixture parses")
 }
 
+fn citation_ndjson(citations: &[&Path]) -> String {
+    let mut output = citations
+        .iter()
+        .map(|path| serde_json::to_string(&json_file(path)).expect("citation fixture serializes"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    output.push('\n');
+    output
+}
+
 fn crop_element_request(
     document: &Value,
     element_id: &str,
@@ -273,6 +283,270 @@ fn verify_alpha_demo_reports_match_goldens() {
         let expected = json_file(expected_path);
         assert_eq!(actual, expected, "golden drift for {name}");
     }
+}
+
+#[test]
+fn verify_batch_lines_byte_equal_corresponding_single_verify_reports() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let ungrounded = root.join("examples/verify/native_ungrounded_citations.json");
+    let citations_ndjson = temp_json(
+        "verify-batch-single-report-equivalence",
+        &citation_ndjson(&[&grounded, &ungrounded]),
+    );
+
+    let batch = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        citations_ndjson.to_str().unwrap(),
+    ]);
+    assert_eq!(batch.status.code(), Some(0));
+    assert_eq!(batch.stderr, b"");
+
+    let expected = [grounded, ungrounded]
+        .iter()
+        .map(|citations| {
+            let output = run_ethos(&[
+                "verify",
+                document.to_str().unwrap(),
+                "--citations",
+                citations.to_str().unwrap(),
+            ]);
+            assert_eq!(output.status.code(), Some(0));
+            output.stdout[..output.stdout.len() - 1].to_vec()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        batch
+            .stdout
+            .split(|byte| *byte == b'\n')
+            .filter(|line| !line.is_empty())
+            .collect::<Vec<_>>(),
+        expected.iter().map(Vec::as_slice).collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn verify_batch_preserves_request_order_and_is_byte_identical_on_repeat() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let ungrounded = root.join("examples/verify/native_ungrounded_citations.json");
+    let citations_ndjson = temp_json(
+        "verify-batch-ordering",
+        &citation_ndjson(&[&ungrounded, &grounded]),
+    );
+    let first = temp_output("verify-batch-first");
+    let second = temp_output("verify-batch-second");
+
+    for output_path in [&first, &second] {
+        let output = run_ethos(&[
+            "verify-batch",
+            document.to_str().unwrap(),
+            "--citations-ndjson",
+            citations_ndjson.to_str().unwrap(),
+            "--out",
+            output_path.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(0));
+        assert_eq!(output.stdout, b"");
+        assert_eq!(output.stderr, b"");
+    }
+
+    let first_bytes = std::fs::read(&first).expect("first batch output is readable");
+    assert_eq!(
+        first_bytes,
+        std::fs::read(&second).expect("second batch output is readable")
+    );
+    let reports = first_bytes
+        .split(|byte| *byte == b'\n')
+        .filter(|line| !line.is_empty())
+        .map(|line| serde_json::from_slice::<Value>(line).expect("NDJSON line is JSON"))
+        .collect::<Vec<_>>();
+    assert_eq!(reports.len(), 2);
+    assert_eq!(reports[0]["all_evidence_grounded"], false);
+    assert_eq!(reports[1]["all_evidence_grounded"], true);
+}
+
+#[test]
+fn verify_batch_fail_on_ungrounded_exits_one_after_output_and_invalid_input_writes_nothing() {
+    let root = repo_root();
+    let document = document_example();
+    let ungrounded = root.join("examples/verify/native_ungrounded_citations.json");
+    let valid_ndjson = temp_json(
+        "verify-batch-fail-on-ungrounded",
+        &citation_ndjson(&[&ungrounded]),
+    );
+    let report_output = temp_output("verify-batch-ungrounded-output");
+    let ungrounded_output = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        valid_ndjson.to_str().unwrap(),
+        "--fail-on-ungrounded",
+        "--out",
+        report_output.to_str().unwrap(),
+    ]);
+    assert_eq!(ungrounded_output.status.code(), Some(1));
+    assert_eq!(ungrounded_output.stdout, b"");
+    assert!(std::fs::read(&report_output)
+        .expect("ungrounded report is written")
+        .ends_with(b"\n"));
+
+    let invalid_ndjson = temp_json(
+        "verify-batch-invalid-input",
+        &format!("{}not-json\n", citation_ndjson(&[&ungrounded])),
+    );
+    let invalid_output = temp_output("verify-batch-invalid-output");
+    let invalid = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        invalid_ndjson.to_str().unwrap(),
+        "--out",
+        invalid_output.to_str().unwrap(),
+    ]);
+    assert_eq!(invalid.status.code(), Some(2));
+    assert_eq!(invalid.stdout, b"");
+    assert!(
+        !invalid_output.exists(),
+        "invalid batch must not create output"
+    );
+}
+
+#[test]
+fn verify_batch_enforces_request_count_and_blank_line_boundaries() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let line = serde_json::to_string(&json_file(&grounded)).unwrap();
+    for count in [32, 1024] {
+        let input = temp_json(
+            &format!("verify-batch-{count}"),
+            &(line.clone() + "\n").repeat(count),
+        );
+        let output = run_ethos(&[
+            "verify-batch",
+            document.to_str().unwrap(),
+            "--citations-ndjson",
+            input.to_str().unwrap(),
+        ]);
+        assert_eq!(
+            output.status.code(),
+            Some(0),
+            "count={count}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(
+            output
+                .stdout
+                .split(|byte| *byte == b'\n')
+                .filter(|line| !line.is_empty())
+                .count(),
+            count
+        );
+    }
+    for (name, contents) in [
+        ("empty", String::new()),
+        ("interior-blank", format!("{line}\n\n{line}\n")),
+        ("oversized", (line.clone() + "\n").repeat(1025)),
+    ] {
+        let input = temp_json(&format!("verify-batch-{name}"), &contents);
+        let output_path = temp_output(&format!("verify-batch-{name}-output"));
+        let output = run_ethos(&[
+            "verify-batch",
+            document.to_str().unwrap(),
+            "--citations-ndjson",
+            input.to_str().unwrap(),
+            "--out",
+            output_path.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(2), "{name}");
+        assert!(!output_path.exists(), "{name} must be atomic");
+    }
+}
+
+#[test]
+fn verify_batch_supports_foreign_grounding_and_explicit_config() {
+    let root = repo_root();
+    let cases = [
+        (
+            root.join("fixtures/foreign/opendataloader/real/opendataloader-output.json"),
+            root.join("fixtures/foreign/opendataloader/real/citations.json"),
+            Some("opendataloader-json"),
+            None,
+        ),
+        (
+            document_example(),
+            root.join("examples/verify/native_grounded_citations.json"),
+            None,
+            Some(root.join("schemas/examples/verification-config.hardened.example.json")),
+        ),
+    ];
+    for (source, citations, grounding, config) in cases {
+        let input = temp_json(
+            "verify-batch-adapter-config",
+            &citation_ndjson(&[&citations]),
+        );
+        let mut batch_args = vec![
+            "verify-batch",
+            source.to_str().unwrap(),
+            "--citations-ndjson",
+            input.to_str().unwrap(),
+        ];
+        let mut single_args = vec![
+            "verify",
+            source.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+        ];
+        if let Some(value) = grounding {
+            batch_args.extend(["--grounding", value]);
+            single_args.extend(["--grounding", value]);
+        }
+        if let Some(path) = config.as_ref() {
+            batch_args.extend(["--config", path.to_str().unwrap()]);
+            single_args.extend(["--config", path.to_str().unwrap()]);
+        }
+        let batch = run_ethos(&batch_args);
+        let single = run_ethos(&single_args);
+        assert_eq!(
+            batch.status.code(),
+            Some(0),
+            "{}",
+            String::from_utf8_lossy(&batch.stderr)
+        );
+        assert_eq!(batch.stdout, single.stdout);
+    }
+}
+
+#[test]
+fn verify_batch_rejects_crop_config_atomically() {
+    let root = repo_root();
+    let mut config = json_file(root.join("schemas/examples/verification-config.example.json"));
+    config["evidence"]["include_crops"] = serde_json::json!(true);
+    let config_path = temp_json(
+        "verify-batch-crop-config",
+        &serde_json::to_string(&config).unwrap(),
+    );
+    let citations = root.join("examples/verify/native_grounded_citations.json");
+    let input = temp_json("verify-batch-crop-input", &citation_ndjson(&[&citations]));
+    let output_path = temp_output("verify-batch-crop-output");
+    let output = run_ethos(&[
+        "verify-batch",
+        document_example().to_str().unwrap(),
+        "--citations-ndjson",
+        input.to_str().unwrap(),
+        "--config",
+        config_path.to_str().unwrap(),
+        "--out",
+        output_path.to_str().unwrap(),
+    ]);
+    assert_eq!(output.status.code(), Some(2));
+    assert!(!output_path.exists());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("does not support crop evidence"));
 }
 
 #[test]
@@ -2882,4 +3156,168 @@ fn case_insensitive_config_allows_literal_case_difference() {
         "normalized_text_contains"
     );
     assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn report_html_renders_supported_report_deterministically_and_escapes_content() {
+    let root = repo_root();
+    let mut report = json_file(root.join("schemas/examples/verification-report.example.json"));
+    report["grounding"]["parser"]["name"] = serde_json::json!("parser<script>&\"'");
+    report["checks"][0]["claim"]["text"] = serde_json::json!("claim<script>&\"'");
+    let input = temp_json("html-report", &serde_json::to_string(&report).unwrap());
+    let first = temp_output("html-report-first");
+    let second = temp_output("html-report-second");
+    for output in [&first, &second] {
+        let result = run_ethos(&[
+            "report",
+            "html",
+            input.to_str().unwrap(),
+            "--out",
+            output.to_str().unwrap(),
+        ]);
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        assert!(result.stdout.is_empty());
+    }
+    let html = std::fs::read(&first).unwrap();
+    assert_eq!(html, std::fs::read(&second).unwrap());
+    let text = String::from_utf8(html).unwrap();
+    assert!(text.starts_with("<!doctype html>"));
+    assert!(text.contains("Ethos verifies citation grounding, not semantic truth"));
+    assert!(text.contains("parser&lt;script&gt;&amp;&quot;&#39;"));
+    assert!(text.contains("claim&lt;script&gt;&amp;&quot;&#39;"));
+    assert!(text.contains("Status: <strong>grounded</strong>"));
+    assert!(text.contains("match method: normalized_text_contains"));
+    assert!(text.contains("Grounding capabilities"));
+    assert!(text.contains("Capability limits"));
+    assert!(text.contains("Proof limitations"));
+    assert!(text.contains("Report warnings"));
+    assert!(!text.contains("<script"));
+    assert!(!text.contains("http://"));
+    assert!(!text.contains("https://"));
+    assert!(!text.contains("<link"));
+    assert!(!text.contains("<img"));
+}
+
+#[test]
+fn report_html_rejects_unsupported_schema_and_unsafe_crop_root_without_output() {
+    let root = repo_root();
+    let mut report = json_file(root.join("schemas/examples/verification-report.example.json"));
+    report["schema_version"] = serde_json::json!("9.9.9");
+    let input = temp_json(
+        "unsupported-html-report",
+        &serde_json::to_string(&report).unwrap(),
+    );
+    let output = temp_output("unsupported-html-output");
+    let result = run_ethos(&[
+        "report",
+        "html",
+        input.to_str().unwrap(),
+        "--out",
+        output.to_str().unwrap(),
+    ]);
+    assert_eq!(result.status.code(), Some(2));
+    assert!(!output.exists());
+    let valid = root.join("schemas/examples/verification-report.example.json");
+    for root in [
+        "/crops",
+        "../crops",
+        "crops//x",
+        "crops\\x",
+        "https://x",
+        "crops?x",
+        "crops#x",
+        "javascript:alert(1)",
+        "data:text/html,x",
+        "crops/%2f",
+        "./crops",
+        "crops/",
+        ".",
+    ] {
+        let output = temp_output("unsafe-crop-root");
+        let result = run_ethos(&[
+            "report",
+            "html",
+            valid.to_str().unwrap(),
+            "--out",
+            output.to_str().unwrap(),
+            "--crop-root",
+            root,
+        ]);
+        assert_eq!(result.status.code(), Some(2), "{root}");
+        assert!(!output.exists());
+    }
+
+    let mut crop_report = json_file(valid);
+    crop_report["checks"][0]["evidence"]["crop_ref"] = serde_json::json!("crop-01.png");
+    let crop_input = temp_json(
+        "safe-html-crop-input",
+        &serde_json::to_string(&crop_report).unwrap(),
+    );
+    let cropless_output = temp_output("cropless-html-crop-output");
+    let result = run_ethos(&[
+        "report",
+        "html",
+        crop_input.to_str().unwrap(),
+        "--out",
+        cropless_output.to_str().unwrap(),
+    ]);
+    assert!(result.status.success());
+    let cropless_html = String::from_utf8(std::fs::read(cropless_output).unwrap()).unwrap();
+    assert!(cropless_html.contains("Crop unavailable in this standalone report"));
+    assert!(!cropless_html.contains("href="));
+    let crop_output = temp_output("safe-html-crop-output");
+    let result = run_ethos(&[
+        "report",
+        "html",
+        crop_input.to_str().unwrap(),
+        "--crop-root",
+        "crops",
+        "--out",
+        crop_output.to_str().unwrap(),
+    ]);
+    assert!(result.status.success());
+    let crop_html = String::from_utf8(std::fs::read(crop_output).unwrap()).unwrap();
+    assert!(crop_html.contains("href=\"crops/crop-01.png\""));
+}
+
+#[test]
+fn report_html_renders_hardened_and_non_grounded_diagnostics() {
+    let root = repo_root();
+    for (fixture, expected) in [
+        (
+            "schemas/examples/verification-report.hardened.example.json",
+            "Dispersion",
+        ),
+        (
+            "schemas/examples/verification-report-negative.example.json",
+            "Reason: stale_fingerprint",
+        ),
+    ] {
+        let output = temp_output("html-report-variant");
+        let result = run_ethos(&[
+            "report",
+            "html",
+            root.join(fixture).to_str().unwrap(),
+            "--out",
+            output.to_str().unwrap(),
+        ]);
+        assert!(
+            result.status.success(),
+            "{fixture}: {}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        let html = String::from_utf8(std::fs::read(output).unwrap()).unwrap();
+        if expected == "Dispersion" {
+            assert!(html.contains("Dispersion"));
+            assert!(html.contains("grounded_checks"));
+            assert!(html.contains("grounded"));
+        } else {
+            assert!(html.contains(expected), "{html}");
+            assert!(html.contains("Status: <strong>stale</strong>"));
+        }
+    }
 }

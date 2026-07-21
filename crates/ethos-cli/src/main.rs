@@ -81,6 +81,13 @@ enum Command {
     },
     /// Citation evidence verification (ethos-verify)
     Verify(VerifyArgs),
+    /// Verify many citation requests against one loaded grounding source
+    VerifyBatch(VerifyBatchArgs),
+    /// Render a deterministic human-readable proof report
+    Report {
+        #[command(subcommand)]
+        command: ReportCommand,
+    },
     /// Recompute and check a document fingerprint
     Fingerprint(FingerprintArgs),
     /// Diagnose local Ethos and caller-provided PDFium setup
@@ -225,6 +232,24 @@ enum EvidenceCommand {
     Anchor(EvidenceAnchorArgs),
 }
 
+#[derive(Subcommand)]
+enum ReportCommand {
+    /// Render a verification report as self-contained HTML
+    Html(ReportHtmlArgs),
+}
+
+#[derive(Args)]
+pub(crate) struct ReportHtmlArgs {
+    /// Canonical verification report JSON.
+    pub(crate) input: PathBuf,
+    /// Destination HTML file.
+    #[arg(long)]
+    pub(crate) out: PathBuf,
+    /// Safe relative prefix used only for existing crop references.
+    #[arg(long)]
+    pub(crate) crop_root: Option<String>,
+}
+
 #[derive(Args)]
 pub(crate) struct RagChunkArgs {
     /// Canonical document (`*.ethos.json`)
@@ -287,6 +312,27 @@ pub(crate) struct VerifyArgs {
     #[arg(long)]
     pub(crate) crop_source_pdf: Option<PathBuf>,
     /// Exit 1 after writing the report when any requested evidence is not grounded.
+    #[arg(long)]
+    pub(crate) fail_on_ungrounded: bool,
+}
+
+#[derive(Args)]
+pub(crate) struct VerifyBatchArgs {
+    /// Grounding input: canonical Ethos document, or foreign output with --grounding.
+    pub(crate) input: PathBuf,
+    /// NDJSON file containing one canonical citation input per non-empty line.
+    #[arg(long)]
+    pub(crate) citations_ndjson: PathBuf,
+    /// Foreign grounding adapter id (e.g. `opendataloader-json`).
+    #[arg(long)]
+    pub(crate) grounding: Option<String>,
+    /// Verification config (JSON); defaults to the pinned `default-v1`.
+    #[arg(long)]
+    pub(crate) config: Option<PathBuf>,
+    /// Output path for canonical verification-report NDJSON (default: stdout).
+    #[arg(long)]
+    pub(crate) out: Option<PathBuf>,
+    /// Exit 1 after writing reports when any request is not fully grounded.
     #[arg(long)]
     pub(crate) fail_on_ungrounded: bool,
 }
@@ -393,6 +439,10 @@ fn run(cli: Cli) -> Result<(), Failure> {
             command: EvidenceCommand::Anchor(args),
         } => cmd::evidence::evidence_anchor(args),
         Command::Verify(args) => cmd::verify::verify(args),
+        Command::VerifyBatch(args) => cmd::verify::verify_batch(args),
+        Command::Report {
+            command: ReportCommand::Html(args),
+        } => cmd::report::html(args),
         Command::Fingerprint(args) => cmd::doc::fingerprint(args),
         Command::Doctor(args) => cmd::doctor::doctor(args),
         Command::CropElement(args) => cmd::crop::crop_element(args),

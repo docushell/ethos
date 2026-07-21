@@ -40,6 +40,29 @@ const CONTRACTS = [
     },
   },
   {
+    input: "schemas/ethos-evidence-handle-context.schema.json",
+    name: "EthosEvidenceHandleContext",
+    output: "evidence-handle-context.d.ts",
+    definitions: {
+      id: "EthosEvidenceHandleId",
+      cell: "EthosEvidenceHandleCell",
+      locator: "EthosEvidenceHandleLocator",
+      evidence: "EthosEvidenceHandle",
+    },
+  },
+  {
+    input: "schemas/ethos-llm-citation-output-v2.schema.json",
+    name: "EthosLlmCitationOutputV2",
+    output: "citation-emission-v2.d.ts",
+    definitions: {
+      id: "EthosEvidenceHandleCitationId",
+      text: "EthosEvidenceHandleCitationText",
+      textual: "EthosEvidenceHandleTextualCitation",
+      presence: "EthosEvidenceHandlePresenceCitation",
+      claim: "EthosEvidenceHandleCitationClaim",
+    },
+  },
+  {
     input: "schemas/ethos-app-answer-release-decision.schema.json",
     name: "EthosAppAnswerReleaseDecision",
     output: "answer-release.d.ts",
@@ -138,7 +161,7 @@ async function generateTypes(outputDirectory = path.join(PACKAGE_ROOT, "types"))
   }
   await fs.writeFile(
     path.join(outputDirectory, "index.d.ts"),
-    `${BANNER}\n\nexport * from "./verification-report";\nexport * from "./citation-emission";\nexport * from "./answer-release";\n`,
+    `${BANNER}\n\nexport * from "./verification-report";\nexport * from "./citation-emission";\nexport * from "./evidence-handle-context";\nexport * from "./citation-emission-v2";\nexport * from "./answer-release";\n`,
     "utf8",
   );
 }

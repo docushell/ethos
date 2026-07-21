@@ -2,6 +2,59 @@
 
 ## Unreleased
 
+- boundary-exception: reconcile v0.5.0 release-boundary CI metadata and DCO sign-offs for the
+  reviewed release implementation; no new public support boundary is opened.
+- ci: index the v0.4.0 validation closeout and bind it to the existing source commit, and align
+  the Python public API policy with the released Evidence Handle Bridge exports.
+- ci: repin the verification Action to the published v0.4.0 Linux release archive and binary.
+- Fix Evidence Handle Bridge projection for real verification reports, stale evidence, structured state fields, strict contexts, and inert model prose.
+- Render complete HTML proof diagnostics with canonical schema labels and expanded variant coverage.
+- Cover the full verify-batch request boundary, foreign-grounding, config, and crop-rejection matrix.
+- Alternate performance samples, compare repeated 32-process aggregates, and bind environment metadata.
+- Reject unsafe, duplicate, unexpected, link, and special members in pinned PDFium archives.
+
+- Add a fail-closed validator binding future npm B activation to frozen v0.5.0 core-A target-smoke evidence.
+- Run the npm B activation boundary contract in pull-request CI.
+- Keep the npm package lockfile in the published-version hold until core-A refresh.
+- Bind npm B evidence to candidate archive sizes as well as hashes.
+- Document the operator sequence for refreshing and freezing npm B from core-A evidence.
+
+- Recompute source and citation fixture hashes when validating v0.5 performance evidence.
+
+- Add independent validation for v0.5 internal performance evidence and threshold derivations.
+
+- Make Evidence Handle Bridge state projection validate verification-report shape, status, and metadata fail-closed.
+
+- Reject empty v1 Evidence Handle Bridge contexts before hydration or state projection.
+
+- Reject unsafe URI-like and traversal-like HTML proof-report crop prefixes before link rendering.
+
+- Add an operator-only runner for v0.5 cold and batch verification timing evidence.
+
+- Activate v0.5.0 core Rust and Python candidate metadata in lockstep while retaining the
+  published v0.4.0 npm payload and public install wording until the frozen-A payload refresh.
+- Reconcile stale public install wording to the closed v0.4.0 release baseline.
+- Validate `ethos-full` archive, checksum, and inventory binding before target-host extraction.
+
+- verify: add black-box coverage for `verify-batch` canonical per-line equivalence, ordering,
+  repeat determinism, aggregate exit semantics, and invalid-input atomicity.
+- packaging: promote the deterministic `ethos-full` builder from ADR proposal evidence to a
+  v0.5 release candidate pending required target smoke and release gates.
+- examples: add a deterministic, model-free Evidence Handle Bridge walkthrough bound to a
+  recorded verification report.
+- python: add Evidence Handle Bridge v1 trusted contexts and v2 structured model citations with
+  deterministic, fail-closed hydration while preserving citation-emission v1.
+- npm: generate Evidence Handle Bridge context and model-output declarations, and add
+  fail-closed evidence-state projection for verification-report-bound application views.
+- report: add deterministic, self-contained HTML proof reports with supported-schema checks,
+  escaped report content, and fail-closed crop-root validation.
+- verify: add buffered, atomic `verify-batch` NDJSON verification against one validated source,
+  with canonical per-line reports and aggregate ungrounded exit semantics.
+- release: reconcile the published v0.4.0 baseline, accept the bounded v0.5.0
+  `ethos-full` exception, and establish the v0.5.0 four-deliverable release scope.
+
+## 0.4.0 - 2026-07-21
+
 - boundary-exception: refresh the v0.4.0 npm vendor payload from the final stable, byte-identical
   macOS arm64/Linux x64 CLI archives after removing the manifest checksum self-reference.
 - release: remove the CLI's compile-time npm vendor-manifest inclusion so the final CLI artifact

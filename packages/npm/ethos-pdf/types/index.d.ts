@@ -4,4 +4,6 @@
 
 export * from "./verification-report";
 export * from "./citation-emission";
+export * from "./evidence-handle-context";
+export * from "./citation-emission-v2";
 export * from "./answer-release";

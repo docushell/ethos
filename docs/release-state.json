@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "as_of": "2026-07-03",
+  "as_of": "2026-07-21",
   "release": {
-    "version": "0.3.0",
+    "version": "0.4.0",
     "rust_crates": [
       "ethos-doc-core",
       "ethos-verify",
@@ -10,16 +10,16 @@
     ],
     "python_package": {
       "name": "ethos-pdf",
-      "version": "0.3.0"
+      "version": "0.4.0"
     },
     "npm_package": {
       "name": "@docushell/ethos-pdf",
-      "version": "0.3.0"
+      "version": "0.4.0"
     },
     "github_release": {
-      "tag": "v0.3.0",
-      "version": "0.3.0",
-      "name": "Release v0.3.0",
+      "tag": "v0.4.0",
+      "version": "0.4.0",
+      "name": "Release v0.4.0",
       "latest": true,
       "notes": "docs/releases/v0.4.0.md",
       "platforms": [
@@ -27,31 +27,31 @@
         "Linux x64"
       ],
       "assets": [
-        "ethos-macos-arm64.tar.gz",
-        "ethos-macos-arm64.tar.gz.sha256",
-        "ethos-macos-arm64.inventory.json",
-        "ethos-macos-arm64.smoke.json",
         "ethos-linux-x64.tar.gz",
         "ethos-linux-x64.tar.gz.sha256",
         "ethos-linux-x64.inventory.json",
-        "ethos-linux-x64.smoke.json"
+        "ethos-linux-x64.smoke.json",
+        "ethos-macos-arm64.tar.gz",
+        "ethos-macos-arm64.tar.gz.sha256",
+        "ethos-macos-arm64.inventory.json",
+        "ethos-macos-arm64.smoke.json"
       ]
     },
     "package_tags": [
-      "ethos-package-ethos-doc-core-0.3.0",
-      "ethos-package-ethos-verify-0.3.0",
-      "ethos-package-ethos-pdf-0.3.0"
+      "ethos-package-ethos-doc-core-0.4.0",
+      "ethos-package-ethos-verify-0.4.0",
+      "ethos-package-ethos-pdf-0.4.0"
     ],
     "pdfium_environment": "ETHOS_PDFIUM_LIBRARY_PATH"
   },
   "closed_lanes": {
-    "rust_python_publication": "docs/validation/v0-3-0-release-closeout-summary.md",
-    "github_release_artifacts": "docs/validation/v0-3-0-release-closeout-summary.md",
-    "npm_publication": "docs/validation/v0-3-0-release-closeout-summary.md",
-    "public_install_wording": "docs/validation/v0-3-0-release-closeout-summary.md",
-    "package_tags": "docs/validation/v0-3-0-release-closeout-summary.md",
-    "release_tag": "docs/validation/v0-3-0-release-closeout-summary.md",
-    "release_metadata": "docs/validation/v0-3-0-release-closeout-summary.md"
+    "rust_python_publication": "docs/validation/v0-4-0-release-closeout-summary.md",
+    "github_release_artifacts": "docs/validation/v0-4-0-release-closeout-summary.md",
+    "npm_publication": "docs/validation/v0-4-0-release-closeout-summary.md",
+    "public_install_wording": "docs/validation/v0-4-0-release-closeout-summary.md",
+    "package_tags": "docs/validation/v0-4-0-release-closeout-summary.md",
+    "release_tag": "docs/validation/v0-4-0-release-closeout-summary.md",
+    "release_metadata": "docs/validation/v0-4-0-release-closeout-summary.md"
   },
   "blocked_lanes": [
     "additional release tags or release targets",
