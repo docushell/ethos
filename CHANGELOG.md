@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Make Evidence Handle Bridge state projection validate verification-report shape, status, and metadata fail-closed.
+
 - Reject empty v1 Evidence Handle Bridge contexts before hydration or state projection.
 
 - Reject unsafe URI-like and traversal-like HTML proof-report crop prefixes before link rendering.

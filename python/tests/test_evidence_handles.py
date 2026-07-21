@@ -275,7 +275,7 @@ class EvidenceHandleBridgeTests(unittest.TestCase):
             (stale, "report_context_mismatch"),
             (mismatched, "report_context_mismatch"),
             (inconsistent, "invalid_report"),
-        ):
+            ):
             with self.subTest(code=code):
                 assert_error(
                     self,
@@ -284,6 +284,22 @@ class EvidenceHandleBridgeTests(unittest.TestCase):
                         context, emission, invalid_report
                     ),
                 )
+
+        malformed = copy.deepcopy(report)
+        del malformed["grounding"]
+        assert_error(self, "invalid_report", lambda: project_evidence_states(context, emission, malformed))
+        malformed = copy.deepcopy(report)
+        malformed["checks"][0]["status"] = "bogus"
+        assert_error(self, "invalid_report", lambda: project_evidence_states(context, emission, malformed))
+        malformed = copy.deepcopy(report)
+        malformed["checks"][0]["unexpected"] = True
+        assert_error(self, "invalid_report", lambda: project_evidence_states(context, emission, malformed))
+
+    def test_malformed_context_evidence_fails_with_stable_error(self):
+        context = build_evidence_handle_context([evidence_record("ev-1", {"page": "p0001"})])
+        context["evidence"] = None
+        emission = build_evidence_citation_emission("Answer.", [{"kind": "presence", "evidence_id": "ev-1"}])
+        assert_error(self, "invalid_evidence_context", lambda: hydrate_evidence_citations(emission, context))
 
     def test_projection_is_byte_identical_across_two_runs(self):
         context = build_evidence_handle_context([

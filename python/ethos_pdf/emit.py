@@ -230,8 +230,7 @@ def project_evidence_states(
 ) -> Dict[str, Any]:
     """Project noncanonical handle states only from a report bound to trusted hydration."""
     hydrated = hydrate_evidence_citations(emission, context)
-    if not isinstance(report, Mapping) or report.get("schema_version") not in {"1.0.0", "1.1.0"}:
-        raise CitationEmissionError("unsupported_report", "report schema_version is not supported")
+    _validate_projection_report(report)
     if report.get("document_fingerprint") != hydrated["document_fingerprint"] or report.get("fingerprint_stale") is not False:
         raise CitationEmissionError("report_context_mismatch", "report fingerprint does not bind the context")
     checks = report.get("checks")
@@ -259,6 +258,29 @@ def project_evidence_states(
         if "display" in entry: item["display"] = entry["display"]
         states.append(item)
     return {"document_fingerprint": hydrated["document_fingerprint"], "all_evidence_grounded": recomputed, "states": states}
+
+
+def _validate_projection_report(report: Mapping[str, Any]) -> None:
+    required = {"schema_version", "document_fingerprint", "verification_config_sha256", "grounding", "capability_limits", "fingerprint_stale", "all_evidence_grounded", "checks", "unsupported_claim_kinds", "warnings"}
+    if not isinstance(report, Mapping) or set(report) != required:
+        raise CitationEmissionError("invalid_report", "report fields do not match the verification-report schema")
+    if report["schema_version"] not in {"1.0.0", "1.1.0"} or not _FINGERPRINT.fullmatch(report["document_fingerprint"]):
+        raise CitationEmissionError("unsupported_report", "report schema or fingerprint is unsupported")
+    if not isinstance(report["verification_config_sha256"], str) or re.fullmatch(r"[0-9a-f]{64}", report["verification_config_sha256"]) is None:
+        raise CitationEmissionError("invalid_report", "verification config hash is invalid")
+    grounding = report["grounding"]
+    if not isinstance(grounding, Mapping) or set(grounding) != {"parser", "capabilities"} or not isinstance(grounding["parser"], Mapping) or set(grounding["parser"]) != {"name", "version"} or not all(isinstance(grounding["parser"][key], str) and grounding["parser"][key] for key in ("name", "version")):
+        raise CitationEmissionError("invalid_report", "grounding metadata is invalid")
+    if not isinstance(grounding["capabilities"], Mapping) or not isinstance(report["capability_limits"], list) or not isinstance(report["unsupported_claim_kinds"], list) or not isinstance(report["warnings"], list) or not isinstance(report["fingerprint_stale"], bool) or not isinstance(report["all_evidence_grounded"], bool):
+        raise CitationEmissionError("invalid_report", "report metadata has invalid types")
+    statuses = {"grounded", "not_found", "mismatch", "stale", "unsupported_claim_kind", "capability_blocked", "error"}
+    methods = {"exact_text", "normalized_text", "exact_text_contains", "normalized_text_contains", "table_cell_lookup", "bbox_containment", "presence_only", "none"}
+    if not isinstance(report["checks"], list):
+        raise CitationEmissionError("invalid_report", "checks must be a list")
+    for index, check in enumerate(report["checks"], 1):
+        expected = {"id", "claim", "status", "match_method", "semantic_unverified", "warnings"}
+        if not isinstance(check, Mapping) or set(check) != expected or check["id"] != f"v{index:04d}" or check["status"] not in statuses or check["match_method"] not in methods or not isinstance(check["semantic_unverified"], bool) or not isinstance(check["warnings"], list) or not isinstance(check["claim"], Mapping):
+            raise CitationEmissionError("invalid_report", "check does not match the verification-report schema")
 
 
 def emit_langchain_citations(
@@ -596,6 +618,8 @@ def _validate_handle_context(context: Mapping[str, Any]) -> Dict[str, Dict[str, 
         raise CitationEmissionError("invalid_evidence_context", "context fields do not match v1")
     if context["artifact_type"] != "ethos.evidence_handle_context.v1" or context["schema_version"] != EVIDENCE_HANDLE_CONTEXT_SCHEMA_VERSION:
         raise CitationEmissionError("unsupported_schema_version", "expected evidence context 1.0.0")
+    if not isinstance(context["evidence"], list) or any(not isinstance(entry, Mapping) for entry in context["evidence"]):
+        raise CitationEmissionError("invalid_evidence_context", "evidence must be a list of records")
     rebuilt = build_evidence_handle_context([{**entry, "document_fingerprint": context["document_fingerprint"]} for entry in context["evidence"]])
     return {entry["evidence_id"]: entry["locator"] for entry in rebuilt["evidence"]}
 
