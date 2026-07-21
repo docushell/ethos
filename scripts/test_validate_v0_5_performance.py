@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import copy, importlib.util, unittest
+import copy, importlib.util, tempfile, unittest
+from pathlib import Path
 _spec = importlib.util.spec_from_file_location("validate_v0_5_performance", __file__.replace("test_validate_v0_5_performance.py", "validate-v0-5-performance.py"))
 _module = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_module)
 validate = _module.validate
@@ -16,5 +17,12 @@ class PerformanceValidatorTests(unittest.TestCase):
         record=sample(); record["batch_32_ns"]["batch_elapsed"]=[1601]*30
         record["derived"]["batch_median_ns"]=1601; record["derived"]["passed"]=False
         with self.assertRaisesRegex(ValueError,"thresholds"): validate(record)
+
+    def test_rejects_bound_fixture_hash_drift(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / "source.json"
+            source.write_text("different")
+            with self.assertRaisesRegex(ValueError, "source hash"):
+                validate(sample(), source=source)
 
 if __name__=="__main__": unittest.main()

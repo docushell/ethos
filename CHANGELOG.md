@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Recompute source and citation fixture hashes when validating v0.5 performance evidence.
+
 - Add independent validation for v0.5 internal performance evidence and threshold derivations.
 
 - Make Evidence Handle Bridge state projection validate verification-report shape, status, and metadata fail-closed.

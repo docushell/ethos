@@ -80,7 +80,7 @@ ethos-full-candidate-contract:
 v0-5-performance-record:
 	@test -n "$(V0_4_ETHOS_BIN)" && test -n "$(V0_5_ETHOS_BIN)" && test -n "$(V0_5_PERFORMANCE_OUT)" || (echo "set V0_4_ETHOS_BIN, V0_5_ETHOS_BIN, and V0_5_PERFORMANCE_OUT"; exit 2)
 	$(PYTHON) scripts/measure-v0-5-performance.py --baseline-bin "$(V0_4_ETHOS_BIN)" --candidate-bin "$(V0_5_ETHOS_BIN)" --out "$(V0_5_PERFORMANCE_OUT)"
-	$(PYTHON) scripts/validate-v0-5-performance.py --record "$(V0_5_PERFORMANCE_OUT)" --baseline-bin "$(V0_4_ETHOS_BIN)" --candidate-bin "$(V0_5_ETHOS_BIN)"
+	$(PYTHON) scripts/validate-v0-5-performance.py --record "$(V0_5_PERFORMANCE_OUT)" --baseline-bin "$(V0_4_ETHOS_BIN)" --candidate-bin "$(V0_5_ETHOS_BIN)" --source schemas/examples/document.example.json --citations examples/verify/native_grounded_citations.json
 
 windows-verify-candidate-contract:
 	$(PYTHON) .github/scripts/test_windows_verify_candidate.py
