@@ -5,15 +5,15 @@
   "targets": {
     "darwin:arm64": {
       "binary": "ethos-darwin-arm64",
-      "binary_sha256": "ac1ca14b5b9fe53abc6b58afd24d26d0d4d6b737566aa7b47f8f910ce858dcfd",
+      "binary_sha256": "9231e6fab8e859b409c0a9f03d1284fd97cb4b324b8c6ed3cbf0a7a1fee4c5a2",
       "release_asset": "ethos-macos-arm64.tar.gz",
-      "release_asset_sha256": "f3393ea5c3be7b9f5e0ab4b0393bc103be908385ff5db9cd312911f7d5dcbe31"
+      "release_asset_sha256": "e32432b84d859cceca74a7a7e7b3a57cf94d61bcc545b3da0da13d8c9e4a09ce"
     },
     "linux:x64": {
       "binary": "ethos-linux-x64",
-      "binary_sha256": "22367ad9efc2f4d51767afc147d4a15ecff2a6ce5f3c92998577c741b8e53915",
+      "binary_sha256": "55b685d29176f93b82984e61e4f52ea89a1839f513b1597ff519f19e20524d41",
       "release_asset": "ethos-linux-x64.tar.gz",
-      "release_asset_sha256": "b3ba45fe21905e902c47e246d5a8f458e33c56b7db27a04fbbac9a70f861157d"
+      "release_asset_sha256": "e94e7c4154b695227a94648f6fb1e4d9e3cb89c2dbae26c70ce55ec93dd1f218"
     }
   }
 }
