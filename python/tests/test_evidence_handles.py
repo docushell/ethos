@@ -175,6 +175,7 @@ class EvidenceHandleBridgeTests(unittest.TestCase):
 
     def test_invalid_context_records_fail_closed(self):
         invalid_records = [
+            ("empty_retrieval_results", []),
             ("duplicate_evidence_id", [
                 evidence_record("same", {"page": "p0001"}),
                 evidence_record("same", {"page": "p0002"}),

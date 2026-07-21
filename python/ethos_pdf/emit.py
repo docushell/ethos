@@ -197,6 +197,8 @@ def build_evidence_handle_context(records: Iterable[Mapping[str, Any]]) -> Dict[
                 if len(record[field]) > limit: raise CitationEmissionError("invalid_evidence_record", f"{field} exceeds {limit} characters", record_index=index)
                 item[field] = record[field]
         evidence.append(item)
+    if not evidence:
+        raise CitationEmissionError("evidence_limit_exceeded", "context must contain 1 to 1024 evidence entries")
     if len(evidence) > 1024: raise CitationEmissionError("evidence_limit_exceeded", "received more than 1024 evidence entries")
     return {"artifact_type": "ethos.evidence_handle_context.v1", "schema_version": EVIDENCE_HANDLE_CONTEXT_SCHEMA_VERSION, "document_fingerprint": fingerprint, "evidence": evidence}
 

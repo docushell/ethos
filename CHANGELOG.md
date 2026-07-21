@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject empty v1 Evidence Handle Bridge contexts before hydration or state projection.
+
 - Reject unsafe URI-like and traversal-like HTML proof-report crop prefixes before link rendering.
 
 - Add an operator-only runner for v0.5 cold and batch verification timing evidence.
