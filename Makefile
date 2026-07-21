@@ -20,7 +20,7 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: milestone-d-crop-element-surface-shape-contract
 .PHONY: milestone-d-claim-kind-boundary-contract
 .PHONY: app-answer-release-contract app-answer-release-demo app-answer-release-release-prep
-.PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check
+.PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check v0-5-performance-record
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
@@ -76,6 +76,10 @@ trust-benchmark-corpus: $(ETHOS_BIN)
 
 ethos-full-candidate-contract:
 	$(PYTHON) .github/scripts/test_ethos_full_candidate.py
+
+v0-5-performance-record:
+	@test -n "$(V0_4_ETHOS_BIN)" && test -n "$(V0_5_ETHOS_BIN)" && test -n "$(V0_5_PERFORMANCE_OUT)" || (echo "set V0_4_ETHOS_BIN, V0_5_ETHOS_BIN, and V0_5_PERFORMANCE_OUT"; exit 2)
+	$(PYTHON) scripts/measure-v0-5-performance.py --baseline-bin "$(V0_4_ETHOS_BIN)" --candidate-bin "$(V0_5_ETHOS_BIN)" --out "$(V0_5_PERFORMANCE_OUT)"
 
 windows-verify-candidate-contract:
 	$(PYTHON) .github/scripts/test_windows_verify_candidate.py

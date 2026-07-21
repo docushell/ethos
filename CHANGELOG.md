@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add an operator-only runner for v0.5 cold and batch verification timing evidence.
+
 - Activate v0.5.0 core Rust and Python candidate metadata in lockstep while retaining the
   published v0.4.0 npm payload and public install wording until the frozen-A payload refresh.
 - Reconcile stale public install wording to the closed v0.4.0 release baseline.
