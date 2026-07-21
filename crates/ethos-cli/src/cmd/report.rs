@@ -14,7 +14,15 @@ pub(crate) fn html(args: ReportHtmlArgs) -> Result<(), Failure> {
 }
 
 fn validate_crop_root(value: &str) -> Result<String, Failure> {
-    if value.is_empty() || value.starts_with('/') || value.contains("\\") || value.contains("..") || value.contains('?') || value.contains('#') || value.contains("://") || value.split('/').any(str::is_empty) {
+    if value.is_empty()
+        || value.split('/').any(|segment| {
+            segment.is_empty()
+                || matches!(segment, "." | "..")
+                || !segment
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
+        })
+    {
         return Err(Failure::Usage("--crop-root must be a safe relative prefix".to_string()));
     }
     Ok(value.trim_end_matches('/').to_string())

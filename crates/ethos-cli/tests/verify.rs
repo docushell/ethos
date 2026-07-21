@@ -3057,6 +3057,10 @@ fn report_html_renders_supported_report_deterministically_and_escapes_content() 
     assert!(text.contains("parser&lt;script&gt;&amp;&quot;&#39;"));
     assert!(text.contains("claim&lt;script&gt;&amp;&quot;&#39;"));
     assert!(!text.contains("<script"));
+    assert!(!text.contains("http://"));
+    assert!(!text.contains("https://"));
+    assert!(!text.contains("<link"));
+    assert!(!text.contains("<img"));
 }
 
 #[test]
@@ -3087,6 +3091,11 @@ fn report_html_rejects_unsupported_schema_and_unsafe_crop_root_without_output() 
         "https://x",
         "crops?x",
         "crops#x",
+        "javascript:alert(1)",
+        "data:text/html,x",
+        "crops/%2f",
+        "./crops",
+        ".",
     ] {
         let output = temp_output("unsafe-crop-root");
         let result = run_ethos(&[
@@ -3101,4 +3110,21 @@ fn report_html_rejects_unsupported_schema_and_unsafe_crop_root_without_output() 
         assert_eq!(result.status.code(), Some(2), "{root}");
         assert!(!output.exists());
     }
+
+    let mut crop_report = json_file(valid);
+    crop_report["checks"][0]["evidence"]["crop_ref"] = serde_json::json!("crop-01.png");
+    let crop_input = temp_json("safe-html-crop-input", &serde_json::to_string(&crop_report).unwrap());
+    let crop_output = temp_output("safe-html-crop-output");
+    let result = run_ethos(&[
+        "report",
+        "html",
+        crop_input.to_str().unwrap(),
+        "--crop-root",
+        "crops",
+        "--out",
+        crop_output.to_str().unwrap(),
+    ]);
+    assert!(result.status.success());
+    let crop_html = String::from_utf8(std::fs::read(crop_output).unwrap()).unwrap();
+    assert!(crop_html.contains("href=\"crops/crop-01.png\""));
 }
