@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- boundary-exception: close out v0.5.0 GitHub, crates.io, PyPI, and npm publication against frozen
+  core-A/B evidence and published artifact hashes; no Windows artifact or expanded public claims.
 - boundary-exception: reconcile v0.5.0 release-boundary CI metadata and DCO sign-offs for the
   reviewed release implementation; no new public support boundary is opened.
 - ci: index the v0.4.0 validation closeout and bind it to the existing source commit, and align
