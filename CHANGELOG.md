@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- verify: add black-box coverage for `verify-batch` canonical per-line equivalence, ordering,
+  repeat determinism, aggregate exit semantics, and invalid-input atomicity.
 - packaging: promote the deterministic `ethos-full` builder from ADR proposal evidence to a
   v0.5 release candidate pending required target smoke and release gates.
 - examples: add a deterministic, model-free Evidence Handle Bridge walkthrough bound to a

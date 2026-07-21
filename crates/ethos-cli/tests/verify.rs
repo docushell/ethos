@@ -92,6 +92,16 @@ fn json_file(path: impl AsRef<Path>) -> Value {
     serde_json::from_slice(&bytes).expect("JSON fixture parses")
 }
 
+fn citation_ndjson(citations: &[&Path]) -> String {
+    let mut output = citations
+        .iter()
+        .map(|path| serde_json::to_string(&json_file(path)).expect("citation fixture serializes"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    output.push('\n');
+    output
+}
+
 fn crop_element_request(
     document: &Value,
     element_id: &str,
@@ -273,6 +283,137 @@ fn verify_alpha_demo_reports_match_goldens() {
         let expected = json_file(expected_path);
         assert_eq!(actual, expected, "golden drift for {name}");
     }
+}
+
+#[test]
+fn verify_batch_lines_byte_equal_corresponding_single_verify_reports() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let ungrounded = root.join("examples/verify/native_ungrounded_citations.json");
+    let citations_ndjson = temp_json(
+        "verify-batch-single-report-equivalence",
+        &citation_ndjson(&[&grounded, &ungrounded]),
+    );
+
+    let batch = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        citations_ndjson.to_str().unwrap(),
+    ]);
+    assert_eq!(batch.status.code(), Some(0));
+    assert_eq!(batch.stderr, b"");
+
+    let expected = [grounded, ungrounded]
+        .iter()
+        .map(|citations| {
+            let output = run_ethos(&[
+                "verify",
+                document.to_str().unwrap(),
+                "--citations",
+                citations.to_str().unwrap(),
+            ]);
+            assert_eq!(output.status.code(), Some(0));
+            output.stdout[..output.stdout.len() - 1].to_vec()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        batch
+            .stdout
+            .split(|byte| *byte == b'\n')
+            .filter(|line| !line.is_empty())
+            .collect::<Vec<_>>(),
+        expected.iter().map(Vec::as_slice).collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn verify_batch_preserves_request_order_and_is_byte_identical_on_repeat() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let ungrounded = root.join("examples/verify/native_ungrounded_citations.json");
+    let citations_ndjson = temp_json(
+        "verify-batch-ordering",
+        &citation_ndjson(&[&ungrounded, &grounded]),
+    );
+    let first = temp_output("verify-batch-first");
+    let second = temp_output("verify-batch-second");
+
+    for output_path in [&first, &second] {
+        let output = run_ethos(&[
+            "verify-batch",
+            document.to_str().unwrap(),
+            "--citations-ndjson",
+            citations_ndjson.to_str().unwrap(),
+            "--out",
+            output_path.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(0));
+        assert_eq!(output.stdout, b"");
+        assert_eq!(output.stderr, b"");
+    }
+
+    let first_bytes = std::fs::read(&first).expect("first batch output is readable");
+    assert_eq!(
+        first_bytes,
+        std::fs::read(&second).expect("second batch output is readable")
+    );
+    let reports = first_bytes
+        .split(|byte| *byte == b'\n')
+        .filter(|line| !line.is_empty())
+        .map(|line| serde_json::from_slice::<Value>(line).expect("NDJSON line is JSON"))
+        .collect::<Vec<_>>();
+    assert_eq!(reports.len(), 2);
+    assert_eq!(reports[0]["all_evidence_grounded"], false);
+    assert_eq!(reports[1]["all_evidence_grounded"], true);
+}
+
+#[test]
+fn verify_batch_fail_on_ungrounded_exits_one_after_output_and_invalid_input_writes_nothing() {
+    let root = repo_root();
+    let document = document_example();
+    let ungrounded = root.join("examples/verify/native_ungrounded_citations.json");
+    let valid_ndjson = temp_json(
+        "verify-batch-fail-on-ungrounded",
+        &citation_ndjson(&[&ungrounded]),
+    );
+    let report_output = temp_output("verify-batch-ungrounded-output");
+    let ungrounded_output = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        valid_ndjson.to_str().unwrap(),
+        "--fail-on-ungrounded",
+        "--out",
+        report_output.to_str().unwrap(),
+    ]);
+    assert_eq!(ungrounded_output.status.code(), Some(1));
+    assert_eq!(ungrounded_output.stdout, b"");
+    assert!(std::fs::read(&report_output)
+        .expect("ungrounded report is written")
+        .ends_with(b"\n"));
+
+    let invalid_ndjson = temp_json(
+        "verify-batch-invalid-input",
+        &format!("{}not-json\n", citation_ndjson(&[&ungrounded])),
+    );
+    let invalid_output = temp_output("verify-batch-invalid-output");
+    let invalid = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        invalid_ndjson.to_str().unwrap(),
+        "--out",
+        invalid_output.to_str().unwrap(),
+    ]);
+    assert_eq!(invalid.status.code(), Some(2));
+    assert_eq!(invalid.stdout, b"");
+    assert!(
+        !invalid_output.exists(),
+        "invalid batch must not create output"
+    );
 }
 
 #[test]
@@ -2894,8 +3035,18 @@ fn report_html_renders_supported_report_deterministically_and_escapes_content() 
     let first = temp_output("html-report-first");
     let second = temp_output("html-report-second");
     for output in [&first, &second] {
-        let result = run_ethos(&["report", "html", input.to_str().unwrap(), "--out", output.to_str().unwrap()]);
-        assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+        let result = run_ethos(&[
+            "report",
+            "html",
+            input.to_str().unwrap(),
+            "--out",
+            output.to_str().unwrap(),
+        ]);
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
         assert!(result.stdout.is_empty());
     }
     let html = std::fs::read(&first).unwrap();
@@ -2913,15 +3064,40 @@ fn report_html_rejects_unsupported_schema_and_unsafe_crop_root_without_output() 
     let root = repo_root();
     let mut report = json_file(root.join("schemas/examples/verification-report.example.json"));
     report["schema_version"] = serde_json::json!("9.9.9");
-    let input = temp_json("unsupported-html-report", &serde_json::to_string(&report).unwrap());
+    let input = temp_json(
+        "unsupported-html-report",
+        &serde_json::to_string(&report).unwrap(),
+    );
     let output = temp_output("unsupported-html-output");
-    let result = run_ethos(&["report", "html", input.to_str().unwrap(), "--out", output.to_str().unwrap()]);
+    let result = run_ethos(&[
+        "report",
+        "html",
+        input.to_str().unwrap(),
+        "--out",
+        output.to_str().unwrap(),
+    ]);
     assert_eq!(result.status.code(), Some(2));
     assert!(!output.exists());
     let valid = root.join("schemas/examples/verification-report.example.json");
-    for root in ["/crops", "../crops", "crops//x", "crops\\x", "https://x", "crops?x", "crops#x"] {
+    for root in [
+        "/crops",
+        "../crops",
+        "crops//x",
+        "crops\\x",
+        "https://x",
+        "crops?x",
+        "crops#x",
+    ] {
         let output = temp_output("unsafe-crop-root");
-        let result = run_ethos(&["report", "html", valid.to_str().unwrap(), "--out", output.to_str().unwrap(), "--crop-root", root]);
+        let result = run_ethos(&[
+            "report",
+            "html",
+            valid.to_str().unwrap(),
+            "--out",
+            output.to_str().unwrap(),
+            "--crop-root",
+            root,
+        ]);
         assert_eq!(result.status.code(), Some(2), "{root}");
         assert!(!output.exists());
     }
