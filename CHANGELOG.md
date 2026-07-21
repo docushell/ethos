@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- examples: add a deterministic, model-free Evidence Handle Bridge walkthrough bound to a
+  recorded verification report.
 - python: add Evidence Handle Bridge v1 trusted contexts and v2 structured model citations with
   deterministic, fail-closed hydration while preserving citation-emission v1.
 - npm: generate Evidence Handle Bridge context and model-output declarations, and add

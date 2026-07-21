@@ -183,7 +183,7 @@ class EvidenceHandleBridgeTests(unittest.TestCase):
                 evidence_record("one", {"page": "p0001"}),
                 evidence_record("two", {"page": "p0002"}, document_fingerprint="sha256:" + ("b" * 64)),
             ]),
-            ("invalid_locator", [evidence_record("bad", {"page": "p0001", "element_id": "e000001"})]),
+            ("invalid_locator", [evidence_record("bad", {"element_id": "e000001", "span_id": "s000001"})]),
             ("invalid_locator", [evidence_record("bad", {"table_id": "t0001", "cell": {"row": -1, "col": 0}})]),
             ("invalid_evidence_record", [evidence_record("bad", {"page": "p0001"}, untrusted=True)]),
         ]

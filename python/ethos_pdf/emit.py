@@ -573,8 +573,9 @@ def _validate_handle_locator(locator: Any, index: int) -> Dict[str, Any]:
     if not isinstance(locator, Mapping): raise CitationEmissionError("invalid_locator", "locator must be a mapping", record_index=index)
     allowed = {"page", "element_id", "span_id", "table_id", "cell"}
     if set(locator) - allowed: raise CitationEmissionError("invalid_locator", "locator contains forbidden fields", record_index=index)
-    primary = sum(field in locator for field in ("page", "element_id", "span_id", "table_id"))
-    if primary != 1: raise CitationEmissionError("invalid_locator", "locator must contain exactly one primary anchor", record_index=index)
+    anchors = ("element_id", "span_id", "table_id")
+    primary = sum(field in locator for field in anchors)
+    if primary > 1 or (primary == 0 and "page" not in locator): raise CitationEmissionError("invalid_locator", "locator must contain exactly one primary anchor", record_index=index)
     if "table_id" in locator:
         cell = locator.get("cell")
         if not isinstance(cell, Mapping) or set(cell) != {"row", "col"}: raise CitationEmissionError("invalid_locator", "table locator requires cell", record_index=index)
