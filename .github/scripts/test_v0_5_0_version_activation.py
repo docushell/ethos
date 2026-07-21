@@ -51,10 +51,17 @@ class V050CoreVersionActivationTests(unittest.TestCase):
         manifest = json.loads(read("packages/npm/ethos-pdf/vendor/manifest.json"))
         package = json.loads(read("packages/npm/ethos-pdf/package.json"))
         lock = json.loads(read("packages/npm/ethos-pdf/package-lock.json"))
-        self.assertEqual(PUBLISHED_NPM_PAYLOAD, manifest["cli_version"])
-        self.assertEqual(PUBLISHED_NPM_PAYLOAD, package["version"])
-        self.assertEqual(PUBLISHED_NPM_PAYLOAD, lock["version"])
-        self.assertEqual(PUBLISHED_NPM_PAYLOAD, lock["packages"][""].get("version"))
+        versions = {
+            manifest["cli_version"],
+            package["version"],
+            lock["version"],
+            lock["packages"][""].get("version"),
+        }
+        if versions == {VERSION}:
+            changelog = read("CHANGELOG.md")
+            self.assertIn("boundary-exception: refresh the v0.5.0 npm B payload from frozen core-A", changelog)
+        else:
+            self.assertEqual({PUBLISHED_NPM_PAYLOAD}, versions)
 
     def test_mcp_prototype_remains_excluded(self) -> None:
         cargo = read("Cargo.toml")
