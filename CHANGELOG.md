@@ -9,6 +9,8 @@
 - ci: repin the verification Action to the published v0.4.0 Linux release archive and binary.
 - ci: make the release workflow dispatch trigger explicit for GitHub registration.
 - ci: add a fresh v0.5 candidate workflow registration for target artifact evidence.
+- ci: allow the pinned PDFium archive's config, build metadata, headers, and license notices
+  while continuing to reject unsafe and unrelated members.
 - Fix Evidence Handle Bridge projection for real verification reports, stale evidence, structured state fields, strict contexts, and inert model prose.
 - Render complete HTML proof diagnostics with canonical schema labels and expanded variant coverage.
 - Cover the full verify-batch request boundary, foreign-grounding, config, and crop-rejection matrix.

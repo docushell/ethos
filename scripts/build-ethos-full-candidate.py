@@ -86,9 +86,20 @@ def read_pdfium_archive(
                 elif not member.isfile():
                     fail(f"PDFium archive entry must be a regular file: {name}")
                 elif not (
-                    name in {"LICENSE", "README.md", "VERSION", runtime_relpath}
-                    or (name.startswith("include/") and name.endswith(".h"))
-                    or (name.startswith("licenses/") and name.endswith(".txt"))
+                    name
+                    in {
+                        "LICENSE",
+                        "README.md",
+                        "VERSION",
+                        "PDFiumConfig.cmake",
+                        "args.gn",
+                        runtime_relpath,
+                    }
+                    or (
+                        name.startswith("include/")
+                        and (name.endswith(".h") or name.endswith(".h.orig"))
+                    )
+                    or name.startswith("licenses/")
                 ):
                     fail(f"unexpected PDFium archive file: {name}")
                 members[name] = member

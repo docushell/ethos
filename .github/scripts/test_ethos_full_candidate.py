@@ -37,7 +37,13 @@ class EthosFullCandidateTests(unittest.TestCase):
     def write_pdfium_archive(self, runtime: bytes, include_pdfium_notice: bool, extras=None) -> None:
         files = {
             "LICENSE": b"PDFium package license\n",
+            "PDFiumConfig.cmake": b"# fixture config\n",
+            "args.gn": b"pdf_enable_v8=false\n",
+            "include/cpp/fpdf_scopers.h": b"// fixture header\n",
+            "include/fpdfview.h": b"// fixture header\n",
+            "include/fpdfview.h.orig": b"// fixture header backup\n",
             "lib/libpdfium.dylib": runtime,
+            "licenses/notice.md": b"notice\n",
             "licenses/zlib.txt": b"zlib notice\n",
         }
         if include_pdfium_notice:
