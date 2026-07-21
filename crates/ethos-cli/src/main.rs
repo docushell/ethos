@@ -440,7 +440,9 @@ fn run(cli: Cli) -> Result<(), Failure> {
         } => cmd::evidence::evidence_anchor(args),
         Command::Verify(args) => cmd::verify::verify(args),
         Command::VerifyBatch(args) => cmd::verify::verify_batch(args),
-        Command::Report { command: ReportCommand::Html(args) } => cmd::report::html(args),
+        Command::Report {
+            command: ReportCommand::Html(args),
+        } => cmd::report::html(args),
         Command::Fingerprint(args) => cmd::doc::fingerprint(args),
         Command::Doctor(args) => cmd::doctor::doctor(args),
         Command::CropElement(args) => cmd::crop::crop_element(args),

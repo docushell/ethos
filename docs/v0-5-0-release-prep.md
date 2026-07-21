@@ -40,9 +40,10 @@ environment-dependent metadata. It escapes controlled content, preserves report/
 states the citation-grounding boundary, and permits crop links only with a safe relative prefix.
 
 Evidence handles use one document fingerprint, 1–1,024 unique opaque IDs, exactly one trusted
-primary locator per entry, and 1–256 model claims each with exactly one handle. Hydration and
-projection fail closed on invalid contexts, version/schema errors, mismatches, stale fingerprints,
-or internally inconsistent reports; display and excerpt have no proof authority.
+primary locator per entry, and 1–256 model claims each with exactly one handle. Hydration fails
+closed on invalid contexts, version/schema errors, and mismatches. Projection fails closed on
+invalid or internally inconsistent reports; a schema-valid stale report projects every handle
+with `verified=false`. Display and excerpt have no proof authority.
 
 ## Consumer and release gates
 

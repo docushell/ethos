@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:llm-citation-output:2",
   "title": "Ethos evidence-handle model citation output",
+  "description": "Structured claims[].evidence_id values are the only citation channel. The answer is untrusted prose: consumers must not infer, link, or mark verified any handle-shaped token found only in answer text.",
   "type": "object",
   "required": ["schema_version", "answer", "claims"],
   "additionalProperties": false,

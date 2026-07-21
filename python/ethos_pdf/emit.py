@@ -231,7 +231,7 @@ def project_evidence_states(
     """Project noncanonical handle states only from a report bound to trusted hydration."""
     hydrated = hydrate_evidence_citations(emission, context)
     _validate_projection_report(report)
-    if report.get("document_fingerprint") != hydrated["document_fingerprint"] or report.get("fingerprint_stale") is not False:
+    if report.get("document_fingerprint") != hydrated["document_fingerprint"]:
         raise CitationEmissionError("report_context_mismatch", "report fingerprint does not bind the context")
     checks = report.get("checks")
     if not isinstance(checks, list) or len(checks) != len(hydrated["claims"]):
@@ -243,7 +243,7 @@ def project_evidence_states(
         if not isinstance(check.get("semantic_unverified"), bool) or not isinstance(check.get("status"), str):
             raise CitationEmissionError("invalid_report", "report check is malformed")
         if check["status"] != "unsupported_claim_kind": supported.append(check)
-    recomputed = bool(supported) and all(check["status"] == "grounded" for check in supported) and all(not check["semantic_unverified"] for check in checks) and not report.get("unsupported_claim_kinds", [])
+    recomputed = bool(supported) and all(check["status"] == "grounded" for check in supported) and all(not check["semantic_unverified"] for check in checks) and not report.get("unsupported_claim_kinds", []) and not report["fingerprint_stale"]
     if report.get("all_evidence_grounded") is not recomputed:
         raise CitationEmissionError("invalid_report", "report all_evidence_grounded is inconsistent")
     by_handle = {entry["evidence_id"]: [] for entry in context["evidence"]}
@@ -252,9 +252,16 @@ def project_evidence_states(
     states = []
     for entry in context["evidence"]:
         linked = by_handle[entry["evidence_id"]]
-        statuses = [check["status"] == "grounded" and not check["semantic_unverified"] for _, check in linked]
-        state = "unreferenced" if not linked else "grounded" if all(statuses) else "partially_grounded" if any(statuses) else "ungrounded"
-        item = {"evidence_id": entry["evidence_id"], "state": state, "claim_indexes": [index for index, _ in linked], "check_ids": [check["id"] for _, check in linked]}
+        verified = bool(linked) and not report["fingerprint_stale"] and all(check["status"] == "grounded" and not check["semantic_unverified"] for _, check in linked)
+        item = {
+            "evidence_id": entry["evidence_id"],
+            "retrieved": True,
+            "cited": bool(linked),
+            "verified": verified,
+            "claim_indexes": [index for index, _ in linked],
+            "check_ids": [check["id"] for _, check in linked],
+            "check_statuses": [check["status"] for _, check in linked],
+        }
         if "display" in entry: item["display"] = entry["display"]
         states.append(item)
     return {"document_fingerprint": hydrated["document_fingerprint"], "all_evidence_grounded": recomputed, "states": states}
@@ -262,25 +269,37 @@ def project_evidence_states(
 
 def _validate_projection_report(report: Mapping[str, Any]) -> None:
     required = {"schema_version", "document_fingerprint", "verification_config_sha256", "grounding", "capability_limits", "fingerprint_stale", "all_evidence_grounded", "checks", "unsupported_claim_kinds", "warnings"}
-    if not isinstance(report, Mapping) or set(report) != required:
+    allowed = required | {"dispersion"}
+    if not isinstance(report, Mapping) or not required <= set(report) or set(report) - allowed:
         raise CitationEmissionError("invalid_report", "report fields do not match the verification-report schema")
     if report["schema_version"] not in {"1.0.0", "1.1.0"} or not _FINGERPRINT.fullmatch(report["document_fingerprint"]):
         raise CitationEmissionError("unsupported_report", "report schema or fingerprint is unsupported")
     if not isinstance(report["verification_config_sha256"], str) or re.fullmatch(r"[0-9a-f]{64}", report["verification_config_sha256"]) is None:
         raise CitationEmissionError("invalid_report", "verification config hash is invalid")
     grounding = report["grounding"]
-    if not isinstance(grounding, Mapping) or set(grounding) != {"parser", "capabilities"} or not isinstance(grounding["parser"], Mapping) or set(grounding["parser"]) != {"name", "version"} or not all(isinstance(grounding["parser"][key], str) and grounding["parser"][key] for key in ("name", "version")):
+    parser_allowed = {"name", "version", "adapter", "adapter_version"}
+    if not isinstance(grounding, Mapping) or set(grounding) != {"parser", "capabilities"} or not isinstance(grounding["parser"], Mapping) or not {"name", "version"} <= set(grounding["parser"]) or set(grounding["parser"]) - parser_allowed or not all(isinstance(grounding["parser"][key], str) for key in grounding["parser"]):
         raise CitationEmissionError("invalid_report", "grounding metadata is invalid")
     if not isinstance(grounding["capabilities"], Mapping) or not isinstance(report["capability_limits"], list) or not isinstance(report["unsupported_claim_kinds"], list) or not isinstance(report["warnings"], list) or not isinstance(report["fingerprint_stale"], bool) or not isinstance(report["all_evidence_grounded"], bool):
         raise CitationEmissionError("invalid_report", "report metadata has invalid types")
     statuses = {"grounded", "not_found", "mismatch", "stale", "unsupported_claim_kind", "capability_blocked", "error"}
     methods = {"exact_text", "normalized_text", "exact_text_contains", "normalized_text_contains", "table_cell_lookup", "bbox_containment", "presence_only", "none"}
+    reasons = {"missing_locator", "missing_required_text", "unsupported_claim_kind", "stale_fingerprint", "missing_source_fingerprint", "missing_citation_fingerprint", "missing_span_capability", "missing_table_capability", "unknown_coordinate_origin", "element_not_found", "span_not_found", "page_not_found", "bbox_not_found", "locator_conflict", "missing_page_for_bbox", "missing_table_cell_locator", "table_not_found", "table_cell_not_found", "text_mismatch"}
     if not isinstance(report["checks"], list):
         raise CitationEmissionError("invalid_report", "checks must be a list")
+    hardened = "dispersion" in report
     for index, check in enumerate(report["checks"], 1):
-        expected = {"id", "claim", "status", "match_method", "semantic_unverified", "warnings"}
-        if not isinstance(check, Mapping) or set(check) != expected or check["id"] != f"v{index:04d}" or check["status"] not in statuses or check["match_method"] not in methods or not isinstance(check["semantic_unverified"], bool) or not isinstance(check["warnings"], list) or not isinstance(check["claim"], Mapping):
+        required_check = {"id", "claim", "status", "match_method", "semantic_unverified", "warnings"}
+        allowed_check = required_check | {"reason", "resolved_element_ids", "provenance", "context_echo", "evidence"}
+        if not isinstance(check, Mapping) or not required_check <= set(check) or set(check) - allowed_check or check["id"] != f"v{index:04d}" or check["status"] not in statuses or check["match_method"] not in methods or not isinstance(check["semantic_unverified"], bool) or not isinstance(check["warnings"], list) or not isinstance(check["claim"], Mapping):
             raise CitationEmissionError("invalid_report", "check does not match the verification-report schema")
+        if check["status"] == "grounded" and "reason" in check:
+            raise CitationEmissionError("invalid_report", "grounded check must not contain a reason")
+        if check["status"] != "grounded" and check.get("reason") not in reasons:
+            raise CitationEmissionError("invalid_report", "non-grounded check must contain a reason")
+        hardened = hardened or bool(set(check) & {"resolved_element_ids", "provenance", "context_echo"})
+    if hardened != (report["schema_version"] == "1.1.0"):
+        raise CitationEmissionError("invalid_report", "report version does not match hardened fields")
 
 
 def emit_langchain_citations(
@@ -620,6 +639,9 @@ def _validate_handle_context(context: Mapping[str, Any]) -> Dict[str, Dict[str, 
         raise CitationEmissionError("unsupported_schema_version", "expected evidence context 1.0.0")
     if not isinstance(context["evidence"], list) or any(not isinstance(entry, Mapping) for entry in context["evidence"]):
         raise CitationEmissionError("invalid_evidence_context", "evidence must be a list of records")
+    allowed_entry = {"evidence_id", "locator", "display", "excerpt"}
+    if any(set(entry) - allowed_entry for entry in context["evidence"]):
+        raise CitationEmissionError("invalid_evidence_context", "evidence entry contains forbidden fields")
     rebuilt = build_evidence_handle_context([{**entry, "document_fingerprint": context["document_fingerprint"]} for entry in context["evidence"]])
     return {entry["evidence_id"]: entry["locator"] for entry in rebuilt["evidence"]}
 

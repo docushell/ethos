@@ -11,7 +11,7 @@ import json
 import re
 import stat
 import tarfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import NoReturn
 
 
@@ -74,9 +74,24 @@ def read_pdfium_archive(
         with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:gz") as archive:
             members: dict[str, tarfile.TarInfo] = {}
             for member in archive.getmembers():
-                if member.name in members:
-                    fail(f"duplicate PDFium archive entry: {member.name}")
-                members[member.name] = member
+                name = member.name.rstrip("/") if member.isdir() else member.name
+                path_parts = PurePosixPath(name).parts
+                if not name or name.startswith("/") or any(part in {"", ".", ".."} for part in path_parts):
+                    fail(f"unsafe PDFium archive entry: {member.name}")
+                if name in members:
+                    fail(f"duplicate PDFium archive entry: {name}")
+                if member.isdir():
+                    if name not in {"include", "lib", "licenses"}:
+                        fail(f"unexpected PDFium archive directory: {name}")
+                elif not member.isfile():
+                    fail(f"PDFium archive entry must be a regular file: {name}")
+                elif not (
+                    name in {"LICENSE", "README.md", "VERSION", runtime_relpath}
+                    or (name.startswith("include/") and name.endswith(".h"))
+                    or (name.startswith("licenses/") and name.endswith(".txt"))
+                ):
+                    fail(f"unexpected PDFium archive file: {name}")
+                members[name] = member
 
             def regular_file(name: str, label: str) -> bytes:
                 member = members.get(name)

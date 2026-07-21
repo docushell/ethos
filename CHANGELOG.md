@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Fix Evidence Handle Bridge projection for real verification reports, stale evidence, structured state fields, strict contexts, and inert model prose.
+- Render complete HTML proof diagnostics with canonical schema labels and expanded variant coverage.
+- Cover the full verify-batch request boundary, foreign-grounding, config, and crop-rejection matrix.
+- Alternate performance samples, compare repeated 32-process aggregates, and bind environment metadata.
+- Reject unsafe, duplicate, unexpected, link, and special members in pinned PDFium archives.
+
 - Add a fail-closed validator binding future npm B activation to frozen v0.5.0 core-A target-smoke evidence.
 - Run the npm B activation boundary contract in pull-request CI.
 - Keep the npm package lockfile in the published-version hold until core-A refresh.

@@ -6,6 +6,9 @@ export type EthosEvidenceHandleCitationClaim = EthosEvidenceHandleTextualCitatio
 export type EthosEvidenceHandleCitationText = string;
 export type EthosEvidenceHandleCitationId = string;
 
+/**
+ * Structured claims[].evidence_id values are the only citation channel. The answer is untrusted prose: consumers must not infer, link, or mark verified any handle-shaped token found only in answer text.
+ */
 export interface EthosLlmCitationOutputV2 {
   schema_version: "2.0.0";
   answer: string;

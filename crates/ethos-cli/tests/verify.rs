@@ -417,6 +417,139 @@ fn verify_batch_fail_on_ungrounded_exits_one_after_output_and_invalid_input_writ
 }
 
 #[test]
+fn verify_batch_enforces_request_count_and_blank_line_boundaries() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let line = serde_json::to_string(&json_file(&grounded)).unwrap();
+    for count in [32, 1024] {
+        let input = temp_json(
+            &format!("verify-batch-{count}"),
+            &(line.clone() + "\n").repeat(count),
+        );
+        let output = run_ethos(&[
+            "verify-batch",
+            document.to_str().unwrap(),
+            "--citations-ndjson",
+            input.to_str().unwrap(),
+        ]);
+        assert_eq!(
+            output.status.code(),
+            Some(0),
+            "count={count}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(
+            output
+                .stdout
+                .split(|byte| *byte == b'\n')
+                .filter(|line| !line.is_empty())
+                .count(),
+            count
+        );
+    }
+    for (name, contents) in [
+        ("empty", String::new()),
+        ("interior-blank", format!("{line}\n\n{line}\n")),
+        ("oversized", (line.clone() + "\n").repeat(1025)),
+    ] {
+        let input = temp_json(&format!("verify-batch-{name}"), &contents);
+        let output_path = temp_output(&format!("verify-batch-{name}-output"));
+        let output = run_ethos(&[
+            "verify-batch",
+            document.to_str().unwrap(),
+            "--citations-ndjson",
+            input.to_str().unwrap(),
+            "--out",
+            output_path.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(2), "{name}");
+        assert!(!output_path.exists(), "{name} must be atomic");
+    }
+}
+
+#[test]
+fn verify_batch_supports_foreign_grounding_and_explicit_config() {
+    let root = repo_root();
+    let cases = [
+        (
+            root.join("fixtures/foreign/opendataloader/real/opendataloader-output.json"),
+            root.join("fixtures/foreign/opendataloader/real/citations.json"),
+            Some("opendataloader-json"),
+            None,
+        ),
+        (
+            document_example(),
+            root.join("examples/verify/native_grounded_citations.json"),
+            None,
+            Some(root.join("schemas/examples/verification-config.hardened.example.json")),
+        ),
+    ];
+    for (source, citations, grounding, config) in cases {
+        let input = temp_json(
+            "verify-batch-adapter-config",
+            &citation_ndjson(&[&citations]),
+        );
+        let mut batch_args = vec![
+            "verify-batch",
+            source.to_str().unwrap(),
+            "--citations-ndjson",
+            input.to_str().unwrap(),
+        ];
+        let mut single_args = vec![
+            "verify",
+            source.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+        ];
+        if let Some(value) = grounding {
+            batch_args.extend(["--grounding", value]);
+            single_args.extend(["--grounding", value]);
+        }
+        if let Some(path) = config.as_ref() {
+            batch_args.extend(["--config", path.to_str().unwrap()]);
+            single_args.extend(["--config", path.to_str().unwrap()]);
+        }
+        let batch = run_ethos(&batch_args);
+        let single = run_ethos(&single_args);
+        assert_eq!(
+            batch.status.code(),
+            Some(0),
+            "{}",
+            String::from_utf8_lossy(&batch.stderr)
+        );
+        assert_eq!(batch.stdout, single.stdout);
+    }
+}
+
+#[test]
+fn verify_batch_rejects_crop_config_atomically() {
+    let root = repo_root();
+    let mut config = json_file(root.join("schemas/examples/verification-config.example.json"));
+    config["evidence"]["include_crops"] = serde_json::json!(true);
+    let config_path = temp_json(
+        "verify-batch-crop-config",
+        &serde_json::to_string(&config).unwrap(),
+    );
+    let citations = root.join("examples/verify/native_grounded_citations.json");
+    let input = temp_json("verify-batch-crop-input", &citation_ndjson(&[&citations]));
+    let output_path = temp_output("verify-batch-crop-output");
+    let output = run_ethos(&[
+        "verify-batch",
+        document_example().to_str().unwrap(),
+        "--citations-ndjson",
+        input.to_str().unwrap(),
+        "--config",
+        config_path.to_str().unwrap(),
+        "--out",
+        output_path.to_str().unwrap(),
+    ]);
+    assert_eq!(output.status.code(), Some(2));
+    assert!(!output_path.exists());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("does not support crop evidence"));
+}
+
+#[test]
 fn real_opendataloader_fixture_verifies_against_golden() {
     let root = repo_root();
     let report = parse_success(&[
@@ -3056,6 +3189,12 @@ fn report_html_renders_supported_report_deterministically_and_escapes_content() 
     assert!(text.contains("Ethos verifies citation grounding, not semantic truth"));
     assert!(text.contains("parser&lt;script&gt;&amp;&quot;&#39;"));
     assert!(text.contains("claim&lt;script&gt;&amp;&quot;&#39;"));
+    assert!(text.contains("Status: <strong>grounded</strong>"));
+    assert!(text.contains("match method: normalized_text_contains"));
+    assert!(text.contains("Grounding capabilities"));
+    assert!(text.contains("Capability limits"));
+    assert!(text.contains("Proof limitations"));
+    assert!(text.contains("Report warnings"));
     assert!(!text.contains("<script"));
     assert!(!text.contains("http://"));
     assert!(!text.contains("https://"));
@@ -3095,6 +3234,7 @@ fn report_html_rejects_unsupported_schema_and_unsafe_crop_root_without_output() 
         "data:text/html,x",
         "crops/%2f",
         "./crops",
+        "crops/",
         ".",
     ] {
         let output = temp_output("unsafe-crop-root");
@@ -3113,7 +3253,22 @@ fn report_html_rejects_unsupported_schema_and_unsafe_crop_root_without_output() 
 
     let mut crop_report = json_file(valid);
     crop_report["checks"][0]["evidence"]["crop_ref"] = serde_json::json!("crop-01.png");
-    let crop_input = temp_json("safe-html-crop-input", &serde_json::to_string(&crop_report).unwrap());
+    let crop_input = temp_json(
+        "safe-html-crop-input",
+        &serde_json::to_string(&crop_report).unwrap(),
+    );
+    let cropless_output = temp_output("cropless-html-crop-output");
+    let result = run_ethos(&[
+        "report",
+        "html",
+        crop_input.to_str().unwrap(),
+        "--out",
+        cropless_output.to_str().unwrap(),
+    ]);
+    assert!(result.status.success());
+    let cropless_html = String::from_utf8(std::fs::read(cropless_output).unwrap()).unwrap();
+    assert!(cropless_html.contains("Crop unavailable in this standalone report"));
+    assert!(!cropless_html.contains("href="));
     let crop_output = temp_output("safe-html-crop-output");
     let result = run_ethos(&[
         "report",
@@ -3127,4 +3282,42 @@ fn report_html_rejects_unsupported_schema_and_unsafe_crop_root_without_output() 
     assert!(result.status.success());
     let crop_html = String::from_utf8(std::fs::read(crop_output).unwrap()).unwrap();
     assert!(crop_html.contains("href=\"crops/crop-01.png\""));
+}
+
+#[test]
+fn report_html_renders_hardened_and_non_grounded_diagnostics() {
+    let root = repo_root();
+    for (fixture, expected) in [
+        (
+            "schemas/examples/verification-report.hardened.example.json",
+            "Dispersion",
+        ),
+        (
+            "schemas/examples/verification-report-negative.example.json",
+            "Reason: stale_fingerprint",
+        ),
+    ] {
+        let output = temp_output("html-report-variant");
+        let result = run_ethos(&[
+            "report",
+            "html",
+            root.join(fixture).to_str().unwrap(),
+            "--out",
+            output.to_str().unwrap(),
+        ]);
+        assert!(
+            result.status.success(),
+            "{fixture}: {}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        let html = String::from_utf8(std::fs::read(output).unwrap()).unwrap();
+        if expected == "Dispersion" {
+            assert!(html.contains("Dispersion"));
+            assert!(html.contains("grounded_checks"));
+            assert!(html.contains("grounded"));
+        } else {
+            assert!(html.contains(expected), "{html}");
+            assert!(html.contains("Status: <strong>stale</strong>"));
+        }
+    }
 }

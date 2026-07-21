@@ -18,7 +18,12 @@
 from __future__ import annotations
 
 import copy
+import json
+import subprocess
+import sys
+import tempfile
 import unittest
+from pathlib import Path
 
 from ethos_pdf import (
     CitationEmissionError,
@@ -65,6 +70,8 @@ def verification_report(hydrated_claims, statuses, *, stale=False, fingerprint=F
             "semantic_unverified": False,
             "warnings": [],
         })
+        if status != "grounded":
+            checks[-1]["reason"] = "page_not_found" if status == "not_found" else "text_mismatch"
     supported = [check for check in checks if check["status"] != "unsupported_claim_kind"]
     return {
         "schema_version": "1.0.0",
@@ -247,9 +254,9 @@ class EvidenceHandleBridgeTests(unittest.TestCase):
         self.assertFalse(projection["all_evidence_grounded"])
         self.assertEqual(
             [
-                {"evidence_id": "unreferenced", "state": "unreferenced", "claim_indexes": [], "check_ids": []},
-                {"evidence_id": "mixed", "state": "partially_grounded", "claim_indexes": [1, 2], "check_ids": ["v0001", "v0002"], "display": "Revenue"},
-                {"evidence_id": "ungrounded", "state": "ungrounded", "claim_indexes": [3], "check_ids": ["v0003"]},
+                {"evidence_id": "unreferenced", "retrieved": True, "cited": False, "verified": False, "claim_indexes": [], "check_ids": [], "check_statuses": []},
+                {"evidence_id": "mixed", "retrieved": True, "cited": True, "verified": False, "claim_indexes": [1, 2], "check_ids": ["v0001", "v0002"], "check_statuses": ["grounded", "mismatch"], "display": "Revenue"},
+                {"evidence_id": "ungrounded", "retrieved": True, "cited": True, "verified": False, "claim_indexes": [3], "check_ids": ["v0003"], "check_statuses": ["not_found"]},
             ],
             projection["states"],
         )
@@ -271,8 +278,11 @@ class EvidenceHandleBridgeTests(unittest.TestCase):
         inconsistent = copy.deepcopy(report)
         inconsistent["all_evidence_grounded"] = False
 
+        stale["all_evidence_grounded"] = False
+        stale_projection = project_evidence_states(context, emission, stale)
+        self.assertFalse(stale_projection["states"][0]["verified"])
+
         for invalid_report, code in (
-            (stale, "report_context_mismatch"),
             (mismatched, "report_context_mismatch"),
             (inconsistent, "invalid_report"),
             ):
@@ -300,6 +310,36 @@ class EvidenceHandleBridgeTests(unittest.TestCase):
         context["evidence"] = None
         emission = build_evidence_citation_emission("Answer.", [{"kind": "presence", "evidence_id": "ev-1"}])
         assert_error(self, "invalid_evidence_context", lambda: hydrate_evidence_citations(emission, context))
+
+    def test_context_rejects_forbidden_entry_fingerprint(self):
+        context = build_evidence_handle_context([evidence_record("ev-1", {"page": "p0001"})])
+        emission = build_evidence_citation_emission("Answer.", [{"kind": "presence", "evidence_id": "ev-1"}])
+        for fingerprint in (FINGERPRINT, "sha256:" + ("c" * 64)):
+            invalid = copy.deepcopy(context)
+            invalid["evidence"][0]["document_fingerprint"] = fingerprint
+            assert_error(self, "invalid_evidence_context", lambda invalid=invalid: hydrate_evidence_citations(emission, invalid))
+
+    def test_projects_repository_verification_report_fixtures(self):
+        root = Path(__file__).resolve().parents[2]
+        context = build_evidence_handle_context(json.loads((root / "examples/evidence-handle-bridge/retrieval-records.json").read_text()))
+        model = json.loads((root / "examples/evidence-handle-bridge/model-output.json").read_text())
+        emission = build_evidence_citation_emission(model["answer"], model["claims"])
+        for fixture in ("verification-report.example.json", "verification-report.hardened.example.json"):
+            with self.subTest(fixture=fixture):
+                report = json.loads((root / "schemas/examples" / fixture).read_text())
+                projection = project_evidence_states(context, emission, report)
+                self.assertTrue(projection["all_evidence_grounded"])
+                self.assertTrue(all(item["verified"] for item in projection["states"]))
+
+    def test_repository_example_runs_byte_identically(self):
+        root = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as temporary:
+            outputs = []
+            for run in ("run1", "run2"):
+                out = Path(temporary) / run
+                subprocess.run([sys.executable, str(root / "examples/evidence-handle-bridge/run.py"), "--out-dir", str(out)], cwd=root, check=True)
+                outputs.append({path.name: path.read_bytes() for path in out.iterdir()})
+            self.assertEqual(outputs[0], outputs[1])
 
     def test_projection_is_byte_identical_across_two_runs(self):
         context = build_evidence_handle_context([
