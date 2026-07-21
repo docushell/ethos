@@ -4,6 +4,8 @@
 
 - boundary-exception: reconcile v0.5.0 release-boundary CI metadata and DCO sign-offs for the
   reviewed release implementation; no new public support boundary is opened.
+- ci: index the v0.4.0 validation closeout and bind it to the existing source commit, and align
+  the Python public API policy with the released Evidence Handle Bridge exports.
 - Fix Evidence Handle Bridge projection for real verification reports, stale evidence, structured state fields, strict contexts, and inert model prose.
 - Render complete HTML proof diagnostics with canonical schema labels and expanded variant coverage.
 - Cover the full verify-batch request boundary, foreign-grounding, config, and crop-rejection matrix.

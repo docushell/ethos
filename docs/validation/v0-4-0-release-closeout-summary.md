@@ -3,8 +3,7 @@
 Status: closed on 2026-07-21.
 
 GitHub Release `v0.4.0` was published at 2026-07-21T05:02:19Z and is the latest non-draft,
-non-prerelease release. Its annotated tag object is
-`6041b2ed5617f923e5d226f1f69bb184d70d5fce`, resolving to source commit
+non-prerelease release. Its release tag resolves to source commit
 `e73477e427d2384bdb3b6b913578411325d3d107`.
 
 The published caller-provided-PDFium archives are:
