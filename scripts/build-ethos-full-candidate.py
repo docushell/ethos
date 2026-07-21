@@ -103,6 +103,10 @@ def read_pdfium_archive(
         fail(f"invalid PDFium archive {path}: {error}")
     if "pdfium.txt" not in notices:
         fail("PDFium archive must include licenses/pdfium.txt")
+    for name in notices:
+        parts = Path(name).parts
+        if not name or Path(name).is_absolute() or any(part in {"", ".", ".."} for part in parts):
+            fail(f"unsafe PDFium notice path: {name}")
     return runtime, package_license, notices
 
 
@@ -142,6 +146,7 @@ def build(args: argparse.Namespace) -> tuple[Path, Path, Path]:
     if not ethos_path.stat().st_mode & stat.S_IXUSR:
         fail(f"Ethos binary is not executable: {ethos_path}")
     runtime_relpath = TARGETS[args.target]
+    archive_bytes = read_required(pdfium_archive, "PDFium archive")
     runtime, pdfium_license, license_files = read_pdfium_archive(
         pdfium_archive, expected_archive_hash, runtime_relpath
     )
@@ -182,6 +187,13 @@ def build(args: argparse.Namespace) -> tuple[Path, Path, Path]:
         "target": args.target,
         "version": args.version,
         "launcher": "ethos",
+        "input_sha256": {
+            "profile": sha256_bytes(read_required(profile_path, "profile")),
+            "ethos_binary": sha256_bytes(ethos),
+            "pdfium_archive": sha256_bytes(archive_bytes),
+            "project_license": sha256_bytes(project_license),
+            "project_notice": sha256_bytes(project_notice),
+        },
         "pdfium": {
             "phase": backend.get("phase"),
             "version": backend.get("version"),

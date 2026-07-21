@@ -139,6 +139,8 @@ class EthosFullCandidateTests(unittest.TestCase):
             launcher = archive.extractfile(f"{root}/ethos").read().decode("utf-8")
             self.assertEqual("release_candidate_pending_target_smoke", manifest["status"])
             self.assertEqual("not_publishable_pending_release_gates", manifest["publication"])
+            self.assertEqual(sha256(self.binary.read_bytes()), manifest["input_sha256"]["ethos_binary"])
+            self.assertEqual(sha256(self.pdfium_archive.read_bytes()), manifest["input_sha256"]["pdfium_archive"])
             self.assertIn('ETHOS_PDFIUM_LIBRARY_PATH="$root/lib/libpdfium.dylib"', launcher)
 
     def test_hash_mismatch_fails_closed(self) -> None:
