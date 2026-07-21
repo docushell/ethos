@@ -21,10 +21,13 @@ def main() -> int:
     base=[run([str(a.baseline_bin),"verify",str(a.source),"--citations",str(a.citations)],expected)[0] for _ in range(30)]
     candidate=[run(c,expected)[0] for _ in range(30)]; individual=[run(c,expected)[0] for _ in range(32)]
     with tempfile.TemporaryDirectory() as d:
-        nd=Path(d)/"requests.ndjson"; nd.write_bytes((a.citations.read_bytes().rstrip(b"\n")+b"\n")*32); batch,out=run([str(a.candidate_bin),"verify-batch",str(a.source),"--citations-ndjson",str(nd)])
-    if out != (expected.rstrip(b"\n")+b"\n")*32: fail("batch output was not canonical")
-    bm,cm,im=med(base),med(candidate),med(individual); passed=cm*100<=bm*110 and batch*2<=im*32
+        nd=Path(d)/"requests.ndjson"; nd.write_bytes((a.citations.read_bytes().rstrip(b"\n")+b"\n")*32)
+        batch=[]
+        for _ in range(30):
+            elapsed,out=run([str(a.candidate_bin),"verify-batch",str(a.source),"--citations-ndjson",str(nd)]); batch.append(elapsed)
+            if out != (expected.rstrip(b"\n")+b"\n")*32: fail("batch output was not canonical")
+    bm,cm,im,bm_batch=med(base),med(candidate),med(individual),med(batch); passed=cm*100<=bm*110 and bm_batch*2<=im*32
     if not passed: fail("performance threshold failed")
-    record={"schema":"ethos.v0_5_performance_record.v1","baseline_version":"0.4.0","candidate_version":"0.5.0","baseline_binary_sha256":sha(a.baseline_bin),"candidate_binary_sha256":sha(a.candidate_bin),"source_sha256":sha(a.source),"citations_sha256":sha(a.citations),"single_request_cold_ns":{"baseline":base,"candidate":candidate},"batch_32_ns":{"individual_process":individual,"batch_elapsed":batch},"derived":{"baseline_median_ns":bm,"candidate_median_ns":cm,"individual_median_ns":im,"passed":passed}}
+    record={"schema":"ethos.v0_5_performance_record.v1","baseline_version":"0.4.0","candidate_version":"0.5.0","baseline_binary_sha256":sha(a.baseline_bin),"candidate_binary_sha256":sha(a.candidate_bin),"source_sha256":sha(a.source),"citations_sha256":sha(a.citations),"single_request_cold_ns":{"baseline":base,"candidate":candidate},"batch_32_ns":{"individual_process":individual,"batch_elapsed":batch},"derived":{"baseline_median_ns":bm,"candidate_median_ns":cm,"individual_median_ns":im,"batch_median_ns":bm_batch,"passed":passed}}
     a.out.write_text(json.dumps(record,sort_keys=True,indent=2)+"\n"); return 0
 if __name__=="__main__": raise SystemExit(main())

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add independent validation for v0.5 internal performance evidence and threshold derivations.
+
 - Make Evidence Handle Bridge state projection validate verification-report shape, status, and metadata fail-closed.
 
 - Reject empty v1 Evidence Handle Bridge contexts before hydration or state projection.
