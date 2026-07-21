@@ -29,6 +29,7 @@ from ethos_pdf import (
     citation_json_bytes,
     hydrate_citations,
     hydrate_evidence_citations,
+    project_evidence_states,
 )
 
 
@@ -50,6 +51,45 @@ def assert_error(test, code, callable_):
         callable_()
     test.assertEqual(code, raised.exception.code)
     return raised.exception
+
+
+def verification_report(hydrated_claims, statuses, *, stale=False, fingerprint=FINGERPRINT):
+    """Build the smallest schema-valid report needed by state projection tests."""
+    checks = []
+    for index, (claim, status) in enumerate(zip(hydrated_claims, statuses), 1):
+        checks.append({
+            "id": f"v{index:04d}",
+            "claim": claim,
+            "status": status,
+            "match_method": "presence_only" if claim["kind"] == "presence" else "exact_text",
+            "semantic_unverified": False,
+            "warnings": [],
+        })
+    supported = [check for check in checks if check["status"] != "unsupported_claim_kind"]
+    return {
+        "schema_version": "1.0.0",
+        "document_fingerprint": fingerprint,
+        "verification_config_sha256": "b" * 64,
+        "grounding": {
+            "parser": {"name": "ethos", "version": "0.5.0"},
+            "capabilities": {
+                "spans": True,
+                "char_offsets": True,
+                "tables": True,
+                "fingerprint": True,
+                "coordinate_origin": "top-left",
+                "crop_support": False,
+            },
+        },
+        "capability_limits": [],
+        "fingerprint_stale": stale,
+        "all_evidence_grounded": bool(supported) and all(
+            check["status"] == "grounded" for check in supported
+        ),
+        "checks": checks,
+        "unsupported_claim_kinds": [],
+        "warnings": [],
+    }
 
 
 class EvidenceHandleBridgeTests(unittest.TestCase):
@@ -184,6 +224,80 @@ class EvidenceHandleBridgeTests(unittest.TestCase):
                 build_evidence_citation_emission("Answer.", [{"kind": "presence", "evidence_id": "ev-1"}]),
                 invalid_context,
             ),
+        )
+
+    def test_projects_context_ordered_evidence_states(self):
+        context = build_evidence_handle_context([
+            evidence_record("unreferenced", {"page": "p0001"}),
+            evidence_record("mixed", {"element_id": "e000001"}, display="Revenue"),
+            evidence_record("ungrounded", {"span_id": "s000001"}),
+        ])
+        emission = build_evidence_citation_emission("Answer.", [
+            {"kind": "quote", "text": "Revenue", "evidence_id": "mixed"},
+            {"kind": "value", "text": "$12", "evidence_id": "mixed"},
+            {"kind": "presence", "evidence_id": "ungrounded"},
+        ])
+        hydrated = hydrate_evidence_citations(emission, context)
+        report = verification_report(hydrated["claims"], ["grounded", "mismatch", "not_found"])
+
+        projection = project_evidence_states(context, emission, report)
+
+        self.assertEqual(FINGERPRINT, projection["document_fingerprint"])
+        self.assertFalse(projection["all_evidence_grounded"])
+        self.assertEqual(
+            [
+                {"evidence_id": "unreferenced", "state": "unreferenced", "claim_indexes": [], "check_ids": []},
+                {"evidence_id": "mixed", "state": "partially_grounded", "claim_indexes": [1, 2], "check_ids": ["v0001", "v0002"], "display": "Revenue"},
+                {"evidence_id": "ungrounded", "state": "ungrounded", "claim_indexes": [3], "check_ids": ["v0003"]},
+            ],
+            projection["states"],
+        )
+
+    def test_projection_fails_closed_for_stale_mismatched_or_inconsistent_report(self):
+        context = build_evidence_handle_context([
+            evidence_record("ev-1", {"page": "p0001"}),
+        ])
+        emission = build_evidence_citation_emission("Answer.", [
+            {"kind": "presence", "evidence_id": "ev-1"},
+        ])
+        hydrated = hydrate_evidence_citations(emission, context)
+        report = verification_report(hydrated["claims"], ["grounded"])
+
+        stale = copy.deepcopy(report)
+        stale["fingerprint_stale"] = True
+        mismatched = copy.deepcopy(report)
+        mismatched["checks"][0]["claim"]["citation"] = {"page": "p9999"}
+        inconsistent = copy.deepcopy(report)
+        inconsistent["all_evidence_grounded"] = False
+
+        for invalid_report, code in (
+            (stale, "report_context_mismatch"),
+            (mismatched, "report_context_mismatch"),
+            (inconsistent, "invalid_report"),
+        ):
+            with self.subTest(code=code):
+                assert_error(
+                    self,
+                    code,
+                    lambda invalid_report=invalid_report: project_evidence_states(
+                        context, emission, invalid_report
+                    ),
+                )
+
+    def test_projection_is_byte_identical_across_two_runs(self):
+        context = build_evidence_handle_context([
+            evidence_record("ev-1", {"page": "p0001"}),
+        ])
+        emission = build_evidence_citation_emission("Answer.", [
+            {"kind": "presence", "evidence_id": "ev-1"},
+        ])
+        report = verification_report(
+            hydrate_evidence_citations(emission, context)["claims"], ["grounded"]
+        )
+
+        self.assertEqual(
+            citation_json_bytes(project_evidence_states(context, emission, report)),
+            citation_json_bytes(project_evidence_states(context, emission, report)),
         )
 
 

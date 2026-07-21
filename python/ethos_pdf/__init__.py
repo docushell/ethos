@@ -48,6 +48,7 @@ from .emit import (
     emit_llamaindex_citations,
     hydrate_citations,
     hydrate_evidence_citations,
+    project_evidence_states,
 )
 
 __version__ = "0.4.0"
@@ -77,6 +78,7 @@ __all__ = [
     "emit_llamaindex_citations",
     "hydrate_citations",
     "hydrate_evidence_citations",
+    "project_evidence_states",
     "parse_pdf_json",
     "parse_pdf_markdown",
     "parse_pdf_text",

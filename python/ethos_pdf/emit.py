@@ -223,6 +223,42 @@ def hydrate_evidence_citations(emission: Mapping[str, Any], context: Mapping[str
     return {"document_fingerprint": context["document_fingerprint"], "claims": claims}
 
 
+def project_evidence_states(
+    context: Mapping[str, Any], emission: Mapping[str, Any], report: Mapping[str, Any]
+) -> Dict[str, Any]:
+    """Project noncanonical handle states only from a report bound to trusted hydration."""
+    hydrated = hydrate_evidence_citations(emission, context)
+    if not isinstance(report, Mapping) or report.get("schema_version") not in {"1.0.0", "1.1.0"}:
+        raise CitationEmissionError("unsupported_report", "report schema_version is not supported")
+    if report.get("document_fingerprint") != hydrated["document_fingerprint"] or report.get("fingerprint_stale") is not False:
+        raise CitationEmissionError("report_context_mismatch", "report fingerprint does not bind the context")
+    checks = report.get("checks")
+    if not isinstance(checks, list) or len(checks) != len(hydrated["claims"]):
+        raise CitationEmissionError("report_context_mismatch", "report checks do not match hydrated claims")
+    supported = []
+    for index, (check, claim) in enumerate(zip(checks, hydrated["claims"]), 1):
+        if not isinstance(check, Mapping) or check.get("id") != f"v{index:04d}" or check.get("claim") != claim:
+            raise CitationEmissionError("report_context_mismatch", "report check order or claim differs from hydration")
+        if not isinstance(check.get("semantic_unverified"), bool) or not isinstance(check.get("status"), str):
+            raise CitationEmissionError("invalid_report", "report check is malformed")
+        if check["status"] != "unsupported_claim_kind": supported.append(check)
+    recomputed = bool(supported) and all(check["status"] == "grounded" for check in supported) and all(not check["semantic_unverified"] for check in checks) and not report.get("unsupported_claim_kinds", [])
+    if report.get("all_evidence_grounded") is not recomputed:
+        raise CitationEmissionError("invalid_report", "report all_evidence_grounded is inconsistent")
+    by_handle = {entry["evidence_id"]: [] for entry in context["evidence"]}
+    for index, (claim, check) in enumerate(zip(emission["claims"], checks), 1):
+        by_handle[claim["evidence_id"]].append((index, check))
+    states = []
+    for entry in context["evidence"]:
+        linked = by_handle[entry["evidence_id"]]
+        statuses = [check["status"] == "grounded" and not check["semantic_unverified"] for _, check in linked]
+        state = "unreferenced" if not linked else "grounded" if all(statuses) else "partially_grounded" if any(statuses) else "ungrounded"
+        item = {"evidence_id": entry["evidence_id"], "state": state, "claim_indexes": [index for index, _ in linked], "check_ids": [check["id"] for _, check in linked]}
+        if "display" in entry: item["display"] = entry["display"]
+        states.append(item)
+    return {"document_fingerprint": hydrated["document_fingerprint"], "all_evidence_grounded": recomputed, "states": states}
+
+
 def emit_langchain_citations(
     documents: Iterable[Any],
     answer: str,
@@ -637,4 +673,5 @@ __all__ = [
     "emit_llamaindex_citations",
     "hydrate_citations",
     "hydrate_evidence_citations",
+    "project_evidence_states",
 ]

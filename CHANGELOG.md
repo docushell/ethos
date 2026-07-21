@@ -4,6 +4,8 @@
 
 - python: add Evidence Handle Bridge v1 trusted contexts and v2 structured model citations with
   deterministic, fail-closed hydration while preserving citation-emission v1.
+- npm: generate Evidence Handle Bridge context and model-output declarations, and add
+  fail-closed evidence-state projection for verification-report-bound application views.
 - report: add deterministic, self-contained HTML proof reports with supported-schema checks,
   escaped report content, and fail-closed crop-root validation.
 - verify: add buffered, atomic `verify-batch` NDJSON verification against one validated source,
