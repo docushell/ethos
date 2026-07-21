@@ -81,7 +81,7 @@ def read_pdfium_archive(
                 if name in members:
                     fail(f"duplicate PDFium archive entry: {name}")
                 if member.isdir():
-                    if name not in {"include", "lib", "licenses"}:
+                    if name not in {"include", "include/cpp", "lib", "licenses"}:
                         fail(f"unexpected PDFium archive directory: {name}")
                 elif not member.isfile():
                     fail(f"PDFium archive entry must be a regular file: {name}")
