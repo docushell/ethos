@@ -12,6 +12,7 @@
 - ci: allow the pinned PDFium archive's config, build metadata, headers, and license notices
   while continuing to reject unsafe and unrelated members.
 - ci: allow the pinned PDFium archive's nested C++ header directory.
+- ci: include deterministic base CLI archive evidence in the v0.5 candidate workflow.
 - Fix Evidence Handle Bridge projection for real verification reports, stale evidence, structured state fields, strict contexts, and inert model prose.
 - Render complete HTML proof diagnostics with canonical schema labels and expanded variant coverage.
 - Cover the full verify-batch request boundary, foreign-grounding, config, and crop-rejection matrix.
