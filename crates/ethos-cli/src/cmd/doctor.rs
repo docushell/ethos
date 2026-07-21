@@ -26,10 +26,9 @@ use crate::{write_output, DoctorArgs, Failure, INTERNAL_PDFIUM_LOAD_PROBE_ENV};
 const DOCTOR_PDFIUM_PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 const PDFIUM_SETUP_GUIDANCE: &str =
     "PDFium setup command: scripts/fetch-pdfium.sh. Run it from an Ethos source checkout, apply the printed ETHOS_PDFIUM_LIBRARY_PATH export, then run ethos doctor --require-pdfium. The script verifies pinned archive and runtime sha256 values and never runs automatically. See docs/pdfium-manual-setup.md.";
-// Keep packaged-target reporting single-sourced with the npm vendor payload. If the packaging
-// layout moves, update this include rather than adding a second release target list.
-const NPM_VENDOR_MANIFEST: &str =
-    include_str!("../../../../packages/npm/ethos-pdf/vendor/manifest.json");
+// Keep this independent of the npm manifest: doctor is included in the CLI payload that the
+// manifest hashes, so embedding the manifest would make final release hashes self-referential.
+const NPM_CLI_TARGETS: &[&str] = &["darwin:arm64", "linux:x64"];
 
 pub(crate) fn doctor(args: DoctorArgs) -> Result<(), Failure> {
     let platform = current_platform();
@@ -133,18 +132,11 @@ fn current_platform() -> String {
 }
 
 fn packaged_target_status(platform: &str) -> String {
-    match manifest_targets() {
-        Some(targets) if targets.iter().any(|target| target == platform) => {
-            "supported by the approved npm vendor manifest".to_string()
-        }
-        Some(_) => "not listed in the approved npm vendor manifest".to_string(),
-        None => "could not read approved npm vendor manifest targets".to_string(),
+    if NPM_CLI_TARGETS.contains(&platform) {
+        "supported by the v0.4 npm CLI package".to_string()
+    } else {
+        "not listed in the v0.4 npm CLI package targets".to_string()
     }
-}
-
-fn manifest_targets() -> Option<Vec<String>> {
-    let value: serde_json::Value = serde_json::from_str(NPM_VENDOR_MANIFEST).ok()?;
-    Some(value.get("targets")?.as_object()?.keys().cloned().collect())
 }
 
 fn pdfium_error(message: String) -> Failure {
