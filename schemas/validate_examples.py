@@ -76,6 +76,8 @@ PAIRS = [
         ROOT / "examples" / "citation-emission" / "model-output.fabricated-quote.json",
         ROOT / "examples" / "citation-emission" / "model-output.dangling-id.json",
     ]),
+    ("ethos-evidence-handle-context.schema.json", [EXAMPLES / "evidence-handle-context.example.json"]),
+    ("ethos-llm-citation-output-v2.schema.json", [EXAMPLES / "llm-citation-output-v2.example.json"]),
     ("ethos-security-report.schema.json", [
         EXAMPLES / "security-report.example.json",
         EXAMPLES / "security-report.full.example.json",

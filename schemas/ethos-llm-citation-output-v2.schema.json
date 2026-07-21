@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:llm-citation-output:2",
+  "title": "Ethos evidence-handle model citation output",
+  "type": "object",
+  "required": ["schema_version", "answer", "claims"],
+  "additionalProperties": false,
+  "properties": { "schema_version": { "const": "2.0.0" }, "answer": { "type": "string", "pattern": "\\S" }, "claims": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "$ref": "#/$defs/claim" } } },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\S" },
+    "text": { "type": "string", "pattern": "\\S" },
+    "textual": { "type": "object", "required": ["kind", "text", "evidence_id"], "additionalProperties": false, "properties": { "kind": { "enum": ["quote", "value", "table_cell"] }, "text": { "$ref": "#/$defs/text" }, "evidence_id": { "$ref": "#/$defs/id" } } },
+    "presence": { "type": "object", "required": ["kind", "evidence_id"], "additionalProperties": false, "properties": { "kind": { "const": "presence" }, "evidence_id": { "$ref": "#/$defs/id" } } },
+    "claim": { "oneOf": [{ "$ref": "#/$defs/textual" }, { "$ref": "#/$defs/presence" }] }
+  }
+}

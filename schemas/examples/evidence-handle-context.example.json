@@ -1,0 +1,6 @@
+{
+  "artifact_type": "ethos.evidence_handle_context.v1",
+  "schema_version": "1.0.0",
+  "document_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "evidence": [{ "evidence_id": "ev_000001", "locator": { "page": "p0001" }, "display": "Example page" }]
+}

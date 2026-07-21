@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:evidence-handle-context:1",
+  "title": "Ethos evidence handle context",
+  "type": "object",
+  "required": ["artifact_type", "schema_version", "document_fingerprint", "evidence"],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_type": { "const": "ethos.evidence_handle_context.v1" },
+    "schema_version": { "const": "1.0.0" },
+    "document_fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "evidence": { "type": "array", "minItems": 1, "maxItems": 1024, "items": { "$ref": "#/$defs/evidence" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "\\S" },
+    "cell": { "type": "object", "required": ["row", "col"], "additionalProperties": false, "properties": { "row": { "type": "integer", "minimum": 0 }, "col": { "type": "integer", "minimum": 0 } } },
+    "locator": { "oneOf": [
+      { "type": "object", "required": ["page"], "additionalProperties": false, "properties": { "page": { "$ref": "#/$defs/id" } } },
+      { "type": "object", "required": ["element_id"], "additionalProperties": false, "properties": { "element_id": { "$ref": "#/$defs/id" }, "page": { "$ref": "#/$defs/id" } } },
+      { "type": "object", "required": ["span_id"], "additionalProperties": false, "properties": { "span_id": { "$ref": "#/$defs/id" }, "page": { "$ref": "#/$defs/id" } } },
+      { "type": "object", "required": ["table_id", "cell"], "additionalProperties": false, "properties": { "table_id": { "$ref": "#/$defs/id" }, "cell": { "$ref": "#/$defs/cell" }, "page": { "$ref": "#/$defs/id" } } }
+    ] },
+    "evidence": { "type": "object", "required": ["evidence_id", "locator"], "additionalProperties": false, "properties": { "evidence_id": { "$ref": "#/$defs/id" }, "locator": { "$ref": "#/$defs/locator" }, "display": { "type": "string", "minLength": 1, "maxLength": 512 }, "excerpt": { "type": "string", "minLength": 1, "maxLength": 4096 } } }
+  }
+}

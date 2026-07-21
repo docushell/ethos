@@ -28,6 +28,8 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 EMISSION_SCHEMA_VERSION = "1.0.0"
+EVIDENCE_HANDLE_CONTEXT_SCHEMA_VERSION = "1.0.0"
+EVIDENCE_HANDLE_EMISSION_SCHEMA_VERSION = "2.0.0"
 DEFAULT_MAX_CLAIMS = 256
 _SOURCE_ID_LIMIT = 256
 _CLAIM_KINDS = frozenset(("quote", "value", "presence", "table_cell"))
@@ -166,6 +168,59 @@ def hydrate_citations(
         "document_fingerprint": trusted["document_fingerprint"],
         "claims": claims,
     }
+
+
+def build_evidence_handle_context(records: Iterable[Mapping[str, Any]]) -> Dict[str, Any]:
+    """Build a trusted single-document evidence-handle context without locator inference."""
+    items = _materialize_records(records)
+    fingerprint = None
+    evidence = []
+    seen = set()
+    for index, record in enumerate(items, 1):
+        if not isinstance(record, Mapping) or set(record) - {"document_fingerprint", "evidence_id", "locator", "display", "excerpt"}:
+            raise CitationEmissionError("invalid_evidence_record", "record fields do not match context v1", record_index=index)
+        current = record.get("document_fingerprint")
+        _require_nonblank(current, "document_fingerprint", code="missing_document_fingerprint", record_index=index)
+        if _FINGERPRINT.fullmatch(current) is None:
+            raise CitationEmissionError("invalid_document_fingerprint", "expected sha256 fingerprint", record_index=index)
+        if fingerprint is None: fingerprint = current
+        elif fingerprint != current: raise CitationEmissionError("mixed_document_fingerprints", "all evidence must name one document", record_index=index)
+        evidence_id = record.get("evidence_id")
+        _require_source_id(evidence_id, "evidence_id", record_index=index)
+        if evidence_id in seen: raise CitationEmissionError("duplicate_evidence_id", "evidence_id must be unique", record_index=index)
+        seen.add(evidence_id)
+        locator = _validate_handle_locator(record.get("locator"), index)
+        item = {"evidence_id": evidence_id, "locator": locator}
+        for field, limit in (("display", 512), ("excerpt", 4096)):
+            if field in record:
+                _require_nonblank(record[field], field, code="invalid_evidence_record", record_index=index)
+                if len(record[field]) > limit: raise CitationEmissionError("invalid_evidence_record", f"{field} exceeds {limit} characters", record_index=index)
+                item[field] = record[field]
+        evidence.append(item)
+    if len(evidence) > 1024: raise CitationEmissionError("evidence_limit_exceeded", "received more than 1024 evidence entries")
+    return {"artifact_type": "ethos.evidence_handle_context.v1", "schema_version": EVIDENCE_HANDLE_CONTEXT_SCHEMA_VERSION, "document_fingerprint": fingerprint, "evidence": evidence}
+
+
+def build_evidence_citation_emission(answer: str, claims: Iterable[Mapping[str, Any]]) -> Dict[str, Any]:
+    """Build model output v2 whose handles are opaque and non-authoritative until hydration."""
+    payload = {"schema_version": EVIDENCE_HANDLE_EMISSION_SCHEMA_VERSION, "answer": answer, "claims": _copy_claims(claims)}
+    _validate_handle_emission(payload)
+    return payload
+
+
+def hydrate_evidence_citations(emission: Mapping[str, Any], context: Mapping[str, Any]) -> Dict[str, Any]:
+    """Resolve every model handle solely through a validated trusted context."""
+    _validate_handle_emission(emission)
+    validated = _validate_handle_context(context)
+    claims = []
+    for index, claim in enumerate(emission["claims"], 1):
+        locator = validated.get(claim["evidence_id"])
+        if locator is None:
+            raise CitationEmissionError("out_of_vocabulary", "evidence_id was not shown", claim_index=index)
+        item = {"kind": claim["kind"], "citation": dict(locator)}
+        if "text" in claim: item["text"] = claim["text"]
+        claims.append(item)
+    return {"document_fingerprint": context["document_fingerprint"], "claims": claims}
 
 
 def emit_langchain_citations(
@@ -478,6 +533,51 @@ def _validate_context(context: Mapping[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _validate_handle_locator(locator: Any, index: int) -> Dict[str, Any]:
+    if not isinstance(locator, Mapping): raise CitationEmissionError("invalid_locator", "locator must be a mapping", record_index=index)
+    allowed = {"page", "element_id", "span_id", "table_id", "cell"}
+    if set(locator) - allowed: raise CitationEmissionError("invalid_locator", "locator contains forbidden fields", record_index=index)
+    primary = sum(field in locator for field in ("page", "element_id", "span_id", "table_id"))
+    if primary != 1: raise CitationEmissionError("invalid_locator", "locator must contain exactly one primary anchor", record_index=index)
+    if "table_id" in locator:
+        cell = locator.get("cell")
+        if not isinstance(cell, Mapping) or set(cell) != {"row", "col"}: raise CitationEmissionError("invalid_locator", "table locator requires cell", record_index=index)
+        for axis in ("row", "col"):
+            if isinstance(cell[axis], bool) or not isinstance(cell[axis], int) or cell[axis] < 0: raise CitationEmissionError("invalid_locator", f"cell.{axis} must be non-negative", record_index=index)
+    elif "cell" in locator: raise CitationEmissionError("invalid_locator", "cell requires table_id", record_index=index)
+    for field in ("page", "element_id", "span_id", "table_id"):
+        if field in locator: _require_source_id(locator[field], field, record_index=index)
+    result = dict(locator)
+    if isinstance(result.get("cell"), Mapping): result["cell"] = dict(result["cell"])
+    return result
+
+
+def _validate_handle_context(context: Mapping[str, Any]) -> Dict[str, Dict[str, Any]]:
+    if not isinstance(context, Mapping) or set(context) != {"artifact_type", "schema_version", "document_fingerprint", "evidence"}:
+        raise CitationEmissionError("invalid_evidence_context", "context fields do not match v1")
+    if context["artifact_type"] != "ethos.evidence_handle_context.v1" or context["schema_version"] != EVIDENCE_HANDLE_CONTEXT_SCHEMA_VERSION:
+        raise CitationEmissionError("unsupported_schema_version", "expected evidence context 1.0.0")
+    rebuilt = build_evidence_handle_context([{**entry, "document_fingerprint": context["document_fingerprint"]} for entry in context["evidence"]])
+    return {entry["evidence_id"]: entry["locator"] for entry in rebuilt["evidence"]}
+
+
+def _validate_handle_emission(emission: Mapping[str, Any]) -> None:
+    if not isinstance(emission, Mapping) or set(emission) != {"schema_version", "answer", "claims"} or emission["schema_version"] != EVIDENCE_HANDLE_EMISSION_SCHEMA_VERSION:
+        raise CitationEmissionError("unsupported_schema_version", "expected evidence citation output 2.0.0")
+    _require_nonblank(emission["answer"], "answer", code="invalid_emission")
+    claims = emission["claims"]
+    if not isinstance(claims, list) or not 1 <= len(claims) <= DEFAULT_MAX_CLAIMS: raise CitationEmissionError("invalid_claims", "claims must contain 1 to 256 entries")
+    for index, claim in enumerate(claims, 1):
+        if not isinstance(claim, Mapping) or set(claim) - {"kind", "text", "evidence_id"} or not {"kind", "evidence_id"} <= set(claim):
+            raise CitationEmissionError("invalid_claim", "claim fields do not match v2", claim_index=index)
+        if claim.get("kind") not in _CLAIM_KINDS: raise CitationEmissionError("invalid_claim", "unsupported kind", claim_index=index)
+        _require_source_id(claim.get("evidence_id"), "evidence_id", claim_index=index)
+        if claim["kind"] == "presence":
+            if "text" in claim: raise CitationEmissionError("invalid_claim", "presence must not contain text", claim_index=index)
+        elif "text" not in claim: raise CitationEmissionError("invalid_claim", "text is required", claim_index=index)
+        else: _require_nonblank(claim["text"], "text", claim_index=index)
+
+
 def _require_shown(value: str, vocabulary: frozenset, field: str, claim_index: int) -> None:
     if value not in vocabulary:
         raise CitationEmissionError(
@@ -528,10 +628,13 @@ def _require_source_id(
 __all__ = [
     "CitationEmissionError",
     "build_citation_emission",
+    "build_evidence_handle_context",
+    "build_evidence_citation_emission",
     "build_langchain_context",
     "build_llamaindex_context",
     "citation_json_bytes",
     "emit_langchain_citations",
     "emit_llamaindex_citations",
     "hydrate_citations",
+    "hydrate_evidence_citations",
 ]

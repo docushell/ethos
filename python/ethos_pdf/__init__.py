@@ -39,12 +39,15 @@ from ._cli import (
 from .emit import (
     CitationEmissionError,
     build_citation_emission,
+    build_evidence_citation_emission,
+    build_evidence_handle_context,
     build_langchain_context,
     build_llamaindex_context,
     citation_json_bytes,
     emit_langchain_citations,
     emit_llamaindex_citations,
     hydrate_citations,
+    hydrate_evidence_citations,
 )
 
 __version__ = "0.4.0"
@@ -64,6 +67,8 @@ __all__ = [
     "anchor",
     "app_answer_release_decision",
     "build_citation_emission",
+    "build_evidence_citation_emission",
+    "build_evidence_handle_context",
     "build_langchain_context",
     "build_llamaindex_context",
     "citation_json_bytes",
@@ -71,6 +76,7 @@ __all__ = [
     "emit_langchain_citations",
     "emit_llamaindex_citations",
     "hydrate_citations",
+    "hydrate_evidence_citations",
     "parse_pdf_json",
     "parse_pdf_markdown",
     "parse_pdf_text",

@@ -1,0 +1,5 @@
+{
+  "schema_version": "2.0.0",
+  "answer": "The evidence is present.",
+  "claims": [{ "kind": "presence", "evidence_id": "ev_000001" }]
+}
