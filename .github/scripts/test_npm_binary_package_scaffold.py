@@ -43,15 +43,15 @@ VENDOR_MANIFEST = PACKAGE_DIR / "vendor" / "manifest.json"
 SUPPORTED_TARGETS = {
     "darwin:arm64": {
         "binary": "ethos-darwin-arm64",
-        "binary_sha256": "777e1fb243425a46b83b63ed92fbf7cb810f59cfedd81cfe671cf791410c20dc",
+        "binary_sha256": "ac1ca14b5b9fe53abc6b58afd24d26d0d4d6b737566aa7b47f8f910ce858dcfd",
         "release_asset": "ethos-macos-arm64.tar.gz",
-        "release_asset_sha256": "efb163f140bf4afffd1caeb396f79e42f484591c3e90a86810ca6c0f0c209c96",
+        "release_asset_sha256": "f3393ea5c3be7b9f5e0ab4b0393bc103be908385ff5db9cd312911f7d5dcbe31",
     },
     "linux:x64": {
         "binary": "ethos-linux-x64",
-        "binary_sha256": "b416993fc38e6f794611b8b71789ed85af18eb6aa63fef380d9ae7738661f154",
+        "binary_sha256": "22367ad9efc2f4d51767afc147d4a15ecff2a6ce5f3c92998577c741b8e53915",
         "release_asset": "ethos-linux-x64.tar.gz",
-        "release_asset_sha256": "b549ba5968e04b7679a8d3e879cd45d27f3e9a6fd226eee5c270a4e4f5c01405",
+        "release_asset_sha256": "b3ba45fe21905e902c47e246d5a8f458e33c56b7db27a04fbbac9a70f861157d",
     },
 }
 EXPECTED_PACKAGE_FILES = {
@@ -114,7 +114,7 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
 
         self.assertEqual(1, manifest["version"])
         self.assertEqual("@docushell/ethos-pdf", manifest["package"])
-        self.assertEqual("0.3.0", manifest["cli_version"])
+        self.assertEqual("0.4.0", manifest["cli_version"])
         self.assertEqual(SUPPORTED_TARGETS, manifest["targets"])
         for target in manifest["targets"].values():
             self.assertRegex(target["release_asset_sha256"], r"^[a-f0-9]{64}$")

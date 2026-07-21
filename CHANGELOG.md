@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- ci: keep the verification Action checksum-pinned to the published v0.3.0 CLI while npm
+  candidate vendor metadata advances to v0.4.0.
+- boundary-exception: refresh the v0.4.0 npm vendor manifest and macOS arm64/Linux x64 binaries
+  from the byte-identical caller-provided-PDFium CLI candidates; keep public installation wording
+  on the actually published 0.3.0 package until publication closeout.
 - boundary-exception: normalize CLI release archive metadata and gzip headers so repeated macOS arm64 and Linux
   x64 candidate builds are byte-identical before npm vendoring or publication.
 - build: remove unused Cargo Deny license allowances and document the unavoidable transitive

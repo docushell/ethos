@@ -130,7 +130,7 @@ def validate_registry_surfaces(root: Path) -> list[str]:
     expected_publication = (
         f"The current published npm package is `{published_npm_name}@{published_npm_version}`."
     )
-    expected_binary_version = f"Its vendored CLI binaries report `ethos {cli_version}`."
+    expected_binary_version = f"Its vendored CLI binaries report `ethos {published_npm_version}`."
     expected_npm_install = f"npm install -g {published_npm_name}@{published_npm_version}"
     forbidden_postures = (
         re.compile(r"source package candidate", re.IGNORECASE),
@@ -154,9 +154,9 @@ def validate_registry_surfaces(root: Path) -> list[str]:
                 f"{path.relative_to(root)} is missing CLI version wording: {expected_binary_version}"
             )
         reported_versions = re.findall(rf"`ethos ({SEMVER})`", text)
-        if reported_versions != [cli_version]:
+        if reported_versions != [published_npm_version]:
             failures.append(
-                f"{path.relative_to(root)} must report only CLI version {cli_version}; "
+                f"{path.relative_to(root)} must report only CLI version {published_npm_version}; "
                 f"found {reported_versions}"
             )
         for pattern in forbidden_postures:
@@ -226,7 +226,7 @@ def write_fixture(
     )
     npm_text = (
         f"The current published npm package is `@docushell/ethos-pdf@{published_npm_version}`. "
-        f"Its vendored CLI binaries report `ethos {cli_version}`.\n"
+        f"Its vendored CLI binaries report `ethos {published_npm_version}`.\n"
     )
     (root / "python/README.md").write_text(python_text, encoding="utf-8")
     (root / "python/QUICKSTART.md").write_text(python_text, encoding="utf-8")
@@ -277,14 +277,13 @@ class PackageRegistrySourceConsistencyTests(unittest.TestCase):
             failures = validate_registry_surfaces(root)
         self.assertTrue(any("missing current-publication wording" in failure for failure in failures))
 
-    def test_rejects_cli_wording_stale_against_vendor_manifest(self) -> None:
+    def test_rejects_cli_wording_stale_against_published_npm_version(self) -> None:
         with tempfile.TemporaryDirectory(prefix="ethos-registry-consistency-") as temp:
             root = Path(temp)
             write_fixture(root)
-            manifest = root / "packages/npm/ethos-pdf/vendor/manifest.json"
-            manifest.write_text(
-                json.dumps({"version": 1, "cli_version": "0.3.2", "targets": {}}),
-                encoding="utf-8",
+            readme = root / "packages/npm/ethos-pdf/README.md"
+            readme.write_text(
+                read(readme).replace("`ethos 0.3.1`", "`ethos 0.3.2`"), encoding="utf-8"
             )
             failures = validate_registry_surfaces(root)
         self.assertTrue(any("missing CLI version wording" in failure for failure in failures))
