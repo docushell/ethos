@@ -1,10 +1,20 @@
 # Ethos v0.6.0 Release Preparation
 
-Status: **draft decider request; planning only.** This document does not authorize production
-code, publication, a new public claim, or production positioning. Implementation may start only
-after the gates in section 3 are accepted.
+Status: **accepted as the scoped v0.6.0 decider request** (2026-07-30), satisfying precondition
+§3.1. Implementation is authorized through WP-3 and has landed.
 
-Date prepared: 2026-07-29.
+This acceptance does **not** authorize publication, production positioning, or any new public
+claim. Those remain gated on the release gates in §12 and the claims approval lane.
+
+Decider rulings recorded since acceptance:
+
+- Fingerprint identity is `representation_sha256` (§6.4, §8.1, ADR-0016).
+- Public install wording advances to the published `0.5.0` baseline, verified against crates.io,
+  PyPI, npm, and the GitHub Release.
+- `--source-artifact` on `verify` and `verify-batch` is cut; source binding stays on
+  `grounding check`. Two additions are kept and recorded in ADR-0016.
+
+Date prepared: 2026-07-29. Accepted: 2026-07-30.
 
 > Implementation record: [`v0-6-0-release.md`](v0-6-0-release.md) records what was actually built
 > and verified against this plan, including the points where the implementation and this document

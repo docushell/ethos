@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- `ethos-core`: cover Unicode scalar offset vectors for emoji and combining marks, closing the
+  last §11.2 conformance gap. UTF-16 code-unit offsets and grapheme-cluster counts are both
+  rejected, and an out-of-range end fails instead of panicking on the slice.
+
+- docs: accept `docs/v0-6-0-release-prep.md` as the scoped decider request, satisfying precondition
+  §3.1, and widen the ADR-0016 governs clause to the WP-2 and WP-3 surfaces it already decides.
+  Adds `docs/validation/v0-6-0-double-run-determinism.md` evidencing three of the four §11.4 rows.
+
 - build: make gate rot structurally impossible. `test_gate_reachability.py` fails if any gate
   script under `.github/scripts` is unreachable from CI, if a `make` target invokes a script that
   does not exist, or if a workflow does. Wires the 12 previously unreachable contract and boundary

@@ -1,6 +1,8 @@
 # ADR-0016: Grounding JSON v1 and OpenDataLoader mapping boundary
 
-Status / Date / Governs: Accepted / 2026-07-30 / WP-1 strict Grounding JSON loading and validation.
+Status / Date / Governs: Accepted / 2026-07-30 / Grounding JSON v1 across WP-1 validation, WP-2
+CLI dispatch and source binding, and the WP-3 npm surface. Includes the frozen error vocabulary,
+representation-versus-source hash identity, and the accepted and rejected surface additions below.
 
 ## Context
 

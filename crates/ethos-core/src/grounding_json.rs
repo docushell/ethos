@@ -1072,6 +1072,55 @@ mod tests {
             GroundingJsonErrorCode::InvalidTable
         );
     }
+    /// Build a spans+offsets artifact over `text`, with `span` selected by `[start, end)`.
+    fn offsets_fixture(text: &str, span: &str, start: usize, end: usize) -> String {
+        include_str!("../../../schemas/examples/grounding-source-full.example.json")
+            .replace("\"text\": \"héllo\", \"element\"", &format!("\"text\": \"{span}\", \"element\""))
+            .replace("\"text\": \"héllo\"", &format!("\"text\": \"{text}\""))
+            .replace("\"char_start\": 0", &format!("\"char_start\": {start}"))
+            .replace("\"char_end\": 5", &format!("\"char_end\": {end}"))
+    }
+
+    /// Offsets are Unicode scalar indexes, not UTF-16 code units and not grapheme clusters.
+    ///
+    /// Both vectors are where a JavaScript or Python mapper silently produces wrong offsets that
+    /// still satisfy every structural rule: `"😀".length` is 2 in JavaScript but one scalar, and a
+    /// combining mark renders as one character while occupying two scalars.
+    #[test]
+    fn offsets_are_unicode_scalar_indexes_for_emoji_and_combining_marks() {
+        // "a😀b" is 3 scalars. Selecting the emoji alone is [1, 2).
+        let astral = offsets_fixture("a😀b", "😀", 1, 2);
+        assert_eq!(parse_grounding_json(astral.as_bytes()).unwrap().spans().len(), 1);
+
+        // UTF-16 code units would make the emoji [1, 3) and "b" [3, 4). Both must fail.
+        for (start, end) in [(1, 3), (3, 4)] {
+            let utf16 = offsets_fixture("a😀b", "😀", start, end);
+            assert_eq!(
+                parse_grounding_json(utf16.as_bytes()).unwrap_err().code,
+                GroundingJsonErrorCode::InvalidOffsets,
+                "UTF-16 offsets [{start}, {end}) must not validate"
+            );
+        }
+
+        // "e" + U+0301 renders as one grapheme but is 2 scalars; selecting it is [0, 2).
+        let combining = offsets_fixture("e\u{301}x", "e\u{301}", 0, 2);
+        assert_eq!(parse_grounding_json(combining.as_bytes()).unwrap().spans().len(), 1);
+
+        // Counting the grapheme as one scalar selects only the base letter.
+        let grapheme = offsets_fixture("e\u{301}x", "e\u{301}", 0, 1);
+        assert_eq!(
+            parse_grounding_json(grapheme.as_bytes()).unwrap_err().code,
+            GroundingJsonErrorCode::InvalidOffsets
+        );
+
+        // An end past the final scalar fails rather than panicking on the slice.
+        let past_end = offsets_fixture("a😀b", "b", 2, 9);
+        assert_eq!(
+            parse_grounding_json(past_end.as_bytes()).unwrap_err().code,
+            GroundingJsonErrorCode::InvalidOffsets
+        );
+    }
+
     #[test]
     fn rejects_oversized_strings_before_typed_validation() {
         let oversized = valid().replace("héllo", &"x".repeat(MAX_STRING_BYTES + 1));
