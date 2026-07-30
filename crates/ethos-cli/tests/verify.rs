@@ -3372,3 +3372,81 @@ fn grounding_json_auto_dispatch_reaches_verifier_without_pdfium() {
         "ethos-grounding-json"
     );
 }
+
+#[test]
+fn grounding_json_batch_dispatch_and_source_mismatch_are_atomic() {
+    let root = repo_root();
+    let grounding = root.join("schemas/examples/grounding-source.example.json");
+    let citation = root.join("examples/verify/grounding_json_citations.json");
+    let citation_line = serde_json::to_string(&json_file(&citation)).unwrap() + "\n";
+    let requests = temp_json("grounding-batch-citations", &citation_line);
+    let valid_output = temp_output("grounding-batch-valid");
+    let result = run_ethos(&[
+        "verify-batch",
+        grounding.to_str().unwrap(),
+        "--citations-ndjson",
+        requests.to_str().unwrap(),
+        "--out",
+        valid_output.to_str().unwrap(),
+    ]);
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    let lines = std::fs::read_to_string(&valid_output).unwrap();
+    assert_eq!(lines.lines().count(), 1);
+    assert!(lines.contains("ethos-grounding-json"));
+
+    let mismatch_output = temp_output("grounding-batch-mismatch");
+    let result = run_ethos(&[
+        "verify-batch",
+        grounding.to_str().unwrap(),
+        "--citations-ndjson",
+        requests.to_str().unwrap(),
+        "--source-artifact",
+        root.join("fixtures/foreign/opendataloader/real/source.pdf")
+            .to_str()
+            .unwrap(),
+        "--out",
+        mismatch_output.to_str().unwrap(),
+    ]);
+    assert_eq!(result.status.code(), Some(2));
+    assert!(!mismatch_output.exists());
+}
+
+#[test]
+fn grounding_json_source_hash_match_is_reported_and_verifiable() {
+    let root = repo_root();
+    let grounding = root.join("schemas/examples/grounding-source-bound.example.json");
+    let source_pdf = root.join("fixtures/foreign/opendataloader/real/source.pdf");
+    let validation = run_ethos(&[
+        "grounding",
+        "check",
+        grounding.to_str().unwrap(),
+        "--source-artifact",
+        source_pdf.to_str().unwrap(),
+    ]);
+    assert!(validation.status.success());
+    let validation_report: Value = serde_json::from_slice(&validation.stdout).unwrap();
+    assert_eq!(validation_report["structure"], "valid");
+    assert_eq!(validation_report["source_binding"], "matched");
+
+    let verified = run_ethos(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--citations",
+        root.join("examples/verify/grounding_json_bound_citations.json")
+            .to_str()
+            .unwrap(),
+        "--source-artifact",
+        source_pdf.to_str().unwrap(),
+    ]);
+    assert!(
+        verified.status.success(),
+        "{}",
+        String::from_utf8_lossy(&verified.stderr)
+    );
+    let report: Value = serde_json::from_slice(&verified.stdout).unwrap();
+    assert_eq!(report["all_evidence_grounded"], true);
+}

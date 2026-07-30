@@ -141,6 +141,7 @@ PAIRS = [
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
     ("ethos-grounding-source.schema.json", [EXAMPLES / "grounding-source.example.json"]),
     ("ethos-grounding-source.schema.json", [EXAMPLES / "grounding-source-full.example.json"]),
+    ("ethos-grounding-source.schema.json", [EXAMPLES / "grounding-source-bound.example.json"]),
     ("ethos-grounding-validation-report.schema.json", [EXAMPLES / "grounding-validation-report.example.json"]),
 ]
 
