@@ -47,6 +47,10 @@ async function main() {
     () => verifyClaims({ inputPath, citations: {}, citationsPath: inputPath }),
     (error) => error instanceof EthosSdkError && error.code === "invalid_options",
   );
+  await assert.rejects(
+    () => verifyClaims({ inputPath, citationsPath: inputPath, grounding: "opendataloader-json", sourceArtifactPath: inputPath }),
+    (error) => error instanceof EthosSdkError && error.code === "invalid_options",
+  );
 }
 
 main()

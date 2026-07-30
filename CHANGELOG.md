@@ -18,6 +18,11 @@
 - `@docushell/ethos-pdf`: add the pinned OpenDataLoader mapper examples, byte-identical
   JavaScript/Python output test, and npm-first Grounding JSON quickstart bundle.
 
+- `@docushell/ethos-pdf`: fail closed on foreign-adapter source binding and oversized in-memory
+  citation objects.
+
+- `@docushell/ethos-pdf`: add a temporary-project package-install test using an isolated npm cache.
+
 - docs: complete the WP-0 OpenDataLoader 2.5.0 feasibility proof against the DocuShell-vendored
   JAR, with source-bound page geometry, bottom-left to top-left conversion, explicit capability
   gaps, and byte-identical mapped output; leave ADR and public-posture acceptance gated.

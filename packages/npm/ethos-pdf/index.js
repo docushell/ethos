@@ -8,6 +8,7 @@ const { spawn } = require("node:child_process");
 const { resolveBinary, validateVendorManifest, VENDOR_DIR } = require("./bin/ethos-pdf");
 
 const MAX_OUTPUT_BYTES = 8 * 1024 * 1024;
+const MAX_CITATIONS_BYTES = 8 * 1024 * 1024;
 const DEFAULT_TIMEOUT_MS = 120000;
 
 class EthosSdkError extends Error {
@@ -42,6 +43,12 @@ function verifyClaims(options) {
     if (value.grounding !== undefined && value.grounding !== "opendataloader-json") {
       throw new EthosSdkError("invalid_options", "grounding must be opendataloader-json");
     }
+    if (value.sourceArtifactPath !== undefined && value.grounding === "opendataloader-json") {
+      throw new EthosSdkError(
+        "invalid_options",
+        "sourceArtifactPath is unsupported with the explicit opendataloader-json adapter",
+      );
+    }
 
     let temporaryRoot = null;
     let citationsPath = value.citationsPath;
@@ -49,9 +56,13 @@ function verifyClaims(options) {
       if (!value.citations || typeof value.citations !== "object" || Array.isArray(value.citations)) {
         throw new EthosSdkError("invalid_options", "citations must be a bounded object");
       }
+      const citationsBytes = Buffer.from(JSON.stringify(value.citations), "utf8");
+      if (citationsBytes.length > MAX_CITATIONS_BYTES) {
+        throw new EthosSdkError("invalid_options", "citations exceed the SDK size limit");
+      }
       temporaryRoot = await fs.mkdtemp(path.join(os.tmpdir(), "ethos-citations-"));
       citationsPath = path.join(temporaryRoot, "citations.json");
-      await fs.writeFile(citationsPath, JSON.stringify(value.citations), "utf8");
+      await fs.writeFile(citationsPath, citationsBytes);
     }
 
     const args = ["verify", inputPath, "--citations", requiredPath(citationsPath, "citationsPath")];
