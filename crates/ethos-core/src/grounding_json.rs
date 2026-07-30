@@ -62,6 +62,23 @@ pub enum GroundingJsonErrorCode {
     LimitExceeded,
 }
 
+impl GroundingJsonErrorCode {
+    /// Stable wire spelling used by validation reports.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::InvalidJson => "invalid_json",
+            Self::BomNotAllowed => "bom_not_allowed",
+            Self::DuplicateKey => "duplicate_key",
+            Self::UnknownField => "unknown_field",
+            Self::InvalidField => "invalid_field",
+            Self::UnsupportedVersion => "unsupported_version",
+            Self::InvalidCapabilities => "invalid_capabilities",
+            Self::InvalidInvariant => "invalid_invariant",
+            Self::LimitExceeded => "limit_exceeded",
+        }
+    }
+}
+
 /// One deterministic validation failure.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct GroundingJsonError {
@@ -69,6 +86,31 @@ pub struct GroundingJsonError {
     pub code: GroundingJsonErrorCode,
     /// Bounded JSON path.
     pub path: String,
+}
+
+impl GroundingJsonError {
+    /// Return a bounded correction-oriented message.
+    pub fn message(&self) -> &'static str {
+        match self.code {
+            GroundingJsonErrorCode::InvalidJson => {
+                "submit valid UTF-8 JSON without unsupported numeric forms"
+            }
+            GroundingJsonErrorCode::BomNotAllowed => "remove the UTF-8 BOM",
+            GroundingJsonErrorCode::DuplicateKey => "remove the duplicate object key",
+            GroundingJsonErrorCode::UnknownField => "remove the unknown field",
+            GroundingJsonErrorCode::InvalidField => "correct the field type or required fields",
+            GroundingJsonErrorCode::UnsupportedVersion => {
+                "use ethos.grounding.v1 with schema_version 1.0.0"
+            }
+            GroundingJsonErrorCode::InvalidCapabilities => {
+                "make capabilities agree with supplied arrays and offsets"
+            }
+            GroundingJsonErrorCode::InvalidInvariant => "correct the referenced value or invariant",
+            GroundingJsonErrorCode::LimitExceeded => {
+                "reduce the submitted artifact within the measured limits"
+            }
+        }
+    }
 }
 
 impl fmt::Display for GroundingJsonError {
@@ -90,6 +132,21 @@ impl GroundingJsonSource {
     /// Return the exact accepted representation fingerprint.
     pub fn representation_sha256(&self) -> &str {
         &self.representation_sha256
+    }
+
+    /// Return the producer-declared original PDF hash.
+    pub fn source_sha256(&self) -> &str {
+        &self.artifact.source.sha256
+    }
+
+    /// Return page, element, span, and table counts for validation reports.
+    pub fn counts(&self) -> (usize, usize, usize, usize) {
+        (
+            self.artifact.pages.len(),
+            self.artifact.elements.len(),
+            self.artifact.spans.as_ref().map_or(0, Vec::len),
+            self.artifact.tables.as_ref().map_or(0, Vec::len),
+        )
     }
 }
 

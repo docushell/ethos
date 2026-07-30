@@ -26,6 +26,7 @@
 
 mod assembly;
 mod cmd;
+mod grounding;
 mod worker;
 
 use std::fs;
@@ -81,6 +82,11 @@ enum Command {
     },
     /// Citation evidence verification (ethos-verify)
     Verify(VerifyArgs),
+    /// Validate and inspect parser-neutral Grounding JSON
+    Grounding {
+        #[command(subcommand)]
+        command: GroundingCommand,
+    },
     /// Verify many citation requests against one loaded grounding source
     VerifyBatch(VerifyBatchArgs),
     /// Render a deterministic human-readable proof report
@@ -113,6 +119,24 @@ enum Command {
 enum DocCommand {
     /// Parse a PDF into the canonical document graph
     Parse(DocParseArgs),
+}
+
+#[derive(Subcommand)]
+enum GroundingCommand {
+    /// Validate Grounding JSON and optionally bind it to original PDF bytes
+    Check(GroundingCheckArgs),
+}
+
+#[derive(Args)]
+pub(crate) struct GroundingCheckArgs {
+    /// Grounding JSON input.
+    pub(crate) input: PathBuf,
+    /// Optional original PDF whose bytes must match source.sha256.
+    #[arg(long)]
+    pub(crate) source_artifact: Option<PathBuf>,
+    /// Output path for grounding-validation.json (default: stdout).
+    #[arg(long)]
+    pub(crate) out: Option<PathBuf>,
 }
 
 #[derive(Args)]
@@ -294,6 +318,9 @@ pub(crate) struct VerifyArgs {
     /// Foreign grounding adapter id (e.g. `opendataloader-json`)
     #[arg(long)]
     pub(crate) grounding: Option<String>,
+    /// Optional original PDF bytes to bind when the input is Grounding JSON.
+    #[arg(long)]
+    pub(crate) source_artifact: Option<PathBuf>,
     /// Verification config (JSON); defaults to the pinned `default-v1`
     #[arg(long)]
     pub(crate) config: Option<PathBuf>,
@@ -326,6 +353,9 @@ pub(crate) struct VerifyBatchArgs {
     /// Foreign grounding adapter id (e.g. `opendataloader-json`).
     #[arg(long)]
     pub(crate) grounding: Option<String>,
+    /// Optional original PDF bytes to bind when the input is Grounding JSON.
+    #[arg(long)]
+    pub(crate) source_artifact: Option<PathBuf>,
     /// Verification config (JSON); defaults to the pinned `default-v1`.
     #[arg(long)]
     pub(crate) config: Option<PathBuf>,
@@ -439,6 +469,9 @@ fn run(cli: Cli) -> Result<(), Failure> {
             command: EvidenceCommand::Anchor(args),
         } => cmd::evidence::evidence_anchor(args),
         Command::Verify(args) => cmd::verify::verify(args),
+        Command::Grounding {
+            command: GroundingCommand::Check(args),
+        } => cmd::grounding::check(args),
         Command::VerifyBatch(args) => cmd::verify::verify_batch(args),
         Command::Report {
             command: ReportCommand::Html(args),

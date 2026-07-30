@@ -1,0 +1,10 @@
+{
+  "document_fingerprint": "sha256:f0f15bc8b4741f6970e1c9ccbfefa179347f5e106fec7945b11f2f651baeeb02",
+  "claims": [
+    {
+      "kind": "quote",
+      "text": "héllo",
+      "citation": { "element_id": "block-1" }
+    }
+  ]
+}

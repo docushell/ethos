@@ -3321,3 +3321,54 @@ fn report_html_renders_hardened_and_non_grounded_diagnostics() {
         }
     }
 }
+
+#[test]
+fn grounding_json_check_is_deterministic_and_fail_closed() {
+    let root = repo_root();
+    let grounding = root.join("schemas/examples/grounding-source.example.json");
+    let first = run_ethos(&["grounding", "check", grounding.to_str().unwrap()]);
+    let second = run_ethos(&["grounding", "check", grounding.to_str().unwrap()]);
+    assert!(first.status.success());
+    assert_eq!(first.stderr, b"");
+    assert_eq!(first.stdout, second.stdout);
+    let report: Value = serde_json::from_slice(&first.stdout).unwrap();
+    assert_eq!(report["structure"], "valid");
+    assert_eq!(report["source_binding"], "not_checked");
+    assert!(report["representation_sha256"]
+        .as_str()
+        .unwrap()
+        .starts_with("sha256:"));
+
+    let invalid = root.join("schemas/examples/grounding-source-negative-unknown-field.json");
+    let output = run_ethos(&["grounding", "check", invalid.to_str().unwrap()]);
+    assert_eq!(output.status.code(), Some(2));
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["structure"], "invalid");
+    assert_eq!(report["error"]["code"], "unknown_field");
+}
+
+#[test]
+fn grounding_json_auto_dispatch_reaches_verifier_without_pdfium() {
+    let root = repo_root();
+    let output = run_ethos(&[
+        "verify",
+        root.join("schemas/examples/grounding-source.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/grounding_json_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["all_evidence_grounded"], true);
+    assert_eq!(
+        report["grounding"]["parser"]["adapter"],
+        "ethos-grounding-json"
+    );
+}
