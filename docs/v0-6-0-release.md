@@ -500,23 +500,56 @@ Worth preserving deliberately:
 
 ### Open — work
 
-5. **Public version drift.** `docs/public-boundary-claims.json` and five docs still pin **0.4.0**
-   install strings while the ledger says **0.5.0** is published, so users following the README
-   install a version behind. Two gates are red on exactly this
-   (`test_npm_binary_package_scaffold`, `test_package_registry_source_consistency`). Flagged in
-   prep §4; WP-0 fixed only `execution-status.md`. This is a coordinated public-wording change
-   across the claims registry and belongs in its own reviewed change, not folded into a feature
-   branch. It is independent of Grounding JSON and should not wait for it.
-6. **`npm test` end-to-end, the clean-room Node project, and the clean Python environment** have
-   never completed on any host in this verification — `types.test.js` and `tsc` need a networked
-   `npm install`. They must pass on macOS arm64 or Linux x64 before release.
-7. **The clean-room quickstart must be walked by a developer who did not build this**, with no
-   assistance. Prep §5.1 makes undocumented steps a release blocker. This is the only gate that
-   tests the adoption thesis rather than the implementation. Sections 7.3 and 7.4 were already
-   failures of it, found by walking the path rather than reading it; both are fixed, but the gate
-   has not been run by an actual outsider.
+5. **The public-version deadlock. This needs a decider ruling, not an edit.**
+
+   An attempt to advance the public install wording from `0.4.0` to `0.5.0` was made and
+   **reverted**, because three repository gates assert mutually unsatisfiable things:
+
+   | Gate | Requires |
+   | --- | --- |
+   | `test_package_registry_source_consistency` | `python/README.md`, `python/QUICKSTART.md`, and both npm docs say **0.5.0**, derived from `docs/release-state.json` |
+   | `test_v0_5_0_version_activation` | `README.md` and `docs/public-boundary-claims.json` contain **no** `0.5.0`; its docstring reads *"Guard v0.5.0 core activation while v0.4.0 remains publicly published"* |
+   | `public_boundary_claims_gate` | the package docs contain the claims-registry strings verbatim — and the registry is pinned to 0.4.0 by the gate above |
+
+   Advancing the package docs alone satisfies the first two gates and breaks the third, because
+   the registry still pins `ethos 0.4.0`. Advancing the registry too breaks the activation guard.
+   There is no edit that turns all three green.
+
+   Underneath the gate conflict is a factual one this repository cannot settle on its own:
+   `docs/release-state.json` and `docs/execution-status.md` say v0.5.0 is live on crates.io, PyPI,
+   npm, and GitHub Releases, while the activation guard exists specifically to hold public wording
+   at 0.4.0. This is prep §14's *"the v0.5.0 release ledger and approved public baseline are
+   inconsistent"*, and it is a real one, not documentation staleness.
+
+   The decider must choose: either advance the public install wording to 0.5.0 through the claims
+   approval lane, retiring the activation guard in the same change; or confirm 0.4.0 is the
+   published baseline and correct `docs/release-state.json` plus the registry-consistency gate.
+   Until then `test_package_registry_source_consistency` stays red, and the npm scaffold gate
+   deliberately keeps its 0.4.0 wording assertions.
+
+   Note the npm *payload* is legitimately at 0.5.0 — its refresh carries a recorded boundary
+   exception in `CHANGELOG.md` — which is why the scaffold gate's version and hash expectations
+   were stale and have been corrected.
+
+6. **`npm test` end-to-end.** Seven of eight suites pass. `types.test.js` and `tsc` need a
+   networked `npm install`, which fails here with `ENOTFOUND` on the configured proxy. Must be run
+   on a networked macOS arm64 or Linux x64 host before release.
+
+7. **The independent-developer clean-room gate.** A full walkthrough is recorded in
+   [`validation/v0-6-0-clean-room-walkthrough.md`](validation/v0-6-0-clean-room-walkthrough.md): a
+   new mapper for a synthetic parser sharing no shape with any shipped fixture, written from
+   `writing-a-mapper.md` alone, passed all four self-check steps with no undocumented step. That
+   establishes the procedure is complete and executable — but **not** that it is discoverable,
+   because the walkthrough author also wrote the guide. Prep §5.1 requires a developer who did not
+   build the feature. Still outstanding.
+
 8. Two pre-existing unrelated gate failures (`test_app_answer_release_release_prep`,
    `test_rag_framework_examples`) are still red.
+
+9. **DCO.** All 21 branch commits now carry `Signed-off-by` and `check_dco.py` passes. The history
+   was rewritten to add trailers only — `git diff` against the pre-rewrite state is empty and all
+   21 subjects are unchanged. **This branch now requires a force-push**, and the pre-rewrite state
+   is recoverable from the local tag `pre-dco-backup-v0_6_0Release`.
 
 Explicitly **not** blockers: Windows artifacts, receipts/proofs/replay, DocuShell commercial
 outcomes, and a `darwin:x64` release target.

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- docs: record the clean-room mapper walkthrough and the public-version gate deadlock. A new
+  mapper for a synthetic parser sharing no shape with any shipped fixture, written from
+  `docs/writing-a-mapper.md` alone, passed all four self-check steps; the independent-developer
+  gate remains outstanding. Separately, advancing public install wording from 0.4.0 to 0.5.0 was
+  attempted and reverted: three gates assert mutually unsatisfiable requirements, which needs a
+  decider ruling rather than an edit.
+
 - `ethos-cli`, `ethos-pdf`: PDFium-backed tests now skip instead of failing when Ethos does not
   accept the configured library. The CLI suites ask `ethos doctor --require-pdfium`; the in-crate
   test consults `current_platform_key()`. Previously, correctly following `scripts/fetch-pdfium.sh`
