@@ -2,6 +2,51 @@
 
 ## Unreleased
 
+- `ethos-cli`, `ethos-pdf`: PDFium-backed tests now skip instead of failing when Ethos does not
+  accept the configured library. The CLI suites ask `ethos doctor --require-pdfium`; the in-crate
+  test consults `current_platform_key()`. Previously, correctly following `scripts/fetch-pdfium.sh`
+  on a host without a pinned PDFium profile turned 1 test failure into 27.
+
+- `@docushell/ethos-pdf`: fail closed with a typed `unsupported_platform` or `vendor_invalid`
+  `EthosSdkError` instead of an untyped launcher throw, and assert that contract — including that
+  no process is spawned — on hosts without a packaged binary.
+
+- docs: add `docs/writing-a-mapper.md`, an end-to-end Grounding JSON guide for parser authors in
+  any language: page-geometry sourcing, coordinate conversion, ID and ordering rules, honest
+  capability declaration, the representation-versus-source hash distinction, a self-check recipe,
+  and the frozen rejection-code table.
+
+- docs: document supported hosts, mapper example invocation, page-metadata sourcing, and citation
+  fingerprint selection in the npm quickstart.
+
+- build: declare the `jsonschema` schema-gate dependency in `requirements-dev.txt`.
+
+- build: remove 11 Makefile invocations of the deleted `test_roadmap_status.py`, which broke every
+  contract `make` target, and drop the ten contract-gate assertions that pinned it. Repoint eight
+  contract gates off the deleted `docs/roadmap.md`, and record `structural_provenance` in the
+  frozen `GroundingSource` trait inventory. Failing Python gates go from 12 to 4.
+
+- docs: freeze the fifteen Grounding JSON validation error codes in ADR-0016 as a public
+  compatibility surface, and record the representation-versus-source hash rationale.
+
+- docs: add the v0.6.0 release-prep scope authority, record v0.6.0 progress in the execution-status
+  ledger, and reconcile the WP-0 public-posture request with the accepted README change.
+
+- docs: add `docs/v0-6-0-release.md`, the evidence-based v0.6.0 release record — verified build,
+  lint, test, schema, and end-to-end parser-agnostic results; the unresolved fingerprint-identity
+  conflict; open-source usability findings including unsupported `darwin:x64`; and the remaining
+  governance and technical release blockers.
+
+- `ethos-core`: fix three `clippy::unnecessary_map_or` findings and remove a vestigial no-op
+  `replace` in the Grounding JSON duplicate-page test, restoring a clean
+  `cargo clippy --all-targets --all-features -- -D warnings`.
+
+- `ethos-cli`: complete WP-2 shared source selection. A present top-level `artifact_type` that is
+  duplicated, non-string, or not exactly `ethos.grounding.v1` now fails with exit `2` instead of
+  falling back to the native loader, and `evidence anchor` dispatches through the same shared
+  loader. Explicit `--grounding ethos-json` and `--grounding opendataloader-json` remain valid and
+  no-flag native behavior is unchanged.
+
 - `ethos-cli`: begin WP-2 with exact Grounding JSON dispatch, `grounding check`, deterministic
   validation reports, optional source-PDF hash binding, shared verifier loading, and atomic batch
   source-binding coverage, including PDF magic validation, exact unknown-field paths, stable

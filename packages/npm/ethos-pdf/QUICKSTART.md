@@ -5,6 +5,18 @@
 - macOS arm64
 - Linux x64
 
+## Supported hosts
+
+The packaged binaries and the pinned PDFium profile cover **macOS arm64 and Linux x64 only**.
+
+On any other host — macOS x64 (Intel) included — the npm package fails closed with a typed
+`unsupported_platform` error before running anything, and `ethos doctor --require-pdfium` reports
+that no pinned PDFium profile exists for the platform. Neither is a sign of a broken install.
+
+Everything in the Grounding JSON section below still works on those hosts: build the CLI from an
+Ethos source checkout with `cargo build --locked -p ethos-cli` and use that binary. Grounding JSON
+validation and verification never require PDFium.
+
 The package does not bundle PDFium. Commands that parse or crop PDFs require a caller-provided
 PDFium dynamic library.
 
@@ -74,8 +86,55 @@ const verification = await verifyClaims({
 console.log(verification.exitCode, verification.artifact.all_evidence_grounded);
 ```
 
-The JavaScript and Python mapper examples consume the pinned parser output and page metadata,
-convert bottom-left point coordinates to top-left centipoints, and emit identical Grounding JSON.
+### Citations use the representation hash
+
+There are two hashes and they answer different questions. `source.sha256` is the original PDF hash
+that your mapper declares. `representation_sha256` is the hash of the accepted Grounding JSON, and
+it is what the verifier records as `document_fingerprint`.
+
+**Citations must carry `representation_sha256`.** Read it from the validation report:
+
+```sh
+ethos grounding check grounding.json --out validation.json
+# -> "representation_sha256": "sha256:f0f1…"
+```
+
+Use that value as `document_fingerprint` in your citations file. Re-emitting the artifact changes
+it — including a `producer.version` bump against an unchanged PDF — and older citations then report
+`stale`.
+
+### Running the mapper examples
+
+Both examples take three positional arguments:
+
+```sh
+node   examples/map-grounding.js parser-output.json page-metadata.json grounding.json
+python examples/map_grounding.py parser-output.json page-metadata.json grounding.json
+```
+
+With the packaged fixtures, from the `examples/` directory:
+
+```sh
+node map-grounding.js fixtures/parser-output.json fixtures/page-metadata.json out.json
+```
+
+They consume the pinned parser output and page metadata, convert bottom-left point coordinates to
+top-left centipoints, and emit byte-identical Grounding JSON.
+
+### Where `page-metadata.json` comes from
+
+Grounding JSON requires real page dimensions and rotation, and most parsers — including
+OpenDataLoader — do not emit them. That geometry comes from the **PDF**, not from the parser, which
+is why the examples take a small sidecar file alongside the parser output.
+
+Read it with any PDF library that can report MediaBox dimensions and rotation without doing
+extraction: `pypdf`, `pikepdf`, or `PyMuPDF` in Python, `pdf-lib` in JavaScript, PDFBox in Java, or
+`pdfinfo` from poppler-utils. Your mapper can obtain geometry any way you like; a sidecar is just
+the simplest dependency-free approach.
+
+If your parser is text-only and you have no geometry, this profile is not usable honestly yet. Do
+not substitute page-sized or zero boxes — see
+[Writing a Grounding JSON Mapper](../../../docs/writing-a-mapper.md).
 
 To practice correcting one documented validation failure, copy `examples/fixtures/grounding-invalid.json`
 to a working file and run `checkGrounding`. The report identifies `/elements/0/bbox` as an

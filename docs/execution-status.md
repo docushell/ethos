@@ -15,6 +15,24 @@ Sections below preserve dated milestone and wording records for auditability; ve
 inside them describe their recorded point in time and are not the current release state unless the
 generated block explicitly repeats them. The published public baseline is `0.5.0`.
 
+## v0.6.0 in progress (2026-07-30)
+
+v0.6.0 is the scoped Grounding JSON adoption release. Scope authority is
+`docs/v0-6-0-release-prep.md`; the verified implementation record, open decisions, and remaining
+release blockers are in `docs/v0-6-0-release.md`.
+
+WP-0 through WP-3 have landed on the `v0_6_0Release` branch: the `ethos.grounding.v1` schema and
+strict validator (ADR-0016, which freezes the structural limits and the stable validation error
+vocabulary), the shared CLI source loader with fail-closed artifact-type dispatch, `ethos grounding
+check`, the native-backed npm `checkGrounding`/`verifyClaims` functions, and JavaScript and Python
+mapper examples with byte-identical double-run output. WP-4 consumer and release evidence has not
+started, and the DocuShell acceptance commit is not selected.
+
+Nothing in v0.6.0 is published. Production positioning, hosted surfaces, a Grounding JSON
+availability claim, and npm SDK availability wording all remain blocked. The fingerprint-identity
+question between `docs/v0-6-0-release-prep.md` §8.1 and ADR-0016 is an open decider item and is
+recorded in `docs/v0-6-0-release.md` §3.1.
+
 The DocuShell first-consumer integration closeout is accepted in
 `docs/validation/nip-1-docushell-integration-closeout-2026-07-20.md`. The worker-only public CLI,
 foreign-grounding verification, answer-release, and crop-inspection lanes passed focused and real
