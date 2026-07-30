@@ -2257,6 +2257,14 @@ mod tests {
         if !path.is_file() {
             return;
         }
+        // A host with no pinned PDFium profile — macOS x64, for example — refuses every library,
+        // so skip rather than fail when a contributor has correctly configured PDFium anyway.
+        if current_platform_key().is_none() {
+            eprintln!(
+                "skipping PDFium crop determinism test: no pinned PDFium profile for this host"
+            );
+            return;
+        }
 
         let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/synthetic/simple-text/document.pdf");

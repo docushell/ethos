@@ -16,12 +16,9 @@
 
 use ethos_core::error::EthosError;
 use ethos_core::evidence_anchor::{EvidenceAnchorReport, EvidenceAnchorRequest};
-use ethos_grounding_opendataloader_json::OdlJsonSource;
 
-use crate::{
-    default_max_input_bytes, read_document, read_file_limited, write_output, EvidenceAnchorArgs,
-    Failure,
-};
+use crate::grounding::load_source;
+use crate::{default_max_input_bytes, read_file_limited, write_output, EvidenceAnchorArgs, Failure};
 
 pub(crate) fn evidence_anchor(args: EvidenceAnchorArgs) -> Result<(), Failure> {
     let max_input_bytes = default_max_input_bytes();
@@ -30,27 +27,9 @@ pub(crate) fn evidence_anchor(args: EvidenceAnchorArgs) -> Result<(), Failure> {
         Failure::Usage("evidence refs file does not match the evidence anchor request shape".into())
     })?;
 
-    let report = match args.grounding.as_str() {
-        "ethos-json" => {
-            let doc = read_document(&args.input)?;
-            ethos_verify::anchor_evidence(&doc, request)
-                .map_err(|error| Failure::Usage(error.to_string()))?
-        }
-        "opendataloader-json" => {
-            let bytes = read_file_limited(&args.input, max_input_bytes)?;
-            let text = String::from_utf8(bytes)
-                .map_err(|_| Failure::Usage("grounding input is not UTF-8".to_string()))?;
-            let source = OdlJsonSource::from_json_str(&text)
-                .map_err(|e| Failure::Usage(format!("opendataloader-json adapter: {e}")))?;
-            ethos_verify::anchor_evidence(&source, request)
-                .map_err(|error| Failure::Usage(error.to_string()))?
-        }
-        other => {
-            return Err(Failure::Usage(format!(
-                "unknown grounding adapter '{other}' (available: ethos-json, opendataloader-json)"
-            )));
-        }
-    };
+    let source = load_source(&args.input, args.grounding.as_deref())?;
+    let report = ethos_verify::anchor_evidence(&source, request)
+        .map_err(|error| Failure::Usage(error.to_string()))?;
 
     write_anchor_report(args.out, &report)
 }

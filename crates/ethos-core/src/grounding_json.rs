@@ -686,11 +686,11 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
         || artifact
             .spans
             .as_ref()
-            .map_or(false, |v| v.len() > MAX_ELEMENTS)
+            .is_some_and(|v| v.len() > MAX_ELEMENTS)
         || artifact
             .tables
             .as_ref()
-            .map_or(false, |v| v.len() > MAX_TABLES)
+            .is_some_and(|v| v.len() > MAX_TABLES)
     {
         return Err(error(GroundingJsonErrorCode::LimitExceeded, "/"));
     }
@@ -902,7 +902,7 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
     Ok(())
 }
 fn valid_bbox(b: [i64; 4], page: Option<&Page>) -> bool {
-    page.map_or(false, |p| {
+    page.is_some_and(|p| {
         b.iter().all(|v| *v >= 0 && *v <= MAX_SAFE_INT)
             && b[2] > b[0]
             && b[3] > b[1]
@@ -995,11 +995,8 @@ mod tests {
     }
     #[test]
     fn reports_stable_reference_order_and_id_errors() {
+        // Append a second page that reuses the first page id.
         let duplicate_page = valid().replace(
-            "\"pages\":[{\"id\":\"p1\",\"index\":1",
-            "\"pages\":[{\"id\":\"p1\",\"index\":1",
-        );
-        let duplicate_page = duplicate_page.replace(
             "}],\"elements\"",
             "},{\"id\":\"page-1\",\"index\":2,\"width\":61200,\"height\":79200,\"rotation\":0}],\"elements\"",
         );

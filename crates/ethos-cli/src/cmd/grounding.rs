@@ -131,12 +131,3 @@ fn write_validation_report(
     bytes.push(b'\n');
     write_output(out, &bytes)
 }
-
-#[allow(dead_code)]
-fn _stable_error(error: &GroundingJsonError) -> ReportError {
-    ReportError {
-        code: error.code.as_str().to_string(),
-        path: error.path.clone(),
-        message: error.message().to_string(),
-    }
-}

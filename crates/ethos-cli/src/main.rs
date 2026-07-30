@@ -299,9 +299,10 @@ pub(crate) struct EvidenceAnchorArgs {
     /// Evidence refs request JSON.
     #[arg(long)]
     pub(crate) evidence_refs: PathBuf,
-    /// Grounding adapter id: ethos-json or opendataloader-json.
-    #[arg(long, default_value = "ethos-json")]
-    pub(crate) grounding: String,
+    /// Grounding adapter id: ethos-json, ethos-grounding-json, or opendataloader-json.
+    /// Omit to select the loader from the optional top-level `artifact_type`.
+    #[arg(long)]
+    pub(crate) grounding: Option<String>,
     /// Output path for evidence_anchor_report.json (default: stdout)
     #[arg(long)]
     pub(crate) out: Option<PathBuf>,

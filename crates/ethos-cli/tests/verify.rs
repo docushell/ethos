@@ -168,10 +168,34 @@ fn temp_split_quote_document() -> (PathBuf, String) {
     (path, fingerprint)
 }
 
+/// True when `ETHOS_PDFIUM_LIBRARY_PATH` points at a PDFium that Ethos itself accepts.
+///
+/// Asking `ethos doctor` keeps the harness from disagreeing with the product. On a host with no
+/// pinned PDFium profile — macOS x64, for example — a correctly downloaded library is still
+/// refused, and these tests must skip rather than fail.
 fn pdfium_configured() -> bool {
-    std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
-        .map(PathBuf::from)
-        .is_some_and(|path| path.is_file())
+    static USABLE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *USABLE.get_or_init(|| {
+        let Some(path) = std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH").map(PathBuf::from) else {
+            return false;
+        };
+        if !path.is_file() {
+            return false;
+        }
+        let usable = Command::new(ethos_bin())
+            .args(["doctor", "--require-pdfium"])
+            .output()
+            .is_ok_and(|output| output.status.success());
+        if !usable {
+            eprintln!(
+                "skipping PDFium-backed tests: ETHOS_PDFIUM_LIBRARY_PATH is set, but Ethos does \
+                 not accept this library on this host. Run `ethos doctor --require-pdfium` for \
+                 the reason. Hosts without a pinned PDFium profile (for example macOS x64) are \
+                 expected to skip."
+            );
+        }
+        usable
+    })
 }
 
 fn document_example() -> PathBuf {
@@ -3525,4 +3549,48 @@ fn grounding_json_representation_identity_drives_staleness() {
         first_report["document_fingerprint"],
         second_report["document_fingerprint"]
     );
+}
+
+#[test]
+fn verify_rejects_present_but_unsupported_artifact_types_without_fallback() {
+    let citations = repo_root().join("examples/verify/grounding_json_citations.json");
+    let valid = std::fs::read_to_string(repo_root().join("schemas/examples/grounding-source.example.json"))
+        .expect("fixture is readable");
+
+    // A duplicated artifact_type must never be collapsed into a supported identity.
+    let duplicated = valid.replacen(
+        r#""artifact_type": "ethos.grounding.v1","#,
+        r#""artifact_type": "ethos.grounding.v1", "artifact_type": "ethos.grounding.v1","#,
+        1,
+    );
+    assert_ne!(duplicated, valid, "fixture shape changed");
+
+    for (name, body) in [
+        ("duplicate-artifact-type", duplicated),
+        (
+            "unknown-artifact-type",
+            valid.replace("ethos.grounding.v1", "ethos.grounding.v2"),
+        ),
+        (
+            "non-string-artifact-type",
+            valid.replace(r#""ethos.grounding.v1""#, "5"),
+        ),
+    ] {
+        let path = temp_json(name, &body);
+        let output = run_ethos(&[
+            "verify",
+            path.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(2), "{name} must exit 2");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        // The native loader also mentions `artifact_type` (as an unknown field), so assert the
+        // shared loader's own message to prove no fallback occurred.
+        assert!(
+            stderr.contains("unsupported top-level artifact_type"),
+            "{name} must be rejected by the shared loader, got: {stderr}"
+        );
+        assert!(output.stdout.is_empty(), "{name} must not write a report");
+    }
 }
