@@ -29,6 +29,9 @@
 - `@docushell/ethos-pdf`: cover typed exit-1 reports, timeout/cancellation cleanup, and bounded
   subprocess output in the SDK acceptance tests.
 
+- `@docushell/ethos-pdf`: cover report-file output and removal of private in-memory citation files
+  after successful and nonzero verification.
+
 - docs: complete the WP-0 OpenDataLoader 2.5.0 feasibility proof against the DocuShell-vendored
   JAR, with source-bound page geometry, bottom-left to top-left conversion, explicit capability
   gaps, and byte-identical mapped output; leave ADR and public-posture acceptance gated.

@@ -2,12 +2,14 @@ const assert = require("node:assert/strict");
 const childProcess = require("node:child_process");
 const { EventEmitter } = require("node:events");
 const fs = require("node:fs/promises");
+const os = require("node:os");
 const path = require("node:path");
 
 const calls = [];
 const originalSpawn = childProcess.spawn;
 let mode = "success";
 let killCount = 0;
+let lastTemporaryCitationPath = null;
 
 childProcess.spawn = (binary, args) => {
   const child = new EventEmitter();
@@ -20,14 +22,18 @@ childProcess.spawn = (binary, args) => {
   if (mode === "timeout") return child;
   process.nextTick(async () => {
     if (args[0] === "verify") {
-      const citations = await fs.readFile(args[args.indexOf("--citations") + 1], "utf8");
+      lastTemporaryCitationPath = args[args.indexOf("--citations") + 1];
+      const citations = await fs.readFile(lastTemporaryCitationPath, "utf8");
       assert.ok(citations.length > 0);
     }
     if (mode === "output-limit") {
       child.stdout.emit("data", Buffer.alloc(8 * 1024 * 1024 + 1));
       return;
     }
-    child.stdout.emit("data", Buffer.from(JSON.stringify({ artifact_type: "ethos.test", schema_version: "1.0.0" })));
+    const report = Buffer.from(JSON.stringify({ artifact_type: "ethos.test", schema_version: "1.0.0" }));
+    const outputIndex = args.indexOf("--out");
+    if (outputIndex >= 0) await fs.writeFile(args[outputIndex + 1], report);
+    else child.stdout.emit("data", report);
     if (mode === "exit-1") child.stderr.emit("data", Buffer.from("ungrounded"));
     child.emit("close", mode === "exit-1" ? 1 : 0, null);
   });
@@ -50,6 +56,7 @@ async function main() {
   });
   assert.equal(verified.exitCode, 0);
   assert.deepEqual(calls[1].args.slice(0, 3), ["verify", inputPath, "--citations"]);
+  await assert.rejects(() => fs.access(lastTemporaryCitationPath), { code: "ENOENT" });
   await assert.rejects(
     () => verifyClaims({ inputPath, citations: {}, citationsPath: inputPath }),
     (error) => error instanceof EthosSdkError && error.code === "invalid_options",
@@ -60,10 +67,17 @@ async function main() {
   );
 
   mode = "exit-1";
-  const ungrounded = await verifyClaims({ inputPath, citationsPath: inputPath, failOnUngrounded: true });
+  const ungrounded = await verifyClaims({ inputPath, citations: { schema_version: "1.0.0", checks: [] }, failOnUngrounded: true });
   assert.equal(ungrounded.exitCode, 1);
   assert.equal(ungrounded.artifact.artifact_type, "ethos.test");
   assert.equal(ungrounded.reason, "ungrounded");
+  await assert.rejects(() => fs.access(lastTemporaryCitationPath), { code: "ENOENT" });
+
+  const outputRoot = await fs.mkdtemp(path.join(os.tmpdir(), "ethos-sdk-output-"));
+  const outputPath = path.join(outputRoot, "report.json");
+  const outputReport = await checkGrounding({ inputPath, outputPath });
+  assert.equal(outputReport.artifact.artifact_type, "ethos.test");
+  await fs.rm(outputRoot, { recursive: true, force: true });
 
   mode = "output-limit";
   await assert.rejects(
