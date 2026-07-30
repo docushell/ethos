@@ -27,19 +27,22 @@ function writeFixtureArchive(root, assetName, nestedDir, binaryText) {
   return archive;
 }
 
+const macBinary = '#!/usr/bin/env sh\nif [ "$1" = "--help" ]; then echo "Commands: grounding verify"; fi\n';
+const linuxBinary = '#!/usr/bin/env sh\nif [ "$1" = "--help" ]; then echo "Commands: grounding verify"; fi\n';
+
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "ethos-vendor-assembly-"));
 try {
   const macArchive = writeFixtureArchive(
     temp,
     "ethos-macos-arm64.tar.gz",
     "ethos-macos-arm64",
-    "#!/usr/bin/env sh\necho mac\n"
+    macBinary
   );
   const linuxArchive = writeFixtureArchive(
     temp,
     "ethos-linux-x64.tar.gz",
     "ethos-linux-x64",
-    "#!/usr/bin/env sh\necho linux\n"
+    linuxBinary
   );
   const manifestPath = path.join(temp, "manifest.json");
   fs.writeFileSync(
@@ -50,13 +53,13 @@ try {
         targets: {
           "darwin:arm64": {
             binary: "ethos-darwin-arm64",
-            binary_sha256: sha256Text("#!/usr/bin/env sh\necho mac\n"),
+            binary_sha256: sha256Text(macBinary),
             release_asset: path.basename(macArchive),
             release_asset_sha256: sha256File(macArchive)
           },
           "linux:x64": {
             binary: "ethos-linux-x64",
-            binary_sha256: sha256Text("#!/usr/bin/env sh\necho linux\n"),
+            binary_sha256: sha256Text(linuxBinary),
             release_asset: path.basename(linuxArchive),
             release_asset_sha256: sha256File(linuxArchive)
           }
@@ -78,10 +81,40 @@ try {
     prepared.map((file) => path.basename(file)).sort(),
     ["ethos-darwin-arm64", "ethos-linux-x64"]
   );
-  assert.strictEqual(fs.readFileSync(path.join(vendorDir, "ethos-darwin-arm64"), "utf8"), "#!/usr/bin/env sh\necho mac\n");
-  assert.strictEqual(fs.readFileSync(path.join(vendorDir, "ethos-linux-x64"), "utf8"), "#!/usr/bin/env sh\necho linux\n");
+  assert.strictEqual(fs.readFileSync(path.join(vendorDir, "ethos-darwin-arm64"), "utf8"), macBinary);
+  assert.strictEqual(fs.readFileSync(path.join(vendorDir, "ethos-linux-x64"), "utf8"), linuxBinary);
   assert.ok((fs.statSync(path.join(vendorDir, "ethos-linux-x64")).mode & 0o111) !== 0);
   assert.match(sha256File(path.join(vendorDir, "ethos-linux-x64")), /^[a-f0-9]{64}$/);
+
+  const oldArchive = writeFixtureArchive(
+    temp,
+    "old-ethos-linux-x64.tar.gz",
+    "old-ethos-linux-x64",
+    "#!/usr/bin/env sh\necho old\n"
+  );
+  const oldManifest = path.join(temp, "old-manifest.json");
+  fs.writeFileSync(
+    oldManifest,
+    JSON.stringify({
+      targets: {
+        "linux:x64": {
+          binary: "ethos-linux-x64",
+          binary_sha256: sha256File(path.join(temp, "src", "old-ethos-linux-x64", "ethos")),
+          release_asset: path.basename(oldArchive),
+          release_asset_sha256: sha256File(oldArchive)
+        }
+      }
+    })
+  );
+  assert.throws(
+    () =>
+      prepareVendor({
+        artifactDir: path.join(temp, "artifacts"),
+        vendorDir: path.join(temp, "old-vendor"),
+        manifestPath: oldManifest
+      }),
+    /does not expose the required grounding command/
+  );
 
   const badManifest = path.join(temp, "bad-manifest.json");
   fs.writeFileSync(

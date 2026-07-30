@@ -38,6 +38,9 @@
 - `@docushell/ethos-pdf`: add a documented invalid Grounding fixture and one explicit bounding-box
   correction path for clean-room validation practice.
 
+- `@docushell/ethos-pdf`: make vendor preparation fail closed when an extracted CLI does not
+  expose the required `grounding` command.
+
 - docs: complete the WP-0 OpenDataLoader 2.5.0 feasibility proof against the DocuShell-vendored
   JAR, with source-bound page geometry, bottom-left to top-left conversion, explicit capability
   gaps, and byte-identical mapped output; leave ADR and public-posture acceptance gated.
