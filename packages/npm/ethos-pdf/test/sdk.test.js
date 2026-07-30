@@ -90,10 +90,6 @@ async function main() {
     () => verifyClaims({ inputPath, citations: {}, citationsPath: inputPath }),
     (error) => error instanceof EthosSdkError && error.code === "invalid_options",
   );
-  await assert.rejects(
-    () => verifyClaims({ inputPath, citationsPath: inputPath, grounding: "opendataloader-json", sourceArtifactPath: inputPath }),
-    (error) => error instanceof EthosSdkError && error.code === "invalid_options",
-  );
 
   mode = "exit-1";
   const ungrounded = await verifyClaims({ inputPath, citations: { schema_version: "1.0.0", checks: [] }, failOnUngrounded: true });

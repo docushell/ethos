@@ -32,7 +32,6 @@ export interface VerifyClaimsOptions {
   inputPath: string;
   citationsPath?: string;
   citations?: EthosLlmCitationOutput;
-  sourceArtifactPath?: string;
   configPath?: string;
   outputPath?: string;
   failOnUngrounded?: boolean;

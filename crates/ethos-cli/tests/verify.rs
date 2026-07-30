@@ -3399,7 +3399,7 @@ fn grounding_json_auto_dispatch_reaches_verifier_without_pdfium() {
 }
 
 #[test]
-fn grounding_json_batch_dispatch_and_source_mismatch_are_atomic() {
+fn grounding_json_batch_dispatch_reaches_the_verifier() {
     let root = repo_root();
     let grounding = root.join("schemas/examples/grounding-source.example.json");
     let citation = root.join("examples/verify/grounding_json_citations.json");
@@ -3422,22 +3422,6 @@ fn grounding_json_batch_dispatch_and_source_mismatch_are_atomic() {
     let lines = std::fs::read_to_string(&valid_output).unwrap();
     assert_eq!(lines.lines().count(), 1);
     assert!(lines.contains("ethos-grounding-json"));
-
-    let mismatch_output = temp_output("grounding-batch-mismatch");
-    let result = run_ethos(&[
-        "verify-batch",
-        grounding.to_str().unwrap(),
-        "--citations-ndjson",
-        requests.to_str().unwrap(),
-        "--source-artifact",
-        root.join("fixtures/foreign/opendataloader/real/source.pdf")
-            .to_str()
-            .unwrap(),
-        "--out",
-        mismatch_output.to_str().unwrap(),
-    ]);
-    assert_eq!(result.status.code(), Some(2));
-    assert!(!mismatch_output.exists());
 }
 
 #[test]
@@ -3464,8 +3448,6 @@ fn grounding_json_source_hash_match_is_reported_and_verifiable() {
         root.join("examples/verify/grounding_json_bound_citations.json")
             .to_str()
             .unwrap(),
-        "--source-artifact",
-        source_pdf.to_str().unwrap(),
     ]);
     assert!(
         verified.status.success(),
@@ -3480,14 +3462,12 @@ fn grounding_json_source_hash_match_is_reported_and_verifiable() {
 fn grounding_json_source_binding_rejects_non_pdf_bytes_before_report() {
     let root = repo_root();
     let grounding = root.join("schemas/examples/grounding-source.example.json");
-    let citations = root.join("examples/verify/grounding_json_citations.json");
     let non_pdf = temp_json("grounding-non-pdf", "not a PDF");
     let output = temp_output("grounding-non-pdf-report");
     let result = run_ethos(&[
-        "verify",
+        "grounding",
+        "check",
         grounding.to_str().unwrap(),
-        "--citations",
-        citations.to_str().unwrap(),
         "--source-artifact",
         non_pdf.to_str().unwrap(),
         "--out",

@@ -319,9 +319,6 @@ pub(crate) struct VerifyArgs {
     /// Foreign grounding adapter id (e.g. `opendataloader-json`)
     #[arg(long)]
     pub(crate) grounding: Option<String>,
-    /// Optional original PDF bytes to bind when the input is Grounding JSON.
-    #[arg(long)]
-    pub(crate) source_artifact: Option<PathBuf>,
     /// Verification config (JSON); defaults to the pinned `default-v1`
     #[arg(long)]
     pub(crate) config: Option<PathBuf>,
@@ -354,9 +351,6 @@ pub(crate) struct VerifyBatchArgs {
     /// Foreign grounding adapter id (e.g. `opendataloader-json`).
     #[arg(long)]
     pub(crate) grounding: Option<String>,
-    /// Optional original PDF bytes to bind when the input is Grounding JSON.
-    #[arg(long)]
-    pub(crate) source_artifact: Option<PathBuf>,
     /// Verification config (JSON); defaults to the pinned `default-v1`.
     #[arg(long)]
     pub(crate) config: Option<PathBuf>,

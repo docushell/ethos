@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- `ethos-cli`, `@docushell/ethos-pdf`: remove `--source-artifact` from `verify` and `verify-batch`,
+  and `sourceArtifactPath` from `verifyClaims`. The check ran and left no trace: the report was
+  byte-identical with and without the flag, and `verification_report.json` has no field that can
+  express it, so a passing run read as PDF-bound to the operator while any recipient of that report
+  could not tell it from an unbound one. Source binding stays on `grounding check`, which records
+  `source_binding` in a schema-backed artifact. ADR-0016 records this and the two additions kept
+  deliberately: `--grounding ethos-json` as a shared-loader alias, and in-memory
+  `verifyClaims({ citations })`.
+
 - docs: advance public install wording to the published `0.5.0` baseline. crates.io
   (`ethos-doc-core`, `ethos-verify`, `ethos-pdf`), PyPI (`ethos-pdf`), npm
   (`@docushell/ethos-pdf`), and GitHub Release `v0.5.0` were each verified at 0.5.0, so the

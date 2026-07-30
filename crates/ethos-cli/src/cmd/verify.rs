@@ -38,7 +38,7 @@ use crate::cmd::crop_artifacts::{
     load_bound_crop_source_pdf, write_crop_descriptor_artifact, write_rendered_crop_artifact,
     CropSourcePdf,
 };
-use crate::grounding::{check_source_binding, load_source};
+use crate::grounding::load_source;
 use crate::{
     default_max_input_bytes, read_document, read_file_limited, write_output, Failure, VerifyArgs,
     VerifyBatchArgs, VerifyOutputFormat,
@@ -100,9 +100,6 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
         return write_report(args.out, args.format, report, args.fail_on_ungrounded);
     }
     let source = load_source(&args.input, args.grounding.as_deref())?;
-    if let Some(path) = args.source_artifact.as_deref() {
-        check_source_binding(&source, path)?;
-    }
     let report = ethos_verify::verify_claims(&source, citations, &config, config_sha256);
 
     write_report(args.out, args.format, report, args.fail_on_ungrounded)
@@ -132,9 +129,6 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
         ethos_core::c14n::sha256_hex(&config_value).map_err(|e| EthosError::internal(e.message))?;
 
     let source = load_source(&args.input, args.grounding.as_deref())?;
-    if let Some(path) = args.source_artifact.as_deref() {
-        check_source_binding(&source, path)?;
-    }
     let reports = batch_reports(&source, citations, &config, &config_sha256);
 
     let mut output = Vec::new();

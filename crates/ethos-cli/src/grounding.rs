@@ -13,7 +13,6 @@ use ethos_grounding_opendataloader_json::OdlJsonSource;
 
 use crate::{default_max_input_bytes, read_document, read_file_limited, Failure};
 use serde::de::{IgnoredAny, MapAccess, Visitor};
-use sha2::{Digest, Sha256};
 use std::fmt;
 use std::path::Path;
 
@@ -149,27 +148,6 @@ fn grounding_json_failure(error: ethos_core::grounding_json::GroundingJsonError)
         error.code.as_str(),
         error.path
     ))
-}
-
-/// Check optional original-PDF binding without changing verification semantics.
-pub(crate) fn check_source_binding(source: &LoadedGrounding, path: &Path) -> Result<(), Failure> {
-    let expected = match source {
-        LoadedGrounding::GroundingJson(source) => source.source_sha256(),
-        _ => {
-            return Err(Failure::Usage(
-                "--source-artifact requires Grounding JSON input".to_string(),
-            ))
-        }
-    };
-    let bytes = crate::read_file_limited(path, crate::default_max_input_bytes())?;
-    ensure_pdf_magic(&bytes)?;
-    let actual = format!("sha256:{:x}", Sha256::digest(bytes));
-    if actual != expected {
-        return Err(Failure::Usage(
-            "source artifact hash does not match source.sha256".to_string(),
-        ));
-    }
-    Ok(())
 }
 
 pub(crate) fn ensure_pdf_magic(bytes: &[u8]) -> Result<(), Failure> {

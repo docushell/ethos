@@ -49,13 +49,6 @@ function verifyClaims(options) {
     if (value.grounding !== undefined && value.grounding !== "opendataloader-json") {
       throw new EthosSdkError("invalid_options", "grounding must be opendataloader-json");
     }
-    if (value.sourceArtifactPath !== undefined && value.grounding === "opendataloader-json") {
-      throw new EthosSdkError(
-        "invalid_options",
-        "sourceArtifactPath is unsupported with the explicit opendataloader-json adapter",
-      );
-    }
-
     let temporaryRoot = null;
     let citationsPath = value.citationsPath;
     if (hasObject) {
@@ -72,7 +65,6 @@ function verifyClaims(options) {
     }
 
     const args = ["verify", inputPath, "--citations", requiredPath(citationsPath, "citationsPath")];
-    appendOption(args, "--source-artifact", value.sourceArtifactPath);
     appendOption(args, "--config", value.configPath);
     appendOption(args, "--out", value.outputPath);
     if (value.grounding !== undefined) {

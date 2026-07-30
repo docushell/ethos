@@ -71,6 +71,32 @@ geometry present as fresh, which is the failure mode this project exists to prev
 `matched`, `mismatched`, or `not_checked`. A match proves only that the mapper declared the hash of
 the supplied PDF; it is never evidence of faithful extraction.
 
+### Accepted surface beyond release-prep §7.2 and §8.2
+
+Two additions are accepted deliberately. Everything else that appeared during implementation was
+removed rather than kept.
+
+**`--grounding ethos-json` on `verify` and `verify-batch`.** Routing `evidence anchor` through the
+shared loader gave all three commands one dispatch point. The legacy `ethos-json` spelling is
+therefore accepted everywhere rather than special-cased in one command. It is an alias for the
+existing no-flag native behavior. Known wart: combining it with `--crop-dir` reports that crops are
+native-only, which is confusing because the caller did ask for native; the crop guard is
+intentionally left untouched.
+
+**`verifyClaims({ citations })` in the npm SDK.** Release-prep §8.2 lists only `citationsPath`. In
+JavaScript the citations are already in memory, so requiring a path pushes every caller to
+reimplement the same temporary-file dance, usually without cleanup on throw. The SDK does it once:
+`mkdtemp`, an 8 MiB bound, and removal in a `finally`. `citationsPath` and `citations` remain
+mutually exclusive.
+
+**Rejected: `--source-artifact` on `verify` and `verify-batch`** (and its `sourceArtifactPath`
+passthrough in `verifyClaims`). Source binding belongs to `grounding check`, which records
+`source_binding` in a schema-backed artifact. On `verify` the check ran and left no trace: the
+report was byte-identical with and without the flag, and `verification_report.json` has no field
+that could express it. An operator would reasonably read a passing run as PDF-bound while any
+downstream recipient of that report could not distinguish it from an unbound one. Recording the
+binding would require a verification-report change, which release-prep §5.3 excludes.
+
 ## Consequences
 
 All parsers that participate in the future shared loader must map into this one strict artifact.
