@@ -1,0 +1,13 @@
+{
+  "parser": "opendataloader-pdf",
+  "version": "2.5.0",
+  "source_pdf": "source.pdf",
+  "source_pdf_sha256": "082f9f8c800fda43b13d097ccf3a603e1f8048987fb497fd2be4cba6817001ee",
+  "parser_output": "parser-output.json",
+  "parser_output_sha256": "9f9b8f8d331750a26aebd40a916c8e169647bb76d0232c76549c79274b514ec1",
+  "page_metadata": "page-metadata.json",
+  "grounding_json": "grounding.json",
+  "grounding_json_sha256": "d83a67d1d79f8bc82d36516a548a4a8c46796b071637e3f830e80dbd295bc8b3",
+  "citations": "citations.json",
+  "license": "Apache-2.0"
+}

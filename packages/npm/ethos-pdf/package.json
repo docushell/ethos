@@ -25,6 +25,7 @@
     "index.js",
     "scripts/",
     "types/",
+    "examples/",
     "vendor/",
     "QUICKSTART.md",
     "README.md",
@@ -46,7 +47,7 @@
     "generate:types": "node dev/generate-types.js",
     "prepare:vendor": "node scripts/prepare-vendor.js",
     "postinstall": "node scripts/postinstall.js",
-    "test": "node test/platform-selection.test.js && node test/vendor-assembly.test.js && node test/vendor-integrity.test.js && node test/setup-guidance.test.js && node test/sdk.test.js && node test/types.test.js && tsc -p tsconfig.types.json"
+    "test": "node test/platform-selection.test.js && node test/vendor-assembly.test.js && node test/vendor-integrity.test.js && node test/setup-guidance.test.js && node test/sdk.test.js && node test/examples.test.js && node test/types.test.js && tsc -p tsconfig.types.json"
   },
   "devDependencies": {
     "json-schema-to-typescript": "15.0.4",

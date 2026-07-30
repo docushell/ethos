@@ -15,6 +15,9 @@
   declarations plus bounded Promise-based `checkGrounding` and `verifyClaims` wrappers over the
   packaged CLI.
 
+- `@docushell/ethos-pdf`: add the pinned OpenDataLoader mapper examples, byte-identical
+  JavaScript/Python output test, and npm-first Grounding JSON quickstart bundle.
+
 - docs: complete the WP-0 OpenDataLoader 2.5.0 feasibility proof against the DocuShell-vendored
   JAR, with source-bound page geometry, bottom-left to top-left conversion, explicit capability
   gaps, and byte-identical mapped output; leave ADR and public-posture acceptance gated.

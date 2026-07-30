@@ -51,3 +51,28 @@ If PDFium is missing, PDF-backed commands fail with a message that names
 `ETHOS_PDFIUM_LIBRARY_PATH`. Installation only warns because non-PDF commands and setup workflows
 must remain usable before PDFium is configured. The warning is an initial-setup hint only; CI,
 Docker images, and deployment environments may set `ETHOS_PDFIUM_LIBRARY_PATH` later at runtime.
+
+## Grounding JSON quickstart
+
+The package includes a pinned parser result and Grounding JSON example. The SDK checks and verifies
+those installed files without Rust or PDFium:
+
+```js
+const path = require("node:path");
+const { checkGrounding, verifyClaims } = require("@docushell/ethos-pdf");
+
+const root = path.join(__dirname, "node_modules/@docushell/ethos-pdf/examples/fixtures");
+const inputPath = path.join(root, "grounding.json");
+
+const validation = await checkGrounding({ inputPath });
+console.log(validation.exitCode, validation.artifact.structure);
+
+const verification = await verifyClaims({
+  inputPath,
+  citationsPath: path.join(root, "citations.json"),
+});
+console.log(verification.exitCode, verification.artifact.all_evidence_grounded);
+```
+
+The JavaScript and Python mapper examples consume the pinned parser output and page metadata,
+convert bottom-left point coordinates to top-left centipoints, and emit identical Grounding JSON.
