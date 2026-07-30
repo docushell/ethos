@@ -3488,3 +3488,41 @@ fn grounding_json_dispatch_ignores_producer_identity() {
     let report: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(report["structure"], "valid");
 }
+
+#[test]
+fn grounding_json_representation_identity_drives_staleness() {
+    let root = repo_root();
+    let original = root.join("schemas/examples/grounding-source.example.json");
+    let citations = root.join("examples/verify/grounding_json_citations.json");
+    let original_bytes = std::fs::read(&original).unwrap();
+    let changed = String::from_utf8(original_bytes.clone())
+        .unwrap()
+        .replace("\"name\": \"fixture\"", "\"name\": \"fixture-alt\"");
+    let changed_path = temp_json("grounding-representation-changed", &changed);
+
+    let first = run_ethos(&[
+        "verify",
+        original.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+    let second = run_ethos(&[
+        "verify",
+        changed_path.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+    assert!(first.status.success());
+    assert!(second.status.success());
+    let first_report: Value = serde_json::from_slice(&first.stdout).unwrap();
+    let second_report: Value = serde_json::from_slice(&second.stdout).unwrap();
+    assert_eq!(first_report["fingerprint_stale"], false);
+    assert_eq!(first_report["all_evidence_grounded"], true);
+    assert_eq!(second_report["fingerprint_stale"], true);
+    assert_eq!(second_report["all_evidence_grounded"], false);
+    assert_eq!(second_report["checks"][0]["status"], "stale");
+    assert_ne!(
+        first_report["document_fingerprint"],
+        second_report["document_fingerprint"]
+    );
+}
