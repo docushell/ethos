@@ -4,8 +4,8 @@
 
 - `ethos-cli`: begin WP-2 with exact Grounding JSON dispatch, `grounding check`, deterministic
   validation reports, optional source-PDF hash binding, shared verifier loading, and atomic batch
-  source-binding coverage, including PDF magic validation, exact unknown-field paths, and stable
-  duplicate/reference/order/geometry/offset/table error codes.
+  source-binding coverage, including PDF magic validation, exact unknown-field paths, stable
+  duplicate/reference/order/geometry/offset/table error codes, and focused conformance coverage.
 
 - `ethos-core`: implement the WP-1 Grounding JSON v1 schemas, duplicate-key-safe parsing, typed
   capability/geometry/span/table invariants, measured limits, and deterministic representation

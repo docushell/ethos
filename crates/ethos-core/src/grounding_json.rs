@@ -994,6 +994,34 @@ mod tests {
         );
     }
     #[test]
+    fn reports_stable_reference_order_and_id_errors() {
+        let duplicate_page = valid().replace(
+            "\"pages\":[{\"id\":\"p1\",\"index\":1",
+            "\"pages\":[{\"id\":\"p1\",\"index\":1",
+        );
+        let duplicate_page = duplicate_page.replace(
+            "}],\"elements\"",
+            "},{\"id\":\"page-1\",\"index\":2,\"width\":61200,\"height\":79200,\"rotation\":0}],\"elements\"",
+        );
+        let error = parse_grounding_json(duplicate_page.as_bytes()).unwrap_err();
+        assert_eq!(error.code, GroundingJsonErrorCode::DuplicateId);
+        assert_eq!(error.path, "/pages/1/id");
+        assert_eq!(
+            error.message(),
+            "make identifiers unique within their typed namespace"
+        );
+
+        let unknown_page = valid().replace("\"page\":\"page-1\"", "\"page\":\"missing\"");
+        let error = parse_grounding_json(unknown_page.as_bytes()).unwrap_err();
+        assert_eq!(error.code, GroundingJsonErrorCode::UnknownReference);
+        assert_eq!(error.path, "/elements/0/page");
+
+        let out_of_order = valid().replace("\"index\":1", "\"index\":2");
+        let error = parse_grounding_json(out_of_order.as_bytes()).unwrap_err();
+        assert_eq!(error.code, GroundingJsonErrorCode::InvalidOrder);
+        assert_eq!(error.path, "/pages/0/index");
+    }
+    #[test]
     fn rejects_fixture_limits_and_unsafe_integers() {
         let cases = [
             (
