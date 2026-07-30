@@ -10,6 +10,8 @@ const EXPECTED_FILES = [
   "citation-emission-v2.d.ts",
   "citation-emission.d.ts",
   "evidence-handle-context.d.ts",
+  "grounding-source.d.ts",
+  "grounding-validation-report.d.ts",
   "index.d.ts",
   "verification-report.d.ts",
 ];
