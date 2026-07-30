@@ -149,6 +149,7 @@ function run(binaryPath, args, options) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      cleanupSignal();
       resolve({ exitCode: code === null ? 1 : code, signal, stdout: Buffer.concat(stdout), stderr: Buffer.concat(stderr) });
     });
 
@@ -156,8 +157,13 @@ function run(binaryPath, args, options) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      cleanupSignal();
       child.kill("SIGTERM");
       reject(new EthosSdkError(code, message));
+    }
+
+    function cleanupSignal() {
+      options.signal?.removeEventListener("abort", abort);
     }
   });
 }

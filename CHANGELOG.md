@@ -26,6 +26,9 @@
 - `ethos-cli`: add explicit representation-identity coverage proving byte changes preserve
   `source.sha256` but change the verifier fingerprint and stale existing citations.
 
+- `@docushell/ethos-pdf`: cover typed exit-1 reports, timeout/cancellation cleanup, and bounded
+  subprocess output in the SDK acceptance tests.
+
 - docs: complete the WP-0 OpenDataLoader 2.5.0 feasibility proof against the DocuShell-vendored
   JAR, with source-bound page geometry, bottom-left to top-left conversion, explicit capability
   gaps, and byte-identical mapped output; leave ADR and public-posture acceptance gated.
