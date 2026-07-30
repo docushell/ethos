@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- docs: begin v0.6.0 WP-0 by reconciling the v0.5.0 release ledger and recording an executable,
+  deterministic real-parser feasibility stop; keep schema/runtime work gated on a positive,
+  geometry-honest mapping proof.
+- docs: narrow the draft v0.6.0 release-prep plan to a strict language-neutral Grounding JSON
+  adoption boundary, separate exact-representation identity from PDF source binding, require a
+  parser-neutral pinned real-parser mapping proof before schema freeze, preserve DocuShell's
+  existing OpenDataLoader path without migration, define the mapper-once plug-and-play boundary,
+  add optional same-run verification binding, define exact v1 version behavior, improve the
+  minimal native-backed npm API and npm-first example, name the DocuShell Mapping & Compatibility
+  Pilot, and simplify the README with clear current-versus-proposed parser paths and links to the
+  relevant plan sections; record the accepted adoption direction with WP-0-only authorization,
+  the coordinated public-posture change, strict no-repair and clean-room usability gates, and
+  explicit v0.7.0 planning inputs for OCR, measured canonicalization, and an optional reviewed
+  mapping assistant; keep receipt/proof/exact-replay work as an unversioned separate decision
+  without a second v0.6.0 planning document, with WP-1 through WP-4 and exact public wording still
+  blocked pending the recorded gates.
 - boundary-exception: close out v0.5.0 GitHub, crates.io, PyPI, and npm publication against frozen
   core-A/B evidence and published artifact hashes; no Windows artifact or expanded public claims.
 - boundary-exception: reconcile v0.5.0 release-boundary CI metadata and DCO sign-offs for the
