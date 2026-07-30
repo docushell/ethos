@@ -56,6 +56,18 @@ pub enum GroundingJsonErrorCode {
     UnsupportedVersion,
     /// A capability combination is contradictory.
     InvalidCapabilities,
+    /// A page, element, span, or table identifier was repeated.
+    DuplicateId,
+    /// A referenced page or element does not exist.
+    UnknownReference,
+    /// An array ordering invariant failed.
+    InvalidOrder,
+    /// A bounding box is malformed or outside its page.
+    InvalidBBox,
+    /// Character offsets do not match the owning text.
+    InvalidOffsets,
+    /// A table or cell invariant failed.
+    InvalidTable,
     /// A reference, order, identifier, or geometry invariant failed.
     InvalidInvariant,
     /// An accepted structural limit was exceeded.
@@ -73,6 +85,12 @@ impl GroundingJsonErrorCode {
             Self::InvalidField => "invalid_field",
             Self::UnsupportedVersion => "unsupported_version",
             Self::InvalidCapabilities => "invalid_capabilities",
+            Self::DuplicateId => "duplicate_id",
+            Self::UnknownReference => "unknown_reference",
+            Self::InvalidOrder => "invalid_order",
+            Self::InvalidBBox => "invalid_bbox",
+            Self::InvalidOffsets => "invalid_offsets",
+            Self::InvalidTable => "invalid_table",
             Self::InvalidInvariant => "invalid_invariant",
             Self::LimitExceeded => "limit_exceeded",
         }
@@ -104,6 +122,20 @@ impl GroundingJsonError {
             }
             GroundingJsonErrorCode::InvalidCapabilities => {
                 "make capabilities agree with supplied arrays and offsets"
+            }
+            GroundingJsonErrorCode::DuplicateId => {
+                "make identifiers unique within their typed namespace"
+            }
+            GroundingJsonErrorCode::UnknownReference => "reference an existing page or element",
+            GroundingJsonErrorCode::InvalidOrder => {
+                "preserve the required deterministic array order"
+            }
+            GroundingJsonErrorCode::InvalidBBox => "submit a positive bounding box within its page",
+            GroundingJsonErrorCode::InvalidOffsets => {
+                "make Unicode scalar offsets select the span text exactly"
+            }
+            GroundingJsonErrorCode::InvalidTable => {
+                "correct table cell order, ranges, and overlaps"
             }
             GroundingJsonErrorCode::InvalidInvariant => "correct the referenced value or invariant",
             GroundingJsonErrorCode::LimitExceeded => {
@@ -666,18 +698,32 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
     let mut pages = HashSet::new();
     let mut expected = 1u32;
     for (i, p) in artifact.pages.iter().enumerate() {
-        if !valid_id(&p.id)
-            || !page_ids.insert(p.id.clone())
-            || p.index != expected
-            || p.width <= 0
-            || p.height <= 0
-            || p.width > MAX_SAFE_INT
-            || p.height > MAX_SAFE_INT
-            || !matches!(p.rotation, 0 | 90 | 180 | 270)
-        {
+        let path = format!("/pages/{i}");
+        if !valid_id(&p.id) {
+            return Err(error(
+                GroundingJsonErrorCode::InvalidField,
+                &format!("{path}/id"),
+            ));
+        }
+        if !page_ids.insert(p.id.clone()) {
+            return Err(error(
+                GroundingJsonErrorCode::DuplicateId,
+                &format!("{path}/id"),
+            ));
+        }
+        if p.index != expected {
+            return Err(error(
+                GroundingJsonErrorCode::InvalidOrder,
+                &format!("{path}/index"),
+            ));
+        }
+        if p.width <= 0 || p.height <= 0 || p.width > MAX_SAFE_INT || p.height > MAX_SAFE_INT {
+            return Err(error(GroundingJsonErrorCode::InvalidInvariant, &path));
+        }
+        if !matches!(p.rotation, 0 | 90 | 180 | 270) {
             return Err(error(
                 GroundingJsonErrorCode::InvalidInvariant,
-                &format!("/pages/{i}"),
+                &format!("{path}/rotation"),
             ));
         }
         expected += 1;
@@ -685,24 +731,76 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
     }
     let mut ids = HashSet::new();
     for (i, e) in artifact.elements.iter().enumerate() {
-        if !valid_id(&e.id)
-            || !ids.insert(e.id.clone())
-            || !pages.contains(&e.page)
-            || !valid_bbox(e.bbox, artifact.pages.iter().find(|p| p.id == e.page))
-            || e.kind.is_empty()
+        let path = format!("/elements/{i}");
+        if !valid_id(&e.id) {
+            return Err(error(
+                GroundingJsonErrorCode::InvalidField,
+                &format!("{path}/id"),
+            ));
+        }
+        if !ids.insert(e.id.clone()) {
+            return Err(error(
+                GroundingJsonErrorCode::DuplicateId,
+                &format!("{path}/id"),
+            ));
+        }
+        if !pages.contains(&e.page) {
+            return Err(error(
+                GroundingJsonErrorCode::UnknownReference,
+                &format!("{path}/page"),
+            ));
+        }
+        if !valid_bbox(e.bbox, artifact.pages.iter().find(|p| p.id == e.page)) {
+            return Err(error(
+                GroundingJsonErrorCode::InvalidBBox,
+                &format!("{path}/bbox"),
+            ));
+        }
+        if e.kind.is_empty()
             || e.kind
                 .bytes()
                 .any(|b| !(b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_' || b == b'-'))
         {
             return Err(error(
-                GroundingJsonErrorCode::InvalidInvariant,
-                &format!("/elements/{i}"),
+                GroundingJsonErrorCode::InvalidField,
+                &format!("{path}/kind"),
             ));
         }
     }
     if let Some(spans) = &artifact.spans {
         let mut seen = HashSet::new();
         for (i, s) in spans.iter().enumerate() {
+            let path = format!("/spans/{i}");
+            if !valid_id(&s.id) {
+                return Err(error(
+                    GroundingJsonErrorCode::InvalidField,
+                    &format!("{path}/id"),
+                ));
+            }
+            if !seen.insert(s.id.clone()) {
+                return Err(error(
+                    GroundingJsonErrorCode::DuplicateId,
+                    &format!("{path}/id"),
+                ));
+            }
+            if !pages.contains(&s.page) {
+                return Err(error(
+                    GroundingJsonErrorCode::UnknownReference,
+                    &format!("{path}/page"),
+                ));
+            }
+            if !valid_bbox(s.bbox, artifact.pages.iter().find(|p| p.id == s.page)) {
+                return Err(error(
+                    GroundingJsonErrorCode::InvalidBBox,
+                    &format!("{path}/bbox"),
+                ));
+            }
+            if s.element.as_ref().is_some_and(|id| !ids.contains(id)) {
+                return Err(error(
+                    GroundingJsonErrorCode::UnknownReference,
+                    &format!("{path}/element"),
+                ));
+            }
             let offsets_present = s.char_start.is_some() || s.char_end.is_some();
             let offsets_complete = s.char_start.is_some() && s.char_end.is_some();
             let offsets_match = match (s.element.as_ref(), s.char_start, s.char_end) {
@@ -723,32 +821,39 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
                     .unwrap_or(false),
                 _ => false,
             };
-            if !valid_id(&s.id)
-                || !seen.insert(s.id.clone())
-                || !pages.contains(&s.page)
-                || !valid_bbox(s.bbox, artifact.pages.iter().find(|p| p.id == s.page))
-                || offsets_present != artifact.capabilities.char_offsets
+            if offsets_present != artifact.capabilities.char_offsets
                 || (artifact.capabilities.char_offsets && (!offsets_complete || !offsets_match))
-                || s.element.as_ref().map_or(false, |id| !ids.contains(id))
             {
-                return Err(error(
-                    GroundingJsonErrorCode::InvalidInvariant,
-                    &format!("/spans/{i}"),
-                ));
+                return Err(error(GroundingJsonErrorCode::InvalidOffsets, &path));
             }
         }
     }
     if let Some(tables) = &artifact.tables {
         let mut seen = HashSet::new();
         for (i, t) in tables.iter().enumerate() {
-            if !valid_id(&t.id)
-                || !seen.insert(t.id.clone())
-                || !pages.contains(&t.page)
-                || !valid_bbox(t.bbox, artifact.pages.iter().find(|p| p.id == t.page))
-            {
+            let path = format!("/tables/{i}");
+            if !valid_id(&t.id) {
                 return Err(error(
-                    GroundingJsonErrorCode::InvalidInvariant,
-                    &format!("/tables/{i}"),
+                    GroundingJsonErrorCode::InvalidField,
+                    &format!("{path}/id"),
+                ));
+            }
+            if !seen.insert(t.id.clone()) {
+                return Err(error(
+                    GroundingJsonErrorCode::DuplicateId,
+                    &format!("{path}/id"),
+                ));
+            }
+            if !pages.contains(&t.page) {
+                return Err(error(
+                    GroundingJsonErrorCode::UnknownReference,
+                    &format!("{path}/page"),
+                ));
+            }
+            if !valid_bbox(t.bbox, artifact.pages.iter().find(|p| p.id == t.page)) {
+                return Err(error(
+                    GroundingJsonErrorCode::InvalidBBox,
+                    &format!("{path}/bbox"),
                 ));
             }
             if t.cells.len() > MAX_CELLS {
@@ -770,7 +875,7 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
                     || col_end.is_none()
                 {
                     return Err(error(
-                        GroundingJsonErrorCode::InvalidInvariant,
+                        GroundingJsonErrorCode::InvalidTable,
                         &format!("/tables/{i}/cells"),
                     ));
                 }
@@ -779,7 +884,7 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
                     for col in c.col..col_end.unwrap() {
                         if !occupied.insert((row, col)) {
                             return Err(error(
-                                GroundingJsonErrorCode::InvalidInvariant,
+                                GroundingJsonErrorCode::InvalidTable,
                                 &format!("/tables/{i}/cells"),
                             ));
                         }
@@ -885,7 +990,7 @@ mod tests {
         let bad = valid().replace("54000,10200", "64000,10200");
         assert_eq!(
             parse_grounding_json(bad.as_bytes()).unwrap_err().code,
-            GroundingJsonErrorCode::InvalidInvariant
+            GroundingJsonErrorCode::InvalidBBox
         );
     }
     #[test]
@@ -933,13 +1038,13 @@ mod tests {
             parse_grounding_json(offset_mismatch.as_bytes())
                 .unwrap_err()
                 .code,
-            GroundingJsonErrorCode::InvalidInvariant
+            GroundingJsonErrorCode::InvalidOffsets
         );
         let overlap = include_str!("../../../schemas/examples/grounding-source-full.example.json")
             .replace("\"row\": 0, \"col\": 1", "\"row\": 0, \"col\": 0");
         assert_eq!(
             parse_grounding_json(overlap.as_bytes()).unwrap_err().code,
-            GroundingJsonErrorCode::InvalidInvariant
+            GroundingJsonErrorCode::InvalidTable
         );
     }
     #[test]
