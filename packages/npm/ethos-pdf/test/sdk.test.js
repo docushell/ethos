@@ -41,10 +41,39 @@ childProcess.spawn = (binary, args) => {
 };
 
 const { EthosSdkError, checkGrounding, verifyClaims } = require("..");
+const { SUPPORTED_TARGETS, targetKey } = require("../bin/ethos-pdf");
 
 const inputPath = path.resolve(__dirname, "../../../../schemas/examples/grounding-source.example.json");
 
+// An unsupported host must fail with one typed SDK error before anything can be mistaken for a
+// verification result. Assert exactly that, then skip the spawn-backed assertions, which need a
+// packaged binary for this target. CI covers the full path on a supported target.
+async function assertUnsupportedPlatformFailsClosed() {
+  for (const call of [
+    () => checkGrounding({ inputPath }),
+    () => verifyClaims({ inputPath, citationsPath: inputPath }),
+  ]) {
+    await assert.rejects(
+      call,
+      (error) =>
+        error instanceof EthosSdkError &&
+        error.code === "unsupported_platform" &&
+        /No verification was performed/.test(error.message),
+    );
+  }
+  assert.equal(calls.length, 0, "unsupported platform must never spawn a process");
+}
+
 async function main() {
+  if (!SUPPORTED_TARGETS.has(targetKey())) {
+    await assertUnsupportedPlatformFailsClosed();
+    console.log(
+      `sdk ok (unsupported target ${targetKey()}: typed unsupported_platform error asserted, ` +
+        "spawn-backed assertions skipped)",
+    );
+    return;
+  }
+
   const checked = await checkGrounding({ inputPath });
   assert.equal(checked.exitCode, 0);
   assert.equal(checked.artifact.artifact_type, "ethos.test");

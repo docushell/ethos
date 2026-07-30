@@ -5,7 +5,13 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 
-const { resolveBinary, validateVendorManifest, VENDOR_DIR } = require("./bin/ethos-pdf");
+const {
+  resolveBinary,
+  validateVendorManifest,
+  SUPPORTED_TARGETS,
+  targetKey,
+  VENDOR_DIR
+} = require("./bin/ethos-pdf");
 
 const MAX_OUTPUT_BYTES = 8 * 1024 * 1024;
 const MAX_CITATIONS_BYTES = 8 * 1024 * 1024;
@@ -77,14 +83,32 @@ function verifyClaims(options) {
   });
 }
 
+// Resolve the packaged binary, converting launcher errors into one typed SDK error. An
+// unsupported platform or a missing/invalid vendor payload must fail before anything can be
+// mistaken for a verification result.
+function resolveBinaryOrThrowTyped() {
+  if (!SUPPORTED_TARGETS.has(targetKey())) {
+    throw new EthosSdkError(
+      "unsupported_platform",
+      `Unsupported Ethos npm binary target: ${process.platform} ${process.arch}. ` +
+        "Supported targets are macOS arm64 and Linux x64. No verification was performed."
+    );
+  }
+  try {
+    validateVendorManifest();
+    return resolveBinary();
+  } catch (error) {
+    throw new EthosSdkError("vendor_invalid", error.message);
+  }
+}
+
 async function execute(operation, options, build) {
   if (!options || typeof options !== "object" || Array.isArray(options)) {
     throw new EthosSdkError("invalid_options", `${operation} options must be an object`);
   }
   const plan = await build(options);
   try {
-    validateVendorManifest();
-    const binaryPath = resolveBinary();
+    const binaryPath = resolveBinaryOrThrowTyped();
     const result = await run(binaryPath, plan.args, options);
     const artifactBytes = plan.outputPath
       ? await readOutputFile(plan.outputPath)
