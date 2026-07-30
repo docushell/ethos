@@ -8,6 +8,8 @@
   "page_metadata": "page-metadata.json",
   "grounding_json": "grounding.json",
   "grounding_json_sha256": "d83a67d1d79f8bc82d36516a548a4a8c46796b071637e3f830e80dbd295bc8b3",
+  "invalid_grounding_json": "grounding-invalid.json",
+  "invalid_grounding_json_sha256": "e0900451bf42044c761ca5c576b2c4d1456effa33782caa663bec04a724776df",
   "citations": "citations.json",
   "license": "Apache-2.0"
 }

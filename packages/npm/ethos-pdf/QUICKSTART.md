@@ -76,3 +76,8 @@ console.log(verification.exitCode, verification.artifact.all_evidence_grounded);
 
 The JavaScript and Python mapper examples consume the pinned parser output and page metadata,
 convert bottom-left point coordinates to top-left centipoints, and emit identical Grounding JSON.
+
+To practice correcting one documented validation failure, copy `examples/fixtures/grounding-invalid.json`
+to a working file and run `checkGrounding`. The report identifies `/elements/0/bbox` as an
+out-of-page bounding box. Change its right coordinate from `60000` to `39415`, rerun the check,
+and confirm that `structure` becomes `valid`. Ethos does not repair submitted artifacts.

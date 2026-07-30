@@ -35,6 +35,9 @@
 - `@docushell/ethos-pdf`: verify packaged mapper fixture hashes, Apache-2.0 provenance, source
   binding, and citation fingerprint coherence.
 
+- `@docushell/ethos-pdf`: add a documented invalid Grounding fixture and one explicit bounding-box
+  correction path for clean-room validation practice.
+
 - docs: complete the WP-0 OpenDataLoader 2.5.0 feasibility proof against the DocuShell-vendored
   JAR, with source-bound page geometry, bottom-left to top-left conversion, explicit capability
   gaps, and byte-identical mapped output; leave ADR and public-posture acceptance gated.

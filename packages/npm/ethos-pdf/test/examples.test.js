@@ -33,6 +33,7 @@ async function main() {
       ["source_pdf_sha256", "source_pdf"],
       ["parser_output_sha256", "parser_output"],
       ["grounding_json_sha256", "grounding_json"],
+      ["invalid_grounding_json_sha256", "invalid_grounding_json"],
     ]) {
       const bytes = await fs.readFile(path.join(FIXTURES, manifest[fileKey]));
       const digest = crypto.createHash("sha256").update(bytes).digest("hex");
