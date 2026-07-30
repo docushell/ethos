@@ -1,0 +1,12 @@
+{
+  "artifact_type": "ethos.grounding.v1",
+  "schema_version": "1.0.0",
+  "source": { "media_type": "application/pdf", "sha256": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+  "producer": { "name": "fixture", "version": "1.0.0" },
+  "capabilities": { "spans": true, "char_offsets": true, "tables": true },
+  "coordinate_system": { "unit": "centipoint", "origin": "top-left" },
+  "pages": [{ "id": "page-1", "index": 1, "width": 61200, "height": 79200, "rotation": 0 }],
+  "elements": [{ "id": "block-1", "page": "page-1", "bbox": [7200, 8400, 54000, 10200], "kind": "text_block", "text": "héllo" }],
+  "spans": [{ "id": "span-1", "page": "page-1", "bbox": [7200, 8400, 54000, 10200], "text": "héllo", "element": "block-1", "char_start": 0, "char_end": 5 }],
+  "tables": [{ "id": "table-1", "page": "page-1", "bbox": [1000, 1100, 5000, 3000], "cells": [{ "row": 0, "col": 0, "row_span": 1, "col_span": 1, "bbox": [1000, 1100, 3000, 2000], "text": "A" }, { "row": 0, "col": 1, "row_span": 1, "col_span": 1, "bbox": [3000, 1100, 5000, 2000], "text": "B" }] }]
+}

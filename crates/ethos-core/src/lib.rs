@@ -58,6 +58,8 @@ pub mod fingerprint;
 #[cfg(feature = "full")]
 pub mod geom;
 #[cfg(feature = "full")]
+pub mod grounding_json;
+#[cfg(feature = "full")]
 pub mod ids;
 #[cfg(feature = "full")]
 pub mod model;

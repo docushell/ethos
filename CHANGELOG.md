@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- `ethos-core`: implement the WP-1 Grounding JSON v1 schemas, duplicate-key-safe parsing, typed
+  capability/geometry/span/table invariants, measured limits, and deterministic representation
+  hashes under ADR-0016.
+
+- docs: complete the WP-0 OpenDataLoader 2.5.0 feasibility proof against the DocuShell-vendored
+  JAR, with source-bound page geometry, bottom-left to top-left conversion, explicit capability
+  gaps, and byte-identical mapped output; leave ADR and public-posture acceptance gated.
 - docs: begin v0.6.0 WP-0 by reconciling the v0.5.0 release ledger and recording an executable,
   deterministic real-parser feasibility stop; keep schema/runtime work gated on a positive,
   geometry-honest mapping proof.

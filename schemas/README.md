@@ -23,6 +23,8 @@ consumer-facing schema surface; compatibility and versioning rules apply to it.
 | `ethos-verification-config.schema.json` | verification config (its c14n hash stamps reports) |
 | `ethos-crop-descriptor.schema.json` | crop descriptor JSON emitted by `ethos crop_element` and `ethos verify --crop-dir` |
 | `ethos-deterministic-profile.schema.json` | `profiles/ethos-deterministic-v*.json` checker |
+| `ethos-grounding-source.schema.json` | `ethos.grounding.v1` parser-neutral source artifact |
+| `ethos-grounding-validation-report.schema.json` | `ethos.grounding_validation.v1` validation result |
 
 ## Internal process and guard schemas
 
@@ -67,6 +69,9 @@ them small, valid, and mutually consistent (same fingerprints across document / 
 security-report / verification-report examples).
 
 `verification-report.example.json` shows a grounded report.
+`grounding-source.example.json` and `grounding-source-full.example.json` show the minimal and
+capability-complete Grounding JSON fixtures. The `grounding-source-negative-*.json` fixtures are
+raw parser rejection cases and are intentionally not schema-positive examples.
 `verification-report-negative.example.json` shows a non-grounded report with a per-check
 `reason` label.
 

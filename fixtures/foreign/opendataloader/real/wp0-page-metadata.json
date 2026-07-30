@@ -1,0 +1,10 @@
+{
+  "source_pdf": "source.pdf",
+  "source_pdf_sha256": "082f9f8c800fda43b13d097ccf3a603e1f8048987fb497fd2be4cba6817001ee",
+  "measurement_command": "pdfinfo source.pdf",
+  "unit": "point",
+  "origin": "bottom-left",
+  "pages": [
+    { "index": 1, "width": 595, "height": 841, "rotation": 0 }
+  ]
+}

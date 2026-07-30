@@ -1,0 +1,8 @@
+{
+  "artifact_type": "ethos.grounding_validation.v1",
+  "schema_version": "1.0.0",
+  "structure": "valid",
+  "source_binding": "not_checked",
+  "representation_sha256": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "counts": { "pages": 1, "elements": 1, "spans": 0, "tables": 0 }
+}
