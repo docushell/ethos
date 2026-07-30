@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Guard v0.5.0 core activation while v0.4.0 remains publicly published."""
+"""Guard v0.5.0 core activation and its published public install wording.
+
+v0.5.0 was published on 2026-07-21 to crates.io (`ethos-doc-core`, `ethos-verify`, `ethos-pdf`),
+PyPI (`ethos-pdf`), npm (`@docushell/ethos-pdf`), and GitHub Release `v0.5.0`. Before that date this
+module held the public install wording at the previously published 0.4.0 while the core was
+activated at 0.5.0. That hold is retired: the published baseline and the advertised install
+commands must now agree, and the checks below assert the published direction.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 VERSION = "0.5.0"
-PUBLISHED_NPM_PAYLOAD = "0.4.0"
+PUBLISHED_NPM_PAYLOAD = VERSION
 
 
 def read(path: str) -> str:
@@ -41,14 +48,25 @@ class V050CoreVersionActivationTests(unittest.TestCase):
         self.assertEqual(2, workflow.count('--expected-version "ethos ${{ steps.version.outputs.value }}"'))
         self.assertEqual(2, workflow.count('--version ${{ steps.version.outputs.value }}'))
 
-    def test_public_install_wording_is_not_advanced_to_the_candidate(self) -> None:
+    def test_public_install_wording_matches_the_published_release(self) -> None:
         claims = read("docs/public-boundary-claims.json")
         readme = read("README.md")
         active_readme = readme.split("### 60-second `ethos-full` install", 1)[0]
-        self.assertNotIn("0.5.0", active_readme)
-        self.assertNotIn("0.5.0", claims)
+        # The published baseline is the advertised one. Nothing may still point at the previous
+        # release, and the exact install commands must name the published version.
+        for surface, text in (("README.md", active_readme), ("claims registry", claims)):
+            self.assertNotIn("0.4.0", text, surface)
+        for command in (
+            f"cargo add ethos-doc-core@{VERSION}",
+            f"cargo add ethos-verify@{VERSION}",
+            f"cargo add ethos-pdf@{VERSION}",
+            f"python3 -m pip install ethos-pdf=={VERSION}",
+            f"npm install -g @docushell/ethos-pdf@{VERSION}",
+        ):
+            self.assertIn(command, active_readme, command)
+            self.assertIn(command, claims, command)
 
-    def test_npm_payload_remains_on_published_release_until_refreshed_from_core_a(self) -> None:
+    def test_npm_payload_matches_the_published_release(self) -> None:
         manifest = json.loads(read("packages/npm/ethos-pdf/vendor/manifest.json"))
         package = json.loads(read("packages/npm/ethos-pdf/package.json"))
         lock = json.loads(read("packages/npm/ethos-pdf/package-lock.json"))
@@ -58,11 +76,13 @@ class V050CoreVersionActivationTests(unittest.TestCase):
             lock["version"],
             lock["packages"][""].get("version"),
         }
-        if versions == {VERSION}:
-            changelog = read("CHANGELOG.md")
-            self.assertIn("boundary-exception: refresh the v0.5.0 npm B payload from frozen core-A", changelog)
-        else:
-            self.assertEqual({PUBLISHED_NPM_PAYLOAD}, versions)
+        self.assertEqual({PUBLISHED_NPM_PAYLOAD}, versions)
+        # The payload refresh that moved these off the previous release keeps its recorded
+        # boundary exception.
+        self.assertIn(
+            "boundary-exception: refresh the v0.5.0 npm B payload from frozen core-A",
+            read("CHANGELOG.md"),
+        )
 
     def test_mcp_prototype_remains_excluded(self) -> None:
         cargo = read("Cargo.toml")

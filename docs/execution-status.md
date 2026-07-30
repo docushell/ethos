@@ -29,9 +29,14 @@ mapper examples with byte-identical double-run output. WP-4 consumer and release
 started, and the DocuShell acceptance commit is not selected.
 
 Nothing in v0.6.0 is published. Production positioning, hosted surfaces, a Grounding JSON
-availability claim, and npm SDK availability wording all remain blocked. The fingerprint-identity
-question between `docs/v0-6-0-release-prep.md` §8.1 and ADR-0016 is an open decider item and is
-recorded in `docs/v0-6-0-release.md` §3.1.
+availability claim, and npm SDK availability wording all remain blocked.
+
+Two decider rulings landed on 2026-07-30. The Grounding JSON fingerprint is
+`representation_sha256`, the hash of the accepted artifact bytes, with `source.sha256` remaining a
+separate optional PDF binding; `docs/v0-6-0-release-prep.md` §6.4 and §8.1 were corrected to match
+ADR-0016. Separately, the public install wording is advanced to the published `0.5.0` baseline
+after registry verification, retiring the pre-publication hold in
+`.github/scripts/test_v0_5_0_version_activation.py`.
 
 The DocuShell first-consumer integration closeout is accepted in
 `docs/validation/nip-1-docushell-integration-closeout-2026-07-20.md`. The worker-only public CLI,

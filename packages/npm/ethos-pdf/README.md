@@ -34,5 +34,5 @@ Vendor assembly:
 - the script extracts the `ethos` executable from each archive and writes
   `vendor/ethos-darwin-arm64` and `vendor/ethos-linux-x64`.
 
-The current published npm package is `@docushell/ethos-pdf@0.4.0`. Its vendored CLI binaries report
-`ethos 0.4.0`.
+The current published npm package is `@docushell/ethos-pdf@0.5.0`. Its vendored CLI binaries report
+`ethos 0.5.0`.

@@ -165,8 +165,8 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertIn("does not bundle PDFium", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
         self.assertIn("QUICKSTART.md", text)
-        self.assertIn("current published npm package is `@docushell/ethos-pdf@0.4.0`", text)
-        self.assertIn("`ethos 0.4.0`", text)
+        self.assertIn("current published npm package is `@docushell/ethos-pdf@0.5.0`", text)
+        self.assertIn("`ethos 0.5.0`", text)
         self.assertIn("release-archive and extracted-executable SHA256 values", text)
         self.assertIn("does not include public benchmark reports or claims", normalized)
 

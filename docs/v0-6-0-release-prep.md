@@ -321,14 +321,18 @@ The producer declares only:
 - `char_offsets`; and
 - `tables`.
 
-Grounding JSON fixes fingerprint support to true from `source.sha256`, coordinate origin to
-top-left, crop support to false, adapter ID to `ethos-grounding-json`, and adapter version to
-`1.0.0`.
+Grounding JSON fixes fingerprint support to true, coordinate origin to top-left, crop support to
+false, adapter ID to `ethos-grounding-json`, and adapter version to `1.0.0`.
 
-> Superseded in implementation. ADR-0016 makes `representation_sha256` — the hash of the accepted
-> Grounding JSON bytes — the `GroundingSource` fingerprint, with `source.sha256` remaining a
-> separate optional binding to the original PDF. See `v0-6-0-release.md` §3.1; the §8.1 citation
-> example below reflects the superseded reading and must be corrected when the decider rules.
+The fingerprint **value** is `representation_sha256`, the hash of the accepted Grounding JSON
+bytes, as accepted in ADR-0016 and ruled by the decider on 2026-07-30. `source.sha256` remains a
+separate optional binding to the original PDF and is never substituted for the fingerprint.
+
+The reasoning: the verifier only ever observes the Grounding JSON. Recording a PDF hash it never
+read as "what was verified" would be a claim Ethos cannot support, and it would let a silently
+re-mapped artifact with different geometry present as fresh. The accepted cost is that re-emitting
+the artifact changes the fingerprint — including a `producer.version` bump against an unchanged
+PDF — so citations bound to a previous representation correctly report `stale`.
 
 Rules:
 
@@ -505,11 +509,24 @@ The standalone release binary provides the same commands. Grounding validation a
 must not require PDFium.
 
 The quickstart must show that the retrieval or agent layer submits literal claims against the
-same accepted IDs:
+same accepted IDs, fingerprinted by the accepted representation rather than the source PDF.
+
+`grounding check` reports the value to use:
 
 ```json
 {
-  "document_fingerprint": "sha256:<same source hash>",
+  "artifact_type": "ethos.grounding_validation.v1",
+  "structure": "valid",
+  "source_binding": "matched",
+  "representation_sha256": "sha256:<representation hash>"
+}
+```
+
+Citations carry that value as `document_fingerprint`:
+
+```json
+{
+  "document_fingerprint": "sha256:<representation hash>",
   "claims": [
     {
       "kind": "quote",
@@ -523,8 +540,10 @@ same accepted IDs:
 }
 ```
 
-> Superseded in implementation. The accepted fingerprint is `representation_sha256`, not the source
-> hash. See the note in §6.4 and `v0-6-0-release.md` §3.1.
+Using `source.sha256` here would report `stale` against a correct artifact. The two hashes answer
+different questions and the quickstart must say so: `source.sha256` records which PDF the mapper
+claims it read, `representation_sha256` records which representation Ethos actually verified. See
+§6.4 and `docs/writing-a-mapper.md` §7.
 
 Ethos does not generate claims, select evidence, or decide relevance. It checks the submitted
 literal claim and locator against the recorded representation.

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- docs: advance public install wording to the published `0.5.0` baseline. crates.io
+  (`ethos-doc-core`, `ethos-verify`, `ethos-pdf`), PyPI (`ethos-pdf`), npm
+  (`@docushell/ethos-pdf`), and GitHub Release `v0.5.0` were each verified at 0.5.0, so the
+  release ledger was correct and the install commands were a release behind. Retires and inverts
+  the pre-publication hold in `test_v0_5_0_version_activation.py`, which now asserts the
+  advertised commands name the published version.
+
+- docs: rule Grounding JSON fingerprint identity as `representation_sha256` and correct
+  `docs/v0-6-0-release-prep.md` §6.4 and §8.1 to match ADR-0016, removing the authority conflict.
+  The quickstart flow now reads the fingerprint from `grounding check` rather than reusing the
+  source PDF hash, which would report `stale` against a correct artifact.
+
 - docs: record the clean-room mapper walkthrough and the public-version gate deadlock. A new
   mapper for a synthetic parser sharing no shape with any shipped fixture, written from
   `docs/writing-a-mapper.md` alone, passed all four self-check steps; the independent-developer

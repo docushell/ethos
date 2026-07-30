@@ -176,7 +176,16 @@ environmental. The full suite still needs a run on macOS arm64 or Linux x64 (sec
 
 ## 3. Decisions that differ from the prep document
 
-### 3.1 Fingerprint identity — **decision required**
+### 3.1 Fingerprint identity — **RULED 2026-07-30: representation hash**
+
+The decider accepted the representation hash. `docs/v0-6-0-release-prep.md` §6.4 and §8.1 have been
+corrected to match ADR-0016, so the authorities no longer conflict. The prep document now shows
+`grounding check` reporting `representation_sha256` and citations carrying that value as
+`document_fingerprint`, and states why using `source.sha256` there would report `stale`.
+
+The original conflict is preserved below for the record.
+
+---
 
 The implementation makes the verifier fingerprint the **representation hash**
 (`representation_sha256`, the hash of the accepted Grounding JSON bytes), recorded in ADR-0016.
@@ -500,10 +509,29 @@ Worth preserving deliberately:
 
 ### Open — work
 
-5. **The public-version deadlock. This needs a decider ruling, not an edit.**
+5. **The public-version deadlock — RESOLVED 2026-07-30.**
+
+   Independently verified against the registries on 2026-07-30: `ethos-doc-core`, `ethos-verify`,
+   and `ethos-pdf` are all at **0.5.0** on crates.io (published 2026-07-21); `ethos-pdf` is at
+   **0.5.0** on PyPI; `@docushell/ethos-pdf` `dist-tags.latest` is **0.5.0** on npm; and GitHub
+   Release `v0.5.0` is latest with the `ethos-macos-arm64.tar.gz` and `ethos-linux-x64.tar.gz`
+   assets the README describes.
+
+   So `docs/release-state.json` and `docs/execution-status.md` were correct, the public install
+   wording was wrong, and `test_v0_5_0_version_activation` was a stale pre-publication hold. Users
+   following the README had been installing a version behind since 2026-07-21.
+
+   Public install wording is now advanced to 0.5.0 across `README.md`,
+   `docs/public-boundary-claims.json`, both Python docs, and both npm docs. The activation guard is
+   retired and inverted: it now asserts that the advertised install commands name the published
+   version and that no surface still points at the previous release.
+
+   The original deadlock analysis is preserved below for the record.
+
+   ---
 
    An attempt to advance the public install wording from `0.4.0` to `0.5.0` was made and
-   **reverted**, because three repository gates assert mutually unsatisfiable things:
+   **reverted**, because three repository gates asserted mutually unsatisfiable things:
 
    | Gate | Requires |
    | --- | --- |
