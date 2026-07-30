@@ -44,11 +44,9 @@ OUT_OF_SCOPE_PUBLIC_CLAIM_TERMS = [
     "table-quality",
     "parser-quality",
 ]
-D_CLOSEOUT_PREP_GUARD = "$(PYTHON) .github/scripts/test_milestone_d_closeout_prep_record.py"
-D_CLOSEOUT_RECORD_GUARD = "$(PYTHON) .github/scripts/test_milestone_d_closeout_record.py"
-D_FINAL_CLOSEOUT_RECORD_GUARD = (
-    "$(PYTHON) .github/scripts/test_milestone_d_final_closeout_record.py"
-)
+# The three milestone-D closeout-record guards were removed with their records in 73d53c8
+# ("docs: remove completed historical records"). The contract assertions below are current
+# policy and survive; the closeout ceremony for a shipped milestone does not.
 PUBLIC_SURFACE_POSTURE_GUARD = "$(PYTHON) .github/scripts/test_public_surface_posture.py"
 CLAIMS_GATE = "$(PYTHON) .github/scripts/claims_gate.py"
 SURFACE_EXPANSION_BLOCKER_PATTERN = re.compile(r"\b(surfaces?|bindings?|methods?)\b")
@@ -487,9 +485,6 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
 
         for target in registered_targets():
             self.assertIn(f"$(MAKE) {target} PYTHON=$(PYTHON)", block)
-        self.assertIn(D_CLOSEOUT_PREP_GUARD, block)
-        self.assertIn(D_CLOSEOUT_RECORD_GUARD, block)
-        self.assertIn(D_FINAL_CLOSEOUT_RECORD_GUARD, block)
         self.assertIn(PUBLIC_SURFACE_POSTURE_GUARD, block)
         self.assertIn(CLAIMS_GATE, block)
         self.assertIn("$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py", block)
@@ -501,9 +496,6 @@ class MilestoneDInternalContractsTests(unittest.TestCase):
         self.assertEqual(
             [f"$(MAKE) {target} PYTHON=$(PYTHON)" for target in registered_targets()]
             + [
-                D_CLOSEOUT_PREP_GUARD,
-                D_CLOSEOUT_RECORD_GUARD,
-                D_FINAL_CLOSEOUT_RECORD_GUARD,
                 PUBLIC_SURFACE_POSTURE_GUARD,
                 CLAIMS_GATE,
                 "$(PYTHON) .github/scripts/test_milestone_d_internal_contracts.py",

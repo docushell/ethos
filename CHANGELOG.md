@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- build: make gate rot structurally impossible. `test_gate_reachability.py` fails if any gate
+  script under `.github/scripts` is unreachable from CI, if a `make` target invokes a script that
+  does not exist, or if a workflow does. Wires the 12 previously unreachable contract and boundary
+  gates into a new `governance-gates` CI job, and removes eight `make` targets for shipped releases
+  and milestones that together referenced roughly 280 deleted scripts and could not run at all.
+  Deletes three gates whose only subject was a deleted record or a removed target. Gate scripts
+  reachable from CI: 44 of 44.
+
 - `ethos-cli`, `@docushell/ethos-pdf`: remove `--source-artifact` from `verify` and `verify-batch`,
   and `sourceArtifactPath` from `verifyClaims`. The check ran and left no trace: the report was
   byte-identical with and without the flag, and `verification_report.json` has no field that can
