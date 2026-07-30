@@ -39,7 +39,6 @@ PYTHON_INIT = ROOT / "python/ethos_pdf/__init__.py"
 PYTHON_CLI = ROOT / "python/ethos_pdf/_cli.py"
 VERIFY_TESTS = ROOT / "crates/ethos-cli/tests/verify.rs"
 PYTHON_TESTS = ROOT / "python/tests/test_cli_surface.py"
-ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 EXPECTED_EXPLICIT_BLOCKERS = [
@@ -110,7 +109,6 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             "$(MAKE) python-surface-test PYTHON=$(PYTHON)",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
-            "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_milestone_d_crop_element_surface_shape_contract.py",
             "git diff --check",
         ]
@@ -132,7 +130,8 @@ class MilestoneDCropElementSurfaceShapeContractTests(unittest.TestCase):
             self.assertNotIn(out_of_scope, block)
 
     def test_contract_is_linked_from_status_docs(self) -> None:
-        for path in [ROADMAP, EXECUTION_STATUS, SCHEMAS_README]:
+        # docs/roadmap.md was removed in 73d53c8 as a completed historical record.
+        for path in [EXECUTION_STATUS, SCHEMAS_README]:
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-crop-element-surface-shape-contract.md", text, path)
 

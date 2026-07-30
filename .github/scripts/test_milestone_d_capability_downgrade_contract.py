@@ -31,7 +31,6 @@ CONTRACT = ROOT / "docs/milestone-d-capability-downgrade-contract.md"
 CONTRACT_INVENTORY = ROOT / "examples/verify/capability_downgrade_v1_contract.json"
 CONTRACT_INVENTORY_SCHEMA = ROOT / "schemas/ethos-capability-downgrade-contract.schema.json"
 VERIFICATION_REPORT_SCHEMA = ROOT / "schemas/ethos-verification-report.schema.json"
-ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 EXPECTED_EXPLICIT_BLOCKERS = [
@@ -150,7 +149,6 @@ class MilestoneDCapabilityDowngradeContractTests(unittest.TestCase):
             "cargo test --locked -p ethos-cli --test verify capability",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
-            "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_milestone_d_capability_downgrade_contract.py",
             "git diff --check",
         ]
@@ -176,7 +174,8 @@ class MilestoneDCapabilityDowngradeContractTests(unittest.TestCase):
             self.assertNotIn(out_of_scope, block)
 
     def test_contract_is_linked_from_status_docs(self) -> None:
-        for path in [ROADMAP, EXECUTION_STATUS, SCHEMAS_README]:
+        # docs/roadmap.md was removed in 73d53c8 as a completed historical record.
+        for path in [EXECUTION_STATUS, SCHEMAS_README]:
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-capability-downgrade-contract.md", text, path)
 

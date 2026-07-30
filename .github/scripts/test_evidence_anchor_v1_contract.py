@@ -35,7 +35,6 @@ REQUEST_SCHEMA = ROOT / "schemas/ethos-evidence-anchor-request.schema.json"
 REPORT_SCHEMA = ROOT / "schemas/ethos-evidence-anchor-report.schema.json"
 SCHEMAS_README = ROOT / "schemas/README.md"
 VALIDATE_EXAMPLES = ROOT / "schemas/validate_examples.py"
-ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 README = ROOT / "README.md"
 EVIDENCE_TYPES = ROOT / "crates/ethos-core/src/evidence_anchor.rs"
@@ -46,7 +45,6 @@ EXPECTED_TARGET_COMMANDS = [
     "cargo test --locked -p ethos-grounding-opendataloader-json",
     "$(PYTHON) schemas/validate_examples.py",
     "$(PYTHON) .github/scripts/test_execution_status.py",
-    "$(PYTHON) .github/scripts/test_roadmap_status.py",
     "$(PYTHON) .github/scripts/test_evidence_anchor_v1_contract.py",
     "git diff --check",
 ]

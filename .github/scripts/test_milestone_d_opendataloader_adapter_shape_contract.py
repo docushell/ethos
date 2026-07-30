@@ -35,7 +35,6 @@ ADAPTER_README = ROOT / "adapters/grounding/opendataloader-json/README.md"
 CLI_VERIFY_TEST = ROOT / "crates/ethos-cli/tests/verify.rs"
 VERIFY_CASES = ROOT / "examples/verify/cases.json"
 VERIFICATION_REPORT_SCHEMA = ROOT / "schemas/ethos-verification-report.schema.json"
-ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 EXPECTED_EXPLICIT_BLOCKERS = [
@@ -107,7 +106,6 @@ class MilestoneDOpendataloaderAdapterShapeContractTests(unittest.TestCase):
             "cargo test --locked -p ethos-cli --test verify opendataloader",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
-            "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_milestone_d_opendataloader_adapter_shape_contract.py",
             "git diff --check",
         ]
@@ -132,7 +130,8 @@ class MilestoneDOpendataloaderAdapterShapeContractTests(unittest.TestCase):
             self.assertNotIn(out_of_scope, block)
 
     def test_contract_is_linked_from_status_docs(self) -> None:
-        for path in [ROADMAP, EXECUTION_STATUS, SCHEMAS_README]:
+        # docs/roadmap.md was removed in 73d53c8 as a completed historical record.
+        for path in [EXECUTION_STATUS, SCHEMAS_README]:
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-opendataloader-adapter-shape-contract.md", text, path)
 

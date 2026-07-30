@@ -32,7 +32,6 @@ CONTRACT = ROOT / "docs/milestone-d-sandbox-subprocess-contract.md"
 CONTRACT_INVENTORY = ROOT / "examples/sandbox/sandbox_subprocess_v1_contract.json"
 CONTRACT_INVENTORY_SCHEMA = ROOT / "schemas/ethos-sandbox-subprocess-contract.schema.json"
 SANDBOX_REQUEST_SCHEMA = ROOT / "schemas/ethos-sandbox-subprocess-request.schema.json"
-ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 PDF_PARSE_TESTS = ROOT / "crates/ethos-cli/tests/pdf_parse.rs"
@@ -683,7 +682,6 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             "cargo test --locked -p ethos-cli --test pdf_parse worker",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
-            "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_milestone_d_sandbox_subprocess_contract.py",
             "git diff --check",
         ]
@@ -706,7 +704,8 @@ class MilestoneDSandboxSubprocessContractTests(unittest.TestCase):
             self.assertNotIn(out_of_scope, block)
 
     def test_contract_is_linked_from_status_docs(self) -> None:
-        for path in [ROADMAP, EXECUTION_STATUS, SCHEMAS_README]:
+        # docs/roadmap.md was removed in 73d53c8 as a completed historical record.
+        for path in [EXECUTION_STATUS, SCHEMAS_README]:
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-sandbox-subprocess-contract.md", text, path)
 

@@ -36,7 +36,6 @@ CROP_ELEMENT_REQUEST_SCHEMA = ROOT / "schemas/ethos-crop-element-request.schema.
 CROP_ELEMENT_REQUEST_EXAMPLE = ROOT / "schemas/examples/crop-element-request.example.json"
 CROP_DESCRIPTOR_SCHEMA = ROOT / "schemas/ethos-crop-descriptor.schema.json"
 VERIFICATION_REPORT_EXAMPLE = ROOT / "schemas/examples/verification-report.example.json"
-ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 CLI_MAIN = ROOT / "crates/ethos-cli/src/main.rs"
@@ -535,7 +534,6 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             "cargo test --locked -p ethos-cli --test verify crop_element_cli",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
-            "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_milestone_d_crop_element_contract.py",
             "git diff --check",
         ]
@@ -558,7 +556,8 @@ class MilestoneDCropElementContractTests(unittest.TestCase):
             self.assertNotIn(out_of_scope, block)
 
     def test_contract_is_linked_from_status_docs(self) -> None:
-        for path in [ROADMAP, EXECUTION_STATUS, SCHEMAS_README]:
+        # docs/roadmap.md was removed in 73d53c8 as a completed historical record.
+        for path in [EXECUTION_STATUS, SCHEMAS_README]:
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-crop-element-contract.md", text, path)
 

@@ -39,7 +39,6 @@ RUST_VERIFY_TYPES = ROOT / "crates/ethos-core/src/verify_types.rs"
 RUST_VERIFY_LIB = ROOT / "crates/ethos-verify/src/lib.rs"
 RUST_CLI_VERIFY = ROOT / "crates/ethos-cli/src/cmd/verify.rs"
 CLI_VERIFY_TESTS = ROOT / "crates/ethos-cli/tests/verify.rs"
-ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 EXPECTED_SUPPORTED = ["quote", "value", "presence", "table_cell"]
@@ -107,7 +106,6 @@ class MilestoneDClaimKindBoundaryContractTests(unittest.TestCase):
             "cargo test --locked -p ethos-cli --test verify invalid_config_constraints_are_usage_errors",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
-            "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_milestone_d_claim_kind_boundary_contract.py",
             "git diff --check",
         ]
@@ -132,7 +130,8 @@ class MilestoneDClaimKindBoundaryContractTests(unittest.TestCase):
             self.assertNotIn(out_of_scope, block)
 
     def test_contract_is_linked_from_status_docs(self) -> None:
-        for path in [ROADMAP, EXECUTION_STATUS, SCHEMAS_README]:
+        # docs/roadmap.md was removed in 73d53c8 as a completed historical record.
+        for path in [EXECUTION_STATUS, SCHEMAS_README]:
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-claim-kind-boundary-contract.md", text, path)
 

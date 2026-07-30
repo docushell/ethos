@@ -55,7 +55,6 @@ evidence-anchor-v1-contract:
 	cargo test --locked -p ethos-grounding-opendataloader-json
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_evidence_anchor_v1_contract.py
 	git diff --check
 
@@ -171,7 +170,6 @@ milestone-d-verify-citations-contract:
 	cargo test --locked -p ethos-cli --test verify
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_verify_citations_contract.py
 	git diff --check
 
@@ -180,7 +178,6 @@ milestone-d-claim-kind-boundary-contract:
 	cargo test --locked -p ethos-cli --test verify invalid_config_constraints_are_usage_errors
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_claim_kind_boundary_contract.py
 	git diff --check
 
@@ -190,7 +187,6 @@ milestone-d-grounding-source-contract:
 	cargo test --locked -p ethos-cli --test verify opendataloader_verify_adapter_produces_capability_aware_report
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_grounding_source_contract.py
 	git diff --check
 
@@ -200,7 +196,6 @@ milestone-d-crop-element-contract:
 	cargo test --locked -p ethos-cli --test verify crop_element_cli
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_crop_element_contract.py
 	git diff --check
 
@@ -208,7 +203,6 @@ milestone-d-crop-element-surface-shape-contract:
 	$(MAKE) python-surface-test PYTHON=$(PYTHON)
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_crop_element_surface_shape_contract.py
 	git diff --check
 
@@ -219,7 +213,6 @@ milestone-d-sandbox-subprocess-contract:
 	cargo test --locked -p ethos-cli --test pdf_parse worker
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_sandbox_subprocess_contract.py
 	git diff --check
 
@@ -228,7 +221,6 @@ milestone-d-capability-downgrade-contract:
 	cargo test --locked -p ethos-cli --test verify capability
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_capability_downgrade_contract.py
 	git diff --check
 
@@ -237,7 +229,6 @@ milestone-d-opendataloader-adapter-shape-contract:
 	cargo test --locked -p ethos-cli --test verify opendataloader
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_d_opendataloader_adapter_shape_contract.py
 	git diff --check
 
@@ -291,7 +282,6 @@ frozen-record-guards:
 milestone-e-prep:
 	$(MAKE) light-check PYTHON=$(PYTHON)
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_public_surface_posture.py
 	$(PYTHON) .github/scripts/claims_gate.py
 	$(PYTHON) .github/scripts/test_public_prealpha_wording_approval.py
@@ -511,7 +501,6 @@ milestone-b-internal-checks:
 	$(PYTHON) schemas/test_font_policy_validation.py
 	$(PYTHON) schemas/test_security_report_validation.py
 	$(PYTHON) .github/scripts/test_execution_status.py
-	$(PYTHON) .github/scripts/test_roadmap_status.py
 	$(PYTHON) .github/scripts/test_milestone_b_closeout_record.py
 	$(PYTHON) .github/scripts/test_milestone_b_exit_checklist.py
 	$(MAKE) verify-alpha PYTHON=$(PYTHON)

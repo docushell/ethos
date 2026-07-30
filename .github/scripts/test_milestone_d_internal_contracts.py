@@ -33,7 +33,6 @@ VALIDATE_EXAMPLES = ROOT / "schemas/validate_examples.py"
 COMMON_CONTRACT_GATES = [
     "$(PYTHON) schemas/validate_examples.py",
     "$(PYTHON) .github/scripts/test_execution_status.py",
-    "$(PYTHON) .github/scripts/test_roadmap_status.py",
 ]
 OUT_OF_SCOPE_PUBLIC_CLAIM_TERMS = [
     "benchmark",

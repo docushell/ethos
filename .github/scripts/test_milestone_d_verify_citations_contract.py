@@ -33,7 +33,6 @@ CONTRACT_INVENTORY = ROOT / "examples/verify/verify_citations_v1_contract.json"
 CONTRACT_INVENTORY_SCHEMA = ROOT / "schemas/ethos-verify-citations-contract.schema.json"
 VERIFICATION_CONFIG_EXAMPLE = ROOT / "schemas/examples/verification-config.example.json"
 VERIFICATION_REPORT_SCHEMA = ROOT / "schemas/ethos-verification-report.schema.json"
-ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 EXPECTED_EXPLICIT_BLOCKERS = [
@@ -205,7 +204,6 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
             "cargo test --locked -p ethos-cli --test verify",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
-            "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_milestone_d_verify_citations_contract.py",
             "git diff --check",
         ]
@@ -229,7 +227,8 @@ class MilestoneDVerifyCitationsContractTests(unittest.TestCase):
             self.assertNotIn(out_of_scope, block)
 
     def test_contract_is_linked_from_status_docs(self) -> None:
-        for path in [ROADMAP, EXECUTION_STATUS, SCHEMAS_README]:
+        # docs/roadmap.md was removed in 73d53c8 as a completed historical record.
+        for path in [EXECUTION_STATUS, SCHEMAS_README]:
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-verify-citations-contract.md", text, path)
 

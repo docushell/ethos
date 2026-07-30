@@ -35,7 +35,6 @@ MODEL_SOURCE = ROOT / "crates/ethos-core/src/model.rs"
 ODL_SOURCE = ROOT / "adapters/grounding/opendataloader-json/src/lib.rs"
 CLI_VERIFY_TEST = ROOT / "crates/ethos-cli/tests/verify.rs"
 VERIFICATION_REPORT_SCHEMA = ROOT / "schemas/ethos-verification-report.schema.json"
-ROADMAP = ROOT / "docs/roadmap.md"
 EXECUTION_STATUS = ROOT / "docs/execution-status.md"
 SCHEMAS_README = ROOT / "schemas/README.md"
 EXPECTED_EXPLICIT_BLOCKERS = [
@@ -52,6 +51,9 @@ EXPECTED_TRAIT_METHODS = [
     "fingerprint",
     "pages",
     "elements",
+    # Provided by the trait since v0.4.0; recorded here so the frozen inventory matches the
+    # declared surface.
+    "structural_provenance",
     "spans",
     "tables",
     "crop_ref",
@@ -122,7 +124,6 @@ class MilestoneDGroundingSourceContractTests(unittest.TestCase):
             "cargo test --locked -p ethos-cli --test verify opendataloader_verify_adapter_produces_capability_aware_report",
             "$(PYTHON) schemas/validate_examples.py",
             "$(PYTHON) .github/scripts/test_execution_status.py",
-            "$(PYTHON) .github/scripts/test_roadmap_status.py",
             "$(PYTHON) .github/scripts/test_milestone_d_grounding_source_contract.py",
             "git diff --check",
         ]
@@ -147,7 +148,9 @@ class MilestoneDGroundingSourceContractTests(unittest.TestCase):
             self.assertNotIn(out_of_scope, block)
 
     def test_contract_is_linked_from_status_docs(self) -> None:
-        for path in [ROADMAP, EXECUTION_STATUS, SCHEMAS_README]:
+        # docs/roadmap.md was removed in 73d53c8 as a completed historical record; the surviving
+        # status surfaces still have to link the contract.
+        for path in [EXECUTION_STATUS, SCHEMAS_README]:
             text = path.read_text(encoding="utf-8")
             self.assertIn("milestone-d-grounding-source-contract.md", text, path)
 
