@@ -32,6 +32,9 @@
 - `@docushell/ethos-pdf`: cover report-file output and removal of private in-memory citation files
   after successful and nonzero verification.
 
+- `@docushell/ethos-pdf`: verify packaged mapper fixture hashes, Apache-2.0 provenance, source
+  binding, and citation fingerprint coherence.
+
 - docs: complete the WP-0 OpenDataLoader 2.5.0 feasibility proof against the DocuShell-vendored
   JAR, with source-bound page geometry, bottom-left to top-left conversion, explicit capability
   gaps, and byte-identical mapped output; leave ADR and public-posture acceptance gated.

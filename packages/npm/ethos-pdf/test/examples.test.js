@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
@@ -25,6 +26,22 @@ async function main() {
     const second = await fs.readFile(pythonOutput);
     assert.deepEqual(first, second, "JavaScript and Python mapper bytes differ");
     assert.deepEqual(first, expected, "committed grounding fixture is stale");
+
+    const manifest = JSON.parse(await fs.readFile(path.join(FIXTURES, "manifest.json"), "utf8"));
+    assert.equal(manifest.license, "Apache-2.0");
+    for (const [hashKey, fileKey] of [
+      ["source_pdf_sha256", "source_pdf"],
+      ["parser_output_sha256", "parser_output"],
+      ["grounding_json_sha256", "grounding_json"],
+    ]) {
+      const bytes = await fs.readFile(path.join(FIXTURES, manifest[fileKey]));
+      const digest = crypto.createHash("sha256").update(bytes).digest("hex");
+      assert.equal(digest, manifest[hashKey], `${fileKey} hash drifted`);
+    }
+    const grounding = JSON.parse(first);
+    const citations = JSON.parse(await fs.readFile(path.join(FIXTURES, manifest.citations), "utf8"));
+    assert.equal(grounding.source.sha256, `sha256:${manifest.source_pdf_sha256}`);
+    assert.equal(citations.document_fingerprint, `sha256:${manifest.grounding_json_sha256}`);
   } finally {
     await fs.rm(temporaryRoot, { recursive: true, force: true });
   }
