@@ -141,17 +141,20 @@ pub(crate) fn check_source_binding(source: &LoadedGrounding, path: &Path) -> Res
             ))
         }
     };
-    let actual = format!(
-        "sha256:{:x}",
-        Sha256::digest(crate::read_file_limited(
-            path,
-            crate::default_max_input_bytes()
-        )?)
-    );
+    let bytes = crate::read_file_limited(path, crate::default_max_input_bytes())?;
+    ensure_pdf_magic(&bytes)?;
+    let actual = format!("sha256:{:x}", Sha256::digest(bytes));
     if actual != expected {
         return Err(Failure::Usage(
             "source artifact hash does not match source.sha256".to_string(),
         ));
+    }
+    Ok(())
+}
+
+pub(crate) fn ensure_pdf_magic(bytes: &[u8]) -> Result<(), Failure> {
+    if !bytes.starts_with(b"%PDF-") {
+        return Err(Failure::Usage("source artifact is not a PDF".to_string()));
     }
     Ok(())
 }

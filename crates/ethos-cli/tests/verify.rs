@@ -3345,6 +3345,7 @@ fn grounding_json_check_is_deterministic_and_fail_closed() {
     let report: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(report["structure"], "invalid");
     assert_eq!(report["error"]["code"], "unknown_field");
+    assert_eq!(report["error"]["path"], "/unexpected");
 }
 
 #[test]
@@ -3449,4 +3450,41 @@ fn grounding_json_source_hash_match_is_reported_and_verifiable() {
     );
     let report: Value = serde_json::from_slice(&verified.stdout).unwrap();
     assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn grounding_json_source_binding_rejects_non_pdf_bytes_before_report() {
+    let root = repo_root();
+    let grounding = root.join("schemas/examples/grounding-source.example.json");
+    let citations = root.join("examples/verify/grounding_json_citations.json");
+    let non_pdf = temp_json("grounding-non-pdf", "not a PDF");
+    let output = temp_output("grounding-non-pdf-report");
+    let result = run_ethos(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+        "--source-artifact",
+        non_pdf.to_str().unwrap(),
+        "--out",
+        output.to_str().unwrap(),
+    ]);
+    assert_eq!(result.status.code(), Some(2));
+    assert!(!output.exists());
+}
+
+#[test]
+fn grounding_json_dispatch_ignores_producer_identity() {
+    let root = repo_root();
+    let original =
+        std::fs::read_to_string(root.join("schemas/examples/grounding-source.example.json"))
+            .unwrap();
+    let changed = original
+        .replace("\"name\": \"fixture\"", "\"name\": \"different-parser\"")
+        .replace("\"version\": \"1.0.0\"", "\"version\": \"99.99.99\"");
+    let input = temp_json("grounding-producer-identity", &changed);
+    let output = run_ethos(&["grounding", "check", input.to_str().unwrap()]);
+    assert!(output.status.success());
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["structure"], "valid");
 }

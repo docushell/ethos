@@ -472,6 +472,7 @@ pub fn parse_grounding_json(bytes: &[u8]) -> Result<GroundingJsonSource, Groundi
         })?;
     de.end()
         .map_err(|_| error(GroundingJsonErrorCode::InvalidJson, "/"))?;
+    reject_unknown_fields(&value)?;
     let artifact: Artifact = serde_json::from_value(value).map_err(|e| {
         if e.to_string().contains("unknown field") {
             error(GroundingJsonErrorCode::UnknownField, "/")
@@ -486,6 +487,119 @@ pub fn parse_grounding_json(bytes: &[u8]) -> Result<GroundingJsonSource, Groundi
         artifact,
         representation_sha256: format!("sha256:{:x}", hash.finalize()),
     })
+}
+
+fn reject_unknown_fields(value: &Value) -> Result<(), GroundingJsonError> {
+    let Some(root) = value.as_object() else {
+        return Ok(());
+    };
+    check_object(
+        root,
+        &[
+            "artifact_type",
+            "schema_version",
+            "source",
+            "producer",
+            "capabilities",
+            "coordinate_system",
+            "pages",
+            "elements",
+            "spans",
+            "tables",
+        ],
+        "/",
+    )?;
+    check_child(root.get("source"), &["media_type", "sha256"], "/source")?;
+    check_child(root.get("producer"), &["name", "version"], "/producer")?;
+    check_child(
+        root.get("capabilities"),
+        &["spans", "char_offsets", "tables"],
+        "/capabilities",
+    )?;
+    check_child(
+        root.get("coordinate_system"),
+        &["unit", "origin"],
+        "/coordinate_system",
+    )?;
+    check_array(
+        root.get("pages"),
+        &["id", "index", "width", "height", "rotation"],
+        "/pages",
+    )?;
+    check_array(
+        root.get("elements"),
+        &["id", "page", "bbox", "kind", "text"],
+        "/elements",
+    )?;
+    check_array(
+        root.get("spans"),
+        &[
+            "id",
+            "page",
+            "bbox",
+            "text",
+            "element",
+            "char_start",
+            "char_end",
+        ],
+        "/spans",
+    )?;
+    if let Some(Value::Array(tables)) = root.get("tables") {
+        for (index, table) in tables.iter().enumerate() {
+            let path = format!("/tables/{index}");
+            if let Some(object) = table.as_object() {
+                check_object(object, &["id", "page", "bbox", "cells"], &path)?;
+                check_array(
+                    object.get("cells"),
+                    &["row", "col", "row_span", "col_span", "bbox", "text"],
+                    &format!("{path}/cells"),
+                )?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn check_child(
+    value: Option<&Value>,
+    allowed: &[&str],
+    path: &str,
+) -> Result<(), GroundingJsonError> {
+    if let Some(Value::Object(object)) = value {
+        check_object(object, allowed, path)?;
+    }
+    Ok(())
+}
+
+fn check_array(
+    value: Option<&Value>,
+    allowed: &[&str],
+    path: &str,
+) -> Result<(), GroundingJsonError> {
+    if let Some(Value::Array(items)) = value {
+        for (index, item) in items.iter().enumerate() {
+            if let Some(object) = item.as_object() {
+                check_object(object, allowed, &format!("{path}/{index}"))?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn check_object(
+    object: &Map<String, Value>,
+    allowed: &[&str],
+    path: &str,
+) -> Result<(), GroundingJsonError> {
+    if let Some(key) = object.keys().find(|key| !allowed.contains(&key.as_str())) {
+        let field_path = if path == "/" {
+            format!("/{key}")
+        } else {
+            format!("{path}/{key}")
+        };
+        return Err(error(GroundingJsonErrorCode::UnknownField, &field_path));
+    }
+    Ok(())
 }
 
 fn error(code: GroundingJsonErrorCode, path: &str) -> GroundingJsonError {
@@ -735,10 +849,9 @@ mod tests {
             GroundingJsonErrorCode::InvalidJson
         );
         let unknown = valid().replacen("{\"artifact_type\"", "{\"extra\":1,\"artifact_type\"", 1);
-        assert_eq!(
-            parse_grounding_json(unknown.as_bytes()).unwrap_err().code,
-            GroundingJsonErrorCode::UnknownField
-        );
+        let error = parse_grounding_json(unknown.as_bytes()).unwrap_err();
+        assert_eq!(error.code, GroundingJsonErrorCode::UnknownField);
+        assert_eq!(error.path, "/extra");
         let null = valid().replacen("\"text\":\"héllo\"", "\"text\":null", 1);
         assert_eq!(
             parse_grounding_json(null.as_bytes()).unwrap_err().code,

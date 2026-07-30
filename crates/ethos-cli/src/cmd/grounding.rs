@@ -7,6 +7,7 @@
 use ethos_core::grounding_json::{GroundingJsonError, GroundingJsonSource};
 use sha2::{Digest, Sha256};
 
+use crate::grounding::ensure_pdf_magic;
 use crate::{read_file_limited, write_output, Failure, GroundingCheckArgs};
 
 pub(crate) fn check(args: GroundingCheckArgs) -> Result<(), Failure> {
@@ -27,6 +28,7 @@ pub(crate) fn check(args: GroundingCheckArgs) -> Result<(), Failure> {
         None => SourceBinding::NotChecked,
         Some(path) => {
             let bytes = read_file_limited(path, crate::default_max_input_bytes())?;
+            ensure_pdf_magic(&bytes)?;
             let actual = format!("sha256:{:x}", Sha256::digest(bytes));
             if actual == source.source_sha256() {
                 SourceBinding::Matched
