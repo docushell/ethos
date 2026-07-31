@@ -21,12 +21,20 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: milestone-d-claim-kind-boundary-contract
 .PHONY: app-answer-release-contract app-answer-release-demo
 .PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check v0-5-performance-record v0-5-npm-b-activation-contract
+.PHONY: validator-ceiling-check
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
 
 verify-alpha-tree:
+	cargo check --locked -p ethos-verify
+	cargo check --locked -p ethos-grounding-opendataloader-json
 	$(PYTHON) .github/scripts/check_verify_dependency_boundary.py
+
+# Runs BOTH ceiling tests: the cheap `capabilities` all-false shape and the expensive
+# spans + char_offsets shape. Release profile, because the ceiling describes that profile.
+validator-ceiling-check:
+	ETHOS_CHECK_VALIDATOR_CEILING=1 cargo test --locked --release -p ethos-doc-core ceiling
 
 verify-alpha: $(ETHOS_BIN)
 	cargo test --locked -p ethos-verify

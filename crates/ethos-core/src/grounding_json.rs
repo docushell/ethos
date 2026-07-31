@@ -694,8 +694,9 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
     {
         return Err(error(GroundingJsonErrorCode::LimitExceeded, "/"));
     }
-    let mut page_ids = HashSet::new();
-    let mut pages = HashSet::new();
+    // One index over page ids: it rejects duplicates as it is built, answers the membership
+    // checks below, and gives element/span/table/cell bbox validation an O(1) page lookup.
+    let mut page_by_id: std::collections::HashMap<&str, &Page> = std::collections::HashMap::new();
     let mut expected = 1u32;
     for (i, p) in artifact.pages.iter().enumerate() {
         let path = format!("/pages/{i}");
@@ -705,7 +706,7 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
                 &format!("{path}/id"),
             ));
         }
-        if !page_ids.insert(p.id.clone()) {
+        if page_by_id.insert(p.id.as_str(), p).is_some() {
             return Err(error(
                 GroundingJsonErrorCode::DuplicateId,
                 &format!("{path}/id"),
@@ -727,7 +728,6 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
             ));
         }
         expected += 1;
-        pages.insert(p.id.clone());
     }
     let mut ids = HashSet::new();
     for (i, e) in artifact.elements.iter().enumerate() {
@@ -744,13 +744,13 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
                 &format!("{path}/id"),
             ));
         }
-        if !pages.contains(&e.page) {
+        if !page_by_id.contains_key(e.page.as_str()) {
             return Err(error(
                 GroundingJsonErrorCode::UnknownReference,
                 &format!("{path}/page"),
             ));
         }
-        if !valid_bbox(e.bbox, artifact.pages.iter().find(|p| p.id == e.page)) {
+        if !valid_bbox(e.bbox, page_by_id.get(e.page.as_str()).copied()) {
             return Err(error(
                 GroundingJsonErrorCode::InvalidBBox,
                 &format!("{path}/bbox"),
@@ -768,6 +768,13 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
         }
     }
     if let Some(spans) = &artifact.spans {
+        // Only the char-offset cross-reference below reads this, so artifacts that declare no
+        // spans never pay to build it.
+        let element_by_id: std::collections::HashMap<&str, &Element> = artifact
+            .elements
+            .iter()
+            .map(|e| (e.id.as_str(), e))
+            .collect();
         let mut seen = HashSet::new();
         for (i, s) in spans.iter().enumerate() {
             let path = format!("/spans/{i}");
@@ -783,13 +790,13 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
                     &format!("{path}/id"),
                 ));
             }
-            if !pages.contains(&s.page) {
+            if !page_by_id.contains_key(s.page.as_str()) {
                 return Err(error(
                     GroundingJsonErrorCode::UnknownReference,
                     &format!("{path}/page"),
                 ));
             }
-            if !valid_bbox(s.bbox, artifact.pages.iter().find(|p| p.id == s.page)) {
+            if !valid_bbox(s.bbox, page_by_id.get(s.page.as_str()).copied()) {
                 return Err(error(
                     GroundingJsonErrorCode::InvalidBBox,
                     &format!("{path}/bbox"),
@@ -804,10 +811,9 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
             let offsets_present = s.char_start.is_some() || s.char_end.is_some();
             let offsets_complete = s.char_start.is_some() && s.char_end.is_some();
             let offsets_match = match (s.element.as_ref(), s.char_start, s.char_end) {
-                (Some(element_id), Some(start), Some(end)) => artifact
-                    .elements
-                    .iter()
-                    .find(|e| e.id == *element_id)
+                (Some(element_id), Some(start), Some(end)) => element_by_id
+                    .get(element_id.as_str())
+                    .copied()
                     .and_then(|e| e.text.as_ref())
                     .map(|text| {
                         let chars: Vec<char> = text.chars().collect();
@@ -844,13 +850,13 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
                     &format!("{path}/id"),
                 ));
             }
-            if !pages.contains(&t.page) {
+            if !page_by_id.contains_key(t.page.as_str()) {
                 return Err(error(
                     GroundingJsonErrorCode::UnknownReference,
                     &format!("{path}/page"),
                 ));
             }
-            if !valid_bbox(t.bbox, artifact.pages.iter().find(|p| p.id == t.page)) {
+            if !valid_bbox(t.bbox, page_by_id.get(t.page.as_str()).copied()) {
                 return Err(error(
                     GroundingJsonErrorCode::InvalidBBox,
                     &format!("{path}/bbox"),
@@ -869,7 +875,7 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
                 let col_end = c.col.checked_add(c.col_span);
                 if c.row_span == 0
                     || c.col_span == 0
-                    || !valid_bbox(c.bbox, artifact.pages.iter().find(|p| p.id == t.page))
+                    || !valid_bbox(c.bbox, page_by_id.get(t.page.as_str()).copied())
                     || previous.is_some_and(|(row, col)| (c.row, c.col) <= (row, col))
                     || row_end.is_none()
                     || col_end.is_none()
@@ -1075,7 +1081,10 @@ mod tests {
     /// Build a spans+offsets artifact over `text`, with `span` selected by `[start, end)`.
     fn offsets_fixture(text: &str, span: &str, start: usize, end: usize) -> String {
         include_str!("../../../schemas/examples/grounding-source-full.example.json")
-            .replace("\"text\": \"héllo\", \"element\"", &format!("\"text\": \"{span}\", \"element\""))
+            .replace(
+                "\"text\": \"héllo\", \"element\"",
+                &format!("\"text\": \"{span}\", \"element\""),
+            )
             .replace("\"text\": \"héllo\"", &format!("\"text\": \"{text}\""))
             .replace("\"char_start\": 0", &format!("\"char_start\": {start}"))
             .replace("\"char_end\": 5", &format!("\"char_end\": {end}"))
@@ -1090,7 +1099,13 @@ mod tests {
     fn offsets_are_unicode_scalar_indexes_for_emoji_and_combining_marks() {
         // "a😀b" is 3 scalars. Selecting the emoji alone is [1, 2).
         let astral = offsets_fixture("a😀b", "😀", 1, 2);
-        assert_eq!(parse_grounding_json(astral.as_bytes()).unwrap().spans().len(), 1);
+        assert_eq!(
+            parse_grounding_json(astral.as_bytes())
+                .unwrap()
+                .spans()
+                .len(),
+            1
+        );
 
         // UTF-16 code units would make the emoji [1, 3) and "b" [3, 4). Both must fail.
         for (start, end) in [(1, 3), (3, 4)] {
@@ -1104,7 +1119,13 @@ mod tests {
 
         // "e" + U+0301 renders as one grapheme but is 2 scalars; selecting it is [0, 2).
         let combining = offsets_fixture("e\u{301}x", "e\u{301}", 0, 2);
-        assert_eq!(parse_grounding_json(combining.as_bytes()).unwrap().spans().len(), 1);
+        assert_eq!(
+            parse_grounding_json(combining.as_bytes())
+                .unwrap()
+                .spans()
+                .len(),
+            1
+        );
 
         // Counting the grapheme as one scalar selects only the base letter.
         let grapheme = offsets_fixture("e\u{301}x", "e\u{301}", 0, 1);
@@ -1132,11 +1153,66 @@ mod tests {
     /// measuring it portably in-process would cost more than it proves.
     const CEILING_MICROS_PER_ELEMENT: f64 = 40.0;
 
+    /// The same accepted ceiling against the capability shape the mapper guide encourages:
+    /// `spans` and `char_offsets` both declared. The original baseline measured
+    /// `capabilities` all `false`, which never reaches the span/element cross-reference path.
+    ///
     /// Opt-in because shared CI runners make wall-clock assertions flaky, and debug builds run
     /// roughly an order of magnitude slower than the release profile the ceiling describes.
     ///
-    /// Run with:
-    /// `ETHOS_CHECK_VALIDATOR_CEILING=1 cargo test --release -p ethos-doc-core validator_stays`
+    /// Both ceiling tests run together with `make validator-ceiling-check`.
+    #[test]
+    fn ceiling_holds_when_the_mapper_declares_spans_and_char_offsets() {
+        if std::env::var_os("ETHOS_CHECK_VALIDATOR_CEILING").is_none() {
+            eprintln!("skipping: set ETHOS_CHECK_VALIDATOR_CEILING=1");
+            return;
+        }
+        assert!(!cfg!(debug_assertions), "run with --release");
+
+        const ELEMENTS: usize = 20_000;
+        let mut a = String::new();
+        a.push_str(
+            r#"{"artifact_type":"ethos.grounding.v1","schema_version":"1.0.0","source":{"media_type":"application/pdf","sha256":"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"},"producer":{"name":"ceiling","version":"1.0.0"},"capabilities":{"spans":true,"char_offsets":true,"tables":false},"coordinate_system":{"unit":"centipoint","origin":"top-left"},"pages":[{"id":"page-1","index":1,"width":61200,"height":79200,"rotation":0}],"elements":["#,
+        );
+        for i in 0..ELEMENTS {
+            if i > 0 {
+                a.push(',');
+            }
+            a.push_str(&format!(
+                r#"{{"id":"block-{i}","page":"page-1","bbox":[100,100,5000,900],"kind":"text_block","text":"Revenue line {i} increased."}}"#
+            ));
+        }
+        a.push_str(r#"],"spans":["#);
+        let target = ELEMENTS - 1;
+        for i in 0..ELEMENTS {
+            if i > 0 {
+                a.push(',');
+            }
+            a.push_str(&format!(
+                r#"{{"id":"span-{i}","page":"page-1","bbox":[100,100,5000,900],"text":"Revenue","element":"block-{target}","char_start":0,"char_end":7}}"#
+            ));
+        }
+        a.push_str("]}");
+
+        let started = std::time::Instant::now();
+        let source = parse_grounding_json(a.as_bytes()).expect("fixture is valid");
+        let micros_per_element = started.elapsed().as_secs_f64() * 1e6 / ELEMENTS as f64;
+        assert_eq!(source.counts().1, ELEMENTS);
+        assert!(
+            micros_per_element <= CEILING_MICROS_PER_ELEMENT,
+            "validation cost {micros_per_element:.1} us/element, over the accepted ceiling of \
+             {CEILING_MICROS_PER_ELEMENT:.1} us/element"
+        );
+    }
+
+    /// The accepted ceiling against the cheapest capability shape, `capabilities` all `false`.
+    /// This is the shape the published baseline measured; the test above covers the expensive
+    /// one, and both must hold.
+    ///
+    /// Opt-in because shared CI runners make wall-clock assertions flaky, and debug builds run
+    /// roughly an order of magnitude slower than the release profile the ceiling describes.
+    ///
+    /// Both ceiling tests run together with `make validator-ceiling-check`.
     #[test]
     fn validator_stays_within_the_accepted_resource_ceiling() {
         if std::env::var_os("ETHOS_CHECK_VALIDATOR_CEILING").is_none() {

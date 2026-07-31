@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- `ethos-core`: make Grounding JSON validation linear by indexing page and element identifiers
+  instead of rescanning per element, span, table, and cell. An artifact declaring `spans` and
+  `char_offsets` previously validated in quadratic time — a 15 MB artifact took 128.8 s and is
+  now 1.2 s. Elements-only artifacts are unaffected in behavior.
+- `ethos-core`: add a validator resource-ceiling regression test for the `spans` +
+  `char_offsets` capability shape, alongside the existing elements-only test. Both run in CI via
+  `make validator-ceiling-check`. Table-bearing artifacts are not separately asserted.
+- `ethos-core`: re-measure and republish the validator resource baseline for both capability
+  shapes. Peak RSS at the frozen element ceiling with spans is 2.66 GB, roughly double the
+  previously published elements-only figure; size memory-capped workers accordingly. The
+  accepted 2 KB/element RSS ceiling is exceeded by that shape and needs a decision — see
+  `docs/validation/v0-6-0-validator-resource-baseline.md` §Outstanding.
+
 - docs: approve the v0.6.0 public wording, applied at publication only, with a revision clause
   allowing changes from walkthrough findings or business need through the normal claims lane. The
   approval covers a capability claim already evidenced by three working mappers; the outsider

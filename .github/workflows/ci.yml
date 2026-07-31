@@ -44,6 +44,10 @@ jobs:
           fetch-depth: 0
       - run: rustup show
       - run: cargo test --locked --workspace --all-features
+      - name: Grounding JSON validator resource ceiling
+        # Both capability shapes, release profile. Without this the ceiling test is skipped
+        # by its own env guard and a superlinear regression merges green.
+        run: make validator-ceiling-check
       - name: fixture manifest validation
         run: python3 fixtures/validate_fixtures.py
       - name: layout evaluator alpha

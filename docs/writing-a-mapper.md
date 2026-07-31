@@ -313,7 +313,13 @@ Oversized input is rejected before any parse work, in milliseconds, with exit `7
 ### Sizing the process that runs the check
 
 `grounding check` holds the parsed artifact in memory rather than streaming it, so **peak resident
-memory runs about 6–9× the artifact size**. Measured on a release build:
+memory runs about 6–12× the artifact size**. Measured on a release build.
+
+Cost tracks the number of records — elements *and* spans — not bytes. Declaring `spans` roughly
+doubles both the artifact and the resident set, so the two shapes are listed separately. Size your
+worker from whichever row matches what your mapper emits.
+
+**`capabilities` all `false`** (elements only):
 
 | Elements | Artifact | Wall clock | Peak RSS |
 | --- | --- | --- | --- |
@@ -321,9 +327,18 @@ memory runs about 6–9× the artifact size**. Measured on a release build:
 | 100,000 | 15 MB | 1.9 s | 138 MB |
 | 1,000,000 (the ceiling) | 151 MB | 26.5 s | 1.29 GB |
 
-Wall clock tracks element count, not bytes. If you run Ethos in a memory-capped worker, size it
-from this table — an artifact at the element ceiling needs roughly 1.5 GB. A cap below that gets
-your worker killed instead of receiving a clean rejection.
+**`spans: true, char_offsets: true`** (one span per element):
+
+| Elements + spans | Artifact | Wall clock | Peak RSS |
+| --- | --- | --- | --- |
+| 10,000 | 2.3 MB | 0.13 s | 28 MB |
+| 100,000 | 23.5 MB | 1.2 s | 270 MB |
+| 1,000,000 (the ceiling) | 227 MiB | 13.0 s | 2.66 GB |
+
+If you run Ethos in a memory-capped worker, size it from the shape you actually emit. **An artifact
+at the element ceiling with spans needs roughly 3 GB.** A cap below that gets your worker killed
+instead of receiving a clean rejection. Tables add cells on top of either shape and are not
+tabulated separately; leave headroom if you emit large tables.
 
 ### Practice
 
