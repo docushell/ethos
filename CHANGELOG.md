@@ -20,6 +20,12 @@
   written through directly, since replacing those inodes would destroy the destination the
   caller named. File modes are unchanged: an existing file keeps its mode, a new file gets 0644.
 
+- build & cleanup: remove 5 unbuilt placeholder crate directories (`ethos-layout-ml`,
+  `ethos-mcp`, `ethos-rag`, `ethos-render`, `ethos-security`), correct the crate map and
+  dependency graph in `docs/architecture.md` to match the actual workspace manifests, add
+  parser-neutrality compile checks to the `verify-alpha-tree` target, and clarify the
+  `semantic_unverified` schema description.
+
 - docs: approve the v0.6.0 public wording, applied at publication only, with a revision clause
   allowing changes from walkthrough findings or business need through the normal claims lane. The
   approval covers a capability claim already evidenced by three working mappers; the outsider

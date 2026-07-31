@@ -113,8 +113,8 @@ def main() -> None:
     dependencies = ", ".join(sorted(ALLOWED_NORMAL_DEPENDENCIES))
     features = ", ".join(sorted(ETHOS_CORE_FEATURES))
     print(
-        f"ok: {PACKAGE_NAME} normal dependencies are [{dependencies}]; "
-        f"ethos-core default features are disabled and features are [{features}]"
+        f"ok: {PACKAGE_NAME} manifest normal dependencies are [{dependencies}]; "
+        f"ethos-core default features are disabled and features are [{features}] (manifest check only)"
     )
 
 
