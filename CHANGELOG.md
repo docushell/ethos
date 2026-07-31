@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- docs: approve the v0.6.0 public wording, applied at publication only, with a revision clause
+  allowing changes from walkthrough findings or business need through the normal claims lane. The
+  approval covers a capability claim already evidenced by three working mappers; the outsider
+  walkthrough tests documentation quality and still gates publication under §5.1, not this
+  approval. Widening past the recorded limits remains a new approval.
+
 - build: activate the v0.6.0 core version across the workspace, internal crate pins, `Cargo.lock`,
   `pyproject.toml`, and the Python package, guarded by `test_v0_6_0_version_activation.py`. Public
   install wording and the vendored npm payload deliberately stay on the published 0.5.0: activation

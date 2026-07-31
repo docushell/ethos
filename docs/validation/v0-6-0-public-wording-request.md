@@ -1,6 +1,35 @@
 # v0.6.0 Public Wording Request
 
-Status: **request; not approved** (2026-07-31). Nothing here is applied to any public surface.
+Status: **approved 2026-07-31; applied at publication only.** Nothing here is on a public surface
+yet, and `test_v0_6_0_version_activation.py` keeps every install command naming the published
+0.5.0 until v0.6.0 reaches the registries.
+
+## Revision clause
+
+This wording may be revised without a fresh approval from scratch when either of these happens:
+
+- the outsider clean-room walkthrough finds the mapper guide unclear, or
+- business need changes how Ethos should be described.
+
+Revisions go through the normal claims lane: update `README.md` and
+`docs/public-boundary-claims.json` together, keep the claims gates green, and note the change in
+`CHANGELOG.md`. The claims registry has been revised at v0.2, v0.3, and v0.5, so this is the
+established path rather than an exception.
+
+What a revision may **not** do is widen the claim past the "What this request does NOT claim"
+section below. Removing one of those limits is a new approval, not a revision.
+
+## Why approving before the walkthrough is sound
+
+The two answer different questions. This wording claims a **capability** — that any parser can
+reach the verifier by writing one mapper — and that is already evidenced by the JavaScript, Python,
+and DocuShell mappers, none of which needed PDFium. The walkthrough tests **documentation
+quality**: whether a stranger can follow the guide.
+
+A poor walkthrough result means the guide needs work. It does not make the capability claim false.
+
+The walkthrough still gates **publication**, because release-prep §5.1 makes an undocumented step a
+release blocker. It does not gate this approval.
 
 Release-prep §12 requires that exact public wording be separately approved. This document is the
 request. It proposes the minimum wording change v0.6.0 needs, and states plainly what it does not
@@ -95,13 +124,14 @@ what makes the claim credible:
 | A stranger can write a mapper | **Pending** — outsider walkthrough |
 | A real consumer uses public surfaces only | DocuShell `cc652ec` |
 
-The third row is not yet evidenced. If the outsider walkthrough finds the guide unusable, this
-request should be revised before approval rather than approved on schedule.
+The third row is documentation quality, not capability. It gates publication under §5.1 and feeds
+the revision clause above; it does not gate this approval.
 
 ## Decision
 
-- [ ] Approved as written
-- [ ] Approved with changes
-- [ ] Rejected
+**Approved as written — decider, 2026-07-31.**
 
-Approver: ____________________  Date: ____________
+Approval covers the wording in this document only, applied at publication, subject to the revision
+clause above. It does not approve production positioning, hosted surfaces, Windows artifacts,
+benchmark claims, OCR, or any widening of the limits recorded in "What this request does NOT
+claim".
