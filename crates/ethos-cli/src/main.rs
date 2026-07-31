@@ -527,17 +527,61 @@ pub(crate) fn read_document(path: &Path) -> Result<Document, Failure> {
     Ok(doc)
 }
 
+/// Write one output artifact.
+///
+/// Regular files (and paths that do not exist yet) are written atomically through a temporary
+/// file in the same directory, so an interrupted write cannot leave a truncated artifact behind.
+///
+/// Anything that is *not* a regular file — a symlink, FIFO, or device node such as
+/// `/dev/stdout` — is written through directly. Renaming over those destinations would replace
+/// the inode instead of writing to it, which destroys the symlink or FIFO the caller named.
+/// Atomicity is not available for those targets and was never claimed for them.
 pub(crate) fn write_output(out: Option<PathBuf>, bytes: &[u8]) -> Result<(), Failure> {
-    match out {
-        Some(path) => fs::write(&path, bytes)
-            .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display()))),
-        None => {
-            use std::io::Write as _;
-            std::io::stdout()
-                .write_all(bytes)
-                .map_err(|_| Failure::Ethos(EthosError::internal("stdout write failed")))
-        }
+    use std::io::Write as _;
+
+    let Some(path) = out else {
+        return std::io::stdout()
+            .write_all(bytes)
+            .map_err(|_| Failure::Ethos(EthosError::internal("stdout write failed")));
+    };
+
+    let cannot_write = || Failure::Usage(format!("cannot write output: {}", path.display()));
+
+    // `symlink_metadata` does not follow links, so a symlinked destination is correctly
+    // classified as a symlink rather than as whatever it points at.
+    let existing = fs::symlink_metadata(&path).ok();
+    if existing
+        .as_ref()
+        .is_some_and(|metadata| !metadata.is_file())
+    {
+        return fs::write(&path, bytes).map_err(|_| cannot_write());
     }
+
+    let parent = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let mut temporary = tempfile::NamedTempFile::new_in(parent).map_err(|_| cannot_write())?;
+    temporary
+        .write_all(bytes)
+        .and_then(|_| temporary.as_file().sync_all())
+        .map_err(|_| cannot_write())?;
+    // NamedTempFile creates with mode 0600 and `persist` keeps it. Restore the mode a plain
+    // `fs::write` would have produced: the existing file's mode when overwriting, otherwise the
+    // usual 0644 default, so report consumers running as another user keep their read access.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt as _;
+        let mode = existing
+            .as_ref()
+            .map_or(0o644, |metadata| metadata.permissions().mode() & 0o777);
+        temporary
+            .as_file()
+            .set_permissions(std::fs::Permissions::from_mode(mode))
+            .map_err(|_| cannot_write())?;
+    }
+    temporary.persist(&path).map_err(|_| cannot_write())?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -635,6 +679,107 @@ mod tests {
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(value["error"]["code"], "internal_error");
         assert_eq!(value["error"]["message"], err.message);
+    }
+
+    #[test]
+    fn write_output_replaces_a_regular_file_atomically() {
+        let dir = tempfile::tempdir().expect("temp dir can be created");
+        let path = dir.path().join("report.json");
+        fs::write(&path, b"stale").expect("seed file can be written");
+
+        assert!(
+            write_output(Some(path.clone()), b"fresh").is_ok(),
+            "regular file write failed"
+        );
+
+        assert_eq!(fs::read(&path).expect("output is readable"), b"fresh");
+        let leftovers: Vec<_> = fs::read_dir(dir.path())
+            .expect("temp dir is readable")
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.path() != path)
+            .collect();
+        assert!(
+            leftovers.is_empty(),
+            "atomic write left a temporary file behind"
+        );
+    }
+
+    #[test]
+    fn write_output_writes_through_a_symlink_instead_of_replacing_it() {
+        // A rename() would swap the symlink for a regular file and never touch the target.
+        let dir = tempfile::tempdir().expect("temp dir can be created");
+        let target = dir.path().join("target.json");
+        let link = dir.path().join("latest.json");
+        fs::write(&target, b"stale").expect("target can be written");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&target, &link).expect("symlink can be created");
+        #[cfg(not(unix))]
+        return;
+
+        assert!(
+            write_output(Some(link.clone()), b"fresh").is_ok(),
+            "symlink write failed"
+        );
+
+        assert!(
+            fs::symlink_metadata(&link)
+                .expect("link still exists")
+                .is_symlink(),
+            "symlink destination was replaced by a regular file"
+        );
+        assert_eq!(
+            fs::read(&target).expect("target is readable"),
+            b"fresh",
+            "write did not reach the symlink target"
+        );
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn write_output_keeps_group_and_other_read_access() {
+        use std::os::unix::fs::PermissionsExt as _;
+
+        let dir = tempfile::tempdir().expect("temp dir can be created");
+
+        // A path that does not exist yet gets the ordinary 0644 default, not the 0600 a bare
+        // temporary file would carry.
+        let created = dir.path().join("created.json");
+        assert!(
+            write_output(Some(created.clone()), b"{}").is_ok(),
+            "new file write failed"
+        );
+        let mode = fs::metadata(&created)
+            .expect("new file is readable")
+            .permissions()
+            .mode()
+            & 0o777;
+        assert_eq!(mode, 0o644, "new output file is not world-readable");
+
+        // An existing file keeps whatever mode the operator gave it.
+        let existing = dir.path().join("existing.json");
+        fs::write(&existing, b"stale").expect("seed file can be written");
+        fs::set_permissions(&existing, fs::Permissions::from_mode(0o664)).expect("mode can be set");
+        assert!(
+            write_output(Some(existing.clone()), b"{}").is_ok(),
+            "existing file write failed"
+        );
+        let mode = fs::metadata(&existing)
+            .expect("existing file is readable")
+            .permissions()
+            .mode()
+            & 0o777;
+        assert_eq!(mode, 0o664, "existing output file mode was not preserved");
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn write_output_accepts_a_character_device_destination() {
+        // `--out /dev/null` and `--out /dev/stdout` cannot be written by rename: the parent
+        // directory is not writable and the destination is not a regular file.
+        assert!(
+            write_output(Some(PathBuf::from("/dev/null")), b"{}").is_ok(),
+            "character device destination was rejected"
+        );
     }
 
     #[test]

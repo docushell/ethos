@@ -16,7 +16,6 @@
 
 use std::collections::BTreeMap;
 use std::collections::HashSet;
-use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
 use ethos_core::crop_element::{CropElementDescriptor, CropElementRendering};
@@ -140,30 +139,10 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
         output.extend_from_slice(&line);
         output.push(b'\n');
     }
-    write_batch_output(args.out, &output)?;
+    write_output(args.out, &output)?;
     if args.fail_on_ungrounded && any_ungrounded {
         return Err(Failure::Ungrounded);
     }
-    Ok(())
-}
-
-fn write_batch_output(out: Option<PathBuf>, bytes: &[u8]) -> Result<(), Failure> {
-    let Some(path) = out else {
-        return write_output(None, bytes);
-    };
-    let parent = path
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or(Path::new("."));
-    let mut temporary = tempfile::NamedTempFile::new_in(parent)
-        .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
-    temporary
-        .write_all(bytes)
-        .and_then(|_| temporary.as_file().sync_all())
-        .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
-    temporary
-        .persist(&path)
-        .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
     Ok(())
 }
 

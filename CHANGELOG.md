@@ -15,6 +15,11 @@
   accepted 2 KB/element RSS ceiling is exceeded by that shape and needs a decision — see
   `docs/validation/v0-6-0-validator-resource-baseline.md` §Outstanding.
 
+- `ethos-cli`: write report output atomically for regular files, via a temporary file in the
+  destination directory. Symlinks, FIFOs, and device nodes such as `/dev/stdout` continue to be
+  written through directly, since replacing those inodes would destroy the destination the
+  caller named. File modes are unchanged: an existing file keeps its mode, a new file gets 0644.
+
 - docs: approve the v0.6.0 public wording, applied at publication only, with a revision clause
   allowing changes from walkthrough findings or business need through the normal claims lane. The
   approval covers a capability claim already evidenced by three working mappers; the outsider
