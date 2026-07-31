@@ -1,7 +1,6 @@
 # v0.6.0 DocuShell Consumer Acceptance
 
-Status: **acceptance evidence recorded; awaiting decider review of the bound commit**
-(2026-07-31).
+Status: **accepted and bound to a reviewed DocuShell commit** (2026-07-31).
 
 Covers release-prep §9.4. This is a consumer acceptance test, not authorization to change
 DocuShell in the Ethos release.
@@ -10,8 +9,11 @@ DocuShell in the Ethos release.
 
 | Repository | Commit | State |
 | --- | --- | --- |
-| DocuShell | `cc652ec` on `ethos-v0-6-0-grounding-shadow` | **branch, not merged** — must be reviewed and bound to a `main` SHA before Ethos closeout |
+| DocuShell | `cc652ec71cc11a330e5c2843f0cc1645bf5cc10b` | reviewed, fast-forward merged to `main`, pushed to `origin/main` |
 | Ethos | this branch | — |
+
+The DocuShell commit was reviewed by the decider and merged with `--ff-only`, so the reviewed SHA
+and the SHA on `main` are identical. §9.4's exact-commit requirement is satisfied.
 
 DocuShell's existing pinned consumer state, unchanged by this work:
 
@@ -66,7 +68,14 @@ The pinned OpenDataLoader 2.5.0 output and its source-bound page geometry from t
 feasibility record, copied into DocuShell so the lane reproduces without running the vendor JAR.
 Ethos CLI steps skip unless `ETHOS_CLI_PATH` is set, keeping the suite runnable without a binary.
 
+## Test execution
+
+Without `ETHOS_CLI_PATH`, the four pure-mapper tests run and the three CLI-backed tests skip, so
+DocuShell CI stays green on runners without an Ethos binary. With the CLI supplied, all seven run.
+Both modes were exercised before merge.
+
 ## Outstanding
 
-The DocuShell commit is on a branch. §9.4 requires an **exact reviewed commit**; bind this record
-to a reviewed `main` SHA before Ethos closeout.
+None for §9.4. One optional improvement: DocuShell's parse-pdf image already installs the CLI at
+`/opt/ethos/bin/ethos`, so exporting `ETHOS_CLI_PATH` in that image's test stage would move the
+three CLI-backed assertions from skipped to executed in CI. Not a release blocker.

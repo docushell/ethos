@@ -1,6 +1,6 @@
 # v0.6.0 Double-Run Determinism Evidence
 
-Status: **three of four §11.4 rows evidenced; DocuShell mapper outstanding** (2026-07-31).
+Status: **all four §11.4 rows evidenced** (2026-07-31).
 
 Covers release-prep §11.4. Recorded on `darwin:x64` against a CLI built from source, with no
 PDFium configured.
@@ -22,7 +22,7 @@ ethos  grounding check out.json --source-artifact fixtures/source.pdf --out vali
 | Validation report bytes equal across two runs | **byte-identical** |
 | JavaScript mapper bytes equal across two runs | **byte-identical** |
 | Python mapper bytes equal across two runs | **byte-identical** |
-| DocuShell mapper bytes equal across two runs | **outstanding** — acceptance commit not selected |
+| DocuShell mapper bytes equal across two runs | **byte-identical** — asserted in DocuShell `cc652ec`, see `v0-6-0-docushell-acceptance.md` |
 
 Cross-implementation equality, which §11.4 does not require but which the two examples claim:
 
@@ -45,6 +45,5 @@ was `matched` against the pinned `fixtures/source.pdf`.
 ## Scope
 
 This evidences producer determinism only. It is not a claim about cross-platform reproducibility,
-which the project does not make for rendered artifacts, and it does not cover the DocuShell
-acceptance mapper. The single-versus-batch verification equality row in §11.4 is covered by the
-Rust integration suite rather than here.
+which the project does not make for rendered artifacts. The single-versus-batch verification
+equality row in §11.4 is covered by the Rust integration suite rather than here.

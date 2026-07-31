@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- docs: bind DocuShell consumer acceptance to reviewed commit `cc652ec`, merged fast-forward to
+  `main` so the reviewed SHA and the `main` SHA are identical, satisfying §9.4's exact-commit
+  requirement. Completes the fourth §11.4 double-run row.
+
 - docs: record DocuShell consumer acceptance and the Grounding JSON validator resource baseline.
   DocuShell gains a bounded Grounding JSON shadow lane on branch `ethos-v0-6-0-grounding-shadow`
   (`cc652ec`), leaving its production OpenDataLoader path untouched per §9.2; seven tests cover the
