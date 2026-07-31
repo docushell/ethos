@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- docs: measure the Grounding JSON validator at the frozen ADR-0016 ceiling instead of
+  extrapolating. One million elements takes 26.5 s and 1.29 GB peak RSS; a schema-legal artifact
+  near the 256 MiB input limit reached 1.42 GB. Peak RSS runs 6–9× artifact size because the
+  validator retains the parsed artifact rather than streaming, so the input limit does not bound
+  memory to a comparable figure. Oversized input still fails closed in milliseconds with exit `7`.
+  Records the worker-sizing consequence in `docs/writing-a-mapper.md`.
+
 - docs: bind DocuShell consumer acceptance to reviewed commit `cc652ec`, merged fast-forward to
   `main` so the reviewed SHA and the `main` SHA are identical, satisfying §9.4's exact-commit
   requirement. Completes the fourth §11.4 double-run row.

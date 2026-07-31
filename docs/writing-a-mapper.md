@@ -308,6 +308,23 @@ Floats and exponent forms are rejected outright — every number in the artifact
 256 MiB input · 64 nesting levels · 5,000 pages · 1,000,000 elements · 1,000,000 spans ·
 100,000 tables · 1,000,000 cells · 256-byte IDs · 16,384-byte strings.
 
+Oversized input is rejected before any parse work, in milliseconds, with exit `7`.
+
+### Sizing the process that runs the check
+
+`grounding check` holds the parsed artifact in memory rather than streaming it, so **peak resident
+memory runs about 6–9× the artifact size**. Measured on a release build:
+
+| Elements | Artifact | Wall clock | Peak RSS |
+| --- | --- | --- | --- |
+| 10,000 | 1.5 MB | 0.15 s | 14 MB |
+| 100,000 | 15 MB | 1.9 s | 138 MB |
+| 1,000,000 (the ceiling) | 151 MB | 26.5 s | 1.29 GB |
+
+Wall clock tracks element count, not bytes. If you run Ethos in a memory-capped worker, size it
+from this table — an artifact at the element ceiling needs roughly 1.5 GB. A cap below that gets
+your worker killed instead of receiving a clean rejection.
+
 ### Practice
 
 `packages/npm/ethos-pdf/examples/fixtures/grounding-invalid.json` is a deliberately broken artifact.
