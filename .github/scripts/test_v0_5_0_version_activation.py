@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Guard v0.5.0 core activation and its published public install wording.
+"""Guard the published v0.5.0 public baseline while a later version activates in the core.
 
 v0.5.0 was published on 2026-07-21 to crates.io (`ethos-doc-core`, `ethos-verify`, `ethos-pdf`),
-PyPI (`ethos-pdf`), npm (`@docushell/ethos-pdf`), and GitHub Release `v0.5.0`. Before that date this
-module held the public install wording at the previously published 0.4.0 while the core was
-activated at 0.5.0. That hold is retired: the published baseline and the advertised install
-commands must now agree, and the checks below assert the published direction.
+PyPI (`ethos-pdf`), npm (`@docushell/ethos-pdf`), and GitHub Release `v0.5.0`. It remains the
+version users can actually install, so the advertised install commands and the shipped npm payload
+must keep naming it until a later release publishes.
+
+Core version activation moved to `test_v0_6_0_version_activation.py` when the workspace advanced to
+0.6.0. This module now guards only the published direction.
 """
 
 from __future__ import annotations
@@ -25,19 +27,6 @@ def read(path: str) -> str:
 
 
 class V050CoreVersionActivationTests(unittest.TestCase):
-    def test_core_release_metadata_is_activated_in_lockstep(self) -> None:
-        cargo = read("Cargo.toml")
-        cli = read("crates/ethos-cli/Cargo.toml")
-        lock = read("Cargo.lock")
-        self.assertIn(f'version = "{VERSION}"', cargo)
-        for dependency in ("ethos-core", "ethos-layout", "ethos-tables"):
-            self.assertIn(f'version = "{VERSION}"', next(line for line in cargo.splitlines() if line.startswith(dependency)))
-        for dependency in ("ethos-pdf", "ethos-verify", "ethos-grounding-opendataloader-json"):
-            self.assertIn(f'version = "{VERSION}"', next(line for line in cli.splitlines() if line.startswith(dependency)))
-        self.assertGreaterEqual(lock.count(f'version = "{VERSION}"'), 7)
-        self.assertIn(f'version = "{VERSION}"', read("pyproject.toml"))
-        self.assertIn(f'__version__ = "{VERSION}"', read("python/ethos_pdf/__init__.py"))
-
     def test_draft_artifact_workflows_derive_the_activated_version(self) -> None:
         workflow = read(".github/workflows/release.yml")
         self.assertEqual(2, workflow.count("tomllib.load(open('Cargo.toml','rb'))['workspace']['package']['version']"))

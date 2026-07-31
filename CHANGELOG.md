@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- build: activate the v0.6.0 core version across the workspace, internal crate pins, `Cargo.lock`,
+  `pyproject.toml`, and the Python package, guarded by `test_v0_6_0_version_activation.py`. Public
+  install wording and the vendored npm payload deliberately stay on the published 0.5.0: activation
+  is not publication, and the npm package ships a 0.5.0 binary that no version bump would change.
+
+- docs: request the v0.6.0 public wording as a separate approval per §12. Grounding JSON is
+  currently described in `README.md` as a proposal, which publication would make false. The request
+  states what it does not claim, keeps the mapper requirement and geometry limitation visible, and
+  flags that the outsider-walkthrough evidence row is not yet filled.
+
 - `ethos-core`: accept the validator resource ceiling at 40 µs and 2 KB per element, replacing
   §12's regression comparison against the v0.5.0 verification baseline, which would measure an
   unchanged path. Enforced by `validator_stays_within_the_accepted_resource_ceiling`, release-only

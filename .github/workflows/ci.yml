@@ -187,6 +187,7 @@ jobs:
       # Listed one per line on purpose: test_gate_reachability.py greps these literal paths to
       # prove no gate has been orphaned, so a loop over bare names would defeat it.
       - run: python3 .github/scripts/test_check_golden_change_rationale.py
+      - run: python3 .github/scripts/test_v0_6_0_version_activation.py
       - run: python3 .github/scripts/test_milestone_d_capability_downgrade_contract.py
       - run: python3 .github/scripts/test_milestone_d_claim_kind_boundary_contract.py
       - run: python3 .github/scripts/test_milestone_d_crop_element_contract.py
