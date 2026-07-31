@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- docs: record DocuShell consumer acceptance and the Grounding JSON validator resource baseline.
+  DocuShell gains a bounded Grounding JSON shadow lane on branch `ethos-v0-6-0-grounding-shadow`
+  (`cc652ec`), leaving its production OpenDataLoader path untouched per §9.2; seven tests cover the
+  §9.4 criteria. The validator baseline replaces the §12 v0.5.0 regression comparison, which would
+  measure an unchanged path, with per-element wall clock and peak RSS figures the decider can set a
+  ceiling against.
+
 - `ethos-core`: cover Unicode scalar offset vectors for emoji and combining marks, closing the
   last §11.2 conformance gap. UTF-16 code-unit offsets and grapheme-cluster counts are both
   rejected, and an out-of-range end fails instead of panicking on the slice.
