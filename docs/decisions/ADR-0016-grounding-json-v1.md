@@ -57,6 +57,30 @@ Each failure returns exactly one code with one bounded JSON path and one bounded
 message. Parser-library diagnostics, document text, local paths, and unbounded values are never
 copied into a deterministic report.
 
+### Accepted validator resource ceiling
+
+Decided 2026-07-31, replacing release-prep §12's regression comparison against the v0.5.0
+verification baseline. That comparison would measure an unchanged code path, because Grounding JSON
+adds a parallel loader and no existing verification path changes.
+
+The accepted ceiling, on the release profile:
+
+- **40 µs per element** wall clock
+- **2 KB per element** peak resident memory
+
+Measured cost at the frozen 1,000,000-element limit is 26.5 µs and 1.29 KB per element, so the
+ceiling carries roughly 1.5× headroom. Wall clock is enforced by
+`validator_stays_within_the_accepted_resource_ceiling`, which is release-only and opt-in via
+`ETHOS_CHECK_VALIDATOR_CEILING` because wall-clock assertions flake on shared runners. Peak memory
+is recorded in `docs/validation/v0-6-0-validator-resource-baseline.md` and re-measured on any
+change to the strict parser.
+
+The frozen structural limits are unchanged. A schema-legal artifact at the element ceiling needs
+roughly 1.5 GB resident, because the validator retains the parsed artifact rather than streaming
+it. That working set is documented for integrators in `docs/writing-a-mapper.md` rather than
+addressed by lowering a frozen limit. A validator memory guard using the existing
+`MemoryLimitExceeded` exit is recorded as a v0.7.0 input, alongside streaming validation.
+
 ### Representation identity versus source binding
 
 `representation_sha256` is the `GroundingSource` fingerprint and is what the verification report

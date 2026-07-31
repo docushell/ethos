@@ -1,7 +1,7 @@
 # v0.6.0 Grounding JSON Validator Resource Baseline
 
-Status: **measured through the frozen ceiling; numeric ceiling awaiting the decider**
-(2026-07-31).
+Status: **accepted** (2026-07-31). Ceiling set at 40 µs and 2 KB per element. Frozen structural
+limits unchanged; the working set is documented rather than reduced.
 
 Release-prep §12 asks for resource and performance evidence showing no unacceptable regression
 against the frozen v0.5.0 verification baseline, with a numeric ceiling set before implementation
@@ -57,30 +57,41 @@ about 1.6 GB will be killed by a legal artifact rather than rejecting it, which 
 limit into an opaque crash. That is an integration property, not an Ethos defect, but it should be
 stated rather than discovered.
 
-Three responses, in preference order:
+**Decision (2026-07-31): document the working set and keep the frozen limits.**
 
-1. **Document the working set** and keep the frozen limits. Consumers size workers from a published
-   figure. No schema change, no breaking change to ADR-0016.
-2. **Lower the element ceiling** so peak RSS lands under a few hundred MB. This changes a frozen
-   ADR limit and is a compatibility decision, not a tuning one.
-3. **Add a validator memory guard** that fails with the existing `MemoryLimitExceeded` (exit `11`)
-   instead of letting the host OOM-kill. New work; belongs in v0.7.0 with streaming validation.
+The sizing table is in `docs/writing-a-mapper.md`, where integrators meet it before running the
+check. No structural limit changes, so ADR-0016 stays intact and no consumer breaks.
 
-Recommendation: option 1 for v0.6.0, with the figure in `docs/writing-a-mapper.md` limits section,
-and option 3 logged as a v0.7.0 input.
+Two alternatives were considered and rejected for v0.6.0. Lowering the element ceiling would change
+a frozen ADR limit, which is a compatibility decision rather than a tuning one. Adding a validator
+memory guard that fails with the existing `MemoryLimitExceeded` (exit `11`) instead of letting the
+host OOM-kill is real work; it is recorded as a v0.7.0 input alongside streaming validation.
 
-## Suggested ceiling
+## Accepted ceiling
 
-Replace the §12 v0.5.0 regression comparison with a bounded per-element resource test on the new
+Replaces the §12 v0.5.0 regression comparison with a bounded per-element resource test on the new
 validator. Measured values with roughly 1.5× headroom:
 
 - **40 µs per element wall clock**, release profile
 - **2 KB per element peak RSS**
 
-At the frozen 1,000,000-element ceiling that permits 40 s and 2 GB. Set on measurement, not
-aspiration, and re-measured on any change to the strict parser.
+At the frozen 1,000,000-element limit that permits 40 s and 2 GB.
+
+Wall clock is enforced by `validator_stays_within_the_accepted_resource_ceiling` in
+`crates/ethos-core/src/grounding_json.rs`. It is release-only, because a debug build runs about an
+order of magnitude slower than the profile the ceiling describes, and opt-in through
+`ETHOS_CHECK_VALIDATOR_CEILING` because wall-clock assertions flake on shared CI runners:
+
+```sh
+ETHOS_CHECK_VALIDATOR_CEILING=1 cargo test --release -p ethos-doc-core validator_stays
+```
+
+It validates 100,000 elements, a tenth of the frozen limit. Cost is linear, so that is
+representative while staying fast enough to run on demand.
+
+Peak RSS is not asserted in-process; measuring it portably would cost more than it proves. It is
+recorded here and re-measured on any change to the strict parser.
 
 ## Outstanding
 
-Decider sets the numeric ceiling and picks among the three responses above. The extrapolation gap
-flagged in the previous revision of this record is now closed by direct measurement.
+None. §12's resource and performance evidence requirement is met.

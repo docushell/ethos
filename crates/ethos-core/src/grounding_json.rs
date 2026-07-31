@@ -1121,6 +1121,63 @@ mod tests {
         );
     }
 
+    /// Accepted validator resource ceiling (decider, 2026-07-31).
+    ///
+    /// Measured at the frozen 1,000,000-element limit: 26.5 µs and 1.29 KB peak RSS per element.
+    /// The ceiling carries roughly 1.5× headroom over that. See
+    /// `docs/validation/v0-6-0-validator-resource-baseline.md`.
+    ///
+    /// Wall clock tracks element count rather than bytes, so a per-element figure is the
+    /// meaningful shape. Peak RSS is recorded in that document rather than asserted here, because
+    /// measuring it portably in-process would cost more than it proves.
+    const CEILING_MICROS_PER_ELEMENT: f64 = 40.0;
+
+    /// Opt-in because shared CI runners make wall-clock assertions flaky, and debug builds run
+    /// roughly an order of magnitude slower than the release profile the ceiling describes.
+    ///
+    /// Run with:
+    /// `ETHOS_CHECK_VALIDATOR_CEILING=1 cargo test --release -p ethos-doc-core validator_stays`
+    #[test]
+    fn validator_stays_within_the_accepted_resource_ceiling() {
+        if std::env::var_os("ETHOS_CHECK_VALIDATOR_CEILING").is_none() {
+            eprintln!("skipping validator ceiling check: set ETHOS_CHECK_VALIDATOR_CEILING=1");
+            return;
+        }
+        assert!(
+            !cfg!(debug_assertions),
+            "the ceiling describes the release profile; re-run with --release"
+        );
+
+        // A tenth of the frozen element limit. Cost is linear, so this is representative while
+        // staying fast enough to run on demand.
+        const ELEMENTS: usize = 100_000;
+        let mut artifact = String::with_capacity(ELEMENTS * 160);
+        artifact.push_str(
+            r#"{"artifact_type":"ethos.grounding.v1","schema_version":"1.0.0","source":{"media_type":"application/pdf","sha256":"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"},"producer":{"name":"ceiling","version":"1.0.0"},"capabilities":{"spans":false,"char_offsets":false,"tables":false},"coordinate_system":{"unit":"centipoint","origin":"top-left"},"pages":[{"id":"page-1","index":1,"width":61200,"height":79200,"rotation":0}],"elements":["#,
+        );
+        for index in 0..ELEMENTS {
+            if index > 0 {
+                artifact.push(',');
+            }
+            artifact.push_str(&format!(
+                r#"{{"id":"block-{index}","page":"page-1","bbox":[100,100,5000,900],"kind":"text_block","text":"Revenue line {index} increased materially."}}"#
+            ));
+        }
+        artifact.push_str("]}");
+
+        let started = std::time::Instant::now();
+        let source = parse_grounding_json(artifact.as_bytes()).expect("ceiling fixture is valid");
+        let micros_per_element = started.elapsed().as_secs_f64() * 1e6 / ELEMENTS as f64;
+
+        assert_eq!(source.counts().1, ELEMENTS);
+        assert!(
+            micros_per_element <= CEILING_MICROS_PER_ELEMENT,
+            "validation cost {micros_per_element:.1} µs/element, over the accepted ceiling of \
+             {CEILING_MICROS_PER_ELEMENT:.1} µs/element. Re-measure and update \
+             docs/validation/v0-6-0-validator-resource-baseline.md before raising this."
+        );
+    }
+
     #[test]
     fn rejects_oversized_strings_before_typed_validation() {
         let oversized = valid().replace("héllo", &"x".repeat(MAX_STRING_BYTES + 1));

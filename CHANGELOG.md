@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- `ethos-core`: accept the validator resource ceiling at 40 µs and 2 KB per element, replacing
+  §12's regression comparison against the v0.5.0 verification baseline, which would measure an
+  unchanged path. Enforced by `validator_stays_within_the_accepted_resource_ceiling`, release-only
+  and opt-in via `ETHOS_CHECK_VALIDATOR_CEILING` so wall-clock assertions cannot flake CI. Frozen
+  structural limits are unchanged; the ~1.5 GB working set at the element ceiling is documented for
+  integrators instead, with a validator memory guard logged as a v0.7.0 input.
+
 - docs: measure the Grounding JSON validator at the frozen ADR-0016 ceiling instead of
   extrapolating. One million elements takes 26.5 s and 1.29 GB peak RSS; a schema-legal artifact
   near the 256 MiB input limit reached 1.42 GB. Peak RSS runs 6–9× artifact size because the
