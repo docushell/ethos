@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- `ethos-pdf`: apply page rotation when mapping PDFium text coordinates into Ethos space.
+  PDFium reports page dimensions with rotation applied but returns text coordinates in
+  unrotated user space, and the conversion only flipped the origin. On `/Rotate 90` and `270`
+  pages, where the box transposes, this produced coordinates outside the reported page —
+  including negative ones — so `crop_element` correctly rejected them with "resolved element
+  bbox exceeds page bounds" and no rendered crop could be produced for those documents. A
+  `/Rotate 270` A4 page reported a 842x595 box while text `y` ran to 767, giving `y0 = -172`.
+  Rotation `0` and `180` are unchanged, since neither transposes the box. The unrotated media
+  box is derived from the reported display box, so no additional PDFium symbol is required.
+  Covered by unit tests for all four rotations that fail against the previous behavior; the
+  existing `synthetic-rotation-90` fixture asserted page dimensions and text but never bbox
+  geometry, which is why this was not caught.
+
 - `ethos-core`: make Grounding JSON validation linear by indexing page and element identifiers
   instead of rescanning per element, span, table, and cell. An artifact declaring `spans` and
   `char_offsets` previously validated in quadratic time — a 15 MB artifact took 128.8 s and is
