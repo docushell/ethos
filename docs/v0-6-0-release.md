@@ -352,7 +352,9 @@ The mapper owns exactly three things, and Ethos will never do any of them for yo
   `GroundingSource` contract requires them. Text-only parsers cannot use this profile honestly.
   Do not submit page-sized boxes, zero boxes, or invented coordinates. Making geometry optional
   would reshape a public trait and needs its own compatibility decision — log blocked integrations
-  instead (prep §6.6).
+  instead (prep §6.6). The scope of that compatibility decision is smaller than this bullet
+  implies; §10.1 records what a source audit found, as a v0.7.0 input. The requirement stated here
+  is unchanged for v0.6.0.
 - **`producer` is unauthenticated.** It is a bounded declaration, not an identity.
 - **A source-hash match proves only that the mapper declared the hash of the PDF you supplied.**
   It is not evidence that the parser extracted the PDF faithfully. Nothing in Ethos claims otherwise,
@@ -613,3 +615,100 @@ Two cheap ways to find out early:
   JSON mapper within 90 days of release. Count attempts, not completions — the friction logs from
   failures are worth more than the successes. If the number is zero, the adoption thesis is wrong
   and v0.7.0 should be something else, most likely revisiting the geometry requirement in 5.1.
+
+### 10.1 Multi-format grounding — v0.7.0 input
+
+Status: analysis only. Nothing here is an accepted decision, a public claim, or a commitment that
+v0.7.0 carries this work. It records what a source-code audit established about the geometry
+requirement in §5.1, so the decision the §5.1 note defers can be made against measurements rather
+than assumption. Any adoption needs its own ADR.
+
+**The verifier already supports geometry-free text anchoring. No change is required to it.** This
+was traced through the released code, not inferred:
+
+| Step | Behaviour | Location |
+| --- | --- | --- |
+| `page_locator_required` | false when `element_id` is present and no bbox is supplied | `ethos-verify/src/lib.rs` |
+| `resolve_page` | `PageCheck::NotChecked` when no page locator is given — not `NotFound` | same |
+| `resolve_text` | `element_id` path compares `element.text` only; reads no geometry | same |
+| `requires_bbox` | false for `AnchorLevel::Text`, so `resolve_bbox` is never called | same |
+| `SourceIndex::new` | collects source data; performs no geometry validation | same |
+| `anchor_status` | `NotChecked` + `NotChecked` + `Matched` ⇒ `Bound` | same |
+
+An evidence ref of `{evidence_kind: text, required_anchor_level: text, locator: {element_id},
+expected_text}` therefore reaches `AnchorStatus::Bound` at `AnchorLevel::Text` and pushes no
+capability limit. `pages` also has no `minItems`, so an empty page list is already schema-valid.
+
+The constraint is narrower than §5.1 states. Geometry is mandatory in the **artifact and its
+validator**, not in the verification algorithm. Per element, `ethos.grounding.v1` requires
+`id, page, bbox, kind`; for a flow document `page` and `bbox` are unfillable, and they are exactly
+the fields the text path never reads.
+
+**Where the requirement is actually enforced.** Five gates, all in one layer:
+
+1. `$defs.source.media_type` — `const "application/pdf"` (schema)
+2. the same check in `ethos-core/src/grounding_json.rs`
+3. `$defs.coordinate_system` — `unit: const centipoint`, `origin: const top-left`
+4. `bbox` required on element, span, table, and cell (schema)
+5. positive-area and in-page-bounds enforcement in `grounding_json.rs`
+
+Gate 5 rules out the cheap workaround: a `[0,0,0,0]` sentinel is rejected for zero area, so any
+change must make `bbox` *absent*, not empty. It also means an off-canvas PPTX shape, which carries
+negative coordinates legitimately, is rejected today.
+
+**§5.1's compatibility concern needs re-scoping, not reversing.** §5.1 says making geometry
+optional "would reshape a public trait". For the minimal path it does not: `GroundingElement.bbox`
+can stay `[i64; 4]`, with a conditional applied to the wire artifact and its validator only. A
+`GroundingJsonSource` parsed from a geometry-absent artifact would still have to materialise some
+in-memory value that is never read, gated by `CoordinateOrigin::Unknown` — which already exists
+and already drives the correct `capability_limited` downgrade in `resolve_bbox`. That is the same
+capability-gating pattern `SourceIndex` already uses for spans and tables. Whether an unread
+in-memory sentinel is acceptable, or whether the honest fix is `Option<[i64; 4]>` and a breaking
+change to the published `0.5.0` baseline, is the open decision. It is a smaller decision than §5.1
+implies, but it is not free.
+
+**Measurements taken during the audit.**
+
+- *PPTX geometry is tie-free.* 914400 EMU/inch ÷ 72 pt gives 12700 EMU/pt, so 127 EMU = 1
+  centipoint. Rounding is required — the conversion is not exact — but a tie needs
+  `EMU mod 127 == 63.5`, and that residue is always an integer, so **exact-half ties are impossible
+  because 127 is odd**. The `round_half_away_from_zero` tie-break that
+  `docs/bring-your-own-parser.md` tells mapper authors to test is provably never exercised by EMU
+  input, and the conversion needs no `f64`. Standard slide sizes are exact: 4:3 → 72000 × 54000,
+  16:9 → 96000 × 54000 centipoints. A4 slides are inexact but still tie-free.
+- *XLSX geometry is font-bound and must not be computed.* The same nominal 8.43-character default
+  column resolves to 4800 centipoints under Calibri 11 or Arial 10 (MaxDigitWidth 7px) and 5400
+  under Times New Roman 12 or Verdana 11 (8px) — a 12.5% swing driven by a pixel measurement at 96
+  DPI. ADR-0003's font policy covers embedded PDF fonts, not system UI fonts, so this would be a new
+  nondeterminism surface. An `R1C1` locator is deterministic, survives re-saves and column resizes,
+  and is better evidence than a box.
+- *Render-to-PDF fails two independent gates.* LibreOffice headless is roughly 400 MB against
+  ADR-0008's ≤30 MB installed ceiling, and is LGPL against an `Apache-2.0 / MIT / Unicode-3.0`
+  allowlist. Native OOXML reading is `zip` (deflate only, which OOXML mandates) plus `quick-xml`,
+  both MIT, adding an estimated 0.3–0.8 MB. `miniz_oxide` is `MIT OR Apache-2.0 OR Zlib`, so
+  `deny.toml` needs no amendment. Confirm by measurement before relying on this.
+
+**Sequencing, if this is taken up.** DOCX, then XLSX, then PPTX — the reverse of the intuition
+that the format with visible geometry is the cheap one, because the enabling change is
+format-independent and PPTX is the only one of the three that needs gate 5 resolved.
+
+1. **DOCX** exercises the geometry-absent path, which is the only genuinely new behaviour, and is
+   where demand is. Paragraph order in `word/document.xml` is document order: deterministic, no
+   layout engine, no font metrics. Pagination does not exist in the file at all and must not be
+   synthesised.
+2. **XLSX** reuses that path and adds an `R1C1` locator convention. It raises one question PDF never
+   did: a cell carries both a formula (`<f>`) and a cached value (`<v>`), and a cached value can be
+   stale against its formula. Check this against
+   `docs/derived-value-v1-and-normalization-v2-implementation-plan.md` before designing it.
+3. **PPTX** last, despite the clean arithmetic above, because off-slide shapes carry negative
+   coordinates and are rejected by gate 5. That is arguably a security-report finding rather than a
+   parse error, and deciding which is a prerequisite, not a detail.
+
+Note that none of this requires Ethos to parse Office formats. ADR-0007 already holds that the
+parser is one grounding source and not the product boundary, so the enabling change is to let a
+DOCX-derived artifact through the door; mature parsers for these formats already exist. `ids-v1`
+needs no change either — `SPEC.md` §5 already permits foreign source-native IDs.
+
+The stronger product argument found during the audit is unrelated to parsing: the existing security
+report shape maps onto tracked changes, comments, hidden rows and sheets, white-on-white text, VBA
+macros, and DDE connections. Unlike extraction, that is differentiated.

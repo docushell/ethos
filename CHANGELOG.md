@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- docs: record a multi-format grounding analysis as a v0.7.0 input in `docs/v0-6-0-release.md`
+  §10.1, where §10 already pointed v0.7.0 at the §5.1 geometry requirement. A source audit found
+  that the verifier already binds text evidence without geometry — an `element_id` + `expected_text`
+  ref reaches `AnchorStatus::Bound` at `AnchorLevel::Text` with no capability limit, because
+  `page_locator_required` is false, `resolve_page` returns `NotChecked`, and `resolve_bbox` is never
+  called. The requirement is enforced in the artifact and its validator, not in the verification
+  algorithm, across five gates; the positive-area check rules out a zero-bbox workaround. Records
+  measurements (EMU→centipoint ties are impossible since 127 is odd; XLSX column geometry swings
+  12.5% with the Normal font; render-to-PDF fails both the ADR-0008 footprint ceiling and the
+  license allowlist) and a DOCX → XLSX → PPTX sequencing rationale. §5.1 gains a pointer noting its
+  compatibility concern is narrower than stated. Analysis only: no schema, code, contract, or public
+  wording changes, and no commitment that v0.7.0 carries the work.
+
 - `ethos-pdf`: apply page rotation when mapping PDFium text coordinates into Ethos space.
   PDFium reports page dimensions with rotation applied but returns text coordinates in
   unrotated user space, and the conversion only flipped the origin. On `/Rotate 90` and `270`
