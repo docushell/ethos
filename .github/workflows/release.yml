@@ -141,7 +141,9 @@ jobs:
       - name: derive candidate version
         id: version
         shell: pwsh
-        run: '"value=$(python -c \"import tomllib; print(tomllib.load(open(''Cargo.toml'',''rb''))[''workspace''][''package''][''version'])\")" | Out-File -FilePath $env:GITHUB_OUTPUT -Append'
+        run: |
+          $version = python -c "import tomllib; print(tomllib.load(open('Cargo.toml','rb'))['workspace']['package']['version'])"
+          "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
       - name: assemble deterministic verify-only candidates twice
         run: |
           python scripts/build-windows-verify-candidate.py --ethos-binary target/release/ethos.exe --version ${{ steps.version.outputs.value }} --out-dir target/release-artifacts/run1
