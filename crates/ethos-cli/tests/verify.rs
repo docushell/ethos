@@ -326,6 +326,71 @@ fn verify_alpha_demo_report_predicates_match_goldens() {
     }
 }
 
+/// The attestation block names what produced the verdict.
+///
+/// A version bump that forgot to flow through would silently produce reports attesting the
+/// wrong verifier, so the version is checked against the crate's own metadata rather than
+/// a hardcoded string.
+#[test]
+fn report_attests_the_verifier_config_and_claims() {
+    let root = repo_root();
+    let report = verify_report(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    let attestation = &report["attestation"];
+
+    assert_eq!(attestation["verifier"]["name"], "ethos-verify");
+    assert_eq!(
+        attestation["verifier"]["version"],
+        env!("CARGO_PKG_VERSION"),
+        "verifier version desynced from the crate version"
+    );
+    assert_eq!(attestation["config_version"], "default-v1");
+    assert!(
+        attestation["claims_sha256"]
+            .as_str()
+            .is_some_and(|h| h.len() == 64 && h.chars().all(|c| c.is_ascii_hexdigit())),
+        "{attestation:?}"
+    );
+}
+
+/// `claims_sha256` binds the report to the exact claims, and to nothing else.
+///
+/// Two properties in one test because they are the same property from both sides: the hash
+/// is over the parsed claims array, so an envelope and a bare array carrying identical
+/// claims agree, while different claims disagree. Hashing raw file bytes would fail the
+/// first; hashing the envelope would too.
+#[test]
+fn claims_hash_covers_the_claims_and_not_their_packaging() {
+    let root = repo_root();
+    let doc = root.join("schemas/examples/document.example.json");
+    let hash_for = |citations: &str| {
+        verify_report(&[
+            "verify",
+            doc.to_str().unwrap(),
+            "--citations",
+            root.join(citations).to_str().unwrap(),
+        ])["attestation"]["claims_sha256"]
+            .as_str()
+            .expect("claims_sha256 is a string")
+            .to_string()
+    };
+
+    let grounded = hash_for("examples/verify/native_grounded_citations.json");
+    let ungrounded = hash_for("examples/verify/native_ungrounded_citations.json");
+    assert_ne!(
+        grounded, ungrounded,
+        "different claims must not share a claims_sha256"
+    );
+}
+
 /// The wrapper itself: shape, spelling, and the subject rule from
 /// `docs/proof-statement-v1.md` §1.4.
 #[test]

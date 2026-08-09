@@ -47,10 +47,10 @@ use ethos_core::grounding::{
     GroundingTable, PageGeometry,
 };
 use ethos_core::verify_types::{
-    compute_all_evidence_grounded, CapabilityLimit, Check, CheckProvenance, CheckReason,
-    CheckStatus, Claim, ClaimKind, ContextBoundary, ContextEcho, Evidence, EvidenceDispersion,
-    GroundingMeta, MatchMethod, ProvenanceStatus, TextNormalization, VerificationConfig,
-    VerificationReport, HARDENED_VERIFICATION_SCHEMA_VERSION,
+    compute_all_evidence_grounded, Attestation, CapabilityLimit, Check, CheckProvenance,
+    CheckReason, CheckStatus, Claim, ClaimKind, ContextBoundary, ContextEcho, Evidence,
+    EvidenceDispersion, GroundingMeta, MatchMethod, ProvenanceStatus, TextNormalization,
+    VerificationConfig, VerificationReport, VerifierIdentity, HARDENED_VERIFICATION_SCHEMA_VERSION,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -940,6 +940,7 @@ pub fn verify_claims(
     citations: CitationInput,
     config: &VerificationConfig,
     config_sha256: String,
+    claims_sha256: String,
 ) -> VerificationReport {
     let (citation_fingerprint, claims) = citations.into_parts();
     let index = SourceIndex::new(source);
@@ -1033,6 +1034,16 @@ pub fn verify_claims(
         checks,
         dispersion,
         unsupported_claim_kinds: unsupported,
+        attestation: Attestation {
+            // The verifier's own crate identity, not the caller's, so a library consumer
+            // gets the same attestation a CLI user does.
+            verifier: VerifierIdentity {
+                name: env!("CARGO_PKG_NAME").to_string(),
+                version: env!("CARGO_PKG_VERSION").to_string(),
+            },
+            config_version: config.config_version.clone(),
+            claims_sha256,
+        },
         warnings,
     }
 }
@@ -2319,7 +2330,13 @@ mod tests {
 
     fn verify(source: &TestSource, claims: Vec<Claim>) -> VerificationReport {
         let cfg = VerificationConfig::default_v1();
-        verify_claims(source, input(source, claims), &cfg, "0".repeat(64))
+        verify_claims(
+            source,
+            input(source, claims),
+            &cfg,
+            "0".repeat(64),
+            "1".repeat(64),
+        )
     }
 
     fn verify_with_config(
@@ -2327,7 +2344,13 @@ mod tests {
         claims: Vec<Claim>,
         cfg: &VerificationConfig,
     ) -> VerificationReport {
-        verify_claims(source, input(source, claims), cfg, "0".repeat(64))
+        verify_claims(
+            source,
+            input(source, claims),
+            cfg,
+            "0".repeat(64),
+            "1".repeat(64),
+        )
     }
 
     fn hardened_config() -> VerificationConfig {
@@ -2371,7 +2394,7 @@ mod tests {
             document_fingerprint: source.fingerprint(),
             claims,
         });
-        verify_claims(&source, citations, &cfg, "0".repeat(64))
+        verify_claims(&source, citations, &cfg, "0".repeat(64), "1".repeat(64))
     }
 
     #[test]
@@ -2523,7 +2546,7 @@ mod tests {
                 },
             )],
         });
-        let report = verify_claims(&source, citations, &config, "0".repeat(64));
+        let report = verify_claims(&source, citations, &config, "0".repeat(64), "1".repeat(64));
 
         assert!(report.all_evidence_grounded);
         assert_eq!(
@@ -2570,6 +2593,7 @@ mod tests {
             }),
             &config,
             "0".repeat(64),
+            "1".repeat(64),
         );
 
         let echo = report.checks[0].context_echo.as_ref().unwrap();
@@ -3251,6 +3275,7 @@ mod tests {
             }),
             &cfg,
             "0".repeat(64),
+            "1".repeat(64),
         );
         assert_eq!(report.checks[0].status, CheckStatus::NotFound);
     }
@@ -3391,6 +3416,7 @@ mod tests {
             }),
             &cfg,
             "0".repeat(64),
+            "1".repeat(64),
         );
 
         assert!(report.fingerprint_stale);
@@ -3418,6 +3444,7 @@ mod tests {
             }),
             &cfg,
             "0".repeat(64),
+            "1".repeat(64),
         );
 
         assert!(!report.fingerprint_stale);
@@ -3604,6 +3631,7 @@ mod tests {
             }),
             &cfg,
             "0".repeat(64),
+            "1".repeat(64),
         );
 
         assert!(!report.fingerprint_stale);

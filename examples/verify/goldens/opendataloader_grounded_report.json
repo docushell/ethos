@@ -1,5 +1,13 @@
 {
   "all_evidence_grounded": true,
+  "attestation": {
+    "claims_sha256": "c4ddfee72316d216331e6869ca486459d7ef80858aa40d43e6a6644b5462cfb4",
+    "config_version": "default-v1",
+    "verifier": {
+      "name": "ethos-verify",
+      "version": "0.6.0"
+    }
+  },
   "capability_limits": [
     "missing_fingerprint",
     "missing_spans",

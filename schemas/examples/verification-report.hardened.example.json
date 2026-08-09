@@ -87,5 +87,13 @@
   "schema_version": "1.1.0",
   "unsupported_claim_kinds": [],
   "verification_config_sha256": "70cc82cc7583d9c32ee33d1c8988a6bfe98130de8c0c5bef4de9a834bcbd23c4",
-  "warnings": []
+  "warnings": [],
+    "attestation": {
+      "claims_sha256": "51e36a018bcc9286835738bccd7f277776b8c6f7820b05ed2a601db25dd42c82",
+      "config_version": "hardened-v1",
+      "verifier": {
+        "name": "ethos-verify",
+        "version": "0.6.0"
+      }
+    }
 }

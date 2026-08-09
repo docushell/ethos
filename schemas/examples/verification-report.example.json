@@ -75,5 +75,13 @@
     }
   ],
   "unsupported_claim_kinds": [],
-  "warnings": []
+  "warnings": [],
+    "attestation": {
+      "claims_sha256": "51e36a018bcc9286835738bccd7f277776b8c6f7820b05ed2a601db25dd42c82",
+      "config_version": "default-v1",
+      "verifier": {
+        "name": "ethos-verify",
+        "version": "0.6.0"
+      }
+    }
 }

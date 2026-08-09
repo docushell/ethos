@@ -382,6 +382,48 @@ pub struct VerificationReport {
     pub unsupported_claim_kinds: Vec<String>,
     /// Report-level warnings (capability downgrades land here).
     pub warnings: Vec<WarningCode>,
+    /// What produced this verdict. Required, never optional — an unattested report is the
+    /// thing this field exists to prevent.
+    pub attestation: Attestation,
+}
+
+/// The verifier that produced a report.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct VerifierIdentity {
+    /// Crate name, from the verifier's own `CARGO_PKG_NAME`.
+    pub name: String,
+    /// Crate version, from the verifier's own `CARGO_PKG_VERSION`.
+    pub version: String,
+}
+
+/// A binding record naming everything needed to re-run a verdict.
+///
+/// This is a **record, not cryptographic proof**. It attests the crate version, not binary
+/// provenance; a hostile operator can write whatever they like here. It exists so that
+/// cooperating parties and auditors can reproduce a verdict, and so that "same claim,
+/// different answer" across releases reads as a versioned ruleset change rather than
+/// broken determinism.
+///
+/// Deliberately absent: timestamp, hostname, and toolchain, each of which would break
+/// byte-identical repeat runs. Also absent are the config hash and source fingerprint —
+/// both are already top-level on the report as `verification_config_sha256` and
+/// `document_fingerprint`, and duplicating them into a nested block is bloat, not
+/// attestation. Together with those two fields and `verifier.version`, this block is the
+/// replay recipe expressed as data; the prose recipe belongs in documentation, not in
+/// every artifact.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Attestation {
+    /// The verifier crate that produced this report.
+    pub verifier: VerifierIdentity,
+    /// Echo of the config's human-facing label, so a report is readable without the
+    /// config file at hand. `verification_config_sha256` stays authoritative.
+    pub config_version: String,
+    /// `sha256(c14n(claims))` over the **parsed claims array**.
+    ///
+    /// Not the raw file bytes, which are whitespace-fragile, and not the envelope, so a
+    /// bare-array input and an envelope input carrying equal claims hash equal. This is
+    /// the binding that was missing: report to exact claims input.
+    pub claims_sha256: String,
 }
 
 /// The PRD §8 invariant, in one place. True only when:
@@ -1345,6 +1387,14 @@ mod tests {
             dispersion: None,
             unsupported_claim_kinds: Vec::new(),
             warnings: Vec::new(),
+            attestation: Attestation {
+                verifier: VerifierIdentity {
+                    name: "ethos-verify".to_string(),
+                    version: "0.0.0-test".to_string(),
+                },
+                config_version: "default-v1".to_string(),
+                claims_sha256: "0".repeat(64),
+            },
         }
     }
 
