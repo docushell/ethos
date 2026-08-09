@@ -107,10 +107,28 @@ claims, config — and in-toto's subject model is artifact-centric, so the other
 the attestation block (§4) instead. Two reports over one document with different claims
 share a subject, which is correct: both are statements *about* that document.
 
-### 1.5 Decided while drafting, override if wrong
+### 1.5 Representations — RULED: stay bare
 
-**Representations stay bare.** `document.ethos.json` and `chunks.jsonl` are representations,
-not assertions about anything. Statements are for verdicts.
+`document.ethos.json` and `chunks.jsonl` are **not** wrapped. Statements are for verdicts
+only.
+
+A statement means "X asserts P about Y." A document graph is not an assertion *about* the
+document; it is the document re-expressed. Wrapping it would read as "here is a claim
+about invoice.pdf, and the claim is invoice.pdf." Wrap everything and `statement` stops
+distinguishing anything, which costs the design the one line an integrator has to hold in
+their head.
+
+Three supporting reasons:
+
+- `chunks.jsonl` is streaming NDJSON. Wrapping each line bloats every record; wrapping the
+  file breaks streaming.
+- Both are consumed by other tools, including DocuShell's retrieval path. Wrapping changes
+  working consumers for no benefit they would notice.
+- The provenance argument does not apply: both already carry a document fingerprint,
+  profile hash, and config hash per `SPEC.md`. They are self-describing already.
+
+This is the same instinct as the `II.1` rule in DocuShell's workbench architecture, applied
+one level down: the thing being judged must not look like the judgment.
 
 ---
 
