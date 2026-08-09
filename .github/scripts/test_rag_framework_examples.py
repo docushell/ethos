@@ -102,7 +102,10 @@ class RagFrameworkExampleTests(unittest.TestCase):
                         artifacts[0][0],
                         (framework, case),
                     )
-                    report = json.loads(artifacts[0][1])
+                    # verify emits an in-toto Statement; the report is its predicate
+                    # (docs/proof-statement-v1.md). The example scripts themselves are
+                    # unchanged: they key on the exit code, which the wrapper does not touch.
+                    report = json.loads(artifacts[0][1])["predicate"]
                     self.assertEqual(grounded, report["all_evidence_grounded"])
                     self.assertEqual(statuses, [check["status"] for check in report["checks"]])
 
