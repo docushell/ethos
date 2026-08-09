@@ -79,7 +79,8 @@ def verify_run(
     result = run(command)
     if result.returncode != 0:
         fail(f"{name} verifier exited {result.returncode}: {result.stderr.strip()}")
-    report = json.loads(report_path.read_text())
+    # verify emits an in-toto Statement; the report is its predicate
+    report = json.loads(report_path.read_text())["predicate"]
     if len(report["checks"]) != len(checks):
         fail(f"{name} report check count drifted")
     for expected, actual in zip(checks, report["checks"]):

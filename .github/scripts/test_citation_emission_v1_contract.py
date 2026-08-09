@@ -186,7 +186,8 @@ class CitationEmissionV1ContractTests(unittest.TestCase):
                     self.assertEqual(expected_exit, result.returncode, result.stderr)
                     reports.append(report.read_bytes())
                 self.assertEqual(reports[0], reports[1], stem)
-                payload = json.loads(reports[0])
+                # verify emits an in-toto Statement; the report is its predicate
+                payload = json.loads(reports[0])["predicate"]
                 self.assertEqual(all_grounded, payload["all_evidence_grounded"])
                 self.assertEqual(statuses, [check["status"] for check in payload["checks"]])
 

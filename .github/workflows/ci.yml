@@ -57,6 +57,9 @@ jobs:
         run: python3 fixtures/validate_fixtures.py
       - name: layout evaluator alpha
         run: make layout-evaluator-alpha
+      - name: citation emission v1 contract
+        # Guards the documented pointer-first integration path and its runnable examples.
+        run: make citation-emission-v1-contract
       - name: Python surface tests
         run: PYTHONPATH=python python3 -m unittest discover -s python/tests
       - name: npm package test dependencies

@@ -290,8 +290,20 @@ def compare_bytes(left, right, name):
     print(f"ok    {name} is byte-identical across runs")
 
 
-def compare_json(actual_path, expected_path, repo_root, name):
+def load_predicate(path):
+    """`ethos verify` emits an in-toto Statement; the report is its predicate.
+
+    Goldens stay in the pre-0.6 report shape on purpose: comparing the predicate against
+    them is what proves the wrapper is a pure re-wrap rather than a reshaping.
+    See docs/proof-statement-v1.md.
+    """
+    return load_json(path)["predicate"]
+
+
+def compare_json(actual_path, expected_path, repo_root, name, actual_key=None):
     actual = load_json(actual_path)
+    if actual_key is not None:
+        actual = actual[actual_key]
     expected = load_json(expected_path)
     if actual == expected:
         print(f"ok    {name} matches {relative(expected_path, repo_root)}")
@@ -466,7 +478,7 @@ def validate_crop_descriptors(descriptor_paths, schema_path, repo_root, name):
 
 
 def validate_report_crop_links(report_path, descriptor_paths, name):
-    report = load_json(report_path)
+    report = load_predicate(report_path)
     expected = {}
     for check in report.get("checks", []):
         evidence = check.get("evidence") or {}
@@ -558,7 +570,9 @@ def verify_case(case, contract_case, args):
     run_verify([*command, "--out", str(first)], args.repo_root, case["name"])
     run_verify([*command, "--out", str(second)], args.repo_root, case["name"])
     compare_bytes(first, second, case["name"])
-    report = compare_json(first, args.repo_root / case["golden"], args.repo_root, case["name"])
+    report = compare_json(
+        first, args.repo_root / case["golden"], args.repo_root, case["name"], actual_key="predicate"
+    )
     validate_report_contract(report, contract_case, case["name"])
 
 
