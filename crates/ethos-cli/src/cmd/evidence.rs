@@ -18,7 +18,9 @@ use ethos_core::error::EthosError;
 use ethos_core::evidence_anchor::{EvidenceAnchorReport, EvidenceAnchorRequest};
 
 use crate::grounding::load_source;
-use crate::{default_max_input_bytes, read_file_limited, write_output, EvidenceAnchorArgs, Failure};
+use crate::{
+    default_max_input_bytes, read_file_limited, write_output, EvidenceAnchorArgs, Failure,
+};
 
 pub(crate) fn evidence_anchor(args: EvidenceAnchorArgs) -> Result<(), Failure> {
     let max_input_bytes = default_max_input_bytes();

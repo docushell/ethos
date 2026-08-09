@@ -133,7 +133,7 @@ export interface EthosVerificationReport {
       | "presence_only"
       | "none";
     /**
-     * True whenever grounding the claim would require semantic judgment beyond the declared match method (e.g. paraphrase, arithmetic, cross-region synthesis). Such checks can never make all_evidence_grounded true.
+     * True whenever grounding the claim would require semantic judgment beyond the declared match method (e.g. paraphrase, arithmetic, cross-region synthesis). In v1, literal checkers always set this false; non-literal claims fail closed as unsupported_claim_kind instead. Such checks can never make all_evidence_grounded true.
      */
     semantic_unverified: boolean;
     resolved_element_ids?: string[];

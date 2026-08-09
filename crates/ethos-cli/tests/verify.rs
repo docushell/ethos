@@ -3534,8 +3534,9 @@ fn grounding_json_representation_identity_drives_staleness() {
 #[test]
 fn verify_rejects_present_but_unsupported_artifact_types_without_fallback() {
     let citations = repo_root().join("examples/verify/grounding_json_citations.json");
-    let valid = std::fs::read_to_string(repo_root().join("schemas/examples/grounding-source.example.json"))
-        .expect("fixture is readable");
+    let valid =
+        std::fs::read_to_string(repo_root().join("schemas/examples/grounding-source.example.json"))
+            .expect("fixture is readable");
 
     // A duplicated artifact_type must never be collapsed into a supported identity.
     let duplicated = valid.replacen(
