@@ -6,8 +6,8 @@ is built yet.
 Base URI is locked to `https://docushell.com/ethos/` (§1.2). Build sequencing and the
 file-by-file touch list live in `docs/proof-statement-v1-implementation-plan.md`.
 
-Scope: this changes the *shape* of Ethos output artifacts and adds corroboration. It
-changes no verification semantics. If a proposal alters what `grounded` means for any
+Scope: this makes Ethos output artifacts self-describing and self-attesting. It changes
+no verification semantics. If a proposal alters what `grounded` means for any
 existing claim, it does not belong in this document.
 
 ---
@@ -60,11 +60,11 @@ as a system consumes statements from more than one producer.
 
 ```
 https://docushell.com/ethos/grounding/v1
-https://docushell.com/ethos/corroboration/v1
+https://docushell.com/ethos/evidence-anchor/v1
 https://docushell.com/ethos/security/v1
 ```
 
-Shape is `<base>/<predicate>/v<n>` for all seven, with no exceptions.
+Shape is `<base>/<predicate>/v<n>` for all six, with no exceptions.
 
 Chosen over a dedicated Ethos domain because a purchase and a perpetual renewal
 obligation is a poor trade against a weak branding signal. Independence is carried by the
@@ -147,7 +147,6 @@ out the attack when a developer trusts an unsigned one.
 | `security/v1` | `security_report.json` | migrate |
 | `crop/v1` | crop descriptors | migrate |
 | `answer-release/v1` | app-answer-release decision | migrate |
-| `corroboration/v1` | nothing | new (§5) |
 
 Migration of each existing artifact is a **pure re-wrap**: the current schema becomes the
 predicate schema unchanged, and the statement wraps it. A payload-equivalence test asserts
@@ -191,48 +190,23 @@ stops being replayable.
 
 ---
 
-## 5. Multi-source and corroboration
-
-### 5.1 `sources[]`
+## 5. Evidence tier
 
 ```json
-"sources": [
-  { "parser": { }, "capabilities": { }, "fingerprint": "sha256:…" }
-],
 "evidence_tier": "exact_span"
 ```
 
-An array even when N=1. Widening a frozen schema from one to many costs a major version;
-starting wide costs nothing today.
+One deterministic enum saying how strong the match was, derived from the existing locator
+precedence. Values: `exact_span`, `element_scoped`, `page_scoped`, `capability_limited`.
 
-`evidence_tier` generalizes AetherProof's `model_root_type`: put the *strength of what was
-proven* into the artifact as one enum, so a consumer reads one field rather than
-interpreting a capabilities matrix. Values: `exact_span`, `element_scoped`, `page_scoped`,
-`capability_limited`. Derived deterministically from locator precedence.
+Generalises AetherProof's `model_root_type`: put the strength of what was proven into the
+artifact as a single field, so a consumer reads one value instead of interpreting a
+capability matrix.
 
-### 5.2 `corroboration/v1`
-
-The reason this release is worth a migration.
-
-Run N independently derived grounding sources over one subject. Compare bindings under
-declared tolerance. Emit one state:
-
-| State | Meaning |
-| --- | --- |
-| `corroborated` | every source binds the claim, locators agree |
-| `single_source` | N=1, stated plainly rather than implied |
-| `divergent` | sources disagree — the most useful signal Ethos can produce |
-| `capability_asymmetric` | only some sources could answer |
-
-Source independence is **declared, never assumed**. Two adapters both wrapping PDFium share
-failure modes, and the predicate has to say so.
-
-This is a deterministic dent in the gap `docs/hallucination-threat-model.md` and DocuShell's
-own MVP notes both name: a parser error that both drafts and verifies consistently is
-otherwise invisible. It does not close that gap. It makes one class of it visible.
-
-Corroboration raises confidence. It does not prove fidelity. That sentence belongs in
-`CLAIMS.md` on day one, before anyone reads `divergent` as a verdict.
+**Multi-source is deliberately absent.** An earlier draft carried `sources: []` to support
+running two parsers and comparing them. That capability is dropped (see §7), and an array
+that is always length one, never exercised, is exactly the kind of unvalidated shape that
+forces a `v2` later. The singular `grounding` field stays as it is.
 
 ---
 
@@ -258,9 +232,18 @@ claimed this. T0 says check it yourself.
 
 ## 7. Out of scope
 
-Signing and keys. A keystore. Hash-chained logs. Bundle export and an offline verifier.
-A conformance vector corpus. MCP proxying. Semantic checking. New parsers. Any change to
-verification semantics.
+Corroboration and multi-source comparison. Signing and keys. A keystore. Hash-chained
+logs. Bundle export and an offline verifier. A conformance vector corpus. MCP proxying.
+Semantic checking. New parsers. Any change to verification semantics.
+
+**On corroboration specifically.** Running two independently derived parsers and reporting
+their disagreement is the only deterministic answer to "who checks the parser?", and it is
+cut anyway. No external user has asked for it, two parsers sharing an upstream share
+failure modes, it doubles parse cost, and nobody has measured the divergence rate on real
+documents — a rate near zero makes it not worth building and a rate that is high makes it
+noise reviewers learn to ignore. The compensating control already shipped: DocuShell shows
+a reviewer the rendered crop of the actual page region. Revisit only with a measured
+divergence number, not a threat model.
 
 Bundles and the conformance corpus are the two most likely to be argued back in. Both are
 commitment devices whose job is to make change expensive, and there are currently zero
@@ -276,10 +259,9 @@ first.
 1.  Statement wrapper: one builder in ethos-core, no command hand-rolls a statement
 2.  grounding/v1 as a pure re-wrap + payload-equivalence test + regenerated goldens
 3.  Attestation block, non-optional
-4.  sources[] + evidence_tier
-5.  corroboration/v1
-6.  Remaining five predicates
-7.  CLAIMS.md + README reframe
+4.  evidence_tier
+5.  Remaining five predicates
+6.  CLAIMS.md + README reframe
 ```
 
 Step 2 lands as one commit that changes nothing but shape. Every golden moves at once, so

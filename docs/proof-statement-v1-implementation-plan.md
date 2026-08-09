@@ -143,45 +143,24 @@ repeat runs.
 yanked except for security. A report naming an unobtainable verifier version stops being
 replayable, and that damage is retroactive.
 
-### WP-4 — `sources[]` and `evidence_tier`
+### WP-4 — `evidence_tier`
 
 **Touch list**
-- `verify_types.rs` — `sources: Vec<SourceIdentity>` replacing the singular `grounding`
-  field; `evidence_tier: EvidenceTier` enum
-- `crates/ethos-verify/src/lib.rs` — populate `sources` with one entry today; derive
-  `evidence_tier` from the existing locator precedence in `resolve_target`
+- `verify_types.rs` — `evidence_tier: EvidenceTier` enum
+- `crates/ethos-verify/src/lib.rs` — derive it from the existing locator precedence in
+  `resolve_target`
 - schema + goldens
 
 `EvidenceTier`: `exact_span | element_scoped | page_scoped | capability_limited`.
 
-Array even at N=1. Widening a frozen schema later costs a major version.
+**The singular `grounding` field is unchanged.** An earlier draft replaced it with
+`sources: Vec<_>` to support corroboration. That capability is cut, so the array would be
+frozen at length one and never exercised — the exact unvalidated shape that forces a `v2`.
 
 **Acceptance:** tier derivation covered per locator kind; existing capability-downgrade
 tests still pass unchanged.
 
-### WP-5 — `corroboration/v1`
-
-**Goal:** N independently derived sources over one subject, with disagreement surfaced.
-
-**Touch list**
-- `crates/ethos-verify/src/lib.rs` — accept N `GroundingSource`s; deterministic comparison
-  of resolved bindings under declared tolerance
-- `crates/ethos-cli/src/cmd/verify.rs` — repeatable `--grounding` argument
-- `crates/ethos-core/src/verify_types.rs` — `CorroborationReport`
-- `schemas/ethos-corroboration-report.schema.json` (new)
-- fixtures: one corroborated case, one divergent case
-
-**States:** `corroborated`, `single_source`, `divergent`, `capability_asymmetric`.
-
-**Independence is declared, never inferred.** Two adapters both wrapping PDFium share
-failure modes; the predicate records the declaration rather than assuming it.
-
-**Acceptance**
-- divergent fixture produces `divergent`, not a silent pick-one
-- comparison is order-independent: sources in either order give identical bytes
-- `capability_asymmetric` when only one source can answer
-
-### WP-6 — Remaining five predicates
+### WP-5 — Remaining five predicates
 
 `grounding-validation/v1`, `evidence-anchor/v1`, `security/v1`, `crop/v1`,
 `answer-release/v1`. Each a pure re-wrap with its own payload-equivalence test.
@@ -196,7 +175,7 @@ consumer contract with a frozen error vocabulary under ADR-0016.
 **If the release drags, `crop/v1` and `answer-release/v1` defer to 0.6.1.** Fewest
 consumers.
 
-### WP-7 — Documentation
+### WP-6 — Documentation
 
 - `docs/CLAIMS.md` (new) — proves / does-not-prove / regulatory mapping with a residual-gap
   column / a paste-ready questionnaire paragraph
@@ -229,9 +208,9 @@ exists for this; use it rather than working around it.
 
 ## 4. Out of scope
 
-Signing and keys. A keystore. Hash-chained logs. Bundle export and an offline verifier.
-A conformance vector corpus. MCP proxying. Semantic checking. New parsers. Any change to
-verification semantics.
+Corroboration and multi-source comparison. Signing and keys. A keystore. Hash-chained
+logs. Bundle export and an offline verifier. A conformance vector corpus. MCP proxying.
+Semantic checking. New parsers. Any change to verification semantics.
 
 Bundles and the conformance corpus are the two most likely to be argued back in. Both are
 commitment devices whose purpose is to make change expensive, and there are zero
@@ -242,9 +221,8 @@ party depends on the format, or when an auditor asks for a portable bundle.
 
 ## 5. Definition of done
 
-- All seven predicate types emit statements through one builder
+- All six predicate types emit statements through one builder
 - Payload equivalence proven for all six migrated artifacts
-- `corroboration/v1` produces `divergent` on the divergence fixture
 - Attestation present and non-optional in every predicate
 - 400+ tests pass; determinism workflow green; `make -n release-gates` expands
 - `CLAIMS.md` published
