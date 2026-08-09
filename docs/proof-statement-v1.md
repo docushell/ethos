@@ -1,10 +1,11 @@
 # Proof Statement v1
 
-Status: **ruled, not implemented.** The three decisions in §1 are settled. Nothing here
-is built yet.
+Status: **implemented.** Every decision in §1 is ruled and every work package in
+`docs/proof-statement-v1-implementation-plan.md` is complete. This document is now the
+reference for the shipped format, not a proposal.
 
-Base URI is locked to `https://docushell.com/ethos/` (§1.2). Build sequencing and the
-file-by-file touch list live in `docs/proof-statement-v1-implementation-plan.md`.
+Base URI is `https://docushell.com/ethos/` (§1.2). The user-facing statement of what a
+verdict does and does not prove lives in `docs/CLAIMS.md`; this document owns the format.
 
 Scope: this makes Ethos output artifacts self-describing and self-attesting. It changes
 no verification semantics. If a proposal alters what `grounded` means for any
@@ -48,7 +49,7 @@ that is fine because tooling reads it. For document evidence, where opening the 
 reading it is half the value, it is a regression. DSSE stays a signing wrapper for T2
 (§6) and never becomes the thing on disk at T0 or T1.
 
-Verify the current `_type` revision against the in-toto spec before freezing it.
+The `_type` string was verified against the in-toto v1 specification before being frozen.
 
 ### 1.2 URI namespace — RULED: `https://docushell.com/ethos/`
 
@@ -64,7 +65,7 @@ https://docushell.com/ethos/evidence-anchor/v1
 https://docushell.com/ethos/security/v1
 ```
 
-Shape is `<base>/<predicate>/v<n>` for all six, with no exceptions.
+Shape is `<base>/<predicate>/v<n>` for all five, with no exceptions.
 
 Chosen over a dedicated Ethos domain because a purchase and a perpetual renewal
 obligation is a poor trade against a weak branding signal. Independence is carried by the
@@ -121,8 +122,8 @@ The one case where `subject[1]` would be honest is `--crop-source-pdf`, where Et
 and validates the actual PDF bytes. If it is ever built, that is the only permitted source:
 **a hash Ethos computed, never one it was handed.**
 
-Consumers must not assume `subject[0]` is the PDF. That is a documentation obligation and
-it goes in the contract doc and in `CLAIMS.md`.
+Consumers must not assume `subject[0]` is the PDF. That obligation is discharged in §2's
+field table and in `docs/CLAIMS.md` §2.
 
 Claims and config do not appear in `subject`. A verdict depends on three inputs — document,
 claims, config — and in-toto's subject model is artifact-centric, so the other two bind in
@@ -204,14 +205,24 @@ arrives in a layer that already exists rather than reshaping the artifact.
 
 ## 3. Predicate types
 
-| Predicate | Replaces | Status |
+Five, all shipped. Every one is emitted through `statement_json_bytes` in `ethos-cli`, so
+the shape cannot drift between producers.
+
+| Predicate | Command | Replaces |
 | --- | --- | --- |
-| `grounding/v1` | `verification_report.json` | migrate |
-| `grounding-validation/v1` | `ethos.grounding_validation.v1` | migrate, URI-ify |
-| `evidence-anchor/v1` | `evidence_anchor_report.json` | migrate |
-| `security/v1` | `security_report.json` | migrate |
-| `crop/v1` | crop descriptors | migrate |
-| `answer-release/v1` | app-answer-release decision | migrate |
+| `grounding/v1` | `ethos verify` | `verification_report.json` |
+| `grounding-validation/v1` | `ethos grounding check` | grounding validation report |
+| `evidence-anchor/v1` | `ethos evidence anchor` | `evidence_anchor_report.json` |
+| `security/v1` | `ethos security report` | `security_report.json` |
+| `crop/v1` | `ethos crop_element` | crop descriptors |
+
+**`answer-release` has no predicate type.** It is an app-layer envelope consumers build
+through `derive_app_answer_release_decision`; the CLI never emits it, so there is no
+producer to migrate and nothing to reserve.
+
+`grounding-validation/v1` keeps its `artifact_type` field inside the predicate. Retiring it
+in favour of `predicateType` would have broken payload equivalence for no benefit, and
+ADR-0016 freezes it as an input contract regardless.
 
 Migration of each existing artifact is a **pure re-wrap**: the current schema becomes the
 predicate schema unchanged, and the statement wraps it. A payload-equivalence test asserts
@@ -219,8 +230,8 @@ the new `predicate` block is byte-identical to the old top-level report, which r
 migration to a provably pure re-wrapping and forces any semantic change into its own
 visible commit.
 
-If the release starts dragging, `crop/v1` and `answer-release/v1` are the first to defer.
-They have the fewest consumers.
+Every migration was a pure re-wrap in practice: not one golden, schema, or example file
+changed when the five commands moved onto the statement shape.
 
 ---
 
@@ -275,23 +286,22 @@ forces a `v2` later. The singular `grounding` field stays as it is.
 
 ---
 
-## 6. Proof tiers
+## 6. Proof tiers, and what the format owes them
 
-Publish these as a table. The ordering is counterintuitive and the top rung is the one
-nobody else can occupy.
+The three tiers — T0 reproducible, T1 attested, T2 signed — are defined once, for readers,
+in `docs/CLAIMS.md` §5. They are not restated here; two copies of a claim is how the two
+copies start disagreeing.
 
-| Tier | Claim | Key required |
-| --- | --- | --- |
-| **T0 Reproducible** | anyone re-runs and gets identical bytes | no |
-| **T1 Attested** | the record names the verifier, config, and exact claims that produced it | no |
-| **T2 Signed** | a named key asserts who ran it and when | yes |
+What this document owns is the format consequence. **Ethos ships T0 and T1.** T2 is out of
+scope, and the reason the shape matters is that adding it later must not reshape the
+artifact:
 
-Ethos ships T0 and T1 in this release. T2 is deliberately out: the statement shape makes
-signing a wrapper you add later without touching the artifact, which is the whole reason
-for getting the shape right first.
-
-The message the tiers carry: everyone else starts at T2 and calls it proof. T2 says someone
-claimed this. T0 says check it yourself.
+- signatures attach to the **wrapper** layer (§2), which is named and empty rather than
+  absent, so signing adds a layer instead of restructuring one
+- the `predicate` stays byte-identical when a signature is added, so a T1 verdict and the
+  T2 verdict wrapping it replay to the same bytes
+- DSSE is the intended signing envelope and is deliberately **not** the on-disk artifact,
+  because it base64-encodes the payload and unreadable evidence is a regression (§1.1)
 
 ---
 

@@ -2,42 +2,55 @@
 
 ## Unreleased
 
-- boundary-exception: **every Ethos verdict is now an in-toto Statement.** `verify`,
-  `grounding check`, `evidence anchor`, `security report`, and `crop_element` wrap their
-  output in `{_type, subject, predicateType, predicate}`, emitted through one serialiser so
-  the shape cannot drift between producers. The report you already parse is the
-  `predicate`: `jq .predicate` returns the pre-0.6 shape byte for byte. Representations
-  (`doc parse`, `rag chunk`) stay bare, because a document graph is not an assertion about
-  the document. Base predicate URI is `https://docushell.com/ethos/<predicate>/v1`, where
-  `v1` versions the predicate schema and never the product.
-- Two fields added inside the report. `attestation` names the verifier crate and version,
-  the config label, and a SHA-256 over the exact parsed claims, so a verdict says what
-  produced it and can be replayed. `evidence_tier` states per check how precisely evidence
-  was bound — `exact_span`, `table_cell`, `element_scoped`, `page_scoped`, or
-  `capability_limited` — instead of leaving consumers to derive it.
+### Proof statements — every Ethos verdict is self-describing and self-attesting
+
+- boundary-exception: `verify`, `grounding check`, `evidence anchor`, `security report`,
+  and `crop_element` now wrap their output in an in-toto Statement —
+  `{_type, subject, predicateType, predicate}` — emitted through one serialiser so the
+  shape cannot drift between producers. `subject` names the artifact by the SHA-256 of the
+  bytes Ethos read, so a consumer holding the same file can confirm the verdict is about
+  their copy. Base URI is `https://docushell.com/ethos/<predicate>/v1`, where `v1` versions
+  the predicate schema and never the product.
+
+  **Upgrading:** the report you already parse is the `predicate`. `jq .predicate` returns
+  the pre-0.6 shape byte for byte. Every migration was a pure re-wrap; no golden, schema, or
+  example file changed when the five commands moved.
+
+  `doc parse` and `rag chunk` stay bare. A document graph and a chunk stream are
+  representations, not assertions about anything, and statements are for verdicts.
+  `answer-release` gets no predicate type: the CLI never emits it.
+
+- Two fields added inside the report, both required reading before trusting a verdict.
+  `attestation` names the verifier crate and version, the config label, and a SHA-256 over
+  the exact parsed claims, so a verdict says what produced it and can be replayed. It
+  attests the crate, not the binary — a hostile operator can lie in it, and `docs/CLAIMS.md`
+  says so. `evidence_tier` states per check how precisely evidence was bound:
+  `exact_span`, `table_cell`, `element_scoped`, `page_scoped`, or `capability_limited`.
+
 - `GroundingElement`, `GroundingSpan`, `GroundingTable`, and `GroundingCell` carry
   `Option<[i64; 4]>` for `bbox`. The wire schema still requires geometry; the Rust type can
   now express its absence, which keeps the multi-format path open without opening it. Read
-  sites fail closed: an element with no declared box contains nothing.
-- Adds `docs/CLAIMS.md`, now covered by the claims gate: what a verdict proves, what it does
-  not, and the paragraph to paste into a security questionnaire.
+  sites fail closed — an element with no declared box contains nothing — and a test locks
+  the geometry-free text path that a flow format would eventually need.
 
-- boundary-exception: rewrite `README.md` to drop the public-beta posture. The status badge,
-  the beta status block, the "Current evaluation support" framing, and the "Blocked" column
-  are all removed. "Blocked" was internal release vocabulary meaning "not yet approved for
-  publication", which reads to a user as broken or gatekept; the replacement states what is
-  not supported as a fact about capability. Nothing in the rewrite claims production
-  readiness, and `claims_gate.py` still passes, so no banned overclaim was introduced in
-  exchange.
-- boundary-exception: update `docs/public-boundary-claims.json` to match. Five pinned README
-  strings carried the retired beta wording; they are replaced by six that carry the same
-  boundaries in the new voice, including the honest limits — Ethos does not decide whether an
-  answer is true, a missing capability yields an explicit limitation rather than a guess, and
-  no speed, footprint, or parser-quality comparison is published because no defensible
-  benchmark has been run. Eleven existing install and PDFium claims are unchanged.
-- boundary-exception: scope `.github/workflows/ci.yml` to product correctness and
-  architectural invariants, parking publication gates behind `make release-gates`. See
-  `docs/ci-scope.md`.
+- boundary-exception: adds `docs/CLAIMS.md`, itself covered by the claims gate. What a
+  verdict proves, what it does not, a regulatory mapping with a residual-gap column, and
+  the paragraph to paste into a security questionnaire.
+
+- boundary-exception: rewrites `README.md` to drop the public-beta posture — status badge,
+  beta block, "Current evaluation support", and the "Blocked" column. "Blocked" was internal
+  release vocabulary meaning "not yet approved for publication", which reads to a user as
+  broken or gatekept; the replacement states what is not supported as a fact about
+  capability. Nothing claims production readiness, and `claims_gate.py` passes, so removing
+  hesitation bought no overclaim. `docs/public-boundary-claims.json` is updated to match:
+  five pinned strings carrying the retired wording replaced by six carrying the same
+  boundaries in the new voice.
+
+- boundary-exception: scopes `.github/workflows/ci.yml` to product correctness and
+  architectural invariants, parking publication gates behind `make release-gates`. CI went
+  from 81 steps to 41; roughly two thirds of the scripts under `.github/scripts` were tests
+  asserting the release machinery was wired rather than tests of Ethos. See
+  `docs/ci-scope.md` for what runs, what is parked, and the trigger to restore it.
 
 - docs: record a multi-format grounding analysis as a v0.7.0 input in `docs/v0-6-0-release.md`
   §10.1, where §10 already pointed v0.7.0 at the §5.1 geometry requirement. A source audit found
