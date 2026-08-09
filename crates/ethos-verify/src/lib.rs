@@ -2088,6 +2088,7 @@ pub fn normalize_quote(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ethos_core::evidence_anchor::EvidenceLocator;
     use ethos_core::grounding::{
         Capabilities, GroundingCell, GroundingElement, GroundingProvenance, GroundingSpan,
         GroundingTable, PageGeometry, ParserIdentity,
@@ -3651,5 +3652,98 @@ mod tests {
         assert_eq!(v["grounding"]["parser"]["name"], "test-parser");
         assert_eq!(v["fingerprint_stale"], false);
         assert_eq!(v["checks"].as_array().unwrap().len(), 1);
+    }
+
+    // ---- geometry-free text anchoring -------------------------------------------------
+    //
+    // An `element_id` + `expected_text` ref with no page locator and no bbox binds at
+    // `AnchorLevel::Text` and reports no capability limit. `docs/v0-6-0-release.md` §10.1
+    // established this by source audit; these tests make it an enforced invariant.
+    //
+    // Why it is guarded: geometry is mandatory in `ethos.grounding.v1` and its validator,
+    // not in this algorithm. That gap is what would let a flow document — DOCX, where
+    // pagination does not exist in the file and any bbox would have to be invented — ever
+    // be verified honestly. A refactor that made a page locator or a bbox mandatory here
+    // would close that path silently, and nothing else in the suite would notice.
+    //
+    // Multi-format support is deliberately out of scope (`docs/proof-statement-v1.md` §7).
+    // These tests keep the door open; they do not open it.
+
+    fn geometry_free_text_ref() -> EvidenceRef {
+        EvidenceRef {
+            evidence_id: "ev-1".into(),
+            evidence_kind: EvidenceKind::Text,
+            required_anchor_level: AnchorLevel::Text,
+            locator: EvidenceLocator {
+                page_index: None,
+                page_id: None,
+                element_id: Some("e000002".into()),
+                span_id: None,
+                bbox: None,
+                ..Default::default()
+            },
+            expected_text: Some("Revenue grew to $12.4M".into()),
+            expected_text_sha256: None,
+            text_normalization_profile: None,
+        }
+    }
+
+    #[test]
+    fn geometry_free_text_ref_needs_no_page_locator() {
+        // Guards the `element_id` disjunct in `page_locator_required`. If this flips true,
+        // `validate_required_page_locator` rejects the ref before anchoring even starts.
+        assert!(!page_locator_required(&geometry_free_text_ref()));
+    }
+
+    #[test]
+    fn geometry_free_text_ref_needs_no_bbox() {
+        // `AnchorLevel::Text` must stay outside `requires_bbox`, otherwise
+        // `validate_required_anchor_inputs` rejects a ref that carries no bbox.
+        assert!(!requires_bbox(&geometry_free_text_ref()));
+    }
+
+    #[test]
+    fn absent_page_locator_resolves_to_not_checked_never_not_found() {
+        // The distinction that carries the whole path. `NotChecked` means "no page was
+        // asked about"; `NotFound` means "a page was asked about and is missing" and
+        // would fail the anchor. A source with no pages at all must still yield
+        // `NotChecked`, since `pages` has no `minItems` in the artifact schema.
+        let source = TestSource::default();
+        let index = SourceIndex::new(&source);
+        let resolution = resolve_page(&index, &geometry_free_text_ref());
+        assert_eq!(resolution.check, PageCheck::NotChecked);
+        assert_eq!(resolution.page_id, None);
+    }
+
+    #[test]
+    fn geometry_free_text_ref_binds_with_no_capability_limit() {
+        // End to end: the four steps above compose into `Bound`. The bbox axis must read
+        // `NotChecked` rather than `CapabilityLimited` — the ref never asked for geometry,
+        // so nothing was downgraded and the caller is owed no warning.
+        let source = TestSource::default();
+        let report = anchor_evidence(
+            &source,
+            EvidenceAnchorRequest {
+                artifact_type: ethos_core::evidence_anchor::EVIDENCE_ANCHOR_REQUEST_ARTIFACT_TYPE
+                    .to_string(),
+                schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+                source_fingerprint: None,
+                evidence_refs: vec![geometry_free_text_ref()],
+                report_options: None,
+            },
+        )
+        .expect("a geometry-free text ref is a valid request");
+
+        let anchor = &report.anchors[0];
+        assert_eq!(anchor.anchor_status, AnchorStatus::Bound);
+        assert_eq!(anchor.achieved_anchor_level, AnchorLevel::Text);
+        assert_eq!(anchor.checks.page, PageCheck::NotChecked);
+        assert_eq!(anchor.checks.bbox, BboxCheck::NotChecked);
+        assert_eq!(anchor.checks.text, TextCheck::Matched);
+        assert!(
+            anchor.capability_limits.is_empty(),
+            "a ref that asked for no geometry was not downgraded: {:?}",
+            anchor.capability_limits
+        );
     }
 }
