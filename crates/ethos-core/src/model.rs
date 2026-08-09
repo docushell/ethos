@@ -411,7 +411,7 @@ fn grounding_element_from_element(e: &Element) -> crate::grounding::GroundingEle
     crate::grounding::GroundingElement {
         id: e.id.clone(),
         page: e.page.clone(),
-        bbox: e.bbox.to_array(),
+        bbox: Some(e.bbox.to_array()),
         kind: e.element_type.as_str().to_string(),
         text: e.text.clone(),
     }
@@ -518,7 +518,7 @@ impl crate::grounding::GroundingSource for Document {
             .map(|span| crate::grounding::GroundingSpan {
                 id: span.id.clone(),
                 page: span.page.clone(),
-                bbox: span.bbox.to_array(),
+                bbox: Some(span.bbox.to_array()),
                 text: span.text.clone(),
                 element: self
                     .payload
@@ -539,7 +539,7 @@ impl crate::grounding::GroundingSource for Document {
             .map(|t| crate::grounding::GroundingTable {
                 id: t.id.clone(),
                 page: t.page_refs.first().cloned().unwrap_or_default(),
-                bbox: t.bbox.to_array(),
+                bbox: Some(t.bbox.to_array()),
                 cells: t
                     .cells
                     .iter()
@@ -548,7 +548,7 @@ impl crate::grounding::GroundingSource for Document {
                         col: c.col,
                         row_span: c.row_span,
                         col_span: c.col_span,
-                        bbox: c.bbox.to_array(),
+                        bbox: Some(c.bbox.to_array()),
                         text: c.text.clone(),
                     })
                     .collect(),

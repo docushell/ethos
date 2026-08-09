@@ -1,5 +1,13 @@
 {
   "all_evidence_grounded": true,
+  "attestation": {
+    "claims_sha256": "bc750df695e997651171408e2df748c316397a7620ead800fc13fd17486b3911",
+    "config_version": "default-v1",
+    "verifier": {
+      "name": "ethos-verify",
+      "version": "0.6.0"
+    }
+  },
   "capability_limits": [],
   "checks": [
     {
@@ -20,6 +28,7 @@
         "page": "p0001",
         "text": "The alpha trust loop verifies grounded evidence"
       },
+      "evidence_tier": "element_scoped",
       "id": "v0001",
       "match_method": "normalized_text_contains",
       "semantic_unverified": false,

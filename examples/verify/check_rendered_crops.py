@@ -86,7 +86,8 @@ def compare_artifact_dirs(left_dir, right_dir, suffix, label):
 
 
 def validate_rendered_descriptors(report_path, doc_path, descriptor_paths, png_paths):
-    report = load_json(report_path)
+    # verify emits an in-toto Statement; the report is its predicate
+    report = load_json(report_path)["predicate"]
     doc = load_json(doc_path)
     png_by_name = {path.name: path for path in png_paths}
     expected_refs = {

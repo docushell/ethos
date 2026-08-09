@@ -56,7 +56,8 @@ fn parse_success(args: &[&str]) -> Value {
         String::from_utf8_lossy(&output.stdout)
     );
     assert_eq!(output.stderr, b"");
-    serde_json::from_slice(&output.stdout).expect("stdout is JSON")
+    // `ethos evidence anchor` emits an in-toto Statement; the report is its predicate.
+    serde_json::from_slice::<Value>(&output.stdout).expect("stdout is JSON")["predicate"].clone()
 }
 
 fn temp_json(name: &str, value: Value) -> PathBuf {

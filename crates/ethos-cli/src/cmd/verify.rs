@@ -83,6 +83,11 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     let config_sha256 =
         ethos_core::c14n::sha256_hex(&config_value).map_err(|e| EthosError::internal(e.message))?;
 
+    // Over the parsed claims array, not the raw file bytes (whitespace-fragile) and not
+    // the envelope, so a bare-array input and an envelope input with equal claims hash
+    // equal. ethos-verify cannot compute this itself; it has no c14n under invariant 4.
+    let claims_sha256 = claims_sha256(&citations)?;
+
     if args.grounding.is_none() && args.crop_dir.is_some() {
         let doc = read_document(&args.input)?;
         let crop_source_pdf = args
@@ -91,17 +96,31 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
             .map(|source_pdf| load_bound_crop_source_pdf(&doc, source_pdf))
             .transpose()?;
         let source = NativeCropSource { document: &doc };
-        let mut report = ethos_verify::verify_claims(&source, citations, &config, config_sha256);
+        let mut report =
+            ethos_verify::verify_claims(&source, citations, &config, config_sha256, claims_sha256);
         assign_logical_crop_refs(&mut report)?;
         if let Some(crop_dir) = args.crop_dir.as_deref() {
             write_crop_artifacts(crop_dir, &report, crop_source_pdf.as_ref())?;
         }
-        return write_report(args.out, args.format, report, args.fail_on_ungrounded);
+        return write_report(
+            args.out,
+            args.format,
+            report,
+            args.fail_on_ungrounded,
+            &args.input,
+        );
     }
     let source = load_source(&args.input, args.grounding.as_deref())?;
-    let report = ethos_verify::verify_claims(&source, citations, &config, config_sha256);
+    let report =
+        ethos_verify::verify_claims(&source, citations, &config, config_sha256, claims_sha256);
 
-    write_report(args.out, args.format, report, args.fail_on_ungrounded)
+    write_report(
+        args.out,
+        args.format,
+        report,
+        args.fail_on_ungrounded,
+        &args.input,
+    )
 }
 
 /// Verify an all-or-nothing NDJSON batch. Source/configuration validation happens once before
@@ -128,13 +147,13 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
         ethos_core::c14n::sha256_hex(&config_value).map_err(|e| EthosError::internal(e.message))?;
 
     let source = load_source(&args.input, args.grounding.as_deref())?;
-    let reports = batch_reports(&source, citations, &config, &config_sha256);
+    let reports = batch_reports(&source, citations, &config, &config_sha256)?;
 
     let mut output = Vec::new();
     let mut any_ungrounded = false;
     for report in reports {
         any_ungrounded |= !report.all_evidence_grounded;
-        let mut line = verification_report_json_bytes(&report)?;
+        let mut line = verification_report_json_bytes(&report, &args.input)?;
         line.pop(); // The ordinary report framing newline becomes NDJSON framing below.
         output.extend_from_slice(&line);
         output.push(b'\n');
@@ -203,13 +222,27 @@ fn batch_reports(
     citations: Vec<CitationInput>,
     config: &VerificationConfig,
     config_sha256: &str,
-) -> Vec<VerificationReport> {
+) -> Result<Vec<VerificationReport>, Failure> {
     citations
         .into_iter()
         .map(|citation| {
-            ethos_verify::verify_claims(source, citation, config, config_sha256.to_string())
+            let claims_sha256 = claims_sha256(&citation)?;
+            Ok(ethos_verify::verify_claims(
+                source,
+                citation,
+                config,
+                config_sha256.to_string(),
+                claims_sha256,
+            ))
         })
         .collect()
+}
+
+/// `sha256(c14n(claims))` over the parsed claims array.
+fn claims_sha256(citations: &CitationInput) -> Result<String, Failure> {
+    let value = serde_json::to_value(citations.claims())
+        .map_err(|e| EthosError::internal(e.to_string()))?;
+    ethos_core::c14n::sha256_hex(&value).map_err(|e| EthosError::internal(e.message).into())
 }
 
 fn write_report(
@@ -217,9 +250,10 @@ fn write_report(
     format: VerifyOutputFormat,
     report: VerificationReport,
     fail_on_ungrounded: bool,
+    input: &Path,
 ) -> Result<(), Failure> {
     let bytes = match format {
-        VerifyOutputFormat::Json => verification_report_json_bytes(&report)?,
+        VerifyOutputFormat::Json => verification_report_json_bytes(&report, input)?,
         VerifyOutputFormat::Summary => verification_report_summary_bytes(&report)?,
     };
     let all_evidence_grounded = report.all_evidence_grounded;
@@ -230,12 +264,11 @@ fn write_report(
     Ok(())
 }
 
-fn verification_report_json_bytes(report: &VerificationReport) -> Result<Vec<u8>, Failure> {
-    let value = serde_json::to_value(report).map_err(|e| EthosError::internal(e.to_string()))?;
-    let mut bytes =
-        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
-    bytes.push(b'\n');
-    Ok(bytes)
+fn verification_report_json_bytes(
+    report: &VerificationReport,
+    input: &Path,
+) -> Result<Vec<u8>, Failure> {
+    crate::statement_json_bytes(input, "grounding", report)
 }
 
 fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<u8>, Failure> {
@@ -921,7 +954,9 @@ fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failu
 mod tests {
     use super::*;
     use ethos_core::codes::WarningCode;
-    use ethos_core::verify_types::{Check, CheckStatus, Evidence, GroundingMeta, MatchMethod};
+    use ethos_core::verify_types::{
+        Attestation, Check, CheckStatus, Evidence, GroundingMeta, MatchMethod, VerifierIdentity,
+    };
 
     const TEST_DOCUMENT_FINGERPRINT: &str =
         "sha256:7164f43f104dc248193f12ea828e0ab857eae194210114c6f6c0160fd643c87b";
@@ -954,6 +989,14 @@ mod tests {
             dispersion: None,
             unsupported_claim_kinds: Vec::new(),
             warnings: Vec::new(),
+            attestation: Attestation {
+                verifier: VerifierIdentity {
+                    name: "ethos-verify".to_string(),
+                    version: "0.0.0-test".to_string(),
+                },
+                config_version: "default-v1".to_string(),
+                claims_sha256: "0".repeat(64),
+            },
         }
     }
 
@@ -975,6 +1018,7 @@ mod tests {
             status: CheckStatus::Grounded,
             reason: None,
             match_method: MatchMethod::ExactTextContains,
+            evidence_tier: None,
             semantic_unverified: false,
             evidence: Some(Evidence {
                 text: text.map(str::to_string),
@@ -1174,6 +1218,7 @@ mod tests {
                     status: CheckStatus::Grounded,
                     reason: None,
                     match_method: MatchMethod::ExactTextContains,
+                    evidence_tier: None,
                     semantic_unverified: false,
                     evidence: Some(Evidence {
                         text: Some("Hello world".to_string()),
@@ -1203,6 +1248,7 @@ mod tests {
                     status: CheckStatus::Grounded,
                     reason: None,
                     match_method: MatchMethod::PresenceOnly,
+                    evidence_tier: None,
                     semantic_unverified: false,
                     evidence: Some(Evidence {
                         text: None,
@@ -1219,6 +1265,14 @@ mod tests {
             dispersion: None,
             unsupported_claim_kinds: Vec::new(),
             warnings: Vec::new(),
+            attestation: Attestation {
+                verifier: VerifierIdentity {
+                    name: "ethos-verify".to_string(),
+                    version: "0.0.0-test".to_string(),
+                },
+                config_version: "default-v1".to_string(),
+                claims_sha256: "0".repeat(64),
+            },
         };
 
         assign_logical_crop_refs(&mut report)

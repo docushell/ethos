@@ -164,6 +164,10 @@ export interface EthosVerificationReport {
       crop_ref?: string;
     };
     warnings: EthosVerificationWarningCode[];
+    /**
+     * How precisely this check bound its evidence. Absent when nothing resolved.
+     */
+    evidence_tier?: "exact_span" | "table_cell" | "element_scoped" | "page_scoped" | "capability_limited";
   }[];
   /**
    * Claim kinds present in the input that this verifier/config does not support. Non-empty => all_evidence_grounded=false.
@@ -173,4 +177,21 @@ export interface EthosVerificationReport {
    * Report-level stable warning codes (capability downgrades land here as capability_limited).
    */
   warnings: EthosVerificationWarningCode[];
+  /**
+   * What produced this verdict. A binding record, not cryptographic proof: it attests the verifier crate version, not binary provenance.
+   */
+  attestation: {
+    verifier: {
+      name: string;
+      version: string;
+    };
+    /**
+     * Echo of the config label. verification_config_sha256 stays authoritative.
+     */
+    config_version: string;
+    /**
+     * sha256(c14n(claims)) over the parsed claims array, not the raw file bytes and not the envelope.
+     */
+    claims_sha256: string;
+  };
 }

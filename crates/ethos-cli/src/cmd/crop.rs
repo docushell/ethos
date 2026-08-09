@@ -17,7 +17,6 @@
 use ethos_core::crop_element::{
     resolve_crop_element_descriptor, CropElementRendering, CropElementRequest,
 };
-use ethos_core::error::EthosError;
 
 use crate::cmd::crop_artifacts::{
     load_bound_crop_source_pdf, write_crop_descriptor_artifact, write_rendered_crop_artifact,
@@ -65,12 +64,7 @@ pub(crate) fn crop_element(args: CropElementArgs) -> Result<(), Failure> {
         }
     }
 
-    let mut bytes = ethos_core::c14n::c14n_bytes(
-        &serde_json::to_value(descriptor)
-            .map_err(|_| EthosError::internal("crop_element descriptor serialization failed"))?,
-    )
-    .map_err(|error| EthosError::internal(error.message))?;
-    bytes.push(b'\n');
+    let bytes = crate::statement_json_bytes(&args.input, "crop", &descriptor)?;
     write_output(args.out, &bytes)
 }
 

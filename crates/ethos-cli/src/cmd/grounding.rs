@@ -16,7 +16,7 @@ pub(crate) fn check(args: GroundingCheckArgs) -> Result<(), Failure> {
         Ok(source) => source,
         Err(error) => {
             let report = invalid_report(&error);
-            write_validation_report(args.out, &report)?;
+            write_validation_report(args.out, &args.input, &report)?;
             return Err(Failure::Usage(format!(
                 "grounding JSON {} at {}",
                 error.code.as_str(),
@@ -38,7 +38,7 @@ pub(crate) fn check(args: GroundingCheckArgs) -> Result<(), Failure> {
         }
     };
     let report = valid_report(&source, source_binding);
-    write_validation_report(args.out, &report)?;
+    write_validation_report(args.out, &args.input, &report)?;
     if matches!(source_binding, SourceBinding::Mismatched) {
         return Err(Failure::Usage(
             "source artifact hash does not match source.sha256".to_string(),
@@ -108,6 +108,7 @@ impl SourceBinding {
 
 fn write_validation_report(
     out: Option<std::path::PathBuf>,
+    input: &std::path::Path,
     report: &ValidationReport,
 ) -> Result<(), Failure> {
     let mut value = serde_json::json!({
@@ -126,8 +127,9 @@ fn write_validation_report(
         value["error"] =
             serde_json::json!({"code": error.code, "path": error.path, "message": error.message});
     }
-    let mut bytes = ethos_core::c14n::c14n_bytes(&value)
-        .map_err(|e| Failure::Ethos(ethos_core::error::EthosError::internal(e.message)))?;
-    bytes.push(b'\n');
+    // The payload keeps its `artifact_type` field. Retiring it in favour of predicateType
+    // would break payload equivalence for no benefit today; ADR-0016 freezes it as a
+    // consumer contract on input regardless.
+    let bytes = crate::statement_json_bytes(input, "grounding-validation", &value)?;
     write_output(out, &bytes)
 }

@@ -158,3 +158,59 @@ Parser adapters should:
 
 The OpenDataLoader JSON adapter remains the full reference adapter. It is useful for serious
 foreign-parser mapping, but the minimal integration surface is the `GroundingSource` trait above.
+
+## Geometry is required, and where that requirement lives
+
+**For adapter authors: your source needs real coordinates.** `ethos.grounding.v1` requires
+`bbox` on every element, span, table, and cell. A text-only parser cannot use this profile
+honestly. Do not submit page-sized boxes, zero boxes, or invented coordinates — a zero-area
+box is rejected outright, so a `[0,0,0,0]` sentinel will not get you through.
+
+The Rust trait types carry `Option<[i64; 4]>`. That is deliberate and it is **not** an
+invitation to send `None`: the wire schema still requires the field, and the reader will
+reject an artifact without it. The `Option` exists so the type system can express a source
+that has no geometry to declare, which is not a thing this profile accepts today.
+
+**For maintainers: the constraint is narrower than it looks.** The verifier already binds
+text evidence with no geometry at all. An evidence ref of `{element_id, expected_text}`
+with no page locator and no bbox reaches `AnchorStatus::Bound` at `AnchorLevel::Text` and
+pushes no capability limit. That behaviour is covered by tests in `ethos-verify` named
+`geometry_free_*` and `absent_page_locator_resolves_to_not_checked_never_not_found` — do
+not remove them, they are what keeps the path open.
+
+Geometry is mandatory in the **artifact and its validator**, not in the verification
+algorithm. Five gates enforce it, all in one layer:
+
+| # | Gate | Where |
+| --- | --- | --- |
+| 1 | `media_type` is `const "application/pdf"` | `schemas/ethos-grounding-source.schema.json` |
+| 2 | the same media-type check | `crates/ethos-core/src/grounding_json.rs` |
+| 3 | `coordinate_system` pins `unit: centipoint`, `origin: top-left` | schema |
+| 4 | `bbox` required on element, span, table, cell | schema |
+| 5 | positive-area and in-page-bounds enforcement | `grounding_json.rs` |
+
+Gate 5 is why any future change must make `bbox` *absent* rather than empty. It also means
+an off-canvas PPTX shape, which legitimately carries negative coordinates, is rejected
+today — arguably a security-report finding rather than a parse error, and that call is a
+prerequisite to PPTX support rather than a detail.
+
+**If format support is ever taken up**, the order is DOCX, then XLSX, then PPTX. That is
+the reverse of the intuition that the format with visible geometry is the cheap one:
+
+- **DOCX** exercises the geometry-absent path, which is the only genuinely new behaviour.
+  Paragraph order in `word/document.xml` is document order — deterministic, no layout
+  engine, no font metrics. Pagination does not exist in the file and must not be
+  synthesised.
+- **XLSX** reuses that path and adds an `R1C1` locator convention. `GroundingCell` already
+  carries `row`, `col`, `row_span`, and `col_span`, so a sheet maps onto the existing table
+  model with no new locator concept. Do not compute column geometry: the same nominal
+  8.43-character column measures 4800 centipoints under Calibri 11 and 5400 under Verdana
+  11, a 12.5% swing driven by system font metrics that ADR-0003's font policy does not
+  cover.
+- **PPTX** last, despite clean arithmetic (127 EMU = 1 centipoint, and 127 is odd so
+  rounding ties are impossible), because gate 5 must be resolved first.
+
+Full analysis, including the measurements above and why rendering to PDF fails both the
+footprint and licence gates, is in `docs/v0-6-0-release.md` §10.1. Multi-format support is
+out of scope for v0.6.0 — `docs/proof-statement-v1.md` §7 records the trigger for
+revisiting it.

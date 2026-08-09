@@ -1,5 +1,13 @@
 {
   "all_evidence_grounded": true,
+  "attestation": {
+    "claims_sha256": "c4ddfee72316d216331e6869ca486459d7ef80858aa40d43e6a6644b5462cfb4",
+    "config_version": "default-v1",
+    "verifier": {
+      "name": "ethos-verify",
+      "version": "0.6.0"
+    }
+  },
   "capability_limits": [
     "missing_fingerprint",
     "missing_spans",
@@ -26,6 +34,7 @@
         "page": "page-1",
         "text": "Revenue grew to $12.4M in Q3 2025."
       },
+      "evidence_tier": "element_scoped",
       "id": "v0001",
       "match_method": "normalized_text_contains",
       "semantic_unverified": false,
@@ -54,6 +63,7 @@
         "page": "page-1",
         "text": "$12.4M"
       },
+      "evidence_tier": "table_cell",
       "id": "v0002",
       "match_method": "table_cell_lookup",
       "semantic_unverified": false,
@@ -77,6 +87,7 @@
         "page": "page-1",
         "text": "Revenue grew to $12.4M in Q3 2025."
       },
+      "evidence_tier": "element_scoped",
       "id": "v0003",
       "match_method": "presence_only",
       "semantic_unverified": false,

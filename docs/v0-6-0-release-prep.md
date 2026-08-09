@@ -1,5 +1,12 @@
 # Ethos v0.6.0 Release Preparation
 
+> **This document covers the Grounding JSON portion of v0.6.0 only.** That work is complete
+> and merged. On 2026-08-09 v0.6.0 was expanded into the major format release; scope
+> authority for the remaining work is `docs/proof-statement-v1.md`, and the task board is
+> in `docs/proof-statement-v1-implementation-plan.md`.
+>
+> Everything below stays accurate for what it describes. It is no longer the whole picture.
+
 Status: **accepted as the scoped v0.6.0 decider request** (2026-07-30), satisfying precondition
 §3.1. Implementation is authorized through WP-3 and has landed.
 

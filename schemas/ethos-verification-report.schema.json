@@ -2,54 +2,99 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:verification-report:1",
   "title": "Ethos verification report (verification_report.json)",
-  "description": "Citation evidence verification over any GroundingSource (Ethos or foreign parser output). Verification is EVIDENCE GROUNDING — the cited region exists, its text matches by a declared method, the fingerprint is fresh. It is never pixel-level, semantic, or arithmetic proof of an answer. Capability-driven downgrades are explicit: missing spans, missing fingerprints, or foreign coordinate systems appear as capability_limited warnings, never silent approximation. INVARIANT (PRD §8): all_evidence_grounded is true only when (a) at least one supported check exists, (b) every supported check has status 'grounded', (c) no check has semantic_unverified=true, (d) unsupported_claim_kinds is empty, and (e) fingerprint_stale is false. The reference implementation enforces this; the schema documents it.",
+  "description": "Citation evidence verification over any GroundingSource (Ethos or foreign parser output). Verification is EVIDENCE GROUNDING \u2014 the cited region exists, its text matches by a declared method, the fingerprint is fresh. It is never pixel-level, semantic, or arithmetic proof of an answer. Capability-driven downgrades are explicit: missing spans, missing fingerprints, or foreign coordinate systems appear as capability_limited warnings, never silent approximation. INVARIANT (PRD \u00a78): all_evidence_grounded is true only when (a) at least one supported check exists, (b) every supported check has status 'grounded', (c) no check has semantic_unverified=true, (d) unsupported_claim_kinds is empty, and (e) fingerprint_stale is false. The reference implementation enforces this; the schema documents it.",
   "type": "object",
   "required": [
-    "schema_version",
-    "verification_config_sha256",
-    "grounding",
-    "capability_limits",
-    "fingerprint_stale",
     "all_evidence_grounded",
+    "attestation",
+    "capability_limits",
     "checks",
+    "fingerprint_stale",
+    "grounding",
+    "schema_version",
     "unsupported_claim_kinds",
+    "verification_config_sha256",
     "warnings"
   ],
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
     "document_fingerprint": {
       "$ref": "#/$defs/fingerprint",
       "description": "Fingerprint of the grounding document when the source declares one; absent (with capability warning) otherwise."
     },
-    "verification_config_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "verification_config_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
     "grounding": {
       "type": "object",
-      "required": ["parser", "capabilities"],
+      "required": [
+        "parser",
+        "capabilities"
+      ],
       "additionalProperties": false,
       "properties": {
         "parser": {
           "type": "object",
-          "required": ["name", "version"],
+          "required": [
+            "name",
+            "version"
+          ],
           "additionalProperties": false,
           "properties": {
-            "name": { "type": "string" },
-            "version": { "type": "string" },
-            "adapter": { "type": "string", "description": "Adapter identifier, e.g. 'opendataloader-json'." },
-            "adapter_version": { "type": "string" }
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "adapter": {
+              "type": "string",
+              "description": "Adapter identifier, e.g. 'opendataloader-json'."
+            },
+            "adapter_version": {
+              "type": "string"
+            }
           }
         },
         "capabilities": {
           "type": "object",
-          "required": ["spans", "char_offsets", "tables", "fingerprint", "coordinate_origin", "crop_support"],
+          "required": [
+            "spans",
+            "char_offsets",
+            "tables",
+            "fingerprint",
+            "coordinate_origin",
+            "crop_support"
+          ],
           "additionalProperties": false,
           "properties": {
-            "spans": { "type": "boolean" },
-            "char_offsets": { "type": "boolean" },
-            "tables": { "type": "boolean" },
-            "fingerprint": { "type": "boolean" },
-            "coordinate_origin": { "enum": ["top-left", "bottom-left", "unknown"] },
-            "crop_support": { "type": "boolean" }
+            "spans": {
+              "type": "boolean"
+            },
+            "char_offsets": {
+              "type": "boolean"
+            },
+            "tables": {
+              "type": "boolean"
+            },
+            "fingerprint": {
+              "type": "boolean"
+            },
+            "coordinate_origin": {
+              "enum": [
+                "top-left",
+                "bottom-left",
+                "unknown"
+              ]
+            },
+            "crop_support": {
+              "type": "boolean"
+            }
           }
         }
       }
@@ -74,67 +119,150 @@
       },
       "uniqueItems": true
     },
-    "all_evidence_grounded": { "type": "boolean" },
+    "all_evidence_grounded": {
+      "type": "boolean"
+    },
     "dispersion": {
       "type": "object",
-      "required": ["grounded_checks", "elements", "pages", "unmapped_grounded_checks"],
+      "required": [
+        "grounded_checks",
+        "elements",
+        "pages",
+        "unmapped_grounded_checks"
+      ],
       "additionalProperties": false,
       "properties": {
-        "grounded_checks": { "type": "integer", "minimum": 0 },
-        "elements": { "type": "integer", "minimum": 0 },
-        "pages": { "type": "integer", "minimum": 0 },
-        "unmapped_grounded_checks": { "type": "integer", "minimum": 0 },
-        "sections": { "type": "integer", "minimum": 0 }
+        "grounded_checks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "elements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pages": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unmapped_grounded_checks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sections": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "checks": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "claim", "status", "match_method", "semantic_unverified", "warnings"],
+        "required": [
+          "id",
+          "claim",
+          "status",
+          "match_method",
+          "semantic_unverified",
+          "warnings"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "pattern": "^v[0-9]{4}$" },
+          "id": {
+            "type": "string",
+            "pattern": "^v[0-9]{4}$"
+          },
           "claim": {
             "type": "object",
-            "required": ["kind", "citation"],
+            "required": [
+              "kind",
+              "citation"
+            ],
             "additionalProperties": false,
             "properties": {
-              "kind": { "enum": ["quote", "value", "presence", "table_cell", "region", "other"] },
-              "text": { "type": "string", "description": "The claimed quote/value text, when textual." },
+              "kind": {
+                "enum": [
+                  "quote",
+                  "value",
+                  "presence",
+                  "table_cell",
+                  "region",
+                  "other"
+                ]
+              },
+              "text": {
+                "type": "string",
+                "description": "The claimed quote/value text, when textual."
+              },
               "citation": {
                 "type": "object",
                 "description": "Where the claim says the evidence lives. At least one locator required; id formats follow the grounding source.",
                 "additionalProperties": false,
                 "minProperties": 1,
                 "properties": {
-                  "page": { "type": "string" },
-                  "element_id": { "type": "string" },
-                  "span_id": { "type": "string" },
-                  "table_id": { "type": "string" },
+                  "page": {
+                    "type": "string"
+                  },
+                  "element_id": {
+                    "type": "string"
+                  },
+                  "span_id": {
+                    "type": "string"
+                  },
+                  "table_id": {
+                    "type": "string"
+                  },
                   "cell": {
                     "type": "object",
-                    "required": ["row", "col"],
+                    "required": [
+                      "row",
+                      "col"
+                    ],
                     "additionalProperties": false,
                     "properties": {
-                      "row": { "type": "integer", "minimum": 0 },
-                      "col": { "type": "integer", "minimum": 0 }
+                      "row": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "col": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
                     }
                   },
-                  "bbox": { "$ref": "#/$defs/bbox" }
+                  "bbox": {
+                    "$ref": "#/$defs/bbox"
+                  }
                 }
               }
             }
           },
           "status": {
-            "enum": ["grounded", "not_found", "mismatch", "stale", "unsupported_claim_kind", "capability_blocked", "error"]
+            "enum": [
+              "grounded",
+              "not_found",
+              "mismatch",
+              "stale",
+              "unsupported_claim_kind",
+              "capability_blocked",
+              "error"
+            ]
           },
           "reason": {
             "$ref": "#/$defs/check_reason",
             "description": "Stable diagnostic reason for a non-grounded check outcome. Omitted for grounded checks."
           },
           "match_method": {
-            "enum": ["exact_text", "normalized_text", "exact_text_contains", "normalized_text_contains", "table_cell_lookup", "bbox_containment", "presence_only", "none"],
+            "enum": [
+              "exact_text",
+              "normalized_text",
+              "exact_text_contains",
+              "normalized_text_contains",
+              "table_cell_lookup",
+              "bbox_containment",
+              "presence_only",
+              "none"
+            ],
             "description": "How evidence was matched. Equality methods require the target text to equal the claim text after the configured normalization. '*_contains' methods are explicit substring containment and are used only for quote evidence inside a larger target. 'normalized_text' uses ONLY the whitespace rule pinned in the verification config; nothing fuzzier exists in v1."
           },
           "semantic_unverified": {
@@ -143,37 +271,79 @@
           },
           "resolved_element_ids": {
             "type": "array",
-            "items": { "type": "string" },
+            "items": {
+              "type": "string"
+            },
             "uniqueItems": true
           },
           "provenance": {
             "type": "object",
-            "required": ["status"],
+            "required": [
+              "status"
+            ],
             "additionalProperties": false,
             "properties": {
-              "status": { "enum": ["available", "capability_limited", "not_applicable"] },
-              "heading_path": { "type": "array", "items": { "type": "string" } },
-              "element_role": { "type": "string" },
-              "previous_element_id": { "type": "string" },
-              "next_element_id": { "type": "string" }
+              "status": {
+                "enum": [
+                  "available",
+                  "capability_limited",
+                  "not_applicable"
+                ]
+              },
+              "heading_path": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "element_role": {
+                "type": "string"
+              },
+              "previous_element_id": {
+                "type": "string"
+              },
+              "next_element_id": {
+                "type": "string"
+              }
             }
           },
           "context_echo": {
             "type": "object",
-            "required": ["before", "match", "after"],
+            "required": [
+              "before",
+              "match",
+              "after"
+            ],
             "additionalProperties": false,
             "properties": {
-              "before": { "type": "string" },
-              "match": { "type": "string" },
-              "after": { "type": "string" },
+              "before": {
+                "type": "string"
+              },
+              "match": {
+                "type": "string"
+              },
+              "after": {
+                "type": "string"
+              },
               "element_boundary": {
                 "type": "object",
-                "required": ["offset", "left_element_id", "right_element_id"],
+                "required": [
+                  "offset",
+                  "left_element_id",
+                  "right_element_id"
+                ],
                 "additionalProperties": false,
                 "properties": {
-                  "offset": { "type": "integer", "minimum": 0 },
-                  "left_element_id": { "type": "string" },
-                  "right_element_id": { "type": "string" }
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "left_element_id": {
+                    "type": "string"
+                  },
+                  "right_element_id": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -183,55 +353,163 @@
             "description": "What was found at the citation target. Page-only presence checks synthesize bbox as the full page extent. crop_ref is an opaque audit pointer emitted only when the verification config requests crops and the GroundingSource declares crop_support.",
             "additionalProperties": false,
             "properties": {
-              "text": { "type": "string" },
-              "page": { "type": "string" },
-              "bbox": { "$ref": "#/$defs/bbox" },
-              "crop_ref": { "type": "string" }
+              "text": {
+                "type": "string"
+              },
+              "page": {
+                "type": "string"
+              },
+              "bbox": {
+                "$ref": "#/$defs/bbox"
+              },
+              "crop_ref": {
+                "type": "string"
+              }
             }
           },
-          "warnings": { "type": "array", "items": { "$ref": "#/$defs/warning_code" } }
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/warning_code"
+            }
+          },
+          "evidence_tier": {
+            "type": "string",
+            "enum": [
+              "exact_span",
+              "table_cell",
+              "element_scoped",
+              "page_scoped",
+              "capability_limited"
+            ],
+            "description": "How precisely this check bound its evidence. Absent when nothing resolved."
+          }
         }
       }
     },
     "unsupported_claim_kinds": {
       "type": "array",
       "description": "Claim kinds present in the input that this verifier/config does not support. Non-empty => all_evidence_grounded=false.",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "warnings": {
       "type": "array",
       "description": "Report-level stable warning codes (capability downgrades land here as capability_limited).",
-      "items": { "$ref": "#/$defs/warning_code" }
+      "items": {
+        "$ref": "#/$defs/warning_code"
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verifier",
+        "config_version",
+        "claims_sha256"
+      ],
+      "description": "What produced this verdict. A binding record, not cryptographic proof: it attests the verifier crate version, not binary provenance.",
+      "properties": {
+        "verifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "config_version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Echo of the config label. verification_config_sha256 stays authoritative."
+        },
+        "claims_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "sha256(c14n(claims)) over the parsed claims array, not the raw file bytes and not the envelope."
+        }
+      }
     }
   },
   "allOf": [
     {
       "if": {
         "anyOf": [
-          { "required": ["dispersion"] },
+          {
+            "required": [
+              "dispersion"
+            ]
+          },
           {
             "properties": {
               "checks": {
                 "contains": {
                   "anyOf": [
-                    { "required": ["resolved_element_ids"] },
-                    { "required": ["provenance"] },
-                    { "required": ["context_echo"] }
+                    {
+                      "required": [
+                        "resolved_element_ids"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "provenance"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "context_echo"
+                      ]
+                    }
                   ]
                 }
               }
             },
-            "required": ["checks"]
+            "required": [
+              "checks"
+            ]
           }
         ]
       },
-      "then": { "properties": { "schema_version": { "const": "1.1.0" } } },
-      "else": { "properties": { "schema_version": { "const": "1.0.0" } } }
+      "then": {
+        "properties": {
+          "schema_version": {
+            "const": "1.1.0"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "schema_version": {
+            "const": "1.0.0"
+          }
+        }
+      }
     }
   ],
   "$defs": {
-    "fingerprint": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "bbox": { "type": "array", "items": { "type": "integer" }, "minItems": 4, "maxItems": 4 },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "bbox": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
     "check_reason": {
       "enum": [
         "missing_locator",

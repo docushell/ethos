@@ -1,5 +1,19 @@
 # Ethos v0.6.0 — Release Record
 
+> **Scope expanded on 2026-08-09. Read this first.**
+>
+> v0.6.0 is now the major format release. Everything recorded below — the Grounding JSON
+> work, WP-0 through WP-3 — is merged to `main` and remains accurate as history. It is no
+> longer the whole of v0.6.0.
+>
+> The added scope makes every Ethos output artifact self-describing and self-attesting.
+> Authority for that work is `docs/proof-statement-v1.md` (format and rulings) and
+> `docs/proof-statement-v1-implementation-plan.md` (tasks and acceptance).
+>
+> §9 below is **partly superseded**: attestation and verification-report changes moved from
+> non-goal to core deliverable. Do not treat this document as the scope authority for the
+> remaining v0.6.0 work.
+
 Status: **implementation verified; release blocked on governance and platform items in section 8.**
 This document does not authorize publication, production positioning, or any new public claim.
 
@@ -586,10 +600,16 @@ outcomes, and a `darwin:x64` release target.
 
 ---
 
-## 9. Non-goals, unchanged
+## 9. Non-goals
 
-Verification-report changes. Receipt, attestation, proof-package, signing, ledger, checkpoint, or
-replay protocols. New PDF parsing behavior or parser-quality claims. New parser-specific adapters
+**Superseded in part on 2026-08-09.** Verification-report changes and attestation are now
+**in scope** — see `docs/proof-statement-v1.md`. Signing, ledgers, checkpoints, hash-chained
+logs, bundle export, and an offline verifier remain non-goals. The list below is retained
+with the superseded items struck through in prose rather than deleted, so the scope change
+is visible rather than silent.
+
+~~Verification-report changes.~~ ~~Attestation.~~ Receipt, proof-package, signing, ledger,
+checkpoint, or replay protocols. New PDF parsing behavior or parser-quality claims. New parser-specific adapters
 beyond the existing OpenDataLoader adapter. Geometry-less or text-only profiles. Dynamic plugins,
 WASM adapters, adapter marketplaces, or mapping DSLs. Automatic field inference, ID repair,
 coordinate guessing, capability guessing, or source-hash repair. Non-PDF profiles. Search, indexing,

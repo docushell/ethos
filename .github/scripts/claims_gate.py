@@ -35,6 +35,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 SURFACES = [
     "README.md",
     "docs/landscape-log.md",
+    "docs/CLAIMS.md",
     "examples",
     "announcements",
     "bindings",

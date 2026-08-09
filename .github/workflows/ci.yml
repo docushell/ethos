@@ -57,6 +57,9 @@ jobs:
         run: python3 fixtures/validate_fixtures.py
       - name: layout evaluator alpha
         run: make layout-evaluator-alpha
+      - name: citation emission v1 contract
+        # Guards the documented pointer-first integration path and its runnable examples.
+        run: make citation-emission-v1-contract
       - name: Python surface tests
         run: PYTHONPATH=python python3 -m unittest discover -s python/tests
       - name: npm package test dependencies
@@ -131,6 +134,19 @@ jobs:
           sudo unshare -n -- ./target/debug/ethos fingerprint schemas/examples/document.example.json
           sudo unshare -n -- ./target/debug/ethos rag chunk schemas/examples/document.example.json > /tmp/chunks.jsonl
           test -s /tmp/chunks.jsonl
+
+  rag-framework-examples:
+    # The adoption path: LangChain/LlamaIndex examples must run twice byte-identically
+    # with no API keys. Broken examples fail for strangers evaluating Ethos, not for us.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: rustup show
+      - run: pip install -r examples/citation-emission/requirements-frameworks.txt
+      - run: make rag-framework-examples
 
   dco:
     runs-on: ubuntu-latest

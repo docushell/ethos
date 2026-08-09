@@ -1,5 +1,13 @@
 {
   "all_evidence_grounded": false,
+  "attestation": {
+    "claims_sha256": "0c11ac8e8953130d39f0e9e2b7784eb08f2bdf388b5e20a31c9bb0af004d1e40",
+    "config_version": "default-v1",
+    "verifier": {
+      "name": "ethos-verify",
+      "version": "0.6.0"
+    }
+  },
   "capability_limits": [],
   "checks": [
     {
@@ -21,6 +29,7 @@
         "page": "p0001",
         "text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion."
       },
+      "evidence_tier": "element_scoped",
       "id": "v0001",
       "match_method": "normalized_text_contains",
       "reason": "text_mismatch",

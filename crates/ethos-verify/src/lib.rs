@@ -47,10 +47,11 @@ use ethos_core::grounding::{
     GroundingTable, PageGeometry,
 };
 use ethos_core::verify_types::{
-    compute_all_evidence_grounded, CapabilityLimit, Check, CheckProvenance, CheckReason,
-    CheckStatus, Claim, ClaimKind, ContextBoundary, ContextEcho, Evidence, EvidenceDispersion,
-    GroundingMeta, MatchMethod, ProvenanceStatus, TextNormalization, VerificationConfig,
-    VerificationReport, HARDENED_VERIFICATION_SCHEMA_VERSION,
+    compute_all_evidence_grounded, Attestation, CapabilityLimit, Check, CheckProvenance,
+    CheckReason, CheckStatus, Claim, ClaimKind, ContextBoundary, ContextEcho, Evidence,
+    EvidenceDispersion, EvidenceTier, GroundingMeta, MatchMethod, ProvenanceStatus,
+    TextNormalization, VerificationConfig, VerificationReport, VerifierIdentity,
+    HARDENED_VERIFICATION_SCHEMA_VERSION,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -622,9 +623,14 @@ fn resolve_anchor_target(
             .iter()
             .enumerate()
             .filter(|(_, element)| {
-                element.page == page_id && contains_bbox(element.bbox, bbox, tolerance)
+                element.page == page_id
+                    && element
+                        .bbox
+                        .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
             })
-            .min_by_key(|(position, element)| (bbox_area(element.bbox), *position))
+            .min_by_key(|(position, element)| {
+                (element.bbox.map_or(u128::MAX, bbox_area), *position)
+            })
             .map(|(position, element)| target_from_element(element, Some(position)));
     }
     let expected = evidence_ref.expected_text.as_deref()?;
@@ -663,19 +669,22 @@ fn resolve_bbox(
         .matching
         .bbox_containment_tolerance_q
         .unwrap_or(0);
-    if index
-        .elements
-        .iter()
-        .any(|element| element.page == page_id && contains_bbox(element.bbox, bbox, tolerance))
-        || index
-            .spans
-            .iter()
-            .any(|span| span.page == page_id && contains_bbox(span.bbox, bbox, tolerance))
-        || index
-            .tables
-            .iter()
-            .any(|table| table.page == page_id && contains_bbox(table.bbox, bbox, tolerance))
-    {
+    if index.elements.iter().any(|element| {
+        element.page == page_id
+            && element
+                .bbox
+                .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
+    }) || index.spans.iter().any(|span| {
+        span.page == page_id
+            && span
+                .bbox
+                .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
+    }) || index.tables.iter().any(|table| {
+        table.page == page_id
+            && table
+                .bbox
+                .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
+    }) {
         BboxCheck::Valid
     } else {
         BboxCheck::NotFound
@@ -932,6 +941,7 @@ pub fn verify_claims(
     citations: CitationInput,
     config: &VerificationConfig,
     config_sha256: String,
+    claims_sha256: String,
 ) -> VerificationReport {
     let (citation_fingerprint, claims) = citations.into_parts();
     let index = SourceIndex::new(source);
@@ -1025,6 +1035,16 @@ pub fn verify_claims(
         checks,
         dispersion,
         unsupported_claim_kinds: unsupported,
+        attestation: Attestation {
+            // The verifier's own crate identity, not the caller's, so a library consumer
+            // gets the same attestation a CLI user does.
+            verifier: VerifierIdentity {
+                name: env!("CARGO_PKG_NAME").to_string(),
+                version: env!("CARGO_PKG_VERSION").to_string(),
+            },
+            config_version: config.config_version.clone(),
+            claims_sha256,
+        },
         warnings,
     }
 }
@@ -1063,6 +1083,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1080,6 +1101,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1101,6 +1123,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1117,6 +1140,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1134,6 +1158,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1150,6 +1175,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1168,6 +1194,7 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                evidence_tier: None,
                 resolved_element_ids: Vec::new(),
                 provenance: None,
                 context_echo: None,
@@ -1183,6 +1210,7 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                evidence_tier: None,
                 resolved_element_ids: Vec::new(),
                 provenance: None,
                 context_echo: None,
@@ -1199,6 +1227,7 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                evidence_tier: None,
                 resolved_element_ids: Vec::new(),
                 provenance: None,
                 context_echo: None,
@@ -1220,6 +1249,7 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                evidence_tier: None,
                 resolved_element_ids: Vec::new(),
                 provenance: None,
                 context_echo: None,
@@ -1251,6 +1281,22 @@ fn check_claim(
             )
         })
         .flatten();
+    // The tier the target actually resolved at, unless a capability limit is what decided
+    // this check — then the honest statement is that the source could not answer at the
+    // precision asked for, not that it answered imprecisely.
+    let capability_limited = matches!(
+        reason,
+        Some(
+            CheckReason::MissingSpanCapability
+                | CheckReason::MissingTableCapability
+                | CheckReason::UnknownCoordinateOrigin
+        )
+    );
+    let evidence_tier = Some(if capability_limited {
+        EvidenceTier::CapabilityLimited
+    } else {
+        target.tier
+    });
     Check {
         id: check_id,
         claim,
@@ -1259,6 +1305,7 @@ fn check_claim(
         match_method,
         semantic_unverified: false,
         evidence,
+        evidence_tier,
         resolved_element_ids: context
             .emit_hardening
             .then(|| target.element_ids.clone())
@@ -1342,6 +1389,9 @@ fn claim_kind_name(kind: ClaimKind) -> &'static str {
 
 #[derive(Debug, Clone)]
 struct FoundTarget {
+    /// Set where the target resolves, never re-derived from the citation, so the tier
+    /// cannot drift from the locator precedence it describes.
+    tier: EvidenceTier,
     page: Option<String>,
     bbox: Option<[i64; 4]>,
     text: Option<String>,
@@ -1500,9 +1550,14 @@ fn resolve_target(
             .iter()
             .enumerate()
             .filter(|(_, element)| {
-                element.page == page && contains_bbox(element.bbox, bbox, tolerance)
+                element.page == page
+                    && element
+                        .bbox
+                        .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
             })
-            .min_by_key(|(position, element)| (bbox_area(element.bbox), *position))
+            .min_by_key(|(position, element)| {
+                (element.bbox.map_or(u128::MAX, bbox_area), *position)
+            })
             .map(|(position, element)| target_from_element(element, Some(position)))
             .map(TargetResolution::Found)
             .unwrap_or(TargetResolution::NotFound(CheckReason::BboxNotFound));
@@ -1520,6 +1575,7 @@ fn resolve_target(
             .map(|found| {
                 TargetResolution::Found(FoundTarget {
                     page: Some(found.id.clone()),
+                    tier: EvidenceTier::PageScoped,
                     bbox: Some([0, 0, found.width, found.height]),
                     text: None,
                     from_table_cell: false,
@@ -1549,8 +1605,9 @@ fn enforce_supplemental_page(resolution: TargetResolution, claim: &Claim) -> Tar
 fn target_from_element(element: &GroundingElement, element_index: Option<usize>) -> FoundTarget {
     FoundTarget {
         page: Some(element.page.clone()),
-        bbox: Some(element.bbox),
+        bbox: element.bbox,
         text: element.text.clone(),
+        tier: EvidenceTier::ElementScoped,
         from_table_cell: false,
         element_index,
         element_ids: vec![element.id.clone()],
@@ -1561,8 +1618,9 @@ fn target_from_element(element: &GroundingElement, element_index: Option<usize>)
 fn target_from_span(span: &GroundingSpan) -> FoundTarget {
     FoundTarget {
         page: Some(span.page.clone()),
-        bbox: Some(span.bbox),
+        bbox: span.bbox,
         text: Some(span.text.clone()),
+        tier: EvidenceTier::ExactSpan,
         from_table_cell: false,
         element_index: None,
         element_ids: span.element.iter().cloned().collect(),
@@ -1605,8 +1663,9 @@ fn table_cell_covers(cell: &GroundingCell, row: u32, col: u32) -> bool {
 fn target_from_cell(page: &str, cell: &GroundingCell) -> FoundTarget {
     FoundTarget {
         page: Some(page.to_string()),
-        bbox: Some(cell.bbox),
+        bbox: cell.bbox,
         text: Some(cell.text.clone()),
+        tier: EvidenceTier::TableCell,
         from_table_cell: true,
         element_index: None,
         element_ids: Vec::new(),
@@ -1682,7 +1741,13 @@ fn adjacent_text_pair_target(
     if first.page != second.page {
         return None;
     }
-    if !element_bboxes_are_adjacent(first.bbox, second.bbox) {
+    // Both elements need declared geometry before adjacency can mean anything. A
+    // geometry-free element is never "next to" another, which matches the existing
+    // capability gate on CoordinateOrigin::Unknown: no coordinates, no join.
+    let (Some(first_bbox), Some(second_bbox)) = (first.bbox, second.bbox) else {
+        return None;
+    };
+    if !element_bboxes_are_adjacent(first_bbox, second_bbox) {
         return None;
     }
     let first_text = first.text.as_deref()?;
@@ -1697,7 +1762,9 @@ fn adjacent_text_pair_target(
 
     Some(FoundTarget {
         page: Some(first.page.clone()),
-        bbox: Some(union_bbox(first.bbox, second.bbox)),
+        // Two elements joined is still element precision, not span precision.
+        tier: EvidenceTier::ElementScoped,
+        bbox: Some(union_bbox(first_bbox, second_bbox)),
         text: Some(joined),
         from_table_cell: false,
         element_index: None,
@@ -2088,6 +2155,7 @@ pub fn normalize_quote(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ethos_core::evidence_anchor::EvidenceLocator;
     use ethos_core::grounding::{
         Capabilities, GroundingCell, GroundingElement, GroundingProvenance, GroundingSpan,
         GroundingTable, PageGeometry, ParserIdentity,
@@ -2155,7 +2223,7 @@ mod tests {
                 GroundingElement {
                     id: "e000002".into(),
                     page: "p0001".into(),
-                    bbox: [7200, 10100, 54000, 11500],
+                    bbox: Some([7200, 10100, 54000, 11500]),
                     kind: "text_block".into(),
                     text: Some(
                         "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.".into(),
@@ -2164,7 +2232,7 @@ mod tests {
                 GroundingElement {
                     id: "e000003".into(),
                     page: "p0001".into(),
-                    bbox: [7200, 13000, 54000, 20000],
+                    bbox: Some([7200, 13000, 54000, 20000]),
                     kind: "table".into(),
                     text: None,
                 },
@@ -2185,7 +2253,7 @@ mod tests {
             vec![GroundingSpan {
                 id: "s000002".into(),
                 page: "p0001".into(),
-                bbox: [7200, 10100, 54000, 11500],
+                bbox: Some([7200, 10100, 54000, 11500]),
                 text: "Revenue grew to $12.4M in Q3 2025".into(),
                 element: Some("e000002".into()),
                 char_start: Some(0),
@@ -2196,14 +2264,14 @@ mod tests {
             vec![GroundingTable {
                 id: "t0001".into(),
                 page: "p0001".into(),
-                bbox: [7200, 13000, 54000, 20000],
+                bbox: Some([7200, 13000, 54000, 20000]),
                 cells: vec![
                     GroundingCell {
                         row: 0,
                         col: 0,
                         row_span: 1,
                         col_span: 1,
-                        bbox: [7200, 13000, 30600, 16500],
+                        bbox: Some([7200, 13000, 30600, 16500]),
                         text: "Metric".into(),
                     },
                     GroundingCell {
@@ -2211,7 +2279,7 @@ mod tests {
                         col: 1,
                         row_span: 1,
                         col_span: 1,
-                        bbox: [30600, 16500, 54000, 20000],
+                        bbox: Some([30600, 16500, 54000, 20000]),
                         text: "$12.4M".into(),
                     },
                 ],
@@ -2299,7 +2367,13 @@ mod tests {
 
     fn verify(source: &TestSource, claims: Vec<Claim>) -> VerificationReport {
         let cfg = VerificationConfig::default_v1();
-        verify_claims(source, input(source, claims), &cfg, "0".repeat(64))
+        verify_claims(
+            source,
+            input(source, claims),
+            &cfg,
+            "0".repeat(64),
+            "1".repeat(64),
+        )
     }
 
     fn verify_with_config(
@@ -2307,7 +2381,13 @@ mod tests {
         claims: Vec<Claim>,
         cfg: &VerificationConfig,
     ) -> VerificationReport {
-        verify_claims(source, input(source, claims), cfg, "0".repeat(64))
+        verify_claims(
+            source,
+            input(source, claims),
+            cfg,
+            "0".repeat(64),
+            "1".repeat(64),
+        )
     }
 
     fn hardened_config() -> VerificationConfig {
@@ -2327,7 +2407,7 @@ mod tests {
         GroundingElement {
             id: id.into(),
             page: page.into(),
-            bbox,
+            bbox: Some(bbox),
             kind: "text_block".into(),
             text: text.map(str::to_string),
         }
@@ -2351,7 +2431,7 @@ mod tests {
             document_fingerprint: source.fingerprint(),
             claims,
         });
-        verify_claims(&source, citations, &cfg, "0".repeat(64))
+        verify_claims(&source, citations, &cfg, "0".repeat(64), "1".repeat(64))
     }
 
     #[test]
@@ -2503,7 +2583,7 @@ mod tests {
                 },
             )],
         });
-        let report = verify_claims(&source, citations, &config, "0".repeat(64));
+        let report = verify_claims(&source, citations, &config, "0".repeat(64), "1".repeat(64));
 
         assert!(report.all_evidence_grounded);
         assert_eq!(
@@ -2550,6 +2630,7 @@ mod tests {
             }),
             &config,
             "0".repeat(64),
+            "1".repeat(64),
         );
 
         let echo = report.checks[0].context_echo.as_ref().unwrap();
@@ -3231,6 +3312,7 @@ mod tests {
             }),
             &cfg,
             "0".repeat(64),
+            "1".repeat(64),
         );
         assert_eq!(report.checks[0].status, CheckStatus::NotFound);
     }
@@ -3371,6 +3453,7 @@ mod tests {
             }),
             &cfg,
             "0".repeat(64),
+            "1".repeat(64),
         );
 
         assert!(report.fingerprint_stale);
@@ -3398,6 +3481,7 @@ mod tests {
             }),
             &cfg,
             "0".repeat(64),
+            "1".repeat(64),
         );
 
         assert!(!report.fingerprint_stale);
@@ -3584,6 +3668,7 @@ mod tests {
             }),
             &cfg,
             "0".repeat(64),
+            "1".repeat(64),
         );
 
         assert!(!report.fingerprint_stale);
@@ -3651,5 +3736,167 @@ mod tests {
         assert_eq!(v["grounding"]["parser"]["name"], "test-parser");
         assert_eq!(v["fingerprint_stale"], false);
         assert_eq!(v["checks"].as_array().unwrap().len(), 1);
+    }
+
+    // ---- geometry-free text anchoring -------------------------------------------------
+    //
+    // An `element_id` + `expected_text` ref with no page locator and no bbox binds at
+    // `AnchorLevel::Text` and reports no capability limit. `docs/v0-6-0-release.md` §10.1
+    // established this by source audit; these tests make it an enforced invariant.
+    //
+    // Why it is guarded: geometry is mandatory in `ethos.grounding.v1` and its validator,
+    // not in this algorithm. That gap is what would let a flow document — DOCX, where
+    // pagination does not exist in the file and any bbox would have to be invented — ever
+    // be verified honestly. A refactor that made a page locator or a bbox mandatory here
+    // would close that path silently, and nothing else in the suite would notice.
+    //
+    // Multi-format support is deliberately out of scope (`docs/proof-statement-v1.md` §7).
+    // These tests keep the door open; they do not open it.
+
+    fn geometry_free_text_ref() -> EvidenceRef {
+        EvidenceRef {
+            evidence_id: "ev-1".into(),
+            evidence_kind: EvidenceKind::Text,
+            required_anchor_level: AnchorLevel::Text,
+            locator: EvidenceLocator {
+                page_index: None,
+                page_id: None,
+                element_id: Some("e000002".into()),
+                span_id: None,
+                bbox: None,
+                ..Default::default()
+            },
+            expected_text: Some("Revenue grew to $12.4M".into()),
+            expected_text_sha256: None,
+            text_normalization_profile: None,
+        }
+    }
+
+    #[test]
+    fn geometry_free_text_ref_needs_no_page_locator() {
+        // Guards the `element_id` disjunct in `page_locator_required`. If this flips true,
+        // `validate_required_page_locator` rejects the ref before anchoring even starts.
+        assert!(!page_locator_required(&geometry_free_text_ref()));
+    }
+
+    #[test]
+    fn geometry_free_text_ref_needs_no_bbox() {
+        // `AnchorLevel::Text` must stay outside `requires_bbox`, otherwise
+        // `validate_required_anchor_inputs` rejects a ref that carries no bbox.
+        assert!(!requires_bbox(&geometry_free_text_ref()));
+    }
+
+    #[test]
+    fn absent_page_locator_resolves_to_not_checked_never_not_found() {
+        // The distinction that carries the whole path. `NotChecked` means "no page was
+        // asked about"; `NotFound` means "a page was asked about and is missing" and
+        // would fail the anchor. A source with no pages at all must still yield
+        // `NotChecked`, since `pages` has no `minItems` in the artifact schema.
+        let source = TestSource::default();
+        let index = SourceIndex::new(&source);
+        let resolution = resolve_page(&index, &geometry_free_text_ref());
+        assert_eq!(resolution.check, PageCheck::NotChecked);
+        assert_eq!(resolution.page_id, None);
+    }
+
+    /// A source whose elements declare no geometry. Not reachable through
+    /// `ethos.grounding.v1`, which still requires `bbox` on the wire — this exercises the
+    /// Rust-level `None` that WP-0 task 0.2 made expressible.
+    struct GeometryFree(TestSource);
+    impl GroundingSource for GeometryFree {
+        fn parser(&self) -> ParserIdentity {
+            self.0.parser()
+        }
+        fn capabilities(&self) -> Capabilities {
+            self.0.capabilities()
+        }
+        fn fingerprint(&self) -> Option<String> {
+            self.0.fingerprint()
+        }
+        fn pages(&self) -> Vec<PageGeometry> {
+            self.0.pages()
+        }
+        fn elements(&self) -> Vec<GroundingElement> {
+            self.0
+                .elements()
+                .into_iter()
+                .map(|element| GroundingElement {
+                    bbox: None,
+                    ..element
+                })
+                .collect()
+        }
+        fn spans(&self) -> Vec<GroundingSpan> {
+            Vec::new()
+        }
+        fn tables(&self) -> Vec<GroundingTable> {
+            Vec::new()
+        }
+    }
+
+    #[test]
+    fn absent_element_geometry_never_satisfies_a_bbox_query() {
+        // Fail closed. An element that declares no box contains nothing, so a bbox
+        // locator over a geometry-free source resolves to NotFound rather than matching
+        // on the text alone. The failure this guards against is treating `None` as a
+        // wildcard, which would make every bbox query succeed against every element.
+        let source = GeometryFree(TestSource::default());
+        let index = SourceIndex::new(&source);
+        let mut evidence_ref = geometry_free_text_ref();
+        evidence_ref.required_anchor_level = AnchorLevel::Bbox;
+        evidence_ref.locator.page_id = Some("p0001".into());
+        evidence_ref.locator.bbox = Some([7200, 10100, 54000, 11500]);
+
+        assert_eq!(
+            resolve_bbox(&index, &evidence_ref, Some("p0001")),
+            BboxCheck::NotFound
+        );
+    }
+
+    #[test]
+    fn adjacent_quote_join_refuses_elements_without_geometry() {
+        // The adjacency join reads two boxes to decide they touch. With no boxes there is
+        // nothing to compare, so the join must decline rather than fall back to reading
+        // order — the same posture the join already takes for CoordinateOrigin::Unknown.
+        let source = GeometryFree(TestSource::default());
+        let config = VerificationConfig::default_v1();
+        let elements = source.elements();
+
+        assert!(
+            adjacent_text_pair_target(&elements[0], &elements[1], "anything", &config).is_none(),
+            "a pair with no declared geometry must not be joined"
+        );
+    }
+
+    #[test]
+    fn geometry_free_text_ref_binds_with_no_capability_limit() {
+        // End to end: the four steps above compose into `Bound`. The bbox axis must read
+        // `NotChecked` rather than `CapabilityLimited` — the ref never asked for geometry,
+        // so nothing was downgraded and the caller is owed no warning.
+        let source = TestSource::default();
+        let report = anchor_evidence(
+            &source,
+            EvidenceAnchorRequest {
+                artifact_type: ethos_core::evidence_anchor::EVIDENCE_ANCHOR_REQUEST_ARTIFACT_TYPE
+                    .to_string(),
+                schema_version: ethos_core::SCHEMA_VERSION.to_string(),
+                source_fingerprint: None,
+                evidence_refs: vec![geometry_free_text_ref()],
+                report_options: None,
+            },
+        )
+        .expect("a geometry-free text ref is a valid request");
+
+        let anchor = &report.anchors[0];
+        assert_eq!(anchor.anchor_status, AnchorStatus::Bound);
+        assert_eq!(anchor.achieved_anchor_level, AnchorLevel::Text);
+        assert_eq!(anchor.checks.page, PageCheck::NotChecked);
+        assert_eq!(anchor.checks.bbox, BboxCheck::NotChecked);
+        assert_eq!(anchor.checks.text, TextCheck::Matched);
+        assert!(
+            anchor.capability_limits.is_empty(),
+            "a ref that asked for no geometry was not downgraded: {:?}",
+            anchor.capability_limits
+        );
     }
 }

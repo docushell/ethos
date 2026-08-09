@@ -321,7 +321,7 @@ fn parse_elements(
         elements.push(GroundingElement {
             id,
             page: format!("page-{page_number}"),
-            bbox,
+            bbox: Some(bbox),
             kind,
             text,
         });
@@ -363,12 +363,14 @@ fn parse_tables(
         bbox_within_page(bbox, page, "table")?;
         let cells = parse_table_cells(table)?;
         for cell in &cells {
-            bbox_within_page(cell.bbox, page, "cell")?;
+            if let Some(geom) = cell.bbox {
+                bbox_within_page(geom, page, "cell")?;
+            }
         }
         tables.push(GroundingTable {
             id,
             page: format!("page-{page_number}"),
-            bbox,
+            bbox: Some(bbox),
             cells,
         });
     }
@@ -520,7 +522,7 @@ fn parse_real_table(
     Ok(GroundingTable {
         id,
         page: format!("page-{page_number}"),
-        bbox,
+        bbox: Some(bbox),
         cells,
     })
 }
@@ -572,7 +574,7 @@ fn parse_real_table_cell(
         col,
         row_span: 1,
         col_span: 1,
-        bbox,
+        bbox: Some(bbox),
         text,
     })
 }
@@ -629,7 +631,7 @@ fn parse_real_content_element(
     elements.push(GroundingElement {
         id,
         page: format!("page-{page_number}"),
-        bbox,
+        bbox: Some(bbox),
         kind,
         text: None,
     });
@@ -887,7 +889,7 @@ fn parse_table_cell(cell: &Value) -> Result<GroundingCell, AdapterError> {
         col,
         row_span,
         col_span,
-        bbox,
+        bbox: Some(bbox),
         text,
     })
 }
@@ -1053,7 +1055,7 @@ mod tests {
         assert_eq!(els.len(), 2);
         assert_eq!(els[0].kind, "heading");
         assert_eq!(els[0].text.as_deref(), Some("Quarterly Report"));
-        assert_eq!(els[0].bbox, [7200, 7200, 30480, 9000]);
+        assert_eq!(els[0].bbox, Some([7200, 7200, 30480, 9000]));
 
         let tables = src.tables();
         assert_eq!(tables.len(), 1);
@@ -1061,7 +1063,7 @@ mod tests {
         assert_eq!(tables[0].page, "page-1");
         assert_eq!(tables[0].cells.len(), 2);
         assert_eq!(tables[0].cells[1].text, "$12.4M");
-        assert_eq!(tables[0].cells[1].bbox, [30600, 16500, 54000, 20000]);
+        assert_eq!(tables[0].cells[1].bbox, Some([30600, 16500, 54000, 20000]));
 
         let caps = src.capabilities();
         assert!(caps.tables);
@@ -1089,7 +1091,7 @@ mod tests {
         assert_eq!(els[0].id, "odl-1");
         assert_eq!(els[0].kind, "heading");
         assert_eq!(els[0].text.as_deref(), Some("Lorem Ipsum"));
-        assert_eq!(els[0].bbox, [20089, 70694, 39415, 74513]);
+        assert_eq!(els[0].bbox, Some([20089, 70694, 39415, 74513]));
         assert_eq!(els[1].id, "odl-2");
         assert_eq!(els[1].kind, "paragraph");
         assert_eq!(els[1].text.as_deref(), Some("Lorem ipsum dolor sit amet."));
@@ -1246,12 +1248,12 @@ mod tests {
         assert_eq!(tables.len(), 1);
         assert_eq!(tables[0].id, "odl-13");
         assert_eq!(tables[0].page, "page-2");
-        assert_eq!(tables[0].bbox, [1500, 2000, 25000, 12000]);
+        assert_eq!(tables[0].bbox, Some([1500, 2000, 25000, 12000]));
         assert_eq!(tables[0].cells.len(), 2);
         assert_eq!(tables[0].cells[0].row, 1);
         assert_eq!(tables[0].cells[0].col, 1);
         assert_eq!(tables[0].cells[0].text, "Cell A");
-        assert_eq!(tables[0].cells[0].bbox, [2000, 3000, 12000, 6000]);
+        assert_eq!(tables[0].cells[0].bbox, Some([2000, 3000, 12000, 6000]));
         assert_eq!(tables[0].cells[1].row, 1);
         assert_eq!(tables[0].cells[1].col, 2);
         assert_eq!(tables[0].cells[1].text, "Cell B");
@@ -1439,7 +1441,7 @@ mod tests {
         assert_eq!(tables[0].id, "odl-table-a");
         assert_eq!(tables[0].cells.len(), 1);
         assert_eq!(tables[0].cells[0].text, "Alias cell");
-        assert_eq!(tables[0].cells[0].bbox, [2000, 18500, 21000, 21500]);
+        assert_eq!(tables[0].cells[0].bbox, Some([2000, 18500, 21000, 21500]));
     }
 
     #[test]

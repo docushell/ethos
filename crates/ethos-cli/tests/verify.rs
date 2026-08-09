@@ -53,6 +53,14 @@ fn parse_success(args: &[&str]) -> Value {
     serde_json::from_slice(&output.stdout).expect("stdout is JSON")
 }
 
+/// `ethos verify` emits an in-toto Statement (`docs/proof-statement-v1.md`). The report
+/// these assertions care about is its predicate; the wrapper is asserted separately in
+/// `verify_emits_a_proof_statement`.
+fn verify_report(args: &[&str]) -> Value {
+    parse_success(args)["predicate"].clone()
+}
+
+/// `ethos crop_element` emits an in-toto Statement; the descriptor is its predicate.
 fn parse_crop_element_success(args: &[&str]) -> Value {
     let output = run_ethos(args);
     assert!(
@@ -66,7 +74,7 @@ fn parse_crop_element_success(args: &[&str]) -> Value {
         String::from_utf8_lossy(&output.stderr),
         "warning: crop_element is source-only pre-alpha and unsupported\n"
     );
-    serde_json::from_slice(&output.stdout).expect("stdout is JSON")
+    serde_json::from_slice::<Value>(&output.stdout).expect("stdout is JSON")["predicate"].clone()
 }
 
 fn temp_json(name: &str, json: &str) -> PathBuf {
@@ -261,7 +269,7 @@ fn verify_alpha_report_cases() -> Vec<(String, Vec<String>, PathBuf)> {
 #[test]
 fn verify_alpha_schema_report_example_matches_cli_output() {
     let root = repo_root();
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         root.join("schemas/examples/document.example.json")
             .to_str()
@@ -279,7 +287,7 @@ fn verify_alpha_schema_report_example_matches_cli_output() {
 #[test]
 fn hardened_schema_report_example_matches_cli_output() {
     let root = repo_root();
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         root.join("schemas/examples/document.example.json")
             .to_str()
@@ -299,14 +307,274 @@ fn hardened_schema_report_example_matches_cli_output() {
     assert_eq!(report, expected);
 }
 
+/// Payload equivalence, and the reason the goldens did not move when verify output became
+/// an in-toto Statement.
+///
+/// The goldens are still the pre-0.6 report shape. Asserting the emitted *predicate*
+/// against them proves the wrapper is a pure re-wrap: every byte the verifier produces is
+/// unchanged, only nested. Regenerating the goldens instead would have destroyed exactly
+/// the evidence needed to show that, at the one moment it mattered.
+///
+/// A semantic change now fails here, where a wrapper change fails in
+/// `verify_emits_a_proof_statement`. Keeping those separate is the point.
 #[test]
-fn verify_alpha_demo_reports_match_goldens() {
+fn verify_alpha_demo_report_predicates_match_goldens() {
     for (name, args, expected_path) in verify_alpha_report_cases() {
         let args = args.iter().map(String::as_str).collect::<Vec<_>>();
         let actual = parse_success(&args);
         let expected = json_file(expected_path);
-        assert_eq!(actual, expected, "golden drift for {name}");
+        assert_eq!(actual["predicate"], expected, "golden drift for {name}");
     }
+}
+
+/// Every verdict-emitting command wraps its output, and each names its own predicate type.
+///
+/// One test over all of them because the failure mode is a command that quietly keeps its
+/// own serialisation — the drift only shows when two producers disagree, which is exactly
+/// when nobody is looking. `ethos doc parse` and `ethos rag chunk` are absent on purpose:
+/// representations are not verdicts and stay bare (`docs/proof-statement-v1.md` §1.5).
+#[test]
+fn every_verdict_command_emits_its_own_predicate_type() {
+    let root = repo_root();
+    let doc = root.join("schemas/examples/document.example.json");
+    let cases: [(&str, Vec<String>); 4] = [
+        (
+            "grounding",
+            vec![
+                "verify".into(),
+                doc.display().to_string(),
+                "--citations".into(),
+                root.join("examples/verify/native_grounded_citations.json")
+                    .display()
+                    .to_string(),
+            ],
+        ),
+        (
+            "grounding-validation",
+            vec![
+                "grounding".into(),
+                "check".into(),
+                root.join("schemas/examples/grounding-source.example.json")
+                    .display()
+                    .to_string(),
+            ],
+        ),
+        (
+            "security",
+            vec![
+                "security".into(),
+                "report".into(),
+                doc.display().to_string(),
+            ],
+        ),
+        (
+            "crop",
+            vec![
+                "crop_element".into(),
+                doc.display().to_string(),
+                "--request".into(),
+                root.join("schemas/examples/crop-element-request.example.json")
+                    .display()
+                    .to_string(),
+            ],
+        ),
+    ];
+
+    for (predicate, args) in cases {
+        let args: Vec<&str> = args.iter().map(String::as_str).collect();
+        let output = run_ethos(&args);
+        let statement: Value =
+            serde_json::from_slice(&output.stdout).unwrap_or_else(|_| panic!("{predicate}: JSON"));
+
+        assert_eq!(
+            statement["_type"], "https://in-toto.io/Statement/v1",
+            "{predicate}"
+        );
+        assert_eq!(
+            statement["predicateType"],
+            format!("https://docushell.com/ethos/{predicate}/v1"),
+            "{predicate}"
+        );
+        assert!(
+            statement["predicate"].is_object(),
+            "{predicate}: verdict must sit under .predicate"
+        );
+        let subject = statement["subject"]
+            .as_array()
+            .unwrap_or_else(|| panic!("{predicate}: subject"));
+        assert_eq!(subject.len(), 1, "{predicate}");
+        assert!(
+            subject[0]["digest"]["sha256"].is_string(),
+            "{predicate}: subject needs a digest"
+        );
+    }
+}
+
+/// `evidence_tier` states how precisely each check bound its evidence.
+///
+/// One report exercising three tiers at once, because the value of the field is that a
+/// consumer reads it instead of deriving it from `match_method` plus the citation — and a
+/// derivation that only ever sees one tier is a derivation nobody has tested.
+#[test]
+fn each_check_states_how_precisely_it_bound_evidence() {
+    let root = repo_root();
+    let report = verify_report(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    let tiers: Vec<&str> = report["checks"]
+        .as_array()
+        .expect("checks is an array")
+        .iter()
+        .map(|check| {
+            check["evidence_tier"]
+                .as_str()
+                .expect("a grounded check states its tier")
+        })
+        .collect();
+
+    // element-scoped quote, table cell, page-scoped presence — in citation order
+    assert_eq!(tiers, ["element_scoped", "table_cell", "page_scoped"]);
+}
+
+/// A check that resolved nothing must not claim a precision it never achieved.
+#[test]
+fn unresolved_checks_state_no_tier() {
+    let root = repo_root();
+    let report = verify_report(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_ungrounded_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    for check in report["checks"].as_array().expect("checks is an array") {
+        if check["status"] == "not_found" {
+            assert!(
+                check["evidence_tier"].is_null(),
+                "a check that found nothing claimed a tier: {check}"
+            );
+        }
+    }
+}
+
+/// The attestation block names what produced the verdict.
+///
+/// A version bump that forgot to flow through would silently produce reports attesting the
+/// wrong verifier, so the version is checked against the crate's own metadata rather than
+/// a hardcoded string.
+#[test]
+fn report_attests_the_verifier_config_and_claims() {
+    let root = repo_root();
+    let report = verify_report(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    let attestation = &report["attestation"];
+
+    assert_eq!(attestation["verifier"]["name"], "ethos-verify");
+    assert_eq!(
+        attestation["verifier"]["version"],
+        env!("CARGO_PKG_VERSION"),
+        "verifier version desynced from the crate version"
+    );
+    assert_eq!(attestation["config_version"], "default-v1");
+    assert!(
+        attestation["claims_sha256"]
+            .as_str()
+            .is_some_and(|h| h.len() == 64 && h.chars().all(|c| c.is_ascii_hexdigit())),
+        "{attestation:?}"
+    );
+}
+
+/// `claims_sha256` binds the report to the exact claims, and to nothing else.
+///
+/// Two properties in one test because they are the same property from both sides: the hash
+/// is over the parsed claims array, so an envelope and a bare array carrying identical
+/// claims agree, while different claims disagree. Hashing raw file bytes would fail the
+/// first; hashing the envelope would too.
+#[test]
+fn claims_hash_covers_the_claims_and_not_their_packaging() {
+    let root = repo_root();
+    let doc = root.join("schemas/examples/document.example.json");
+    let hash_for = |citations: &str| {
+        verify_report(&[
+            "verify",
+            doc.to_str().unwrap(),
+            "--citations",
+            root.join(citations).to_str().unwrap(),
+        ])["attestation"]["claims_sha256"]
+            .as_str()
+            .expect("claims_sha256 is a string")
+            .to_string()
+    };
+
+    let grounded = hash_for("examples/verify/native_grounded_citations.json");
+    let ungrounded = hash_for("examples/verify/native_ungrounded_citations.json");
+    assert_ne!(
+        grounded, ungrounded,
+        "different claims must not share a claims_sha256"
+    );
+}
+
+/// The wrapper itself: shape, spelling, and the subject rule from
+/// `docs/proof-statement-v1.md` §1.4.
+#[test]
+fn verify_emits_a_proof_statement() {
+    let root = repo_root();
+    let input = root.join("schemas/examples/document.example.json");
+    let statement = parse_success(&[
+        "verify",
+        input.to_str().unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+
+    assert_eq!(statement["_type"], "https://in-toto.io/Statement/v1");
+    assert_eq!(
+        statement["predicateType"],
+        "https://docushell.com/ethos/grounding/v1"
+    );
+
+    // subject[0] is the representation Ethos read, digested by the bytes of the input file
+    // so a consumer holding that file can compute the same value. subject[1] is absent:
+    // the only source binding available is producer-declared, and an in-toto subject is
+    // matched by digest, so recording a declaration would invite a consumer to conclude
+    // Ethos verified against bytes it never saw.
+    let subject = statement["subject"]
+        .as_array()
+        .expect("subject is an array");
+    assert_eq!(subject.len(), 1, "{subject:?}");
+    assert_eq!(subject[0]["name"], "document.example.json");
+    let expected_digest = {
+        use sha2::{Digest, Sha256};
+        let bytes = std::fs::read(&input).expect("input is readable");
+        format!("{:x}", Sha256::digest(&bytes))
+    };
+    assert_eq!(subject[0]["digest"]["sha256"], expected_digest);
+    assert!(
+        subject[0]["digest"]["sha256"]
+            .as_str()
+            .is_some_and(|d| !d.starts_with("sha256:")),
+        "in-toto carries the algorithm in the map key; the value must not repeat it"
+    );
 }
 
 #[test]
@@ -387,7 +655,9 @@ fn verify_batch_preserves_request_order_and_is_byte_identical_on_repeat() {
     let reports = first_bytes
         .split(|byte| *byte == b'\n')
         .filter(|line| !line.is_empty())
-        .map(|line| serde_json::from_slice::<Value>(line).expect("NDJSON line is JSON"))
+        .map(|line| {
+            serde_json::from_slice::<Value>(line).expect("NDJSON line is JSON")["predicate"].clone()
+        })
         .collect::<Vec<_>>();
     assert_eq!(reports.len(), 2);
     assert_eq!(reports[0]["all_evidence_grounded"], false);
@@ -576,7 +846,7 @@ fn verify_batch_rejects_crop_config_atomically() {
 #[test]
 fn real_opendataloader_fixture_verifies_against_golden() {
     let root = repo_root();
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         root.join("fixtures/foreign/opendataloader/real/opendataloader-output.json")
             .to_str()
@@ -608,7 +878,7 @@ fn real_opendataloader_ungrounded_fixture_verifies_against_golden() {
     let root = repo_root();
     let grounding = root.join("fixtures/foreign/opendataloader/real/opendataloader-output.json");
     let citations = root.join("fixtures/foreign/opendataloader/real/ungrounded_citations.json");
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         grounding.to_str().unwrap(),
         "--grounding",
@@ -638,7 +908,9 @@ fn real_opendataloader_ungrounded_fixture_verifies_against_golden() {
     ]);
     assert_eq!(gated.status.code(), Some(1));
     assert_eq!(gated.stderr, b"");
-    let gated_report: Value = serde_json::from_slice(&gated.stdout).expect("stdout is JSON");
+    let gated_report: Value = serde_json::from_slice::<Value>(&gated.stdout)
+        .expect("stdout is JSON")["predicate"]
+        .clone();
     assert_eq!(gated_report, expected);
 }
 
@@ -659,7 +931,9 @@ fn fail_on_ungrounded_exits_zero_when_all_evidence_is_grounded() {
 
     assert_eq!(output.status.code(), Some(0));
     assert_eq!(output.stderr, b"");
-    let report: Value = serde_json::from_slice(&output.stdout).expect("stdout is JSON");
+    let report: Value = serde_json::from_slice::<Value>(&output.stdout).expect("stdout is JSON")
+        ["predicate"]
+        .clone();
     assert_eq!(report["all_evidence_grounded"], true);
 }
 
@@ -684,7 +958,7 @@ fn fail_on_ungrounded_exits_one_after_writing_stale_report() {
     assert_eq!(output.status.code(), Some(1));
     assert_eq!(output.stdout, b"");
     assert_eq!(output.stderr, b"");
-    let report = json_file(out);
+    let report = json_file(out)["predicate"].clone();
     assert_eq!(report["fingerprint_stale"], true);
     assert_eq!(report["all_evidence_grounded"], false);
     assert_eq!(report["checks"][0]["status"], "stale");
@@ -710,7 +984,9 @@ fn fail_on_ungrounded_exits_one_with_stdout_report_for_capability_blocked_source
 
     assert_eq!(output.status.code(), Some(1));
     assert_eq!(output.stderr, b"");
-    let report: Value = serde_json::from_slice(&output.stdout).expect("stdout is JSON");
+    let report: Value = serde_json::from_slice::<Value>(&output.stdout).expect("stdout is JSON")
+        ["predicate"]
+        .clone();
     assert_eq!(report["all_evidence_grounded"], false);
     assert_eq!(report["checks"][0]["status"], "capability_blocked");
     assert_eq!(report["checks"][0]["reason"], "missing_table_capability");
@@ -819,7 +1095,7 @@ fn native_verify_crop_dir_writes_deterministic_crop_descriptors() {
     assert_eq!(output.stdout, b"");
     assert_eq!(output.stderr, b"");
 
-    let report = json_file(&out);
+    let report = json_file(&out)["predicate"].clone();
     assert_eq!(report["grounding"]["capabilities"]["crop_support"], true);
     assert_eq!(report["capability_limits"], serde_json::json!([]));
 
@@ -891,7 +1167,7 @@ fn crop_element_cli_writes_descriptor() {
         String::from_utf8_lossy(&output.stderr),
         "warning: crop_element is source-only pre-alpha and unsupported\n"
     );
-    assert_eq!(json_file(out), expected);
+    assert_eq!(json_file(out)["predicate"], expected);
 }
 
 #[test]
@@ -1203,7 +1479,7 @@ fn crop_source_pdf_writes_rendered_crop_artifacts_when_pdfium_is_configured() {
     assert_eq!(output.stdout, b"");
     assert_eq!(output.stderr, b"");
 
-    let report = json_file(&out);
+    let report = json_file(&out)["predicate"].clone();
     assert_eq!(report["all_evidence_grounded"], true);
     let crop_ref = report["checks"][0]["evidence"]["crop_ref"]
         .as_str()
@@ -1313,7 +1589,7 @@ fn native_ethos_verify_produces_non_empty_checks() {
     let doc = document_example();
     let root = repo_root();
     let citations = root.join("examples/verify/native_citations.json");
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -1354,7 +1630,7 @@ fn native_verify_grounds_split_quote_across_adjacent_elements() {
         "split-quote-citations",
         &serde_json::to_string(&citations).unwrap(),
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -1382,7 +1658,7 @@ fn opendataloader_verify_adapter_produces_capability_aware_report() {
     let grounding = odl_example();
     let root = repo_root();
     let citations = root.join("examples/verify/answer_citations.json");
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         grounding.to_str().unwrap(),
         "--grounding",
@@ -1486,7 +1762,7 @@ fn stale_fingerprint_is_report_level_failure() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -1811,7 +2087,7 @@ fn bare_array_citation_input_works() {
           }
         ]"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -1843,7 +2119,7 @@ fn envelope_without_fingerprint_blocks_when_source_has_fingerprint() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -2219,7 +2495,7 @@ fn value_claim_verifies_against_native_ethos_text() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -2250,7 +2526,7 @@ fn value_substrings_do_not_ground_against_native_ethos_text() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -2285,7 +2561,7 @@ fn table_cell_claim_verifies_against_native_ethos_table() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -2371,7 +2647,7 @@ fn parsed_table_candidate_fixture_verifies_table_cell_citations() {
         "table-candidate-fixture-citations",
         &serde_json::to_string(&citations).expect("citations serialize"),
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -2461,7 +2737,7 @@ fn parsed_table_candidate_fixture_writes_table_cell_crop_artifacts() {
     assert_eq!(output.stdout, b"");
     assert_eq!(output.stderr, b"");
 
-    let report = json_file(&out);
+    let report = json_file(&out)["predicate"].clone();
     assert_eq!(report["all_evidence_grounded"], true);
     assert_eq!(report["checks"][0]["status"], "grounded");
     assert_eq!(report["checks"][0]["match_method"], "table_cell_lookup");
@@ -2536,7 +2812,7 @@ fn table_cell_mismatch_and_missing_cell_fail_gate() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -2652,7 +2928,7 @@ fn table_cell_is_capability_blocked_when_tables_are_missing() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         grounding.to_str().unwrap(),
         "--grounding",
@@ -2719,7 +2995,7 @@ fn empty_tables_are_not_found_when_table_capability_is_declared() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         grounding.to_str().unwrap(),
         "--grounding",
@@ -2796,7 +3072,7 @@ fn real_opendataloader_style_table_cell_claim_grounds() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         grounding.to_str().unwrap(),
         "--grounding",
@@ -2867,7 +3143,7 @@ fn real_opendataloader_text_and_child_alias_claim_grounds() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         grounding.to_str().unwrap(),
         "--grounding",
@@ -2920,7 +3196,7 @@ fn foreign_source_without_fingerprint_blocks_fingerprint_pinned_citations() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         grounding.to_str().unwrap(),
         "--grounding",
@@ -2989,7 +3265,7 @@ fn config_excluded_value_claim_is_unsupported() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -3027,7 +3303,7 @@ fn page_only_presence_works() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -3060,7 +3336,7 @@ fn bbox_presence_works_when_coordinate_origin_is_known() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -3091,7 +3367,7 @@ fn bbox_presence_is_capability_blocked_when_coordinate_origin_is_unknown() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         grounding.to_str().unwrap(),
         "--grounding",
@@ -3159,7 +3435,7 @@ fn case_insensitive_config_allows_literal_case_difference() {
           ]
         }"#,
     );
-    let report = parse_success(&[
+    let report = verify_report(&[
         "verify",
         doc.to_str().unwrap(),
         "--citations",
@@ -3355,7 +3631,8 @@ fn grounding_json_check_is_deterministic_and_fail_closed() {
     assert!(first.status.success());
     assert_eq!(first.stderr, b"");
     assert_eq!(first.stdout, second.stdout);
-    let report: Value = serde_json::from_slice(&first.stdout).unwrap();
+    let report: Value =
+        serde_json::from_slice::<Value>(&first.stdout).unwrap()["predicate"].clone();
     assert_eq!(report["structure"], "valid");
     assert_eq!(report["source_binding"], "not_checked");
     assert!(report["representation_sha256"]
@@ -3366,7 +3643,8 @@ fn grounding_json_check_is_deterministic_and_fail_closed() {
     let invalid = root.join("schemas/examples/grounding-source-negative-unknown-field.json");
     let output = run_ethos(&["grounding", "check", invalid.to_str().unwrap()]);
     assert_eq!(output.status.code(), Some(2));
-    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    let report: Value =
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()["predicate"].clone();
     assert_eq!(report["structure"], "invalid");
     assert_eq!(report["error"]["code"], "unknown_field");
     assert_eq!(report["error"]["path"], "/unexpected");
@@ -3390,7 +3668,8 @@ fn grounding_json_auto_dispatch_reaches_verifier_without_pdfium() {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    let report: Value =
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()["predicate"].clone();
     assert_eq!(report["all_evidence_grounded"], true);
     assert_eq!(
         report["grounding"]["parser"]["adapter"],
@@ -3437,7 +3716,8 @@ fn grounding_json_source_hash_match_is_reported_and_verifiable() {
         source_pdf.to_str().unwrap(),
     ]);
     assert!(validation.status.success());
-    let validation_report: Value = serde_json::from_slice(&validation.stdout).unwrap();
+    let validation_report: Value =
+        serde_json::from_slice::<Value>(&validation.stdout).unwrap()["predicate"].clone();
     assert_eq!(validation_report["structure"], "valid");
     assert_eq!(validation_report["source_binding"], "matched");
 
@@ -3454,7 +3734,8 @@ fn grounding_json_source_hash_match_is_reported_and_verifiable() {
         "{}",
         String::from_utf8_lossy(&verified.stderr)
     );
-    let report: Value = serde_json::from_slice(&verified.stdout).unwrap();
+    let report: Value =
+        serde_json::from_slice::<Value>(&verified.stdout).unwrap()["predicate"].clone();
     assert_eq!(report["all_evidence_grounded"], true);
 }
 
@@ -3489,7 +3770,8 @@ fn grounding_json_dispatch_ignores_producer_identity() {
     let input = temp_json("grounding-producer-identity", &changed);
     let output = run_ethos(&["grounding", "check", input.to_str().unwrap()]);
     assert!(output.status.success());
-    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    let report: Value =
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()["predicate"].clone();
     assert_eq!(report["structure"], "valid");
 }
 
@@ -3518,8 +3800,10 @@ fn grounding_json_representation_identity_drives_staleness() {
     ]);
     assert!(first.status.success());
     assert!(second.status.success());
-    let first_report: Value = serde_json::from_slice(&first.stdout).unwrap();
-    let second_report: Value = serde_json::from_slice(&second.stdout).unwrap();
+    let first_report: Value =
+        serde_json::from_slice::<Value>(&first.stdout).unwrap()["predicate"].clone();
+    let second_report: Value =
+        serde_json::from_slice::<Value>(&second.stdout).unwrap()["predicate"].clone();
     assert_eq!(first_report["fingerprint_stale"], false);
     assert_eq!(first_report["all_evidence_grounded"], true);
     assert_eq!(second_report["fingerprint_stale"], true);

@@ -536,6 +536,49 @@ pub(crate) fn read_document(path: &Path) -> Result<Document, Failure> {
 /// `/dev/stdout` — is written through directly. Renaming over those destinations would replace
 /// the inode instead of writing to it, which destroys the symlink or FIFO the caller named.
 /// Atomicity is not available for those targets and was never claimed for them.
+/// Serialize a verdict as a proof statement (`docs/proof-statement-v1.md`).
+///
+/// The single path from an Ethos verdict to bytes on disk. Every command that emits a
+/// verdict goes through here, so the statement shape cannot drift between producers — the
+/// same reason `ethos-core` owns one c14n implementation.
+///
+/// Representations are not verdicts and do not come through here: `ethos doc parse` and
+/// `ethos rag chunk` stay bare (§1.5).
+pub(crate) fn statement_json_bytes<P: serde::Serialize>(
+    input: &Path,
+    predicate: &str,
+    payload: &P,
+) -> Result<Vec<u8>, Failure> {
+    let statement = ethos_core::statement::Statement::new(
+        representation_subject(input)?,
+        // subject[1] is omitted everywhere: the only source binding available is
+        // producer-declared, and an in-toto subject is matched by digest (§1.4).
+        None,
+        ethos_core::statement::predicate_type(predicate, 1),
+        payload,
+    );
+    let mut bytes = ethos_core::statement::statement_bytes(&statement)
+        .map_err(|e| EthosError::internal(e.message))?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+/// `subject[0]`: the representation Ethos read, digested by the input file's bytes.
+///
+/// in-toto matches subjects by digest, so the value must be computable by a consumer
+/// holding the same file. A document fingerprint would not be.
+fn representation_subject(input: &Path) -> Result<ethos_core::statement::Subject, Failure> {
+    let bytes = read_file_limited(input, default_max_input_bytes())?;
+    let name = input
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    Ok(ethos_core::statement::Subject::sha256(
+        name,
+        ethos_core::c14n::sha256_hex_bytes(&bytes),
+    ))
+}
+
 pub(crate) fn write_output(out: Option<PathBuf>, bytes: &[u8]) -> Result<(), Failure> {
     use std::io::Write as _;
 

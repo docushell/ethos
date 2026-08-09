@@ -17,7 +17,6 @@
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
-use ethos_core::error::EthosError;
 use ethos_core::model::{Document, Element, Page, Span, Warning};
 
 use crate::{read_document, write_output, Failure, SecurityReportArgs};
@@ -26,19 +25,19 @@ const PREVIEW_MAX_CHARS: usize = 120;
 
 pub(crate) fn security_report(args: SecurityReportArgs) -> Result<(), Failure> {
     let doc = read_document(&args.input)?;
-    let out = security_report_output_bytes(&doc)?;
+    let out = security_report_output_bytes(&doc, &args.input)?;
     write_output(args.out, &out)
 }
 
-fn security_report_output_bytes(doc: &Document) -> Result<Vec<u8>, Failure> {
+fn security_report_output_bytes(
+    doc: &Document,
+    input: &std::path::Path,
+) -> Result<Vec<u8>, Failure> {
     let refs = SecurityReportRefs::new(doc);
     let warnings = sorted_security_warnings(doc)?;
     let (summary, findings) = security_report_records(&warnings, &refs)?;
     let value = security_report_value(doc, summary, findings);
-    let mut bytes =
-        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
-    bytes.push(b'\n');
-    Ok(bytes)
+    crate::statement_json_bytes(input, "security", &value)
 }
 
 fn sorted_security_warnings(doc: &Document) -> Result<Vec<&Warning>, Failure> {
