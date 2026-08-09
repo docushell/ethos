@@ -95,9 +95,31 @@ representation and **Ethos never touched the source PDF**. An artifact claiming 
 ]
 ```
 
-- `subject[0]` is always the representation Ethos read. Required.
-- `subject[1]` is the source document, present **only** when the binding is real. Omitted
-  otherwise, never guessed.
+- `subject[0]` is always the representation Ethos read. Required. Digested by the **bytes
+  of the input file**, not by `document_fingerprint` — in-toto matches subjects by digest,
+  so the value has to be something a consumer holding the same file can compute, and the
+  document fingerprint is the canonical-graph identity rather than a property of the file.
+- `subject[1]` is the source document, present **only** when the binding is real.
+
+**"Real" means Ethos read the bytes itself.** Not that a producer declared a hash.
+
+`ethos verify` emits no `subject[1]` today, and that is the ruling as of 2026-08-09. On the
+Grounding JSON path the only available source binding is
+`GroundingJsonSource::source_sha256`, documented as the producer-declared PDF hash, and
+§5.1 already states that a source-hash match "proves only that the mapper declared the hash
+of the PDF you supplied."
+
+An in-toto `subject` means *this statement is about these artifacts*, and tools match them
+by digest. A reviewer holding `loan-file.pdf`, seeing its hash in `subject[1]`, reasonably
+concludes Ethos checked their file. It did not — it read a JSON that claimed to come from
+it. Edit that one line in the JSON and the statement still points at the right PDF and
+still reports everything grounded. That is a true statement about a declaration presented
+in the field auditors trust most, and the gap is invisible at exactly the moment it
+matters.
+
+The one case where `subject[1]` would be honest is `--crop-source-pdf`, where Ethos loads
+and validates the actual PDF bytes. If it is ever built, that is the only permitted source:
+**a hash Ethos computed, never one it was handed.**
 
 Consumers must not assume `subject[0]` is the PDF. That is a documentation obligation and
 it goes in the contract doc and in `CLAIMS.md`.
