@@ -64,6 +64,8 @@ pub mod ids;
 #[cfg(feature = "full")]
 pub mod model;
 #[cfg(feature = "full")]
+pub mod statement;
+#[cfg(feature = "full")]
 pub mod traits;
 
 /// Canonical schema version emitted by this crate (all five schemas move in lockstep).
