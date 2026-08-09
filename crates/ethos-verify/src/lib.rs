@@ -622,9 +622,14 @@ fn resolve_anchor_target(
             .iter()
             .enumerate()
             .filter(|(_, element)| {
-                element.page == page_id && contains_bbox(element.bbox, bbox, tolerance)
+                element.page == page_id
+                    && element
+                        .bbox
+                        .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
             })
-            .min_by_key(|(position, element)| (bbox_area(element.bbox), *position))
+            .min_by_key(|(position, element)| {
+                (element.bbox.map_or(u128::MAX, bbox_area), *position)
+            })
             .map(|(position, element)| target_from_element(element, Some(position)));
     }
     let expected = evidence_ref.expected_text.as_deref()?;
@@ -663,19 +668,22 @@ fn resolve_bbox(
         .matching
         .bbox_containment_tolerance_q
         .unwrap_or(0);
-    if index
-        .elements
-        .iter()
-        .any(|element| element.page == page_id && contains_bbox(element.bbox, bbox, tolerance))
-        || index
-            .spans
-            .iter()
-            .any(|span| span.page == page_id && contains_bbox(span.bbox, bbox, tolerance))
-        || index
-            .tables
-            .iter()
-            .any(|table| table.page == page_id && contains_bbox(table.bbox, bbox, tolerance))
-    {
+    if index.elements.iter().any(|element| {
+        element.page == page_id
+            && element
+                .bbox
+                .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
+    }) || index.spans.iter().any(|span| {
+        span.page == page_id
+            && span
+                .bbox
+                .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
+    }) || index.tables.iter().any(|table| {
+        table.page == page_id
+            && table
+                .bbox
+                .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
+    }) {
         BboxCheck::Valid
     } else {
         BboxCheck::NotFound
@@ -1500,9 +1508,14 @@ fn resolve_target(
             .iter()
             .enumerate()
             .filter(|(_, element)| {
-                element.page == page && contains_bbox(element.bbox, bbox, tolerance)
+                element.page == page
+                    && element
+                        .bbox
+                        .is_some_and(|geom| contains_bbox(geom, bbox, tolerance))
             })
-            .min_by_key(|(position, element)| (bbox_area(element.bbox), *position))
+            .min_by_key(|(position, element)| {
+                (element.bbox.map_or(u128::MAX, bbox_area), *position)
+            })
             .map(|(position, element)| target_from_element(element, Some(position)))
             .map(TargetResolution::Found)
             .unwrap_or(TargetResolution::NotFound(CheckReason::BboxNotFound));
@@ -1549,7 +1562,7 @@ fn enforce_supplemental_page(resolution: TargetResolution, claim: &Claim) -> Tar
 fn target_from_element(element: &GroundingElement, element_index: Option<usize>) -> FoundTarget {
     FoundTarget {
         page: Some(element.page.clone()),
-        bbox: Some(element.bbox),
+        bbox: element.bbox,
         text: element.text.clone(),
         from_table_cell: false,
         element_index,
@@ -1561,7 +1574,7 @@ fn target_from_element(element: &GroundingElement, element_index: Option<usize>)
 fn target_from_span(span: &GroundingSpan) -> FoundTarget {
     FoundTarget {
         page: Some(span.page.clone()),
-        bbox: Some(span.bbox),
+        bbox: span.bbox,
         text: Some(span.text.clone()),
         from_table_cell: false,
         element_index: None,
@@ -1605,7 +1618,7 @@ fn table_cell_covers(cell: &GroundingCell, row: u32, col: u32) -> bool {
 fn target_from_cell(page: &str, cell: &GroundingCell) -> FoundTarget {
     FoundTarget {
         page: Some(page.to_string()),
-        bbox: Some(cell.bbox),
+        bbox: cell.bbox,
         text: Some(cell.text.clone()),
         from_table_cell: true,
         element_index: None,
@@ -1682,7 +1695,13 @@ fn adjacent_text_pair_target(
     if first.page != second.page {
         return None;
     }
-    if !element_bboxes_are_adjacent(first.bbox, second.bbox) {
+    // Both elements need declared geometry before adjacency can mean anything. A
+    // geometry-free element is never "next to" another, which matches the existing
+    // capability gate on CoordinateOrigin::Unknown: no coordinates, no join.
+    let (Some(first_bbox), Some(second_bbox)) = (first.bbox, second.bbox) else {
+        return None;
+    };
+    if !element_bboxes_are_adjacent(first_bbox, second_bbox) {
         return None;
     }
     let first_text = first.text.as_deref()?;
@@ -1697,7 +1716,7 @@ fn adjacent_text_pair_target(
 
     Some(FoundTarget {
         page: Some(first.page.clone()),
-        bbox: Some(union_bbox(first.bbox, second.bbox)),
+        bbox: Some(union_bbox(first_bbox, second_bbox)),
         text: Some(joined),
         from_table_cell: false,
         element_index: None,
@@ -2156,7 +2175,7 @@ mod tests {
                 GroundingElement {
                     id: "e000002".into(),
                     page: "p0001".into(),
-                    bbox: [7200, 10100, 54000, 11500],
+                    bbox: Some([7200, 10100, 54000, 11500]),
                     kind: "text_block".into(),
                     text: Some(
                         "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.".into(),
@@ -2165,7 +2184,7 @@ mod tests {
                 GroundingElement {
                     id: "e000003".into(),
                     page: "p0001".into(),
-                    bbox: [7200, 13000, 54000, 20000],
+                    bbox: Some([7200, 13000, 54000, 20000]),
                     kind: "table".into(),
                     text: None,
                 },
@@ -2186,7 +2205,7 @@ mod tests {
             vec![GroundingSpan {
                 id: "s000002".into(),
                 page: "p0001".into(),
-                bbox: [7200, 10100, 54000, 11500],
+                bbox: Some([7200, 10100, 54000, 11500]),
                 text: "Revenue grew to $12.4M in Q3 2025".into(),
                 element: Some("e000002".into()),
                 char_start: Some(0),
@@ -2197,14 +2216,14 @@ mod tests {
             vec![GroundingTable {
                 id: "t0001".into(),
                 page: "p0001".into(),
-                bbox: [7200, 13000, 54000, 20000],
+                bbox: Some([7200, 13000, 54000, 20000]),
                 cells: vec![
                     GroundingCell {
                         row: 0,
                         col: 0,
                         row_span: 1,
                         col_span: 1,
-                        bbox: [7200, 13000, 30600, 16500],
+                        bbox: Some([7200, 13000, 30600, 16500]),
                         text: "Metric".into(),
                     },
                     GroundingCell {
@@ -2212,7 +2231,7 @@ mod tests {
                         col: 1,
                         row_span: 1,
                         col_span: 1,
-                        bbox: [30600, 16500, 54000, 20000],
+                        bbox: Some([30600, 16500, 54000, 20000]),
                         text: "$12.4M".into(),
                     },
                 ],
@@ -2328,7 +2347,7 @@ mod tests {
         GroundingElement {
             id: id.into(),
             page: page.into(),
-            bbox,
+            bbox: Some(bbox),
             kind: "text_block".into(),
             text: text.map(str::to_string),
         }
@@ -3713,6 +3732,75 @@ mod tests {
         let resolution = resolve_page(&index, &geometry_free_text_ref());
         assert_eq!(resolution.check, PageCheck::NotChecked);
         assert_eq!(resolution.page_id, None);
+    }
+
+    /// A source whose elements declare no geometry. Not reachable through
+    /// `ethos.grounding.v1`, which still requires `bbox` on the wire — this exercises the
+    /// Rust-level `None` that WP-0 task 0.2 made expressible.
+    struct GeometryFree(TestSource);
+    impl GroundingSource for GeometryFree {
+        fn parser(&self) -> ParserIdentity {
+            self.0.parser()
+        }
+        fn capabilities(&self) -> Capabilities {
+            self.0.capabilities()
+        }
+        fn fingerprint(&self) -> Option<String> {
+            self.0.fingerprint()
+        }
+        fn pages(&self) -> Vec<PageGeometry> {
+            self.0.pages()
+        }
+        fn elements(&self) -> Vec<GroundingElement> {
+            self.0
+                .elements()
+                .into_iter()
+                .map(|element| GroundingElement {
+                    bbox: None,
+                    ..element
+                })
+                .collect()
+        }
+        fn spans(&self) -> Vec<GroundingSpan> {
+            Vec::new()
+        }
+        fn tables(&self) -> Vec<GroundingTable> {
+            Vec::new()
+        }
+    }
+
+    #[test]
+    fn absent_element_geometry_never_satisfies_a_bbox_query() {
+        // Fail closed. An element that declares no box contains nothing, so a bbox
+        // locator over a geometry-free source resolves to NotFound rather than matching
+        // on the text alone. The failure this guards against is treating `None` as a
+        // wildcard, which would make every bbox query succeed against every element.
+        let source = GeometryFree(TestSource::default());
+        let index = SourceIndex::new(&source);
+        let mut evidence_ref = geometry_free_text_ref();
+        evidence_ref.required_anchor_level = AnchorLevel::Bbox;
+        evidence_ref.locator.page_id = Some("p0001".into());
+        evidence_ref.locator.bbox = Some([7200, 10100, 54000, 11500]);
+
+        assert_eq!(
+            resolve_bbox(&index, &evidence_ref, Some("p0001")),
+            BboxCheck::NotFound
+        );
+    }
+
+    #[test]
+    fn adjacent_quote_join_refuses_elements_without_geometry() {
+        // The adjacency join reads two boxes to decide they touch. With no boxes there is
+        // nothing to compare, so the join must decline rather than fall back to reading
+        // order — the same posture the join already takes for CoordinateOrigin::Unknown.
+        let source = GeometryFree(TestSource::default());
+        let config = VerificationConfig::default_v1();
+        let elements = source.elements();
+
+        assert!(
+            adjacent_text_pair_target(&elements[0], &elements[1], "anything", &config).is_none(),
+            "a pair with no declared geometry must not be joined"
+        );
     }
 
     #[test]

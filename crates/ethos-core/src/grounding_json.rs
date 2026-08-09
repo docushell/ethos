@@ -224,7 +224,7 @@ impl GroundingSource for GroundingJsonSource {
             .map(|e| GroundingElement {
                 id: e.id.clone(),
                 page: e.page.clone(),
-                bbox: e.bbox,
+                bbox: Some(e.bbox),
                 kind: e.kind.clone(),
                 text: e.text.clone(),
             })
@@ -239,7 +239,7 @@ impl GroundingSource for GroundingJsonSource {
             .map(|s| GroundingSpan {
                 id: s.id,
                 page: s.page,
-                bbox: s.bbox,
+                bbox: Some(s.bbox),
                 text: s.text,
                 element: s.element,
                 char_start: s.char_start,
@@ -256,7 +256,7 @@ impl GroundingSource for GroundingJsonSource {
             .map(|t| GroundingTable {
                 id: t.id,
                 page: t.page,
-                bbox: t.bbox,
+                bbox: Some(t.bbox),
                 cells: t
                     .cells
                     .into_iter()
@@ -265,7 +265,7 @@ impl GroundingSource for GroundingJsonSource {
                         col: c.col,
                         row_span: c.row_span,
                         col_span: c.col_span,
-                        bbox: c.bbox,
+                        bbox: Some(c.bbox),
                         text: c.text,
                     })
                     .collect(),

@@ -98,7 +98,15 @@ pub struct GroundingElement {
     /// Owning page id.
     pub page: String,
     /// `[x0, y0, x1, y1]` in the source's declared units/origin.
-    pub bbox: [i64; 4],
+    ///
+    /// `None` means the source has no geometry to declare — a flow format where any box
+    /// would have to be invented. It is not a sentinel for "zero area" or "unknown
+    /// position": consumers must treat it as absent evidence and downgrade, exactly as
+    /// they already do for [`CoordinateOrigin::Unknown`]. `ethos.grounding.v1` still
+    /// requires `bbox` on the wire, so today `None` only arises from sources constructed
+    /// in Rust.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bbox: Option<[i64; 4]>,
     /// Element kind, lowercased, source-defined (e.g. `"text_block"`, `"heading"`).
     pub kind: String,
     /// Text content when applicable.
@@ -128,8 +136,10 @@ pub struct GroundingSpan {
     pub id: String,
     /// Owning page id.
     pub page: String,
-    /// `[x0, y0, x1, y1]` in the source's declared units/origin.
-    pub bbox: [i64; 4],
+    /// `[x0, y0, x1, y1]` in the source's declared units/origin. `None` when the source
+    /// declares no geometry; see [`GroundingElement::bbox`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bbox: Option<[i64; 4]>,
     /// Span text.
     pub text: String,
     /// Owning element id, when ownership is known.
@@ -154,8 +164,10 @@ pub struct GroundingCell {
     pub row_span: u32,
     /// Columns spanned (≥1).
     pub col_span: u32,
-    /// Cell bbox.
-    pub bbox: [i64; 4],
+    /// Cell bbox. `None` when the source declares no geometry; see
+    /// [`GroundingElement::bbox`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bbox: Option<[i64; 4]>,
     /// Cell text.
     pub text: String,
 }
@@ -167,8 +179,10 @@ pub struct GroundingTable {
     pub id: String,
     /// Owning page id (first page for multi-page tables).
     pub page: String,
-    /// Table bbox.
-    pub bbox: [i64; 4],
+    /// Table bbox. `None` when the source declares no geometry; see
+    /// [`GroundingElement::bbox`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bbox: Option<[i64; 4]>,
     /// Cells; absence of a (row, col) means an empty/covered cell.
     pub cells: Vec<GroundingCell>,
 }
@@ -257,7 +271,7 @@ mod tests {
             vec![GroundingElement {
                 id: "e1".into(),
                 page: "p1".into(),
-                bbox: [0, 0, 5, 5],
+                bbox: Some([0, 0, 5, 5]),
                 kind: "text_block".into(),
                 text: Some("hello".into()),
             }]
