@@ -250,9 +250,26 @@ claimed this. T0 says check it yourself.
 
 ## 7. Out of scope
 
-Corroboration and multi-source comparison. Signing and keys. A keystore. Hash-chained
-logs. Bundle export and an offline verifier. A conformance vector corpus. MCP proxying.
-Semantic checking. New parsers. Any change to verification semantics.
+Corroboration and multi-source comparison. Multi-format grounding (DOCX, XLSX, PPTX).
+Signing and keys. A keystore. Hash-chained logs. Bundle export and an offline verifier.
+A conformance vector corpus. MCP proxying. Semantic checking. New parsers. Any change to
+verification semantics.
+
+**On multi-format specifically.** `docs/v0-6-0-release.md` §10.1 already scoped it: the
+verifier binds text with no geometry today, and the requirement lives in five gates in the
+artifact schema and its validator, not in the verification algorithm. It is out of scope
+here because no DocuShell workflow needs it — WORKBENCH Part I puts "any format other than
+PDF" out of scope, and Part II names no trigger for it. Docling supporting every format is
+a fact about Docling, not a requirement on Ethos.
+
+Two things keep the option open at near-zero cost, and both are in WP-0 of the
+implementation plan: a test locking the geometry-free text path, which is currently an
+audit finding with nothing enforcing it, and `Option<[i64; 4]>` for `bbox` in the trait,
+which rides the breaking change WP-3 already makes rather than needing a second one. The
+schema does not move.
+
+**Trigger to revisit:** a named DocuShell workflow requiring DOCX or XLSX verification, a
+design partner asking, or a real corpus where non-PDF is a meaningful share. Not before.
 
 **On corroboration specifically.** Running two independently derived parsers and reporting
 their disagreement is the only deterministic answer to "who checks the parser?", and it is

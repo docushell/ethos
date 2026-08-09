@@ -89,6 +89,24 @@ Your merged PR ships in the next train; the CHANGELOG line you wrote becomes the
 - Response target: median first maintainer response under 48 hours.
 - Code of conduct: `CODE_OF_CONDUCT.md`. Roles and decision-making: `GOVERNANCE.md`.
 
+## Working on v0.6.0
+
+v0.6.0 is the major format release: every Ethos output artifact becomes self-describing
+and self-attesting. Two documents own it.
+
+- `docs/proof-statement-v1.md` — the format and the rulings. Read §1 first.
+- `docs/proof-statement-v1-implementation-plan.md` — prerequisites, the loop, and a task
+  board with dependencies and acceptance criteria. Start at "Start here".
+
+Branch is `proof-statement-v1`. Pick an unclaimed task whose dependencies are done.
+
+Two rules that are easy to violate by accident:
+
+- **Goldens move in a commit that changes nothing else.** Every golden shifts during this
+  migration, so a bundled behaviour change is unreviewable.
+- **Format questions are not decided in a PR.** If a task turns out to need a ruling, stop
+  and raise it. `docs/proof-statement-v1.md` §1 is where those live.
+
 ## Commit sign-off hook
 
 Every commit needs a `Signed-off-by` trailer (ADR-0004), and CI enforces it across the

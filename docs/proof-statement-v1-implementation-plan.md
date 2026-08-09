@@ -9,6 +9,103 @@ list, tests, acceptance.
 
 ---
 
+## Start here
+
+New to this work? Read in this order:
+
+1. `docs/proof-statement-v1.md` §1 — what was ruled and why. Twenty minutes.
+2. §0 below — the six ground rules. A change that breaks one is out of scope regardless
+   of how good it is.
+3. The task board — pick an unclaimed task whose dependencies are done.
+
+### Prerequisites
+
+```bash
+rustup show                                    # pinned toolchain from rust-toolchain.toml
+pip install "jsonschema>=4.18"                 # schema validation
+pip install -r requirements-dev.txt            # repo dev tooling
+cp scripts/hooks/commit-msg .git/hooks/ && chmod +x .git/hooks/commit-msg
+```
+
+That last line is not optional. Every commit needs a `Signed-off-by` trailer in the final
+paragraph, CI checks the whole PR range, and the hook catches the two ways it goes wrong.
+
+PDFium is **not** needed for this work. Nothing here touches parsing.
+
+### The loop
+
+```bash
+cargo test --locked --workspace --all-features    # expect 400+ passing, 0 failing
+cargo fmt --all && cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+python3 schemas/validate_examples.py              # after any schema change
+make -n release-gates                             # must still expand; parked gates stay reachable
+```
+
+Before opening a PR, run what CI runs. The nine jobs are listed in `docs/ci-scope.md`.
+
+### Rules for claiming work
+
+- One work package per branch, one task per commit where practical.
+- **Goldens move in a commit that changes nothing else.** Never bundle a golden
+  regeneration with a behaviour change; that is the one thing that makes this migration
+  unreviewable.
+- If a task turns out to need a decision, stop and raise it. Do not decide format
+  questions in a PR — `docs/proof-statement-v1.md` §1 is where those live.
+
+### Definition of a finished task
+
+Code, test, schema, and golden all in the same state. A task with passing code and a stale
+schema is not done. Each task below names its own acceptance evidence.
+
+---
+
+## Task board
+
+Dependencies run top to bottom. Nothing in WP-2 starts before WP-1 lands.
+
+| ID | Task | Acceptance | Depends on |
+| --- | --- | --- | --- |
+| **0.1** | Test the geometry-free text path — `{element_id, expected_text}`, no page, no bbox | fails if `resolve_page` returns `NotFound` or `requires_bbox` turns true at `AnchorLevel::Text` | — |
+| **0.2** | `bbox` → `Option<[i64; 4]>` on element, span, table, cell; schema unchanged | workspace green; grounding validation byte-identical (goldens unmoved) | — |
+| **0.3** | Record the five multi-format gates and the DOCX → XLSX → PPTX sequencing | contract doc section exists | — |
+| **1.1** | New `crates/ethos-core/src/statement.rs`: `Subject`, `Statement<P>`, `statement_bytes` | compiles; `digest` is a `BTreeMap` | — |
+| **1.2** | Export from `lib.rs`, gated behind the `verify-types` feature | `cargo check -p ethos-doc-core --no-default-features --features grounding` passes | 1.1 |
+| **1.3** | Round-trip test: build → serialise → parse → compare | test passes | 1.1 |
+| **1.4** | Byte-stability test: same input twice, identical bytes | test passes | 1.1 |
+| **2.1** | New `schemas/ethos-proof-statement.schema.json` | `validate_examples.py` passes | 1.2 |
+| **2.2** | Wrap in `verification_report_json_bytes` (`cmd/verify.rs:233`) | single + batch NDJSON paths both wrapped | 1.2 |
+| **2.3** | Subject construction: `[0]` representation always, `[1]` source only when bound | test proving `[1]` is omitted, never synthesised | 2.2 |
+| **2.4** | **Payload-equivalence test** — `c14n(new.predicate)` == `c14n(old_report)` for every golden | the whole re-wrap proven to be a no-op | 2.2 |
+| **2.5** | Regenerate goldens, standalone commit | determinism workflow green | 2.4 |
+| **2.6** | Wrapped example under `schemas/examples/` | `validate_examples.py` passes | 2.1 |
+| **3.1** | `Attestation`, `VerifierIdentity`, `ConfigIdentity`, `InputIdentity` in `verify_types.rs`; field is required, not `Option` | compiles | 2.5 |
+| **3.2** | Populate in `ethos-verify` using **its own** `env!` macros, not the CLI's | library callers get the same attestation as CLI callers | 3.1 |
+| **3.3** | `claims_sha256` from the **parsed claims array** | bare-array and envelope inputs with equal claims hash equal | 3.1 |
+| **3.4** | Schema: `attestation` required | `validate_examples.py` passes | 3.1 |
+| **3.5** | Version-desync test: `verifier.version == env!("CARGO_PKG_VERSION")` | a version bump cannot silently desync | 3.2 |
+| **3.6** | Replay test: regenerate a golden from its named inputs, `cmp` byte-identical | passes | 3.2 |
+| **4.1** | `EvidenceTier` enum in `verify_types.rs` | compiles | 3.6 |
+| **4.2** | Derive from locator precedence in `resolve_target` | one test per locator kind | 4.1 |
+| **4.3** | Schema + goldens | existing capability-downgrade tests unchanged | 4.2 |
+| **5.1** | Shared serialiser — the other five artifacts serialise inline today | one code path for all six | 4.3 |
+| **5.2** | `grounding-validation/v1`; keep accepting `artifact_type` on **input** (ADR-0016 frozen error vocabulary) | payload-equivalence test | 5.1 |
+| **5.3** | `evidence-anchor/v1` | payload-equivalence test | 5.1 |
+| **5.4** | `security/v1` | payload-equivalence test | 5.1 |
+| **5.5** | `crop/v1` — *first to defer if the release drags* | payload-equivalence test | 5.1 |
+| **5.6** | `answer-release/v1` — *first to defer if the release drags* | payload-equivalence test | 5.1 |
+| **6.1** | `docs/CLAIMS.md` | contains all five does-not-prove rows listed in WP-6 | 5.6 |
+| **6.2** | `docs/proof-statement-contract.md` — payload-vs-envelope field table | every field assigned a layer | 5.6 |
+| **6.3** | README reframe | — | 6.1 |
+| **6.4** | Migration guide: `jq .predicate` recovers the pre-0.6 shape | — | 6.1 |
+
+**2.4 is the one that matters most.** Every golden moves at once during this migration,
+which blinds determinism CI exactly when it is most needed. That test reduces the whole
+re-wrap to a provable no-op, so any real semantic change is forced into its own visible
+commit. `.github/scripts/check_golden_change_rationale.py` exists for this — use it rather
+than working around it.
+
+---
+
 ## 0. Ground rules
 
 Non-negotiable. A change that breaks one of these is out of scope regardless of merit.
@@ -55,6 +152,63 @@ hash mechanism needed for the attestation block already exists and needs no new 
 ## 2. Work packages
 
 Dependency order. Each lands as its own commit with its own acceptance evidence.
+
+### WP-0 — Keep the multi-format path open
+
+**Goal:** remove future obstacles without adding future features. Multi-format support is
+**not** in this release (`docs/proof-statement-v1.md` §7). This work package only stops the
+door closing.
+
+Runs alongside WP-1. Nothing in the statement work depends on it, and it depends on nothing.
+
+**0.1 — Test the geometry-free text path.** `docs/v0-6-0-release.md` §10.1 established by
+source audit that an evidence ref of `{element_id, expected_text}` with no page and no bbox
+reaches `AnchorStatus::Bound` at `AnchorLevel::Text` with no capability limit. **Nothing
+tests it.** A refactor could close that path and no one would find out until someone tried a
+flow document years later.
+
+Assert all four steps, not just the outcome: `page_locator_required` is false,
+`resolve_page` returns `PageCheck::NotChecked` rather than `NotFound`, `resolve_bbox` is
+never reached, and the result is `Bound` with an empty capability-limit list.
+
+This converts an audit finding into an enforced invariant. Audit findings decay; tests do
+not.
+
+**0.2 — `bbox` becomes `Option<[i64; 4]>` in the trait.** Four fields in
+`crates/ethos-core/src/grounding.rs` (element, span, table, cell) plus every read site in
+`ethos-verify` and the OpenDataLoader adapter.
+
+§10.1 frames the choice as "unread in-memory sentinel versus `Option` and a breaking change
+to the published `0.5.0` baseline". **v0.6.0 is already a breaking change to that baseline** —
+WP-3 adds a required `attestation` field to `VerificationReport`. So the honest option costs
+nothing extra now and costs a second breaking release later.
+
+**The schema does not move.** `bbox` stays required in `ethos.grounding.v1`, `media_type`
+stays `const "application/pdf"`, and the positive-area check stays. The Rust type becomes
+able to express absence; the wire contract still refuses it. Relaxing the schema *is* the
+feature, and the feature is out of scope.
+
+Mechanical but not trivial — the compiler finds every site, but there are many. Half a day.
+
+**0.3 — Record the extension points.** A short section in the contract doc naming the five
+gates from §10.1, where each lives, and the DOCX → XLSX → PPTX sequencing, so nobody
+re-derives it.
+
+**Not in scope for WP-0**, and each for a reason:
+
+- Relaxing any schema gate — that is the feature.
+- A format registry, a `Format` enum, or a plugin layer — speculative abstraction against a
+  requirement nobody has stated.
+- New locator kinds. `GroundingCell` already carries `row`, `col`, `row_span`, `col_span`.
+  **Row/column addressing is R1C1**, so an XLSX sheet maps onto the existing table model with
+  no new locator concept. The only blocker is `bbox` on cells, which 0.2 handles.
+
+**Acceptance**
+- 0.1 fails if `resolve_page` is changed to return `NotFound`, or if `requires_bbox` starts
+  returning true for `AnchorLevel::Text`
+- 0.2: `cargo test --workspace --all-features` green; `ethos.grounding.v1` validation
+  behaviour byte-identical, proven by unchanged goldens
+- `make -n release-gates` still expands
 
 ### WP-1 — Statement builder
 

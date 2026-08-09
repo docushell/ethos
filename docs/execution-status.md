@@ -15,7 +15,40 @@ Sections below preserve dated milestone and wording records for auditability; ve
 inside them describe their recorded point in time and are not the current release state unless the
 generated block explicitly repeats them. The published public baseline is `0.5.0`.
 
-## v0.6.0 in progress (2026-07-30)
+## v0.6.0 scope expanded to the major format release (2026-08-09)
+
+v0.6.0 is now the major release. The Grounding JSON work recorded in the section below is
+merged to `main` and remains accurate; it is no longer the whole of v0.6.0.
+
+**What was added.** Every Ethos output artifact becomes self-describing and self-attesting.
+Artifacts are wrapped in an in-toto Statement carrying the type and the subject document,
+and every predicate names the verifier, config, and exact claims that produced it. Six
+artifact types migrate. Six work packages.
+
+**Scope authority:** `docs/proof-statement-v1.md` (format and rulings).
+**Task board and acceptance evidence:** `docs/proof-statement-v1-implementation-plan.md`.
+**Branch:** `proof-statement-v1`.
+
+Rulings on record, all 2026-08-09: in-toto Statement as the native artifact rather than
+DSSE, which base64-encodes the payload and makes evidence unreadable; base URI
+`https://docushell.com/ethos/`, shape `<base>/<predicate>/v<n>`; `representation_sha256`
+stays authoritative, extending the §8 ruling in `docs/v0-6-0-release.md`; `subject` carries
+the representation first and the source document only when the binding is real;
+`document.ethos.json` and `chunks.jsonl` stay unwrapped because statements are for verdicts.
+
+**Cut:** corroboration and the `sources[]` array that existed to carry it. Designed from a
+threat model rather than a user, no external request, and the divergence rate on real
+documents has never been measured. `docs/proof-statement-v1.md` §7 records that revisiting
+requires a measured number, not another argument.
+
+Also on 2026-08-09, CI was scoped to product correctness and architectural invariants
+(81 steps to 41); publication gates are parked behind `make release-gates`. See
+`docs/ci-scope.md`.
+
+Nothing in the expanded v0.6.0 is published. Production positioning, hosted surfaces, and
+public availability claims all remain blocked.
+
+## v0.6.0 Grounding JSON work (2026-07-30)
 
 v0.6.0 is the scoped Grounding JSON adoption release. Scope authority is
 `docs/v0-6-0-release-prep.md`; the verified implementation record, open decisions, and remaining
