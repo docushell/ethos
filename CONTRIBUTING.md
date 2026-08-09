@@ -88,3 +88,16 @@ Your merged PR ships in the next train; the CHANGELOG line you wrote becomes the
 - Bugs and parser failures: issues (templates provided). Security: `SECURITY.md` (private).
 - Response target: median first maintainer response under 48 hours.
 - Code of conduct: `CODE_OF_CONDUCT.md`. Roles and decision-making: `GOVERNANCE.md`.
+
+## Commit sign-off hook
+
+Every commit needs a `Signed-off-by` trailer (ADR-0004), and CI enforces it across the
+full PR range. Install the local guard once:
+
+```bash
+cp scripts/hooks/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
+```
+
+It rejects a missing sign-off and a sign-off stranded outside the trailer block by a
+blank line. Git only parses trailers in the final paragraph, so keep `Signed-off-by`
+and any `Co-Authored-By` adjacent with no blank line between them.
