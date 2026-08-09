@@ -56,6 +56,11 @@ const report: EthosVerificationReport = {
   checks: [],
   unsupported_claim_kinds: [],
   warnings: ["capability_limited"],
+  attestation: {
+    verifier: { name: "ethos-verify", version: "0.6.0" },
+    config_version: "default-v1",
+    claims_sha256: "0".repeat(64),
+  },
 };
 
 const claim: EthosCitationClaim = {

@@ -269,7 +269,9 @@ def project_evidence_states(
 
 def _validate_projection_report(report: Mapping[str, Any]) -> None:
     required = {"schema_version", "document_fingerprint", "verification_config_sha256", "grounding", "capability_limits", "fingerprint_stale", "all_evidence_grounded", "checks", "unsupported_claim_kinds", "warnings"}
-    allowed = required | {"dispersion"}
+    # attestation and evidence_tier arrive in 0.6. Allowed rather than required, because
+    # this wrapper drives a caller-provided ethos binary that may predate them.
+    allowed = required | {"dispersion", "attestation"}
     if not isinstance(report, Mapping) or not required <= set(report) or set(report) - allowed:
         raise CitationEmissionError("invalid_report", "report fields do not match the verification-report schema")
     if report["schema_version"] not in {"1.0.0", "1.1.0"} or not _FINGERPRINT.fullmatch(report["document_fingerprint"]):
@@ -290,7 +292,7 @@ def _validate_projection_report(report: Mapping[str, Any]) -> None:
     hardened = "dispersion" in report
     for index, check in enumerate(report["checks"], 1):
         required_check = {"id", "claim", "status", "match_method", "semantic_unverified", "warnings"}
-        allowed_check = required_check | {"reason", "resolved_element_ids", "provenance", "context_echo", "evidence"}
+        allowed_check = required_check | {"reason", "resolved_element_ids", "provenance", "context_echo", "evidence", "evidence_tier"}
         if not isinstance(check, Mapping) or not required_check <= set(check) or set(check) - allowed_check or check["id"] != f"v{index:04d}" or check["status"] not in statuses or check["match_method"] not in methods or not isinstance(check["semantic_unverified"], bool) or not isinstance(check["warnings"], list) or not isinstance(check["claim"], Mapping):
             raise CitationEmissionError("invalid_report", "check does not match the verification-report schema")
         if check["status"] == "grounded" and "reason" in check:
