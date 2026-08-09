@@ -1,8 +1,11 @@
 # Proof Statement v1
 
-Status: **draft for ruling.** Nothing here is implemented. Three decisions in §1 are
-open and block everything below them; the rest is written assuming the recommended
-answer so the tradeoffs are concrete rather than abstract.
+Status: **ruled, not implemented.** The three decisions in §1 are settled. Nothing here
+is built yet.
+
+One action remains before the first artifact ships: **pick and register the Ethos
+domain** (§1.2). Every `predicateType` string is permanent, so no artifact can be
+emitted until the domain is chosen and controlled.
 
 Scope: this changes the *shape* of Ethos output artifacts and adds corroboration. It
 changes no verification semantics. If a proposal alters what `grounded` means for any
@@ -10,9 +13,9 @@ existing claim, it does not belong in this document.
 
 ---
 
-## 1. Open decisions
+## 1. Decisions
 
-### 1.1 Artifact shape — recommend in-toto Statement
+### 1.1 Artifact shape — RULED: in-toto Statement
 
 Ethos emits six distinct top-level output artifacts today. One of them, the grounding
 validation report, carries `artifact_type: "ethos.grounding_validation.v1"` as a required
@@ -24,7 +27,7 @@ binding, and say nothing about what produced them.
 duplicate-key counting. **v0.6.0 reached for self-describing artifacts and stopped at
 one.** This document finishes that, rather than importing a foreign idea.
 
-Recommendation: adopt the in-toto Statement as the native artifact.
+Ruled: the in-toto Statement is the native artifact.
 
 ```json
 {
@@ -48,28 +51,53 @@ reading it is half the value, it is a regression. DSSE stays a signing wrapper f
 
 Verify the current `_type` revision against the in-toto spec before freezing it.
 
-### 1.2 URI namespace — open
+### 1.2 URI namespace — RULED: an Ethos-owned domain
 
-`predicateType` URIs are permanent. The only real question is the domain: an Ethos domain
-or a DocuShell one.
+`predicateType` URIs are permanent and they announce who owns the format. The product
+argument is independence: the checker is not the thing being checked, and it runs without
+trusting DocuShell. A namespace reading `docushell.com` erodes that every time someone
+opens an artifact.
 
-Recommendation: Ethos. The product argument is independence, and independence is
-weakened if the evidence format is namespaced to the commercial product built on it.
+**Blocking action:** the specific domain is not yet chosen or registered. No artifact can
+be emitted until it is, because the string cannot change afterward. Placeholder in this
+document is `ethos.dev`; substitute the real one before any code lands.
 
-### 1.3 `representation_sha256` — recommend keep
+### 1.3 Source identity — RULED: representation hash authoritative
 
-This is the standing recommendation in `docs/v0-6-0-release.md` §3.1 and it becomes
-`subject[].digest`. Rule it first, because it propagates into a frozen format.
+`representation_sha256` stays the authoritative fingerprint, per the standing ruling in
+`docs/v0-6-0-release.md` §8. Ethos names what it actually read.
 
-### 1.4 Decided while drafting, override if wrong
+This matters most on the Grounding JSON path, where a foreign parser produced the
+representation and **Ethos never touched the source PDF**. An artifact claiming to be
+"about invoice.pdf" would be asserting something Ethos cannot know.
 
-- **`subject` holds source documents only.** A verification verdict is about three
-  inputs: the document, the claims, and the config. in-toto's subject model is
-  artifact-centric, so claims and config bind in the predicate's attestation block (§4)
-  instead. Two reports over one document with different claims share a subject, which is
-  correct: both are statements *about* that document.
-- **Representations stay bare.** `document.ethos.json` and `chunks.jsonl` are
-  representations, not assertions about anything. Statements are for verdicts.
+### 1.4 Subject shape — RULED: both, representation first
+
+`subject` is an array, so the honest answer and the useful one are not in conflict.
+
+```json
+"subject": [
+  { "name": "parser-output.json", "digest": { "sha256": "8f3a…" } },
+  { "name": "invoice.pdf",        "digest": { "sha256": "3fc9…" } }
+]
+```
+
+- `subject[0]` is always the representation Ethos read. Required.
+- `subject[1]` is the source document, present **only** when the binding is real. Omitted
+  otherwise, never guessed.
+
+Consumers must not assume `subject[0]` is the PDF. That is a documentation obligation and
+it goes in the contract doc and in `CLAIMS.md`.
+
+Claims and config do not appear in `subject`. A verdict depends on three inputs — document,
+claims, config — and in-toto's subject model is artifact-centric, so the other two bind in
+the attestation block (§4) instead. Two reports over one document with different claims
+share a subject, which is correct: both are statements *about* that document.
+
+### 1.5 Decided while drafting, override if wrong
+
+**Representations stay bare.** `document.ethos.json` and `chunks.jsonl` are representations,
+not assertions about anything. Statements are for verdicts.
 
 ---
 
@@ -232,7 +260,7 @@ first.
 ## 8. Order of work
 
 ```
-0.  Rule §1.1, §1.2, §1.3
+0.  Register the Ethos domain (§1.2) — blocks every predicateType string
 1.  Statement wrapper: one builder in ethos-core, no command hand-rolls a statement
 2.  grounding/v1 as a pure re-wrap + payload-equivalence test + regenerated goldens
 3.  Attestation block, non-optional
