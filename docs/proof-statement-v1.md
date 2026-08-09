@@ -271,6 +271,9 @@ schema does not move.
 **Trigger to revisit:** a named DocuShell workflow requiring DOCX or XLSX verification, a
 design partner asking, or a real corpus where non-PDF is a meaningful share. Not before.
 
+The five gates, where each lives, and the DOCX → XLSX → PPTX sequencing are recorded in
+`docs/bring-your-own-parser.md` so nobody re-derives them.
+
 **On corroboration specifically.** Running two independently derived parsers and reporting
 their disagreement is the only deterministic answer to "who checks the parser?", and it is
 cut anyway. No external user has asked for it, two parsers sharing an upstream share
