@@ -60,6 +60,7 @@ fn verify_report(args: &[&str]) -> Value {
     parse_success(args)["predicate"].clone()
 }
 
+/// `ethos crop_element` emits an in-toto Statement; the descriptor is its predicate.
 fn parse_crop_element_success(args: &[&str]) -> Value {
     let output = run_ethos(args);
     assert!(
@@ -73,7 +74,7 @@ fn parse_crop_element_success(args: &[&str]) -> Value {
         String::from_utf8_lossy(&output.stderr),
         "warning: crop_element is source-only pre-alpha and unsupported\n"
     );
-    serde_json::from_slice(&output.stdout).expect("stdout is JSON")
+    serde_json::from_slice::<Value>(&output.stdout).expect("stdout is JSON")["predicate"].clone()
 }
 
 fn temp_json(name: &str, json: &str) -> PathBuf {
@@ -323,6 +324,89 @@ fn verify_alpha_demo_report_predicates_match_goldens() {
         let actual = parse_success(&args);
         let expected = json_file(expected_path);
         assert_eq!(actual["predicate"], expected, "golden drift for {name}");
+    }
+}
+
+/// Every verdict-emitting command wraps its output, and each names its own predicate type.
+///
+/// One test over all of them because the failure mode is a command that quietly keeps its
+/// own serialisation — the drift only shows when two producers disagree, which is exactly
+/// when nobody is looking. `ethos doc parse` and `ethos rag chunk` are absent on purpose:
+/// representations are not verdicts and stay bare (`docs/proof-statement-v1.md` §1.5).
+#[test]
+fn every_verdict_command_emits_its_own_predicate_type() {
+    let root = repo_root();
+    let doc = root.join("schemas/examples/document.example.json");
+    let cases: [(&str, Vec<String>); 4] = [
+        (
+            "grounding",
+            vec![
+                "verify".into(),
+                doc.display().to_string(),
+                "--citations".into(),
+                root.join("examples/verify/native_grounded_citations.json")
+                    .display()
+                    .to_string(),
+            ],
+        ),
+        (
+            "grounding-validation",
+            vec![
+                "grounding".into(),
+                "check".into(),
+                root.join("schemas/examples/grounding-source.example.json")
+                    .display()
+                    .to_string(),
+            ],
+        ),
+        (
+            "security",
+            vec![
+                "security".into(),
+                "report".into(),
+                doc.display().to_string(),
+            ],
+        ),
+        (
+            "crop",
+            vec![
+                "crop_element".into(),
+                doc.display().to_string(),
+                "--request".into(),
+                root.join("schemas/examples/crop-element-request.example.json")
+                    .display()
+                    .to_string(),
+            ],
+        ),
+    ];
+
+    for (predicate, args) in cases {
+        let args: Vec<&str> = args.iter().map(String::as_str).collect();
+        let output = run_ethos(&args);
+        let statement: Value =
+            serde_json::from_slice(&output.stdout).unwrap_or_else(|_| panic!("{predicate}: JSON"));
+
+        assert_eq!(
+            statement["_type"], "https://in-toto.io/Statement/v1",
+            "{predicate}"
+        );
+        assert_eq!(
+            statement["predicateType"],
+            format!("https://docushell.com/ethos/{predicate}/v1"),
+            "{predicate}"
+        );
+        assert!(
+            statement["predicate"].is_object(),
+            "{predicate}: verdict must sit under .predicate"
+        );
+        let subject = statement["subject"]
+            .as_array()
+            .unwrap_or_else(|| panic!("{predicate}: subject"));
+        assert_eq!(subject.len(), 1, "{predicate}");
+        assert!(
+            subject[0]["digest"]["sha256"].is_string(),
+            "{predicate}: subject needs a digest"
+        );
     }
 }
 
@@ -1083,7 +1167,7 @@ fn crop_element_cli_writes_descriptor() {
         String::from_utf8_lossy(&output.stderr),
         "warning: crop_element is source-only pre-alpha and unsupported\n"
     );
-    assert_eq!(json_file(out), expected);
+    assert_eq!(json_file(out)["predicate"], expected);
 }
 
 #[test]
@@ -3547,7 +3631,8 @@ fn grounding_json_check_is_deterministic_and_fail_closed() {
     assert!(first.status.success());
     assert_eq!(first.stderr, b"");
     assert_eq!(first.stdout, second.stdout);
-    let report: Value = serde_json::from_slice(&first.stdout).unwrap();
+    let report: Value =
+        serde_json::from_slice::<Value>(&first.stdout).unwrap()["predicate"].clone();
     assert_eq!(report["structure"], "valid");
     assert_eq!(report["source_binding"], "not_checked");
     assert!(report["representation_sha256"]
@@ -3558,7 +3643,8 @@ fn grounding_json_check_is_deterministic_and_fail_closed() {
     let invalid = root.join("schemas/examples/grounding-source-negative-unknown-field.json");
     let output = run_ethos(&["grounding", "check", invalid.to_str().unwrap()]);
     assert_eq!(output.status.code(), Some(2));
-    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    let report: Value =
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()["predicate"].clone();
     assert_eq!(report["structure"], "invalid");
     assert_eq!(report["error"]["code"], "unknown_field");
     assert_eq!(report["error"]["path"], "/unexpected");
@@ -3630,7 +3716,8 @@ fn grounding_json_source_hash_match_is_reported_and_verifiable() {
         source_pdf.to_str().unwrap(),
     ]);
     assert!(validation.status.success());
-    let validation_report: Value = serde_json::from_slice(&validation.stdout).unwrap();
+    let validation_report: Value =
+        serde_json::from_slice::<Value>(&validation.stdout).unwrap()["predicate"].clone();
     assert_eq!(validation_report["structure"], "valid");
     assert_eq!(validation_report["source_binding"], "matched");
 
@@ -3683,7 +3770,8 @@ fn grounding_json_dispatch_ignores_producer_identity() {
     let input = temp_json("grounding-producer-identity", &changed);
     let output = run_ethos(&["grounding", "check", input.to_str().unwrap()]);
     assert!(output.status.success());
-    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    let report: Value =
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()["predicate"].clone();
     assert_eq!(report["structure"], "valid");
 }
 

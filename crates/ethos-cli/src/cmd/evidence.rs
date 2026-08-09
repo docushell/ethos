@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-use ethos_core::error::EthosError;
 use ethos_core::evidence_anchor::{EvidenceAnchorReport, EvidenceAnchorRequest};
 
 use crate::grounding::load_source;
@@ -33,16 +32,14 @@ pub(crate) fn evidence_anchor(args: EvidenceAnchorArgs) -> Result<(), Failure> {
     let report = ethos_verify::anchor_evidence(&source, request)
         .map_err(|error| Failure::Usage(error.to_string()))?;
 
-    write_anchor_report(args.out, &report)
+    write_anchor_report(args.out, &args.input, &report)
 }
 
 fn write_anchor_report(
     out: Option<std::path::PathBuf>,
+    input: &std::path::Path,
     report: &EvidenceAnchorReport,
 ) -> Result<(), Failure> {
-    let value = serde_json::to_value(report).map_err(|e| EthosError::internal(e.to_string()))?;
-    let mut bytes =
-        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
-    bytes.push(b'\n');
+    let bytes = crate::statement_json_bytes(input, "evidence-anchor", report)?;
     write_output(out, &bytes)
 }

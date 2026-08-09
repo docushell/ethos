@@ -101,7 +101,9 @@ fn security_report_matches_schema_example_json() {
     );
     assert_eq!(output.stderr, b"");
 
-    let actual: Value = serde_json::from_slice(&output.stdout).expect("report JSON parses");
+    let actual: Value = serde_json::from_slice::<Value>(&output.stdout)
+        .expect("report JSON parses")["predicate"]
+        .clone();
     let expected = json_file(security_report_example());
     assert_eq!(actual, expected);
 }
@@ -118,7 +120,9 @@ fn security_report_derives_text_backed_warning_from_document() {
     );
     assert_eq!(output.stderr, b"");
 
-    let report: Value = serde_json::from_slice(&output.stdout).expect("report JSON parses");
+    let report: Value = serde_json::from_slice::<Value>(&output.stdout)
+        .expect("report JSON parses")["predicate"]
+        .clone();
     assert_eq!(report["schema_version"], "1.0.0");
     assert_eq!(
         report["document_fingerprint"],
@@ -245,7 +249,9 @@ fn security_report_orders_multiple_text_backed_findings_deterministically() {
         String::from_utf8_lossy(&output.stderr)
     );
     assert_eq!(output.stderr, b"");
-    let report: Value = serde_json::from_slice(&output.stdout).expect("report JSON parses");
+    let report: Value = serde_json::from_slice::<Value>(&output.stdout)
+        .expect("report JSON parses")["predicate"]
+        .clone();
     assert_eq!(report["findings"].as_array().unwrap().len(), 2);
     assert_eq!(report["summary"]["hidden_text_detected"], 1);
     assert_eq!(report["summary"]["low_contrast_text_detected"], 1);
@@ -427,7 +433,9 @@ fn security_report_derives_image_only_page_warning() {
         String::from_utf8_lossy(&output.stderr)
     );
     assert_eq!(output.stderr, b"");
-    let report: Value = serde_json::from_slice(&output.stdout).expect("report JSON parses");
+    let report: Value = serde_json::from_slice::<Value>(&output.stdout)
+        .expect("report JSON parses")["predicate"]
+        .clone();
     assert_eq!(report["summary"]["image_only_page"], 1);
     assert_eq!(report["findings"].as_array().unwrap().len(), 1);
     assert_eq!(report["findings"][0]["code"], "image_only_page");
