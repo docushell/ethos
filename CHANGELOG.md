@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- boundary-exception: **every Ethos verdict is now an in-toto Statement.** `verify`,
+  `grounding check`, `evidence anchor`, `security report`, and `crop_element` wrap their
+  output in `{_type, subject, predicateType, predicate}`, emitted through one serialiser so
+  the shape cannot drift between producers. The report you already parse is the
+  `predicate`: `jq .predicate` returns the pre-0.6 shape byte for byte. Representations
+  (`doc parse`, `rag chunk`) stay bare, because a document graph is not an assertion about
+  the document. Base predicate URI is `https://docushell.com/ethos/<predicate>/v1`, where
+  `v1` versions the predicate schema and never the product.
+- Two fields added inside the report. `attestation` names the verifier crate and version,
+  the config label, and a SHA-256 over the exact parsed claims, so a verdict says what
+  produced it and can be replayed. `evidence_tier` states per check how precisely evidence
+  was bound — `exact_span`, `table_cell`, `element_scoped`, `page_scoped`, or
+  `capability_limited` — instead of leaving consumers to derive it.
+- `GroundingElement`, `GroundingSpan`, `GroundingTable`, and `GroundingCell` carry
+  `Option<[i64; 4]>` for `bbox`. The wire schema still requires geometry; the Rust type can
+  now express its absence, which keeps the multi-format path open without opening it. Read
+  sites fail closed: an element with no declared box contains nothing.
+- Adds `docs/CLAIMS.md`, now covered by the claims gate: what a verdict proves, what it does
+  not, and the paragraph to paste into a security questionnaire.
+
 - boundary-exception: rewrite `README.md` to drop the public-beta posture. The status badge,
   the beta status block, the "Current evaluation support" framing, and the "Blocked" column
   are all removed. "Blocked" was internal release vocabulary meaning "not yet approved for

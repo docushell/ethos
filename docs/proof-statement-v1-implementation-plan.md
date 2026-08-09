@@ -1,6 +1,6 @@
 # Implementation Plan: Proof Statement v1
 
-Status: **approved for build, not started.** Companion to `docs/proof-statement-v1.md`,
+Status: **complete.** WP-0 through WP-6 are implemented and committed on `proof-statement-v1`. Companion to `docs/proof-statement-v1.md`,
 which owns the format. This document owns sequencing, the file-by-file touch list, and
 the acceptance evidence for each step.
 
@@ -330,6 +330,11 @@ consumer contract with a frozen error vocabulary under ADR-0016.
 consumers.
 
 ### WP-6 — Documentation
+
+The payload-versus-envelope field table went into `docs/proof-statement-v1.md` §2 rather than
+a separate contract document: the table was the only thing that document would have held.
+`answer-release/v1` was dropped from WP-5 — it is not emitted by the CLI, so there is no
+producer to migrate.
 
 - `docs/CLAIMS.md` (new) — proves / does-not-prove / regulatory mapping with a residual-gap
   column / a paste-ready questionnaire paragraph

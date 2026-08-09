@@ -29,7 +29,8 @@ Apache-2.0. Runs locally. No account, no API key, no network.
 - [Parse a born-digital PDF](#2-minute-pdf-parse-quickstart)
 - [Use another parser](#bring-your-own-parser)
 - [See what works today](#supported-today--not-yet)
-- [Read the limits](#scope-and-boundaries)
+- [See what comes out](#what-comes-out)
+- [Read the limits](docs/CLAIMS.md) — what a verdict proves, and what it does not
 - [Read the v0.6.0 format plan](docs/proof-statement-v1.md) — the major release in progress
 - [Pick up a v0.6.0 task](docs/proof-statement-v1-implementation-plan.md) — task board and acceptance criteria
 
@@ -57,6 +58,44 @@ cargo build --locked -p ethos-cli
 Exit `1` means verification ran but at least one check failed. Ethos still writes the report so
 you can see the reason. This example checks document evidence; it does not judge whether an answer
 is factually correct.
+
+## What comes out
+
+Every verdict is a self-describing record. It says what kind of result it is, which artifact
+it is about, and what produced it:
+
+```json
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    { "name": "invoice.pdf", "digest": { "sha256": "1a3106…" } }
+  ],
+  "predicateType": "https://docushell.com/ethos/grounding/v1",
+  "predicate": {
+    "all_evidence_grounded": true,
+    "checks": [ { "id": "v0001", "status": "grounded", "evidence_tier": "element_scoped" } ],
+    "attestation": {
+      "verifier": { "name": "ethos-verify", "version": "0.6.0" },
+      "config_version": "default-v1",
+      "claims_sha256": "65e9f8…"
+    }
+  }
+}
+```
+
+`subject` names the artifact by digest, so anyone holding the same file can confirm the
+verdict is about their copy. `attestation` names the verifier, config, and exact claims, so
+the verdict can be re-run and compared byte for byte. `evidence_tier` says how precisely each
+claim was bound rather than leaving you to work it out.
+
+The [in-toto Statement](https://github.com/in-toto/attestation) shape is borrowed from the
+supply-chain world, so existing tooling already reads it.
+
+**Upgrading from 0.5:** the report you already parse is now the `predicate`. `jq .predicate`
+gives back the previous shape byte for byte. Nothing inside it changed except two added
+fields, `attestation` and `evidence_tier`.
+
+Read [what a verdict proves and what it does not](docs/CLAIMS.md) before building on it.
 
 ## Why Ethos?
 

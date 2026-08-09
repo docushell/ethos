@@ -170,10 +170,35 @@ Enforce it by type, the way `QuantizedGeom` enforces quantize-at-extraction. A p
 struct that cannot hold a `SystemTime` cannot break the goldens. This is what makes
 signing safe to add later without a second migration.
 
-The contract doc carries a field table stating which layer every field lives in, and an
-explicit warning that basing policy decisions on wrapper fields is unsafe. Signet's
-`SECURITY.md` is the model here: it tabulates signed versus unsigned fields and spells
-out the attack when a developer trusts an unsigned one.
+### Which layer every field lives in
+
+Signet's `SECURITY.md` is the model: tabulate the layers, then spell out the attack when a
+developer trusts the wrong one.
+
+| Field | Layer | Deterministic | Safe to base a decision on |
+| --- | --- | --- | --- |
+| `predicate.*` (the whole verdict) | payload | yes | yes |
+| `predicate.attestation.*` | payload | yes | yes, for replay — see the limit below |
+| `predicate.evidence_tier` | payload | yes | yes |
+| `_type` | statement | yes | yes |
+| `predicateType` | statement | yes | yes |
+| `subject[].digest` | statement | yes | yes |
+| `subject[].name` | statement | yes | **no** — a filename, not an identity |
+| signatures, timestamps, run ids | wrapper | **no** | not present at T0/T1 |
+
+**The attack this table exists to prevent.** `subject[].name` is a convenience label taken
+from the input path. Two different documents can carry the same name, and a name can be
+anything the caller chose. in-toto matches artifacts by **digest**; a consumer that keys a
+release decision on the name rather than the digest can be handed a file called
+`loan-file.pdf` that is not the loan file. Match on `digest`, display the name.
+
+**And the limit on attestation.** It records the verifier crate name and version as
+compile-time constants. It attests the *crate*, not the binary. A hostile operator can put
+any string there. The block is for cooperating parties and auditors reproducing a verdict,
+not for defending against the party who produced it.
+
+Nothing lives in the wrapper layer yet. It is named here so that when signing arrives, it
+arrives in a layer that already exists rather than reshaping the artifact.
 
 ---
 
