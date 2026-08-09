@@ -35,6 +35,18 @@ function verifyBinaryChecksum(targetKey, target, binaryPath) {
   return true;
 }
 
+function verifyGroundingSupport(binaryPath) {
+  const result = spawnSync(binaryPath, ["--help"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  const help = `${result.stdout || ""}\n${result.stderr || ""}`;
+  if (result.status !== 0 || !/\bgrounding\b/.test(help)) {
+    throw new Error(`Binary does not expose the required grounding command: ${binaryPath}`);
+  }
+  return true;
+}
+
 function findEthosBinary(root) {
   const stack = [root];
   while (stack.length > 0) {
@@ -94,6 +106,7 @@ function prepareVendor({
       extractTarGz(archivePath, tempDir);
       const sourceBinary = findEthosBinary(tempDir);
       verifyBinaryChecksum(targetKey, target, sourceBinary);
+      verifyGroundingSupport(sourceBinary);
       const vendorBinary = path.join(vendorDir, target.binary);
       fs.copyFileSync(sourceBinary, vendorBinary);
       fs.chmodSync(vendorBinary, 0o755);
@@ -132,5 +145,6 @@ module.exports = {
   prepareVendor,
   readManifest,
   sha256File,
-  verifyBinaryChecksum
+  verifyBinaryChecksum,
+  verifyGroundingSupport
 };

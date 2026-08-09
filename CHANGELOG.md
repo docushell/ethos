@@ -2,6 +2,244 @@
 
 ## Unreleased
 
+- docs: record a multi-format grounding analysis as a v0.7.0 input in `docs/v0-6-0-release.md`
+  §10.1, where §10 already pointed v0.7.0 at the §5.1 geometry requirement. A source audit found
+  that the verifier already binds text evidence without geometry — an `element_id` + `expected_text`
+  ref reaches `AnchorStatus::Bound` at `AnchorLevel::Text` with no capability limit, because
+  `page_locator_required` is false, `resolve_page` returns `NotChecked`, and `resolve_bbox` is never
+  called. The requirement is enforced in the artifact and its validator, not in the verification
+  algorithm, across five gates; the positive-area check rules out a zero-bbox workaround. Records
+  measurements (EMU→centipoint ties are impossible since 127 is odd; XLSX column geometry swings
+  12.5% with the Normal font; render-to-PDF fails both the ADR-0008 footprint ceiling and the
+  license allowlist) and a DOCX → XLSX → PPTX sequencing rationale. §5.1 gains a pointer noting its
+  compatibility concern is narrower than stated. Analysis only: no schema, code, contract, or public
+  wording changes, and no commitment that v0.7.0 carries the work.
+
+- `ethos-pdf`: apply page rotation when mapping PDFium text coordinates into Ethos space.
+  PDFium reports page dimensions with rotation applied but returns text coordinates in
+  unrotated user space, and the conversion only flipped the origin. On `/Rotate 90` and `270`
+  pages, where the box transposes, this produced coordinates outside the reported page —
+  including negative ones — so `crop_element` correctly rejected them with "resolved element
+  bbox exceeds page bounds" and no rendered crop could be produced for those documents. A
+  `/Rotate 270` A4 page reported a 842x595 box while text `y` ran to 767, giving `y0 = -172`.
+  Rotation `0` and `180` are unchanged, since neither transposes the box. The unrotated media
+  box is derived from the reported display box, so no additional PDFium symbol is required.
+  Covered by unit tests for all four rotations that fail against the previous behavior; the
+  existing `synthetic-rotation-90` fixture asserted page dimensions and text but never bbox
+  geometry, which is why this was not caught.
+
+- `ethos-core`: make Grounding JSON validation linear by indexing page and element identifiers
+  instead of rescanning per element, span, table, and cell. An artifact declaring `spans` and
+  `char_offsets` previously validated in quadratic time — a 15 MB artifact took 128.8 s and is
+  now 1.2 s. Elements-only artifacts are unaffected in behavior.
+- `ethos-core`: add a validator resource-ceiling regression test for the `spans` +
+  `char_offsets` capability shape, alongside the existing elements-only test. Both run in CI via
+  `make validator-ceiling-check`. Table-bearing artifacts are not separately asserted.
+- `ethos-core`: re-measure and republish the validator resource baseline for both capability
+  shapes. Peak RSS at the frozen element ceiling with spans is 2.66 GB, roughly double the
+  previously published elements-only figure; size memory-capped workers accordingly. The
+  accepted 2 KB/element RSS ceiling is exceeded by that shape and needs a decision — see
+  `docs/validation/v0-6-0-validator-resource-baseline.md` §Outstanding.
+
+- `ethos-cli`: write report output atomically for regular files, via a temporary file in the
+  destination directory. Symlinks, FIFOs, and device nodes such as `/dev/stdout` continue to be
+  written through directly, since replacing those inodes would destroy the destination the
+  caller named. File modes are unchanged: an existing file keeps its mode, a new file gets 0644.
+
+- build & cleanup: remove 5 unbuilt placeholder crate directories (`ethos-layout-ml`,
+  `ethos-mcp`, `ethos-rag`, `ethos-render`, `ethos-security`), correct the crate map and
+  dependency graph in `docs/architecture.md` to match the actual workspace manifests, add
+  parser-neutrality compile checks to the `verify-alpha-tree` target, and clarify the
+  `semantic_unverified` schema description.
+
+- docs: approve the v0.6.0 public wording, applied at publication only, with a revision clause
+  allowing changes from walkthrough findings or business need through the normal claims lane. The
+  approval covers a capability claim already evidenced by three working mappers; the outsider
+  walkthrough tests documentation quality and still gates publication under §5.1, not this
+  approval. Widening past the recorded limits remains a new approval.
+
+- build: activate the v0.6.0 core version across the workspace, internal crate pins, `Cargo.lock`,
+  `pyproject.toml`, and the Python package, guarded by `test_v0_6_0_version_activation.py`. Public
+  install wording and the vendored npm payload deliberately stay on the published 0.5.0: activation
+  is not publication, and the npm package ships a 0.5.0 binary that no version bump would change.
+
+- docs: request the v0.6.0 public wording as a separate approval per §12. Grounding JSON is
+  currently described in `README.md` as a proposal, which publication would make false. The request
+  states what it does not claim, keeps the mapper requirement and geometry limitation visible, and
+  flags that the outsider-walkthrough evidence row is not yet filled.
+
+- `ethos-core`: accept the validator resource ceiling at 40 µs and 2 KB per element, replacing
+  §12's regression comparison against the v0.5.0 verification baseline, which would measure an
+  unchanged path. Enforced by `validator_stays_within_the_accepted_resource_ceiling`, release-only
+  and opt-in via `ETHOS_CHECK_VALIDATOR_CEILING` so wall-clock assertions cannot flake CI. Frozen
+  structural limits are unchanged; the ~1.5 GB working set at the element ceiling is documented for
+  integrators instead, with a validator memory guard logged as a v0.7.0 input.
+
+- docs: measure the Grounding JSON validator at the frozen ADR-0016 ceiling instead of
+  extrapolating. One million elements takes 26.5 s and 1.29 GB peak RSS; a schema-legal artifact
+  near the 256 MiB input limit reached 1.42 GB. Peak RSS runs 6–9× artifact size because the
+  validator retains the parsed artifact rather than streaming, so the input limit does not bound
+  memory to a comparable figure. Oversized input still fails closed in milliseconds with exit `7`.
+  Records the worker-sizing consequence in `docs/writing-a-mapper.md`.
+
+- docs: bind DocuShell consumer acceptance to reviewed commit `cc652ec`, merged fast-forward to
+  `main` so the reviewed SHA and the `main` SHA are identical, satisfying §9.4's exact-commit
+  requirement. Completes the fourth §11.4 double-run row.
+
+- docs: record DocuShell consumer acceptance and the Grounding JSON validator resource baseline.
+  DocuShell gains a bounded Grounding JSON shadow lane on branch `ethos-v0-6-0-grounding-shadow`
+  (`cc652ec`), leaving its production OpenDataLoader path untouched per §9.2; seven tests cover the
+  §9.4 criteria. The validator baseline replaces the §12 v0.5.0 regression comparison, which would
+  measure an unchanged path, with per-element wall clock and peak RSS figures the decider can set a
+  ceiling against.
+
+- `ethos-core`: cover Unicode scalar offset vectors for emoji and combining marks, closing the
+  last §11.2 conformance gap. UTF-16 code-unit offsets and grapheme-cluster counts are both
+  rejected, and an out-of-range end fails instead of panicking on the slice.
+
+- docs: accept `docs/v0-6-0-release-prep.md` as the scoped decider request, satisfying precondition
+  §3.1, and widen the ADR-0016 governs clause to the WP-2 and WP-3 surfaces it already decides.
+  Adds `docs/validation/v0-6-0-double-run-determinism.md` evidencing three of the four §11.4 rows.
+
+- build: make gate rot structurally impossible. `test_gate_reachability.py` fails if any gate
+  script under `.github/scripts` is unreachable from CI, if a `make` target invokes a script that
+  does not exist, or if a workflow does. Wires the 12 previously unreachable contract and boundary
+  gates into a new `governance-gates` CI job, and removes eight `make` targets for shipped releases
+  and milestones that together referenced roughly 280 deleted scripts and could not run at all.
+  Deletes three gates whose only subject was a deleted record or a removed target. Gate scripts
+  reachable from CI: 44 of 44.
+
+- `ethos-cli`, `@docushell/ethos-pdf`: remove `--source-artifact` from `verify` and `verify-batch`,
+  and `sourceArtifactPath` from `verifyClaims`. The check ran and left no trace: the report was
+  byte-identical with and without the flag, and `verification_report.json` has no field that can
+  express it, so a passing run read as PDF-bound to the operator while any recipient of that report
+  could not tell it from an unbound one. Source binding stays on `grounding check`, which records
+  `source_binding` in a schema-backed artifact. ADR-0016 records this and the two additions kept
+  deliberately: `--grounding ethos-json` as a shared-loader alias, and in-memory
+  `verifyClaims({ citations })`.
+
+- docs: advance public install wording to the published `0.5.0` baseline. crates.io
+  (`ethos-doc-core`, `ethos-verify`, `ethos-pdf`), PyPI (`ethos-pdf`), npm
+  (`@docushell/ethos-pdf`), and GitHub Release `v0.5.0` were each verified at 0.5.0, so the
+  release ledger was correct and the install commands were a release behind. Retires and inverts
+  the pre-publication hold in `test_v0_5_0_version_activation.py`, which now asserts the
+  advertised commands name the published version.
+
+- docs: rule Grounding JSON fingerprint identity as `representation_sha256` and correct
+  `docs/v0-6-0-release-prep.md` §6.4 and §8.1 to match ADR-0016, removing the authority conflict.
+  The quickstart flow now reads the fingerprint from `grounding check` rather than reusing the
+  source PDF hash, which would report `stale` against a correct artifact.
+
+- docs: record the clean-room mapper walkthrough and the public-version gate deadlock. A new
+  mapper for a synthetic parser sharing no shape with any shipped fixture, written from
+  `docs/writing-a-mapper.md` alone, passed all four self-check steps; the independent-developer
+  gate remains outstanding. Separately, advancing public install wording from 0.4.0 to 0.5.0 was
+  attempted and reverted: three gates assert mutually unsatisfiable requirements, which needs a
+  decider ruling rather than an edit.
+
+- `ethos-cli`, `ethos-pdf`: PDFium-backed tests now skip instead of failing when Ethos does not
+  accept the configured library. The CLI suites ask `ethos doctor --require-pdfium`; the in-crate
+  test consults `current_platform_key()`. Previously, correctly following `scripts/fetch-pdfium.sh`
+  on a host without a pinned PDFium profile turned 1 test failure into 27.
+
+- `@docushell/ethos-pdf`: fail closed with a typed `unsupported_platform` or `vendor_invalid`
+  `EthosSdkError` instead of an untyped launcher throw, and assert that contract — including that
+  no process is spawned — on hosts without a packaged binary.
+
+- docs: add `docs/writing-a-mapper.md`, an end-to-end Grounding JSON guide for parser authors in
+  any language: page-geometry sourcing, coordinate conversion, ID and ordering rules, honest
+  capability declaration, the representation-versus-source hash distinction, a self-check recipe,
+  and the frozen rejection-code table.
+
+- docs: document supported hosts, mapper example invocation, page-metadata sourcing, and citation
+  fingerprint selection in the npm quickstart.
+
+- build: declare the `jsonschema` schema-gate dependency in `requirements-dev.txt`.
+
+- build: remove 11 Makefile invocations of the deleted `test_roadmap_status.py`, which broke every
+  contract `make` target, and drop the ten contract-gate assertions that pinned it. Repoint eight
+  contract gates off the deleted `docs/roadmap.md`, and record `structural_provenance` in the
+  frozen `GroundingSource` trait inventory. Failing Python gates go from 12 to 4.
+
+- docs: freeze the fifteen Grounding JSON validation error codes in ADR-0016 as a public
+  compatibility surface, and record the representation-versus-source hash rationale.
+
+- docs: add the v0.6.0 release-prep scope authority, record v0.6.0 progress in the execution-status
+  ledger, and reconcile the WP-0 public-posture request with the accepted README change.
+
+- docs: add `docs/v0-6-0-release.md`, the evidence-based v0.6.0 release record — verified build,
+  lint, test, schema, and end-to-end parser-agnostic results; the unresolved fingerprint-identity
+  conflict; open-source usability findings including unsupported `darwin:x64`; and the remaining
+  governance and technical release blockers.
+
+- `ethos-core`: fix three `clippy::unnecessary_map_or` findings and remove a vestigial no-op
+  `replace` in the Grounding JSON duplicate-page test, restoring a clean
+  `cargo clippy --all-targets --all-features -- -D warnings`.
+
+- `ethos-cli`: complete WP-2 shared source selection. A present top-level `artifact_type` that is
+  duplicated, non-string, or not exactly `ethos.grounding.v1` now fails with exit `2` instead of
+  falling back to the native loader, and `evidence anchor` dispatches through the same shared
+  loader. Explicit `--grounding ethos-json` and `--grounding opendataloader-json` remain valid and
+  no-flag native behavior is unchanged.
+
+- `ethos-cli`: begin WP-2 with exact Grounding JSON dispatch, `grounding check`, deterministic
+  validation reports, optional source-PDF hash binding, shared verifier loading, and atomic batch
+  source-binding coverage, including PDF magic validation, exact unknown-field paths, stable
+  duplicate/reference/order/geometry/offset/table error codes, and focused conformance coverage.
+
+- `ethos-core`: implement the WP-1 Grounding JSON v1 schemas, duplicate-key-safe parsing, typed
+  capability/geometry/span/table invariants, measured limits, and deterministic representation
+  hashes under ADR-0016.
+
+- `@docushell/ethos-pdf`: begin WP-3 with generated Grounding JSON and validation-report
+  declarations plus bounded Promise-based `checkGrounding` and `verifyClaims` wrappers over the
+  packaged CLI.
+
+- `@docushell/ethos-pdf`: add the pinned OpenDataLoader mapper examples, byte-identical
+  JavaScript/Python output test, and npm-first Grounding JSON quickstart bundle.
+
+- `@docushell/ethos-pdf`: fail closed on foreign-adapter source binding and oversized in-memory
+  citation objects.
+
+- `@docushell/ethos-pdf`: add a temporary-project package-install test using an isolated npm cache.
+
+- `ethos-cli`: add explicit representation-identity coverage proving byte changes preserve
+  `source.sha256` but change the verifier fingerprint and stale existing citations.
+
+- `@docushell/ethos-pdf`: cover typed exit-1 reports, timeout/cancellation cleanup, and bounded
+  subprocess output in the SDK acceptance tests.
+
+- `@docushell/ethos-pdf`: cover report-file output and removal of private in-memory citation files
+  after successful and nonzero verification.
+
+- `@docushell/ethos-pdf`: verify packaged mapper fixture hashes, Apache-2.0 provenance, source
+  binding, and citation fingerprint coherence.
+
+- `@docushell/ethos-pdf`: add a documented invalid Grounding fixture and one explicit bounding-box
+  correction path for clean-room validation practice.
+
+- `@docushell/ethos-pdf`: make vendor preparation fail closed when an extracted CLI does not
+  expose the required `grounding` command.
+
+- docs: complete the WP-0 OpenDataLoader 2.5.0 feasibility proof against the DocuShell-vendored
+  JAR, with source-bound page geometry, bottom-left to top-left conversion, explicit capability
+  gaps, and byte-identical mapped output; leave ADR and public-posture acceptance gated.
+- docs: begin v0.6.0 WP-0 by reconciling the v0.5.0 release ledger and recording an executable,
+  deterministic real-parser feasibility stop; keep schema/runtime work gated on a positive,
+  geometry-honest mapping proof.
+- docs: narrow the draft v0.6.0 release-prep plan to a strict language-neutral Grounding JSON
+  adoption boundary, separate exact-representation identity from PDF source binding, require a
+  parser-neutral pinned real-parser mapping proof before schema freeze, preserve DocuShell's
+  existing OpenDataLoader path without migration, define the mapper-once plug-and-play boundary,
+  add optional same-run verification binding, define exact v1 version behavior, improve the
+  minimal native-backed npm API and npm-first example, name the DocuShell Mapping & Compatibility
+  Pilot, and simplify the README with clear current-versus-proposed parser paths and links to the
+  relevant plan sections; record the accepted adoption direction with WP-0-only authorization,
+  the coordinated public-posture change, strict no-repair and clean-room usability gates, and
+  explicit v0.7.0 planning inputs for OCR, measured canonicalization, and an optional reviewed
+  mapping assistant; keep receipt/proof/exact-replay work as an unversioned separate decision
+  without a second v0.6.0 planning document, with WP-1 through WP-4 and exact public wording still
+  blocked pending the recorded gates.
 - boundary-exception: close out v0.5.0 GitHub, crates.io, PyPI, and npm publication against frozen
   core-A/B evidence and published artifact hashes; no Windows artifact or expanded public claims.
 - boundary-exception: reconcile v0.5.0 release-boundary CI metadata and DCO sign-offs for the

@@ -565,3 +565,90 @@ fn repeated_input_is_byte_identical() {
     assert!(second.status.success());
     assert_eq!(first.stdout, second.stdout);
 }
+
+fn grounding_example() -> PathBuf {
+    repo_root().join("schemas/examples/grounding-source.example.json")
+}
+
+#[test]
+fn explicit_ethos_json_adapter_remains_valid_without_the_removed_default() {
+    let request = request(serde_json::json!([]));
+    let explicit = parse_success(&[
+        "evidence",
+        "anchor",
+        document_example().to_str().unwrap(),
+        "--grounding",
+        "ethos-json",
+        "--evidence-refs",
+        request.to_str().unwrap(),
+    ]);
+    let implicit = parse_success(&[
+        "evidence",
+        "anchor",
+        document_example().to_str().unwrap(),
+        "--evidence-refs",
+        request.to_str().unwrap(),
+    ]);
+    assert_eq!(explicit, implicit);
+}
+
+#[test]
+fn evidence_anchor_auto_detects_grounding_json() {
+    let request = request(serde_json::json!([
+        {
+            "evidence_id": "gj_text",
+            "evidence_kind": "text",
+            "required_anchor_level": "text",
+            "locator": { "element_id": "block-1" },
+            "expected_text": "héllo"
+        }
+    ]));
+    let report = parse_success(&[
+        "evidence",
+        "anchor",
+        grounding_example().to_str().unwrap(),
+        "--evidence-refs",
+        request.to_str().unwrap(),
+    ]);
+    assert_eq!(
+        report["grounding"]["parser"]["adapter"],
+        "ethos-grounding-json"
+    );
+    let explicit = parse_success(&[
+        "evidence",
+        "anchor",
+        grounding_example().to_str().unwrap(),
+        "--grounding",
+        "ethos-grounding-json",
+        "--evidence-refs",
+        request.to_str().unwrap(),
+    ]);
+    assert_eq!(report, explicit);
+}
+
+#[test]
+fn present_but_unsupported_artifact_type_never_falls_back_to_the_native_loader() {
+    let request = request(serde_json::json!([]));
+    for source in [
+        serde_json::json!({ "artifact_type": "ethos.grounding.v2" }),
+        serde_json::json!({ "artifact_type": 5 }),
+        serde_json::json!({ "artifact_type": ["ethos.grounding.v1"] }),
+    ] {
+        let path = temp_json("unsupported-artifact-type", source);
+        let output = run_ethos(&[
+            "evidence",
+            "anchor",
+            path.to_str().unwrap(),
+            "--evidence-refs",
+            request.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(2));
+        // Assert the shared loader's own message. The native loader also mentions
+        // `artifact_type` (as an unknown field), so a weaker check would pass on fallback.
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("unsupported top-level artifact_type"),
+            "must be rejected by the shared loader, not the native loader: {stderr}"
+        );
+    }
+}

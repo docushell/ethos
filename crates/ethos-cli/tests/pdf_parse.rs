@@ -167,10 +167,36 @@ fn font_isolation_fixture_pdf(name: &str) -> PathBuf {
         .join(format!("{name}.pdf"))
 }
 
+/// True when `ETHOS_PDFIUM_LIBRARY_PATH` points at a PDFium that Ethos itself accepts.
+///
+/// Asking `ethos doctor` keeps the harness from disagreeing with the product. On a host with no
+/// pinned PDFium profile — macOS x64, for example — a correctly downloaded library is still
+/// refused, and these tests must skip rather than fail. Checking only that the file exists made
+/// following the documented setup steps strictly worse than skipping them.
 fn pdfium_configured() -> bool {
-    std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
-        .map(PathBuf::from)
-        .is_some_and(|path| path.is_file())
+    static USABLE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *USABLE.get_or_init(pdfium_usable)
+}
+
+fn pdfium_usable() -> bool {
+    let Some(path) = std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH").map(PathBuf::from) else {
+        return false;
+    };
+    if !path.is_file() {
+        return false;
+    }
+    let usable = Command::new(ethos_bin())
+        .args(["doctor", "--require-pdfium"])
+        .output()
+        .is_ok_and(|output| output.status.success());
+    if !usable {
+        eprintln!(
+            "skipping PDFium-backed tests: ETHOS_PDFIUM_LIBRARY_PATH is set, but Ethos does not \
+             accept this library on this host. Run `ethos doctor --require-pdfium` for the reason. \
+             Hosts without a pinned PDFium profile (for example macOS x64) are expected to skip."
+        );
+    }
+    usable
 }
 
 fn run_ethos(args: &[&str]) -> Output {

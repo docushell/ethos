@@ -8,11 +8,14 @@ deterministic parser, not a parser that may later add verification.
 
 ## Public architecture (what users see)
 
+These are **CLI command groups**, not crate names. `ethos rag` in particular is implemented
+inside `ethos-cli`; there is no `ethos-rag` crate.
+
 ```text
 Ethos
-├── ethos-doc      Document parsing, structure, and canonical document graph
-├── ethos-rag      Chunking, citation references, and retrieval-ready artifacts
-└── ethos-verify   Evidence, grounding, fingerprint, and citation verification
+├── ethos doc      Document parsing, structure, and canonical document graph
+├── ethos rag      Chunking, citation references, and retrieval-ready artifacts
+└── ethos verify   Evidence, grounding, fingerprint, and citation verification
 ```
 
 CLI mirrors this: `ethos doc parse`, `ethos rag chunk`, `ethos verify`, plus `ethos
@@ -22,28 +25,30 @@ Release 1 messaging is "document parsing and structure" — not broad "document 
 
 ## Internal crate graph and build order
 
+This graph is the actual `Cargo.toml` dependency graph of the seven workspace members. Chunking,
+security reports, crops, and regions are CLI command implementations inside `ethos-cli`, not
+crates; see the roadmap row in the crate map below for modules that do not exist yet.
+
 ```mermaid
 graph TD
   SCH[schemas/ + c14n spec] --> CORE[ethos-core: model, traits, c14n, fingerprint]
   CORE --> PDF[ethos-pdf: PDFium adapter + quantization]
   CORE --> VER[ethos-verify: GroundingSource only]
-  PDF --> LAY[ethos-layout]
-  LAY --> TAB[ethos-tables]
-  LAY --> RAG[ethos-rag: chunks + md/txt exports]
-  TAB --> RAG
-  PDF --> REG[non-text regions: stable coordinates]
-  REG --> RAG
-  PDF --> REN[ethos-render]
-  CORE --> SEC[ethos-security]
-  RAG --> CLI[ethos-cli]
+  CORE --> LAY[ethos-layout]
+  CORE --> TAB[ethos-tables]
+  CORE --> GRD[adapters/grounding/opendataloader-json]
+  PDF --> CLI[ethos-cli]
   VER --> CLI
-  REN --> CLI
-  SEC --> CLI
-  CLI --> MCP[ethos-mcp]
-  CORE --> PYB[bindings/python]
-  CORE --> NOB[bindings/node]
-  VER --> GRD[adapters/grounding]
+  LAY --> CLI
+  TAB --> CLI
+  GRD --> CLI
+  CORE --> PYB[bindings/python: shells out to the CLI]
+  CORE --> NOB[bindings/node: shells out to the CLI]
 ```
+
+`ethos-layout` and `ethos-tables` depend on `ethos-core` alone — not on `ethos-pdf` and not on
+each other. That is deliberate: it proves by construction that layout and table logic run on
+quantized geometry and never touch a live PDFium handle (invariant 4).
 
 Pipeline stages (PRD §5.4): ingest → extract → normalize (quantize) → layout → tables →
 regions → RAG → security → verify → render → export. Every export is derived from the
@@ -89,9 +94,9 @@ dependency wiring. Package publication and public installation remain blocked.
 | `ethos-verify` | B alpha, D v1 | parser-agnostic verification via `GroundingSource` only |
 | `adapters/grounding/opendataloader-json` | A stub, B alpha, D v1 | first foreign-parser adapter; LiteParse/Docling candidates later |
 | `ethos-layout` | B | reading order, blocks, headings, lists; md/txt exporters |
-| `ethos-tables`, `ethos-rag`, `ethos-security`, `ethos-render` | C | tables; chunks+citations+regions; security report; crops/overlay |
-| `ethos-cli` | A skeleton → | binary `ethos`, command groups `doc` / `rag` / `verify` |
-| `ethos-mcp` | D | experimental MCP server, PRD §9.4 security rules |
+| `ethos-tables` | C | table candidates and extraction algorithms |
+| `ethos-cli` | A skeleton → | binary `ethos`, command groups `doc` / `rag` / `verify` / `security` / `crop` |
+| `ethos-rag`, `ethos-security`, `ethos-render`, `ethos-mcp`, `ethos-layout-ml` | Roadmap | unbuilt planned modules (CLI command implementations currently in `ethos-cli`) |
 | bindings: python | B | PyO3/maturin, stable surface |
 | bindings: node | D | napi-rs, beta surface |
 

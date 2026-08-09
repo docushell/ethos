@@ -499,22 +499,64 @@ fn crop_window(
     Ok((x0, y0, x1 - x0, y1 - y0))
 }
 
+/// Page geometry needed to place PDFium coordinates in Ethos space.
+///
+/// PDFium reports page dimensions with rotation already applied
+/// (`FPDF_GetPageWidthF`/`FPDF_GetPageHeightF`), but its text coordinates stay
+/// in unrotated user space with a bottom-left origin. Ethos artifacts are
+/// top-left and share the page's reported (rotated) box, so both the rotation
+/// and the origin flip belong here. Flipping alone was correct only for 0/180,
+/// where the box does not transpose; 90/270 produced coordinates outside the
+/// page, including negative ones.
+#[derive(Clone, Copy)]
+struct PageSpace {
+    /// Display width in points, rotation applied.
+    width_pts: f64,
+    /// Display height in points, rotation applied.
+    height_pts: f64,
+    /// Normalized page rotation: 0/90/180/270.
+    rotation: u16,
+}
+
+impl PageSpace {
+    /// Unrotated media box, derived from the display box. 90/270 transpose it,
+    /// so no additional PDFium symbol is needed to recover it.
+    fn unrotated(self) -> (f64, f64) {
+        match self.rotation {
+            90 | 270 => (self.height_pts, self.width_pts),
+            _ => (self.width_pts, self.height_pts),
+        }
+    }
+
+    /// Map one PDFium point (unrotated user space, bottom-left origin) into
+    /// Ethos display space (top-left origin).
+    fn to_display(self, x: f64, y: f64) -> (f64, f64) {
+        let (width_u, height_u) = self.unrotated();
+        match self.rotation {
+            90 => (y, x),
+            180 => (width_u - x, y),
+            270 => (height_u - y, width_u - x),
+            _ => (x, height_u - y),
+        }
+    }
+}
+
 fn qrect_from_pdfium_char_box(
-    page_height_pts: f64,
+    space: PageSpace,
     left: f64,
     right: f64,
     bottom: f64,
     top: f64,
 ) -> Result<QRect, EthosError> {
-    let x0 = left.min(right);
-    let x1 = left.max(right);
-    let y0 = page_height_pts - top.max(bottom);
-    let y1 = page_height_pts - top.min(bottom);
+    // Transform both corners, then re-derive the extremes: rotation can swap
+    // which corner is which, so the axis min/max is only known after mapping.
+    let (ax, ay) = space.to_display(left, bottom);
+    let (bx, by) = space.to_display(right, top);
     QRect::new(
-        quantize_coord(x0)?,
-        quantize_coord(y0)?,
-        quantize_coord(x1)?,
-        quantize_coord(y1)?,
+        quantize_coord(ax.min(bx))?,
+        quantize_coord(ay.min(by))?,
+        quantize_coord(ax.max(bx))?,
+        quantize_coord(ay.max(by))?,
     )
     .map_err(|_| EthosError::internal("malformed character bbox"))
 }
@@ -1153,6 +1195,15 @@ impl PdfPage<'_> {
         }
     }
 
+    /// Display box plus rotation, as needed to map PDFium text coordinates.
+    fn page_space(&self) -> PageSpace {
+        PageSpace {
+            width_pts: self.width_pts(),
+            height_pts: self.height_pts(),
+            rotation: self.rotation(),
+        }
+    }
+
     fn model_page(&self, original_page: u32) -> Result<Page, EthosError> {
         Ok(Page {
             id: page_id(original_page)?,
@@ -1184,7 +1235,7 @@ impl PdfPage<'_> {
             funcs: self.funcs,
             handle: text_handle,
         };
-        text_page.geometry_probe(&page, self.height_pts())
+        text_page.geometry_probe(&page, self.page_space())
     }
 
     fn extract_text_spans(
@@ -1202,7 +1253,7 @@ impl PdfPage<'_> {
             funcs: self.funcs,
             handle: text_handle,
         };
-        text_page.extract_runs(page, self.height_pts(), next_span, spans)
+        text_page.extract_runs(page, self.page_space(), next_span, spans)
     }
 
     fn render_crop_raw(&self, page_index: u32, bbox: QRect) -> Result<RawCrop, EthosError> {
@@ -1388,7 +1439,7 @@ impl PdfTextPage<'_> {
     fn geometry_probe(
         &self,
         page: &Page,
-        page_height_pts: f64,
+        space: PageSpace,
     ) -> Result<GeometryProbePage, EthosError> {
         // SAFETY: handle is a live FPDF_TEXTPAGE.
         let count = unsafe { (self.funcs.text_count_chars)(self.handle) };
@@ -1404,21 +1455,21 @@ impl PdfTextPage<'_> {
         let mut runs = Vec::new();
         let mut next_run = 1u32;
         for index in 0..count {
-            let record = self.geometry_probe_char(index, page_height_pts)?;
+            let record = self.geometry_probe_char(index, space)?;
             match record.parser_action.as_str() {
                 "include" => {
                     if run.has_style_change(&record.font_id, record.font_size_q, record.font_flags)
                     {
-                        run.flush(self, page_height_pts, &mut next_run, &mut runs)?;
+                        run.flush(self, space, &mut next_run, &mut runs)?;
                     }
                     run.push(&record);
                 }
                 "skip_generated_hyphen" => {}
-                _ => run.flush(self, page_height_pts, &mut next_run, &mut runs)?,
+                _ => run.flush(self, space, &mut next_run, &mut runs)?,
             }
             chars.push(record);
         }
-        run.flush(self, page_height_pts, &mut next_run, &mut runs)?;
+        run.flush(self, space, &mut next_run, &mut runs)?;
 
         Ok(GeometryProbePage {
             id: page.id.clone(),
@@ -1436,7 +1487,7 @@ impl PdfTextPage<'_> {
     fn geometry_probe_char(
         &self,
         index: c_int,
-        page_height_pts: f64,
+        space: PageSpace,
     ) -> Result<GeometryProbeChar, EthosError> {
         // SAFETY: index is in range for this text page.
         let unicode = unsafe { (self.funcs.text_get_unicode)(self.handle, index) };
@@ -1454,9 +1505,9 @@ impl PdfTextPage<'_> {
             unicode,
             text: ch.map(|ch| ch.to_string()),
             parser_action: parser_action.to_string(),
-            char_box: self.char_bbox(index, page_height_pts)?,
-            loose_char_box: self.loose_char_bbox(index, page_height_pts)?,
-            char_origin: self.char_origin(index, page_height_pts)?,
+            char_box: self.char_bbox(index, space)?,
+            loose_char_box: self.loose_char_bbox(index, space)?,
+            char_origin: self.char_origin(index, space)?,
             font_id: font_info.font_id,
             font_flags: font_info.font_flags,
             font_size_q: self.font_size_q(index),
@@ -1466,7 +1517,7 @@ impl PdfTextPage<'_> {
     fn extract_runs(
         &self,
         page: &Page,
-        page_height_pts: f64,
+        space: PageSpace,
         next_span: &mut u32,
         spans: &mut Vec<Span>,
     ) -> Result<(), EthosError> {
@@ -1500,7 +1551,7 @@ impl PdfTextPage<'_> {
                 continue;
             }
 
-            let Some(bbox) = self.char_bbox(index, page_height_pts)? else {
+            let Some(bbox) = self.char_bbox(index, space)? else {
                 run.flush(page, next_span, spans)?;
                 continue;
             };
@@ -1509,13 +1560,13 @@ impl PdfTextPage<'_> {
             if run.has_style_change(&font_info.font_id, font_size_q) {
                 run.flush(page, next_span, spans)?;
             }
-            let origin = self.char_origin(index, page_height_pts)?;
+            let origin = self.char_origin(index, space)?;
             run.push(ch, bbox, origin, font_info.font_id, font_size_q);
         }
         run.flush(page, next_span, spans)
     }
 
-    fn char_bbox(&self, index: c_int, page_height_pts: f64) -> Result<Option<QRect>, EthosError> {
+    fn char_bbox(&self, index: c_int, space: PageSpace) -> Result<Option<QRect>, EthosError> {
         let mut left = 0.0f64;
         let mut right = 0.0f64;
         let mut bottom = 0.0f64;
@@ -1535,19 +1586,11 @@ impl PdfTextPage<'_> {
             return Ok(None);
         }
         Ok(Some(qrect_from_pdfium_char_box(
-            page_height_pts,
-            left,
-            right,
-            bottom,
-            top,
+            space, left, right, bottom, top,
         )?))
     }
 
-    fn loose_char_bbox(
-        &self,
-        index: c_int,
-        page_height_pts: f64,
-    ) -> Result<Option<QRect>, EthosError> {
+    fn loose_char_bbox(&self, index: c_int, space: PageSpace) -> Result<Option<QRect>, EthosError> {
         let Some(get_loose_char_box) = self.funcs.text_get_loose_char_box else {
             return Ok(None);
         };
@@ -1558,7 +1601,7 @@ impl PdfTextPage<'_> {
             return Ok(None);
         }
         Ok(Some(qrect_from_pdfium_char_box(
-            page_height_pts,
+            space,
             f64::from(rect.left),
             f64::from(rect.right),
             f64::from(rect.bottom),
@@ -1566,11 +1609,7 @@ impl PdfTextPage<'_> {
         )?))
     }
 
-    fn char_origin(
-        &self,
-        index: c_int,
-        page_height_pts: f64,
-    ) -> Result<Option<[i64; 2]>, EthosError> {
+    fn char_origin(&self, index: c_int, space: PageSpace) -> Result<Option<[i64; 2]>, EthosError> {
         let Some(get_char_origin) = self.funcs.text_get_char_origin else {
             return Ok(None);
         };
@@ -1581,17 +1620,15 @@ impl PdfTextPage<'_> {
         if ok == 0 {
             return Ok(None);
         }
-        Ok(Some([
-            quantize_coord(x)?,
-            quantize_coord(page_height_pts - y)?,
-        ]))
+        let (dx, dy) = space.to_display(x, y);
+        Ok(Some([quantize_coord(dx)?, quantize_coord(dy)?]))
     }
 
     fn text_rects(
         &self,
         char_start: c_int,
         char_count: c_int,
-        page_height_pts: f64,
+        space: PageSpace,
     ) -> Result<Vec<QRect>, EthosError> {
         let (Some(count_rects), Some(get_rect)) =
             (self.funcs.text_count_rects, self.funcs.text_get_rect)
@@ -1624,13 +1661,7 @@ impl PdfTextPage<'_> {
                 )
             };
             if ok != 0 {
-                rects.push(qrect_from_pdfium_char_box(
-                    page_height_pts,
-                    left,
-                    right,
-                    bottom,
-                    top,
-                )?);
+                rects.push(qrect_from_pdfium_char_box(space, left, right, bottom, top)?);
             }
         }
         Ok(rects)
@@ -1860,7 +1891,7 @@ impl GeometryRunBuilder {
     fn flush(
         &mut self,
         text_page: &PdfTextPage<'_>,
-        page_height_pts: f64,
+        space: PageSpace,
         next_run: &mut u32,
         runs: &mut Vec<GeometryProbeRun>,
     ) -> Result<(), EthosError> {
@@ -1874,8 +1905,7 @@ impl GeometryRunBuilder {
             .copied()
             .map(|index| index + 1)
             .unwrap_or(char_start);
-        let text_rects =
-            text_page.text_rects(char_start, char_end - char_start, page_height_pts)?;
+        let text_rects = text_page.text_rects(char_start, char_end - char_start, space)?;
         runs.push(GeometryProbeRun {
             index: *next_run,
             text: std::mem::take(&mut self.text),
@@ -2257,6 +2287,14 @@ mod tests {
         if !path.is_file() {
             return;
         }
+        // A host with no pinned PDFium profile — macOS x64, for example — refuses every library,
+        // so skip rather than fail when a contributor has correctly configured PDFium anyway.
+        if current_platform_key().is_none() {
+            eprintln!(
+                "skipping PDFium crop determinism test: no pinned PDFium profile for this host"
+            );
+            return;
+        }
 
         let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/synthetic/simple-text/document.pdf");
@@ -2542,5 +2580,68 @@ mod tests {
             pin["sha256"],
             ethos_core::c14n::sha256_hex_bytes(FONT_SUBSTITUTION_TABLE_JSON.as_bytes())
         );
+    }
+
+    #[test]
+    fn unrotated_pages_keep_the_previous_top_left_flip() {
+        // Rotation 0 must stay identical to the pre-rotation behavior:
+        // x unchanged, y flipped about the page height.
+        let space = PageSpace {
+            width_pts: 595.0,
+            height_pts: 842.0,
+            rotation: 0,
+        };
+        let rect = qrect_from_pdfium_char_box(space, 100.0, 200.0, 700.0, 720.0).unwrap();
+        assert_eq!(rect.to_array(), [10000, 12200, 20000, 14200]);
+    }
+
+    #[test]
+    fn rotated_pages_keep_text_inside_the_reported_page_box() {
+        // Real geometry from a /Rotate 270 A4 page: media 595x842, reported
+        // display box 842x595. PDFium reports text in unrotated user space, so
+        // flipping about the display height alone yielded y0 = 595 - 767.08 —
+        // a negative coordinate that the crop_element contract rejects.
+        let space = PageSpace {
+            width_pts: 842.0,
+            height_pts: 595.0,
+            rotation: 270,
+        };
+        let rect = qrect_from_pdfium_char_box(space, 258.07, 294.88, 548.67, 767.08).unwrap();
+        let [x0, y0, x1, y1] = rect.to_array();
+        assert!(x0 >= 0 && y0 >= 0, "rotated text produced a negative bbox");
+        assert!(x1 <= 84200, "bbox exceeds the reported page width");
+        assert!(y1 <= 59500, "bbox exceeds the reported page height");
+        assert!(x0 < x1 && y0 < y1, "bbox must keep positive area");
+    }
+
+    #[test]
+    fn every_rotation_maps_the_media_box_inside_the_display_box() {
+        // The whole unrotated media box must land inside the reported display
+        // box for all four rotations, or crop_element rejects valid documents.
+        for rotation in [0u16, 90, 180, 270] {
+            let (width_pts, height_pts) = match rotation {
+                90 | 270 => (842.0, 595.0),
+                _ => (595.0, 842.0),
+            };
+            let space = PageSpace {
+                width_pts,
+                height_pts,
+                rotation,
+            };
+            let (width_u, height_u) = space.unrotated();
+            let corners = [
+                (0.0, 0.0),
+                (width_u, 0.0),
+                (0.0, height_u),
+                (width_u, height_u),
+            ];
+            for (x, y) in corners {
+                let (dx, dy) = space.to_display(x, y);
+                assert!(
+                    (0.0..=width_pts).contains(&dx) && (0.0..=height_pts).contains(&dy),
+                    "rotation {rotation}: ({x},{y}) mapped outside the page as ({dx},{dy})"
+                );
+            }
+        }
     }
 }

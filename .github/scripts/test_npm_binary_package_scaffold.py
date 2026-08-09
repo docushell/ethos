@@ -40,18 +40,21 @@ QUICKSTART = PACKAGE_DIR / "QUICKSTART.md"
 NOTICE = PACKAGE_DIR / "NOTICE"
 LICENSE = PACKAGE_DIR / "LICENSE"
 VENDOR_MANIFEST = PACKAGE_DIR / "vendor" / "manifest.json"
+# Bound to the reviewed v0.5.0 release commit bfb7197 ("prepare npm B from frozen
+# v0.5 core"). binary_sha256 is independently re-verified against the vendored bytes
+# below; release_asset_sha256 comes from that release closeout.
 SUPPORTED_TARGETS = {
     "darwin:arm64": {
         "binary": "ethos-darwin-arm64",
-        "binary_sha256": "7d0fb5407d35acc29387c1573a362c54090410e11a8072a3cd2d541195b2a84b",
+        "binary_sha256": "df2d46efb96501b8071cd8665ca525ee5af4787804cd04d07262354199ead913",
         "release_asset": "ethos-macos-arm64.tar.gz",
-        "release_asset_sha256": "719f092101bb1e4cfeebc9507155b15739642f0b891664bd0d9f8a05d9688ba5",
+        "release_asset_sha256": "30fa34afda745d168e1af39a134e2281f4a409d425765f3dc85c2e312fcbbcc2",
     },
     "linux:x64": {
         "binary": "ethos-linux-x64",
-        "binary_sha256": "2136dcd349a7b3f73f8df83a1b1e35819f9832043eb264b3eaea341697b739ed",
+        "binary_sha256": "7b6b7cb03c1d16183b6cdd56f6d2ebe593a25ef257baa5b6553a0055c53e8f44",
         "release_asset": "ethos-linux-x64.tar.gz",
-        "release_asset_sha256": "616be562306d64a293554ca4695f19deb6e135dd328e88598a80e76f6f8fb3cd",
+        "release_asset_sha256": "592b175c00d147625f2f2ccc8bc5c74fb8a00ee37f178c363757f2c72404876e",
     },
 }
 EXPECTED_PACKAGE_FILES = {
@@ -60,6 +63,18 @@ EXPECTED_PACKAGE_FILES = {
     "QUICKSTART.md",
     "README.md",
     "bin/ethos-pdf.js",
+    # v0.6.0 WP-3: the CommonJS runtime entry, generated Grounding JSON declarations, and the
+    # mapper examples with their pinned fixtures.
+    "index.js",
+    "examples/map-grounding.js",
+    "examples/map_grounding.py",
+    "examples/fixtures/citations.json",
+    "examples/fixtures/grounding.json",
+    "examples/fixtures/grounding-invalid.json",
+    "examples/fixtures/manifest.json",
+    "examples/fixtures/page-metadata.json",
+    "examples/fixtures/parser-output.json",
+    "examples/fixtures/source.pdf",
     "package.json",
     "scripts/postinstall.js",
     "scripts/prepare-vendor.js",
@@ -67,6 +82,8 @@ EXPECTED_PACKAGE_FILES = {
     "types/citation-emission.d.ts",
     "types/citation-emission-v2.d.ts",
     "types/evidence-handle-context.d.ts",
+    "types/grounding-source.d.ts",
+    "types/grounding-validation-report.d.ts",
     "types/index.d.ts",
     "types/verification-report.d.ts",
     "vendor/ethos-darwin-arm64",
@@ -116,7 +133,7 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
 
         self.assertEqual(1, manifest["version"])
         self.assertEqual("@docushell/ethos-pdf", manifest["package"])
-        self.assertEqual("0.4.0", manifest["cli_version"])
+        self.assertEqual("0.5.0", manifest["cli_version"])
         self.assertEqual(SUPPORTED_TARGETS, manifest["targets"])
         for target in manifest["targets"].values():
             self.assertRegex(target["release_asset_sha256"], r"^[a-f0-9]{64}$")
@@ -148,8 +165,8 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertIn("does not bundle PDFium", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
         self.assertIn("QUICKSTART.md", text)
-        self.assertIn("current published npm package is `@docushell/ethos-pdf@0.4.0`", text)
-        self.assertIn("`ethos 0.4.0`", text)
+        self.assertIn("current published npm package is `@docushell/ethos-pdf@0.5.0`", text)
+        self.assertIn("`ethos 0.5.0`", text)
         self.assertIn("release-archive and extracted-executable SHA256 values", text)
         self.assertIn("does not include public benchmark reports or claims", normalized)
 

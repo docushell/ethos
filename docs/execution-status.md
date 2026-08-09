@@ -3,9 +3,9 @@
 Date: 2026-07-20
 Owner: product / decider
 <!-- BEGIN GENERATED CURRENT RELEASE STATE -->
-Status: v0.4.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. Its released version is `0.4.0`. GitHub Release `v0.4.0` is marked as the repository's latest release and contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. npm `@docushell/ethos-pdf@0.4.0` is live on npm. The exact v0.4.0 public install wording packet is approved and closed out. Package-tag creation for `ethos-package-ethos-doc-core-0.4.0`, `ethos-package-ethos-verify-0.4.0`, and `ethos-package-ethos-pdf-0.4.0` is closed out, and the existing release tag is closed out.
+Status: v0.5.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. Its released version is `0.5.0`. GitHub Release `v0.5.0` is marked as the repository's latest release and contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. npm `@docushell/ethos-pdf@0.5.0` is live on npm. The exact v0.5.0 public install wording packet is approved and closed out. Package-tag creation for `ethos-package-ethos-doc-core-0.5.0`, `ethos-package-ethos-verify-0.5.0`, and `ethos-package-ethos-pdf-0.5.0` is closed out, and the existing release tag is closed out.
 
-Current closeout records: [rust python publication](validation/v0-4-0-release-closeout-summary.md); [github release artifacts](validation/v0-4-0-release-closeout-summary.md); [npm publication](validation/v0-4-0-release-closeout-summary.md); [public install wording](validation/v0-4-0-release-closeout-summary.md); [package tags](validation/v0-4-0-release-closeout-summary.md); [release tag](validation/v0-4-0-release-closeout-summary.md); [release metadata](validation/v0-4-0-release-closeout-summary.md).
+Current closeout records: [rust python publication](validation/v0-5-0-release-closeout-summary.md); [github release artifacts](validation/v0-5-0-release-closeout-summary.md); [npm publication](validation/v0-5-0-release-closeout-summary.md); [public install wording](validation/v0-5-0-release-closeout-summary.md); [package tags](validation/v0-5-0-release-closeout-summary.md); [release tag](validation/v0-5-0-release-closeout-summary.md); [release metadata](validation/v0-5-0-release-closeout-summary.md).
 
 Still blocked: additional release tags or release targets, hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports and claims, speed, footprint, parser-quality, and table-quality claims, ethos-doc, and ethos-rag.
 <!-- END GENERATED CURRENT RELEASE STATE -->
@@ -13,7 +13,30 @@ Still blocked: additional release tags or release targets, hosted surfaces, prod
 The generated block above is the sole current public-release authority in this historical ledger.
 Sections below preserve dated milestone and wording records for auditability; version statements
 inside them describe their recorded point in time and are not the current release state unless the
-generated block explicitly repeats them. The published public baseline is `0.4.0`.
+generated block explicitly repeats them. The published public baseline is `0.5.0`.
+
+## v0.6.0 in progress (2026-07-30)
+
+v0.6.0 is the scoped Grounding JSON adoption release. Scope authority is
+`docs/v0-6-0-release-prep.md`; the verified implementation record, open decisions, and remaining
+release blockers are in `docs/v0-6-0-release.md`.
+
+WP-0 through WP-3 have landed on the `v0_6_0Release` branch: the `ethos.grounding.v1` schema and
+strict validator (ADR-0016, which freezes the structural limits and the stable validation error
+vocabulary), the shared CLI source loader with fail-closed artifact-type dispatch, `ethos grounding
+check`, the native-backed npm `checkGrounding`/`verifyClaims` functions, and JavaScript and Python
+mapper examples with byte-identical double-run output. WP-4 consumer and release evidence has not
+started, and the DocuShell acceptance commit is not selected.
+
+Nothing in v0.6.0 is published. Production positioning, hosted surfaces, a Grounding JSON
+availability claim, and npm SDK availability wording all remain blocked.
+
+Two decider rulings landed on 2026-07-30. The Grounding JSON fingerprint is
+`representation_sha256`, the hash of the accepted artifact bytes, with `source.sha256` remaining a
+separate optional PDF binding; `docs/v0-6-0-release-prep.md` §6.4 and §8.1 were corrected to match
+ADR-0016. Separately, the public install wording is advanced to the published `0.5.0` baseline
+after registry verification, retiring the pre-publication hold in
+`.github/scripts/test_v0_5_0_version_activation.py`.
 
 The DocuShell first-consumer integration closeout is accepted in
 `docs/validation/nip-1-docushell-integration-closeout-2026-07-20.md`. The worker-only public CLI,

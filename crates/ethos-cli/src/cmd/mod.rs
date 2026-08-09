@@ -19,6 +19,7 @@ pub(crate) mod crop_artifacts;
 pub(crate) mod doc;
 pub(crate) mod doctor;
 pub(crate) mod evidence;
+pub(crate) mod grounding;
 pub(crate) mod rag;
 pub(crate) mod report;
 pub(crate) mod security;

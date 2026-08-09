@@ -78,6 +78,31 @@ const CONTRACTS = [
       claim_decision: "EthosClaimDecision",
     },
   },
+  {
+    input: "schemas/ethos-grounding-source.schema.json",
+    name: "EthosGroundingSource",
+    output: "grounding-source.d.ts",
+    definitions: {
+      bbox: "EthosGroundingBbox",
+      capabilities: "EthosGroundingCapabilities",
+      cell: "EthosGroundingCell",
+      coordinate_system: "EthosGroundingCoordinateSystem",
+      element: "EthosGroundingElement",
+      id: "EthosGroundingId",
+      page: "EthosGroundingPage",
+      producer: "EthosGroundingProducer",
+      sha256: "EthosGroundingSha256",
+      source: "EthosGroundingSourceMetadata",
+      span: "EthosGroundingSpan",
+      table: "EthosGroundingTable",
+    },
+  },
+  {
+    input: "schemas/ethos-grounding-validation-report.schema.json",
+    name: "EthosGroundingValidationReport",
+    output: "grounding-validation-report.d.ts",
+    definitions: { error: "EthosGroundingValidationError" },
+  },
 ];
 
 function expandCitationLocators(schema) {
@@ -159,9 +184,10 @@ async function generateTypes(outputDirectory = path.join(PACKAGE_ROOT, "types"))
     });
     await fs.writeFile(path.join(outputDirectory, contract.output), declaration, "utf8");
   }
+  const runtimeTypeImports = `import type { EthosLlmCitationOutput } from "./citation-emission";\nimport type { EthosVerificationReport } from "./verification-report";\nimport type { EthosGroundingValidationReport } from "./grounding-validation-report";\n`;
   await fs.writeFile(
     path.join(outputDirectory, "index.d.ts"),
-    `${BANNER}\n\nexport * from "./verification-report";\nexport * from "./citation-emission";\nexport * from "./evidence-handle-context";\nexport * from "./citation-emission-v2";\nexport * from "./answer-release";\n`,
+    `${BANNER}\n\n${runtimeTypeImports}\nexport * from "./verification-report";\nexport * from "./citation-emission";\nexport * from "./evidence-handle-context";\nexport * from "./citation-emission-v2";\nexport * from "./answer-release";\nexport * from "./grounding-source";\nexport * from "./grounding-validation-report";\n\nexport interface EthosCommandResult<T> {\n  exitCode: number;\n  artifact: T | null;\n  reason: string | null;\n}\n\nexport interface CheckGroundingOptions {\n  inputPath: string;\n  outputPath?: string;\n  sourceArtifactPath?: string;\n  timeoutMs?: number;\n  signal?: AbortSignal;\n}\n\nexport interface VerifyClaimsOptions {\n  inputPath: string;\n  citationsPath?: string;\n  citations?: EthosLlmCitationOutput;\n  configPath?: string;\n  outputPath?: string;\n  failOnUngrounded?: boolean;\n  grounding?: "opendataloader-json";\n  timeoutMs?: number;\n  signal?: AbortSignal;\n}\n\nexport function checkGrounding(options: CheckGroundingOptions): Promise<EthosCommandResult<EthosGroundingValidationReport>>;\nexport function verifyClaims(options: VerifyClaimsOptions): Promise<EthosCommandResult<EthosVerificationReport>>;\n`,
     "utf8",
   );
 }

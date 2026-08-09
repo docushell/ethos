@@ -168,10 +168,34 @@ fn temp_split_quote_document() -> (PathBuf, String) {
     (path, fingerprint)
 }
 
+/// True when `ETHOS_PDFIUM_LIBRARY_PATH` points at a PDFium that Ethos itself accepts.
+///
+/// Asking `ethos doctor` keeps the harness from disagreeing with the product. On a host with no
+/// pinned PDFium profile — macOS x64, for example — a correctly downloaded library is still
+/// refused, and these tests must skip rather than fail.
 fn pdfium_configured() -> bool {
-    std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH")
-        .map(PathBuf::from)
-        .is_some_and(|path| path.is_file())
+    static USABLE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *USABLE.get_or_init(|| {
+        let Some(path) = std::env::var_os("ETHOS_PDFIUM_LIBRARY_PATH").map(PathBuf::from) else {
+            return false;
+        };
+        if !path.is_file() {
+            return false;
+        }
+        let usable = Command::new(ethos_bin())
+            .args(["doctor", "--require-pdfium"])
+            .output()
+            .is_ok_and(|output| output.status.success());
+        if !usable {
+            eprintln!(
+                "skipping PDFium-backed tests: ETHOS_PDFIUM_LIBRARY_PATH is set, but Ethos does \
+                 not accept this library on this host. Run `ethos doctor --require-pdfium` for \
+                 the reason. Hosts without a pinned PDFium profile (for example macOS x64) are \
+                 expected to skip."
+            );
+        }
+        usable
+    })
 }
 
 fn document_example() -> PathBuf {
@@ -3319,5 +3343,235 @@ fn report_html_renders_hardened_and_non_grounded_diagnostics() {
             assert!(html.contains(expected), "{html}");
             assert!(html.contains("Status: <strong>stale</strong>"));
         }
+    }
+}
+
+#[test]
+fn grounding_json_check_is_deterministic_and_fail_closed() {
+    let root = repo_root();
+    let grounding = root.join("schemas/examples/grounding-source.example.json");
+    let first = run_ethos(&["grounding", "check", grounding.to_str().unwrap()]);
+    let second = run_ethos(&["grounding", "check", grounding.to_str().unwrap()]);
+    assert!(first.status.success());
+    assert_eq!(first.stderr, b"");
+    assert_eq!(first.stdout, second.stdout);
+    let report: Value = serde_json::from_slice(&first.stdout).unwrap();
+    assert_eq!(report["structure"], "valid");
+    assert_eq!(report["source_binding"], "not_checked");
+    assert!(report["representation_sha256"]
+        .as_str()
+        .unwrap()
+        .starts_with("sha256:"));
+
+    let invalid = root.join("schemas/examples/grounding-source-negative-unknown-field.json");
+    let output = run_ethos(&["grounding", "check", invalid.to_str().unwrap()]);
+    assert_eq!(output.status.code(), Some(2));
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["structure"], "invalid");
+    assert_eq!(report["error"]["code"], "unknown_field");
+    assert_eq!(report["error"]["path"], "/unexpected");
+}
+
+#[test]
+fn grounding_json_auto_dispatch_reaches_verifier_without_pdfium() {
+    let root = repo_root();
+    let output = run_ethos(&[
+        "verify",
+        root.join("schemas/examples/grounding-source.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/grounding_json_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["all_evidence_grounded"], true);
+    assert_eq!(
+        report["grounding"]["parser"]["adapter"],
+        "ethos-grounding-json"
+    );
+}
+
+#[test]
+fn grounding_json_batch_dispatch_reaches_the_verifier() {
+    let root = repo_root();
+    let grounding = root.join("schemas/examples/grounding-source.example.json");
+    let citation = root.join("examples/verify/grounding_json_citations.json");
+    let citation_line = serde_json::to_string(&json_file(&citation)).unwrap() + "\n";
+    let requests = temp_json("grounding-batch-citations", &citation_line);
+    let valid_output = temp_output("grounding-batch-valid");
+    let result = run_ethos(&[
+        "verify-batch",
+        grounding.to_str().unwrap(),
+        "--citations-ndjson",
+        requests.to_str().unwrap(),
+        "--out",
+        valid_output.to_str().unwrap(),
+    ]);
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    let lines = std::fs::read_to_string(&valid_output).unwrap();
+    assert_eq!(lines.lines().count(), 1);
+    assert!(lines.contains("ethos-grounding-json"));
+}
+
+#[test]
+fn grounding_json_source_hash_match_is_reported_and_verifiable() {
+    let root = repo_root();
+    let grounding = root.join("schemas/examples/grounding-source-bound.example.json");
+    let source_pdf = root.join("fixtures/foreign/opendataloader/real/source.pdf");
+    let validation = run_ethos(&[
+        "grounding",
+        "check",
+        grounding.to_str().unwrap(),
+        "--source-artifact",
+        source_pdf.to_str().unwrap(),
+    ]);
+    assert!(validation.status.success());
+    let validation_report: Value = serde_json::from_slice(&validation.stdout).unwrap();
+    assert_eq!(validation_report["structure"], "valid");
+    assert_eq!(validation_report["source_binding"], "matched");
+
+    let verified = run_ethos(&[
+        "verify",
+        grounding.to_str().unwrap(),
+        "--citations",
+        root.join("examples/verify/grounding_json_bound_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    assert!(
+        verified.status.success(),
+        "{}",
+        String::from_utf8_lossy(&verified.stderr)
+    );
+    let report: Value = serde_json::from_slice(&verified.stdout).unwrap();
+    assert_eq!(report["all_evidence_grounded"], true);
+}
+
+#[test]
+fn grounding_json_source_binding_rejects_non_pdf_bytes_before_report() {
+    let root = repo_root();
+    let grounding = root.join("schemas/examples/grounding-source.example.json");
+    let non_pdf = temp_json("grounding-non-pdf", "not a PDF");
+    let output = temp_output("grounding-non-pdf-report");
+    let result = run_ethos(&[
+        "grounding",
+        "check",
+        grounding.to_str().unwrap(),
+        "--source-artifact",
+        non_pdf.to_str().unwrap(),
+        "--out",
+        output.to_str().unwrap(),
+    ]);
+    assert_eq!(result.status.code(), Some(2));
+    assert!(!output.exists());
+}
+
+#[test]
+fn grounding_json_dispatch_ignores_producer_identity() {
+    let root = repo_root();
+    let original =
+        std::fs::read_to_string(root.join("schemas/examples/grounding-source.example.json"))
+            .unwrap();
+    let changed = original
+        .replace("\"name\": \"fixture\"", "\"name\": \"different-parser\"")
+        .replace("\"version\": \"1.0.0\"", "\"version\": \"99.99.99\"");
+    let input = temp_json("grounding-producer-identity", &changed);
+    let output = run_ethos(&["grounding", "check", input.to_str().unwrap()]);
+    assert!(output.status.success());
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["structure"], "valid");
+}
+
+#[test]
+fn grounding_json_representation_identity_drives_staleness() {
+    let root = repo_root();
+    let original = root.join("schemas/examples/grounding-source.example.json");
+    let citations = root.join("examples/verify/grounding_json_citations.json");
+    let original_bytes = std::fs::read(&original).unwrap();
+    let changed = String::from_utf8(original_bytes.clone())
+        .unwrap()
+        .replace("\"name\": \"fixture\"", "\"name\": \"fixture-alt\"");
+    let changed_path = temp_json("grounding-representation-changed", &changed);
+
+    let first = run_ethos(&[
+        "verify",
+        original.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+    let second = run_ethos(&[
+        "verify",
+        changed_path.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+    ]);
+    assert!(first.status.success());
+    assert!(second.status.success());
+    let first_report: Value = serde_json::from_slice(&first.stdout).unwrap();
+    let second_report: Value = serde_json::from_slice(&second.stdout).unwrap();
+    assert_eq!(first_report["fingerprint_stale"], false);
+    assert_eq!(first_report["all_evidence_grounded"], true);
+    assert_eq!(second_report["fingerprint_stale"], true);
+    assert_eq!(second_report["all_evidence_grounded"], false);
+    assert_eq!(second_report["checks"][0]["status"], "stale");
+    assert_ne!(
+        first_report["document_fingerprint"],
+        second_report["document_fingerprint"]
+    );
+}
+
+#[test]
+fn verify_rejects_present_but_unsupported_artifact_types_without_fallback() {
+    let citations = repo_root().join("examples/verify/grounding_json_citations.json");
+    let valid =
+        std::fs::read_to_string(repo_root().join("schemas/examples/grounding-source.example.json"))
+            .expect("fixture is readable");
+
+    // A duplicated artifact_type must never be collapsed into a supported identity.
+    let duplicated = valid.replacen(
+        r#""artifact_type": "ethos.grounding.v1","#,
+        r#""artifact_type": "ethos.grounding.v1", "artifact_type": "ethos.grounding.v1","#,
+        1,
+    );
+    assert_ne!(duplicated, valid, "fixture shape changed");
+
+    for (name, body) in [
+        ("duplicate-artifact-type", duplicated),
+        (
+            "unknown-artifact-type",
+            valid.replace("ethos.grounding.v1", "ethos.grounding.v2"),
+        ),
+        (
+            "non-string-artifact-type",
+            valid.replace(r#""ethos.grounding.v1""#, "5"),
+        ),
+    ] {
+        let path = temp_json(name, &body);
+        let output = run_ethos(&[
+            "verify",
+            path.to_str().unwrap(),
+            "--citations",
+            citations.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(2), "{name} must exit 2");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        // The native loader also mentions `artifact_type` (as an unknown field), so assert the
+        // shared loader's own message to prove no fallback occurred.
+        assert!(
+            stderr.contains("unsupported top-level artifact_type"),
+            "{name} must be rejected by the shared loader, got: {stderr}"
+        );
+        assert!(output.stdout.is_empty(), "{name} must not write a report");
     }
 }

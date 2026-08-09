@@ -139,6 +139,18 @@ PAIRS = [
         ROOT / "examples" / "sandbox" / "sandbox_subprocess_v1_contract.json",
     ]),
     ("ethos-deterministic-profile.schema.json", [ROOT / "profiles" / "ethos-deterministic-v1.json"]),
+    ("ethos-grounding-source.schema.json", [EXAMPLES / "grounding-source.example.json"]),
+    ("ethos-grounding-source.schema.json", [EXAMPLES / "grounding-source-full.example.json"]),
+    ("ethos-grounding-source.schema.json", [EXAMPLES / "grounding-source-bound.example.json"]),
+    ("ethos-grounding-validation-report.schema.json", [EXAMPLES / "grounding-validation-report.example.json"]),
+]
+
+NEGATIVE_GROUNDING_FIXTURES = [
+    EXAMPLES / "grounding-source-negative-duplicate.json",
+    EXAMPLES / "grounding-source-negative-float.json",
+    EXAMPLES / "grounding-source-negative-unknown-field.json",
+    EXAMPLES / "grounding-source-negative-unsafe-integer.json",
+    EXAMPLES / "grounding-source-negative-depth.json",
 ]
 
 failures = 0
@@ -185,6 +197,17 @@ for schema_name, example_paths in PAIRS:
                 validate_instance(validator, json.loads(line), f"{example.name}:{i}")
         else:
             validate_instance(validator, json.loads(example.read_text(encoding="utf-8")), example.name)
+
+# Grounding rejection fixtures are intentionally not positive examples. They still need to be
+# rejected by the JSON Schema, while the Rust tests exercise the stricter duplicate-key path.
+grounding_schema = json.loads((SCHEMAS / "ethos-grounding-source.schema.json").read_text(encoding="utf-8"))
+grounding_validator = Validator(grounding_schema)
+for fixture in NEGATIVE_GROUNDING_FIXTURES:
+    errors = list(grounding_validator.iter_errors(json.loads(fixture.read_text(encoding="utf-8"))))
+    if errors:
+        print(f"ok    {fixture.name} rejected by grounding schema")
+    else:
+        fail(f"{fixture.name} unexpectedly validates against grounding schema")
 
 # --- referential integrity inside the document example -------------------------------
 doc = json.loads((EXAMPLES / "document.example.json").read_text(encoding="utf-8"))

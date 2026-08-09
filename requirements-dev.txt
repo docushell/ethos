@@ -1,0 +1,15 @@
+# Development dependencies for Ethos repository gates.
+#
+# Install with:
+#     python3 -m venv .venv && . .venv/bin/activate
+#     python3 -m pip install -r requirements-dev.txt
+#
+# Required by:
+#     schemas/validate_examples.py
+#     .github/scripts/test_milestone_d_grounding_source_contract.py
+#     make schema-examples
+#
+# The Ethos Python package itself has no runtime dependency on these. Nothing here is
+# network-capable at verification time.
+
+jsonschema>=4.18

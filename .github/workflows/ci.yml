@@ -1,4 +1,9 @@
-# ci.yml — every PR (plan §9). Red = no merge.
+# ci.yml — every PR. Red = no merge.
+#
+# Scope during stealth: product correctness and architectural invariants only.
+# Publication-gate scripts (release state, registry consistency, claims/wording,
+# GitHub release metadata, frozen records) are parked behind `make release-gates`
+# and run manually before a real publish. See docs/ci-scope.md.
 name: ci
 
 on:
@@ -36,7 +41,7 @@ jobs:
 
   test:
     # unit + fixture tests, c14n idempotence property tests, contract vectors,
-    # deterministic-profile pin, and active release-contract guards
+    # deterministic-profile pin
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,103 +49,44 @@ jobs:
           fetch-depth: 0
       - run: rustup show
       - run: cargo test --locked --workspace --all-features
+      - name: Grounding JSON validator resource ceiling
+        # Both capability shapes, release profile. Without this the ceiling test is skipped
+        # by its own env guard and a superlinear regression merges green.
+        run: make validator-ceiling-check
       - name: fixture manifest validation
         run: python3 fixtures/validate_fixtures.py
       - name: layout evaluator alpha
         run: make layout-evaluator-alpha
       - name: Python surface tests
         run: PYTHONPATH=python python3 -m unittest discover -s python/tests
-      - name: ethos-full deterministic candidate contract
-        run: make ethos-full-candidate-contract
-      - name: Windows verify-only candidate contract
-        run: make windows-verify-candidate-contract
       - name: npm package test dependencies
         run: npm ci --prefix packages/npm/ethos-pdf --ignore-scripts
       - name: npm package integrity tests
         run: npm test --prefix packages/npm/ethos-pdf
-      - name: registry package source consistency tests
-        run: python3 .github/scripts/test_package_registry_source_consistency.py
-      - name: registry claims gate negative tests
-        run: python3 .github/scripts/test_claims_gate_registry_surfaces.py
-      - name: verify dependency boundary policy tests
-        run: python3 .github/scripts/test_check_verify_dependency_boundary.py
-      - name: frozen record guard runner tests
-        run: python3 .github/scripts/test_run_frozen_record_guards.py
-      - name: release state tests
-        run: python3 .github/scripts/test_release_state.py
-      - name: current release state check
-        run: python3 .github/scripts/check_release_state.py --check
-      - name: GitHub release metadata checker tests
-        run: python3 .github/scripts/test_github_release_metadata.py
-      - name: readiness gate tests
-        run: python3 .github/scripts/test_readiness_gate.py
-      - name: Gate Zero evidence preflight tests
-        run: python3 .github/scripts/test_gate_zero_evidence_preflight.py
-      - name: determinism workflow tests
-        run: python3 .github/scripts/test_determinism_workflow.py
-      - name: CI workflow tests
-        run: python3 .github/scripts/test_ci_workflow.py
-      - name: RAG chunk alpha target tests
-        run: python3 .github/scripts/test_rag_chunk_alpha.py
-      - name: Security report alpha target tests
-        run: python3 .github/scripts/test_security_report_alpha.py
-      - name: execution status tests
-        run: python3 .github/scripts/test_execution_status.py
-      - name: public surface posture tests
-        run: python3 .github/scripts/test_public_surface_posture.py
-      - name: Evidence anchor v1 contract guard tests
-        run: python3 .github/scripts/test_evidence_anchor_v1_contract.py
-      - name: Citation emission v1 contract
-        run: make citation-emission-v1-contract
-      - name: App answer release contract target
-        run: make app-answer-release-contract PYTHON=python3
-      - name: Python public API policy tests
-        run: python3 .github/scripts/test_python_public_api_policy.py
-      - name: Ethos verify Action contract tests
-        run: make ethos-verify-action-contract PYTHON=python3
-      - name: v0.5.0 core version activation tests
-        run: python3 .github/scripts/test_v0_5_0_version_activation.py
-      - name: v0.5.0 npm B activation boundary tests
-        run: python3 .github/scripts/test_validate_npm_b_activation.py
-      - name: Validation record source tests
-        run: python3 .github/scripts/test_validation_record_source.py
-      - name: frozen closed-lane record guards
-        run: python3 .github/scripts/run_frozen_record_guards.py
-      - name: Milestone E package publication dry-run smoke target
-        run: make package-publication-dry-run-smoke
-      - name: Gate Zero harness tests
-        run: python3 benchmarks/harness/test_run_gate_zero.py
 
-  released-cli-action-dogfood:
-    # This validates the current Action wrapper against its checksum-pinned public
-    # CLI. Current-source verifier behavior is covered by the test and determinism jobs.
+  dogfood:
+    # The product claim, tested end to end from current source: a grounded citation
+    # set exits 0, a fabricated one exits 1. Deliberately built from this tree rather
+    # than a checksum-pinned published CLI, so a format change fails here on purpose.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Accept the grounded README fixture
-        id: grounded
-        uses: ./actions/verify
-        with:
-          source: schemas/examples/document.example.json
-          citations: examples/verify/native_grounded_citations.json
-          report: target/action-dogfood/grounded.json
-      - name: Reject the fabricated README fixture
-        id: fabricated
-        continue-on-error: true
-        uses: ./actions/verify
-        with:
-          source: schemas/examples/document.example.json
-          citations: examples/verify/native_ungrounded_citations.json
-          report: target/action-dogfood/fabricated.json
-      - name: Assert the expected verification outcomes
-        if: always()
-        shell: bash
-        env:
-          GROUNDED_OUTCOME: ${{ steps.grounded.outcome }}
-          FABRICATED_OUTCOME: ${{ steps.fabricated.outcome }}
+      - run: rustup show
+      - run: cargo build --locked -p ethos-cli
+      - name: grounded citations verify clean
         run: |
-          test "$GROUNDED_OUTCOME" = "success"
-          test "$FABRICATED_OUTCOME" = "failure"
+          ./target/debug/ethos verify schemas/examples/document.example.json \
+            --citations examples/verify/native_grounded_citations.json \
+            --fail-on-ungrounded
+      - name: fabricated citations are caught
+        run: |
+          set +e
+          ./target/debug/ethos verify schemas/examples/document.example.json \
+            --citations examples/verify/native_ungrounded_citations.json \
+            --fail-on-ungrounded
+          code=$?
+          set -e
+          test "$code" = "1"
 
   verify-portability:
     # Invariant 4: ethos-verify compiles against the grounding trait module alone and
@@ -159,17 +105,6 @@ jobs:
           cargo check --locked -p ethos-doc-core --no-default-features --features grounding
           cargo check --locked -p ethos-doc-core --no-default-features --features verify-types
 
-  rag-framework-examples:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: rustup show
-      - run: pip install -r examples/citation-emission/requirements-frameworks.txt
-      - run: make rag-framework-examples
-
   schema-validate:
     runs-on: ubuntu-latest
     steps:
@@ -181,22 +116,11 @@ jobs:
       - run: python3 schemas/validate_examples.py
       - run: python3 schemas/test_security_report_validation.py
       - run: python3 schemas/test_table_model_validation.py
-      - name: Gate Zero result schema validation
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          from jsonschema import Draft202012Validator
-
-          schema = json.loads(Path("benchmarks/gate-zero/result.schema.json").read_text())
-          Draft202012Validator.check_schema(schema)
-          PY
       - run: python3 fixtures/validate_fixtures.py
 
   no-network-runtime:
     # Invariant 5c: the base CLI functions with zero network egress. Runs the CLI inside
-    # a no-net namespace; any egress attempt fails hard. Extends to full parses when the
-    # engine lands.
+    # a no-net namespace; any egress attempt fails hard.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -207,18 +131,6 @@ jobs:
           sudo unshare -n -- ./target/debug/ethos fingerprint schemas/examples/document.example.json
           sudo unshare -n -- ./target/debug/ethos rag chunk schemas/examples/document.example.json > /tmp/chunks.jsonl
           test -s /tmp/chunks.jsonl
-
-  claims-gate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - run: python3 .github/scripts/test_public_surface_posture.py
-      - run: python3 .github/scripts/claims_gate.py
-      - run: python3 .github/scripts/public_boundary_claims_gate.py
-      - run: python3 .github/scripts/check_release_boundary_paths.py
-      - run: python3 .github/scripts/validation_record_integrity.py
 
   dco:
     runs-on: ubuntu-latest

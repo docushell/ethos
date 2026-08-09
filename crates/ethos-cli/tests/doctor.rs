@@ -59,6 +59,20 @@ fn pdfium_configured() -> Option<PathBuf> {
         .filter(|path| path.is_file())
 }
 
+/// True when this host has a pinned PDFium profile at all.
+///
+/// Hosts without one — macOS x64, for example — report `has no hash for this platform` instead of
+/// a pin mismatch, so message-specific assertions must not run there.
+fn host_has_pinned_pdfium_profile() -> bool {
+    let path = temp_file("profile-probe", b"not a dynamic library");
+    let output = run_ethos_with_env(
+        &["doctor", "--require-pdfium"],
+        &[(PDFIUM_ENV, path.to_str().unwrap())],
+    );
+    let _ = std::fs::remove_file(&path);
+    !String::from_utf8_lossy(&output.stderr).contains("no hash for this platform")
+}
+
 fn assert_pdfium_setup_guidance(message: &str) {
     assert!(message.contains("scripts/fetch-pdfium.sh"));
     assert!(message.contains("sha256"));
@@ -146,11 +160,18 @@ fn doctor_reports_non_library_file_as_unusable_without_crashing_main_process() {
     assert!(stdout.contains("configured PDFium is not usable by Ethos"));
     let error: Value = serde_json::from_slice(&output.stderr).expect("stderr is error JSON");
     assert_eq!(error["error"]["code"], "internal_error");
-    assert!(error["error"]["message"]
-        .as_str()
-        .unwrap()
-        .contains("pinned phase 1 profile"));
-    assert_pdfium_setup_guidance(error["error"]["message"].as_str().unwrap());
+    let message = error["error"]["message"].as_str().unwrap();
+    // The rejection reason is host-dependent: a pinned host reports a profile mismatch, an
+    // unpinned host reports a missing platform entry. Both must name the phase 1 profile, exit
+    // 12, and carry the setup guidance. This test is about not crashing, not about which reason.
+    assert!(
+        message.contains("phase 1 profile"),
+        "unusable PDFium must name the phase 1 profile: {message}"
+    );
+    if host_has_pinned_pdfium_profile() {
+        assert!(message.contains("pinned phase 1 profile"));
+    }
+    assert_pdfium_setup_guidance(message);
 }
 
 #[test]
@@ -159,6 +180,13 @@ fn doctor_require_pdfium_succeeds_when_real_pdfium_is_configured() {
         eprintln!("skipping doctor real PDFium test: ETHOS_PDFIUM_LIBRARY_PATH is not configured");
         return;
     };
+    if !host_has_pinned_pdfium_profile() {
+        eprintln!(
+            "skipping doctor real PDFium test: this host has no pinned PDFium profile, so no \
+             library can be accepted here. Supported hosts are macOS arm64 and Linux x64."
+        );
+        return;
+    }
     let output = run_ethos_with_env(
         &["doctor", "--require-pdfium"],
         &[(PDFIUM_ENV, path.to_str().unwrap())],

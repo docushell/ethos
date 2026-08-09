@@ -18,5 +18,6 @@ Every closing PRD §15 open question gets an ADR here. Output-changing merges re
 | 0012 | Deterministic evidence anchoring boundary | Accepted |
 | 0013 | Caller-provided PDFium beta posture | Proposed |
 | 0015 | Opt-in bundled PDFium artifacts | Proposed |
+| 0016 | Grounding JSON v1 and OpenDataLoader mapping boundary | Accepted |
 
 Format: Status / Date / Governs, Context, Decision, Consequences. Statuses: Proposed → Accepted | Rejected | Superseded-by-NNNN.

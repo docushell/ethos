@@ -16,7 +16,6 @@
 
 use std::collections::BTreeMap;
 use std::collections::HashSet;
-use std::io::Write as _;
 use std::path::{Path, PathBuf};
 
 use ethos_core::crop_element::{CropElementDescriptor, CropElementRendering};
@@ -32,13 +31,13 @@ use ethos_core::verify_types::{
     ProofLimitation, ProofStatus, ProofSummary, VerificationConfig, VerificationReport,
     HARDENED_VERIFICATION_SCHEMA_VERSION,
 };
-use ethos_grounding_opendataloader_json::OdlJsonSource;
 use ethos_verify::CitationInput;
 
 use crate::cmd::crop_artifacts::{
     load_bound_crop_source_pdf, write_crop_descriptor_artifact, write_rendered_crop_artifact,
     CropSourcePdf,
 };
+use crate::grounding::load_source;
 use crate::{
     default_max_input_bytes, read_document, read_file_limited, write_output, Failure, VerifyArgs,
     VerifyBatchArgs, VerifyOutputFormat,
@@ -84,42 +83,23 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     let config_sha256 =
         ethos_core::c14n::sha256_hex(&config_value).map_err(|e| EthosError::internal(e.message))?;
 
-    let report = match args.grounding.as_deref() {
-        None => {
-            let doc = read_document(&args.input)?;
-            let crop_source_pdf = args
-                .crop_source_pdf
-                .as_deref()
-                .map(|source_pdf| load_bound_crop_source_pdf(&doc, source_pdf))
-                .transpose()?;
-            match args.crop_dir.as_ref() {
-                Some(_) => {
-                    let source = NativeCropSource { document: &doc };
-                    let mut report =
-                        ethos_verify::verify_claims(&source, citations, &config, config_sha256);
-                    assign_logical_crop_refs(&mut report)?;
-                    if let Some(crop_dir) = args.crop_dir.as_deref() {
-                        write_crop_artifacts(crop_dir, &report, crop_source_pdf.as_ref())?;
-                    }
-                    return write_report(args.out, args.format, report, args.fail_on_ungrounded);
-                }
-                None => ethos_verify::verify_claims(&doc, citations, &config, config_sha256),
-            }
+    if args.grounding.is_none() && args.crop_dir.is_some() {
+        let doc = read_document(&args.input)?;
+        let crop_source_pdf = args
+            .crop_source_pdf
+            .as_deref()
+            .map(|source_pdf| load_bound_crop_source_pdf(&doc, source_pdf))
+            .transpose()?;
+        let source = NativeCropSource { document: &doc };
+        let mut report = ethos_verify::verify_claims(&source, citations, &config, config_sha256);
+        assign_logical_crop_refs(&mut report)?;
+        if let Some(crop_dir) = args.crop_dir.as_deref() {
+            write_crop_artifacts(crop_dir, &report, crop_source_pdf.as_ref())?;
         }
-        Some("opendataloader-json") => {
-            let bytes = read_file_limited(&args.input, max_input_bytes)?;
-            let text = String::from_utf8(bytes)
-                .map_err(|_| Failure::Usage("grounding input is not UTF-8".to_string()))?;
-            let source = OdlJsonSource::from_json_str(&text)
-                .map_err(|e| Failure::Usage(format!("opendataloader-json adapter: {e}")))?;
-            ethos_verify::verify_claims(&source, citations, &config, config_sha256)
-        }
-        Some(other) => {
-            return Err(Failure::Usage(format!(
-                "unknown grounding adapter '{other}' (available: opendataloader-json)"
-            )));
-        }
-    };
+        return write_report(args.out, args.format, report, args.fail_on_ungrounded);
+    }
+    let source = load_source(&args.input, args.grounding.as_deref())?;
+    let report = ethos_verify::verify_claims(&source, citations, &config, config_sha256);
 
     write_report(args.out, args.format, report, args.fail_on_ungrounded)
 }
@@ -147,25 +127,8 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
     let config_sha256 =
         ethos_core::c14n::sha256_hex(&config_value).map_err(|e| EthosError::internal(e.message))?;
 
-    let reports = match args.grounding.as_deref() {
-        None => {
-            let document = read_document(&args.input)?;
-            batch_reports(&document, citations, &config, &config_sha256)
-        }
-        Some("opendataloader-json") => {
-            let bytes = read_file_limited(&args.input, max_input_bytes)?;
-            let text = String::from_utf8(bytes)
-                .map_err(|_| Failure::Usage("grounding input is not UTF-8".to_string()))?;
-            let source = OdlJsonSource::from_json_str(&text)
-                .map_err(|e| Failure::Usage(format!("opendataloader-json adapter: {e}")))?;
-            batch_reports(&source, citations, &config, &config_sha256)
-        }
-        Some(other) => {
-            return Err(Failure::Usage(format!(
-                "unknown grounding adapter '{other}' (available: opendataloader-json)"
-            )))
-        }
-    };
+    let source = load_source(&args.input, args.grounding.as_deref())?;
+    let reports = batch_reports(&source, citations, &config, &config_sha256);
 
     let mut output = Vec::new();
     let mut any_ungrounded = false;
@@ -176,30 +139,10 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
         output.extend_from_slice(&line);
         output.push(b'\n');
     }
-    write_batch_output(args.out, &output)?;
+    write_output(args.out, &output)?;
     if args.fail_on_ungrounded && any_ungrounded {
         return Err(Failure::Ungrounded);
     }
-    Ok(())
-}
-
-fn write_batch_output(out: Option<PathBuf>, bytes: &[u8]) -> Result<(), Failure> {
-    let Some(path) = out else {
-        return write_output(None, bytes);
-    };
-    let parent = path
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or(Path::new("."));
-    let mut temporary = tempfile::NamedTempFile::new_in(parent)
-        .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
-    temporary
-        .write_all(bytes)
-        .and_then(|_| temporary.as_file().sync_all())
-        .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
-    temporary
-        .persist(&path)
-        .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
     Ok(())
 }
 
