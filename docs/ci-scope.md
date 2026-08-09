@@ -60,8 +60,16 @@ Exiting stealth is the trigger. When Ethos publishes again:
 3. Decide then whether reachability enforcement comes back, and if so, scope it to the
    keeper set rather than to every script in the tree.
 
-## Archived material
+## Closed-milestone guards
 
-Closed-milestone contract guards, their docs, and historical validation records live in
-`docs/archive/`. They are kept because Ethos sells auditability and deleting your own
-audit trail is the wrong instinct. They are not wired to anything.
+The nine `test_milestone_d_*.py` guards and their `make` targets are removed. They
+asserted prose, not behaviour: that a doc contained a specific sentence, that the
+Makefile declared `.PHONY`, that one document linked to another. The only real tests
+inside those targets were `cargo test` invocations that already run under
+`cargo test --workspace --all-features`.
+
+The Milestone D contract documents themselves stay in `docs/`. They describe real
+behavioural contracts, they are cross-referenced from the threat model and from live
+implementation plans, and they cost nothing to keep. Ethos sells auditability; deleting
+its own contract history would be the wrong instinct. `docs/validation/` stays for the
+same reason, and because `docs/release-state.json` resolves into it.
