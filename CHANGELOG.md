@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- boundary-exception: rewrite `README.md` to drop the public-beta posture. The status badge,
+  the beta status block, the "Current evaluation support" framing, and the "Blocked" column
+  are all removed. "Blocked" was internal release vocabulary meaning "not yet approved for
+  publication", which reads to a user as broken or gatekept; the replacement states what is
+  not supported as a fact about capability. Nothing in the rewrite claims production
+  readiness, and `claims_gate.py` still passes, so no banned overclaim was introduced in
+  exchange.
+- boundary-exception: update `docs/public-boundary-claims.json` to match. Five pinned README
+  strings carried the retired beta wording; they are replaced by six that carry the same
+  boundaries in the new voice, including the honest limits — Ethos does not decide whether an
+  answer is true, a missing capability yields an explicit limitation rather than a guess, and
+  no speed, footprint, or parser-quality comparison is published because no defensible
+  benchmark has been run. Eleven existing install and PDFium claims are unchanged.
+- boundary-exception: scope `.github/workflows/ci.yml` to product correctness and
+  architectural invariants, parking publication gates behind `make release-gates`. See
+  `docs/ci-scope.md`.
+
 - docs: record a multi-format grounding analysis as a v0.7.0 input in `docs/v0-6-0-release.md`
   §10.1, where §10 already pointed v0.7.0 at the §5.1 geometry requirement. A source audit found
   that the verifier already binds text evidence without geometry — an `element_id` + `expected_text`

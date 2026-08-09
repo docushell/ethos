@@ -5,24 +5,22 @@
 [![bench](https://github.com/docushell/ethos/actions/workflows/bench.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/bench.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 ![Rust: 1.87+](https://img.shields.io/badge/rust-1.87%2B-orange)
-![status: public beta](https://img.shields.io/badge/status-public--beta-blue)
 
-> **Status: public beta evaluation.**
-> Ethos is a deterministic document evidence layer for source-grounded verification and
-> citation checking across native Ethos JSON and supported foreign parser outputs. The current
-> beta includes the GitHub source repository, Rust library crates `ethos-doc-core`,
-> `ethos-verify`, and `ethos-pdf` at `0.5.0`, the Python `ethos-pdf` wheel at `0.5.0`, the npm
-> `@docushell/ethos-pdf@0.5.0` package, and GitHub Release `v0.5.0` macOS arm64/Linux x64 CLI
-> artifacts. PDFium-backed commands use caller-provided PDFium through
-> `ETHOS_PDFIUM_LIBRARY_PATH`.
-> Current execution status and release-scope notes live in `docs/execution-status.md`;
-> public-release hygiene gates live in `docs/public-release-checklist.md`.
+**Ethos checks whether an AI's claims about a document are actually in the document.**
 
-Ethos checks whether a citation points to evidence that exists in a document. It can use its own
-born-digital PDF parser or supported output from another parser.
+Models reword. They cite page 4 on one run and page 7 on the next. Ethos doesn't move: same
+source, same claim, same config, same answer, byte for byte. So when a verdict changes, you
+know it was the model that changed and not the checker.
 
-Ethos reports what matched, what did not match, whether the evidence is stale, and which source
-capabilities were missing. It does not decide whether an answer is true, relevant, or complete.
+Point it at your own parser's output or let it parse a born-digital PDF itself. It reports
+what matched, what didn't, whether the evidence went stale, and — the part most tools skip —
+**what it could not establish**. A missing capability produces an explicit limitation, never
+a silent guess.
+
+It does not decide whether an answer is true, relevant, or complete. That boundary is
+deliberate and permanent.
+
+Apache-2.0. Runs locally. No account, no API key, no network.
 
 ## Start here
 
@@ -32,7 +30,8 @@ capabilities were missing. It does not decide whether an answer is true, relevan
 - [Use another parser](#bring-your-own-parser)
 - [See what works today](#supported-today--not-yet)
 - [Read the limits](#scope-and-boundaries)
-- [Review the draft v0.6 parser-integration plan](docs/v0-6-0-release-prep.md)
+- [Read the v0.6.0 format plan](docs/proof-statement-v1.md) — the major release in progress
+- [Pick up a v0.6.0 task](docs/proof-statement-v1-implementation-plan.md) — task board and acceptance criteria
 
 ## Catch a fabricated citation in 60 seconds
 
@@ -89,29 +88,31 @@ truth system.
 
 ## Supported today / not yet
 
-| Area | Current evaluation support |
+| Area | What works |
 | --- | --- |
-| Born-digital PDF parsing | Narrow public beta path with caller-provided PDFium |
-| Native Ethos JSON verification | Supported in the current verification loop |
-| Foreign parser grounding | OpenDataLoader-style JSON adapter path |
+| Citation verification | Native Ethos JSON and foreign parser output, no PDFium needed |
+| Foreign parser grounding | OpenDataLoader-style JSON adapter, or write your own |
+| Born-digital PDF parsing | Yes, with caller-provided PDFium |
 | Output formats | JSON, Markdown, text, chunks, verification reports, crop descriptors |
-| Distribution | Source, Rust crates, Python wheel, npm package, macOS arm64 CLI artifact, Linux x64 CLI artifact |
-| Local execution | Base flows run locally; PDFium is caller-provided |
+| Install | Rust crates, Python wheel, npm package, macOS arm64 and Linux x64 CLI, or build from source |
+| Where it runs | Your machine. No network calls anywhere in the base flows. |
 
-| Area | Current boundary |
+| Area | Not supported |
 | --- | --- |
-| Scanned/image-only PDFs | No base OCR; fails with `ocr_required` |
-| Windows packaged artifacts | Blocked |
-| Hosted API or demo | Blocked |
-| Bundled project-maintained PDFium | Blocked |
-| Public benchmark claims | Blocked |
-| Production positioning | Blocked |
+| Scanned or image-only PDFs | No OCR. Fails with `ocr_required` rather than guessing. |
+| Windows CLI artifact | Build from source on Windows; no packaged binary yet |
+| Bundled PDFium | Supply your own via `ETHOS_PDFIUM_LIBRARY_PATH` |
+| Hosted API | None. Ethos is a local tool by design. |
+| Semantic judgement | Ethos checks whether cited evidence exists, not whether an answer is correct |
+
+We publish no speed, footprint, or parser-quality comparisons, because we have not run a
+benchmark whose numbers we would be willing to defend. When that changes the numbers will
+arrive with the harness that produced them.
 
 ## Install or build
 
-Ethos is public beta for source, Rust crate, Python wheel, macOS arm64 CLI artifact, Linux x64 CLI
-artifact, and npm `@docushell/ethos-pdf` evaluation. PDFium-backed commands require
-caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.
+Verification needs nothing but the CLI. PDF parsing additionally needs caller-provided PDFium
+through `ETHOS_PDFIUM_LIBRARY_PATH`.
 
 Choose the smallest path that fits your work:
 
@@ -127,7 +128,7 @@ Source-checkout prerequisites:
 - Python 3 for demo and schema-validation targets
 - `jsonschema>=4.18` in the Python environment used for `make verify-alpha`
 - caller-provided local PDFium through `ETHOS_PDFIUM_LIBRARY_PATH` only for PDFium-backed paths
-  (`scripts/fetch-pdfium.sh` can fetch the exact pinned evaluation archive; see the quickstart)
+  (`scripts/fetch-pdfium.sh` can fetch the exact pinned archive; see the quickstart)
 
 From a source checkout:
 
@@ -201,7 +202,7 @@ platforms fail before invoking a binary. PDFium-backed commands fail until
 Run `ethos doctor` for local setup diagnostics. Run `ethos doctor --require-pdfium` after setting
 `ETHOS_PDFIUM_LIBRARY_PATH` to check whether the configured PDFium is usable by Ethos.
 
-GitHub Release `v0.5.0` also provides evaluation CLI archives for macOS arm64 and Linux x64.
+GitHub Release `v0.5.0` also provides CLI archives for macOS arm64 and Linux x64.
 
 ## 2-minute PDF parse quickstart
 
@@ -209,12 +210,12 @@ This source-checkout example uses a generated born-digital PDF. PDFium remains c
 through `ETHOS_PDFIUM_LIBRARY_PATH`. Ethos checks the library you configure; it does not download,
 install, repair, or vet untrusted dynamic libraries.
 
-For evaluation, `scripts/fetch-pdfium.sh` can download the exact pinned PDFium archive named in
+`scripts/fetch-pdfium.sh` downloads the exact pinned PDFium archive named in
 `docs/pdfium-profile.md`. It checks the archive and library hashes, stops on a mismatch, and prints
 the `ETHOS_PDFIUM_LIBRARY_PATH` value to use.
 
 ```bash
-scripts/fetch-pdfium.sh   # optional: fetch + verify the pinned evaluation PDFium
+scripts/fetch-pdfium.sh   # optional: fetch + verify the pinned PDFium
 ```
 
 ```bash
@@ -226,7 +227,7 @@ export ETHOS_PDFIUM_LIBRARY_PATH=/absolute/path/to/libpdfium.dylib
 ./target/debug/ethos doc parse fixtures/synthetic/simple-text/document.pdf --format text
 ```
 
-The fixture is synthetic and born-digital. This is an evaluation smoke path, not a benchmark or a
+The fixture is synthetic and born-digital. This is a smoke path, not a benchmark or a
 claim about broader PDF, OCR, table, production, hosted, or bundled-PDFium support.
 
 ## Minimal end-to-end example
@@ -284,7 +285,7 @@ PDFium.
   --out /tmp/ethos-evidence-anchor-report.json
 ```
 
-## Try the alpha verification loop
+## Try the verification loop
 
 From a source checkout, the current verification loop is:
 
@@ -389,7 +390,8 @@ Ethos would remain the open verification engine. DocuShell could sell hosted map
 compatibility testing, support, and audit workflows around it. Billing and hosted-service code do
 not belong in the Ethos core.
 
-Relevant sections in the [v0.6.0 plan](docs/v0-6-0-release-prep.md):
+Relevant sections in the [Grounding JSON plan](docs/v0-6-0-release-prep.md), which covers the
+merged parser-integration half of v0.6.0:
 
 - §1 — Release decision
 - §5 — Success criteria and non-goals
@@ -431,9 +433,8 @@ Report vulnerabilities through GitHub private vulnerability reporting. See `SECU
 | Rust version errors or unexpected compiler behavior | Run `rustup show`; this repo pins Rust `1.87.0` through `rust-toolchain.toml`. |
 | `ethos verify --fail-on-ungrounded` exits `1` | Verification finished and wrote a report, but at least one check failed. Start with `checks[].status` and `warnings`. |
 | Scanned or image-only PDFs do not parse | Base Ethos does not include OCR. These inputs should fail with `ocr_required` until OCR support is explicitly added. |
-| Need a PDFium library for evaluation | Run `scripts/fetch-pdfium.sh`. It downloads the exact pinned archive recorded in `docs/pdfium-profile.md`, verifies both recorded sha256 values, and prints the `ETHOS_PDFIUM_LIBRARY_PATH` export line. |
-| Rendered crop PNGs are missing or skipped | Logical crop descriptor JSON works in the alpha path; rendered PNG crop artifacts require the source PDF path and a configured PDFium runtime. |
-| Release/tag workflow fails | Release, package, hosted, Windows, bundled PDFium, benchmark, and production surfaces are blocked unless a dedicated approval record authorizes the exact surface. |
+| Need a PDFium library | Run `scripts/fetch-pdfium.sh`. It downloads the exact pinned archive recorded in `docs/pdfium-profile.md`, verifies both recorded sha256 values, and prints the `ETHOS_PDFIUM_LIBRARY_PATH` export line. |
+| Rendered crop PNGs are missing or skipped | Crop descriptor JSON works without PDFium; rendered PNG crops need the source PDF path and a configured PDFium runtime. |
 
 ## FAQ
 
@@ -459,13 +460,13 @@ Not in the base install. Scanned or image-only pages fail with `ocr_required`.
 
 ### Can I use Ethos in CI?
 
-Yes. Use `--fail-on-ungrounded`; it exits `1` when verification finishes but a check fails. Current
-packages and binaries remain public beta evaluation surfaces. See
-[`docs/execution-status.md`](docs/execution-status.md) for their support limits.
+Yes. Use `--fail-on-ungrounded`; it exits `1` when verification finishes but a check fails. Exit `2`
+means malformed input or a usage error, which is a process failure rather than a verification
+result — do not retry on it.
 
 ### Where are benchmark results?
 
-Public benchmark reports are not approved. Generated public-safe Gate Zero evidence belongs in the
+There are none to publish yet. Generated public-safe Gate Zero evidence belongs in the
 separate `docushell/ethos-bench` repository, not in this main source repo.
 
 ## Repository map
