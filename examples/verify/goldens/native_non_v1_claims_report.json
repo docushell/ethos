@@ -26,6 +26,7 @@
         ],
         "page": "p0001"
       },
+      "evidence_tier": "page_scoped",
       "id": "v0001",
       "match_method": "presence_only",
       "semantic_unverified": false,

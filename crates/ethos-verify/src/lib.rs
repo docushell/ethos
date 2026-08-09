@@ -49,8 +49,9 @@ use ethos_core::grounding::{
 use ethos_core::verify_types::{
     compute_all_evidence_grounded, Attestation, CapabilityLimit, Check, CheckProvenance,
     CheckReason, CheckStatus, Claim, ClaimKind, ContextBoundary, ContextEcho, Evidence,
-    EvidenceDispersion, GroundingMeta, MatchMethod, ProvenanceStatus, TextNormalization,
-    VerificationConfig, VerificationReport, VerifierIdentity, HARDENED_VERIFICATION_SCHEMA_VERSION,
+    EvidenceDispersion, EvidenceTier, GroundingMeta, MatchMethod, ProvenanceStatus,
+    TextNormalization, VerificationConfig, VerificationReport, VerifierIdentity,
+    HARDENED_VERIFICATION_SCHEMA_VERSION,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -1082,6 +1083,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1099,6 +1101,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1120,6 +1123,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1136,6 +1140,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1153,6 +1158,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1169,6 +1175,7 @@ fn check_claim(
             match_method: MatchMethod::None,
             semantic_unverified: false,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
@@ -1187,6 +1194,7 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                evidence_tier: None,
                 resolved_element_ids: Vec::new(),
                 provenance: None,
                 context_echo: None,
@@ -1202,6 +1210,7 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                evidence_tier: None,
                 resolved_element_ids: Vec::new(),
                 provenance: None,
                 context_echo: None,
@@ -1218,6 +1227,7 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                evidence_tier: None,
                 resolved_element_ids: Vec::new(),
                 provenance: None,
                 context_echo: None,
@@ -1239,6 +1249,7 @@ fn check_claim(
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
                 evidence: None,
+                evidence_tier: None,
                 resolved_element_ids: Vec::new(),
                 provenance: None,
                 context_echo: None,
@@ -1270,6 +1281,22 @@ fn check_claim(
             )
         })
         .flatten();
+    // The tier the target actually resolved at, unless a capability limit is what decided
+    // this check — then the honest statement is that the source could not answer at the
+    // precision asked for, not that it answered imprecisely.
+    let capability_limited = matches!(
+        reason,
+        Some(
+            CheckReason::MissingSpanCapability
+                | CheckReason::MissingTableCapability
+                | CheckReason::UnknownCoordinateOrigin
+        )
+    );
+    let evidence_tier = Some(if capability_limited {
+        EvidenceTier::CapabilityLimited
+    } else {
+        target.tier
+    });
     Check {
         id: check_id,
         claim,
@@ -1278,6 +1305,7 @@ fn check_claim(
         match_method,
         semantic_unverified: false,
         evidence,
+        evidence_tier,
         resolved_element_ids: context
             .emit_hardening
             .then(|| target.element_ids.clone())
@@ -1361,6 +1389,9 @@ fn claim_kind_name(kind: ClaimKind) -> &'static str {
 
 #[derive(Debug, Clone)]
 struct FoundTarget {
+    /// Set where the target resolves, never re-derived from the citation, so the tier
+    /// cannot drift from the locator precedence it describes.
+    tier: EvidenceTier,
     page: Option<String>,
     bbox: Option<[i64; 4]>,
     text: Option<String>,
@@ -1544,6 +1575,7 @@ fn resolve_target(
             .map(|found| {
                 TargetResolution::Found(FoundTarget {
                     page: Some(found.id.clone()),
+                    tier: EvidenceTier::PageScoped,
                     bbox: Some([0, 0, found.width, found.height]),
                     text: None,
                     from_table_cell: false,
@@ -1575,6 +1607,7 @@ fn target_from_element(element: &GroundingElement, element_index: Option<usize>)
         page: Some(element.page.clone()),
         bbox: element.bbox,
         text: element.text.clone(),
+        tier: EvidenceTier::ElementScoped,
         from_table_cell: false,
         element_index,
         element_ids: vec![element.id.clone()],
@@ -1587,6 +1620,7 @@ fn target_from_span(span: &GroundingSpan) -> FoundTarget {
         page: Some(span.page.clone()),
         bbox: span.bbox,
         text: Some(span.text.clone()),
+        tier: EvidenceTier::ExactSpan,
         from_table_cell: false,
         element_index: None,
         element_ids: span.element.iter().cloned().collect(),
@@ -1631,6 +1665,7 @@ fn target_from_cell(page: &str, cell: &GroundingCell) -> FoundTarget {
         page: Some(page.to_string()),
         bbox: cell.bbox,
         text: Some(cell.text.clone()),
+        tier: EvidenceTier::TableCell,
         from_table_cell: true,
         element_index: None,
         element_ids: Vec::new(),
@@ -1727,6 +1762,8 @@ fn adjacent_text_pair_target(
 
     Some(FoundTarget {
         page: Some(first.page.clone()),
+        // Two elements joined is still element precision, not span precision.
+        tier: EvidenceTier::ElementScoped,
         bbox: Some(union_bbox(first_bbox, second_bbox)),
         text: Some(joined),
         from_table_cell: false,

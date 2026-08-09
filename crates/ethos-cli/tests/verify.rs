@@ -326,6 +326,63 @@ fn verify_alpha_demo_report_predicates_match_goldens() {
     }
 }
 
+/// `evidence_tier` states how precisely each check bound its evidence.
+///
+/// One report exercising three tiers at once, because the value of the field is that a
+/// consumer reads it instead of deriving it from `match_method` plus the citation — and a
+/// derivation that only ever sees one tier is a derivation nobody has tested.
+#[test]
+fn each_check_states_how_precisely_it_bound_evidence() {
+    let root = repo_root();
+    let report = verify_report(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_grounded_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    let tiers: Vec<&str> = report["checks"]
+        .as_array()
+        .expect("checks is an array")
+        .iter()
+        .map(|check| {
+            check["evidence_tier"]
+                .as_str()
+                .expect("a grounded check states its tier")
+        })
+        .collect();
+
+    // element-scoped quote, table cell, page-scoped presence — in citation order
+    assert_eq!(tiers, ["element_scoped", "table_cell", "page_scoped"]);
+}
+
+/// A check that resolved nothing must not claim a precision it never achieved.
+#[test]
+fn unresolved_checks_state_no_tier() {
+    let root = repo_root();
+    let report = verify_report(&[
+        "verify",
+        root.join("schemas/examples/document.example.json")
+            .to_str()
+            .unwrap(),
+        "--citations",
+        root.join("examples/verify/native_ungrounded_citations.json")
+            .to_str()
+            .unwrap(),
+    ]);
+    for check in report["checks"].as_array().expect("checks is an array") {
+        if check["status"] == "not_found" {
+            assert!(
+                check["evidence_tier"].is_null(),
+                "a check that found nothing claimed a tier: {check}"
+            );
+        }
+    }
+}
+
 /// The attestation block names what produced the verdict.
 ///
 /// A version bump that forgot to flow through would silently produce reports attesting the

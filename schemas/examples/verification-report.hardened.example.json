@@ -23,6 +23,7 @@
       },
       "id": "v0001",
       "match_method": "normalized_text_contains",
+      "evidence_tier": "element_scoped",
       "provenance": {
         "element_role": "text_block",
         "heading_path": ["Q3 Financial Summary"],
@@ -54,6 +55,7 @@
       },
       "id": "v0002",
       "match_method": "table_cell_lookup",
+      "evidence_tier": "table_cell",
       "provenance": {
         "status": "not_applicable"
       },

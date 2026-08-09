@@ -1056,6 +1056,7 @@ mod tests {
             status: CheckStatus::Grounded,
             reason: None,
             match_method: MatchMethod::ExactTextContains,
+            evidence_tier: None,
             semantic_unverified: false,
             evidence: Some(Evidence {
                 text: text.map(str::to_string),
@@ -1255,6 +1256,7 @@ mod tests {
                     status: CheckStatus::Grounded,
                     reason: None,
                     match_method: MatchMethod::ExactTextContains,
+                    evidence_tier: None,
                     semantic_unverified: false,
                     evidence: Some(Evidence {
                         text: Some("Hello world".to_string()),
@@ -1284,6 +1286,7 @@ mod tests {
                     status: CheckStatus::Grounded,
                     reason: None,
                     match_method: MatchMethod::PresenceOnly,
+                    evidence_tier: None,
                     semantic_unverified: false,
                     evidence: Some(Evidence {
                         text: None,

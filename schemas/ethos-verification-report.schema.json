@@ -372,6 +372,17 @@
             "items": {
               "$ref": "#/$defs/warning_code"
             }
+          },
+          "evidence_tier": {
+            "type": "string",
+            "enum": [
+              "exact_span",
+              "table_cell",
+              "element_scoped",
+              "page_scoped",
+              "capability_limited"
+            ],
+            "description": "How precisely this check bound its evidence. Absent when nothing resolved."
           }
         }
       }

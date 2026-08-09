@@ -32,6 +32,7 @@
       },
       "status": "grounded",
       "match_method": "normalized_text_contains",
+      "evidence_tier": "element_scoped",
       "semantic_unverified": false,
       "evidence": {
         "text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.",
@@ -60,6 +61,7 @@
       },
       "status": "grounded",
       "match_method": "table_cell_lookup",
+      "evidence_tier": "table_cell",
       "semantic_unverified": false,
       "evidence": {
         "text": "$12.4M",

@@ -29,6 +29,7 @@
         "page": "p0001",
         "text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion."
       },
+      "evidence_tier": "element_scoped",
       "id": "v0001",
       "match_method": "normalized_text_contains",
       "semantic_unverified": false,
@@ -57,6 +58,7 @@
         "page": "p0001",
         "text": "$12.4M"
       },
+      "evidence_tier": "table_cell",
       "id": "v0002",
       "match_method": "table_cell_lookup",
       "semantic_unverified": false,
@@ -79,6 +81,7 @@
         ],
         "page": "p0001"
       },
+      "evidence_tier": "page_scoped",
       "id": "v0003",
       "match_method": "presence_only",
       "semantic_unverified": false,

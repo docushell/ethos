@@ -29,6 +29,7 @@
         "page": "p0001",
         "text": "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion."
       },
+      "evidence_tier": "element_scoped",
       "id": "v0001",
       "match_method": "normalized_text_contains",
       "reason": "text_mismatch",

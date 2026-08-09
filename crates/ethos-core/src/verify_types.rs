@@ -333,6 +333,10 @@ pub struct Check {
     /// Echoed evidence, when configured.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub evidence: Option<Evidence>,
+    /// How precisely this check bound its evidence. Absent when nothing resolved, so a
+    /// check that found no target never claims a precision it did not achieve.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub evidence_tier: Option<EvidenceTier>,
     /// Resolved source element ids, emitted only by the hardened report profile.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resolved_element_ids: Vec<String>,
@@ -385,6 +389,31 @@ pub struct VerificationReport {
     /// What produced this verdict. Required, never optional — an unattested report is the
     /// thing this field exists to prevent.
     pub attestation: Attestation,
+}
+
+/// How precisely a check bound its evidence.
+///
+/// A convenience projection, not a new fact: a consumer could derive it from
+/// `match_method` and the claim's citation. It exists so every consumer does not write
+/// that derivation and get it subtly wrong, which for a release decision is the kind of
+/// error nobody notices.
+///
+/// Ordered most to least precise. `table_cell` is not in the original four values; a table
+/// cell is a first-class v1 claim kind, and folding it into `element_scoped` would
+/// understate a precisely bound cell.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EvidenceTier {
+    /// Bound to a span: sub-element precision.
+    ExactSpan,
+    /// Bound to one table cell by (table, row, col).
+    TableCell,
+    /// Bound to a whole element.
+    ElementScoped,
+    /// Bound to a page only, with no element resolved.
+    PageScoped,
+    /// The source could not answer at the precision the citation asked for.
+    CapabilityLimited,
 }
 
 /// The verifier that produced a report.
@@ -1349,6 +1378,7 @@ mod tests {
             match_method: MatchMethod::ExactText,
             semantic_unverified: semantic,
             evidence: None,
+            evidence_tier: None,
             resolved_element_ids: Vec::new(),
             provenance: None,
             context_echo: None,
