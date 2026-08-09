@@ -22,9 +22,27 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 .PHONY: app-answer-release-contract app-answer-release-demo
 .PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check v0-5-performance-record v0-5-npm-b-activation-contract
 .PHONY: validator-ceiling-check
+.PHONY: release-gates
 
 $(ETHOS_BIN):
 	cargo build --locked -p ethos-cli
+
+# Publication gates. Parked out of CI during stealth (docs/ci-scope.md) because nothing
+# is being published; run this before any real publish. Keep every parked gate reachable
+# from here so nothing rots unnoticed.
+release-gates:
+	$(MAKE) light-check
+	$(MAKE) registry-surface-check
+	$(MAKE) release-state-check
+	$(MAKE) frozen-record-guards
+	$(MAKE) release-hygiene
+	$(MAKE) ethos-full-candidate-contract
+	$(MAKE) windows-verify-candidate-contract
+	$(MAKE) package-publication-dry-run-smoke
+	$(PYTHON) .github/scripts/test_readiness_gate.py
+	$(PYTHON) .github/scripts/test_execution_status.py
+	$(PYTHON) .github/scripts/test_validation_record_source.py
+	$(PYTHON) .github/scripts/test_v0_6_0_version_activation.py
 
 verify-alpha-tree:
 	cargo check --locked -p ethos-verify
