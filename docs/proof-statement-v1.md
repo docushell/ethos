@@ -3,9 +3,8 @@
 Status: **ruled, not implemented.** The three decisions in §1 are settled. Nothing here
 is built yet.
 
-One action remains before the first artifact ships: **pick and register the Ethos
-domain** (§1.2). Every `predicateType` string is permanent, so no artifact can be
-emitted until the domain is chosen and controlled.
+Base URI is locked to `https://docushell.com/ethos/` (§1.2). Build sequencing and the
+file-by-file touch list live in `docs/proof-statement-v1-implementation-plan.md`.
 
 Scope: this changes the *shape* of Ethos output artifacts and adds corroboration. It
 changes no verification semantics. If a proposal alters what `grounded` means for any
@@ -35,7 +34,7 @@ Ruled: the in-toto Statement is the native artifact.
   "subject": [
     { "name": "invoice.pdf", "digest": { "sha256": "3fc9…" } }
   ],
-  "predicateType": "https://<domain>/grounding/v1",
+  "predicateType": "https://docushell.com/ethos/grounding/v1",
   "predicate": { }
 }
 ```
@@ -51,16 +50,30 @@ reading it is half the value, it is a regression. DSSE stays a signing wrapper f
 
 Verify the current `_type` revision against the in-toto spec before freezing it.
 
-### 1.2 URI namespace — RULED: an Ethos-owned domain
+### 1.2 URI namespace — RULED: `https://docushell.com/ethos/`
 
-`predicateType` URIs are permanent and they announce who owns the format. The product
-argument is independence: the checker is not the thing being checked, and it runs without
-trusting DocuShell. A namespace reading `docushell.com` erodes that every time someone
-opens an artifact.
+`predicateType` URIs are permanent. A URL rather than a bare string because the namespace
+is what stops one vendor's `grounding/v1` colliding with another's, which matters as soon
+as a system consumes statements from more than one producer.
 
-**Blocking action:** the specific domain is not yet chosen or registered. No artifact can
-be emitted until it is, because the string cannot change afterward. Placeholder in this
-document is `ethos.dev`; substitute the real one before any code lands.
+**Base URI, locked:** `https://docushell.com/ethos/`
+
+```
+https://docushell.com/ethos/grounding/v1
+https://docushell.com/ethos/corroboration/v1
+https://docushell.com/ethos/security/v1
+```
+
+Shape is `<base>/<predicate>/v<n>` for all seven, with no exceptions.
+
+Chosen over a dedicated Ethos domain because a purchase and a perpetual renewal
+obligation is a poor trade against a weak branding signal. Independence is carried by the
+Apache-2.0 licence, offline key-free operation, and byte-reproducible results — none of
+which a hostname affects. The `/ethos/` path segment scopes the namespace, so a later move
+to a dedicated domain is a rename that keeps the old string as a recognised alias.
+
+**`v<n>` versions the predicate schema, never the product.** `grounding/v1` stays `v1`
+across Ethos 0.6, 0.7, and 1.0. It bumps only when the predicate's own shape breaks.
 
 ### 1.3 Source identity — RULED: representation hash authoritative
 
@@ -260,7 +273,6 @@ first.
 ## 8. Order of work
 
 ```
-0.  Register the Ethos domain (§1.2) — blocks every predicateType string
 1.  Statement wrapper: one builder in ethos-core, no command hand-rolls a statement
 2.  grounding/v1 as a pure re-wrap + payload-equivalence test + regenerated goldens
 3.  Attestation block, non-optional
