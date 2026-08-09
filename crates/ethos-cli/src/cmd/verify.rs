@@ -26,6 +26,7 @@ use ethos_core::grounding::{
     GroundingSpan, GroundingTable, PageGeometry, ParserIdentity,
 };
 use ethos_core::model::Document;
+use ethos_core::statement::{predicate_type, statement_bytes, Statement, Subject};
 use ethos_core::verify_types::{
     CapabilityLimit, Check, CheckReason, CheckStatus, ClaimKind, EvidenceOptions, MatchMethod,
     ProofLimitation, ProofStatus, ProofSummary, VerificationConfig, VerificationReport,
@@ -96,12 +97,24 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
         if let Some(crop_dir) = args.crop_dir.as_deref() {
             write_crop_artifacts(crop_dir, &report, crop_source_pdf.as_ref())?;
         }
-        return write_report(args.out, args.format, report, args.fail_on_ungrounded);
+        return write_report(
+            args.out,
+            args.format,
+            report,
+            args.fail_on_ungrounded,
+            &args.input,
+        );
     }
     let source = load_source(&args.input, args.grounding.as_deref())?;
     let report = ethos_verify::verify_claims(&source, citations, &config, config_sha256);
 
-    write_report(args.out, args.format, report, args.fail_on_ungrounded)
+    write_report(
+        args.out,
+        args.format,
+        report,
+        args.fail_on_ungrounded,
+        &args.input,
+    )
 }
 
 /// Verify an all-or-nothing NDJSON batch. Source/configuration validation happens once before
@@ -134,7 +147,7 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
     let mut any_ungrounded = false;
     for report in reports {
         any_ungrounded |= !report.all_evidence_grounded;
-        let mut line = verification_report_json_bytes(&report)?;
+        let mut line = verification_report_json_bytes(&report, &args.input)?;
         line.pop(); // The ordinary report framing newline becomes NDJSON framing below.
         output.extend_from_slice(&line);
         output.push(b'\n');
@@ -217,9 +230,10 @@ fn write_report(
     format: VerifyOutputFormat,
     report: VerificationReport,
     fail_on_ungrounded: bool,
+    input: &Path,
 ) -> Result<(), Failure> {
     let bytes = match format {
-        VerifyOutputFormat::Json => verification_report_json_bytes(&report)?,
+        VerifyOutputFormat::Json => verification_report_json_bytes(&report, input)?,
         VerifyOutputFormat::Summary => verification_report_summary_bytes(&report)?,
     };
     let all_evidence_grounded = report.all_evidence_grounded;
@@ -230,12 +244,48 @@ fn write_report(
     Ok(())
 }
 
-fn verification_report_json_bytes(report: &VerificationReport) -> Result<Vec<u8>, Failure> {
-    let value = serde_json::to_value(report).map_err(|e| EthosError::internal(e.to_string()))?;
-    let mut bytes =
-        ethos_core::c14n::c14n_bytes(&value).map_err(|e| EthosError::internal(e.message))?;
+fn verification_report_json_bytes(
+    report: &VerificationReport,
+    input: &Path,
+) -> Result<Vec<u8>, Failure> {
+    let statement = Statement::new(
+        representation_subject(input)?,
+        // subject[1] is deliberately absent. The only source binding available is the
+        // producer-declared PDF hash, and an in-toto subject is matched by digest — a
+        // consumer could resolve it and conclude Ethos verified against those bytes.
+        // Ethos never saw them. `docs/proof-statement-v1.md` §1.4 admits a source subject
+        // only when the binding is real; a declaration is not one.
+        None,
+        predicate_type("grounding", 1),
+        report,
+    );
+    let mut bytes = statement_bytes(&statement).map_err(|e| EthosError::internal(e.message))?;
     bytes.push(b'\n');
     Ok(bytes)
+}
+
+/// `subject[0]`: the representation Ethos actually read.
+///
+/// The digest is the SHA-256 of the input file's bytes, not the report's
+/// `document_fingerprint`. in-toto matches subjects by digest, so the value has to be
+/// something a consumer holding the same file can compute for themselves; the document
+/// fingerprint is the canonical-graph identity and is not derivable from the file. For the
+/// Grounding JSON path the two agree anyway, since `representation_sha256` hashes exactly
+/// these bytes.
+///
+/// Reading the file a second time is deliberate. Threading bytes through `load_source`,
+/// `read_document`, and both emit paths costs more than one re-read of an input already
+/// validated and size-capped.
+fn representation_subject(input: &Path) -> Result<Subject, Failure> {
+    let bytes = read_file_limited(input, default_max_input_bytes())?;
+    let name = input
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    Ok(Subject::sha256(
+        name,
+        ethos_core::c14n::sha256_hex_bytes(&bytes),
+    ))
 }
 
 fn verification_report_summary_bytes(report: &VerificationReport) -> Result<Vec<u8>, Failure> {
