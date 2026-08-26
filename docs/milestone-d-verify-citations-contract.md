@@ -61,9 +61,11 @@ Evidence grounding is literal and diagnostic:
   `schemas/ethos-verification-report.schema.json` and implemented by
   `compute_all_evidence_grounded`.
 
-`semantic_unverified` stays false for current literal checks. Work that needs paraphrase,
-arithmetic, cross-region synthesis, or unmodeled evidence must not be silently treated as
-grounded.
+`semantic_unverified` stays false for single-element literal checks; a grounded quote whose
+match exists only as the sanctioned adjacent-element join carries it, because the join's
+continuity is inferred from geometry rather than stated by any element. Work that needs
+paraphrase, arithmetic, cross-region synthesis, or unmodeled evidence must not be silently
+treated as grounded.
 
 ## Capability And Crop Boundaries
 

@@ -1,5 +1,5 @@
 {
-  "all_evidence_grounded": true,
+  "all_evidence_grounded": false,
   "attestation": {
     "claims_sha256": "bc750df695e997651171408e2df748c316397a7620ead800fc13fd17486b3911",
     "config_version": "default-v1",
@@ -31,7 +31,7 @@
       "evidence_tier": "element_scoped",
       "id": "v0001",
       "match_method": "normalized_text_contains",
-      "semantic_unverified": false,
+      "semantic_unverified": true,
       "status": "grounded",
       "warnings": []
     }

@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+### semantic_unverified has its first real producer — the adjacent-element join
+
+- Since the field shipped, every checker hard-coded `semantic_unverified: false`, while
+  consumers gated releases on it — a dead branch wearing a live contract. It now has
+  one deterministic producer: a grounded quote whose target is the sanctioned
+  adjacent-element join (the join exists only for quote claims). The text is literally present, but only as an
+  assembly of two elements whose continuity was inferred from geometry — no single
+  element states it — so the literal method the report names did not effectively check
+  meaning. The bit fails the gate closed, which has been its documented contract all
+  along: a joined match still grounds its check (the evidence trail survives), but the
+  report's `all_evidence_grounded` no longer certifies on it, and dispersion no longer
+  counts it as clean evidence. **This is verdict-visible**: reports whose grounding
+  passed through a join now gate false where they gated true, and the
+  `native-split-quote` golden moved with it. Consumers who wired the amber state for
+  this field finally see it fire.
+
+### The join's adjacency test learns real extractor geometry — opt-in
+
+- `matching.adjacency_gap_tolerance_q` (absent = 0 = the old exact edge-to-edge rule)
+  bounds the absolute distance between facing edges, so it admits both the gaps and
+  the slight overlaps real parsers produce. The exact-equality rule meant the
+  adjacent-quote repair almost never fired outside fixtures with perfectly touching
+  boxes. The knob hashes into `verification_config_sha256` like every matching knob,
+  and the default config's bytes — and therefore every existing config hash — are
+  unchanged.
+
+### A failed check can now say how close it came — `nearest_match`, hardened opt-in
+
+- Under `hardening.include_nearest_match`, a failed quote/value/table_cell check
+  carries a diagnostic nearest candidate: token-Jaccard similarity in integer basis
+  points (c14n admits no float) against the best element in citation scope — the
+  cited element, else the cited page, else the document. A mismatch at 9,900 basis
+  points is a normalization or citation slip a consumer can repair mechanically; a
+  mismatch at 300 is a fabrication. Today both arrive as the same bare
+  `text_mismatch` and downstream repair loops must treat them identically. The
+  verdict never reads the field, the flag is serialized only when true so existing
+  hardened config hashes hold, and setting it alone lifts the report to the hardened
+  1.1.0 schema exactly as the other hardening flags do.
+
+### One document load per batch, not one per line
+
+- `verify-batch` now builds the source index once — the document was cloned,
+  id-indexed, and (since the caches landed) text-normalized once per NDJSON line, up
+  to 1024 times per batch — and frames every line with one precomputed in-toto
+  subject instead of re-reading and re-hashing the input file per request. The new
+  `verify_claims_indexed` makes the same reuse available to library callers;
+  `verify_claims` is the unchanged safe wrapper. Output bytes are identical, and the
+  batch byte-equivalence tests pin that.
+
 ### Two ways the verifier stopped manufacturing false hallucination verdicts
 
 - A quote or value claim with a page-only locator now searches the cited page before

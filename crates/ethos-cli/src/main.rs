@@ -563,8 +563,20 @@ pub(crate) fn statement_json_bytes<P: serde::Serialize>(
     predicate: &str,
     payload: &P,
 ) -> Result<Vec<u8>, Failure> {
+    statement_json_bytes_with_subject(&representation_subject(input)?, predicate, payload)
+}
+
+/// [`statement_json_bytes`] over a precomputed subject. `verify-batch` computes the
+/// subject once and frames every NDJSON line with it — the subject digests the
+/// input file's bytes, so recomputing it per line meant re-reading and re-hashing
+/// the same file up to 1024 times per batch.
+pub(crate) fn statement_json_bytes_with_subject<P: serde::Serialize>(
+    subject: &ethos_core::statement::Subject,
+    predicate: &str,
+    payload: &P,
+) -> Result<Vec<u8>, Failure> {
     let statement = ethos_core::statement::Statement::new(
-        representation_subject(input)?,
+        subject.clone(),
         // subject[1] is omitted everywhere: the only source binding available is
         // producer-declared, and an in-toto subject is matched by digest (§1.4).
         None,
@@ -581,7 +593,9 @@ pub(crate) fn statement_json_bytes<P: serde::Serialize>(
 ///
 /// in-toto matches subjects by digest, so the value must be computable by a consumer
 /// holding the same file. A document fingerprint would not be.
-fn representation_subject(input: &Path) -> Result<ethos_core::statement::Subject, Failure> {
+pub(crate) fn representation_subject(
+    input: &Path,
+) -> Result<ethos_core::statement::Subject, Failure> {
     let bytes = read_file_limited(input, default_max_input_bytes())?;
     let name = input
         .file_name()

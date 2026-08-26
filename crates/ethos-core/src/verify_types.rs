@@ -326,9 +326,12 @@ pub struct Check {
     /// Method used.
     pub match_method: MatchMethod,
     /// True when grounding would require semantic judgment beyond the declared
-    /// method. Alpha literal checkers keep this false because unsupported or
-    /// non-literal claims fail closed instead of being marked semantically checked.
-    /// Such checks can never make `all_evidence_grounded` true.
+    /// method. Non-literal claims fail closed instead of being marked semantically
+    /// checked, and since the adjacent-join producer landed, a grounded text match
+    /// that exists only as a sanctioned join of two elements sets this true — the
+    /// quote is literally present, but its continuity was inferred from geometry
+    /// rather than stated by any single element. Such checks can never make
+    /// `all_evidence_grounded` true.
     pub semantic_unverified: bool,
     /// Echoed evidence, when configured.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -337,6 +340,13 @@ pub struct Check {
     /// check that found no target never claims a precision it did not achieve.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub evidence_tier: Option<EvidenceTier>,
+    /// Diagnostic nearest candidate for a failed text check, emitted only when the
+    /// hardened profile asks (`include_nearest_match`). It never touches the
+    /// verdict: it exists so a consumer can tell a near-miss (normalization or
+    /// citation slip, machine-repairable) from a fabrication without re-reading
+    /// the document.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nearest_match: Option<NearestMatch>,
     /// Resolved source element ids, emitted only by the hardened report profile.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resolved_element_ids: Vec<String>,
@@ -1252,6 +1262,14 @@ pub struct Matching {
     /// Tolerance in quanta for bbox containment checks.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bbox_containment_tolerance_q: Option<i64>,
+    /// Tolerance in quanta for the adjacent-quote join's edge test. Absent means 0:
+    /// edges must touch exactly, the pre-existing behavior — under which the repair
+    /// almost never fires on real parser output, because extractors leave gaps
+    /// between blocks. A small tolerance admits both gaps and slight overlaps
+    /// (the test is on the absolute distance between facing edges), and it hashes
+    /// into `verification_config_sha256` like every other matching knob.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub adjacency_gap_tolerance_q: Option<i64>,
 }
 
 /// Staleness policy.
@@ -1298,13 +1316,43 @@ pub struct HardeningOptions {
     /// Number of Unicode scalar values included on each side of a context match.
     #[serde(default)]
     pub context_window_chars: u32,
+    /// Attach a diagnostic nearest candidate to failed text checks. Never touches
+    /// the verdict; see [`NearestMatch`]. Serialized only when true, so every
+    /// hardened config written before this flag existed keeps its
+    /// `verification_config_sha256` byte for byte.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub include_nearest_match: bool,
 }
 
 impl HardeningOptions {
     /// True when the config requests any hardened report field.
     pub fn enabled(self) -> bool {
-        self.include_provenance || self.include_context_echo || self.include_dispersion
+        self.include_provenance
+            || self.include_context_echo
+            || self.include_dispersion
+            || self.include_nearest_match
     }
+}
+
+/// Diagnostic nearest candidate attached to a failed text check under the hardened
+/// profile's `include_nearest_match`. Similarity is integer basis points of token
+/// Jaccard overlap between the normalized claim text and the normalized candidate
+/// text — integers because c14n admits no float, Jaccard because the question this
+/// field answers is triage ("one slip away, or nowhere near?"), not ranking. The
+/// verdict never reads this field: a `mismatch` with a 9,900-basis-point neighbour
+/// is still a mismatch.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NearestMatch {
+    /// Candidate element id, when the candidate is an element.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub element_id: Option<String>,
+    /// Candidate source text, bounded to the first 512 Unicode scalar values.
+    pub text: String,
+    /// Token-Jaccard similarity in basis points (0..=10000).
+    pub similarity_bp: u16,
+    /// The pinned method that produced `similarity_bp`.
+    pub method: String,
 }
 
 /// The verification config (`urn:ethos:schema:verification-config:1`). Its c14n hash is
@@ -1350,6 +1398,9 @@ impl VerificationConfig {
                 text_normalization: TextNormalization::CollapseWhitespace,
                 case_sensitive: true,
                 bbox_containment_tolerance_q: Some(50),
+                // None keeps the default config's c14n bytes — and therefore every
+                // existing verification_config_sha256 — unchanged.
+                adjacency_gap_tolerance_q: None,
             },
             staleness: Staleness {
                 require_fingerprint_match: true,
@@ -1387,6 +1438,7 @@ mod tests {
             reason: None,
             match_method: MatchMethod::ExactText,
             semantic_unverified: semantic,
+            nearest_match: None,
             evidence: None,
             evidence_tier: None,
             resolved_element_ids: Vec::new(),

@@ -49,7 +49,7 @@ use ethos_core::grounding::{
 use ethos_core::verify_types::{
     compute_all_evidence_grounded, Attestation, CapabilityLimit, Check, CheckProvenance,
     CheckReason, CheckStatus, Claim, ClaimKind, ContextBoundary, ContextEcho, Evidence,
-    EvidenceDispersion, EvidenceTier, GroundingMeta, MatchMethod, ProvenanceStatus,
+    EvidenceDispersion, EvidenceTier, GroundingMeta, MatchMethod, NearestMatch, ProvenanceStatus,
     TextNormalization, VerificationConfig, VerificationReport, VerifierIdentity,
     HARDENED_VERIFICATION_SCHEMA_VERSION,
 };
@@ -943,8 +943,32 @@ pub fn verify_claims(
     config_sha256: String,
     claims_sha256: String,
 ) -> VerificationReport {
+    let index = SourceIndex::for_verification(source, config);
+    verify_claims_indexed(
+        source,
+        &index,
+        citations,
+        config,
+        config_sha256,
+        claims_sha256,
+    )
+}
+
+/// [`verify_claims`] over a prebuilt [`SourceIndex::for_verification`] index. The
+/// convenience wrapper builds the index per call, which is right for one request;
+/// a batch caller passes the same index to every request so the document is
+/// cloned, id-indexed, and text-normalized once per batch instead of once per
+/// line. The index must have been built from the same source and config, or the
+/// caches lie — the wrapper is the safe path, this is the fast one.
+pub fn verify_claims_indexed(
+    source: &dyn GroundingSource,
+    index: &SourceIndex,
+    citations: CitationInput,
+    config: &VerificationConfig,
+    config_sha256: String,
+    claims_sha256: String,
+) -> VerificationReport {
     let (citation_fingerprint, claims) = citations.into_parts();
-    let index = SourceIndex::new(source);
     let source_fingerprint = source.fingerprint();
     let mut capability_limits = capability_limits_for(index.capabilities, config);
     let fingerprint_stale = config.staleness.require_fingerprint_match
@@ -969,7 +993,7 @@ pub fn verify_claims(
             check_claim(
                 idx + 1,
                 source,
-                &index,
+                index,
                 claim,
                 config,
                 CheckContext {
@@ -982,6 +1006,7 @@ pub fn verify_claims(
                     include_provenance: hardening.is_some_and(|o| o.include_provenance),
                     include_context_echo: hardening.is_some_and(|o| o.include_context_echo),
                     context_window_chars: hardening.map_or(0, |o| o.context_window_chars),
+                    include_nearest_match: hardening.is_some_and(|o| o.include_nearest_match),
                 },
                 &mut unsupported,
             )
@@ -1060,6 +1085,7 @@ struct CheckContext {
     include_provenance: bool,
     include_context_echo: bool,
     context_window_chars: u32,
+    include_nearest_match: bool,
 }
 
 fn check_claim(
@@ -1082,6 +1108,7 @@ fn check_claim(
             reason: Some(CheckReason::MissingLocator),
             match_method: MatchMethod::None,
             semantic_unverified: false,
+            nearest_match: None,
             evidence: None,
             evidence_tier: None,
             resolved_element_ids: Vec::new(),
@@ -1100,6 +1127,7 @@ fn check_claim(
             reason: Some(CheckReason::UnsupportedClaimKind),
             match_method: MatchMethod::None,
             semantic_unverified: false,
+            nearest_match: None,
             evidence: None,
             evidence_tier: None,
             resolved_element_ids: Vec::new(),
@@ -1122,6 +1150,7 @@ fn check_claim(
             reason: Some(CheckReason::MissingRequiredText),
             match_method: MatchMethod::None,
             semantic_unverified: false,
+            nearest_match: None,
             evidence: None,
             evidence_tier: None,
             resolved_element_ids: Vec::new(),
@@ -1139,6 +1168,7 @@ fn check_claim(
             reason: Some(CheckReason::StaleFingerprint),
             match_method: MatchMethod::None,
             semantic_unverified: false,
+            nearest_match: None,
             evidence: None,
             evidence_tier: None,
             resolved_element_ids: Vec::new(),
@@ -1157,6 +1187,7 @@ fn check_claim(
             reason: Some(CheckReason::MissingSourceFingerprint),
             match_method: MatchMethod::None,
             semantic_unverified: false,
+            nearest_match: None,
             evidence: None,
             evidence_tier: None,
             resolved_element_ids: Vec::new(),
@@ -1174,6 +1205,7 @@ fn check_claim(
             reason: Some(CheckReason::MissingCitationFingerprint),
             match_method: MatchMethod::None,
             semantic_unverified: false,
+            nearest_match: None,
             evidence: None,
             evidence_tier: None,
             resolved_element_ids: Vec::new(),
@@ -1193,6 +1225,7 @@ fn check_claim(
                 reason: Some(reason),
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
+                nearest_match: None,
                 evidence: None,
                 evidence_tier: None,
                 resolved_element_ids: Vec::new(),
@@ -1209,6 +1242,7 @@ fn check_claim(
                 reason: Some(reason),
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
+                nearest_match: None,
                 evidence: None,
                 evidence_tier: None,
                 resolved_element_ids: Vec::new(),
@@ -1226,6 +1260,7 @@ fn check_claim(
                 reason: Some(reason),
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
+                nearest_match: None,
                 evidence: None,
                 evidence_tier: None,
                 resolved_element_ids: Vec::new(),
@@ -1248,6 +1283,7 @@ fn check_claim(
                 reason: Some(reason),
                 match_method: MatchMethod::None,
                 semantic_unverified: false,
+                nearest_match: None,
                 evidence: None,
                 evidence_tier: None,
                 resolved_element_ids: Vec::new(),
@@ -1287,13 +1323,30 @@ fn check_claim(
     // duplicated a status value would be two fields describing one thing, which is how they
     // start disagreeing.
     let evidence_tier = Some(target.tier);
+    let nearest_match = (context.include_nearest_match
+        && requires_text(claim.kind)
+        && status != CheckStatus::Grounded)
+        .then(|| nearest_match_for(index, &claim, config))
+        .flatten();
+    // The one deterministic semantic_unverified producer: a grounded text match
+    // whose target is a sanctioned adjacent-element join. The quote is literally
+    // present, but only as an assembly of two elements whose continuity was
+    // inferred from geometry — no single element states it — so meaning was not
+    // effectively checked by the literal method the report names. Setting the bit
+    // fails the gate closed (`compute_all_evidence_grounded` excludes it), which
+    // is the field's documented contract and the dormant amber state consumers
+    // already wired.
+    let semantic_unverified = status == CheckStatus::Grounded
+        && requires_text(claim.kind)
+        && target.element_boundary_char.is_some();
     Check {
         id: check_id,
         claim,
         status,
         reason,
         match_method,
-        semantic_unverified: false,
+        semantic_unverified,
+        nearest_match,
         evidence,
         evidence_tier,
         resolved_element_ids: context
@@ -1396,7 +1449,7 @@ struct FoundTarget {
 /// The lookup maps intentionally preserve first-match-by-id behavior, matching the trait default
 /// and current native/ODL adapters. If an adapter gives `element_by_id` different semantics, update
 /// this index at the same time so verifier resolution does not silently diverge.
-struct SourceIndex {
+pub struct SourceIndex {
     capabilities: ethos_core::grounding::Capabilities,
     pages: Vec<PageGeometry>,
     elements: Vec<GroundingElement>,
@@ -1405,6 +1458,18 @@ struct SourceIndex {
     element_by_id: BTreeMap<String, usize>,
     span_by_id: BTreeMap<String, usize>,
     table_by_id: BTreeMap<String, usize>,
+    /// Element positions per page id, in document order — the page scan's index.
+    elements_by_page: BTreeMap<String, Vec<usize>>,
+    /// Span positions per page id, in document order.
+    spans_by_page: BTreeMap<String, Vec<usize>>,
+    /// Element text normalized (and case-folded) under the config this index was
+    /// built for — `None` where the element has none. Populated only by
+    /// [`SourceIndex::for_verification`]; the anchor path neither builds nor reads
+    /// it. The page scan compares against these instead of re-normalizing the
+    /// whole page's text once per claim.
+    normalized_element_text: Vec<Option<String>>,
+    /// Span text normalized under the same config.
+    normalized_span_text: Vec<String>,
 }
 
 impl SourceIndex {
@@ -1425,6 +1490,20 @@ impl SourceIndex {
         let element_by_id = index_elements(&elements);
         let span_by_id = index_spans(&spans);
         let table_by_id = index_tables(&tables);
+        let mut elements_by_page: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+        for (position, element) in elements.iter().enumerate() {
+            elements_by_page
+                .entry(element.page.clone())
+                .or_default()
+                .push(position);
+        }
+        let mut spans_by_page: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+        for (position, span) in spans.iter().enumerate() {
+            spans_by_page
+                .entry(span.page.clone())
+                .or_default()
+                .push(position);
+        }
 
         SourceIndex {
             capabilities,
@@ -1435,7 +1514,37 @@ impl SourceIndex {
             element_by_id,
             span_by_id,
             table_by_id,
+            elements_by_page,
+            spans_by_page,
+            normalized_element_text: Vec::new(),
+            normalized_span_text: Vec::new(),
         }
+    }
+
+    /// Build the index once for a whole verification run under one config —
+    /// including the normalized-text caches the page scan reads. `verify_claims`
+    /// builds this per call; a batch caller builds it once and hands it to
+    /// [`verify_claims_indexed`] per request, which is the whole point: the
+    /// document is cloned, indexed, and normalized once instead of once per
+    /// NDJSON line.
+    pub fn for_verification(source: &dyn GroundingSource, config: &VerificationConfig) -> Self {
+        let mut index = Self::new(source);
+        index.normalized_element_text = index
+            .elements
+            .iter()
+            .map(|element| {
+                element
+                    .text
+                    .as_deref()
+                    .map(|text| normalize_for(config, text))
+            })
+            .collect();
+        index.normalized_span_text = index
+            .spans
+            .iter()
+            .map(|span| normalize_for(config, &span.text))
+            .collect();
+        index
     }
 
     fn span(&self, id: &str) -> Option<&GroundingSpan> {
@@ -1577,19 +1686,39 @@ fn resolve_target(
         // repair requires an element id, and a page cannot name which join was
         // meant.
         if let Some(expected) = claim.text.as_deref().filter(|_| requires_text(claim.kind)) {
-            if let Some((position, element)) =
-                index.elements.iter().enumerate().find(|(_, element)| {
-                    element.page == page
-                        && element.text.as_deref().is_some_and(|actual| {
-                            text_matches(claim.kind, expected, actual, config)
-                        })
+            // One normalization of the claim text, compared against the index's
+            // per-config caches — the scan used to re-normalize every element on
+            // the page once per claim.
+            let expected = normalize_for(config, expected);
+            let element_hit = index
+                .elements_by_page
+                .get(page)
+                .into_iter()
+                .flatten()
+                .find(|position| {
+                    index
+                        .normalized_element_text
+                        .get(**position)
+                        .and_then(Option::as_deref)
+                        .is_some_and(|actual| normalized_matches(claim.kind, &expected, actual))
                 })
-            {
+                .and_then(|position| Some((*position, index.elements.get(*position)?)));
+            if let Some((position, element)) = element_hit {
                 return TargetResolution::Found(target_from_element(element, Some(position)));
             }
-            if let Some(span) = index.spans.iter().find(|span| {
-                span.page == page && text_matches(claim.kind, expected, &span.text, config)
-            }) {
+            let span_hit = index
+                .spans_by_page
+                .get(page)
+                .into_iter()
+                .flatten()
+                .find(|position| {
+                    index
+                        .normalized_span_text
+                        .get(**position)
+                        .is_some_and(|actual| normalized_matches(claim.kind, &expected, actual))
+                })
+                .and_then(|position| index.spans.get(*position));
+            if let Some(span) = span_hit {
                 return TargetResolution::Found(target_from_span(span));
             }
         }
@@ -1835,7 +1964,11 @@ fn adjacent_text_pair_target(
     let (Some(first_bbox), Some(second_bbox)) = (first.bbox, second.bbox) else {
         return None;
     };
-    if !element_bboxes_are_adjacent(first_bbox, second_bbox) {
+    if !element_bboxes_are_adjacent(
+        first_bbox,
+        second_bbox,
+        config.matching.adjacency_gap_tolerance_q.unwrap_or(0),
+    ) {
         return None;
     }
     let first_text = first.text.as_deref()?;
@@ -1876,11 +2009,15 @@ fn bbox_area(bbox: [i64; 4]) -> u128 {
     width.saturating_mul(height)
 }
 
-fn element_bboxes_are_adjacent(first: [i64; 4], second: [i64; 4]) -> bool {
-    let same_line =
-        ranges_overlap_i64(first[1], first[3], second[1], second[3]) && first[2] == second[0];
-    let stacked =
-        ranges_overlap_i64(first[0], first[2], second[0], second[2]) && first[3] == second[1];
+fn element_bboxes_are_adjacent(first: [i64; 4], second: [i64; 4], gap_tolerance_q: i64) -> bool {
+    // The test is on the absolute distance between facing edges, so a tolerance
+    // admits both gaps and slight overlaps — real extractors produce both. Zero
+    // (the default, and every config that predates the knob) means exact
+    // edge-to-edge touch, the original rule.
+    let same_line = ranges_overlap_i64(first[1], first[3], second[1], second[3])
+        && (second[0] - first[2]).abs() <= gap_tolerance_q;
+    let stacked = ranges_overlap_i64(first[0], first[2], second[0], second[2])
+        && (second[1] - first[3]).abs() <= gap_tolerance_q;
     same_line || stacked
 }
 
@@ -2235,40 +2372,126 @@ fn text_match_method(kind: ClaimKind, config: &VerificationConfig) -> MatchMetho
     }
 }
 
+/// Normalize one side of a comparison under the config's profile, case fold
+/// included. `text_matches`, the page scan's cache build, and the nearest-match
+/// diagnostic all go through here, so "normalized under this config" means one
+/// thing everywhere.
+fn normalize_for(config: &VerificationConfig, text: &str) -> String {
+    let normalized = match config.matching.text_normalization {
+        TextNormalization::None => text.to_string(),
+        TextNormalization::CollapseWhitespace => normalize_quote(text),
+        TextNormalization::UnicodeCompatV1 => normalize_quote_unicode_compat_v1(text),
+    };
+    if config.matching.case_sensitive {
+        normalized
+    } else {
+        normalized.to_lowercase()
+    }
+}
+
+/// The comparison itself, over already-normalized sides.
+///
+/// Fails closed on expected text that normalized to nothing: `contains("")` is
+/// true of every element, so expected text a profile erased entirely — a lone
+/// soft hyphen under unicode_compat_v1, say — would ground everywhere while
+/// asserting nothing. The pre-claim gate only trims Unicode whitespace and cannot
+/// see what a fold erases, and the anchor path already refuses
+/// empty-after-normalization expected text; the verdict path must not be weaker.
+fn normalized_matches(kind: ClaimKind, expected: &str, actual: &str) -> bool {
+    if expected.is_empty() {
+        return false;
+    }
+    if kind == ClaimKind::Quote {
+        actual.contains(expected)
+    } else {
+        actual == expected
+    }
+}
+
 fn text_matches(
     kind: ClaimKind,
     expected: &str,
     actual: &str,
     config: &VerificationConfig,
 ) -> bool {
-    let (mut expected, mut actual) = match config.matching.text_normalization {
-        TextNormalization::None => (expected.to_string(), actual.to_string()),
-        TextNormalization::CollapseWhitespace => {
-            (normalize_quote(expected), normalize_quote(actual))
-        }
-        TextNormalization::UnicodeCompatV1 => (
-            normalize_quote_unicode_compat_v1(expected),
-            normalize_quote_unicode_compat_v1(actual),
-        ),
-    };
-    if !config.matching.case_sensitive {
-        expected = expected.to_lowercase();
-        actual = actual.to_lowercase();
+    normalized_matches(
+        kind,
+        &normalize_for(config, expected),
+        &normalize_for(config, actual),
+    )
+}
+
+/// Diagnostic nearest candidate for a failed text check (`include_nearest_match`).
+///
+/// Candidate scope narrows with the citation: the cited element when one is
+/// named, else the cited page's elements, else every element. Similarity is
+/// token-set Jaccard in integer basis points — whitespace-split tokens of the
+/// config-normalized texts, integer arithmetic throughout because c14n admits no
+/// float. Ties break to the earlier element in document order. The verdict never
+/// reads the result; it exists so a consumer can tell a near-miss from a
+/// fabrication without re-reading the document.
+fn nearest_match_for(
+    index: &SourceIndex,
+    claim: &Claim,
+    config: &VerificationConfig,
+) -> Option<NearestMatch> {
+    const NEAREST_MATCH_TEXT_CHARS: usize = 512;
+    let expected = normalize_for(config, claim.text.as_deref()?);
+    let expected_tokens: std::collections::BTreeSet<&str> = expected.split_whitespace().collect();
+    if expected_tokens.is_empty() {
+        return None;
     }
-    // Fail closed on claim text that normalized to nothing: `contains("")` is true
-    // of every element, so expected text a profile erased entirely — a lone soft
-    // hyphen under unicode_compat_v1, say — would ground everywhere while asserting
-    // nothing. The pre-claim gate only trims Unicode whitespace and cannot see what
-    // a fold erases, and the anchor path already refuses empty-after-normalization
-    // expected text; the verdict path must not be weaker.
-    if expected.is_empty() {
-        return false;
-    }
-    if kind == ClaimKind::Quote {
-        actual.contains(&expected)
+    let candidates: Vec<usize> = if let Some(element_id) = claim.citation.element_id.as_deref() {
+        index
+            .element_by_id
+            .get(element_id)
+            .copied()
+            .into_iter()
+            .collect()
+    } else if let Some(page) = claim.citation.page.as_deref() {
+        index
+            .elements_by_page
+            .get(page)
+            .cloned()
+            .unwrap_or_default()
     } else {
-        actual == expected
+        (0..index.elements.len()).collect()
+    };
+    let mut best: Option<(u16, usize)> = None;
+    for position in candidates {
+        let Some(normalized) = index
+            .normalized_element_text
+            .get(position)
+            .and_then(Option::as_deref)
+        else {
+            continue;
+        };
+        let candidate_tokens: std::collections::BTreeSet<&str> =
+            normalized.split_whitespace().collect();
+        if candidate_tokens.is_empty() {
+            continue;
+        }
+        let intersection = expected_tokens.intersection(&candidate_tokens).count();
+        let union = expected_tokens.union(&candidate_tokens).count();
+        let similarity_bp = ((intersection * 10_000) / union) as u16;
+        if best.is_none_or(|(best_bp, _)| similarity_bp > best_bp) {
+            best = Some((similarity_bp, position));
+        }
     }
+    let (similarity_bp, position) = best?;
+    let element = index.elements.get(position)?;
+    Some(NearestMatch {
+        element_id: Some(element.id.clone()),
+        text: element
+            .text
+            .as_deref()
+            .unwrap_or_default()
+            .chars()
+            .take(NEAREST_MATCH_TEXT_CHARS)
+            .collect(),
+        similarity_bp,
+        method: "token_jaccard_v1".to_string(),
+    })
 }
 
 /// One folded character under `unicode_compat_v1`: what a single source character
@@ -2616,6 +2839,7 @@ mod tests {
             include_context_echo: true,
             include_dispersion: true,
             context_window_chars: 12,
+            include_nearest_match: false,
         });
         config
     }
@@ -2804,7 +3028,10 @@ mod tests {
         });
         let report = verify_claims(&source, citations, &config, "0".repeat(64), "1".repeat(64));
 
-        assert!(report.all_evidence_grounded);
+        // Grounded but semantic_unverified: the join is the semantic producer's
+        // one trigger, and the bit fails the gate closed by contract.
+        assert!(!report.all_evidence_grounded);
+        assert!(report.checks[0].semantic_unverified);
         assert_eq!(
             report.checks[0].resolved_element_ids,
             vec!["split-a", "split-b"]
@@ -2816,7 +3043,10 @@ mod tests {
             .unwrap();
         assert_eq!(boundary.left_element_id, "split-a");
         assert_eq!(boundary.right_element_id, "split-b");
-        assert_eq!(report.dispersion.as_ref().unwrap().elements, 2);
+        // Dispersion counts only checks that are grounded AND semantically clean,
+        // and the joined check now carries semantic_unverified — so it contributes
+        // no evidence spread.
+        assert_eq!(report.dispersion.as_ref().unwrap().elements, 0);
     }
 
     #[test]
@@ -2886,7 +3116,10 @@ mod tests {
             )],
         );
 
-        assert!(report.all_evidence_grounded);
+        // The joined match still grounds the check; the semantic_unverified bit it
+        // now carries keeps the report gate closed.
+        assert!(!report.all_evidence_grounded);
+        assert!(report.checks[0].semantic_unverified);
         assert_eq!(report.checks[0].status, CheckStatus::Grounded);
         assert_eq!(
             report.checks[0].match_method,
@@ -3501,6 +3734,231 @@ mod tests {
     }
 
     #[test]
+    fn verify_claims_indexed_report_equals_the_unindexed_wrapper() {
+        let elements = vec![element(
+            "e1",
+            "p0001",
+            [100, 100, 700, 200],
+            Some("Revenue grew to $12.4M in Q3 2025"),
+        )];
+        let claims = vec![claim(
+            ClaimKind::Quote,
+            Some("Revenue grew"),
+            Citation {
+                page: Some("p0001".into()),
+                ..Default::default()
+            },
+        )];
+        let source = ElementSource {
+            elements: elements.clone(),
+            spans: Vec::new(),
+            coordinate_origin: CoordinateOrigin::TopLeft,
+        };
+        let cfg = VerificationConfig::default_v1();
+        let citations = || {
+            CitationInput::Envelope(CitationEnvelope {
+                document_fingerprint: source.fingerprint(),
+                claims: claims.clone(),
+            })
+        };
+        let wrapped = verify_claims(&source, citations(), &cfg, "0".repeat(64), "1".repeat(64));
+        let index = SourceIndex::for_verification(&source, &cfg);
+        let indexed = verify_claims_indexed(
+            &source,
+            &index,
+            citations(),
+            &cfg,
+            "0".repeat(64),
+            "1".repeat(64),
+        );
+        assert_eq!(wrapped, indexed);
+    }
+
+    #[test]
+    fn nearest_match_names_the_near_miss_and_stays_off_the_verdict() {
+        let mut config = unicode_compat_config();
+        config.schema_version = HARDENED_VERIFICATION_SCHEMA_VERSION.to_string();
+        config.hardening = Some(HardeningOptions {
+            include_provenance: false,
+            include_context_echo: false,
+            include_dispersion: false,
+            context_window_chars: 0,
+            include_nearest_match: true,
+        });
+        let elements = vec![
+            element("intro", "p0001", [100, 100, 400, 200], Some("Introduction")),
+            element(
+                "body",
+                "p0001",
+                [100, 300, 700, 400],
+                Some("Operating revenue grew to $12.4M in Q3 2025"),
+            ),
+        ];
+
+        // One word off: the diagnostic names the culprit element with a high
+        // score, and the verdict is still a mismatch.
+        let near_miss = verify_elements_with_config(
+            elements.clone(),
+            vec![claim(
+                ClaimKind::Quote,
+                Some("Operating revenue grew to $12.5M in Q3 2025"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )],
+            &config,
+        );
+        assert_eq!(near_miss.checks[0].status, CheckStatus::Mismatch);
+        let nearest = near_miss.checks[0]
+            .nearest_match
+            .as_ref()
+            .expect("near miss carries a diagnostic");
+        assert_eq!(nearest.element_id.as_deref(), Some("body"));
+        assert_eq!(nearest.method, "token_jaccard_v1");
+        assert!(
+            nearest.similarity_bp >= 7000,
+            "one token off should score high, got {}",
+            nearest.similarity_bp
+        );
+
+        // A fabricated quote scores near zero — same field, opposite triage.
+        let fabricated = verify_elements_with_config(
+            elements,
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The board approved the merger unanimously"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )],
+            &config,
+        );
+        let nearest = fabricated.checks[0]
+            .nearest_match
+            .as_ref()
+            .expect("fabrication still gets a best candidate");
+        assert!(
+            nearest.similarity_bp <= 2000,
+            "unrelated text should score low, got {}",
+            nearest.similarity_bp
+        );
+    }
+
+    #[test]
+    fn nearest_match_is_absent_without_the_flag_and_on_grounded_checks() {
+        let elements = vec![element(
+            "e1",
+            "p0001",
+            [100, 100, 700, 200],
+            Some("Revenue grew to $12.4M in Q3 2025"),
+        )];
+        let default_profile = verify_elements(
+            elements.clone(),
+            vec![claim(
+                ClaimKind::Quote,
+                Some("nothing like the document"),
+                Citation {
+                    element_id: Some("e1".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+        assert!(default_profile.checks[0].nearest_match.is_none());
+
+        let mut config = VerificationConfig::default_v1();
+        config.schema_version = HARDENED_VERIFICATION_SCHEMA_VERSION.to_string();
+        config.hardening = Some(HardeningOptions {
+            include_provenance: false,
+            include_context_echo: false,
+            include_dispersion: false,
+            context_window_chars: 0,
+            include_nearest_match: true,
+        });
+        let grounded = verify_elements_with_config(
+            elements,
+            vec![claim(
+                ClaimKind::Quote,
+                Some("Revenue grew"),
+                Citation {
+                    element_id: Some("e1".into()),
+                    ..Default::default()
+                },
+            )],
+            &config,
+        );
+        assert_eq!(grounded.checks[0].status, CheckStatus::Grounded);
+        assert!(grounded.checks[0].nearest_match.is_none());
+    }
+
+    #[test]
+    fn adjacency_gap_tolerance_joins_fragments_the_exact_rule_refuses() {
+        let elements = vec![
+            element(
+                "split-a",
+                "p0001",
+                [100, 100, 400, 200],
+                Some("The alpha trust loop verifies "),
+            ),
+            // A 30q gap between the facing edges — real extractors leave one.
+            element(
+                "split-b",
+                "p0001",
+                [430, 100, 700, 200],
+                Some("grounded evidence"),
+            ),
+        ];
+        let quote = claim(
+            ClaimKind::Quote,
+            Some("The alpha trust loop verifies grounded evidence"),
+            Citation {
+                element_id: Some("split-a".into()),
+                ..Default::default()
+            },
+        );
+
+        let exact_rule = verify_elements(elements.clone(), vec![quote.clone()]);
+        assert_eq!(exact_rule.checks[0].status, CheckStatus::Mismatch);
+
+        let mut config = VerificationConfig::default_v1();
+        config.matching.adjacency_gap_tolerance_q = Some(50);
+        let tolerant = verify_elements_with_config(elements.clone(), vec![quote.clone()], &config);
+        assert_eq!(tolerant.checks[0].status, CheckStatus::Grounded);
+        // Joined evidence still carries the semantic bit and holds the gate.
+        assert!(tolerant.checks[0].semantic_unverified);
+        assert!(!tolerant.all_evidence_grounded);
+
+        // Some(0) is the exact rule by another spelling, not a third behavior.
+        let mut zero = VerificationConfig::default_v1();
+        zero.matching.adjacency_gap_tolerance_q = Some(0);
+        let explicit_zero = verify_elements_with_config(elements, vec![quote.clone()], &zero);
+        assert_eq!(explicit_zero.checks[0].status, CheckStatus::Mismatch);
+
+        // The tolerance is on the absolute edge distance, so a slight overlap —
+        // which real extractors also produce — joins under the same knob.
+        let overlapping = vec![
+            element(
+                "split-a",
+                "p0001",
+                [100, 100, 400, 200],
+                Some("The alpha trust loop verifies "),
+            ),
+            element(
+                "split-b",
+                "p0001",
+                [370, 100, 700, 200],
+                Some("grounded evidence"),
+            ),
+        ];
+        let mut config = VerificationConfig::default_v1();
+        config.matching.adjacency_gap_tolerance_q = Some(50);
+        let overlapped = verify_elements_with_config(overlapping, vec![quote], &config);
+        assert_eq!(overlapped.checks[0].status, CheckStatus::Grounded);
+        assert!(overlapped.checks[0].semantic_unverified);
+    }
+
+    #[test]
     fn quote_claim_grounds_when_element_id_points_to_second_adjacent_fragment() {
         let report = verify_elements(
             vec![
@@ -3527,7 +3985,10 @@ mod tests {
             )],
         );
 
-        assert!(report.all_evidence_grounded);
+        // Grounded via the sanctioned join, so the check carries
+        // semantic_unverified and the gate stays closed.
+        assert!(!report.all_evidence_grounded);
+        assert!(report.checks[0].semantic_unverified);
         assert_eq!(report.checks[0].status, CheckStatus::Grounded);
         assert_eq!(
             report.checks[0]

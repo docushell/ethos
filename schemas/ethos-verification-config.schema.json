@@ -4,38 +4,74 @@
   "title": "Ethos verification config",
   "description": "Pinned verification behavior. verification_config_sha256 in the report = sha256 over c14n of this object, so two reports are comparable only under the same config hash. v1 match methods are deliberately literal: text equality, explicit quote containment, table cell lookup, bbox containment, presence. Nothing fuzzy, nothing semantic.",
   "type": "object",
-  "required": ["schema_version", "config_version", "claim_kinds", "matching", "staleness", "limits"],
+  "required": [
+    "schema_version",
+    "config_version",
+    "claim_kinds",
+    "matching",
+    "staleness",
+    "limits"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
-    "config_version": { "type": "string", "description": "User-facing label for this config (e.g. 'default-v1')." },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "config_version": {
+      "type": "string",
+      "description": "User-facing label for this config (e.g. 'default-v1')."
+    },
     "claim_kinds": {
       "type": "array",
       "description": "Claim kinds this run supports. Configs accept only the four v1 literal kinds: quote, value, presence, and table_cell. Non-v1 citation kinds are reported under unsupported_claim_kinds rather than enabled here.",
-      "items": { "enum": ["quote", "value", "presence", "table_cell"] },
+      "items": {
+        "enum": [
+          "quote",
+          "value",
+          "presence",
+          "table_cell"
+        ]
+      },
       "minItems": 1,
       "uniqueItems": true
     },
     "matching": {
       "type": "object",
-      "required": ["text_normalization", "case_sensitive"],
+      "required": [
+        "text_normalization",
+        "case_sensitive"
+      ],
       "additionalProperties": false,
       "properties": {
         "text_normalization": {
-          "enum": ["none", "collapse_whitespace", "unicode_compat_v1"],
+          "enum": [
+            "none",
+            "collapse_whitespace",
+            "unicode_compat_v1"
+          ],
           "description": "'collapse_whitespace': normalize line endings, trim, and collapse runs of ASCII whitespace to a single ASCII space — the only normalization in v1. 'unicode_compat_v1' (opt-in): fold a pinned, versioned table of Unicode lookalikes to ASCII (curly quotes, the dash family, common Latin ligatures, U+2026; soft hyphen / zero-width space / U+FEFF erased), then trim and collapse runs of Unicode whitespace to one ASCII space. Still literal and deterministic — a paraphrase does not ground; the table is versioned by the profile name and never edited. It exists because PDF extraction emits U+2019 and U+00A0 where a model quoting the same words types an apostrophe and a space, and those false mismatches read downstream as fabricated quotes."
         },
-        "case_sensitive": { "type": "boolean" },
+        "case_sensitive": {
+          "type": "boolean"
+        },
         "bbox_containment_tolerance_q": {
           "type": "integer",
           "minimum": 0,
           "description": "Tolerance in quanta when checking citation bbox containment against evidence bbox. Integer quanta keep the config float-free."
+        },
+        "adjacency_gap_tolerance_q": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Tolerance in quanta for the adjacent-quote join's edge test, measured as the absolute distance between facing edges, so it admits both gaps and slight overlaps. Absent means 0: edges must touch exactly (the pre-existing rule, under which the repair almost never fires on real parser output). Integer quanta keep the config float-free."
         }
       }
     },
     "staleness": {
       "type": "object",
-      "required": ["require_fingerprint_match"],
+      "required": [
+        "require_fingerprint_match"
+      ],
       "additionalProperties": false,
       "properties": {
         "require_fingerprint_match": {
@@ -46,63 +82,158 @@
     },
     "limits": {
       "type": "object",
-      "required": ["max_checks"],
+      "required": [
+        "max_checks"
+      ],
       "additionalProperties": false,
       "properties": {
-        "max_checks": { "type": "integer", "minimum": 1 }
+        "max_checks": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "evidence": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "include_text": { "type": "boolean", "description": "Echo found evidence text into the report." },
-        "include_crops": { "type": "boolean", "description": "Crop-aware L2 evidence (Milestone D; requires crop_support capability)." }
+        "include_text": {
+          "type": "boolean",
+          "description": "Echo found evidence text into the report."
+        },
+        "include_crops": {
+          "type": "boolean",
+          "description": "Crop-aware L2 evidence (Milestone D; requires crop_support capability)."
+        }
       }
     },
     "hardening": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "include_provenance": { "type": "boolean", "default": false },
-        "include_context_echo": { "type": "boolean", "default": false },
-        "include_dispersion": { "type": "boolean", "default": false },
-        "context_window_chars": { "type": "integer", "minimum": 0, "maximum": 4096, "default": 0 }
+        "include_provenance": {
+          "type": "boolean",
+          "default": false
+        },
+        "include_context_echo": {
+          "type": "boolean",
+          "default": false
+        },
+        "include_dispersion": {
+          "type": "boolean",
+          "default": false
+        },
+        "context_window_chars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096,
+          "default": 0
+        },
+        "include_nearest_match": {
+          "type": "boolean",
+          "default": false,
+          "description": "Attach a diagnostic nearest candidate to failed text checks: token-Jaccard similarity in integer basis points against the nearest element in citation scope. Never touches the verdict; it exists so a consumer can tell a near-miss from a fabrication without re-reading the document."
+        }
       }
     }
   },
   "allOf": [
     {
       "if": {
-        "required": ["hardening"],
+        "required": [
+          "hardening"
+        ],
         "properties": {
           "hardening": {
             "anyOf": [
-              { "required": ["include_provenance"], "properties": { "include_provenance": { "const": true } } },
-              { "required": ["include_context_echo"], "properties": { "include_context_echo": { "const": true } } },
-              { "required": ["include_dispersion"], "properties": { "include_dispersion": { "const": true } } }
+              {
+                "required": [
+                  "include_provenance"
+                ],
+                "properties": {
+                  "include_provenance": {
+                    "const": true
+                  }
+                }
+              },
+              {
+                "required": [
+                  "include_context_echo"
+                ],
+                "properties": {
+                  "include_context_echo": {
+                    "const": true
+                  }
+                }
+              },
+              {
+                "required": [
+                  "include_dispersion"
+                ],
+                "properties": {
+                  "include_dispersion": {
+                    "const": true
+                  }
+                }
+              },
+              {
+                "required": [
+                  "include_nearest_match"
+                ],
+                "properties": {
+                  "include_nearest_match": {
+                    "const": true
+                  }
+                }
+              }
             ]
           }
         }
       },
-      "then": { "properties": { "schema_version": { "const": "1.1.0" } } },
-      "else": { "properties": { "schema_version": { "const": "1.0.0" } } }
+      "then": {
+        "properties": {
+          "schema_version": {
+            "const": "1.1.0"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "schema_version": {
+            "const": "1.0.0"
+          }
+        }
+      }
     },
     {
       "if": {
-        "required": ["hardening"],
+        "required": [
+          "hardening"
+        ],
         "properties": {
           "hardening": {
-            "required": ["include_context_echo"],
-            "properties": { "include_context_echo": { "const": true } }
+            "required": [
+              "include_context_echo"
+            ],
+            "properties": {
+              "include_context_echo": {
+                "const": true
+              }
+            }
           }
         }
       },
       "then": {
         "properties": {
           "hardening": {
-            "required": ["context_window_chars"],
-            "properties": { "context_window_chars": { "minimum": 1 } }
+            "required": [
+              "context_window_chars"
+            ],
+            "properties": {
+              "context_window_chars": {
+                "minimum": 1
+              }
+            }
           }
         }
       }

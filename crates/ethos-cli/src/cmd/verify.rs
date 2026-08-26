@@ -147,6 +147,9 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
         ethos_core::c14n::sha256_hex(&config_value).map_err(|e| EthosError::internal(e.message))?;
 
     let source = load_source(&args.input, args.grounding.as_deref())?;
+    // One index for the whole batch: the document is cloned, id-indexed, and
+    // text-normalized once here instead of once per NDJSON line.
+    let index = ethos_verify::SourceIndex::for_verification(&source, &config);
     if args.merged {
         let citation = merge_batch_citations(citations)?;
         // The merged input must satisfy the attested config exactly as one `verify`
@@ -154,8 +157,14 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
         // more checks than the max_checks its own verification_config_sha256 pins.
         validate_citation_input(&citation, &config)?;
         let claims_sha256 = claims_sha256(&citation)?;
-        let report =
-            ethos_verify::verify_claims(&source, citation, &config, config_sha256, claims_sha256);
+        let report = ethos_verify::verify_claims_indexed(
+            &source,
+            &index,
+            citation,
+            &config,
+            config_sha256,
+            claims_sha256,
+        );
         return write_report(
             args.out,
             VerifyOutputFormat::Json,
@@ -164,13 +173,16 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
             &args.input,
         );
     }
-    let reports = batch_reports(&source, citations, &config, &config_sha256)?;
+    let reports = batch_reports(&source, &index, citations, &config, &config_sha256)?;
 
+    // One subject for every line, too: the subject digests the input file's bytes,
+    // and recomputing it per line re-read and re-hashed the same file per request.
+    let subject = crate::representation_subject(&args.input)?;
     let mut output = Vec::new();
     let mut any_ungrounded = false;
     for report in reports {
         any_ungrounded |= !report.all_evidence_grounded;
-        let mut line = verification_report_json_bytes(&report, &args.input)?;
+        let mut line = crate::statement_json_bytes_with_subject(&subject, "grounding", &report)?;
         line.pop(); // The ordinary report framing newline becomes NDJSON framing below.
         output.extend_from_slice(&line);
         output.push(b'\n');
@@ -289,6 +301,7 @@ fn merge_batch_citations(citations: Vec<CitationInput>) -> Result<CitationInput,
 
 fn batch_reports(
     source: &dyn GroundingSource,
+    index: &ethos_verify::SourceIndex,
     citations: Vec<CitationInput>,
     config: &VerificationConfig,
     config_sha256: &str,
@@ -297,8 +310,9 @@ fn batch_reports(
         .into_iter()
         .map(|citation| {
             let claims_sha256 = claims_sha256(&citation)?;
-            Ok(ethos_verify::verify_claims(
+            Ok(ethos_verify::verify_claims_indexed(
                 source,
+                index,
                 citation,
                 config,
                 config_sha256.to_string(),
@@ -1004,6 +1018,15 @@ fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failu
             "verification config bbox_containment_tolerance_q must be non-negative".to_string(),
         ));
     }
+    if config
+        .matching
+        .adjacency_gap_tolerance_q
+        .is_some_and(|tolerance| tolerance < 0)
+    {
+        return Err(Failure::Usage(
+            "verification config adjacency_gap_tolerance_q must be non-negative".to_string(),
+        ));
+    }
     if config.limits.max_checks == 0 {
         return Err(Failure::Usage(
             "verification config max_checks must be at least 1".to_string(),
@@ -1090,6 +1113,7 @@ mod tests {
             match_method: MatchMethod::ExactTextContains,
             evidence_tier: None,
             semantic_unverified: false,
+            nearest_match: None,
             evidence: Some(Evidence {
                 text: text.map(str::to_string),
                 page: Some("p0001".to_string()),
@@ -1290,6 +1314,7 @@ mod tests {
                     match_method: MatchMethod::ExactTextContains,
                     evidence_tier: None,
                     semantic_unverified: false,
+                    nearest_match: None,
                     evidence: Some(Evidence {
                         text: Some("Hello world".to_string()),
                         page: Some("p0001".to_string()),
@@ -1320,6 +1345,7 @@ mod tests {
                     match_method: MatchMethod::PresenceOnly,
                     evidence_tier: None,
                     semantic_unverified: false,
+                    nearest_match: None,
                     evidence: Some(Evidence {
                         text: None,
                         page: Some("p0001".to_string()),

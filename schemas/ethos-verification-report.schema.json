@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:verification-report:1",
   "title": "Ethos verification report (verification_report.json)",
-  "description": "Citation evidence verification over any GroundingSource (Ethos or foreign parser output). Verification is EVIDENCE GROUNDING \u2014 the cited region exists, its text matches by a declared method, the fingerprint is fresh. It is never pixel-level, semantic, or arithmetic proof of an answer. Capability-driven downgrades are explicit: missing spans, missing fingerprints, or foreign coordinate systems appear as capability_limited warnings, never silent approximation. INVARIANT (PRD \u00a78): all_evidence_grounded is true only when (a) at least one supported check exists, (b) every supported check has status 'grounded', (c) no check has semantic_unverified=true, (d) unsupported_claim_kinds is empty, and (e) fingerprint_stale is false. The reference implementation enforces this; the schema documents it.",
+  "description": "Citation evidence verification over any GroundingSource (Ethos or foreign parser output). Verification is EVIDENCE GROUNDING — the cited region exists, its text matches by a declared method, the fingerprint is fresh. It is never pixel-level, semantic, or arithmetic proof of an answer. Capability-driven downgrades are explicit: missing spans, missing fingerprints, or foreign coordinate systems appear as capability_limited warnings, never silent approximation. INVARIANT (PRD §8): all_evidence_grounded is true only when (a) at least one supported check exists, (b) every supported check has status 'grounded', (c) no check has semantic_unverified=true, (d) unsupported_claim_kinds is empty, and (e) fingerprint_stale is false. The reference implementation enforces this; the schema documents it.",
   "type": "object",
   "required": [
     "all_evidence_grounded",
@@ -267,7 +267,7 @@
           },
           "semantic_unverified": {
             "type": "boolean",
-            "description": "True whenever grounding the claim would require semantic judgment beyond the declared match method (e.g. paraphrase, arithmetic, cross-region synthesis). In v1, literal checkers always set this false; non-literal claims fail closed as unsupported_claim_kind instead. Such checks can never make all_evidence_grounded true."
+            "description": "True whenever grounding the claim would require semantic judgment beyond the declared match method (e.g. paraphrase, arithmetic, cross-region synthesis). Non-literal claims fail closed as unsupported_claim_kind instead, and one literal producer now sets it: a grounded quote whose match exists only as the sanctioned adjacent-element join, where continuity was inferred from geometry rather than stated by any single element. Such checks can never make all_evidence_grounded true."
           },
           "resolved_element_ids": {
             "type": "array",
@@ -382,6 +382,33 @@
               "page_scoped"
             ],
             "description": "How precisely this check bound its evidence. Absent when nothing resolved."
+          },
+          "nearest_match": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text",
+              "similarity_bp",
+              "method"
+            ],
+            "properties": {
+              "element_id": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 2048
+              },
+              "similarity_bp": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "method": {
+                "type": "string"
+              }
+            },
+            "description": "Diagnostic nearest candidate for a failed text check, emitted only under the hardened profile's include_nearest_match. The verdict never reads it: a mismatch with a 9,900-basis-point neighbour is still a mismatch."
           }
         }
       }

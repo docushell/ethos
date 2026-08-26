@@ -1851,8 +1851,14 @@ fn native_verify_grounds_split_quote_across_adjacent_elements() {
         citations.to_str().unwrap(),
     ]);
 
-    assert_eq!(report["all_evidence_grounded"], true);
+    // The join still grounds the literal text, but since the semantic_unverified
+    // producer landed, a match that exists only as a geometry-inferred assembly of
+    // two elements carries the bit — and the bit fails the gate closed, which is
+    // its documented contract. The check is the evidence trail; the gate says the
+    // report as a whole no longer certifies on it.
+    assert_eq!(report["all_evidence_grounded"], false);
     assert_eq!(report["checks"][0]["status"], "grounded");
+    assert_eq!(report["checks"][0]["semantic_unverified"], true);
     assert_eq!(
         report["checks"][0]["match_method"],
         "normalized_text_contains"

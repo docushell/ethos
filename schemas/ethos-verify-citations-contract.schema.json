@@ -17,10 +17,18 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "const": 1 },
-    "contract": { "const": "verify_citations.v1" },
-    "status": { "const": "source-only-pre-alpha" },
-    "carrier": { "const": "ethos verify" },
+    "schema_version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "verify_citations.v1"
+    },
+    "status": {
+      "const": "source-only-pre-alpha"
+    },
+    "carrier": {
+      "const": "ethos verify"
+    },
     "report_cases": {
       "type": "array",
       "minItems": 1,
@@ -39,7 +47,9 @@
         ],
         "additionalProperties": false,
         "properties": {
-          "name": { "$ref": "#/$defs/case_name" },
+          "name": {
+            "$ref": "#/$defs/case_name"
+          },
           "category": {
             "enum": [
               "grounded",
@@ -47,29 +57,44 @@
               "unsupported-non-v1",
               "diagnostic-non-grounded",
               "stale-fingerprint",
-              "capability-blocked"
+              "capability-blocked",
+              "grounded-semantic-unverified"
             ]
           },
-          "all_evidence_grounded": { "type": "boolean" },
+          "all_evidence_grounded": {
+            "type": "boolean"
+          },
           "statuses": {
             "type": "array",
             "minItems": 1,
-            "items": { "$ref": "#/$defs/check_status" }
+            "items": {
+              "$ref": "#/$defs/check_status"
+            }
           },
           "reasons": {
             "type": "array",
-            "items": { "$ref": "#/$defs/check_reason" }
+            "items": {
+              "$ref": "#/$defs/check_reason"
+            }
           },
-          "expected_proof_status": { "$ref": "#/$defs/proof_status" },
-          "expected_request_certified": { "type": "boolean" },
+          "expected_proof_status": {
+            "$ref": "#/$defs/proof_status"
+          },
+          "expected_request_certified": {
+            "type": "boolean"
+          },
           "expected_reusable_check_ids": {
             "type": "array",
-            "items": { "$ref": "#/$defs/check_id" },
+            "items": {
+              "$ref": "#/$defs/check_id"
+            },
             "uniqueItems": true
           },
           "expected_proof_limitations": {
             "type": "array",
-            "items": { "$ref": "#/$defs/proof_limitation" },
+            "items": {
+              "$ref": "#/$defs/proof_limitation"
+            },
             "uniqueItems": true
           }
         }
@@ -78,7 +103,9 @@
     "usage_error_cases": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/case_name" },
+      "items": {
+        "$ref": "#/$defs/case_name"
+      },
       "uniqueItems": true
     },
     "usage_diagnostic_cases": {
@@ -94,29 +121,48 @@
         ],
         "additionalProperties": false,
         "properties": {
-          "name": { "$ref": "#/$defs/case_name" },
-          "exit_code": { "const": 2 },
-          "stdout": { "const": "empty" },
-          "stderr_contains": { "$ref": "#/$defs/usage_diagnostic_message" }
+          "name": {
+            "$ref": "#/$defs/case_name"
+          },
+          "exit_code": {
+            "const": 2
+          },
+          "stdout": {
+            "const": "empty"
+          },
+          "stderr_contains": {
+            "$ref": "#/$defs/usage_diagnostic_message"
+          }
         }
       }
     },
     "summary_cases": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/case_name" },
+      "items": {
+        "$ref": "#/$defs/case_name"
+      },
       "uniqueItems": true
     },
     "explicit_blockers": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string", "minLength": 1 },
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "uniqueItems": true
     }
   },
   "$defs": {
-    "case_name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-    "check_id": { "type": "string", "pattern": "^v[0-9]{4}$" },
+    "case_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "check_id": {
+      "type": "string",
+      "pattern": "^v[0-9]{4}$"
+    },
     "check_status": {
       "enum": [
         "grounded",
