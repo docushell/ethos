@@ -1697,8 +1697,14 @@ fn opendataloader_verify_adapter_produces_capability_aware_report() {
     assert_eq!(report["checks"][1]["status"], "grounded");
     assert_eq!(report["checks"][1]["match_method"], "table_cell_lookup");
     assert_eq!(report["checks"][1]["evidence"]["text"], "$12.4M");
-    assert_eq!(report["checks"][2]["status"], "capability_blocked");
-    assert_eq!(report["checks"][2]["reason"], "unknown_coordinate_origin");
+    // The fabricated quote is refuted, not merely unadjudicated. The adapter declares an
+    // unknown coordinate origin, but no reading-order neighbour of `odl-e2` joins with it to
+    // produce "Operating margin was 99%", so no adjacency ruling could ground the claim and
+    // the determinate negative stands. An unknown origin only blocks a check when geometry
+    // is what the outcome turns on; `split_quote_requires_known_coordinates_for_adjacent_join`
+    // in `ethos-verify` covers that case.
+    assert_eq!(report["checks"][2]["status"], "mismatch");
+    assert_eq!(report["checks"][2]["reason"], "text_mismatch");
     assert_eq!(report["all_evidence_grounded"], false);
 }
 

@@ -97,6 +97,29 @@ fields, `attestation` and `evidence_tier`.
 
 Read [what a verdict proves and what it does not](docs/CLAIMS.md) before building on it.
 
+### Ask for more detail
+
+That is the pinned `default-v1` report. A config carrying a `hardening` block adds three review
+aids and moves the report to schema `1.1.0`:
+
+- **`provenance`** — the cited element's heading path and role, so a reviewer can see which section
+  the evidence sits in. Says `capability_limited` when the source declares no structure, rather
+  than inventing a path.
+- **`context_echo`** — a bounded window of source text around the match, with the matched span
+  delimited. A crop you can read, with no PDFium and no render step.
+- **`dispersion`** — integer counts of how scattered the grounded evidence is across elements,
+  pages, and sections.
+
+```bash
+ethos verify source.ethos.json \
+  --citations citations.json \
+  --config schemas/examples/verification-config.hardened.example.json
+```
+
+They are opt-in because they change the report bytes; a caller that does not ask for them gets the
+default output unchanged. Determinism is unaffected — same source, same claims, same config, same
+bytes. Field reference in [SPEC.md §4.4.1](SPEC.md).
+
 ## Why Ethos?
 
 Document parsers turn files into text and structure. Ethos handles the next step: checking whether

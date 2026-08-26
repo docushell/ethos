@@ -25,7 +25,8 @@
   the exact parsed claims, so a verdict says what produced it and can be replayed. It
   attests the crate, not the binary — a hostile operator can lie in it, and `docs/CLAIMS.md`
   says so. `evidence_tier` states per check how precisely evidence was bound:
-  `exact_span`, `table_cell`, `element_scoped`, `page_scoped`, or `capability_limited`.
+  `exact_span`, `table_cell`, `element_scoped`, or `page_scoped`. It is absent when nothing
+  resolved; a check blocked by a missing capability says so through `status: capability_blocked`.
 
 - `GroundingElement`, `GroundingSpan`, `GroundingTable`, and `GroundingCell` carry
   `Option<[i64; 4]>` for `bbox`. The wire schema still requires geometry; the Rust type can

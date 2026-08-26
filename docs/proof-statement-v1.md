@@ -273,7 +273,11 @@ stops being replayable.
 ```
 
 One deterministic enum saying how strong the match was, derived from the existing locator
-precedence. Values: `exact_span`, `element_scoped`, `page_scoped`, `capability_limited`.
+precedence. Values: `exact_span`, `table_cell`, `element_scoped`, `page_scoped`. The field is
+**absent** when nothing resolved — a check blocked by a missing capability says so through
+`status: capability_blocked`, not through a tier. An earlier draft carried a fifth value,
+`capability_limited`; it was removed before release because no code path could emit it and it
+restated what the status already said.
 
 Generalises AetherProof's `model_root_type`: put the strength of what was proven into the
 artifact as a single field, so a consumer reads one value instead of interpreting a

@@ -379,8 +379,7 @@
               "exact_span",
               "table_cell",
               "element_scoped",
-              "page_scoped",
-              "capability_limited"
+              "page_scoped"
             ],
             "description": "How precisely this check bound its evidence. Absent when nothing resolved."
           }

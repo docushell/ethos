@@ -1281,22 +1281,12 @@ fn check_claim(
             )
         })
         .flatten();
-    // The tier the target actually resolved at, unless a capability limit is what decided
-    // this check — then the honest statement is that the source could not answer at the
-    // precision asked for, not that it answered imprecisely.
-    let capability_limited = matches!(
-        reason,
-        Some(
-            CheckReason::MissingSpanCapability
-                | CheckReason::MissingTableCapability
-                | CheckReason::UnknownCoordinateOrigin
-        )
-    );
-    let evidence_tier = Some(if capability_limited {
-        EvidenceTier::CapabilityLimited
-    } else {
-        target.tier
-    });
+    // The tier the target actually resolved at. A check decided by a capability limit never
+    // reaches here: every capability path returns early with `evidence_tier: None` and
+    // `CheckStatus::CapabilityBlocked`, which already carries the fact. A tier value that
+    // duplicated a status value would be two fields describing one thing, which is how they
+    // start disagreeing.
+    let evidence_tier = Some(target.tier);
     Check {
         id: check_id,
         claim,
@@ -1700,7 +1690,18 @@ fn adjacent_quote_target(
     if claim.citation.element_id.is_some() {
         if let Some(position) = target.element_index {
             if index.capabilities.coordinate_origin == CoordinateOrigin::Unknown {
-                return Err(CheckReason::UnknownCoordinateOrigin);
+                // Coordinate trust only decides the outcome when a neighbour could have
+                // joined at all. When no reading-order neighbour joins with the cited
+                // element to match the quote, no adjacency ruling could ground this claim,
+                // so the determinate negative already computed against the cited element
+                // stands. Refusing here unconditionally would discard a sound `mismatch`
+                // in favour of "cannot tell". This branch can only return a non-pass:
+                // `Ok(None)` falls through to the single-element comparison that has
+                // already failed to match.
+                if adjacent_join_has_text_candidate(index, position, expected, config) {
+                    return Err(CheckReason::UnknownCoordinateOrigin);
+                }
+                return Ok(None);
             }
             return Ok(adjacent_text_pair_for_element(
                 index, position, expected, config,
@@ -1709,6 +1710,35 @@ fn adjacent_quote_target(
     }
 
     Ok(None)
+}
+
+/// True when some reading-order neighbour of `position` satisfies every join precondition
+/// except adjacency itself.
+///
+/// Used only on sources with an unknown coordinate origin, to separate "a join might have
+/// grounded this and we cannot adjudicate it" from "no join was ever possible".
+fn adjacent_join_has_text_candidate(
+    index: &SourceIndex,
+    position: usize,
+    expected: &str,
+    config: &VerificationConfig,
+) -> bool {
+    let Some(current) = index.elements.get(position) else {
+        return false;
+    };
+    let joins_with_next = position
+        .checked_add(1)
+        .and_then(|next| index.elements.get(next))
+        .and_then(|second| adjacent_pair_join_ignoring_geometry(current, second, expected, config))
+        .is_some();
+    if joins_with_next {
+        return true;
+    }
+    position
+        .checked_sub(1)
+        .and_then(|previous| index.elements.get(previous))
+        .and_then(|first| adjacent_pair_join_ignoring_geometry(first, current, expected, config))
+        .is_some()
 }
 
 fn adjacent_text_pair_for_element(
@@ -1732,22 +1762,24 @@ fn adjacent_text_pair_for_element(
         .and_then(|first| adjacent_text_pair_target(first, current, expected, config))
 }
 
-fn adjacent_text_pair_target(
+/// Every join precondition except `element_bboxes_are_adjacent`, returning the joined text.
+///
+/// `element_bboxes_are_adjacent` is the only predicate here that reads coordinates *as*
+/// coordinates, and so the only one an unknown coordinate origin invalidates. Page identity
+/// and bbox *presence* are structural facts that hold whatever the origin is: a cross-page
+/// pair is never joinable by rule, and an element declaring no geometry is never "next to"
+/// another. Splitting them out lets `adjacent_join_has_text_candidate` ask whether geometry
+/// is load-bearing for this claim at all.
+fn adjacent_pair_join_ignoring_geometry(
     first: &GroundingElement,
     second: &GroundingElement,
     expected: &str,
     config: &VerificationConfig,
-) -> Option<FoundTarget> {
+) -> Option<String> {
     if first.page != second.page {
         return None;
     }
-    // Both elements need declared geometry before adjacency can mean anything. A
-    // geometry-free element is never "next to" another, which matches the existing
-    // capability gate on CoordinateOrigin::Unknown: no coordinates, no join.
-    let (Some(first_bbox), Some(second_bbox)) = (first.bbox, second.bbox) else {
-        return None;
-    };
-    if !element_bboxes_are_adjacent(first_bbox, second_bbox) {
+    if first.bbox.is_none() || second.bbox.is_none() {
         return None;
     }
     let first_text = first.text.as_deref()?;
@@ -1759,6 +1791,26 @@ fn adjacent_text_pair_target(
     {
         return None;
     }
+    Some(joined)
+}
+
+fn adjacent_text_pair_target(
+    first: &GroundingElement,
+    second: &GroundingElement,
+    expected: &str,
+    config: &VerificationConfig,
+) -> Option<FoundTarget> {
+    let joined = adjacent_pair_join_ignoring_geometry(first, second, expected, config)?;
+    // Both elements need declared geometry before adjacency can mean anything. A
+    // geometry-free element is never "next to" another, which matches the existing
+    // capability gate on CoordinateOrigin::Unknown: no coordinates, no join.
+    let (Some(first_bbox), Some(second_bbox)) = (first.bbox, second.bbox) else {
+        return None;
+    };
+    if !element_bboxes_are_adjacent(first_bbox, second_bbox) {
+        return None;
+    }
+    let first_text = first.text.as_deref()?;
 
     Some(FoundTarget {
         page: Some(first.page.clone()),
@@ -2824,6 +2876,82 @@ mod tests {
 
         assert!(report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+    }
+
+    #[test]
+    fn wrong_quote_returns_mismatch_on_unknown_coordinate_origin() {
+        // The cited element does not contain the quote, and no reading-order neighbour joins
+        // with it to produce one. No adjacency ruling could ground this claim, so an unknown
+        // coordinate origin cannot change the outcome and the determinate negative stands.
+        // Before this gate ordering, every such claim returned `capability_blocked` and the
+        // sound `mismatch` was discarded.
+        let report = verify_elements_with_origin(
+            vec![
+                element(
+                    "appraised-value",
+                    "p0001",
+                    [100, 100, 400, 200],
+                    Some("Appraised value $485,000"),
+                ),
+                element(
+                    "effective-date",
+                    "p0001",
+                    [400, 100, 700, 200],
+                    Some("Effective date 12 March 2026"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("Appraised value $458,000"),
+                Citation {
+                    element_id: Some("appraised-value".into()),
+                    ..Default::default()
+                },
+            )],
+            CoordinateOrigin::Unknown,
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
+        assert!(!report.checks[0]
+            .warnings
+            .contains(&WarningCode::CapabilityLimited));
+    }
+
+    #[test]
+    fn unknown_origin_quote_spanning_a_page_break_returns_mismatch() {
+        // The neighbour would join textually, but it sits on the next page and the join never
+        // crosses pages. Geometry is therefore not load-bearing and the answer is determinate,
+        // so this must not be reported as a capability limit.
+        let report = verify_elements_with_origin(
+            vec![
+                element(
+                    "page-one-tail",
+                    "p0001",
+                    [100, 600, 400, 700],
+                    Some("The alpha trust loop verifies "),
+                ),
+                element(
+                    "page-two-head",
+                    "p0002",
+                    [100, 100, 400, 200],
+                    Some("grounded evidence"),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("The alpha trust loop verifies grounded evidence"),
+                Citation {
+                    element_id: Some("page-one-tail".into()),
+                    ..Default::default()
+                },
+            )],
+            CoordinateOrigin::Unknown,
+        );
+
+        assert!(!report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
     }
 
     #[test]

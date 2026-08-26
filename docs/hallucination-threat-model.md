@@ -49,8 +49,10 @@ and multiple primary locator groups fail closed with `locator_conflict`.
 
 **Resolved gap G2 — adjacency is capability-gated.** Adjacent-element joins require a known
 coordinate origin. A source with `CoordinateOrigin::Unknown` may still ground a single-element
-match, but a check that would need a join fails closed with `capability_limited` and
-`unknown_coordinate_origin`.
+match, and a check whose outcome genuinely turns on adjacency fails closed with
+`capability_limited` and `unknown_coordinate_origin`. A quote that no reading-order neighbour
+could have joined still returns its determinate `mismatch`: refusing there would trade a sound
+negative for "cannot tell" and hide a real document finding behind a capability limit.
 
 The residual threat above the verifier: N individually true fragment claims assembled into a
 misleading answer. Each check is legitimately `grounded`; the distortion lives in the assembly.
@@ -137,7 +139,15 @@ network access, or judgment calls to core.
   geometry basis: gate it on a compatible coordinate-origin/reading-order capability, mirroring
   the existing `page`+`bbox` refusal of `CoordinateOrigin::Unknown`. Sources without the
   capability get single-element matching only, with a `capability_limited` diagnostic when the
-  join would have been attempted.
+  join would have been attempted. **"Would have been attempted" is decided, not assumed.** Of the
+  join's preconditions only `element_bboxes_are_adjacent` reads coordinates *as* coordinates; page
+  identity, bbox presence, and the joined-text match are structural and hold whatever the origin
+  is. On an unknown-origin source the verifier evaluates those first
+  (`adjacent_join_has_text_candidate`): when no reading-order neighbour could have joined anyway,
+  the outcome does not turn on geometry, and the determinate `mismatch` already computed against
+  the cited element stands. `capability_limited` is reserved for the case where a neighbour
+  genuinely would have joined and only adjacency is unknowable. Neither branch can return
+  `grounded`, so the refinement cannot leak a pass.
 - DocuShell use: none directly — this is trust-surface integrity. It is a prerequisite for the
   acceptance tests below meaning what they say.
 
@@ -206,10 +216,11 @@ Report-level counts describing how scattered the verified evidence is. Split int
   **Adjacent-element joins count both elements.** A quote grounded through the adjacent-element
   join resolves across two elements and contributes **both resolved element IDs** to `elements` —
   R3 counters stitching, and the join is precisely the sanctioned stitching case, so it must be
-  visible in the count. Implementation note: the joined target currently discards element
-  identity (`element_index: None` in `adjacent_quote_target`), which would misroute these checks
-  into `unmapped_grounded_checks`; R3a requires the join to preserve both element identities on
-  the check.
+  visible in the count. As implemented, the join carries both identities: `adjacent_quote_target`
+  returns `element_ids: [first, second]` on the joined `FoundTarget`, which reaches the check as
+  `resolved_element_ids`, so joined quotes are counted in `elements` and never fall through to
+  `unmapped_grounded_checks`. `element_index` stays `None` on the joined target — it addresses a
+  single position and a join has two — and is not the identity carrier.
 - **R3b (depends on R1):** distinct top-level sections spanned. Section identity requires R1's
   structural provenance; do not approximate it from page ranges. The `sections` count is omitted
   when any reusable grounded target is unmapped or lacks structural provenance, so it cannot
@@ -310,8 +321,12 @@ feature works:
 2. **Adjacent-only stitching:** a quote spanning the cited element and its strictly adjacent
    neighbor grounds; the same text cited against a non-adjacent element pair returns `mismatch`.
 3. **Unknown-coordinate adjacency (R0b):** a foreign source with `CoordinateOrigin::Unknown`
-   never produces an adjacency join; the check reports `capability_limited` where the join would
-   have applied, and single-element matching still works.
+   never produces an adjacency join, and single-element matching still works. The refusal is
+   conditional on the join being load-bearing: a quote whose cited element does not contain it and
+   whose reading-order neighbours do not join to match it returns `mismatch`/`text_mismatch`, not
+   `capability_blocked`; a quote that genuinely spans the cited element and its neighbour returns
+   `capability_blocked`/`unknown_coordinate_origin`. A neighbour on the next page is never a
+   candidate, so a page-break split is `mismatch`, not a capability limit.
 4. **Non-adjacent recombination:** a sentence assembled from real fragments in non-adjacent
    elements, cited against any single element, returns `mismatch` — never `grounded`.
 5. **Cross-page adjacency:** the adjacency join never crosses pages, including when bbox numbers

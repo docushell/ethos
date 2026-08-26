@@ -39,12 +39,27 @@ Pinned versions (update on every DocuShell bump):
 
 | Item | Version | Pinned at |
 | --- | --- | --- |
-| `ethos` CLI artifact | v0.3.0 (Linux x64) | 2026-07-19 — vendored in the DocuShell parse-pdf worker image (`docker/parse-pdf/ethos-vendor.json`) |
+| `ethos` CLI artifact | v0.5.0 (Linux x64) | 2026-08-11 — vendored in the DocuShell parse-pdf worker image (`docker/parse-pdf/ethos-vendor.json`) |
 | PDFium (caller-provided) | `chromium/7881` (PDFium 151.0.7881.0, Linux x64) | 2026-07-19 — installed by the same image, `ETHOS_PDFIUM_LIBRARY_PATH` set at build |
-| Report schema | as shipped in v0.3.0 | 2026-07-19 |
+| Report schema | as shipped in v0.5.0 (`schema_version` 1.0.0; 1.1.0 exists but requires an opt-in `--config` with `hardening`, which DocuShell does not pass) | 2026-08-11 |
 | Grounding adapter | `opendataloader-json` | 2026-07-19 |
 | Citation emission callback | v1.0.0 (not yet consumed) | 2026-07-19 — frozen contract with delivered Python helpers |
-| TypeScript declarations | v0.4.0 candidate (not published) | 2026-07-19 — generated and package-tested; DocuShell adoption waits for the human-operated npm release |
+| TypeScript declarations | published in `@docushell/ethos-pdf@0.5.0` (`types/verification-report.d.ts`) | 2026-08-11 — generated from the canonical schemas; carries `dispersion`, `provenance`, `resolved_element_ids`, and `schema_version: "1.0.0" \| "1.1.0"` |
+
+Known consumer gaps, recorded because they are what an external adopter would also hit:
+
+- **The generated declarations did not replace the hand mirror.** FR-1 anticipated retiring
+  `packages/evidence/src/ethos-answer-release.ts` once schema-generated types shipped. They shipped;
+  the mirror did not retire. `packages/evidence/src/index.ts` re-exports it, so the hand-written
+  `EthosVerificationReportCheck` — which carries neither the hardening fields nor `evidence_tier` —
+  is the type DocuShell's release logic actually sees. Drift between the two is unguarded.
+- **`evidence_tier` is not reachable at this pin.** It lands in v0.6.0 alongside `attestation`, so a
+  consumer writing a tier-based demotion against v0.5.0 output reads `undefined` and the demotion
+  silently never fires. Consumers gating on tier need the 0.6.0 bump, not a config change.
+- **`capability_limits` is never empty on the `opendataloader-json` path.** The adapter declares
+  `spans: false`, `char_offsets: false` and `coordinate_origin: unknown`, so every report carries
+  `missing_spans`, `missing_char_offsets` and `unknown_coordinate_origin`. Any consumer rule keyed on
+  that array being empty is unsatisfiable. Limits describe the adapter, not the document.
 
 ### Consumer Dockerfile pattern (friction entry FR-3)
 

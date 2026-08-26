@@ -216,6 +216,10 @@ fingerprints, and capability-blocked checks explicitly.
 - fingerprint freshness;
 - `all_evidence_grounded`;
 - per-check status, reason, and match method;
+- per-check `evidence_tier` — how precisely the check bound its evidence, one of `exact_span`,
+  `table_cell`, `element_scoped`, `page_scoped`, and **absent** when nothing resolved;
+- `attestation` — the verifier crate and version, the config label, and a SHA-256 over the exact
+  parsed claims;
 - unsupported claim kinds;
 - warnings.
 
@@ -245,6 +249,36 @@ false, and `fingerprint_stale` is false. `partially_verified` therefore means "s
 reusable"; it does not certify the request as submitted. Derived proof limitations SHOULD surface
 capability limits, stale fingerprints, unsupported claim kinds, non-grounded checks, and
 semantic-unverified checks.
+
+#### 4.4.1 Hardened reports
+
+A verification config MAY set a `hardening` block. Doing so adds three review aids to the report
+and raises `schema_version` from `1.0.0` to `1.1.0`. They are opt-in because they change the
+report bytes; a caller that does not ask for them gets the pinned `default-v1` output unchanged.
+
+| Field | Where | What it records |
+| --- | --- | --- |
+| `provenance` | per check | The cited element's heading path, role, and reading-order neighbours. `status` is `capability_limited` when the source declares no structure — never a fabricated path |
+| `context_echo` | per grounded quote/value check | A bounded window of source text around the match, with the matched span delimited and any element-join boundary marked. The textual analogue of a crop, with no PDFium render |
+| `dispersion` | report level | Integer counts of how scattered the reusable grounded evidence is: `grounded_checks`, `elements`, `pages`, `unmapped_grounded_checks`, and `sections` when structural provenance is available |
+| `resolved_element_ids` | per check | Every source element the check resolved against. A quote grounded through the adjacent-element join carries both IDs, so a two-element stitch is distinguishable from a single-element match |
+
+Enable them with a config file:
+
+```bash
+ethos verify source.ethos.json \
+  --citations citations.json \
+  --config schemas/examples/verification-config.hardened.example.json
+```
+
+The config MUST declare `"schema_version": "1.1.0"` alongside the `hardening` block; a config that
+sets one without the other is rejected. The three switches — `include_provenance`,
+`include_context_echo`, `include_dispersion` — default to `false`, and a `hardening` block with all
+three false behaves exactly as if it were absent.
+
+These fields are descriptive, not judgements. `dispersion` counts; it does not score. High
+dispersion is not an error — legitimate cross-document synthesis exists — and any threshold over
+these numbers is application policy, never an Ethos verdict.
 
 ### 4.5 Evidence anchor request
 

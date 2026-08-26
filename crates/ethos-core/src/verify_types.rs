@@ -412,8 +412,6 @@ pub enum EvidenceTier {
     ElementScoped,
     /// Bound to a page only, with no element resolved.
     PageScoped,
-    /// The source could not answer at the precision the citation asked for.
-    CapabilityLimited,
 }
 
 /// The verifier that produced a report.

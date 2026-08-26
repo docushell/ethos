@@ -167,7 +167,7 @@ export interface EthosVerificationReport {
     /**
      * How precisely this check bound its evidence. Absent when nothing resolved.
      */
-    evidence_tier?: "exact_span" | "table_cell" | "element_scoped" | "page_scoped" | "capability_limited";
+    evidence_tier?: "exact_span" | "table_cell" | "element_scoped" | "page_scoped";
   }[];
   /**
    * Claim kinds present in the input that this verifier/config does not support. Non-empty => all_evidence_grounded=false.

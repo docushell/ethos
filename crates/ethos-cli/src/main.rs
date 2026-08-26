@@ -319,7 +319,9 @@ pub(crate) struct VerifyArgs {
     /// Foreign grounding adapter id (e.g. `opendataloader-json`)
     #[arg(long)]
     pub(crate) grounding: Option<String>,
-    /// Verification config (JSON); defaults to the pinned `default-v1`
+    /// Verification config (JSON); defaults to the pinned `default-v1`. A config setting
+    /// `hardening` adds structural provenance, source-context echo, and evidence dispersion
+    /// to the report (schema 1.1.0); see schemas/examples/verification-config.hardened.example.json
     #[arg(long)]
     pub(crate) config: Option<PathBuf>,
     /// Output path for verification_report.json (default: stdout)
@@ -351,7 +353,9 @@ pub(crate) struct VerifyBatchArgs {
     /// Foreign grounding adapter id (e.g. `opendataloader-json`).
     #[arg(long)]
     pub(crate) grounding: Option<String>,
-    /// Verification config (JSON); defaults to the pinned `default-v1`.
+    /// Verification config (JSON); defaults to the pinned `default-v1`. A config setting
+    /// `hardening` adds structural provenance, source-context echo, and evidence dispersion
+    /// to each report (schema 1.1.0); see schemas/examples/verification-config.hardened.example.json.
     #[arg(long)]
     pub(crate) config: Option<PathBuf>,
     /// Output path for canonical verification-report NDJSON (default: stdout).
