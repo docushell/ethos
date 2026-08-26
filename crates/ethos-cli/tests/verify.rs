@@ -733,6 +733,30 @@ fn verify_batch_merged_byte_equals_single_verify_over_concatenated_claims() {
 }
 
 #[test]
+fn verify_accepts_the_unicode_compat_v1_normalization_profile() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let mut config = json_file(root.join("schemas/examples/verification-config.example.json"));
+    config["matching"]["text_normalization"] = Value::String("unicode_compat_v1".to_string());
+    let config_path = temp_json(
+        "verify-unicode-compat-config",
+        &serde_json::to_string(&config).expect("config serializes"),
+    );
+
+    let report = verify_report(&[
+        "verify",
+        document.to_str().unwrap(),
+        "--citations",
+        grounded.to_str().unwrap(),
+        "--config",
+        config_path.to_str().unwrap(),
+    ]);
+    assert_eq!(report["all_evidence_grounded"], true);
+    assert_eq!(report["checks"][0]["status"], "grounded");
+}
+
+#[test]
 fn verify_batch_merged_enforces_max_checks_over_the_merged_total() {
     let root = repo_root();
     let document = document_example();

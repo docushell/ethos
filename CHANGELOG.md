@@ -2,6 +2,47 @@
 
 ## Unreleased
 
+### Two ways the verifier stopped manufacturing false hallucination verdicts
+
+- A quote or value claim with a page-only locator now searches the cited page before
+  judging (presence claims are excluded even when the wire's optional text field is
+  set: presence asserts the locator's target exists, and upgrading its evidence to an
+  element the claim never named would move tier, bbox, and crop for an
+  already-grounded verdict). The page branch of target resolution used to return a text-less page target,
+  which the text check reported as `mismatch` / `text_mismatch` labelled with a match
+  method that never ran — so a quote sitting verbatim on the cited page was reported as
+  not in the document, while the anchor API answered `Matched` for the identical input.
+  Resolution order is the anchor engine's: first matching element in document order, then
+  first matching span; the found target carries element precision (`evidence_tier`
+  upgrades from `page_scoped` to `element_scoped` or `exact_span`), and a page with no
+  match falls back to the old page-scoped mismatch — which is now an honest verdict,
+  because the page was actually searched. A quote split across fragments still
+  mismatches: the sanctioned adjacent-join repair requires an element id, and a page
+  cannot name which join was meant.
+
+- `text_normalization` gains an opt-in third profile, `unicode_compat_v1`: fold a
+  pinned, versioned table of Unicode lookalikes to their ASCII forms — the curly-quote
+  family to straight quotes, the dash family (U+2212 included) to hyphen-minus, the
+  common Latin ligatures to their letters, U+2026 to three dots, soft hyphen /
+  zero-width space / U+FEFF erased — then trim and collapse runs of Unicode whitespace
+  to one ASCII space. PDF extraction emits U+2019, U+00A0, and ffi where a model
+  quoting the same words types an apostrophe, a space, and three letters; under the
+  default profile every one of those is a `text_mismatch` that downstream consumers
+  read as a fabricated quote. The profile is still literal and still deterministic — a
+  paraphrase does not ground, the table maps characters and never words, and the table
+  is versioned by the profile name and never edited. Both consumers of the fold — the
+  verdict path and the context-echo offset mapper — read one table, a test pins that
+  they agree on every vector, and `schemas/normalization-vectors-unicode-compat-v1.json`
+  publishes the profile as executable vectors the way the default profile's file does.
+  The default profile is untouched; a `grounded` under `unicode_compat_v1` certifies
+  identity under a named fold recorded in the attested config, which is why the match
+  method stays `normalized_text`/`normalized_text_contains` — the config hash, not a
+  new enum value, says which normalization ran. One guard came with the fold and now
+  protects every profile: expected text that normalizes to nothing matches nothing.
+  A lone soft hyphen passes the whitespace-only pre-claim gate but folds to the empty
+  string, and `contains("")` is true of every element — without the guard that claim
+  would ground anywhere while asserting nothing.
+
 ### The normalization profile is now an executable contract, not a convention
 
 - `schemas/normalization-vectors.json` pins `ethos_collapse_whitespace_v1` as input/output

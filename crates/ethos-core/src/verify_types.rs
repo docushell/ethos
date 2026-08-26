@@ -1218,7 +1218,8 @@ fn app_answer_release_error(message: impl Into<String>) -> AppAnswerReleaseError
     }
 }
 
-/// Text normalization modes (config). v1 has exactly these two.
+/// Text normalization modes (config). v1 shipped exactly the first two;
+/// `unicode_compat_v1` is a later opt-in third.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TextNormalization {
@@ -1227,6 +1228,17 @@ pub enum TextNormalization {
     /// Trim + collapse ASCII whitespace runs to one ASCII space. The only
     /// normalization in v1 (no Unicode normalization — it would alter fidelity).
     CollapseWhitespace,
+    /// Fold a pinned, versioned table of Unicode lookalikes to their ASCII forms,
+    /// then trim + collapse Unicode whitespace runs to one ASCII space. The table
+    /// (curly quotes to straight quotes, the dash family to hyphen-minus, common
+    /// Latin ligatures expanded, U+2026 to three dots, soft hyphen / zero-width
+    /// space / U+FEFF erased) is versioned by the profile name and never edited —
+    /// a different table is a different profile. Still literal and still
+    /// deterministic: a paraphrase does not ground under it. It exists because PDF
+    /// extraction emits U+2019, U+00A0, and fi where a model quoting the same
+    /// words types an apostrophe, a space, and two letters — and each of those
+    /// false mismatches reads downstream as "the AI made this up".
+    UnicodeCompatV1,
 }
 
 /// Matching parameters.

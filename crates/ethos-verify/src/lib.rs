@@ -1558,23 +1558,51 @@ fn resolve_target(
     }
 
     if let Some(page) = claim.citation.page.as_deref() {
-        return index
-            .pages
-            .iter()
-            .find(|candidate| candidate.id == page)
-            .map(|found| {
-                TargetResolution::Found(FoundTarget {
-                    page: Some(found.id.clone()),
-                    tier: EvidenceTier::PageScoped,
-                    bbox: Some([0, 0, found.width, found.height]),
-                    text: None,
-                    from_table_cell: false,
-                    element_index: None,
-                    element_ids: Vec::new(),
-                    element_boundary_char: None,
+        let Some(found) = index.pages.iter().find(|candidate| candidate.id == page) else {
+            return TargetResolution::NotFound(CheckReason::PageNotFound);
+        };
+        // A page-only locator on a text-bearing claim kind searches the page before
+        // judging. Presence claims are excluded even when they carry text — the
+        // wire schema permits text on a presence claim, but presence asserts
+        // existence of the locator's target, and upgrading its evidence to an
+        // element the claim never named would change tier, bbox, and crop for a
+        // verdict that was already grounded.
+        // The alternative this replaced returned a text-less page target, which
+        // check_text_claim reported as a text mismatch labelled with a match method
+        // that never ran — a false verdict for a quote verbatim on the cited page,
+        // and one the anchor engine already contradicted by answering Matched for
+        // the identical input. Resolution order is the anchor engine's: first
+        // matching element in document order, then first matching span. A quote
+        // split across fragments still mismatches — the sanctioned adjacent-join
+        // repair requires an element id, and a page cannot name which join was
+        // meant.
+        if let Some(expected) = claim.text.as_deref().filter(|_| requires_text(claim.kind)) {
+            if let Some((position, element)) =
+                index.elements.iter().enumerate().find(|(_, element)| {
+                    element.page == page
+                        && element.text.as_deref().is_some_and(|actual| {
+                            text_matches(claim.kind, expected, actual, config)
+                        })
                 })
-            })
-            .unwrap_or(TargetResolution::NotFound(CheckReason::PageNotFound));
+            {
+                return TargetResolution::Found(target_from_element(element, Some(position)));
+            }
+            if let Some(span) = index.spans.iter().find(|span| {
+                span.page == page && text_matches(claim.kind, expected, &span.text, config)
+            }) {
+                return TargetResolution::Found(target_from_span(span));
+            }
+        }
+        return TargetResolution::Found(FoundTarget {
+            page: Some(found.id.clone()),
+            tier: EvidenceTier::PageScoped,
+            bbox: Some([0, 0, found.width, found.height]),
+            text: None,
+            from_table_cell: false,
+            element_index: None,
+            element_ids: Vec::new(),
+            element_boundary_char: None,
+        });
     }
 
     TargetResolution::NotFound(CheckReason::MissingLocator)
@@ -1826,6 +1854,9 @@ fn adjacent_text_pair_target(
             TextNormalization::CollapseWhitespace => {
                 normalize_quote(first_text).chars().count() as u32
             }
+            TextNormalization::UnicodeCompatV1 => normalize_quote_unicode_compat_v1(first_text)
+                .chars()
+                .count() as u32,
         }),
     })
 }
@@ -1835,6 +1866,7 @@ fn join_adjacent_text(first: &str, second: &str, config: &VerificationConfig) ->
     match config.matching.text_normalization {
         TextNormalization::None => joined,
         TextNormalization::CollapseWhitespace => normalize_quote(&joined),
+        TextNormalization::UnicodeCompatV1 => normalize_quote_unicode_compat_v1(&joined),
     }
 }
 
@@ -1937,6 +1969,41 @@ fn mapped_text(input: &str, normalization: TextNormalization, case_sensitive: bo
                     units.push((' ', ws_start, ws_end));
                 }
                 units.push((ch, start, end));
+            }
+        }
+        TextNormalization::UnicodeCompatV1 => {
+            // Every folded character maps back to its source character's byte
+            // range — an expansion like fi -> "fi" yields two output chars that
+            // both cite the ligature's bytes, the same shape lowercase expansion
+            // already uses below.
+            let mut whitespace: Option<(usize, usize)> = None;
+            for (ch, start, end) in chars {
+                if ch.is_whitespace() {
+                    if !units.is_empty() {
+                        whitespace = Some(match whitespace {
+                            Some((first, _)) => (first, end),
+                            None => (start, end),
+                        });
+                    }
+                    continue;
+                }
+                match unicode_compat_v1_fold(ch) {
+                    UnicodeFold::Drop => continue,
+                    UnicodeFold::Keep(c) => {
+                        if let Some((ws_start, ws_end)) = whitespace.take() {
+                            units.push((' ', ws_start, ws_end));
+                        }
+                        units.push((c, start, end));
+                    }
+                    UnicodeFold::Str(s) => {
+                        if let Some((ws_start, ws_end)) = whitespace.take() {
+                            units.push((' ', ws_start, ws_end));
+                        }
+                        for c in s.chars() {
+                            units.push((c, start, end));
+                        }
+                    }
+                }
             }
         }
     }
@@ -2151,13 +2218,20 @@ fn contains_bbox(container: [i64; 4], inner: [i64; 4], tolerance: i64) -> bool {
 }
 
 fn text_match_method(kind: ClaimKind, config: &VerificationConfig) -> MatchMethod {
+    // unicode_compat_v1 reports the same normalized_* method names as
+    // collapse_whitespace: the method says a normalization ran, and which one is
+    // pinned by the attested verification_config_sha256, not by a new enum value
+    // every report validator would have to learn.
     match (kind, config.matching.text_normalization) {
         (ClaimKind::Quote, TextNormalization::None) => MatchMethod::ExactTextContains,
-        (ClaimKind::Quote, TextNormalization::CollapseWhitespace) => {
-            MatchMethod::NormalizedTextContains
-        }
+        (
+            ClaimKind::Quote,
+            TextNormalization::CollapseWhitespace | TextNormalization::UnicodeCompatV1,
+        ) => MatchMethod::NormalizedTextContains,
         (_, TextNormalization::None) => MatchMethod::ExactText,
-        (_, TextNormalization::CollapseWhitespace) => MatchMethod::NormalizedText,
+        (_, TextNormalization::CollapseWhitespace | TextNormalization::UnicodeCompatV1) => {
+            MatchMethod::NormalizedText
+        }
     }
 }
 
@@ -2172,16 +2246,106 @@ fn text_matches(
         TextNormalization::CollapseWhitespace => {
             (normalize_quote(expected), normalize_quote(actual))
         }
+        TextNormalization::UnicodeCompatV1 => (
+            normalize_quote_unicode_compat_v1(expected),
+            normalize_quote_unicode_compat_v1(actual),
+        ),
     };
     if !config.matching.case_sensitive {
         expected = expected.to_lowercase();
         actual = actual.to_lowercase();
+    }
+    // Fail closed on claim text that normalized to nothing: `contains("")` is true
+    // of every element, so expected text a profile erased entirely — a lone soft
+    // hyphen under unicode_compat_v1, say — would ground everywhere while asserting
+    // nothing. The pre-claim gate only trims Unicode whitespace and cannot see what
+    // a fold erases, and the anchor path already refuses empty-after-normalization
+    // expected text; the verdict path must not be weaker.
+    if expected.is_empty() {
+        return false;
     }
     if kind == ClaimKind::Quote {
         actual.contains(&expected)
     } else {
         actual == expected
     }
+}
+
+/// One folded character under `unicode_compat_v1`: what a single source character
+/// becomes before whitespace collapse.
+enum UnicodeFold {
+    /// Not in the table — the character passes through untouched.
+    Keep(char),
+    /// Erased entirely: soft hyphen, zero-width space, U+FEFF — characters PDF
+    /// extraction inserts that carry no quoted content.
+    Drop,
+    /// Replaced by this ASCII expansion.
+    Str(&'static str),
+}
+
+/// The `unicode_compat_v1` fold table. Versioned by the profile name and never
+/// edited — a different table is a different profile, exactly as a different
+/// whitespace rule would be. Each row folds a character PDF extraction routinely
+/// emits to the form a model quoting the same words types: the curly-quote family
+/// to straight quotes, the dash family (including U+2212 minus) to hyphen-minus,
+/// the common Latin ligatures to their letters, U+2026 to three dots. Whitespace
+/// is deliberately absent from the table: the profile collapses every
+/// `char::is_whitespace` run to one ASCII space before folding is even consulted,
+/// which is what folds NBSP and its relatives.
+fn unicode_compat_v1_fold(ch: char) -> UnicodeFold {
+    match ch {
+        '\u{2018}' | '\u{2019}' | '\u{201A}' | '\u{201B}' => UnicodeFold::Str("'"),
+        '\u{201C}' | '\u{201D}' | '\u{201E}' | '\u{201F}' => UnicodeFold::Str("\""),
+        '\u{2010}' | '\u{2011}' | '\u{2012}' | '\u{2013}' | '\u{2014}' | '\u{2015}'
+        | '\u{2212}' => UnicodeFold::Str("-"),
+        '\u{2026}' => UnicodeFold::Str("..."),
+        '\u{FB00}' => UnicodeFold::Str("ff"),
+        '\u{FB01}' => UnicodeFold::Str("fi"),
+        '\u{FB02}' => UnicodeFold::Str("fl"),
+        '\u{FB03}' => UnicodeFold::Str("ffi"),
+        '\u{FB04}' => UnicodeFold::Str("ffl"),
+        '\u{FB05}' | '\u{FB06}' => UnicodeFold::Str("st"),
+        '\u{00AD}' | '\u{200B}' | '\u{FEFF}' => UnicodeFold::Drop,
+        _ => UnicodeFold::Keep(ch),
+    }
+}
+
+/// Normalize a quote under `unicode_compat_v1`: collapse runs of Unicode
+/// whitespace to one ASCII space, apply [`unicode_compat_v1_fold`] to everything
+/// else, and trim. Kept in lockstep with `mapped_text`'s arm by construction —
+/// both consume the same fold table — and by a conformance test asserting the two
+/// agree on every published vector, because two implementations of one profile
+/// drifting apart is exactly the defect this family of profiles exists to
+/// prevent.
+pub fn normalize_quote_unicode_compat_v1(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    let mut pending_space = false;
+    for ch in input.chars() {
+        if ch.is_whitespace() {
+            if !out.is_empty() {
+                pending_space = true;
+            }
+            continue;
+        }
+        match unicode_compat_v1_fold(ch) {
+            UnicodeFold::Drop => {}
+            UnicodeFold::Keep(c) => {
+                if pending_space {
+                    out.push(' ');
+                    pending_space = false;
+                }
+                out.push(c);
+            }
+            UnicodeFold::Str(s) => {
+                if pending_space {
+                    out.push(' ');
+                    pending_space = false;
+                }
+                out.push_str(s);
+            }
+        }
+    }
+    out
 }
 
 /// Normalize a quote for literal matching: normalize line endings, collapse ASCII
@@ -2348,6 +2512,7 @@ mod tests {
 
     struct ElementSource {
         elements: Vec<GroundingElement>,
+        spans: Vec<GroundingSpan>,
         coordinate_origin: CoordinateOrigin,
     }
 
@@ -2395,7 +2560,7 @@ mod tests {
             self.elements.clone()
         }
         fn spans(&self) -> Vec<GroundingSpan> {
-            Vec::new()
+            self.spans.clone()
         }
         fn tables(&self) -> Vec<GroundingTable> {
             Vec::new()
@@ -2476,6 +2641,7 @@ mod tests {
     ) -> VerificationReport {
         let source = ElementSource {
             elements,
+            spans: Vec::new(),
             coordinate_origin,
         };
         let cfg = VerificationConfig::default_v1();
@@ -2622,6 +2788,7 @@ mod tests {
                     Some("grounded evidence"),
                 ),
             ],
+            spans: Vec::new(),
             coordinate_origin: CoordinateOrigin::TopLeft,
         };
         let citations = CitationInput::Envelope(CitationEnvelope {
@@ -2665,6 +2832,7 @@ mod tests {
                 [100, 100, 700, 200],
                 Some("first target then target"),
             )],
+            spans: Vec::new(),
             coordinate_origin: CoordinateOrigin::TopLeft,
         };
         let report = verify_claims(
@@ -3016,6 +3184,320 @@ mod tests {
         assert!(!report.all_evidence_grounded);
         assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
         assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
+    }
+
+    fn verify_elements_with_config(
+        elements: Vec<GroundingElement>,
+        claims: Vec<Claim>,
+        cfg: &VerificationConfig,
+    ) -> VerificationReport {
+        let source = ElementSource {
+            elements,
+            spans: Vec::new(),
+            coordinate_origin: CoordinateOrigin::TopLeft,
+        };
+        let citations = CitationInput::Envelope(CitationEnvelope {
+            document_fingerprint: source.fingerprint(),
+            claims,
+        });
+        verify_claims(&source, citations, cfg, "0".repeat(64), "1".repeat(64))
+    }
+
+    fn unicode_compat_config() -> VerificationConfig {
+        let mut config = VerificationConfig::default_v1();
+        config.matching.text_normalization = TextNormalization::UnicodeCompatV1;
+        config
+    }
+
+    #[test]
+    fn quote_claim_page_only_locator_grounds_when_one_element_contains_it() {
+        let report = verify_elements(
+            vec![
+                element("intro", "p0001", [100, 100, 400, 200], Some("Introduction")),
+                element(
+                    "body",
+                    "p0001",
+                    [100, 300, 700, 400],
+                    Some("The alpha trust loop verifies grounded evidence."),
+                ),
+            ],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("verifies grounded evidence"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            report.checks[0].match_method,
+            MatchMethod::NormalizedTextContains
+        );
+        // The page was searched and one element held the quote, so the tier says
+        // element precision — a page-only citation no longer reports a comparison
+        // that never ran, in either direction.
+        assert_eq!(
+            report.checks[0].evidence_tier,
+            Some(EvidenceTier::ElementScoped)
+        );
+    }
+
+    #[test]
+    fn presence_claim_page_only_locator_stays_page_scoped() {
+        let report = verify_elements(
+            vec![element("a", "p0001", [100, 100, 400, 200], Some("text"))],
+            vec![claim(
+                ClaimKind::Presence,
+                None,
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            report.checks[0].evidence_tier,
+            Some(EvidenceTier::PageScoped)
+        );
+    }
+
+    #[test]
+    fn unicode_compat_profile_grounds_extraction_artifacts_the_default_profile_rejects() {
+        let elements = vec![element(
+            "e1",
+            "p0001",
+            [100, 100, 700, 200],
+            // What PDF extraction actually emits: NBSP, curly quotes, an ffi
+            // ligature, a soft-hyphenated line break, and an en dash.
+            Some("Revenue\u{00A0}grew \u{2018}e\u{FB03}cient\u{2019} evi\u{00AD}dence \u{2013} 5"),
+        )];
+        // What a model quoting the same words types.
+        let quote = "Revenue grew 'efficient' evidence - 5";
+        let citation = Citation {
+            element_id: Some("e1".into()),
+            ..Default::default()
+        };
+
+        let default_profile = verify_elements(
+            elements.clone(),
+            vec![claim(ClaimKind::Quote, Some(quote), citation.clone())],
+        );
+        assert_eq!(default_profile.checks[0].status, CheckStatus::Mismatch);
+
+        let unicode_profile = verify_elements_with_config(
+            elements,
+            vec![claim(ClaimKind::Quote, Some(quote), citation)],
+            &unicode_compat_config(),
+        );
+        assert!(unicode_profile.all_evidence_grounded);
+        assert_eq!(unicode_profile.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            unicode_profile.checks[0].match_method,
+            MatchMethod::NormalizedTextContains
+        );
+    }
+
+    #[test]
+    fn unicode_compat_profile_never_grounds_a_paraphrase() {
+        let report = verify_elements_with_config(
+            vec![element(
+                "e1",
+                "p0001",
+                [100, 100, 700, 200],
+                Some("We will approve the request."),
+            )],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("We may approve the request."),
+                Citation {
+                    element_id: Some("e1".into()),
+                    ..Default::default()
+                },
+            )],
+            &unicode_compat_config(),
+        );
+
+        assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+        assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
+    }
+
+    #[test]
+    fn unicode_compat_normalize_and_mapped_text_agree() {
+        // The verdict path (normalize_quote_unicode_compat_v1) and the echo path
+        // (mapped_text) are two consumers of one fold table; this pins that they
+        // stay one profile. Probes cover every fold class plus the whitespace and
+        // trim edges.
+        let probes = [
+            "it\u{2019}s",
+            "\u{201C}quoted\u{201D}",
+            "\u{201A}a\u{2018}b\u{201B}c\u{201F}d\u{201E}e",
+            "2019\u{2013}2020 \u{2014} \u{2212}5 \u{2010}\u{2011}\u{2012}\u{2015}",
+            "a\u{2026}b",
+            "e\u{FB03}cient \u{FB00}\u{FB01}\u{FB02}\u{FB04}\u{FB05}\u{FB06}",
+            "evi\u{00AD}dence a\u{200B}b \u{FEFF}c",
+            "a\u{00A0}\u{00A0}b\u{3000}c\u{000B}d\u{2028}e",
+            "  leading and trailing  ",
+            "a \u{00AD} b",
+            "",
+            "plain ascii text",
+        ];
+        for probe in probes {
+            assert_eq!(
+                normalize_quote_unicode_compat_v1(probe),
+                mapped_text(probe, TextNormalization::UnicodeCompatV1, true).text,
+                "normalize and mapped_text disagree on {probe:?}"
+            );
+        }
+        // Case-insensitive agreement too, minus the one known boundary shared with
+        // collapse_whitespace: text_matches lowercases the whole normalized string
+        // (str::to_lowercase, which applies the Greek final-sigma context rule)
+        // while mapped_text lowercases per character. Its only effect is a grounded
+        // check echoing no context when a final sigma ends the match; no probe here
+        // contains sigma, so the two paths must agree exactly.
+        for probe in probes {
+            assert_eq!(
+                normalize_quote_unicode_compat_v1(probe).to_lowercase(),
+                mapped_text(probe, TextNormalization::UnicodeCompatV1, false).text,
+                "case-insensitive normalize and mapped_text disagree on {probe:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn unicode_compat_context_echo_maps_a_folded_match_back_to_source_bytes() {
+        let mut config = hardened_config();
+        config.matching.text_normalization = TextNormalization::UnicodeCompatV1;
+        let report = verify_elements_with_config(
+            vec![element(
+                "e1",
+                "p0001",
+                [100, 100, 700, 200],
+                Some("the e\u{FB03}cient\u{00A0}engine wins"),
+            )],
+            vec![claim(
+                ClaimKind::Quote,
+                Some("efficient engine"),
+                Citation {
+                    element_id: Some("e1".into()),
+                    ..Default::default()
+                },
+            )],
+            &config,
+        );
+
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        let echo = report.checks[0]
+            .context_echo
+            .as_ref()
+            .expect("hardened config echoes context");
+        // The echo quotes the source as extracted — ligature and NBSP intact —
+        // because the fold maps every normalized character back to the source
+        // bytes it came from.
+        assert_eq!(echo.matched, "e\u{FB03}cient\u{00A0}engine");
+    }
+
+    #[test]
+    fn claim_text_the_fold_erases_entirely_never_grounds() {
+        // A lone soft hyphen passes the pre-claim gate (it is not Unicode
+        // whitespace) but normalizes to "" under unicode_compat_v1, and
+        // contains("") is true of every element — so without the fail-closed guard
+        // this claim would ground anywhere, element-cited or page-scanned.
+        for citation in [
+            Citation {
+                element_id: Some("e1".into()),
+                ..Default::default()
+            },
+            Citation {
+                page: Some("p0001".into()),
+                ..Default::default()
+            },
+        ] {
+            let report = verify_elements_with_config(
+                vec![element("e1", "p0001", [100, 100, 700, 200], Some("text"))],
+                vec![claim(ClaimKind::Quote, Some("\u{00AD}"), citation)],
+                &unicode_compat_config(),
+            );
+            assert!(!report.all_evidence_grounded);
+            assert_eq!(report.checks[0].status, CheckStatus::Mismatch);
+            assert_eq!(report.checks[0].reason, Some(CheckReason::TextMismatch));
+        }
+    }
+
+    #[test]
+    fn presence_claim_with_text_and_page_locator_stays_page_scoped() {
+        // The wire schema permits text on a presence claim; the page scan must not
+        // use it to upgrade the evidence to an element the claim never named.
+        let report = verify_elements(
+            vec![element("e1", "p0001", [100, 100, 700, 200], Some("text"))],
+            vec![claim(
+                ClaimKind::Presence,
+                Some("text"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )],
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(
+            report.checks[0].evidence_tier,
+            Some(EvidenceTier::PageScoped)
+        );
+    }
+
+    #[test]
+    fn quote_claim_page_only_locator_grounds_from_a_span_when_no_element_matches() {
+        let source = ElementSource {
+            elements: vec![element(
+                "e1",
+                "p0001",
+                [100, 100, 400, 200],
+                Some("unrelated prose"),
+            )],
+            spans: vec![GroundingSpan {
+                id: "s1".into(),
+                page: "p0001".into(),
+                bbox: Some([100, 300, 400, 380]),
+                text: "the quoted sentence survives".into(),
+                element: Some("e1".into()),
+                char_start: None,
+                char_end: None,
+            }],
+            coordinate_origin: CoordinateOrigin::TopLeft,
+        };
+        let citations = CitationInput::Envelope(CitationEnvelope {
+            document_fingerprint: source.fingerprint(),
+            claims: vec![claim(
+                ClaimKind::Quote,
+                Some("quoted sentence"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )],
+        });
+        let report = verify_claims(
+            &source,
+            citations,
+            &VerificationConfig::default_v1(),
+            "0".repeat(64),
+            "1".repeat(64),
+        );
+
+        assert!(report.all_evidence_grounded);
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            report.checks[0].evidence_tier,
+            Some(EvidenceTier::ExactSpan)
+        );
     }
 
     #[test]

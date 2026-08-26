@@ -178,7 +178,8 @@ Include a bounded window of source text surrounding the matched span in each gro
 check, with the matched span delimited. The textual analog of crops, with no PDFium, render step,
 or click required.
 
-Scope honesty: **not pure report enrichment** — normalized matching collapses whitespace and uses
+Scope honesty: **not pure report enrichment** — normalized matching applies the configured
+normalization profile (whitespace collapse, or the opt-in `unicode_compat_v1` fold) and uses
 containment (`text_matches` in `ethos-verify`), so the contract must pin deterministic
 match-location rules before the echo can be byte-stable:
 

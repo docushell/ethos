@@ -22,8 +22,8 @@
       "additionalProperties": false,
       "properties": {
         "text_normalization": {
-          "enum": ["none", "collapse_whitespace"],
-          "description": "'collapse_whitespace': normalize line endings, trim, and collapse runs of ASCII whitespace to a single ASCII space. The ONLY normalization in v1; no Unicode normalization (it would alter extraction fidelity)."
+          "enum": ["none", "collapse_whitespace", "unicode_compat_v1"],
+          "description": "'collapse_whitespace': normalize line endings, trim, and collapse runs of ASCII whitespace to a single ASCII space — the only normalization in v1. 'unicode_compat_v1' (opt-in): fold a pinned, versioned table of Unicode lookalikes to ASCII (curly quotes, the dash family, common Latin ligatures, U+2026; soft hyphen / zero-width space / U+FEFF erased), then trim and collapse runs of Unicode whitespace to one ASCII space. Still literal and deterministic — a paraphrase does not ground; the table is versioned by the profile name and never edited. It exists because PDF extraction emits U+2019 and U+00A0 where a model quoting the same words types an apostrophe and a space, and those false mismatches read downstream as fabricated quotes."
         },
         "case_sensitive": { "type": "boolean" },
         "bbox_containment_tolerance_q": {
