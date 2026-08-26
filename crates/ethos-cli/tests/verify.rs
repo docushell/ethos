@@ -665,6 +665,196 @@ fn verify_batch_preserves_request_order_and_is_byte_identical_on_repeat() {
 }
 
 #[test]
+fn verify_batch_merged_byte_equals_single_verify_over_concatenated_claims() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let ungrounded = root.join("examples/verify/native_ungrounded_citations.json");
+    let citations_ndjson = temp_json(
+        "verify-batch-merged",
+        &citation_ndjson(&[&grounded, &ungrounded]),
+    );
+
+    // The oracle is plain `verify` over the hand-concatenated envelope: --merged is
+    // that concatenation, so the two outputs must agree byte for byte — attestation,
+    // check ids, and framing included.
+    let grounded_value = json_file(&grounded);
+    let ungrounded_value = json_file(&ungrounded);
+    assert_eq!(
+        grounded_value["document_fingerprint"], ungrounded_value["document_fingerprint"],
+        "fixtures must cite one document for this test to merge"
+    );
+    let mut merged = grounded_value.clone();
+    merged["claims"]
+        .as_array_mut()
+        .expect("claims is an array")
+        .extend(
+            ungrounded_value["claims"]
+                .as_array()
+                .expect("claims is an array")
+                .iter()
+                .cloned(),
+        );
+    let merged_citations = temp_json(
+        "verify-batch-merged-oracle",
+        &serde_json::to_string(&merged).expect("merged envelope serializes"),
+    );
+
+    let single = run_ethos(&[
+        "verify",
+        document.to_str().unwrap(),
+        "--citations",
+        merged_citations.to_str().unwrap(),
+    ]);
+    assert_eq!(single.status.code(), Some(0));
+
+    let batch = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        citations_ndjson.to_str().unwrap(),
+        "--merged",
+    ]);
+    assert_eq!(batch.status.code(), Some(0));
+    assert_eq!(batch.stderr, b"");
+    assert_eq!(batch.stdout, single.stdout);
+
+    // One report, one gate: an ungrounded claim anywhere in the batch fails the
+    // merged report under --fail-on-ungrounded.
+    let failing = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        citations_ndjson.to_str().unwrap(),
+        "--merged",
+        "--fail-on-ungrounded",
+    ]);
+    assert_eq!(failing.status.code(), Some(1));
+}
+
+#[test]
+fn verify_batch_merged_enforces_max_checks_over_the_merged_total() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let ungrounded = root.join("examples/verify/native_ungrounded_citations.json");
+    let citations_ndjson = temp_json(
+        "verify-batch-merged-max-checks",
+        &citation_ndjson(&[&grounded, &ungrounded]),
+    );
+    // A config whose max_checks admits each request alone but not their sum: the
+    // merged report attests this config, so the merged total must satisfy it exactly
+    // as one `verify` run over the concatenated claims would.
+    let mut config = json_file(root.join("schemas/examples/verification-config.example.json"));
+    let per_request_max = [&grounded, &ungrounded]
+        .iter()
+        .map(|path| json_file(path)["claims"].as_array().expect("claims").len())
+        .max()
+        .expect("two requests");
+    config["limits"]["max_checks"] = Value::from(per_request_max);
+    let config_path = temp_json(
+        "verify-batch-merged-max-checks-config",
+        &serde_json::to_string(&config).expect("config serializes"),
+    );
+
+    let per_request = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        citations_ndjson.to_str().unwrap(),
+        "--config",
+        config_path.to_str().unwrap(),
+    ]);
+    assert_eq!(per_request.status.code(), Some(0), "each line fits alone");
+
+    let merged = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        citations_ndjson.to_str().unwrap(),
+        "--config",
+        config_path.to_str().unwrap(),
+        "--merged",
+    ]);
+    assert_eq!(merged.status.code(), Some(2));
+    assert_eq!(merged.stdout, b"");
+    assert!(
+        String::from_utf8_lossy(&merged.stderr).contains("max_checks"),
+        "stderr names the limit: {}",
+        String::from_utf8_lossy(&merged.stderr)
+    );
+}
+
+#[test]
+fn verify_batch_merged_refuses_mixed_pinned_and_unpinned_requests() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let pinned = json_file(&grounded);
+    let bare_claims = pinned["claims"].clone();
+    let ndjson = format!(
+        "{}\n{}\n",
+        serde_json::to_string(&bare_claims).expect("bare claims serialize"),
+        serde_json::to_string(&pinned).expect("pinned citation serializes"),
+    );
+    let citations_ndjson = temp_json("verify-batch-merged-unpinned", &ndjson);
+
+    let output = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        citations_ndjson.to_str().unwrap(),
+        "--merged",
+    ]);
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("line 1") && stderr.contains("document_fingerprint"),
+        "stderr names the unpinned line: {stderr}"
+    );
+}
+
+#[test]
+fn verify_batch_merged_refuses_disagreeing_fingerprints_and_writes_nothing() {
+    let root = repo_root();
+    let document = document_example();
+    let grounded = root.join("examples/verify/native_grounded_citations.json");
+    let mut restamped = json_file(&grounded);
+    restamped["document_fingerprint"] = Value::String(
+        "sha256:0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+    );
+    let ndjson = format!(
+        "{}\n{}\n",
+        serde_json::to_string(&json_file(&grounded)).expect("citation fixture serializes"),
+        serde_json::to_string(&restamped).expect("restamped citation serializes"),
+    );
+    let citations_ndjson = temp_json("verify-batch-merged-mixed", &ndjson);
+    let out = temp_output("verify-batch-merged-mixed-out");
+
+    let output = run_ethos(&[
+        "verify-batch",
+        document.to_str().unwrap(),
+        "--citations-ndjson",
+        citations_ndjson.to_str().unwrap(),
+        "--merged",
+        "--out",
+        out.to_str().unwrap(),
+    ]);
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(output.stdout, b"");
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("document_fingerprint"),
+        "stderr names the disagreement: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        !out.exists(),
+        "a refused merge must not write a partial report"
+    );
+}
+
+#[test]
 fn verify_batch_fail_on_ungrounded_exits_one_after_output_and_invalid_input_writes_nothing() {
     let root = repo_root();
     let document = document_example();
@@ -3070,8 +3260,8 @@ fn real_opendataloader_style_table_cell_claim_grounds() {
               "citation": {
                 "table_id": "odl-13",
                 "cell": {
-                  "row": 1,
-                  "col": 2
+                  "row": 0,
+                  "col": 1
                 }
               }
             }

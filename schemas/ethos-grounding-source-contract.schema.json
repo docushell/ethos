@@ -102,7 +102,7 @@
         "name": { "type": "string", "minLength": 1 },
         "version": { "type": "string", "minLength": 1 },
         "adapter": { "const": "opendataloader-json" },
-        "adapter_version": { "const": "0.1.0" }
+        "adapter_version": { "const": "0.2.0" }
       }
     },
     "capabilities": {

@@ -26,7 +26,9 @@ ODL JSON does not include parser version or page dimensions, so the adapter repo
 version as `unknown` and derives page extents from observed bounding boxes. Coordinate
 origin remains unknown. Real ODL-style table nodes with explicit `page number`, `bounding
 box`, and `rows[].cells[]` cell page/bbox/text fields are mapped to deterministic grounding
-tables; row and column addresses are derived from row/cell order.
+tables; row and column addresses are derived from row/cell order and are 0-based, as the
+`GroundingCell` contract and `docs/writing-a-mapper.md` require. (Adapter 0.1.0 emitted
+them 1-based — cell claims recorded against that output cite one row and one column high.)
 
 ## Declared capabilities (honest downgrades)
 

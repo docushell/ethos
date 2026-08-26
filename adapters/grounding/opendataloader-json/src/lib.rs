@@ -29,6 +29,10 @@
 //!   "tables"?: [{"id", "page", "bbox", "cells": [{"row", "col", "row_span"?,
 //!     "col_span"?, "bbox", "text"}]}]}`
 //!
+//! Cell `row`/`col` are **0-based** in both accepted shapes, as [`GroundingCell`]
+//! documents: the documented subset declares them, and a real ODL row states no
+//! address at all, so a cell's position in `rows[].cells[]` is its address.
+//!
 //! It also accepts the pinned OpenDataLoader 2.4.x JSON shape:
 //! `{"file name", "number of pages", "kids": [{"type", "id"?, "page number",
 //! "bounding box", "content"?, ...}]}`. That shape does not expose parser version
@@ -58,7 +62,12 @@ use ethos_core::grounding::{
 use serde_json::Value;
 
 /// Adapter version, reported in `ParserIdentity::adapter_version`.
-pub const ADAPTER_VERSION: &str = "0.1.0";
+///
+/// 0.2.0: real-shape (`rows[].cells[]`) table cells became 0-based, matching the
+/// contract [`GroundingCell`] documents and what the documented subset already
+/// declared. Cell claims recorded against 0.1.0 output cite each cell one row and
+/// one column high; the version bump is what makes those artifacts distinguishable.
+pub const ADAPTER_VERSION: &str = "0.2.0";
 
 const REAL_ODL_MAX_PAGES: u32 = 10_000;
 
@@ -510,12 +519,14 @@ fn parse_real_table(
             .and_then(Value::as_array)
             .ok_or_else(|| err("row cells must be an array"))?;
         for (col_index, cell) in cells_value.iter().enumerate() {
+            // `GroundingCell::row`/`col` are 0-based; a real ODL row carries no
+            // explicit address, so position in `rows[].cells[]` is the address.
             cells.push(parse_real_table_cell(
                 cell,
                 page_count,
                 page_number,
-                (row_index + 1) as u32,
-                (col_index + 1) as u32,
+                row_index as u32,
+                col_index as u32,
             )?);
         }
     }
@@ -1250,12 +1261,12 @@ mod tests {
         assert_eq!(tables[0].page, "page-2");
         assert_eq!(tables[0].bbox, Some([1500, 2000, 25000, 12000]));
         assert_eq!(tables[0].cells.len(), 2);
-        assert_eq!(tables[0].cells[0].row, 1);
-        assert_eq!(tables[0].cells[0].col, 1);
+        assert_eq!(tables[0].cells[0].row, 0);
+        assert_eq!(tables[0].cells[0].col, 0);
         assert_eq!(tables[0].cells[0].text, "Cell A");
         assert_eq!(tables[0].cells[0].bbox, Some([2000, 3000, 12000, 6000]));
-        assert_eq!(tables[0].cells[1].row, 1);
-        assert_eq!(tables[0].cells[1].col, 2);
+        assert_eq!(tables[0].cells[1].row, 0);
+        assert_eq!(tables[0].cells[1].col, 1);
         assert_eq!(tables[0].cells[1].text, "Cell B");
     }
 

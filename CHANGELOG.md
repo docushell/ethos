@@ -2,6 +2,57 @@
 
 ## Unreleased
 
+### The normalization profile is now an executable contract, not a convention
+
+- `schemas/normalization-vectors.json` pins `ethos_collapse_whitespace_v1` as input/output
+  vectors generated from `normalize_quote` itself, and a conformance test fails the build
+  the moment the file and the implementation disagree. The profile has more than one
+  implementation across the estate, and they have already drifted once: a JavaScript copy
+  collapsed U+000B (vertical tab), which `char::is_ascii_whitespace` does not include, so
+  an `expected_text_sha256` computed on the producing side could fail the verifier's
+  recompute while both sides named the same profile — a false "not in the document"
+  verdict manufactured by a whitespace table. The vectors name that exact case
+  (`vertical-tab-is-not-collapsed`), plus the edge the trim rule adds: trimming uses
+  Unicode `White_Space`, a wider set than the collapse set, so VT and NBSP survive inside
+  a quote but not at its edges. Consumers should vendor the file and run it in their own
+  CI; regeneration is `cargo test -p ethos-verify --test normalization_vectors -- --ignored`,
+  and the file is never edited by hand.
+
+### OpenDataLoader adapter 0.2.0 — real-shape table cells are 0-based
+
+- The real-ODL path (`rows[].cells[]`) emitted 1-based row and column addresses while the
+  `GroundingCell` contract, `docs/writing-a-mapper.md` ("zero-based"), and the documented
+  subset all say 0-based — so the same cell had two addresses depending on which shape
+  delivered it, and a cell claim written against one grounding source could not ground
+  against another. The adapter now derives 0-based addresses from row/cell order, which is
+  the only address a real ODL row states. This is a claim-visible change: cell claims
+  recorded against 0.1.0 output cite each cell one row and one column high, and the
+  `adapter_version` bump to 0.2.0 (mirrored in the shape-contract schemas and goldens) is
+  what makes artifacts from before and after distinguishable. Consumers holding stored
+  cell claims from 0.1.0 reports need a one-time re-anchor scoped by that version string.
+
+### `verify-batch --merged` — one report, one attestation, no hand-folding
+
+- `verify-batch` can now emit one canonical verification report over every request instead
+  of NDJSON: claims concatenate in request order, check ids run 1..N across the whole
+  batch, and the report carries a single attestation whose `claims_sha256` covers the full
+  merged claims array. The alternative this replaces is consumers folding per-request
+  reports themselves, which cannot be done honestly from the outside: a hand-merged report
+  inherits one batch's `attestation`, `dispersion`, and report-level fields and silently
+  misstates the rest. Merging is the attester's job, so the CLI does it under the
+  attestation. The merged output is byte-identical to a single `verify` run over the
+  hand-concatenated claims envelope — a test pins that equivalence — and everything else
+  follows from taking that equivalence seriously. Fingerprints are all-or-nothing: every
+  request names the same `document_fingerprint` or none names one, because a merged
+  envelope pins every claim in it, and letting an unpinned request ride along would
+  certify its claims under a fingerprint it never named — flipping a staleness failure
+  the per-request mode reports into a merged pass. Disagreeing or mixed pinning is
+  refused as a usage error before any output is written. The merged claim total must
+  satisfy the config's `max_checks`, exactly as the equivalent single `verify` run would
+  demand — otherwise the report would carry more checks than the config its own
+  `verification_config_sha256` attests permits. Large batches pass a config that raises
+  `max_checks`, which has a floor of 1 and no ceiling.
+
 ### Proof statements — every Ethos verdict is self-describing and self-attesting
 
 - boundary-exception: `verify`, `grounding check`, `evidence anchor`, `security report`,

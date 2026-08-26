@@ -361,6 +361,16 @@ pub(crate) struct VerifyBatchArgs {
     /// Output path for canonical verification-report NDJSON (default: stdout).
     #[arg(long)]
     pub(crate) out: Option<PathBuf>,
+    /// Emit one canonical verification report over every request instead of NDJSON:
+    /// claims concatenate in request order under a single attestation, so a consumer
+    /// never folds per-request reports by hand — a hand-folded report inherits one
+    /// batch's attestation and dispersion and misstates the rest. The output is
+    /// byte-identical to one `verify` run over the concatenated claims, so the same
+    /// rules bind: every request must name the same document_fingerprint or none may
+    /// name one, and the merged claim total must satisfy the config's max_checks —
+    /// pass a config raising it for large batches.
+    #[arg(long)]
+    pub(crate) merged: bool,
     /// Exit 1 after writing reports when any request is not fully grounded.
     #[arg(long)]
     pub(crate) fail_on_ungrounded: bool,

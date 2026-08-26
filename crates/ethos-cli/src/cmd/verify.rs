@@ -31,7 +31,7 @@ use ethos_core::verify_types::{
     ProofLimitation, ProofStatus, ProofSummary, VerificationConfig, VerificationReport,
     HARDENED_VERIFICATION_SCHEMA_VERSION,
 };
-use ethos_verify::CitationInput;
+use ethos_verify::{CitationEnvelope, CitationInput};
 
 use crate::cmd::crop_artifacts::{
     load_bound_crop_source_pdf, write_crop_descriptor_artifact, write_rendered_crop_artifact,
@@ -147,6 +147,23 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
         ethos_core::c14n::sha256_hex(&config_value).map_err(|e| EthosError::internal(e.message))?;
 
     let source = load_source(&args.input, args.grounding.as_deref())?;
+    if args.merged {
+        let citation = merge_batch_citations(citations)?;
+        // The merged input must satisfy the attested config exactly as one `verify`
+        // run over the concatenated claims would — otherwise the report would carry
+        // more checks than the max_checks its own verification_config_sha256 pins.
+        validate_citation_input(&citation, &config)?;
+        let claims_sha256 = claims_sha256(&citation)?;
+        let report =
+            ethos_verify::verify_claims(&source, citation, &config, config_sha256, claims_sha256);
+        return write_report(
+            args.out,
+            VerifyOutputFormat::Json,
+            report,
+            args.fail_on_ungrounded,
+            &args.input,
+        );
+    }
     let reports = batch_reports(&source, citations, &config, &config_sha256)?;
 
     let mut output = Vec::new();
@@ -215,6 +232,59 @@ fn load_batch_config(
     };
     validate_verification_config(&config)?;
     Ok(config)
+}
+
+/// Merge NDJSON requests into one citation input for `--merged`: claims concatenate
+/// in request order, and the merged envelope carries the one fingerprint the
+/// requests agree on. Requests naming different fingerprints are refused, because a
+/// merged report carries a single staleness verdict and a single claims
+/// attestation, and one report cannot honestly describe two documents. Pinning is
+/// all-or-nothing for the same reason: a merged envelope with a fingerprint pins
+/// every claim in it, so letting an unpinned request ride along would certify its
+/// claims under a fingerprint it never named — and flip a staleness failure the
+/// per-request mode reports into a merged pass.
+fn merge_batch_citations(citations: Vec<CitationInput>) -> Result<CitationInput, Failure> {
+    let mut document_fingerprint: Option<String> = None;
+    let mut first_unpinned_line: Option<usize> = None;
+    let mut claims = Vec::new();
+    for (index, citation) in citations.into_iter().enumerate() {
+        let (fingerprint, mut line_claims) = match citation {
+            CitationInput::Claims(line_claims) => (None, line_claims),
+            CitationInput::Envelope(envelope) => (envelope.document_fingerprint, envelope.claims),
+        };
+        match fingerprint {
+            Some(fingerprint) => match document_fingerprint.as_deref() {
+                Some(existing) if existing != fingerprint => {
+                    return Err(Failure::Usage(format!(
+                        "citations NDJSON line {} names a document_fingerprint that \
+                         disagrees with an earlier line; --merged produces one report \
+                         about one document",
+                        index + 1
+                    )));
+                }
+                _ => document_fingerprint = Some(fingerprint),
+            },
+            None => {
+                if first_unpinned_line.is_none() {
+                    first_unpinned_line = Some(index + 1);
+                }
+            }
+        }
+        claims.append(&mut line_claims);
+    }
+    if document_fingerprint.is_some() {
+        if let Some(line) = first_unpinned_line {
+            return Err(Failure::Usage(format!(
+                "citations NDJSON line {line} names no document_fingerprint while \
+                 another line does; a merged envelope pins every claim in it, so pin \
+                 every request or none"
+            )));
+        }
+    }
+    Ok(CitationInput::Envelope(CitationEnvelope {
+        document_fingerprint,
+        claims,
+    }))
 }
 
 fn batch_reports(
