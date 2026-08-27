@@ -118,7 +118,7 @@ impl GroundingJsonError {
             GroundingJsonErrorCode::UnknownField => "remove the unknown field",
             GroundingJsonErrorCode::InvalidField => "correct the field type or required fields",
             GroundingJsonErrorCode::UnsupportedVersion => {
-                "use ethos.grounding.v1 with schema_version 1.0.0"
+                "use ethos.grounding.v1 with schema_version 1.0.0 or 1.1.0"
             }
             GroundingJsonErrorCode::InvalidCapabilities => {
                 "make capabilities agree with supplied arrays and offsets"
@@ -223,10 +223,14 @@ impl GroundingSource for GroundingJsonSource {
             .iter()
             .map(|e| GroundingElement {
                 id: e.id.clone(),
-                page: e.page.clone(),
-                bbox: Some(e.bbox),
+                // A page-less element has no page id to give; the empty string is
+                // the honest non-address — no citation can name it, and the page
+                // scan matches nothing against it.
+                page: e.page.clone().unwrap_or_default(),
+                bbox: e.bbox,
                 kind: e.kind.clone(),
                 text: e.text.clone(),
+                locator: e.locator.clone(),
             })
             .collect()
     }
@@ -328,10 +332,14 @@ struct Page {
 #[serde(deny_unknown_fields)]
 struct Element {
     id: String,
-    page: String,
-    bbox: [i64; 4],
+    #[serde(default)]
+    page: Option<String>,
+    #[serde(default)]
+    bbox: Option<[i64; 4]>,
     kind: String,
     text: Option<String>,
+    #[serde(default)]
+    locator: Option<String>,
 }
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -560,7 +568,7 @@ fn reject_unknown_fields(value: &Value) -> Result<(), GroundingJsonError> {
     )?;
     check_array(
         root.get("elements"),
-        &["id", "page", "bbox", "kind", "text"],
+        &["id", "page", "bbox", "kind", "text", "locator"],
         "/elements",
     )?;
     check_array(
@@ -649,13 +657,32 @@ fn valid_id(value: &str) -> bool {
         && value.as_bytes()[0].is_ascii_alphanumeric()
 }
 fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
-    if artifact.artifact_type != "ethos.grounding.v1" || artifact.schema_version != "1.0.0" {
+    if artifact.artifact_type != "ethos.grounding.v1"
+        || !matches!(artifact.schema_version.as_str(), "1.0.0" | "1.1.0")
+    {
         return Err(error(
             GroundingJsonErrorCode::UnsupportedVersion,
             "/artifact_type",
         ));
     }
-    if artifact.source.media_type != "application/pdf"
+    // 1.0.0 is PDF and nothing else, exactly as it always was. 1.1.0 adds the
+    // eight page-less office types, each holding the page-less shape checked
+    // below — a paginated PDF artifact under 1.1.0 keeps the 1.0.0 shape.
+    let page_less = artifact.source.media_type != "application/pdf";
+    const PAGE_LESS_MEDIA: [&str; 8] = [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/vnd.oasis.opendocument.text",
+        "application/vnd.oasis.opendocument.spreadsheet",
+        "application/vnd.oasis.opendocument.presentation",
+        "application/rtf",
+        "application/epub+zip",
+    ];
+    let media_admitted = artifact.source.media_type == "application/pdf"
+        || (artifact.schema_version == "1.1.0"
+            && PAGE_LESS_MEDIA.contains(&artifact.source.media_type.as_str()));
+    if !media_admitted
         || !artifact.source.sha256.starts_with("sha256:")
         || artifact.source.sha256.len() != 71
         || !artifact.source.sha256[7..]
@@ -680,6 +707,35 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
             GroundingJsonErrorCode::InvalidCapabilities,
             "/capabilities",
         ));
+    }
+    if page_less {
+        // A page-less source states no page, no span, no table — and every element
+        // carries the producer's native locator in place of the page/bbox pair.
+        // Checked before the per-entity walks so a violation names the rule rather
+        // than a downstream reference failure.
+        if !artifact.pages.is_empty() {
+            return Err(error(GroundingJsonErrorCode::InvalidInvariant, "/pages"));
+        }
+        if artifact.spans.as_ref().is_some_and(|s| !s.is_empty())
+            || artifact.tables.as_ref().is_some_and(|t| !t.is_empty())
+        {
+            return Err(error(GroundingJsonErrorCode::InvalidInvariant, "/spans"));
+        }
+        for (i, e) in artifact.elements.iter().enumerate() {
+            let path = format!("/elements/{i}");
+            if e.page.is_some() || e.bbox.is_some() {
+                return Err(error(GroundingJsonErrorCode::InvalidField, &path));
+            }
+            match e.locator.as_deref() {
+                Some(locator) if !locator.is_empty() && locator.len() <= 2048 => {}
+                _ => {
+                    return Err(error(
+                        GroundingJsonErrorCode::InvalidField,
+                        &format!("{path}/locator"),
+                    ))
+                }
+            }
+        }
     }
     if artifact.pages.len() > MAX_PAGES
         || artifact.elements.len() > MAX_ELEMENTS
@@ -744,17 +800,31 @@ fn validate(artifact: &Artifact) -> Result<(), GroundingJsonError> {
                 &format!("{path}/id"),
             ));
         }
-        if !page_by_id.contains_key(e.page.as_str()) {
-            return Err(error(
-                GroundingJsonErrorCode::UnknownReference,
-                &format!("{path}/page"),
-            ));
-        }
-        if !valid_bbox(e.bbox, page_by_id.get(e.page.as_str()).copied()) {
-            return Err(error(
-                GroundingJsonErrorCode::InvalidBBox,
-                &format!("{path}/bbox"),
-            ));
+        if !page_less {
+            let (Some(page), Some(bbox)) = (e.page.as_deref(), e.bbox) else {
+                // A paginated artifact's element states its page and box — the
+                // 1.0.0 shape, unchanged under 1.1.0 for PDF sources; a locator
+                // belongs only to the page-less shape.
+                return Err(error(GroundingJsonErrorCode::InvalidField, &path));
+            };
+            if e.locator.is_some() {
+                return Err(error(
+                    GroundingJsonErrorCode::InvalidField,
+                    &format!("{path}/locator"),
+                ));
+            }
+            if !page_by_id.contains_key(page) {
+                return Err(error(
+                    GroundingJsonErrorCode::UnknownReference,
+                    &format!("{path}/page"),
+                ));
+            }
+            if !valid_bbox(bbox, page_by_id.get(page).copied()) {
+                return Err(error(
+                    GroundingJsonErrorCode::InvalidBBox,
+                    &format!("{path}/bbox"),
+                ));
+            }
         }
         if e.kind.is_empty()
             || e.kind
@@ -924,6 +994,51 @@ mod tests {
     fn valid() -> String {
         r#"{"artifact_type":"ethos.grounding.v1","schema_version":"1.0.0","source":{"media_type":"application/pdf","sha256":"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"},"producer":{"name":"test","version":"1.0.0"},"capabilities":{"spans":false,"char_offsets":false,"tables":false},"coordinate_system":{"unit":"centipoint","origin":"top-left"},"pages":[{"id":"page-1","index":1,"width":61200,"height":79200,"rotation":0}],"elements":[{"id":"block-1","page":"page-1","bbox":[7200,8400,54000,10200],"kind":"text_block","text":"héllo"}]}"#.to_owned()
     }
+    fn page_less() -> String {
+        r#"{"artifact_type":"ethos.grounding.v1","schema_version":"1.1.0","source":{"media_type":"application/vnd.openxmlformats-officedocument.wordprocessingml.document","sha256":"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"},"producer":{"name":"ethos-engine","version":"0.39.0"},"capabilities":{"spans":false,"char_offsets":false,"tables":false},"coordinate_system":{"unit":"centipoint","origin":"top-left"},"pages":[],"elements":[{"id":"s1","kind":"text_run","locator":"{\"paragraph\":1,\"part\":\"word/document.xml\",\"run\":1}","text":"Revenue grew to $12.4M in Q3 2025"}]}"#.to_owned()
+    }
+
+    #[test]
+    fn a_page_less_office_artifact_parses_under_1_1_0() {
+        let source = parse_grounding_json(page_less().as_bytes()).unwrap();
+        assert!(source.pages().is_empty());
+        let elements = source.elements();
+        assert_eq!(elements[0].id, "s1");
+        assert_eq!(elements[0].page, "", "no page id exists to give");
+        assert_eq!(elements[0].bbox, None);
+        assert!(elements[0]
+            .locator
+            .as_deref()
+            .unwrap()
+            .contains("word/document.xml"));
+    }
+
+    #[test]
+    fn the_page_less_shape_is_fenced_on_every_side() {
+        // An office media type under 1.0.0: the version that never admitted it.
+        let refused = page_less().replace(
+            "\"schema_version\":\"1.1.0\"",
+            "\"schema_version\":\"1.0.0\"",
+        );
+        assert!(parse_grounding_json(refused.as_bytes()).is_err());
+        // A synthesized page on a page-less source.
+        let refused = page_less().replace(
+            "\"pages\":[]",
+            "\"pages\":[{\"id\":\"page-1\",\"index\":1,\"width\":61200,\"height\":79200,\"rotation\":0}]",
+        );
+        assert!(parse_grounding_json(refused.as_bytes()).is_err());
+        // A page-less element missing its locator.
+        let refused = page_less().replace(",\"locator\":\"{\\\"paragraph\\\":1,\\\"part\\\":\\\"word/document.xml\\\",\\\"run\\\":1}\"", "");
+        assert!(parse_grounding_json(refused.as_bytes()).is_err());
+        // A paginated PDF element gaining a locator: the field belongs to the
+        // page-less shape alone.
+        let refused = valid().replace(
+            "\"kind\":\"text_block\"",
+            "\"kind\":\"text_block\",\"locator\":\"x\"",
+        );
+        assert!(parse_grounding_json(refused.as_bytes()).is_err());
+    }
+
     #[test]
     fn accepts_unicode_and_projects_source() {
         let source = parse_grounding_json(valid().as_bytes()).unwrap();

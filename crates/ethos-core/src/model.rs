@@ -414,6 +414,7 @@ fn grounding_element_from_element(e: &Element) -> crate::grounding::GroundingEle
         bbox: Some(e.bbox.to_array()),
         kind: e.element_type.as_str().to_string(),
         text: e.text.clone(),
+        locator: None,
     }
 }
 

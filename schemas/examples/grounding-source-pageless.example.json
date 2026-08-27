@@ -1,0 +1,36 @@
+{
+  "artifact_type": "ethos.grounding.v1",
+  "schema_version": "1.1.0",
+  "source": {
+    "media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "sha256": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  "producer": {
+    "name": "ethos-engine",
+    "version": "0.39.0"
+  },
+  "capabilities": {
+    "spans": false,
+    "char_offsets": false,
+    "tables": false
+  },
+  "coordinate_system": {
+    "unit": "centipoint",
+    "origin": "top-left"
+  },
+  "pages": [],
+  "elements": [
+    {
+      "id": "s1",
+      "kind": "text_run",
+      "locator": "{\"paragraph\":1,\"part\":\"word/document.xml\",\"run\":1}",
+      "text": "Revenue grew to $12.4M in Q3 2025"
+    },
+    {
+      "id": "s2",
+      "kind": "text_run",
+      "locator": "{\"paragraph\":2,\"part\":\"word/document.xml\",\"run\":1}",
+      "text": "Operating margin held at 31%."
+    }
+  ]
+}

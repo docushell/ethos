@@ -102,9 +102,9 @@ pub struct GroundingElement {
     /// `None` means the source has no geometry to declare — a flow format where any box
     /// would have to be invented. It is not a sentinel for "zero area" or "unknown
     /// position": consumers must treat it as absent evidence and downgrade, exactly as
-    /// they already do for [`CoordinateOrigin::Unknown`]. `ethos.grounding.v1` still
-    /// requires `bbox` on the wire, so today `None` only arises from sources constructed
-    /// in Rust.
+    /// they already do for [`CoordinateOrigin::Unknown`]. Since `ethos.grounding.v1`
+    /// schema 1.1.0 a page-less source states no `bbox` on the wire either — the wire
+    /// caught up to the trait.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bbox: Option<[i64; 4]>,
     /// Element kind, lowercased, source-defined (e.g. `"text_block"`, `"heading"`).
@@ -112,6 +112,13 @@ pub struct GroundingElement {
     /// Text content when applicable.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
+    /// The producer's native locator, serialized canonically (schema 1.1.0,
+    /// page-less sources). Opaque here: verification resolves by element id, and
+    /// this string exists so a citation can be displayed and round-tripped in the
+    /// source's own address language — a DOCX run's `{part, paragraph, run}`, an
+    /// XLSX cell's `{part, sheet, row, column}`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locator: Option<String>,
 }
 
 /// Deterministic structural context for one source element.
@@ -274,6 +281,7 @@ mod tests {
                 bbox: Some([0, 0, 5, 5]),
                 kind: "text_block".into(),
                 text: Some("hello".into()),
+                locator: None,
             }]
         }
     }

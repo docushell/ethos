@@ -30,4 +30,5 @@ serde = { workspace = true }
 sha2 = { workspace = true }
 
 [dev-dependencies]
+ethos-core = { package = "ethos-doc-core", path = "../ethos-core", features = ["full"] }
 serde_json = { workspace = true }

@@ -333,6 +333,7 @@ fn parse_elements(
             bbox: Some(bbox),
             kind,
             text,
+            locator: None,
         });
     }
     Ok(elements)
@@ -645,6 +646,7 @@ fn parse_real_content_element(
         bbox: Some(bbox),
         kind,
         text: None,
+        locator: None,
     });
 
     let mut parts = Vec::new();

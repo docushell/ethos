@@ -2667,6 +2667,7 @@ mod tests {
                     text: Some(
                         "Revenue grew to $12.4M in Q3 2025, driven by enterprise expansion.".into(),
                     ),
+                    locator: None,
                 },
                 GroundingElement {
                     id: "e000003".into(),
@@ -2674,6 +2675,7 @@ mod tests {
                     bbox: Some([7200, 13000, 54000, 20000]),
                     kind: "table".into(),
                     text: None,
+                    locator: None,
                 },
             ]
         }
@@ -2851,6 +2853,7 @@ mod tests {
             bbox: Some(bbox),
             kind: "text_block".into(),
             text: text.map(str::to_string),
+            locator: None,
         }
     }
 
@@ -3730,6 +3733,34 @@ mod tests {
         assert_eq!(
             report.checks[0].evidence_tier,
             Some(EvidenceTier::ExactSpan)
+        );
+    }
+
+    #[test]
+    fn a_page_less_office_source_grounds_a_quote_by_element_id() {
+        // The end of the strand: an office artifact entering by the wire (schema
+        // 1.1.0), and a quote grounding against it by element id — no page, no
+        // bbox, no invented geometry anywhere. Evidence precision is element
+        // scope, which is exactly what a page-less address can honestly claim.
+        let artifact = r#"{"artifact_type":"ethos.grounding.v1","schema_version":"1.1.0","source":{"media_type":"application/vnd.openxmlformats-officedocument.wordprocessingml.document","sha256":"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"},"producer":{"name":"ethos-engine","version":"0.39.0"},"capabilities":{"spans":false,"char_offsets":false,"tables":false},"coordinate_system":{"unit":"centipoint","origin":"top-left"},"pages":[],"elements":[{"id":"s1","kind":"text_run","locator":"{\"paragraph\":1,\"part\":\"word/document.xml\",\"run\":1}","text":"Revenue grew to $12.4M in Q3 2025"}]}"#;
+        let source = ethos_core::grounding_json::parse_grounding_json(artifact.as_bytes()).unwrap();
+        let cfg = VerificationConfig::default_v1();
+        let citations = CitationInput::Envelope(CitationEnvelope {
+            document_fingerprint: source.fingerprint(),
+            claims: vec![claim(
+                ClaimKind::Quote,
+                Some("Revenue grew"),
+                Citation {
+                    element_id: Some("s1".into()),
+                    ..Default::default()
+                },
+            )],
+        });
+        let report = verify_claims(&source, citations, &cfg, "0".repeat(64), "1".repeat(64));
+        assert_eq!(report.checks[0].status, CheckStatus::Grounded);
+        assert_eq!(
+            report.checks[0].evidence_tier,
+            Some(EvidenceTier::ElementScoped)
         );
     }
 

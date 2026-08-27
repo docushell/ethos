@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+### ethos.grounding.v1 schema 1.1.0 — the office formats stop being stranded
+
+- The single largest capability gap in the estate closes on the side that owns the
+  contract. `source.media_type` was a `const` of `application/pdf`, every element required
+  a `page` and a `bbox` — so the eight office formats ethos-engine fully parses (DOCX,
+  XLSX, PPTX, ODT, ODS, ODP, RTF, EPUB) could never enter verification, though the
+  verifier's own trait has been page-less-ready all along (`GroundingElement.bbox` is an
+  `Option` whose doc said the wire had not caught up; it now has). Schema 1.1.0 admits the
+  eight page-less media types under a version-gated union: a 1.0.0 artifact is PDF and
+  exactly the shape it always was, byte for byte; a 1.1.0 PDF artifact keeps that
+  paginated shape; a 1.1.0 office artifact states `pages: []` — a page-less source states
+  no page, and synthesizing one is the invented pagination the producer refuses — no
+  spans, no tables, and every element carries the producer's native `locator` string in
+  place of the page/bbox pair. The locator is opaque here: verification resolves by
+  element id, and the string exists so a citation can be displayed and round-tripped in
+  the source's own address language. Both fences are tested from both sides: a page on a
+  page-less element, a locator on a paginated one, an office media type under 1.0.0, and
+  a missing locator are each refused by schema and by the Rust intake alike, and an
+  end-to-end test grounds a quote against a page-less DOCX artifact by element id at
+  element-scoped evidence precision — which is what a page-less address can honestly
+  claim.
+
 ### semantic_unverified has its first real producer — the adjacent-element join
 
 - Since the field shipped, every checker hard-coded `semantic_unverified: false`, while
