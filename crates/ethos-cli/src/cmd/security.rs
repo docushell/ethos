@@ -50,7 +50,7 @@ fn sorted_security_warnings(doc: &Document) -> Result<Vec<&Warning>, Failure> {
 fn reject_security_codes_in_parser_warnings(doc: &Document) -> Result<(), Failure> {
     for warning in &doc.payload.parser_warnings {
         if warning.code.is_security() {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "security report parser warning {} ({}) must be in security_warnings",
                 warning.id,
                 warning.code.as_str()
@@ -64,7 +64,7 @@ fn validate_security_warning_codes(doc: &Document) -> Result<Vec<&Warning>, Fail
     let mut warnings = Vec::with_capacity(doc.payload.security_warnings.len());
     for warning in &doc.payload.security_warnings {
         if !warning.code.is_security() {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "security report warning {} ({}) is not a security warning code",
                 warning.id,
                 warning.code.as_str()
@@ -168,7 +168,7 @@ fn warning_order(left: &Warning, right: &Warning) -> Ordering {
 
 fn block_inventory_backed_warning(warning: &Warning) -> Result<(), Failure> {
     if warning.code.is_inventory_backed_security() {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "security report warning {} ({}) requires inventory data not available in canonical document",
             warning.id,
             warning.code.as_str()
@@ -227,14 +227,14 @@ fn fixed_finding_message(warning: &Warning) -> Result<&'static str, Failure> {
         .code
         .security_report_message_template()
         .ok_or_else(|| {
-            Failure::Usage(format!(
+            Failure::usage(format!(
                 "security report warning {} ({}) is not a security warning code",
                 warning.id,
                 warning.code.as_str()
             ))
         })?;
     if warning.message != template {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "security report warning {} ({}) message must match fixed template",
             warning.id,
             warning.code.as_str()
@@ -282,7 +282,7 @@ fn validate_warning_refs(warning: &Warning, refs: &SecurityReportRefs<'_>) -> Re
 
 fn reject_unsupported_region_ref(warning: &Warning) -> Result<(), Failure> {
     if let Some(region_ref) = warning.region_ref.as_deref() {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "security report warning {} region_ref {} is unsupported until security report schema supports region_ref",
             warning.id, region_ref
         )));
@@ -295,7 +295,7 @@ fn validate_warning_page_ref(
     refs: &SecurityReportRefs<'_>,
 ) -> Result<(), Failure> {
     if warning.code.is_page_backed_security() && warning.page.is_none() {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "security report warning {} ({}) requires page",
             warning.id,
             warning.code.as_str()
@@ -303,7 +303,7 @@ fn validate_warning_page_ref(
     }
     if let Some(page) = warning.page.as_deref() {
         if !refs.pages.contains_key(page) {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "security report warning {} references unknown page {}",
                 warning.id, page
             )));
@@ -319,14 +319,14 @@ fn validate_warning_element_ref<'a>(
     let element = match warning.element_ref.as_deref() {
         Some(element_ref) => {
             let Some(element) = refs.elements.get(element_ref) else {
-                return Err(Failure::Usage(format!(
+                return Err(Failure::usage(format!(
                     "security report warning {} references unknown element_ref {}",
                     warning.id, element_ref
                 )));
             };
             if let Some(page) = warning.page.as_deref() {
                 if element.page != page {
-                    return Err(Failure::Usage(format!(
+                    return Err(Failure::usage(format!(
                         "security report warning {} element_ref {} page {} does not match page {}",
                         warning.id, element_ref, element.page, page
                     )));
@@ -345,7 +345,7 @@ fn validate_warning_span_ref(
     element: Option<&Element>,
 ) -> Result<(), Failure> {
     if warning.code.is_text_backed_security() && warning.span_ref.is_none() {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "security report warning {} ({}) requires span_ref",
             warning.id,
             warning.code.as_str()
@@ -353,14 +353,14 @@ fn validate_warning_span_ref(
     }
     if let Some(span_ref) = warning.span_ref.as_deref() {
         let Some(span) = refs.spans.get(span_ref) else {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "security report warning {} references unknown span_ref {}",
                 warning.id, span_ref
             )));
         };
         if let Some(page) = warning.page.as_deref() {
             if span.page != page {
-                return Err(Failure::Usage(format!(
+                return Err(Failure::usage(format!(
                     "security report warning {} span_ref {} page {} does not match page {}",
                     warning.id, span_ref, span.page, page
                 )));
@@ -368,7 +368,7 @@ fn validate_warning_span_ref(
         }
         if let Some(element) = element {
             if !element.span_refs.iter().any(|id| id == span_ref) {
-                return Err(Failure::Usage(format!(
+                return Err(Failure::usage(format!(
                     "security report warning {} span_ref {} is not owned by element_ref {}",
                     warning.id, span_ref, element.id
                 )));
@@ -386,13 +386,13 @@ fn validate_span_bbox(
 ) -> Result<(), Failure> {
     let [x0, y0, x1, y1] = span.bbox.to_array();
     if x0 >= x1 || y0 >= y1 {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "security report warning {} span_ref {} bbox has zero area",
             warning.id, span_ref
         )));
     }
     if x0 < 0 || y0 < 0 || x1 > page.width || y1 > page.height {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "security report warning {} span_ref {} bbox exceeds page {} bounds",
             warning.id, span_ref, page.id
         )));

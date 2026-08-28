@@ -173,19 +173,19 @@ fn validate_chunk_refs(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Fai
 
 fn validate_chunk_required_refs(chunk: &Chunk) -> Result<(), Failure> {
     if chunk.element_refs.is_empty() {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "chunk {} must include at least one element_ref",
             chunk.id
         )));
     }
     if chunk.page_refs.is_empty() {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "chunk {} must include at least one page_ref",
             chunk.id
         )));
     }
     if chunk.bboxes.is_empty() {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "chunk {} must include at least one bbox",
             chunk.id
         )));
@@ -200,13 +200,13 @@ fn validate_chunk_page_refs<'a>(
     let mut page_refs = BTreeSet::new();
     for id in &chunk.page_refs {
         if !refs.page_bounds.contains_key(id.as_str()) {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} references unknown page_ref {}",
                 chunk.id, id
             )));
         }
         if !page_refs.insert(id.as_str()) {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} has duplicate page_ref {}",
                 chunk.id, id
             )));
@@ -224,19 +224,19 @@ fn validate_chunk_element_refs<'a>(
     let mut element_refs = BTreeSet::new();
     for id in &chunk.element_refs {
         let Some(page) = refs.element_pages.get(id.as_str()) else {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} references unknown element_ref {}",
                 chunk.id, id
             )));
         };
         if !page_refs.contains(page) {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} element_ref {} page {} is not listed in page_refs",
                 chunk.id, id, page
             )));
         }
         if !element_refs.insert(id.as_str()) {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} has duplicate element_ref {}",
                 chunk.id, id
             )));
@@ -256,32 +256,32 @@ fn validate_chunk_bboxes<'a>(
     let mut bboxes = BTreeSet::new();
     for (idx, bbox) in chunk.bboxes.iter().enumerate() {
         let Some(page_bounds) = refs.page_bounds.get(bbox.page.as_str()) else {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} bboxes[{}] references unknown page_ref {}",
                 chunk.id, idx, bbox.page
             )));
         };
         if !page_refs.contains(bbox.page.as_str()) {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} bboxes[{}] page {} is not listed in page_refs",
                 chunk.id, idx, bbox.page
             )));
         }
         let [x0, y0, x1, y1] = bbox.bbox.to_array();
         if x0 >= x1 || y0 >= y1 {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} bboxes[{}] has zero area",
                 chunk.id, idx
             )));
         }
         if x0 < 0 || y0 < 0 || x1 > page_bounds.width || y1 > page_bounds.height {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} bboxes[{}] exceeds page {} bounds",
                 chunk.id, idx, bbox.page
             )));
         }
         if !bboxes.insert((bbox.page.as_str(), bbox.bbox.to_array())) {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} bboxes[{}] duplicates an earlier bbox on page {}",
                 chunk.id, idx, bbox.page
             )));
@@ -298,7 +298,7 @@ fn validate_backed_page_refs(
 ) -> Result<(), Failure> {
     for id in page_refs {
         if !backed_pages.contains(id) {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} page_ref {} is not backed by element_refs or bboxes",
                 chunk.id, id
             )));
@@ -310,13 +310,13 @@ fn validate_backed_page_refs(
 fn validate_chunk_warning_refs(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Failure> {
     for id in &chunk.warning_refs {
         let Some(code) = refs.warning_codes.get(id.as_str()) else {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} references unknown warning_ref {}",
                 chunk.id, id
             )));
         };
         if code.excludes_from_default_chunks() {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} references default-excluded warning_ref {} ({})",
                 chunk.id,
                 id,
@@ -339,13 +339,13 @@ fn validate_element_default_chunk_warnings(
         .flat_map(|warning_refs| warning_refs.iter())
     {
         let Some(code) = refs.warning_codes.get(warning_ref.as_str()) else {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} element_ref {} references unknown warning_ref {}",
                 chunk.id, element_ref, warning_ref
             )));
         };
         if code.excludes_from_default_chunks() {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} element_ref {} carries default-excluded warning_ref {} ({})",
                 chunk.id,
                 element_ref,
@@ -355,7 +355,7 @@ fn validate_element_default_chunk_warnings(
         }
     }
     if let Some((warning_ref, code)) = refs.excluded_element_warnings.get(element_ref) {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "chunk {} element_ref {} carries default-excluded warning_ref {} ({})",
             chunk.id,
             element_ref,
@@ -370,7 +370,7 @@ fn validate_element_default_chunk_warnings(
         .flat_map(|span_refs| span_refs.iter())
     {
         if let Some((warning_ref, code)) = refs.excluded_span_warnings.get(span_ref.as_str()) {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "chunk {} element_ref {} includes span_ref {} with default-excluded warning_ref {} ({})",
                 chunk.id,
                 element_ref,
@@ -392,14 +392,14 @@ fn validate_chunk_text(chunk: &Chunk, refs: &RagChunkRefs<'_>) -> Result<(), Fai
                 return Ok("");
             };
             text.as_deref()
-                .map_err(|message| Failure::Usage(message.clone()))
+                .map_err(|message| Failure::usage(message.clone()))
         })
         .collect::<Result<Vec<_>, _>>()?
         .join("\n\n");
     // Exact equality is intentional: chunk text is a deterministic derived artifact,
     // not a verification claim using whitespace-normalized matching.
     if chunk.text != reconstructed {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "chunk {} text does not match referenced element text",
             chunk.id
         )));

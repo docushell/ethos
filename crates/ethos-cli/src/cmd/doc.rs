@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use ethos_core::error::UsageCode;
 use std::path::PathBuf;
 
 use ethos_core::config::{PageSelection, ParseConfig};
@@ -58,7 +59,7 @@ pub(crate) fn doc_parse(args: DocParseArgs) -> Result<(), Failure> {
 fn parse_config(pages: Option<&str>, max_parse_ms: Option<u64>) -> Result<ParseConfig, Failure> {
     let pages = match pages {
         Some(spec) => {
-            PageSelection::parse(spec).map_err(|e| Failure::Usage(format!("--pages: {e}")))?
+            PageSelection::parse(spec).map_err(|e| Failure::usage(format!("--pages: {e}")))?
         }
         None => PageSelection::All,
     };
@@ -68,7 +69,7 @@ fn parse_config(pages: Option<&str>, max_parse_ms: Option<u64>) -> Result<ParseC
     };
     if let Some(max_parse_ms) = max_parse_ms {
         if max_parse_ms == 0 {
-            return Err(Failure::Usage(
+            return Err(Failure::usage(
                 "--max-parse-ms must be greater than zero".to_string(),
             ));
         }
@@ -103,7 +104,7 @@ pub(crate) fn pdfium_worker(args: PdfiumWorkerArgs) -> Result<(), Failure> {
 
 pub(crate) fn pdfium_geometry_probe(args: PdfiumGeometryProbeArgs) -> Result<(), Failure> {
     if std::env::var(INTERNAL_GEOMETRY_PROBE_ENV).as_deref() != Ok("1") {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "__pdfium-geometry-probe requires {INTERNAL_GEOMETRY_PROBE_ENV}=1"
         )));
     }
@@ -122,7 +123,7 @@ pub(crate) fn pdfium_geometry_probe(args: PdfiumGeometryProbeArgs) -> Result<(),
 
 pub(crate) fn table_candidate_probe(args: TableCandidateProbeArgs) -> Result<(), Failure> {
     if std::env::var(INTERNAL_TABLE_CANDIDATE_PROBE_ENV).as_deref() != Ok("1") {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "__table-candidate-probe requires {INTERNAL_TABLE_CANDIDATE_PROBE_ENV}=1"
         )));
     }
@@ -135,7 +136,7 @@ fn classify_worker_extract_error(error: EthosError) -> Failure {
     if error.code == ErrorCode::PageLimitExceeded
         && error.message == "page selection out of document range"
     {
-        Failure::Usage("--pages: page selection out of document range".to_string())
+        Failure::usage("--pages: page selection out of document range".to_string())
     } else {
         Failure::Ethos(error)
     }
@@ -184,8 +185,12 @@ fn write_json_artifact_output(
 ) -> Result<(), Failure> {
     match out {
         Some(path) => {
-            std::fs::copy(artifact.path(), &path)
-                .map_err(|_| Failure::Usage(format!("cannot write output: {}", path.display())))?;
+            std::fs::copy(artifact.path(), &path).map_err(|_| {
+                Failure::usage_coded(
+                    UsageCode::HostIo,
+                    format!("cannot write output: {}", path.display()),
+                )
+            })?;
             Ok(())
         }
         None => {

@@ -39,13 +39,13 @@ pub(crate) fn load_bound_crop_source_pdf(
         .windows(5)
         .any(|window| window == b"%PDF-")
     {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "crop source PDF does not contain a PDF header".to_string(),
         ));
     }
     let actual = source_fingerprint(&bytes);
     if actual != doc.source.fingerprint {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "crop source PDF fingerprint does not match document source fingerprint".to_string(),
         ));
     }
@@ -63,7 +63,7 @@ pub(crate) fn write_crop_descriptor_artifact(
     let mut bytes = crop_descriptor_bytes(descriptor)?;
     bytes.push(b'\n');
     std::fs::write(&path, bytes).map_err(|_| {
-        Failure::Usage(format!(
+        Failure::usage(format!(
             "cannot write crop descriptor artifact: {}",
             path.display()
         ))
@@ -79,7 +79,7 @@ pub(crate) fn write_rendered_crop_artifact(
     let rendered_ref = rendered_ref_for(&descriptor.crop_ref)?;
     let rendered_path = crop_artifact_path(crop_dir, &rendered_ref)?;
     std::fs::write(&rendered_path, &rendered.bytes).map_err(|_| {
-        Failure::Usage(format!(
+        Failure::usage(format!(
             "cannot write rendered crop artifact: {}",
             rendered_path.display()
         ))

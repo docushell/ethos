@@ -33,7 +33,7 @@ surface, that is an Ethos product gap — it goes into the
 | Crops | `ethos crop_element` descriptors + rendered crop artifacts (PDFium-backed). |
 | Answer release | `proof_summary` + `app_answer_release_decision` semantics per `docs/app-answer-release-contract.md`. |
 | TypeScript declarations | Schema-generated verification-report, citation-emission, and app answer-release declarations in the `@docushell/ethos-pdf` package's root type entry. Runtime JSON Schema validation remains authoritative. |
-| Exit codes / errors | Stable exit-code and JSON error-envelope contract as documented for the CLI and Python wrapper (0 grounded; 1 ungrounded with report; ≥2 error — fail closed). |
+| Exit codes / errors | Stable exit-code and JSON error-envelope contract as documented for the CLI and Python wrapper (0 grounded; 1 ungrounded with report; ≥2 error — fail closed). **Every failure now carries a machine-readable code.** Exit 2 used to emit a bare English line, so a caller could not tell a malformed input from a broken host without matching message text the spec forbids parsing; it now emits the same `{"error":{"code","message"}}` envelope the coded exits (3–12) already used, with `code` one of `invalid_arguments`, `invalid_input`, `input_limit_exceeded`, `source_mismatch`, `host_io`. The exit code itself is unchanged for every class — this adds a signal rather than moving one. |
 
 Pinned versions (update on every DocuShell bump):
 

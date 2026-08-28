@@ -94,6 +94,70 @@ impl ErrorCode {
     }
 }
 
+/// Why a run failed with a **usage** exit (2), as a machine-readable code.
+///
+/// # Why this exists
+///
+/// Exit 2 carried five unrelated classes of failure and no code at all. A caller
+/// that had to tell "your PDF is not a PDF" from "I could not write the output
+/// file" from "the CLI was invoked wrongly" had exactly one signal — the English
+/// message — and the spec forbids parsing it. Two independent consumers grep that
+/// text anyway, because there is nothing else: docushell matches
+/// `opendataloader-json adapter:` to spot a bad grounding artifact and a
+/// pdfium regex to spot a missing library. That is not their bug.
+///
+/// Coded errors ([`ErrorCode`]) already ship a canonical `{"error":{"code",…}}`
+/// envelope and a distinct exit code each. These now ship the same envelope. The
+/// exit code stays **2** for every one of them, so nothing that branches on exit
+/// codes today has to change — what changes is that there is finally something to
+/// branch on besides prose.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum UsageCode {
+    /// The command line itself was wrong: an unknown flag, a missing required
+    /// argument, a flag that requires another.
+    InvalidArguments,
+    /// Caller-supplied DATA was malformed: a citations file, a config file, a
+    /// grounding artifact, a document that is not canonical.
+    InvalidInput,
+    /// The input was well-formed but exceeded a declared limit — `max_checks`, a
+    /// locator rule, an accepted size bound.
+    InputLimitExceeded,
+    /// The artifact and the source it names do not correspond.
+    SourceMismatch,
+    /// The host got in the way: a file that could not be read, a directory that
+    /// could not be created, an output that could not be written. Nothing about
+    /// the caller's data is implied.
+    HostIo,
+}
+
+impl UsageCode {
+    /// All codes, in contract order.
+    pub const ALL: [UsageCode; 5] = [
+        UsageCode::InvalidArguments,
+        UsageCode::InvalidInput,
+        UsageCode::InputLimitExceeded,
+        UsageCode::SourceMismatch,
+        UsageCode::HostIo,
+    ];
+
+    /// Stable wire string (snake_case).
+    pub fn as_str(self) -> &'static str {
+        match self {
+            UsageCode::InvalidArguments => "invalid_arguments",
+            UsageCode::InvalidInput => "invalid_input",
+            UsageCode::InputLimitExceeded => "input_limit_exceeded",
+            UsageCode::SourceMismatch => "source_mismatch",
+            UsageCode::HostIo => "host_io",
+        }
+    }
+}
+
+impl core::fmt::Display for UsageCode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 impl core::fmt::Display for ErrorCode {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(self.as_str())

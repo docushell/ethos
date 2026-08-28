@@ -25,12 +25,12 @@ pub(crate) fn evidence_anchor(args: EvidenceAnchorArgs) -> Result<(), Failure> {
     let max_input_bytes = default_max_input_bytes();
     let request_bytes = read_file_limited(&args.evidence_refs, max_input_bytes)?;
     let request: EvidenceAnchorRequest = serde_json::from_slice(&request_bytes).map_err(|_| {
-        Failure::Usage("evidence refs file does not match the evidence anchor request shape".into())
+        Failure::usage("evidence refs file does not match the evidence anchor request shape")
     })?;
 
     let source = load_source(&args.input, args.grounding.as_deref())?;
     let report = ethos_verify::anchor_evidence(&source, request)
-        .map_err(|error| Failure::Usage(error.to_string()))?;
+        .map_err(|error| Failure::usage(error.to_string()))?;
 
     write_anchor_report(args.out, &args.input, &report)
 }

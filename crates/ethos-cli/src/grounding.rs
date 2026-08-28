@@ -6,6 +6,7 @@
 
 //! Shared exact-dispatch loader for CLI grounding inputs.
 
+use ethos_core::error::UsageCode;
 use ethos_core::grounding::GroundingSource;
 use ethos_core::grounding_json::GroundingJsonSource;
 use ethos_core::model::Document;
@@ -104,13 +105,13 @@ pub(crate) fn load_source(
         Some("opendataloader-json") => {
             let bytes = read_file_limited(path, max_input_bytes)?;
             let text = String::from_utf8(bytes)
-                .map_err(|_| Failure::Usage("grounding input is not UTF-8".to_string()))?;
+                .map_err(|_| Failure::usage("grounding input is not UTF-8".to_string()))?;
             let source = OdlJsonSource::from_json_str(&text)
-                .map_err(|e| Failure::Usage(format!("opendataloader-json adapter: {e}")))?;
+                .map_err(|e| Failure::usage_coded(UsageCode::InvalidInput, format!("opendataloader-json adapter: {e}")))?;
             Ok(LoadedGrounding::OpenDataLoader(source))
         }
         Some("ethos-grounding-json") => load_grounding_json(path),
-        Some(other) => Err(Failure::Usage(format!(
+        Some(other) => Err(Failure::usage(format!(
             "unknown grounding adapter '{other}' (available: ethos-json, ethos-grounding-json, opendataloader-json)"
         ))),
         None => {
@@ -125,7 +126,7 @@ pub(crate) fn load_source(
                 }
                 // A present but duplicate, non-string, or unsupported artifact type never
                 // falls back to another loader.
-                ArtifactType::Unsupported => Err(Failure::Usage(format!(
+                ArtifactType::Unsupported => Err(Failure::usage(format!(
                     "unsupported top-level artifact_type (expected exactly \
                      '{GROUNDING_V1_ARTIFACT_TYPE}', or omit the field for native Ethos JSON)"
                 ))),
@@ -143,7 +144,7 @@ pub(crate) fn load_grounding_json(path: &Path) -> Result<LoadedGrounding, Failur
 
 /// Render one bounded, stable Grounding JSON validation failure as a usage error.
 fn grounding_json_failure(error: ethos_core::grounding_json::GroundingJsonError) -> Failure {
-    Failure::Usage(format!(
+    Failure::usage(format!(
         "grounding JSON {} at {}",
         error.code.as_str(),
         error.path
@@ -152,7 +153,7 @@ fn grounding_json_failure(error: ethos_core::grounding_json::GroundingJsonError)
 
 pub(crate) fn ensure_pdf_magic(bytes: &[u8]) -> Result<(), Failure> {
     if !bytes.starts_with(b"%PDF-") {
-        return Err(Failure::Usage("source artifact is not a PDF".to_string()));
+        return Err(Failure::usage("source artifact is not a PDF".to_string()));
     }
     Ok(())
 }

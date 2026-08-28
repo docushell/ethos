@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use ethos_core::error::UsageCode;
 use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -47,17 +48,20 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     let max_input_bytes = default_max_input_bytes();
     let citations_bytes = read_file_limited(&args.citations, max_input_bytes)?;
     let citations: CitationInput = serde_json::from_slice(&citations_bytes).map_err(|_| {
-        Failure::Usage("citations file does not match the alpha citation input shape".to_string())
+        Failure::usage_coded(
+            UsageCode::InvalidInput,
+            "citations file does not match the alpha citation input shape".to_string(),
+        )
     })?;
 
     if args.crop_dir.is_some() && args.grounding.is_some() {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "--crop-dir is currently supported only for native Ethos document grounding"
                 .to_string(),
         ));
     }
     if args.crop_source_pdf.is_some() && args.crop_dir.is_none() {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "--crop-source-pdf requires --crop-dir".to_string(),
         ));
     }
@@ -65,7 +69,10 @@ pub(crate) fn verify(args: VerifyArgs) -> Result<(), Failure> {
     let mut config: VerificationConfig = match &args.config {
         Some(path) => {
             serde_json::from_slice(&read_file_limited(path, max_input_bytes)?).map_err(|_| {
-                Failure::Usage("verification config does not match the schema".to_string())
+                Failure::usage_coded(
+                    UsageCode::InvalidInput,
+                    "verification config does not match the schema".to_string(),
+                )
             })?
         }
         None => VerificationConfig::default_v1(),
@@ -134,7 +141,7 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
         .as_ref()
         .is_some_and(|evidence| evidence.include_crops)
     {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "verify-batch does not support crop evidence".to_string(),
         ));
     }
@@ -197,9 +204,9 @@ pub(crate) fn verify_batch(args: VerifyBatchArgs) -> Result<(), Failure> {
 fn parse_batch_citations(path: &Path, max_input_bytes: u64) -> Result<Vec<CitationInput>, Failure> {
     let bytes = read_file_limited(path, max_input_bytes)?;
     let text = std::str::from_utf8(&bytes)
-        .map_err(|_| Failure::Usage("citations NDJSON is not UTF-8".to_string()))?;
+        .map_err(|_| Failure::usage("citations NDJSON is not UTF-8".to_string()))?;
     if text.is_empty() {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "citations NDJSON must contain 1 to 1024 requests".to_string(),
         ));
     }
@@ -210,12 +217,12 @@ fn parse_batch_citations(path: &Path, max_input_bytes: u64) -> Result<Vec<Citati
             if index + 1 == text.split('\n').count() {
                 continue;
             }
-            return Err(Failure::Usage(
+            return Err(Failure::usage(
                 "citations NDJSON must not contain blank lines".to_string(),
             ));
         }
         let citation: CitationInput = serde_json::from_str(line).map_err(|_| {
-            Failure::Usage(format!(
+            Failure::usage(format!(
                 "citations NDJSON line {} does not match the canonical citation input shape",
                 index + 1
             ))
@@ -223,7 +230,7 @@ fn parse_batch_citations(path: &Path, max_input_bytes: u64) -> Result<Vec<Citati
         citations.push(citation);
     }
     if citations.is_empty() || citations.len() > 1024 {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "citations NDJSON must contain 1 to 1024 requests".to_string(),
         ));
     }
@@ -237,7 +244,10 @@ fn load_batch_config(
     let config = match path {
         Some(path) => {
             serde_json::from_slice(&read_file_limited(path, max_input_bytes)?).map_err(|_| {
-                Failure::Usage("verification config does not match the schema".to_string())
+                Failure::usage_coded(
+                    UsageCode::InvalidInput,
+                    "verification config does not match the schema".to_string(),
+                )
             })?
         }
         None => VerificationConfig::default_v1(),
@@ -267,7 +277,7 @@ fn merge_batch_citations(citations: Vec<CitationInput>) -> Result<CitationInput,
         match fingerprint {
             Some(fingerprint) => match document_fingerprint.as_deref() {
                 Some(existing) if existing != fingerprint => {
-                    return Err(Failure::Usage(format!(
+                    return Err(Failure::usage(format!(
                         "citations NDJSON line {} names a document_fingerprint that \
                          disagrees with an earlier line; --merged produces one report \
                          about one document",
@@ -286,7 +296,7 @@ fn merge_batch_citations(citations: Vec<CitationInput>) -> Result<CitationInput,
     }
     if document_fingerprint.is_some() {
         if let Some(line) = first_unpinned_line {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "citations NDJSON line {line} names no document_fingerprint while \
                  another line does; a merged envelope pins every claim in it, so pin \
                  every request or none"
@@ -814,10 +824,13 @@ fn write_crop_artifacts(
     source_pdf: Option<&CropSourcePdf>,
 ) -> Result<(), Failure> {
     std::fs::create_dir_all(crop_dir).map_err(|_| {
-        Failure::Usage(format!(
-            "cannot create crop artifact directory: {}",
-            crop_dir.display()
-        ))
+        Failure::usage_coded(
+            UsageCode::HostIo,
+            format!(
+                "cannot create crop artifact directory: {}",
+                crop_dir.display()
+            ),
+        )
     })?;
 
     let mut descriptors: BTreeMap<String, CropElementDescriptor> = BTreeMap::new();
@@ -901,12 +914,12 @@ fn validate_citation_input(
 ) -> Result<(), Failure> {
     let claims = citations.claims();
     if claims.is_empty() {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "citations file must contain at least one claim".to_string(),
         ));
     }
     if claims.len() > config.limits.max_checks as usize {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "citations file exceeds max_checks ({})",
             config.limits.max_checks
         )));
@@ -915,19 +928,19 @@ fn validate_citation_input(
         .document_fingerprint()
         .is_some_and(|fingerprint| !is_fingerprint_form(fingerprint))
     {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "citations document_fingerprint must be sha256:<64 lowercase hex chars>".to_string(),
         ));
     }
     for (idx, claim) in claims.iter().enumerate() {
         if !claim.citation.has_locator() {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "claim {} citation must contain at least one locator",
                 idx + 1
             )));
         }
         if claim.citation.table_id.is_some() != claim.citation.cell.is_some() {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "claim {} citation table_id and cell must be provided together",
                 idx + 1
             )));
@@ -935,7 +948,7 @@ fn validate_citation_input(
         if claim.kind == ClaimKind::TableCell
             && (claim.citation.table_id.is_none() || claim.citation.cell.is_none())
         {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "claim {} table_cell citation must include table_id and cell",
                 idx + 1
             )));
@@ -946,7 +959,7 @@ fn validate_citation_input(
             && claim.citation.span_id.is_none()
             && claim.citation.table_id.is_none()
         {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "claim {} citation bbox requires page unless another target locator is present",
                 idx + 1
             )));
@@ -956,7 +969,7 @@ fn validate_citation_input(
             .bbox
             .is_some_and(|bbox| bbox[0] >= bbox[2] || bbox[1] >= bbox[3])
         {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "claim {} citation bbox must have positive area",
                 idx + 1
             )));
@@ -969,7 +982,7 @@ fn validate_citation_input(
             .as_ref()
             .is_none_or(|text| text.trim().is_empty())
         {
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "claim {} text must be non-empty for quote, value, and table_cell",
                 idx + 1
             )));
@@ -986,25 +999,25 @@ fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failu
         ethos_core::SCHEMA_VERSION
     };
     if config.schema_version != expected_schema_version {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "verification config schema_version must be {expected_schema_version}"
         )));
     }
     if config.claim_kinds.is_empty() {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "verification config claim_kinds must not be empty".to_string(),
         ));
     }
     let mut seen = HashSet::new();
     for kind in &config.claim_kinds {
         if matches!(kind, ClaimKind::Region | ClaimKind::Other) {
-            return Err(Failure::Usage(
+            return Err(Failure::usage(
                 "verification config claim_kinds must include only quote, value, presence, and table_cell"
                     .to_string(),
             ));
         }
         if !seen.insert(*kind) {
-            return Err(Failure::Usage(
+            return Err(Failure::usage(
                 "verification config claim_kinds must be unique".to_string(),
             ));
         }
@@ -1014,7 +1027,7 @@ fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failu
         .bbox_containment_tolerance_q
         .is_some_and(|tolerance| tolerance < 0)
     {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "verification config bbox_containment_tolerance_q must be non-negative".to_string(),
         ));
     }
@@ -1023,18 +1036,18 @@ fn validate_verification_config(config: &VerificationConfig) -> Result<(), Failu
         .adjacency_gap_tolerance_q
         .is_some_and(|tolerance| tolerance < 0)
     {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "verification config adjacency_gap_tolerance_q must be non-negative".to_string(),
         ));
     }
     if config.limits.max_checks == 0 {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "verification config max_checks must be at least 1".to_string(),
         ));
     }
     if let Some(hardening) = config.hardening {
         if hardening.include_context_echo && !(1..=4096).contains(&hardening.context_window_chars) {
-            return Err(Failure::Usage(
+            return Err(Failure::usage(
                 "verification config context_window_chars must be between 1 and 4096 when context echo is enabled"
                     .to_string(),
             ));

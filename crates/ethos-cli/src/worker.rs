@@ -166,7 +166,7 @@ fn pdfium_load_probe_command() -> Result<ProcessCommand, Failure> {
 
 fn worker_failure(output: &Output, diagnostics: bool) -> Failure {
     if output.status.code() == Some(EXIT_USAGE as i32) {
-        return Failure::Usage(worker_usage_message(&output.stderr));
+        return Failure::usage(worker_usage_message(&output.stderr));
     }
     if let Some(error) = worker_ethos_error(&output.stderr) {
         return error.into();

@@ -4085,3 +4085,69 @@ fn verify_rejects_present_but_unsupported_artifact_types_without_fallback() {
         assert!(output.stdout.is_empty(), "{name} must not write a report");
     }
 }
+
+// -------------------------------------------------------------------------------------------
+// The usage-failure contract
+// -------------------------------------------------------------------------------------------
+
+/// **Exit 2 carries a machine-readable code, like every other failure this CLI has.**
+///
+/// Coded errors have always emitted `{"error":{"code",…}}` and a distinct exit code each.
+/// Usage failures — 109 construction sites spanning CLI misuse, malformed caller data,
+/// exceeded limits, source mismatches and host I/O — emitted a bare English line and
+/// nothing else, while the spec told consumers not to parse it. Two independent consumers
+/// grep that text anyway, because there was no alternative.
+///
+/// The exit code is deliberately still 2 for every class: this adds a signal, it does not
+/// move one, so nothing that branches on exit codes has to change.
+#[test]
+fn a_usage_failure_emits_the_canonical_error_envelope() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let citations = dir.path().join("citations.json");
+    std::fs::write(&citations, br#"{"not":"a citations file"}"#).expect("write");
+
+    let output = run_ethos(&[
+        "verify",
+        citations.to_str().unwrap(),
+        "--citations",
+        citations.to_str().unwrap(),
+        "--grounding",
+        "ethos-grounding-json",
+    ]);
+
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "the exit code is unchanged; only the payload is new"
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let envelope: Value = serde_json::from_str(stderr.trim())
+        .unwrap_or_else(|e| panic!("stderr is a canonical envelope, got {stderr:?}: {e}"));
+    assert_eq!(
+        envelope["error"]["code"], "invalid_input",
+        "a malformed citations file is the caller's DATA, not their command line"
+    );
+    assert!(
+        envelope["error"]["message"]
+            .as_str()
+            .is_some_and(|m| !m.is_empty()),
+        "the human message survives inside the envelope: {envelope}"
+    );
+}
+
+/// Every code the enum names is snake_case and distinct, so a consumer can match on them.
+#[test]
+fn the_usage_codes_are_distinct_and_snake_case() {
+    use ethos_core::error::UsageCode;
+
+    let mut seen = std::collections::BTreeSet::new();
+    for code in UsageCode::ALL {
+        let s = code.as_str();
+        assert!(
+            s.chars().all(|c| c.is_ascii_lowercase() || c == '_'),
+            "{s} is not snake_case"
+        );
+        assert!(seen.insert(s), "{s} appears twice");
+    }
+    assert_eq!(seen.len(), UsageCode::ALL.len());
+}

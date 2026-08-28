@@ -35,7 +35,7 @@ use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use ethos_core::config::ParseConfig;
-use ethos_core::error::{ErrorCode, EthosError};
+use ethos_core::error::{ErrorCode, EthosError, UsageCode};
 use ethos_core::model::Document;
 
 /// Usage-error exit code (also what clap uses).
@@ -390,7 +390,33 @@ pub(crate) enum Failure {
         diagnostics: serde_json::Value,
     },
     Ungrounded,
-    Usage(String),
+    Usage {
+        code: UsageCode,
+        message: String,
+    },
+}
+
+impl Failure {
+    /// A usage failure whose class has not been narrowed yet.
+    ///
+    /// `InvalidArguments` is the default because it honestly describes the majority
+    /// of these sites — a flag or flag combination the CLI does not accept — and
+    /// because a wrong-but-specific code would be worse than a broad one. Sites
+    /// whose class is genuinely different say so with [`Failure::usage_coded`].
+    pub(crate) fn usage(message: impl Into<String>) -> Self {
+        Failure::Usage {
+            code: UsageCode::InvalidArguments,
+            message: message.into(),
+        }
+    }
+
+    /// A usage failure that names its class.
+    pub(crate) fn usage_coded(code: UsageCode, message: impl Into<String>) -> Self {
+        Failure::Usage {
+            code,
+            message: message.into(),
+        }
+    }
 }
 
 impl From<EthosError> for Failure {
@@ -404,8 +430,13 @@ fn main() -> ExitCode {
     match run(cli) {
         Ok(()) => ExitCode::SUCCESS,
         Err(Failure::Ungrounded) => ExitCode::from(EXIT_UNGROUNDED),
-        Err(Failure::Usage(message)) => {
-            eprintln!("error (usage): {message}");
+        Err(Failure::Usage { code, message }) => {
+            // The same canonical envelope coded errors emit, so a caller parses one
+            // shape for every failure this CLI has. The exit code stays 2 for all of
+            // them: nothing that branches on exit codes today needs to change, and
+            // the code that was missing now travels in the payload rather than in
+            // prose the spec forbids parsing.
+            write_usage_envelope(code, &message);
             ExitCode::from(EXIT_USAGE)
         }
         Err(Failure::Ethos(e)) => {
@@ -446,6 +477,24 @@ fn error_output_bytes(
     let mut bytes = ethos_core::c14n::c14n_bytes(&value)?;
     bytes.push(b'\n');
     Ok(bytes)
+}
+
+fn write_usage_envelope(code: UsageCode, message: &str) {
+    use std::io::Write as _;
+
+    let value = serde_json::json!({
+        "error": { "code": code.as_str(), "message": message }
+    });
+    match ethos_core::c14n::c14n_bytes(&value) {
+        Ok(mut bytes) => {
+            bytes.push(b'\n');
+            let _ = std::io::stderr().write_all(&bytes);
+        }
+        // A usage message is assembled from caller-supplied text and could in
+        // principle carry a value c14n refuses. Losing the diagnostic entirely
+        // would be worse than losing its shape, so the human line is the fallback.
+        Err(_) => eprintln!("error (usage): {message}"),
+    }
 }
 
 fn write_error_envelope(e: &EthosError) {
@@ -500,12 +549,21 @@ pub(crate) fn default_max_input_bytes() -> u64 {
 }
 
 pub(crate) fn read_file(path: &Path) -> Result<Vec<u8>, Failure> {
-    fs::read(path).map_err(|_| Failure::Usage(format!("cannot read input: {}", path.display())))
+    fs::read(path).map_err(|_| {
+        Failure::usage_coded(
+            UsageCode::HostIo,
+            format!("cannot read input: {}", path.display()),
+        )
+    })
 }
 
 pub(crate) fn ensure_file_within_limit(path: &Path, max_bytes: u64) -> Result<(), Failure> {
-    let metadata = fs::metadata(path)
-        .map_err(|_| Failure::Usage(format!("cannot read input: {}", path.display())))?;
+    let metadata = fs::metadata(path).map_err(|_| {
+        Failure::usage_coded(
+            UsageCode::HostIo,
+            format!("cannot read input: {}", path.display()),
+        )
+    })?;
     if metadata.len() > max_bytes {
         return Err(
             EthosError::new(ErrorCode::FileTooLarge, "input exceeds max_file_bytes").into(),
@@ -528,12 +586,12 @@ pub(crate) fn read_file_limited(path: &Path, max_bytes: u64) -> Result<Vec<u8>, 
 pub(crate) fn read_document(path: &Path) -> Result<Document, Failure> {
     let bytes = read_file_limited(path, default_max_input_bytes())?;
     let doc: Document = serde_json::from_slice(&bytes).map_err(|error| {
-        Failure::Usage(format!(
+        Failure::usage(format!(
             "input is not a canonical ethos document (schema urn:ethos:schema:document:1): {error}"
         ))
     })?;
     doc.verify_integrity().map_err(|error| {
-        Failure::Usage(format!(
+        Failure::usage(format!(
             "input document failed integrity check: {}",
             error.message
         ))
@@ -616,7 +674,12 @@ pub(crate) fn write_output(out: Option<PathBuf>, bytes: &[u8]) -> Result<(), Fai
             .map_err(|_| Failure::Ethos(EthosError::internal("stdout write failed")));
     };
 
-    let cannot_write = || Failure::Usage(format!("cannot write output: {}", path.display()));
+    let cannot_write = || {
+        Failure::usage_coded(
+            UsageCode::HostIo,
+            format!("cannot write output: {}", path.display()),
+        )
+    };
 
     // `symlink_metadata` does not follow links, so a symlinked destination is correctly
     // classified as a symlink rather than as whatever it points at.

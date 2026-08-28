@@ -44,7 +44,7 @@ pub(crate) fn doctor(args: DoctorArgs) -> Result<(), Failure> {
 
 pub(crate) fn pdfium_load_probe() -> Result<(), Failure> {
     if std::env::var(INTERNAL_PDFIUM_LOAD_PROBE_ENV).as_deref() != Ok("1") {
-        return Err(Failure::Usage(format!(
+        return Err(Failure::usage(format!(
             "__pdfium-load-probe requires {INTERNAL_PDFIUM_LOAD_PROBE_ENV}=1"
         )));
     }
@@ -78,7 +78,7 @@ fn pdfium_status() -> PdfiumStatus {
                 error.message,
             ),
         ),
-        Err(Failure::Usage(message)) => PdfiumStatus::warning(
+        Err(Failure::Usage { message, .. }) => PdfiumStatus::warning(
             true,
             format!("configured PDFium probe did not run: {message}. {PDFIUM_SETUP_GUIDANCE}"),
         ),

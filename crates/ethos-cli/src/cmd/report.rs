@@ -1,3 +1,4 @@
+use ethos_core::error::UsageCode;
 use ethos_core::verify_types::{VerificationReport, HARDENED_VERIFICATION_SCHEMA_VERSION};
 use serde::Serialize;
 
@@ -8,11 +9,11 @@ pub(crate) fn html(args: ReportHtmlArgs) -> Result<(), Failure> {
         &args.input,
         crate::default_max_input_bytes(),
     )?)
-    .map_err(|_| Failure::Usage("input is not a supported verification report".to_string()))?;
+    .map_err(|_| Failure::usage("input is not a supported verification report".to_string()))?;
     if report.schema_version != ethos_core::SCHEMA_VERSION
         && report.schema_version != HARDENED_VERIFICATION_SCHEMA_VERSION
     {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "verification report schema_version is not supported".to_string(),
         ));
     }
@@ -22,8 +23,12 @@ pub(crate) fn html(args: ReportHtmlArgs) -> Result<(), Failure> {
         .map(validate_crop_root)
         .transpose()?;
     let bytes = render(&report, crop_root.as_deref()).into_bytes();
-    std::fs::write(&args.out, bytes)
-        .map_err(|_| Failure::Usage(format!("cannot write output: {}", args.out.display())))
+    std::fs::write(&args.out, bytes).map_err(|_| {
+        Failure::usage_coded(
+            UsageCode::HostIo,
+            format!("cannot write output: {}", args.out.display()),
+        )
+    })
 }
 
 fn validate_crop_root(value: &str) -> Result<String, Failure> {
@@ -36,7 +41,7 @@ fn validate_crop_root(value: &str) -> Result<String, Failure> {
                     .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
         })
     {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "--crop-root must be a safe relative prefix".to_string(),
         ));
     }

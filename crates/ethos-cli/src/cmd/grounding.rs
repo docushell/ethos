@@ -17,7 +17,7 @@ pub(crate) fn check(args: GroundingCheckArgs) -> Result<(), Failure> {
         Err(error) => {
             let report = invalid_report(&error);
             write_validation_report(args.out, &args.input, &report)?;
-            return Err(Failure::Usage(format!(
+            return Err(Failure::usage(format!(
                 "grounding JSON {} at {}",
                 error.code.as_str(),
                 error.path
@@ -40,7 +40,7 @@ pub(crate) fn check(args: GroundingCheckArgs) -> Result<(), Failure> {
     let report = valid_report(&source, source_binding);
     write_validation_report(args.out, &args.input, &report)?;
     if matches!(source_binding, SourceBinding::Mismatched) {
-        return Err(Failure::Usage(
+        return Err(Failure::usage(
             "source artifact hash does not match source.sha256".to_string(),
         ));
     }
