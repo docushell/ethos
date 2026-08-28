@@ -1230,10 +1230,23 @@ fn adjacent_pair_join_ignoring_geometry(
     let first_text = first.text.as_deref()?;
     let second_text = second.text.as_deref()?;
     let joined = join_adjacent_text(first_text, second_text, config);
-    if text_matches(ClaimKind::Quote, expected, first_text, config)
-        || text_matches(ClaimKind::Quote, expected, second_text, config)
-        || !text_matches(ClaimKind::Quote, expected, &joined, config)
-    {
+    // `expected` is the same string in all three comparisons, so it is normalized
+    // once rather than three times. `normalized_matches` is what `text_matches`
+    // calls after normalizing both sides, so the comparison is unchanged.
+    let expected_normalized = normalize_for(config, expected);
+    if normalized_matches(
+        ClaimKind::Quote,
+        &expected_normalized,
+        &normalize_for(config, first_text),
+    ) || normalized_matches(
+        ClaimKind::Quote,
+        &expected_normalized,
+        &normalize_for(config, second_text),
+    ) || !normalized_matches(
+        ClaimKind::Quote,
+        &expected_normalized,
+        &normalize_for(config, &joined),
+    ) {
         return None;
     }
     Some(joined)
