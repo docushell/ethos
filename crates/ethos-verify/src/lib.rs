@@ -208,7 +208,9 @@ pub fn verify_claims_indexed(
     // per batch; an incorrect one silently gets the right answer slowly, which is
     // what the safe wrapper would have given it.
     let rebuilt;
-    let index = if index.normalized_for == Some(SourceIndex::normalization_key(config)) {
+    let index = if index.normalized_for == Some(SourceIndex::normalization_key(config))
+        && index.built_from == source.fingerprint()
+    {
         index
     } else {
         rebuilt = SourceIndex::for_verification(source, config);
@@ -721,6 +723,21 @@ pub struct SourceIndex {
     /// config fields reach `normalize_for`, so they are the whole of what a
     /// cached string depends on — see [`SourceIndex::normalization_key`].
     normalized_for: Option<(TextNormalization, bool)>,
+    /// The fingerprint of the source these caches were built from.
+    ///
+    /// The other half of the obligation the doc comment on
+    /// [`verify_claims_indexed`] states. A batch caller reusing one index across
+    /// requests can pair it with a different document as easily as with a
+    /// different config, and that failure is worse: every resolution reads the
+    /// indexed document while the report carries the passed document's
+    /// fingerprint, so a citation pinned to B comes back `grounded` on evidence
+    /// from A.
+    ///
+    /// `None` when the source declares no fingerprint. Two such sources compare
+    /// equal and are not distinguished — there is nothing to distinguish them by,
+    /// and a source without a fingerprint is already degraded under the default
+    /// staleness policy.
+    built_from: Option<String>,
 }
 
 impl SourceIndex {
@@ -768,6 +785,7 @@ impl SourceIndex {
             elements_by_page,
             spans_by_page,
             normalized_for: None,
+            built_from: None,
             normalized_element_text: Vec::new(),
             normalized_span_text: Vec::new(),
         }
@@ -797,6 +815,7 @@ impl SourceIndex {
             .map(|span| normalize_for(config, &span.text))
             .collect();
         index.normalized_for = Some(Self::normalization_key(config));
+        index.built_from = source.fingerprint();
         index
     }
 
@@ -1863,6 +1882,102 @@ pub fn normalize_quote(input: &str) -> String {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+
+    /// An index built from a DIFFERENT document is rebuilt too.
+    ///
+    /// The config half of this obligation was enforced; the source half was not,
+    /// and it is the worse of the two. Every resolution reads the indexed
+    /// document while `document_fingerprint` on the report names the passed one,
+    /// so a citation pinned to B could come back `grounded` on evidence from A.
+    #[test]
+    fn an_index_from_another_document_is_not_reused() {
+        // Document B says something A does not, so reusing A's index is visible in
+        // the verdict rather than only in the identity field.
+        struct OtherDocument(TestSource);
+        impl GroundingSource for OtherDocument {
+            fn parser(&self) -> ParserIdentity {
+                self.0.parser()
+            }
+            fn capabilities(&self) -> Capabilities {
+                self.0.capabilities()
+            }
+            fn fingerprint(&self) -> Option<String> {
+                Some(format!("sha256:{}", "b".repeat(64)))
+            }
+            fn pages(&self) -> Vec<PageGeometry> {
+                self.0.pages()
+            }
+            fn elements(&self) -> Vec<GroundingElement> {
+                self.0
+                    .elements()
+                    .into_iter()
+                    .map(|mut element| {
+                        element.text = Some("Losses widened in Q3 2025.".into());
+                        element
+                    })
+                    .collect()
+            }
+            fn spans(&self) -> Vec<GroundingSpan> {
+                Vec::new()
+            }
+            fn tables(&self) -> Vec<GroundingTable> {
+                Vec::new()
+            }
+        }
+
+        let config = VerificationConfig::default_v1();
+        let source_a = TestSource::default();
+        let source_b = OtherDocument(TestSource::default());
+
+        let index_a = SourceIndex::for_verification(&source_a, &config);
+        assert_eq!(index_a.built_from, source_a.fingerprint());
+        assert_ne!(index_a.built_from, source_b.fingerprint());
+
+        // A quote only document A contains. Verified against B it must not ground.
+        let claims = || {
+            vec![claim(
+                ClaimKind::Quote,
+                Some("Revenue grew to $12.4M"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )]
+        };
+
+        let honest = verify_claims_indexed(
+            &source_b,
+            &SourceIndex::for_verification(&source_b, &config),
+            CitationInput::Envelope(CitationEnvelope {
+                document_fingerprint: source_b.fingerprint(),
+                claims: claims(),
+            }),
+            &config,
+            "0".repeat(64),
+            "1".repeat(64),
+        );
+        assert_ne!(
+            honest.checks[0].status,
+            CheckStatus::Grounded,
+            "the fixture must be a quote document B does not contain"
+        );
+
+        let rebuilt = verify_claims_indexed(
+            &source_b,
+            &index_a,
+            CitationInput::Envelope(CitationEnvelope {
+                document_fingerprint: source_b.fingerprint(),
+                claims: claims(),
+            }),
+            &config,
+            "0".repeat(64),
+            "1".repeat(64),
+        );
+        assert_eq!(
+            rebuilt.checks[0].status, honest.checks[0].status,
+            "A's index must not ground a claim against B"
+        );
+    }
 
     /// A mismatched index loses the shortcut, never the verdict.
     ///
