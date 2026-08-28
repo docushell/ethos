@@ -191,6 +191,29 @@ pub fn verify_claims_indexed(
     config_sha256: String,
     claims_sha256: String,
 ) -> VerificationReport {
+    // The doc comment above states the caller's obligation; this enforces it.
+    //
+    // The index caches text normalized under the config it was built for, and the
+    // page scan compares against those cached strings. Hand this function an index
+    // built under a different normalization — or one from `SourceIndex::new`, which
+    // carries no caches at all — and the comparison silently runs against strings
+    // normalized by rules the caller did not ask for. That is a wrong verdict
+    // produced by a caching detail, and it was reachable through a `pub` function
+    // whose only guard was a sentence in prose.
+    //
+    // A mismatch REBUILDS rather than panics or returns an error. The signature
+    // returns a report, not a `Result`, and this is a performance shortcut: the
+    // honest failure mode for a shortcut used wrongly is to lose the speed, never
+    // the correctness. A correct caller is untouched and still pays for one index
+    // per batch; an incorrect one silently gets the right answer slowly, which is
+    // what the safe wrapper would have given it.
+    let rebuilt;
+    let index = if index.normalized_for == Some(SourceIndex::normalization_key(config)) {
+        index
+    } else {
+        rebuilt = SourceIndex::for_verification(source, config);
+        &rebuilt
+    };
     let (citation_fingerprint, claims) = citations.into_parts();
     let source_fingerprint = source.fingerprint();
     let mut capability_limits = capability_limits_for(index.capabilities, config);
@@ -693,6 +716,11 @@ pub struct SourceIndex {
     normalized_element_text: Vec<Option<String>>,
     /// Span text normalized under the same config.
     normalized_span_text: Vec<String>,
+    /// The exact normalization the caches above were computed under, or `None`
+    /// when this index carries no caches ([`SourceIndex::new`]). Only these two
+    /// config fields reach `normalize_for`, so they are the whole of what a
+    /// cached string depends on — see [`SourceIndex::normalization_key`].
+    normalized_for: Option<(TextNormalization, bool)>,
 }
 
 impl SourceIndex {
@@ -739,6 +767,7 @@ impl SourceIndex {
             table_by_id,
             elements_by_page,
             spans_by_page,
+            normalized_for: None,
             normalized_element_text: Vec::new(),
             normalized_span_text: Vec::new(),
         }
@@ -767,7 +796,24 @@ impl SourceIndex {
             .iter()
             .map(|span| normalize_for(config, &span.text))
             .collect();
+        index.normalized_for = Some(Self::normalization_key(config));
         index
+    }
+
+    /// The config fields a cached normalized string actually depends on.
+    ///
+    /// `normalize_for` reads `matching.text_normalization` and
+    /// `matching.case_sensitive` and nothing else, so two configs agreeing on
+    /// these two produce identical caches and are interchangeable here. Deriving
+    /// the key from the same pair the normalizer reads keeps the check honest: a
+    /// third field added to `normalize_for` without being added here would make
+    /// this key claim an equivalence that no longer holds, which is why the
+    /// function sits directly beside it.
+    fn normalization_key(config: &VerificationConfig) -> (TextNormalization, bool) {
+        (
+            config.matching.text_normalization,
+            config.matching.case_sensitive,
+        )
     }
 
     fn span(&self, id: &str) -> Option<&GroundingSpan> {
@@ -1817,6 +1863,83 @@ pub fn normalize_quote(input: &str) -> String {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+
+    /// A mismatched index loses the shortcut, never the verdict.
+    ///
+    /// The fast path's obligation — "built from the same source and config, or the
+    /// caches lie" — used to be prose only, reachable through a `pub` function. A
+    /// caller that paired an index with the wrong config got its page scan compared
+    /// against strings normalized by rules it did not ask for.
+    #[test]
+    fn a_mismatched_index_still_answers_under_the_config_it_was_given() {
+        let source = TestSource::default();
+        let mut case_sensitive = VerificationConfig::default_v1();
+        case_sensitive.matching.case_sensitive = true;
+        let mut case_insensitive = VerificationConfig::default_v1();
+        case_insensitive.matching.case_sensitive = false;
+
+        // A quote whose case differs from the source, so the two configs disagree
+        // about it and the cached normalization is load-bearing.
+        let claims = || {
+            vec![claim(
+                ClaimKind::Quote,
+                Some("REVENUE GREW TO $12.4M"),
+                Citation {
+                    page: Some("p0001".into()),
+                    ..Default::default()
+                },
+            )]
+        };
+
+        let honest = verify_claims_indexed(
+            &source,
+            &SourceIndex::for_verification(&source, &case_sensitive),
+            input(&source, claims()),
+            &case_sensitive,
+            "0".repeat(64),
+            "1".repeat(64),
+        );
+
+        // The same request handed an index built under the OTHER normalization.
+        let repaired = verify_claims_indexed(
+            &source,
+            &SourceIndex::for_verification(&source, &case_insensitive),
+            input(&source, claims()),
+            &case_sensitive,
+            "0".repeat(64),
+            "1".repeat(64),
+        );
+        assert_eq!(
+            repaired.checks[0].status, honest.checks[0].status,
+            "a mismatched index must not change the verdict"
+        );
+
+        // An index carrying no caches at all is rebuilt the same way.
+        let from_uncached = verify_claims_indexed(
+            &source,
+            &SourceIndex::new(&source),
+            input(&source, claims()),
+            &case_sensitive,
+            "0".repeat(64),
+            "1".repeat(64),
+        );
+        assert_eq!(from_uncached.checks[0].status, honest.checks[0].status);
+
+        // And the two configs really do disagree here, or the test proves nothing.
+        let other = verify_claims_indexed(
+            &source,
+            &SourceIndex::for_verification(&source, &case_insensitive),
+            input(&source, claims()),
+            &case_insensitive,
+            "0".repeat(64),
+            "1".repeat(64),
+        );
+        assert_ne!(
+            other.checks[0].status, honest.checks[0].status,
+            "the fixture must be one the two configs answer differently"
+        );
+    }
+
     use ethos_core::grounding::{
         Capabilities, GroundingCell, GroundingElement, GroundingProvenance, GroundingSpan,
         GroundingTable, PageGeometry, ParserIdentity,
