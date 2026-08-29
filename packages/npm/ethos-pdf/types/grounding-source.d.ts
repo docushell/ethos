@@ -2,17 +2,11 @@
 // Runtime JSON Schema validation remains authoritative.
 // Ethos verifies citation grounding, not semantic truth.
 
-export type EthosGroundingSha256 = string;
-export type EthosGroundingId = string;
-/**
- * @minItems 4
- * @maxItems 4
- */
-export type EthosGroundingBbox = never[];
-
-export interface EthosGroundingSource {
+export type EthosGroundingSource = {
+  [k: string]: unknown;
+} & {
   artifact_type: "ethos.grounding.v1";
-  schema_version: "1.0.0";
+  schema_version: "1.0.0" | "1.1.0";
   source: EthosGroundingSourceMetadata;
   producer: EthosGroundingProducer;
   capabilities: EthosGroundingCapabilities;
@@ -33,9 +27,29 @@ export interface EthosGroundingSource {
    * @maxItems 100000
    */
   tables?: EthosGroundingTable[];
-}
+};
+export type EthosGroundingSha256 = string;
+export type EthosGroundingId = string;
+/**
+ * @minItems 4
+ * @maxItems 4
+ */
+export type EthosGroundingBbox = never[];
+
 export interface EthosGroundingSourceMetadata {
-  media_type: "application/pdf";
+  /**
+   * 1.0.0 artifacts carry application/pdf and nothing else; 1.1.0 adds the eight page-less office types. The version gate below holds each version to its own shape, so every 1.0.0 artifact that ever validated still validates byte-unchanged.
+   */
+  media_type:
+    | "application/pdf"
+    | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    | "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    | "application/vnd.oasis.opendocument.text"
+    | "application/vnd.oasis.opendocument.spreadsheet"
+    | "application/vnd.oasis.opendocument.presentation"
+    | "application/rtf"
+    | "application/epub+zip";
   sha256: EthosGroundingSha256;
 }
 export interface EthosGroundingProducer {
@@ -60,10 +74,14 @@ export interface EthosGroundingPage {
 }
 export interface EthosGroundingElement {
   id: EthosGroundingId;
-  page: EthosGroundingId;
-  bbox: EthosGroundingBbox;
+  page?: EthosGroundingId;
+  bbox?: EthosGroundingBbox;
   kind: string;
   text?: string;
+  /**
+   * 1.1.0, page-less sources only: the producer's native locator for this element, serialized canonically. Opaque to the verifier, carried for citation display and round-tripping; the element id is the address verification resolves.
+   */
+  locator?: string;
 }
 export interface EthosGroundingSpan {
   id: EthosGroundingId;

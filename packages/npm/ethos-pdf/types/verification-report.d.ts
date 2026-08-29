@@ -133,7 +133,7 @@ export interface EthosVerificationReport {
       | "presence_only"
       | "none";
     /**
-     * True whenever grounding the claim would require semantic judgment beyond the declared match method (e.g. paraphrase, arithmetic, cross-region synthesis). In v1, literal checkers always set this false; non-literal claims fail closed as unsupported_claim_kind instead. Such checks can never make all_evidence_grounded true.
+     * True whenever grounding the claim would require semantic judgment beyond the declared match method (e.g. paraphrase, arithmetic, cross-region synthesis). Non-literal claims fail closed as unsupported_claim_kind instead, and one literal producer now sets it: a grounded quote whose match exists only as the sanctioned adjacent-element join, where continuity was inferred from geometry rather than stated by any single element. Such checks can never make all_evidence_grounded true.
      */
     semantic_unverified: boolean;
     resolved_element_ids?: string[];
@@ -168,6 +168,15 @@ export interface EthosVerificationReport {
      * How precisely this check bound its evidence. Absent when nothing resolved.
      */
     evidence_tier?: "exact_span" | "table_cell" | "element_scoped" | "page_scoped";
+    /**
+     * Diagnostic nearest candidate for a failed text check, emitted only under the hardened profile's include_nearest_match. The verdict never reads it: a mismatch with a 9,900-basis-point neighbour is still a mismatch.
+     */
+    nearest_match?: {
+      element_id?: string;
+      text: string;
+      similarity_bp: number;
+      method: string;
+    };
   }[];
   /**
    * Claim kinds present in the input that this verifier/config does not support. Non-empty => all_evidence_grounded=false.
