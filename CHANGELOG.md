@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.6.0 - 2026-08-30
+
 ### ethos.grounding.v1 schema 1.1.0 — the office formats stop being stranded
 
 - The single largest capability gap in the estate closes on the side that owns the
