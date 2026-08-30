@@ -48,6 +48,16 @@ def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
+def _registry_claims(claims_json: str) -> list[str]:
+    """Every claim string in docs/public-boundary-claims.json, flattened."""
+    registry = json.loads(claims_json)
+    return [
+        claim
+        for surface in registry["surfaces"].values()
+        for claim in surface["claims"]
+    ]
+
+
 class V060CoreVersionActivationTests(unittest.TestCase):
     def test_core_release_metadata_is_activated_in_lockstep(self) -> None:
         cargo = read("Cargo.toml")
@@ -86,7 +96,19 @@ class V060CoreVersionActivationTests(unittest.TestCase):
             self.assertNotIn(command, active_readme, command)
             self.assertNotIn(command, claims, command)
         self.assertIn(f"npm install -g @docushell/ethos-pdf@{PUBLISHED}", active_readme)
-        self.assertNotIn(ACTIVATED, claims)
+
+        # The activated version may appear in the registry only where it states a fact about the
+        # bytes in this tree, never where it advertises something installable. After a payload
+        # refresh the vendored binaries really do report the activated version, and saying so is
+        # the honest claim; a blanket ban forced the registry to describe its own payload wrongly.
+        for claim in _registry_claims(claims):
+            if ACTIVATED not in claim:
+                continue
+            self.assertEqual(
+                f"Its vendored CLI binaries report `ethos {ACTIVATED}`.",
+                claim,
+                f"only the vendored-binary claim may name the activated version: {claim}",
+            )
 
     def test_npm_payload_stays_on_the_published_release_until_refreshed(self) -> None:
         manifest = json.loads(read("packages/npm/ethos-pdf/vendor/manifest.json"))

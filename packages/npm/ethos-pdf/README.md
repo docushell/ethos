@@ -35,4 +35,4 @@ Vendor assembly:
   `vendor/ethos-darwin-arm64` and `vendor/ethos-linux-x64`.
 
 The current published npm package is `@docushell/ethos-pdf@0.5.0`. Its vendored CLI binaries report
-`ethos 0.5.0`.
+`ethos 0.6.0`.

@@ -1,19 +1,19 @@
 {
   "version": 1,
   "package": "@docushell/ethos-pdf",
-  "cli_version": "0.5.0",
+  "cli_version": "0.6.0",
   "targets": {
     "darwin:arm64": {
       "binary": "ethos-darwin-arm64",
-      "binary_sha256": "df2d46efb96501b8071cd8665ca525ee5af4787804cd04d07262354199ead913",
+      "binary_sha256": "038bfd4f4443784c9410278e63709e21d6f40dc4d204a5842a6df73d1b165180",
       "release_asset": "ethos-macos-arm64.tar.gz",
-      "release_asset_sha256": "30fa34afda745d168e1af39a134e2281f4a409d425765f3dc85c2e312fcbbcc2"
+      "release_asset_sha256": "c116b3449a3de1f4bddc6217e7717a1307a6ef58c240e5404be0850af81789bb"
     },
     "linux:x64": {
       "binary": "ethos-linux-x64",
-      "binary_sha256": "7b6b7cb03c1d16183b6cdd56f6d2ebe593a25ef257baa5b6553a0055c53e8f44",
+      "binary_sha256": "ba9c648edecd3579c4d9acf2b901d9ac9a2e194bd108ae0a4c485a17bf47e7a6",
       "release_asset": "ethos-linux-x64.tar.gz",
-      "release_asset_sha256": "592b175c00d147625f2f2ccc8bc5c74fb8a00ee37f178c363757f2c72404876e"
+      "release_asset_sha256": "c12772255ba8a85b020bd9b6bb8bf77d01eaf11a6928a0d7348536eff7c378f2"
     }
   }
 }

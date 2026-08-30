@@ -49,7 +49,7 @@ assert.throws(
 const manifest = readVendorManifest();
 assert.strictEqual(manifest.version, 1);
 assert.strictEqual(manifest.package, "@docushell/ethos-pdf");
-assert.strictEqual(manifest.cli_version, "0.5.0");
+assert.strictEqual(manifest.cli_version, "0.6.0");
 validateVendorManifest(manifest);
 for (const [key, binaryName] of SUPPORTED_TARGETS.entries()) {
   assert.strictEqual(manifest.targets[key].binary, binaryName);
