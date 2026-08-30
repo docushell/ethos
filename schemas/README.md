@@ -36,7 +36,7 @@ so the existing validation harness can check all repository JSON without moving 
 
 | Schema | Repository record it governs |
 | --- | --- |
-| `ethos-evidence-anchor-contract.schema.json` | `evidence_anchor` v1 source-only public beta evaluation guard inventory |
+| `ethos-evidence-anchor-contract.schema.json` | `evidence_anchor` v1 contract inventory |
 | `ethos-crop-element-request.schema.json` | source-only request envelope for Milestone D `crop_element` v1 contract work |
 | `ethos-verify-citations-contract.schema.json` | Milestone D `verify_citations` v1 source-only contract inventory |
 | `ethos-claim-kind-boundary-contract.schema.json` | Milestone D `claim_kind_boundary` v1 source-only contract inventory |
@@ -54,10 +54,10 @@ so the existing validation harness can check all repository JSON without moving 
 | `ethos-milestone-e-internal-trust-loop-rehearsal-evidence-matrix.schema.json` | Milestone E source-only internal trust-loop rehearsal/evidence matrix |
 | `ethos-milestone-e-internal-trust-loop-blocker-ledger.schema.json` | Milestone E source-only internal trust-loop blocker ledger |
 | `ethos-milestone-e-public-approval-lane-blockers.schema.json` | Milestone E source-only public approval lane blocker ledger |
-| `ethos-milestone-e-public-beta-approval-prep.schema.json` | Milestone E source-only public beta approval prep |
+| `ethos-milestone-e-public-beta-approval-prep.schema.json` | Milestone E approval prep (historical record) |
 | `ethos-milestone-e-package-publication-approval-prep.schema.json` | Milestone E source-only package publication approval prep |
 | `ethos-milestone-e-public-facing-readiness-ledger.schema.json` | Milestone E source-only public-facing readiness current-main ledger |
-| `ethos-milestone-e-public-beta-current-main-refresh-prep.schema.json` | Milestone E source-only public beta current-main refresh prep |
+| `ethos-milestone-e-public-beta-current-main-refresh-prep.schema.json` | Milestone E current-main refresh prep (historical record) |
 
 Conventions: snake_case keys; `additionalProperties: false` everywhere except the
 runtime-only `diagnostics` envelope field; geometry is integer quanta (no floats anywhere in
@@ -84,7 +84,7 @@ synthesis policy. This envelope is not `verification_report.json`, is not emitte
 and is not a replacement for the canonical audit report.
 
 Evidence-anchor V1 guard work is tracked in `docs/evidence-anchor-v1-contract.md`. In this
-source-only public beta evaluation guard, `evidence_anchor` names the deterministic source-tracing
+contract inventory, `evidence_anchor` names the deterministic source-tracing
 contract currently carried by `ethos evidence anchor`; it does not add semantic answer
 verification, hosted/API behavior, app-specific integration, crop rendering, or production
 positioning. The contract inventory at `examples/verify/evidence_anchor_v1_contract.json` is
@@ -97,14 +97,14 @@ report schemas, evidence-anchor request/report schemas, default verification-con
 `0.2.x` updates after the `0.2.0` lane is approved and published.
 
 Milestone D `verify_citations` v1 contract work is tracked in
-`docs/milestone-d-verify-citations-contract.md`. In this source-only pre-alpha slice,
+`docs/milestone-d-verify-citations-contract.md`. In this slice,
 `verify_citations` names the citation-input to verification-report contract currently carried by
 `ethos verify`; it does not add a new command or binding surface. The contract inventory at
 `examples/verify/verify_citations_v1_contract.json` is schema-validated here; its alignment with
 the executable case inventory and report goldens is checked by the Milestone D repository guard.
 
 Milestone D `claim_kind_boundary` v1 contract work is tracked in
-`docs/milestone-d-claim-kind-boundary-contract.md`. In this source-only pre-alpha slice,
+`docs/milestone-d-claim-kind-boundary-contract.md`. In this slice,
 `claim_kind_boundary` names the supported v1 claim-kind boundary currently carried by
 `ethos verify`; it does not add new claim-kind support or a new command/binding surface. The
 contract inventory at `examples/verify/claim_kind_boundary_v1_contract.json` is schema-validated
@@ -112,7 +112,7 @@ here; its alignment with the committed non-v1 claim fixture and report golden is
 Milestone D repository guard.
 
 Milestone D `grounding_source` v1 contract work is tracked in
-`docs/milestone-d-grounding-source-contract.md`. In this source-only pre-alpha slice,
+`docs/milestone-d-grounding-source-contract.md`. In this slice,
 `grounding_source` names the parser-neutral evidence boundary currently carried by the
 `GroundingSource` trait and `ethos verify` report grounding metadata; it does not add a new
 command or binding surface. The contract inventory at
@@ -121,7 +121,7 @@ trait methods, source implementations, focused verifier tests, and report golden
 the Milestone D repository guard.
 
 Milestone D `capability_downgrade` v1 contract work is tracked in
-`docs/milestone-d-capability-downgrade-contract.md`. In this source-only pre-alpha slice,
+`docs/milestone-d-capability-downgrade-contract.md`. In this slice,
 `capability_downgrade` names the grounding-source capability declaration to verification-report
 downgrade contract currently carried by `ethos verify`; it does not add a new command or binding
 surface. The contract inventory at `examples/verify/capability_downgrade_v1_contract.json` is
@@ -129,7 +129,7 @@ schema-validated here; its alignment with report goldens is checked by the Miles
 guard.
 
 Milestone D `opendataloader_adapter_shape` v1 contract work is tracked in
-`docs/milestone-d-opendataloader-adapter-shape-contract.md`. In this source-only pre-alpha
+`docs/milestone-d-opendataloader-adapter-shape-contract.md`. In this
 slice, `opendataloader_adapter_shape` names the adapter input-shape to `GroundingSource`
 contract currently carried by `ethos-grounding-opendataloader-json` and
 `ethos verify --grounding opendataloader-json`; it does not add a new command or binding surface.
@@ -138,7 +138,7 @@ schema-validated here; its alignment with adapter tests, CLI grounding tests, re
 usage diagnostics is checked by the Milestone D repository guard.
 
 Milestone D `crop_element` v1 contract work is tracked in
-`docs/milestone-d-crop-element-contract.md`. In this source-only pre-alpha slice,
+`docs/milestone-d-crop-element-contract.md`. In this slice,
 `crop_element` names the element-to-crop-descriptor contract currently carried by the
 source-bound `ethos crop_element` CLI command. The existing `ethos verify --crop-dir` carrier
 continues to emit verifier evidence artifacts from the same descriptor type, with optional rendered
@@ -150,7 +150,7 @@ envelope carries a c14n-derived `request_ref` identity guarded in that same sour
 check.
 
 Milestone D `crop_element_surface_shape` v1 contract work is tracked in
-`docs/milestone-d-crop-element-surface-shape-contract.md`. In this source-only pre-alpha slice,
+`docs/milestone-d-crop-element-surface-shape-contract.md`. In this slice,
 `crop_element_surface_shape` names the callable crop surface shape that must preserve the
 existing crop request and descriptor bindings. The contract inventory at
 `examples/crop/crop_element_surface_shape_v1_contract.json` is schema-validated here; its
@@ -158,7 +158,7 @@ alignment with the request schema, descriptor schema, source-bound CLI command, 
 source-bound Python wrapper is checked by the Milestone D repository guard.
 
 Milestone D `sandbox_subprocess` v1 contract work is tracked in
-`docs/milestone-d-sandbox-subprocess-contract.md`. In this source-only pre-alpha slice,
+`docs/milestone-d-sandbox-subprocess-contract.md`. In this slice,
 `sandbox_subprocess` names the future worker-boundary contract currently represented by the
 existing PDF worker process behind `ethos doc parse` and `ethos fingerprint`; it does not add a
 hardened sandbox or a new command/binding surface. The request envelope examples under
@@ -168,7 +168,7 @@ with the executable worker tests is checked by the Milestone D repository guard.
 envelope carries a c14n-derived `request_ref` identity guarded in that same source-only contract
 check.
 
-Milestone E prep is tracked in `docs/milestone-e-prep-scope.md`. In this source-only pre-alpha
+Milestone E prep is tracked in `docs/milestone-e-prep-scope.md`. In this
 slice, the fixture-candidate inventory at `docs/milestone-e-fixture-candidates.json`,
 fixture-promotion criteria at `docs/milestone-e-fixture-promotion-criteria.json`, internal
 trust-loop walkthrough plan at `docs/milestone-e-internal-trust-loop-walkthrough.json`, and

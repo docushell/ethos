@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "sandbox_subprocess.v1",
-  "status": "source-only-pre-alpha",
+  "status": "supported",
   "carrier": "pdfium worker process",
   "cases": [
     {

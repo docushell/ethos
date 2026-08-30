@@ -1,6 +1,6 @@
 # Milestone D `sandbox_subprocess` v1 Contract
 
-Status: source-only pre-alpha contract work for internal Milestone D continuation.
+Status: internal contract record for Milestone D continuation.
 
 This note defines the narrow `sandbox_subprocess` contract-prep slice for Milestone D. It does not
 add a hardened OS sandbox, new public command, binding, Node surface, MCP surface, or hosted
@@ -82,5 +82,5 @@ This first `sandbox_subprocess` slice does not add:
 - Python, Node, MCP, or hosted sandbox surfaces;
 - crop or verification API changes.
 
-Public-facing language remains limited to source-only pre-alpha internal continuation, evidence
+Public-facing language remains limited to internal continuation, evidence
 grounding, diagnostics, fixture-backed validation, and explicit blockers.

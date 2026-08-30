@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "crop_element_surface_shape.v1",
-  "status": "source-only-pre-alpha",
+  "status": "supported",
   "carrier": "source-only crop_element surface shape",
   "request_schema": "schemas/ethos-crop-element-request.schema.json",
   "descriptor_schema": "schemas/ethos-crop-descriptor.schema.json",

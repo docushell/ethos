@@ -13,7 +13,7 @@ This repository owns implementation-adjacent benchmark inputs and historical evi
 
 Generated Gate Zero benchmark results are not checked into `ethos`; they belong in
 `ethos-bench`. Public wording must continue to point readers at `docs/execution-status.md` for
-the current pre-alpha status and blockers.
+the current status and blockers.
 The controlled-run handoff is `docs/gate-zero-evidence-runbook.md`.
 
 Before any public repository push, run the public-release checklist in
@@ -43,7 +43,7 @@ and an explicit public-report or release decision allows that surface.
 Allowed current wording:
 
 ```text
-Ethos is pre-alpha. The benchmark harness and contracts exist, but public benchmark claims remain blocked.
+The benchmark harness and contracts exist, but public benchmark claims remain blocked.
 ```
 
 Not allowed current wording:

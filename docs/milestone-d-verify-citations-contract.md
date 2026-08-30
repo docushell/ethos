@@ -1,6 +1,6 @@
 # Milestone D `verify_citations` v1 Contract
 
-Status: source-only pre-alpha contract work for internal Milestone D continuation.
+Status: internal contract record for Milestone D continuation.
 
 This note defines the narrow first Milestone D slice for `verify_citations` v1. It does not
 create a new public command, binding, or hosted surface. The current executable carrier remains
@@ -92,5 +92,5 @@ This first D slice does not add:
 - sandbox/subprocess backend expansion;
 - semantic or arithmetic verification.
 
-Public-facing language remains limited to source-only pre-alpha internal continuation, evidence
+Public-facing language remains limited to internal continuation, evidence
 grounding, diagnostics, fixture-backed validation, and explicit blockers.

@@ -1,14 +1,14 @@
 # Milestone D `crop_element` v1 Contract
 
-Status: source-only pre-alpha contract work for internal Milestone D continuation.
+Status: internal contract record for Milestone D continuation.
 
 This note defines the narrow `crop_element` contract-prep slice for Milestone D. It includes an
 internal Rust resolver in `ethos-core::crop_element` that validates request identity, resolves one
 native document element, builds source-bound crop descriptors, and exposes that descriptor
-path through the source-only pre-alpha `ethos crop_element` CLI command. For rendered requests,
+path through the opt-in `ethos crop_element` CLI command. For rendered requests,
 that CLI can bind caller-provided source PDF bytes and emit the descriptor plus PNG artifact. It
 does not create a Node binding, MCP server method, hosted surface, sandbox behavior, or foreign
-adapter crop coordinate interpretation. The internal pre-alpha Python surface wraps the same
+adapter crop coordinate interpretation. The internal Python surface wraps the same
 source-bound CLI command. The
 existing `ethos verify --crop-dir` and optional `--crop-source-pdf` carrier remain the verifier
 evidence-artifact path; `crop_element` names the first-class descriptor contract between a parsed
@@ -101,5 +101,5 @@ This first `crop_element` slice does not add:
 - foreign-adapter crop coordinate hardening;
 - cross-platform rendered-crop byte identity claims.
 
-Public-facing language remains limited to source-only pre-alpha internal continuation, evidence
+Public-facing language remains limited to internal continuation, evidence
 grounding, diagnostics, fixture-backed validation, and explicit blockers.

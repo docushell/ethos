@@ -1,10 +1,9 @@
 # Release Operator Runbook
 
-Ethos is public beta evaluation for source, Rust crates, Python wheel, macOS arm64 CLI artifact,
-Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.3.0` surfaces. This runbook describes the
-operator checks required before any public promotion. It does not authorize new GitHub Release
-artifacts, new package publication, hosted surfaces, production positioning, Windows packaged
-artifacts, bundled project-maintained PDFium builds, or benchmark reports.
+Ethos ships source, Rust crates, Python wheel, macOS arm64 CLI artifact, Linux x64 CLI artifact,
+and npm `@docushell/ethos-pdf` surfaces. This runbook describes the operator checks required
+before any public promotion. It does not authorize hosted surfaces, Windows packaged artifacts,
+bundled project-maintained PDFium builds, or benchmark reports.
 
 ## Who Can Release
 

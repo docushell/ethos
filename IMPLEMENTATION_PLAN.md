@@ -302,7 +302,7 @@ On G2/G3 failure, G1 retry failure, or decider-selected G1 fallback, Ethos pivot
 
 ---
 
-## 8. Milestones D-E - Weeks 23-40 (plan-level public-beta checkpoint)
+## 8. Milestones D-E - Weeks 23-40 (plan-level public checkpoint)
 
 ### Milestone D (weeks 23-30): Agents And Verification (PRD 13-D)
 
@@ -320,7 +320,7 @@ On G2/G3 failure, G1 retry failure, or decider-selected G1 fallback, Ethos pivot
 | WS-SURFACES + WS-CONTRACTS | Stable CLI/Python docs; Node beta docs and MCP experimental docs only if staffed or accepted by release-scope ADR; lightweight LangChain/LlamaIndex examples over Python API; schema compatibility tests; determinism CI hardened; Windows x64 determinism green or release re-scoped; release artifacts for target platforms (footprint check as release gate); project-maintained PDFium Phase 2 builds from `pdfium.googlesource.com` with pinned revision, flags, toolchain, patches, and hashes | Users install stable CLI/Python, parse, inspect, chunk, verify born-digital PDFs; any Node/MCP status is explicit; Public Beta does not ship on Phase 1 PDFium binaries; unresolved Windows determinism divergence blocks or re-scopes Public Beta | 6.1, 13-E |
 | Gate | **Release 1 claim audit**: every included 4.1 stable capability demonstrably present (Rust core, stable CLI, stable Python, canonical JSON, deterministic md, txt, chunks, page selection, rotation/coords, failure detection, spans, headings/lists/reading order, simple tables, non-text region coordinates, security report, verification report, parser-agnostic verification, debug overlay, crop API (`crop_element`, per 13-D), LiteParse-inclusive harness, launch examples); Node beta and MCP experimental either have smoke tests with explicit labels or are removed from public claims by ADR - checklist in the release PR | Public "Release 1" only after audit passes; optional surfaces are labeled or explicitly out of scope | 4.1, 11.4, 13-D |
 
-**Public-beta checkpoint (week 40, plan-level):** A-E complete; public beta live. Milestone F (Release 2 enrichment: complex tables, formula/LaTeX, chart classification, optional enrichment modules - PRD 13-F) is scoped *after* E from fixtures gathered during beta. Platform/hosted adoption is out of scope here.
+**Public checkpoint (week 40, plan-level):** A-E complete; public surfaces live. Milestone F (Release 2 enrichment: complex tables, formula/LaTeX, chart classification, optional enrichment modules - PRD 13-F) is scoped *after* E from fixtures gathered during beta. Platform/hosted adoption is out of scope here.
 
 ---
 

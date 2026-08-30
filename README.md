@@ -5,18 +5,15 @@
 [![bench](https://github.com/docushell/ethos/actions/workflows/bench.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/bench.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 ![Rust: 1.87+](https://img.shields.io/badge/rust-1.87%2B-orange)
-![status: public beta](https://img.shields.io/badge/status-public--beta-blue)
+![status: stable](https://img.shields.io/badge/status-stable-brightgreen)
 
-> **Status: public beta evaluation.**
 > Ethos is a deterministic document evidence layer for source-grounded verification and
-> citation checking across native Ethos JSON and supported foreign parser outputs. The current
-> beta includes the GitHub source repository, Rust library crates `ethos-doc-core`,
-> `ethos-verify`, and `ethos-pdf` at `0.5.0`, the Python `ethos-pdf` wheel at `0.5.0`, the npm
-> `@docushell/ethos-pdf@0.5.0` package, and GitHub Release `v0.5.0` macOS arm64/Linux x64 CLI
-> artifacts. PDFium-backed commands use caller-provided PDFium through
+> citation checking across native Ethos JSON and supported foreign parser outputs. It ships as
+> the Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`, the Python
+> `ethos-pdf` wheel, the npm `@docushell/ethos-pdf` package, and macOS arm64/Linux x64 CLI
+> archives on GitHub Releases. PDFium-backed commands use caller-provided PDFium through
 > `ETHOS_PDFIUM_LIBRARY_PATH`.
-> Current execution status and release-scope notes live in `docs/execution-status.md`;
-> public-release hygiene gates live in `docs/public-release-checklist.md`.
+> Supported surfaces and release scope live in `docs/execution-status.md`.
 
 **Ethos checks whether an AI's claims about a document are actually in the document.**
 
@@ -40,11 +37,10 @@ Apache-2.0. Runs locally. No account, no API key, no network.
 - [Install or build Ethos](#install-or-build)
 - [Parse a born-digital PDF](#2-minute-pdf-parse-quickstart)
 - [Use another parser](#bring-your-own-parser)
-- [See what works today](#supported-today--not-yet)
+- [See what works today](#what-works-today)
 - [See what comes out](#what-comes-out)
 - [Read the limits](docs/CLAIMS.md) — what a verdict proves, and what it does not
-- [Read the v0.6.0 format plan](docs/proof-statement-v1.md) — the major release in progress
-- [Pick up a v0.6.0 task](docs/proof-statement-v1-implementation-plan.md) — task board and acceptance criteria
+- [Read the proof statement format](docs/proof-statement-v1.md) — the v0.6.0 evidence format
 
 ## Catch a fabricated citation in 60 seconds
 
@@ -160,7 +156,7 @@ Use Ethos when a pipeline needs to answer:
 Ethos is a local evidence-checking tool. It is not an OCR service, hosted parsing API, or semantic
 truth system.
 
-## Supported today / not yet
+## What works today
 
 | Area | What works |
 | --- | --- |
@@ -174,14 +170,13 @@ truth system.
 | Area | Not supported |
 | --- | --- |
 | Scanned or image-only PDFs | No OCR. Fails with `ocr_required` rather than guessing. |
-| Windows CLI artifact | Build from source on Windows; no packaged binary yet |
+| Windows CLI artifact | Build from source on Windows |
 | Bundled PDFium | Supply your own via `ETHOS_PDFIUM_LIBRARY_PATH` |
 | Hosted API | None. Ethos is a local tool by design. |
 | Semantic judgement | Ethos checks whether cited evidence exists, not whether an answer is correct |
 
-We publish no speed, footprint, or parser-quality comparisons, because we have not run a
-benchmark whose numbers we would be willing to defend. When that changes the numbers will
-arrive with the harness that produced them.
+We publish no speed, footprint, or parser-quality comparisons. When we publish numbers, they
+will arrive with the harness that produced them.
 
 ## Install or build
 
@@ -269,7 +264,7 @@ npm install -g @docushell/ethos-pdf@0.5.0
 ethos --version
 ```
 
-The npm package vendors only the approved macOS arm64 and Linux x64 CLI binaries. Unsupported
+The npm package vendors only the supported macOS arm64 and Linux x64 CLI binaries. Unsupported
 platforms fail before invoking a binary. PDFium-backed commands fail until
 `ETHOS_PDFIUM_LIBRARY_PATH` points to a caller-provided PDFium dynamic library.
 
@@ -301,8 +296,8 @@ export ETHOS_PDFIUM_LIBRARY_PATH=/absolute/path/to/libpdfium.dylib
 ./target/debug/ethos doc parse fixtures/synthetic/simple-text/document.pdf --format text
 ```
 
-The fixture is synthetic and born-digital. This is an evaluation smoke path, not a benchmark or a
-claim about broader PDF, OCR, table, production, hosted, or bundled-PDFium support.
+The fixture is synthetic and born-digital. This is a smoke path, not a benchmark or a claim
+about OCR, table, hosted, or bundled-PDFium support.
 
 ## Minimal end-to-end example
 
@@ -403,11 +398,11 @@ Successful runs end with `verify-alpha demo checks passed`. Generated files are 
 
 - Ethos supports a narrow born-digital PDF path. Scanned or image-only pages fail with
   `ocr_required` because the base install has no OCR.
-- Complex tables, formulas, charts, and difficult layouts are outside the current base scope.
+- Complex tables, formulas, charts, and difficult layouts are outside the base scope.
 - Verification checks whether evidence exists, matches, and belongs to the expected document
   representation. It does not decide whether an answer is true, relevant, or complete.
-- Windows packaged artifacts, bundled project-maintained PDFium builds, hosted surfaces, public
-  benchmark reports, and launch announcements are tracked as separate release-scope work.
+- Windows packaged artifacts, bundled project-maintained PDFium builds, and hosted surfaces are
+  outside the distribution scope: build from source on Windows, and supply your own PDFium.
 
 ## Verification flow
 
@@ -444,28 +439,26 @@ capabilities. It must report missing information honestly. It must not invent ev
 Start with the [`GroundingSource` adapter guide](docs/bring-your-own-parser.md). The existing
 OpenDataLoader adapter is the larger working example.
 
-### Proposed for v0.6.0
+### Grounding JSON, without writing Rust
 
-The draft v0.6.0 plan proposes one strict, language-neutral Grounding JSON format:
+Since v0.6.0 there is one strict, language-neutral Grounding JSON format:
 
 ```text
-your parser output -> one mapper -> Grounding JSON -> ethos check/verify -> report
+your parser output -> one mapper -> Grounding JSON -> ethos grounding check -> report
 ```
 
-This would let JavaScript, Python, Java, Go, and other pipelines use Ethos without implementing a
-Rust trait. “Plug and play” still requires one deterministic mapper because parsers use different
-field names and meanings. Ethos will reject unknown or incomplete input instead of guessing.
+JavaScript, Python, Java, Go, and other pipelines use Ethos without implementing a Rust trait.
+“Plug and play” still requires one deterministic mapper because parsers use different field
+names and meanings. Ethos rejects unknown or incomplete input instead of guessing.
 
-Grounding JSON is a proposal, not a current feature. It must pass a real second-parser mapping
-proof before its schema is frozen. This does not change DocuShell's current OpenDataLoader parsing
-of normal born-digital PDFs; DocuShell would add a mapper only where it wants Ethos verification.
+```bash
+ethos grounding check grounding.json --source-artifact invoice.pdf
+```
 
-Ethos would remain the open verification engine. DocuShell could sell hosted mapping,
-compatibility testing, support, and audit workflows around it. Billing and hosted-service code do
-not belong in the Ethos core.
+Ethos is the open verification engine. Hosted mapping, compatibility testing, support, and audit
+workflows are built around it; billing and hosted-service code do not belong in the Ethos core.
 
-Relevant sections in the [Grounding JSON plan](docs/v0-6-0-release-prep.md), which covers the
-merged parser-integration half of v0.6.0:
+Background on the format's design in the [Grounding JSON plan](docs/v0-6-0-release-prep.md):
 
 - §1 — Release decision
 - §5 — Success criteria and non-goals
@@ -524,9 +517,9 @@ of check. It does not decide whether an answer is correct or good.
 
 ### Can Ethos verify output from other parsers?
 
-Today, Rust developers can implement `GroundingSource`, and the CLI supports the
-OpenDataLoader-style adapter. The v0.6.0 plan proposes Grounding JSON for other languages and
-pipeline tools. See [Bring your own parser](#bring-your-own-parser).
+Yes. Rust code can implement `GroundingSource`, the CLI supports the OpenDataLoader-style
+adapter, and any language can emit Grounding JSON for `ethos grounding check`. See
+[Bring your own parser](#bring-your-own-parser).
 
 ### Does Ethos support scanned PDFs?
 
@@ -540,7 +533,7 @@ result — do not retry on it.
 
 ### Where are benchmark results?
 
-There are none to publish yet. Generated public-safe Gate Zero evidence belongs in the
+We publish none here by design. Generated public-safe Gate Zero evidence belongs in the
 separate `docushell/ethos-bench` repository, not in this main source repo.
 
 ## Repository map

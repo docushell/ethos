@@ -39,18 +39,16 @@ def readme_boundary_claims() -> list[str]:
 
 
 class PublicSurfacePostureTests(unittest.TestCase):
-    def test_readme_status_matches_public_beta_evaluation_scope(self) -> None:
+    def test_readme_status_matches_supported_release_scope(self) -> None:
         text = read(README)
         normalized = " ".join(line.removeprefix("> ").strip() for line in text.splitlines())
 
-        self.assertIn("public beta evaluation", text)
         for claim in readme_boundary_claims():
             self.assertIn(claim, normalized)
         self.assertIn("deterministic document evidence layer", text)
         self.assertIn("Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`", normalized)
         self.assertIn("Python `ethos-pdf` wheel", normalized)
         self.assertIn("caller-provided PDFium", text)
-        self.assertIn("release-scope work", text)
         self.assertIn("cargo add ethos-doc-core@0.5.0", text)
         self.assertIn("cargo add ethos-verify@0.5.0", text)
         self.assertIn("cargo add ethos-pdf@0.5.0", text)
@@ -65,11 +63,14 @@ class PublicSurfacePostureTests(unittest.TestCase):
         self.assertNotIn("not stable production surfaces", text.lower())
         self.assertNotIn("contracts phase", text)
         self.assertNotIn("has not run", text)
+        self.assertNotIn("public beta", text.lower())
+        self.assertNotIn("beta evaluation", text.lower())
+        self.assertNotIn("pre-alpha", text.lower())
 
     def test_examples_readme_stays_fixture_scoped(self) -> None:
         text = read(EXAMPLES_README)
 
-        self.assertIn("source-only public beta fixture set", text)
+        self.assertIn("Pinned fixture set", text)
         self.assertIn("Pinned fixtures only", text)
         self.assertNotIn("launch package", text.lower())
 
@@ -78,12 +79,10 @@ class PublicSurfacePostureTests(unittest.TestCase):
 
         self.assertIn("contracts phase", text)
         self.assertIn("Gate Zero[^\\n]*has not run", text)
-        self.assertIn("launch package", text)
         self.assertIn("benchmark[- ]validated", text)
-        self.assertIn("release[- ]ready", text)
-        self.assertIn("package[- ]ready", text)
-        self.assertIn("production[- ]ready", text)
-        self.assertIn("launch[- ]ready", text)
+        self.assertIn("pre[- ]alpha", text)
+        self.assertIn("public beta", text)
+        self.assertIn("beta evaluation", text)
 
 
 if __name__ == "__main__":

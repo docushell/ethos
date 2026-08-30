@@ -1,9 +1,9 @@
 # Milestone D `crop_element_surface_shape` v1 Contract
 
-Status: source-only pre-alpha contract work for internal Milestone D continuation.
+Status: internal contract record for Milestone D continuation.
 
 This note defines the narrow `crop_element_surface_shape` contract-prep slice for Milestone D.
-It records the source-bound `ethos crop_element` CLI surface and the internal pre-alpha Python
+It records the source-bound `ethos crop_element` CLI surface and the internal Python
 wrapper over that CLI. It does not add a Node binding, MCP method, hosted surface,
 sandbox-backed crop behavior, or foreign-adapter crop coordinate interpretation.
 
@@ -63,5 +63,5 @@ This first `crop_element_surface_shape` slice does not add:
 - foreign-adapter crop coordinate hardening.
 
 Until those blockers are explicitly handled, public language remains limited to source-only
-pre-alpha internal continuation, evidence grounding, diagnostics, fixture-backed validation, and
+internal continuation, evidence grounding, diagnostics, fixture-backed validation, and
 explicit blockers.

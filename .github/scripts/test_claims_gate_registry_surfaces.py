@@ -60,11 +60,11 @@ class ClaimsGateRegistrySurfaceTests(unittest.TestCase):
             write_surface(
                 root,
                 "packages/npm/ethos-pdf/QUICKSTART.md",
-                "Install this production-ready package.\n",
+                "Install this public beta package.\n",
             )
             hits = find_claim_hits(root, REGISTRY_SURFACES)
         self.assertEqual(Path("packages/npm/ethos-pdf/QUICKSTART.md"), hits[0][0])
-        self.assertEqual("unsupported public production posture", hits[0][2])
+        self.assertEqual("stale public-beta posture", hits[0][2])
 
     def test_missing_optional_surface_does_not_fail_scan(self) -> None:
         with tempfile.TemporaryDirectory(prefix="ethos-claims-registry-") as temp:

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:crop-element-surface-shape-contract:1",
   "title": "Ethos crop_element_surface_shape v1 contract inventory",
-  "description": "Source-only pre-alpha Milestone D inventory for the crop_element callable surface shape. This validates inventory shape and vocabulary; CLI and non-CLI surface alignment stays in the repository guard.",
+  "description": "Contract inventory for the crop_element callable surface shape. This validates inventory shape and vocabulary; CLI and non-CLI surface alignment stays in the repository guard.",
   "type": "object",
   "required": [
     "schema_version",
@@ -20,7 +20,7 @@
   "properties": {
     "schema_version": { "const": 1 },
     "contract": { "const": "crop_element_surface_shape.v1" },
-    "status": { "const": "source-only-pre-alpha" },
+    "status": { "const": "supported" },
     "carrier": { "const": "source-only crop_element surface shape" },
     "request_schema": { "$ref": "#/$defs/repo_path" },
     "descriptor_schema": { "$ref": "#/$defs/repo_path" },

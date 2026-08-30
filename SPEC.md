@@ -1,6 +1,6 @@
 # Ethos Evidence Format (EEF)
 
-**Version 0.2 — Public beta evaluation**
+**Version 0.2**
 
 Ethos Evidence Format is an open, local-first format for representing document evidence that can
 be parsed, cited, anchored, and verified. It is designed for humans, agents, RAG systems, parser

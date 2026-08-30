@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:verify-citations-contract:1",
   "title": "Ethos verify_citations v1 contract inventory",
-  "description": "Source-only pre-alpha Milestone D inventory for the current verify_citations v1 contract carried by `ethos verify`. This schema validates inventory shape and vocabulary; executable case/golden alignment stays in the repository guard.",
+  "description": "Contract inventory for the current verify_citations v1 contract carried by `ethos verify`. This schema validates inventory shape and vocabulary; executable case/golden alignment stays in the repository guard.",
   "type": "object",
   "required": [
     "schema_version",
@@ -24,7 +24,7 @@
       "const": "verify_citations.v1"
     },
     "status": {
-      "const": "source-only-pre-alpha"
+      "const": "supported"
     },
     "carrier": {
       "const": "ethos verify"

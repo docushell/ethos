@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-//! # `ethos` — source-only pre-alpha CLI
+//! # `ethos` — the Ethos CLI
 //!
 //! Current command groups are `ethos doc …`, `ethos rag …`, `ethos security …`,
 //! `ethos verify …`, plus `ethos fingerprint`. Exit codes follow the contract from
@@ -98,7 +98,7 @@ enum Command {
     Fingerprint(FingerprintArgs),
     /// Diagnose local Ethos and caller-provided PDFium setup
     Doctor(DoctorArgs),
-    /// Source-only pre-alpha crop descriptor for one native document element
+    /// Opt-in, unstable crop descriptor for one native document element
     #[command(name = "crop_element")]
     CropElement(CropElementArgs),
     /// Internal killable PDFium worker. Not a public CLI surface.

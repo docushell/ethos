@@ -10,7 +10,7 @@ below is recorded from the frozen manifest and pinned competitor lock.
 
 ## Product Decision
 
-Ethos remains pre-alpha. Gate Zero is ready for controlled host runs, not public claims.
+Gate Zero is ready for controlled host runs, not public claims.
 
 The engineering harness now fails closed when the corpus/hardware manifest or competitor lock is
 incomplete. The Gate Zero v1 corpus is now frozen in `benchmarks/gate-zero/corpus/` with synthetic
@@ -119,5 +119,5 @@ Until Gate Zero produces `benchmarks/results/gate-zero/{g1,g2,g3}.json` from the
 and pinned competitors, product language must stay at:
 
 ```text
-Ethos is pre-alpha. Current results are engineering fixtures, not public benchmark claims.
+Current results are engineering fixtures, not public benchmark claims.
 ```

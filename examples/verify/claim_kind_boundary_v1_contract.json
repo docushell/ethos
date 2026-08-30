@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "claim_kind_boundary.v1",
-  "status": "source-only-pre-alpha",
+  "status": "supported",
   "carrier": "ethos verify",
   "supported_claim_kinds": ["quote", "value", "presence", "table_cell"],
   "unsupported_claim_kinds": ["region", "other"],

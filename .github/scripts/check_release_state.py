@@ -229,7 +229,7 @@ def render_current_status(state: Mapping[str, object]) -> str:
         f"and the Python `{python_package['name']}` wheel is live on PyPI. Its released version is "
         f"`{python_package['version']}`. GitHub Release `{github['tag']}` is marked as the "
         "repository's latest release and contains closed-out "
-        f"{platforms} CLI artifacts for evaluation with "
+        f"{platforms} CLI artifacts built against "
         f"caller-provided PDFium through `{release['pdfium_environment']}`. npm "
         f"`{npm_package['name']}@{npm_package['version']}` is live on npm. The exact v{version} "
         f"public install wording packet is approved and closed out. Package-tag creation for "

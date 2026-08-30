@@ -1,9 +1,9 @@
 # Evidence Anchor V1 Contract Guard
 
-Status: source-only public beta evaluation guard for the current `ethos evidence anchor` surface.
+Status: contract guard for the current `ethos evidence anchor` surface.
 
 This note defines the narrow post-merge guard for `evidence_anchor` v1. It does not change the
-approved public beta/evaluation posture, and it does not approve any hosted, production, benchmark,
+approved posture, and it does not approve any hosted, benchmark,
 parser-quality, table-quality, Windows, bundled-PDFium, `ethos-doc`, or `ethos-rag` surface.
 
 The current executable carrier is the `ethos evidence anchor` CLI command. It consumes a single
@@ -60,5 +60,5 @@ This `evidence_anchor` guard does not add:
 - production positioning;
 - benchmark, speed, footprint, parser-quality, or table-quality claims.
 
-Until those blockers are explicitly handled, public language remains limited to public beta
+Until those blockers are explicitly handled, public language remains limited to the approved
 evaluation of deterministic evidence anchoring over the currently approved surfaces.

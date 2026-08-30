@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "grounding_source.v1",
-  "status": "source-only-pre-alpha",
+  "status": "supported",
   "carrier": "GroundingSource trait",
   "trait_module": "crates/ethos-core/src/grounding.rs",
   "report_schema": "schemas/ethos-verification-report.schema.json",

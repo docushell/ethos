@@ -72,7 +72,7 @@ fn parse_crop_element_success(args: &[&str]) -> Value {
     );
     assert_eq!(
         String::from_utf8_lossy(&output.stderr),
-        "warning: crop_element is source-only pre-alpha and unsupported\n"
+        "warning: crop_element is an unstable opt-in surface\n"
     );
     serde_json::from_slice::<Value>(&output.stdout).expect("stdout is JSON")["predicate"].clone()
 }
@@ -1379,7 +1379,7 @@ fn crop_element_cli_writes_descriptor() {
     assert_eq!(output.stdout, b"");
     assert_eq!(
         String::from_utf8_lossy(&output.stderr),
-        "warning: crop_element is source-only pre-alpha and unsupported\n"
+        "warning: crop_element is an unstable opt-in surface\n"
     );
     assert_eq!(json_file(out)["predicate"], expected);
 }
@@ -1527,7 +1527,7 @@ fn crop_element_cli_writes_rendered_artifacts_when_pdfium_is_configured() {
     assert_eq!(output.stdout, b"");
     assert_eq!(
         String::from_utf8_lossy(&output.stderr),
-        "warning: crop_element is source-only pre-alpha and unsupported\n"
+        "warning: crop_element is an unstable opt-in surface\n"
     );
 
     let descriptor = json_file(&out);

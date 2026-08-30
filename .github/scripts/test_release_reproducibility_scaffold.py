@@ -70,7 +70,7 @@ class ReleaseReproducibilityScaffoldTests(unittest.TestCase):
         normalized_notices = normalized(RELEASE_NOTICES)
         combined = f"{runbook}\n{notices}"
 
-        self.assertIn("@docushell/ethos-pdf@0.3.0", runbook)
+        self.assertIn("@docushell/ethos-pdf", runbook)
         self.assertIn("Patch 0.1.1 Artifact Refresh Prep", runbook)
         self.assertIn("ethos 0.1.1", runbook)
         self.assertIn("ethos 0.1.1", notices)
