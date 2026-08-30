@@ -82,6 +82,13 @@ PAIRS = [
         EXAMPLES / "security-report.example.json",
         EXAMPLES / "security-report.full.example.json",
     ]),
+    # Both examples are real CLI output, not hand-written: `ethos verify` and
+    # `ethos grounding check` over `grounding-source-bound.example.json`. A hand-written
+    # envelope would only prove the schema matches what someone believed the binary emits.
+    ("ethos-proof-statement.schema.json", [
+        EXAMPLES / "proof-statement.example.json",
+        EXAMPLES / "proof-statement-grounding-validation.example.json",
+    ]),
     ("ethos-verification-report.schema.json", [
         EXAMPLES / "verification-report.example.json",
         EXAMPLES / "verification-report.hardened.example.json",

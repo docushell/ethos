@@ -1,0 +1,89 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "predicate": {
+    "all_evidence_grounded": false,
+    "attestation": {
+      "claims_sha256": "51e36a018bcc9286835738bccd7f277776b8c6f7820b05ed2a601db25dd42c82",
+      "config_version": "default-v1",
+      "verifier": {
+        "name": "ethos-verify",
+        "version": "0.6.0"
+      }
+    },
+    "capability_limits": [
+      "missing_spans",
+      "missing_char_offsets",
+      "missing_tables"
+    ],
+    "checks": [
+      {
+        "claim": {
+          "citation": {
+            "element_id": "e000002",
+            "page": "p0001"
+          },
+          "kind": "quote",
+          "text": "Revenue grew to $12.4M in Q3 2025"
+        },
+        "id": "v0001",
+        "match_method": "none",
+        "reason": "stale_fingerprint",
+        "semantic_unverified": false,
+        "status": "stale",
+        "warnings": []
+      },
+      {
+        "claim": {
+          "citation": {
+            "cell": {
+              "col": 1,
+              "row": 1
+            },
+            "table_id": "t0001"
+          },
+          "kind": "table_cell",
+          "text": "$12.4M"
+        },
+        "id": "v0002",
+        "match_method": "none",
+        "reason": "stale_fingerprint",
+        "semantic_unverified": false,
+        "status": "stale",
+        "warnings": []
+      }
+    ],
+    "document_fingerprint": "sha256:a465cf1825207295dd8b104f98f52bdaa8d7c79a84be730666f2092bdbb4946b",
+    "fingerprint_stale": true,
+    "grounding": {
+      "capabilities": {
+        "char_offsets": false,
+        "coordinate_origin": "top-left",
+        "crop_support": false,
+        "fingerprint": true,
+        "spans": false,
+        "tables": false
+      },
+      "parser": {
+        "adapter": "ethos-grounding-json",
+        "adapter_version": "1.0.0",
+        "name": "fixture",
+        "version": "1.0.0"
+      }
+    },
+    "schema_version": "1.0.0",
+    "unsupported_claim_kinds": [],
+    "verification_config_sha256": "4bb224166a04a25fed2dd3ecdb9638ddcc5b398658532b73f1c0547e4983d0b0",
+    "warnings": [
+      "capability_limited"
+    ]
+  },
+  "predicateType": "https://docushell.com/ethos/grounding/v1",
+  "subject": [
+    {
+      "digest": {
+        "sha256": "a465cf1825207295dd8b104f98f52bdaa8d7c79a84be730666f2092bdbb4946b"
+      },
+      "name": "grounding-source-bound.example.json"
+    }
+  ]
+}

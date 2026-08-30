@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ethos:schema:proof-statement:1",
+  "title": "Ethos proof statement (in-toto Statement wrapper)",
+  "description": "The envelope every verdict-bearing Ethos command writes to stdout from 0.6.0 onward: an in-toto Statement whose `predicate` carries the verdict verbatim. Strip the wrapper (`jq .predicate`) and the pre-0.6.0 artifact comes back byte for byte, which is why this schema validates the wrapper and stops at `predicate`. THE PREDICATE IS VALIDATED BY ITS OWN SCHEMA, selected by `predicateType`: `.../grounding/v1` by urn:ethos:schema:verification-report:1, `.../grounding-validation/v1` by urn:ethos:schema:grounding-validation-report:1, `.../evidence-anchor/v1` by urn:ethos:schema:evidence-anchor-report:1, `.../security/v1` by urn:ethos:schema:security-report:1, and `.../crop/v1` by the crop descriptor schema. That mapping is stated rather than expressed as $ref dispatch on purpose — a second copy of five predicate schemas inside this one is a copy that can disagree with the originals, and disagreeing schemas for one artifact is the failure this envelope exists to prevent. Representations are not verdicts and are not wrapped: `ethos doc parse` and `ethos rag chunk` still write bare artifacts (docs/proof-statement-v1.md §1.5).",
+  "type": "object",
+  "required": [
+    "_type",
+    "predicate",
+    "predicateType",
+    "subject"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "_type": {
+      "const": "https://in-toto.io/Statement/v1",
+      "description": "The in-toto statement type. Spelled with a leading underscore by that specification, not by Ethos convention."
+    },
+    "subject": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "description": "The artifacts this statement is about, in a fixed order. `subject[0]` is the representation Ethos actually read, digested by that file's bytes so a consumer holding the same file can recompute it — a document fingerprint could not be recomputed that way and is not used here. `subject[1]` is the originating source document, and is present only when the binding is real; every command emits exactly one subject today, because on the Grounding JSON path a foreign parser produced the representation and Ethos never touched the source (docs/proof-statement-v1.md §1.4). An empty array is forbidden by in-toto and unrepresentable in the implementation.",
+      "items": {
+        "$ref": "#/$defs/subject"
+      }
+    },
+    "predicateType": {
+      "description": "Which kind of verdict `predicate` holds, and therefore which schema validates it. These URIs are permanent: `v<n>` versions the predicate schema, never the product, so `grounding/v1` stays `v1` across Ethos releases and only moves if the report's own shape breaks.",
+      "enum": [
+        "https://docushell.com/ethos/grounding/v1",
+        "https://docushell.com/ethos/grounding-validation/v1",
+        "https://docushell.com/ethos/evidence-anchor/v1",
+        "https://docushell.com/ethos/security/v1",
+        "https://docushell.com/ethos/crop/v1"
+      ]
+    },
+    "predicate": {
+      "type": "object",
+      "description": "The verdict, unchanged from the artifact Ethos wrote before 0.6.0. Validate it against the schema named by `predicateType`; this schema deliberately asserts only that it is an object."
+    }
+  },
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "title": "in-toto subject",
+      "required": [
+        "digest",
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-facing identifier, normally the input file's name. Distinguishes entries only; artifacts are matched by digest. May be empty when the input path has no file name component."
+        },
+        "digest": {
+          "type": "object",
+          "required": [
+            "sha256"
+          ],
+          "additionalProperties": false,
+          "description": "Algorithm-to-digest map. Ethos emits exactly `sha256`; a statement carrying another algorithm was not written by this implementation at this schema version, and adding one is a schema bump rather than a tolerated extra.",
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$",
+              "description": "Bare lowercase hex, with no `sha256:` prefix — in-toto carries the algorithm in the map key, so repeating it in the value would double-encode it. Note this differs from `document_fingerprint` inside a verification report, which is prefixed."
+            }
+          }
+        }
+      }
+    }
+  }
+}

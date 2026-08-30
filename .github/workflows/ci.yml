@@ -119,6 +119,7 @@ jobs:
       - run: python3 schemas/validate_examples.py
       - run: python3 schemas/test_security_report_validation.py
       - run: python3 schemas/test_table_model_validation.py
+      - run: python3 schemas/test_proof_statement_validation.py
       - run: python3 fixtures/validate_fixtures.py
 
   no-network-runtime:

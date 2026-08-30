@@ -4,6 +4,30 @@
 
 ## 0.6.0 - 2026-08-30
 
+### The proof statement has a schema, so a consumer has something to validate against
+
+- `schemas/ethos-proof-statement.schema.json` (`urn:ethos:schema:proof-statement:1`) describes
+  the in-toto envelope the verdict-bearing commands now write. Until it existed, the release
+  shipped a shape change with nothing to migrate to: `ethos verify`'s stdout stops validating
+  against `urn:ethos:schema:verification-report:1`, whose root sets `additionalProperties: false`
+  and which now requires `attestation` — so a consumer validating in CI went red with no schema
+  that accepts what the binary emits.
+- **It validates the wrapper and stops at `predicate`.** Which schema validates the verdict is
+  selected by `predicateType`, and that mapping is documented rather than expressed as `$ref`
+  dispatch: five predicate schemas copied inside this one is five copies that can disagree with
+  their originals, and two schemas disagreeing about one artifact is the failure the envelope
+  exists to prevent.
+- Both examples are real CLI output rather than hand-written — `ethos verify` and
+  `ethos grounding check` over `grounding-source-bound.example.json`. A hand-written envelope
+  proves only that the schema matches what somebody believed the binary emits.
+- `schemas/test_proof_statement_validation.py` carries the refusals, and CI runs it.
+  `validate_examples.py` can only prove the schema accepts what Ethos emits; a schema that
+  accepts every document passes that gate exactly as loudly as one that works. Eleven cases,
+  including the one that matters — the bare pre-0.6.0 report, which is what a consumer who never
+  noticed the wrapper will hand it — plus `sha256:`-prefixed digests, which is how
+  `document_fingerprint` is spelled one level down and therefore the plausible wrong answer
+  rather than an unlikely one.
+
 ### Exit 2 carries a machine-readable code — a breaking stderr-shape change
 
 - Every other failure this CLI has emitted for releases carried

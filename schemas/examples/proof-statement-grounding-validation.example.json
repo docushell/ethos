@@ -1,0 +1,25 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "predicate": {
+    "artifact_type": "ethos.grounding_validation.v1",
+    "counts": {
+      "elements": 1,
+      "pages": 1,
+      "spans": 0,
+      "tables": 0
+    },
+    "representation_sha256": "sha256:a465cf1825207295dd8b104f98f52bdaa8d7c79a84be730666f2092bdbb4946b",
+    "schema_version": "1.0.0",
+    "source_binding": "not_checked",
+    "structure": "valid"
+  },
+  "predicateType": "https://docushell.com/ethos/grounding-validation/v1",
+  "subject": [
+    {
+      "digest": {
+        "sha256": "a465cf1825207295dd8b104f98f52bdaa8d7c79a84be730666f2092bdbb4946b"
+      },
+      "name": "grounding-source-bound.example.json"
+    }
+  ]
+}
