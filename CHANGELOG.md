@@ -4,6 +4,31 @@
 
 ## 0.6.0 - 2026-08-30
 
+### Exit 2 carries a machine-readable code — a breaking stderr-shape change
+
+- Every other failure this CLI has emitted for releases carried
+  `{"error":{"code","message"}}`; exit 2 alone emitted a bare English line, so a caller could
+  not tell a malformed citations file from an unreadable output directory without matching
+  message text `SPEC.md` forbids parsing. Usage failures detected by the command now carry the
+  same canonical envelope, with the exit code unchanged at 2 for every class — the code travels
+  in the payload rather than in prose.
+- **This is a breaking stderr-shape change by SPEC.md's own rule, and §6.4 was rewritten rather
+  than left contradicting the binary.** The previous text specified a single plain-text shape
+  and stated consumers "MUST NOT attempt to parse exit 2 as JSON". A consumer written against
+  it and handed the envelope will not match `error (usage): <message>`.
+- Exit 2 still carries **two** shapes and the spec now says so. Argument-parser rejections — an
+  unknown flag, a missing required argument — are emitted before the command is dispatched, in
+  the parser's own plain text, and carry no code. A consumer must attempt a JSON parse and treat
+  failure as the plain-text form. A usage message is assembled from caller-supplied text, so an
+  implementation that cannot canonicalise it falls back to `error (usage): <message>` rather
+  than dropping the diagnostic.
+- The code set is `invalid_arguments`, `invalid_input`, `input_limit_exceeded`,
+  `source_mismatch`, `host_io`. Only `invalid_arguments`, `invalid_input` and `host_io` are
+  constructed anywhere in the implementation today; the other two are reserved and unreachable,
+  which the spec and `docs/integrations/docushell.md` now both state instead of listing five as
+  though any of them could arrive. Consumers must tolerate an unrecognised code, because a
+  reserved one may begin appearing without the exit code changing.
+
 ### ethos.grounding.v1 schema 1.1.0 — the office formats stop being stranded
 
 - The single largest capability gap in the estate closes on the side that owns the

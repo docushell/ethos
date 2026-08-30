@@ -478,12 +478,39 @@ data. Request/schema/source-shape errors are tool usage errors.
 
 ### 6.4 CLI process-error contract
 
-CLI consumers MUST branch on the process exit code before interpreting standard error. Exit `2`
-is a deterministic, plain-text usage diagnostic with the shape `error (usage): <message>`. Coded
-failures at exits `3` through `12` are canonical JSON with the shape
-`{"error":{"code":"<stable_code>","message":"<stable_message>"}}`. Consumers MUST NOT attempt to
-parse exit `2` as JSON or infer a coded error from message text. Exit-code or stderr-shape changes
-are breaking CLI contract changes.
+CLI consumers MUST branch on the process exit code before interpreting standard error. Coded
+failures at exits `3` through `12` are canonical JSON on standard error with the shape
+`{"error":{"code":"<stable_code>","message":"<stable_message>"}}`.
+
+Exit `2` is a usage failure and carries **two shapes**, distinguished by where the failure was
+detected. A consumer MUST therefore attempt to parse standard error as JSON and MUST treat a
+parse failure as the plain-text form rather than as a malformed response:
+
+- **Argument-parser rejections** — an unknown flag, a missing required argument, a flag that
+  requires another — are emitted by the argument parser before the command is dispatched, in its
+  own plain-text form. They carry no code.
+- **Usage failures detected by the command** carry the same canonical JSON envelope as exits `3`
+  through `12`, with `code` drawn from the usage-code set below. A usage message is assembled
+  from caller-supplied text, so an implementation that cannot canonicalise it MUST fall back to
+  the plain-text form `error (usage): <message>` rather than suppress the diagnostic.
+
+Consumers MUST NOT infer a coded error from message text in either form, and MUST NOT treat the
+absence of a code as a distinct failure class: it locates where the failure was caught, not what
+went wrong.
+
+The usage-code set is `invalid_arguments`, `invalid_input`, `input_limit_exceeded`,
+`source_mismatch`, `host_io`. Consumers MUST accept any member of the set and MUST tolerate an
+unrecognised code by treating it as a usage failure, because a code may begin appearing on the
+wire in a later release without the exit code changing. At the time of writing only
+`invalid_arguments`, `invalid_input` and `host_io` are constructed anywhere in the
+implementation; `input_limit_exceeded` and `source_mismatch` are reserved and unreachable.
+
+Exit `2` previously specified a single plain-text shape and forbade parsing it as JSON. Adding
+the envelope is a **breaking stderr-shape change** by the rule below, and it is recorded as one:
+a consumer written against the previous text and given the JSON form will not match
+`error (usage): <message>`. The exit code itself did not move for any class.
+
+Exit-code or stderr-shape changes are breaking CLI contract changes.
 
 ---
 
