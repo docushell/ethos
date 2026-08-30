@@ -2,6 +2,50 @@
 
 ## Unreleased
 
+### The npm payload carries the v0.6.0 CLI
+
+- boundary-exception: refresh the v0.6.0 npm B payload from frozen core-A. Both vendored
+  binaries and all four digests in `packages/npm/ethos-pdf/vendor/manifest.json` move to the
+  v0.6.0 release, together with `cli_version`, `package.json`, and both `package-lock.json`
+  version fields. `test_v0_6_0_version_activation.py` holds those four as one value, which is
+  why 1d23604 moved three and was reverted; they move as a set here.
+
+  Bytes come from release run 33325655578 on tag `v0.6.0`, source commit `8adda91`, bound in
+  `docs/validation/v0-6-0-release-promotion.md` — not from a local build, which
+  `RELEASE_OPERATOR_RUNBOOK.md` forbids and which would not reproduce these digests anyway,
+  since `cli-draft-artifacts` builds once and does not compare.
+
+  `prepare:vendor` assembled and verified the darwin binary end to end on macOS arm64: archive
+  digest, extracted-binary digest, `--help` grounding support, the new `--version` binding, and
+  the destination digest after copying. It correctly refused the linux binary on this host,
+  because it executes what it copies. That binary was taken from the same verified archive and
+  its digest checked against the manifest; its version is evidenced by the release run's own
+  Linux smoke step, which recorded `version_stdout: ethos 0.6.0` against archive
+  `c12772255ba8a85b020bd9b6bb8bf77d01eaf11a6928a0d7348536eff7c378f2`. Stated plainly because it
+  is weaker than the darwin path: the binding ran on CI's Linux runner, not here.
+
+- The npm README and QUICKSTART said the vendored binaries report `ethos 0.5.0`, and both ship
+  inside the tarball. `test_package_registry_source_consistency.py` derived that sentence from
+  the published npm version, so a refreshed payload would have published a README stating
+  something false about the bytes beside it. The two sentences describe different things: the
+  package on the registry is still `0.5.0`, and the vendored binaries are already `0.6.0`. The
+  publication sentence still follows `docs/release-state.json`; the vendored-binary sentence now
+  follows `vendor/manifest.json`'s `cli_version`.
+
+- `test_npm_binary_package_scaffold.py`'s `SUPPORTED_TARGETS` is rebound from the v0.5.0 closeout
+  to the v0.6.0 run, and `test/platform-selection.test.js` follows `cli_version`.
+
+  `docs/release-state.json` is untouched: `version` stays `0.5.0` because nothing is published
+  yet, and `activated` already reads `0.6.0`.
+
+- `test_v0_6_0_version_activation.py`'s blanket `assertNotIn(ACTIVATED, claims)` is narrowed. Its
+  six explicit install-command checks already cover every installable form; the trailing catch-all
+  additionally forbade the string anywhere in the registry, which forced
+  `docs/public-boundary-claims.json` to describe its own payload wrongly once that payload moved.
+  The activated version may now appear only in the vendored-binary claim, which is a fact about
+  the bytes in this tree rather than an advertisement of something installable. Verified that the
+  narrowed rule still fails when an install command is advanced to the activated version.
+
 ### The ledger separates what is published from what is being prepared
 
 - boundary-exception: `docs/release-state.json` gains `release.activated` and

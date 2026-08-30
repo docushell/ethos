@@ -27,7 +27,7 @@ npm install -g @docushell/ethos-pdf@0.5.0
 ```
 
 The current published npm package is `@docushell/ethos-pdf@0.5.0`. Its vendored CLI binaries report
-`ethos 0.5.0`.
+`ethos 0.6.0`.
 
 ## Vendor Binary Assembly
 
