@@ -65,6 +65,26 @@
   Action with no coverage. The contract target now also runs in the `test` job, so neither the
   pin nor the job can rot unobserved again.
 
+### The PDF determinism gate stops reporting green while skipping
+
+- boundary-exception: `determinism.yml` configures the profile-pinned PDFium runtime on the two
+  Gate Zero platforms. Its `configured PDFium fixture corpus and double-parse equality` step is
+  guarded on `ETHOS_PDFIUM_LIBRARY_PATH`, and that variable was set nowhere in the repository —
+  `determinism.yml:52` was its only occurrence under `.github/workflows/`. The step therefore took
+  its `else` branch on every run of every platform since it was written, printed
+  `deferred: caller-provided PDFium runtime is not configured on this runner`, and the job
+  reported green. The PDF path, which is the riskiest code in the product, was first exercised at
+  tag time after a live download.
+
+- The fix reuses `scripts/fetch-pdfium.sh` rather than adding machinery: it already downloads the
+  archive pinned in `profiles/ethos-deterministic-v1.json`, verifies its sha256 *before*
+  extraction, and verifies the runtime library sha256 after. It supports exactly the two Gate Zero
+  platforms, so Windows continues to defer, which is what the matrix comment says it should do.
+
+- Both halves of the previously-dead branch were run locally against the pinned runtime before
+  this change was committed: `double_parse_is_byte_identical_when_pdfium_is_configured` passes,
+  and `benchmarks/harness/run_fixtures.py` completes over all 14 fixtures.
+
 ## 0.6.0 - 2026-08-30
 
 ### The public surfaces stop describing Ethos as unreleased

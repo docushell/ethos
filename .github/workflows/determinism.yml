@@ -46,6 +46,24 @@ jobs:
             --repo-root "${GITHUB_WORKSPACE}" \
             --ethos-bin "${ethos_bin}" \
             --out-dir "${RUNNER_TEMP}/verify-alpha"
+      # Without this the step below always took its else branch: nothing in this repository
+      # set ETHOS_PDFIUM_LIBRARY_PATH, so the PDF corpus and the double-parse equality test
+      # printed "deferred" and the job reported green. The riskiest path in the product was
+      # first exercised at tag time. scripts/fetch-pdfium.sh verifies the pinned archive hash
+      # before extraction and the runtime library hash after it, and supports exactly the two
+      # Gate Zero platforms; Windows keeps deferring, as the matrix comment says it should.
+      - name: configure the profile-pinned PDFium runtime
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/fetch-pdfium.sh "${RUNNER_TEMP}/pdfium"
+          if [ "${RUNNER_OS}" = "macOS" ]; then
+            lib="${RUNNER_TEMP}/pdfium/lib/libpdfium.dylib"
+          else
+            lib="${RUNNER_TEMP}/pdfium/lib/libpdfium.so"
+          fi
+          echo "ETHOS_PDFIUM_LIBRARY_PATH=${lib}" >> "$GITHUB_ENV"
       - name: configured PDFium fixture corpus and double-parse equality
         shell: bash
         run: |
