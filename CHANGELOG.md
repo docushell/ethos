@@ -45,6 +45,26 @@
   sidecars, and `docs/release-state.json` now lists what actually shipped. Neither fact was
   reachable by any gate that ran.
 
+### The published GitHub Action stops shipping two releases behind
+
+- boundary-exception: `actions/verify/action.yml` downloaded
+  `releases/download/v0.4.0/ethos-linux-x64.tar.gz` with v0.4.0 checksums while v0.5.0 was the
+  published release, so every consumer of the Action installed a two-release-old CLI. It is now
+  pinned to v0.5.0.
+
+- `test_action.py` caused this rather than catching it. It derived the expected version from
+  `docs/release-state.json` but hard-coded the two v0.4.0 checksums at `:35-36`, so the test
+  contradicted itself and could never pass — and `make ethos-verify-action-contract` was reachable
+  from nothing, so nobody saw it fail. The checksums are now read from
+  `packages/npm/ethos-pdf/vendor/manifest.json`, the record of the published CLI, which is already
+  boundary-gated. The Action follows the published release with no per-release edit here.
+
+- boundary-exception: restores the `released-cli-action-dogfood` job to `ci.yml`, deleted in
+  c7d893d during the v0.6.0 work. It is the only thing that runs the published Action end to end —
+  accepting the grounded fixture and rejecting the fabricated one — and its absence left the
+  Action with no coverage. The contract target now also runs in the `test` job, so neither the
+  pin nor the job can rot unobserved again.
+
 ## 0.6.0 - 2026-08-30
 
 ### The public surfaces stop describing Ethos as unreleased

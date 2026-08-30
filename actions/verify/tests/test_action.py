@@ -32,8 +32,16 @@ from unittest import mock
 ACTION = Path(__file__).resolve().parents[1]
 ROOT = ACTION.parents[1]
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
-PUBLISHED_LINUX_ARCHIVE_SHA256 = "616be562306d64a293554ca4695f19deb6e135dd328e88598a80e76f6f8fb3cd"
-PUBLISHED_LINUX_BINARY_SHA256 = "2136dcd349a7b3f73f8df83a1b1e35819f9832043eb264b3eaea341697b739ed"
+# Derived, not transcribed. These were pinned to v0.4.0 while the version above came from
+# docs/release-state.json, so the test contradicted itself and the Action shipped two releases
+# behind. packages/npm/ethos-pdf/vendor/manifest.json is the record of the published CLI and is
+# already boundary-gated, so the Action now follows it without a per-release edit here.
+_VENDOR_MANIFEST = json.loads(
+    (ROOT / "packages/npm/ethos-pdf/vendor/manifest.json").read_text(encoding="utf-8")
+)
+_PUBLISHED_LINUX = _VENDOR_MANIFEST["targets"]["linux:x64"]
+PUBLISHED_LINUX_ARCHIVE_SHA256 = _PUBLISHED_LINUX["release_asset_sha256"]
+PUBLISHED_LINUX_BINARY_SHA256 = _PUBLISHED_LINUX["binary_sha256"]
 sys.path.insert(0, str(ACTION))
 
 import install_cli  # noqa: E402
