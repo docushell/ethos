@@ -72,12 +72,23 @@ jobs:
             if [ "${RUNNER_OS}" = "Windows" ]; then ethos_bin="${ethos_bin}.exe"; fi
             # run_fixtures.py records failures in its JSON and prints nothing, so a red
             # step gave no clue which fixture broke. Report them before exiting.
+            # The checked-in goldens were generated on macOS arm64 and carry bbox values.
+            # docs/determinism-contract.md computes the stable payload projection "after
+            # recursively excluding object keys named bbox and bboxes", because PDFium reports
+            # platform-sensitive rectangle dimensions for otherwise identical text. Comparing
+            # bbox off the golden platform therefore asserts more than the contract guarantees.
+            # macOS compares everything; the other platforms compare what is actually promised.
+            compare_scope=""
+            if [ "${RUNNER_OS}" != "macOS" ]; then
+              compare_scope="--stable-only"
+            fi
             set +e
             python benchmarks/harness/run_fixtures.py \
               --repo-root "${GITHUB_WORKSPACE}" \
               --ethos-bin "${ethos_bin}" \
               --out "${RUNNER_TEMP}/fixture-baseline.json" \
-              --emit-projections "${RUNNER_TEMP}/projections"
+              --emit-projections "${RUNNER_TEMP}/projections" \
+              ${compare_scope}
             rc=$?
             set -e
             if [ "$rc" -ne 0 ]; then
