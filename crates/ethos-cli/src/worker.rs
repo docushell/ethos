@@ -25,7 +25,7 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use ethos_core::config::ParseConfig;
-use ethos_core::error::{ErrorCode, EthosError};
+use ethos_core::error::{ErrorCode, EthosError, UsageCode};
 use ethos_core::model::Document;
 use serde::de::{self, Deserializer as _, IgnoredAny, MapAccess, Visitor};
 use sha2::{Digest, Sha256};
@@ -166,6 +166,9 @@ fn pdfium_load_probe_command() -> Result<ProcessCommand, Failure> {
 
 fn worker_failure(output: &Output, diagnostics: bool) -> Failure {
     if output.status.code() == Some(EXIT_USAGE as i32) {
+        if let Some((code, message)) = worker_usage_envelope(&output.stderr) {
+            return Failure::usage_coded(code, message);
+        }
         return Failure::usage(worker_usage_message(&output.stderr));
     }
     if let Some(error) = worker_ethos_error(&output.stderr) {
@@ -595,6 +598,38 @@ fn join_pipe_reader(
         .map_err(|_| Failure::Ethos(EthosError::internal("pdfium worker pipe reader failed")))
 }
 
+/// Read a child's exit-2 envelope, when it emitted one.
+///
+/// The worker spawns this same binary, so a usage failure in the child arrives in whichever
+/// shape `SPEC.md` §6.4 allows: the canonical `{"error":{"code","message"}}` envelope when the
+/// command detected it, and plain text when the argument parser rejected the command line before
+/// dispatch or when a message could not be canonicalised. Both reach here; only the first
+/// carries a code.
+///
+/// Without this, the envelope fell through to [`worker_usage_message`], whose `strip_prefix` no
+/// longer matches — so the whole JSON document became the message of a *second* envelope written
+/// by the parent, and the child's code was discarded inside a string. Returning `None` for the
+/// plain-text shapes is what keeps that fallback correct rather than merely reachable.
+fn worker_usage_envelope(stderr: &[u8]) -> Option<(UsageCode, String)> {
+    let value: serde_json::Value = serde_json::from_slice(stderr).ok()?;
+    let object = value.as_object()?;
+    // Exactly the one key. A usage envelope carries no diagnostics, and accepting extra keys
+    // here would accept a coded-error envelope too, which is a different contract.
+    if object.len() != 1 {
+        return None;
+    }
+    let error = object.get("error")?.as_object()?;
+    if error.len() != 2 {
+        return None;
+    }
+    let message = error.get("message")?.as_str()?;
+    if message.trim().is_empty() {
+        return None;
+    }
+    let code = UsageCode::from_wire(error.get("code")?.as_str()?)?;
+    Some((code, message.to_string()))
+}
+
 fn worker_usage_message(stderr: &[u8]) -> String {
     let raw = String::from_utf8_lossy(stderr);
     let trimmed = raw.trim();
@@ -826,6 +861,81 @@ pub(crate) fn maybe_fail_for_worker_memory_limit_test() -> Result<(), Failure> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // ---------------------------------------------------------------------------------------
+    // Exit-2 envelope propagation (SPEC.md §6.4)
+    // ---------------------------------------------------------------------------------------
+
+    #[test]
+    fn a_child_usage_envelope_keeps_its_code() {
+        let stderr =
+            br#"{"error":{"code":"invalid_input","message":"citations file is not JSON"}}"#;
+        let parsed = worker_usage_envelope(stderr).expect("a well-formed envelope parses");
+        assert_eq!(parsed.0, UsageCode::InvalidInput);
+        assert_eq!(parsed.1, "citations file is not JSON");
+    }
+
+    /// **The regression this function exists for.** Before it, the envelope fell through to
+    /// `worker_usage_message`, whose `strip_prefix` does not match — so the entire JSON
+    /// document became the message of a second envelope and the code was lost inside a string.
+    #[test]
+    fn a_child_envelope_does_not_become_the_message_of_another_envelope() {
+        let stderr = br#"{"error":{"code":"host_io","message":"cannot create output directory"}}"#;
+        assert!(worker_usage_envelope(stderr).is_some());
+        assert!(
+            worker_usage_message(stderr).starts_with('{'),
+            "the fallback would have carried raw JSON as the message, which is why the \
+             envelope must be read before it"
+        );
+    }
+
+    /// Argument-parser rejections never reach the envelope — clap exits before dispatch — so
+    /// the plain-text path has to stay reachable rather than merely present.
+    #[test]
+    fn the_plain_text_shapes_fall_through_to_the_message() {
+        for stderr in [
+            &b"error (usage): --citations is required"[..],
+            &b"error: unexpected argument '--nope' found"[..],
+            &b""[..],
+        ] {
+            assert!(
+                worker_usage_envelope(stderr).is_none(),
+                "plain text must not parse as an envelope: {}",
+                String::from_utf8_lossy(stderr)
+            );
+        }
+        assert_eq!(
+            worker_usage_message(b"error (usage): --citations is required"),
+            "--citations is required"
+        );
+    }
+
+    /// §6.4 requires tolerating an unrecognised code. Losing the classification is correct;
+    /// losing the diagnostic is not, so this falls back rather than failing.
+    #[test]
+    fn an_unrecognised_code_is_tolerated_rather_than_trusted() {
+        let stderr = br#"{"error":{"code":"not_a_real_code","message":"something happened"}}"#;
+        assert!(worker_usage_envelope(stderr).is_none());
+        assert_eq!(
+            worker_usage_message(stderr),
+            String::from_utf8_lossy(stderr)
+        );
+    }
+
+    /// A coded-error envelope (exits 3-12) may carry `diagnostics`. Accepting it here would
+    /// read a different contract's payload as a usage failure.
+    #[test]
+    fn a_coded_error_envelope_is_not_a_usage_envelope() {
+        let with_diagnostics =
+            br#"{"diagnostics":{"worker":{}},"error":{"code":"invalid_input","message":"x"}}"#;
+        assert!(worker_usage_envelope(with_diagnostics).is_none());
+    }
+
+    #[test]
+    fn an_empty_message_is_not_an_envelope() {
+        let stderr = br#"{"error":{"code":"invalid_input","message":"   "}}"#;
+        assert!(worker_usage_envelope(stderr).is_none());
+    }
 
     const TEST_FINGERPRINT: &str =
         "sha256:0000000000000000000000000000000000000000000000000000000000000000";

@@ -150,6 +150,21 @@ impl UsageCode {
             UsageCode::HostIo => "host_io",
         }
     }
+
+    /// Read a wire string back into a code, or `None` for anything unrecognised.
+    ///
+    /// The inverse of [`UsageCode::as_str`], and derived from it through [`UsageCode::ALL`]
+    /// rather than written as a second match — a hand-written inverse is a table that can
+    /// disagree with the one above it, which for a wire contract means a code that serialises
+    /// one way and parses another.
+    ///
+    /// `None` rather than an error: `SPEC.md` §6.4 requires a consumer to tolerate a code it
+    /// does not recognise, because a reserved code beginning to appear must not itself be a
+    /// break. A caller that gets `None` still knows it holds a usage failure — the exit code
+    /// said so — and has only lost the classification.
+    pub fn from_wire(s: &str) -> Option<UsageCode> {
+        UsageCode::ALL.into_iter().find(|code| code.as_str() == s)
+    }
 }
 
 impl core::fmt::Display for UsageCode {
@@ -192,6 +207,16 @@ impl EthosError {
 
 #[cfg(test)]
 mod tests {
+    /// `from_wire` is derived from `ALL` and `as_str`, so this asserts the derivation rather
+    /// than a second table: every declared code survives a round trip, and nothing else parses.
+    #[test]
+    fn every_usage_code_round_trips_through_the_wire_string() {
+        for code in super::UsageCode::ALL {
+            assert_eq!(super::UsageCode::from_wire(code.as_str()), Some(code));
+        }
+        assert_eq!(super::UsageCode::from_wire("not_a_real_code"), None);
+        assert_eq!(super::UsageCode::from_wire(""), None);
+    }
     use super::*;
 
     #[test]
