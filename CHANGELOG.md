@@ -170,6 +170,31 @@
 
   With both fixed the corpus is 14/14 and `run_fixtures.py` exits 0.
 
+### Reading order stops depending on platform-sensitive geometry
+
+- Layout ordering keys off the span's `origin_locator` baseline instead of its `bbox` centre.
+  `span_line_order` sorted primarily on `center_y`, derived from `bbox`. The determinism
+  contract excludes `bbox` and `bboxes` from the stable payload projection precisely because
+  "PDFium reports platform-sensitive rectangle dimensions for otherwise identical text", while
+  `origin_locator` is fingerprint-critical and stable. Ordering on the excluded field fed
+  platform-sensitive geometry straight back into `span_refs`, element `text`, and element
+  `type` — all of which are *in* the stable projection.
+
+  Measured, not assumed. On the pinned chromium/7881 PDFium, `synthetic-list-items` produced
+  `"- Verify cited evidence"` typed `list_item` on macOS arm64 and `"Verify cited evidence -"`
+  typed `text_block` on Linux x64, because the bullet's bbox centre lands 1 quantum below the
+  word's on macOS and 23 above it on Linux. The baseline origins are byte-identical on both
+  platforms: `[7200, 7200]` and `[7933, 7200]`. Per the contract's own words a stable-projection
+  difference across supported platforms is a release-blocking bug, so this was one.
+
+  Sixteen of eighteen projections differed across the two platforms; fifteen differed only in
+  `bbox`/`bboxes`, which the contract permits, and `origin_locator` was identical across all
+  forty spans. This was the one real divergence.
+
+  The change rewrites no goldens: macOS projections are byte-identical before and after, because
+  ordering by baseline agrees with what the bbox centre happened to produce there. Spans without
+  a locator — every non-PDF source — keep the bbox-centre fallback.
+
 - `docs/validation/README.md` now indexes all twelve records rather than four, and the DocuShell
   acceptance commit is cited as `docushell@cc652ec` rather than a bare hex ref that cannot resolve
   in this repository. Both were surfaced by `validation_record_integrity.py` on its first run

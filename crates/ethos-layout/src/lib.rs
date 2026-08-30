@@ -59,6 +59,7 @@ impl LayoutEngine for BasicLayoutEngine {
                         index,
                         span,
                         center_y: center_y(span.bbox),
+                        order_key: span_order_key(span),
                     })
                 })
                 .collect();
@@ -89,6 +90,17 @@ struct SpanRef<'a> {
     index: usize,
     span: &'a Span,
     center_y: i64,
+    /// Platform-stable ordering key: `(baseline y, baseline x)`.
+    ///
+    /// Reading order must not be decided by `bbox`. The determinism contract excludes `bbox`
+    /// and `bboxes` from the stable payload projection precisely because "PDFium reports
+    /// platform-sensitive rectangle dimensions for otherwise identical text", while
+    /// `origin_locator` is fingerprint-critical and stable. Ordering on a bbox-derived
+    /// `center_y` fed that platform-sensitive value straight back into span order, element
+    /// text, and element type — all of which *are* in the stable projection.
+    ///
+    /// Falls back to the bbox centre for spans with no locator, which is every non-PDF source.
+    order_key: (i64, i64),
 }
 
 struct Line<'a> {
@@ -602,9 +614,19 @@ fn build_element(
     })
 }
 
+/// `(baseline y, baseline x)` from the span's origin locator, or the bbox centre when it has
+/// none. See `SpanRef::order_key`.
+fn span_order_key(span: &Span) -> (i64, i64) {
+    match span.origin_locator.as_ref() {
+        Some(locator) => (locator.first_origin[1], locator.first_origin[0]),
+        None => (center_y(span.bbox), span.bbox.x0),
+    }
+}
+
 fn span_line_order(a: &SpanRef<'_>, b: &SpanRef<'_>) -> std::cmp::Ordering {
-    a.center_y
-        .cmp(&b.center_y)
+    a.order_key
+        .cmp(&b.order_key)
+        .then_with(|| a.center_y.cmp(&b.center_y))
         .then_with(|| a.span.bbox.y0.cmp(&b.span.bbox.y0))
         .then_with(|| a.span.bbox.x0.cmp(&b.span.bbox.x0))
         .then_with(|| a.index.cmp(&b.index))
@@ -671,7 +693,7 @@ fn union_rect(a: QRect, b: QRect) -> QRect {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ethos_core::model::{Page, Region, Warning};
+    use ethos_core::model::{Page, Region, SpanOriginLocator, Warning};
 
     fn span(id: &str, page: &str, bbox: QRect, text: &str) -> Span {
         styled_span(id, page, bbox, text, None, Some(1200))
@@ -712,6 +734,52 @@ mod tests {
             regions: Vec::<Region>::new(),
             warnings: Vec::<Warning>::new(),
         }
+    }
+
+    fn origin_span(id: &str, bbox: QRect, text: &str, origin: [i64; 2]) -> Span {
+        let mut span = span(id, "p0001", bbox, text);
+        span.origin_locator = Some(SpanOriginLocator {
+            policy: "origin-run-locator-v1".to_string(),
+            first_origin: origin,
+            last_origin: origin,
+        });
+        span
+    }
+
+    /// Reading order follows the baseline origin, not the bbox centre.
+    ///
+    /// The bullet's bbox centre here sits *below* the word's, so ordering on `center_y` puts
+    /// the word first; the baselines are identical, so ordering on the origin locator puts the
+    /// bullet first, by x. This is not hypothetical: PDFium returns rectangle dimensions that
+    /// differ by fractions of a point between the macOS and Linux builds of one pinned
+    /// version, which flipped exactly this comparison and changed `span_refs`, element `text`,
+    /// and element `type` across platforms — all inside the stable payload projection that the
+    /// determinism contract guarantees, and which excludes `bbox` for this very reason.
+    #[test]
+    fn reading_order_uses_the_origin_locator_not_the_bbox_centre() {
+        let extraction = extraction(vec![
+            origin_span(
+                "s000001",
+                QRect::new(7_238, 6_836, 7_562, 6_942).unwrap(),
+                "-",
+                [7_200, 7_200],
+            ),
+            origin_span(
+                "s000002",
+                QRect::new(7_938, 6_326, 10_990, 7_451).unwrap(),
+                "Verify",
+                [7_933, 7_200],
+            ),
+        ]);
+
+        let output = BasicLayoutEngine.layout(&extraction).unwrap();
+
+        assert_eq!(output.elements.len(), 1);
+        assert_eq!(output.elements[0].text.as_deref(), Some("- Verify"));
+        assert_eq!(
+            output.elements[0].span_refs,
+            vec!["s000001".to_string(), "s000002".to_string()]
+        );
     }
 
     #[test]
