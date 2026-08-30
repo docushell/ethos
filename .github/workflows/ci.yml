@@ -56,8 +56,11 @@ jobs:
           fetch-depth: 0
       - name: claims, posture, ledger, boundary paths, golden rationale, validation records
         run: make light-check
-      - name: registry surfaces and the npm package suite
-        run: make registry-surface-check
+      - name: claims-gate registry surface coverage
+        # Not `make registry-surface-check`: four of its five members are already in
+        # light-check above, and its `npm test` needs `npm ci` and is already run by the
+        # `test` job. This is the one member covered nowhere else.
+        run: python3 .github/scripts/test_claims_gate_registry_surfaces.py
       - name: gate unit tests
         # These three test the gate scripts themselves and were referenced by no workflow and
         # no Makefile target, so they had never run anywhere.
