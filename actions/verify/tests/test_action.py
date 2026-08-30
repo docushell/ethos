@@ -32,15 +32,19 @@ from unittest import mock
 ACTION = Path(__file__).resolve().parents[1]
 ROOT = ACTION.parents[1]
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
-# Derived, not transcribed. These were pinned to v0.4.0 while the version above came from
+# Derived from the ledger's PUBLISHED release, not from the npm vendor manifest.
+#
+# These were once transcribed v0.4.0 literals while the URL version came from
 # docs/release-state.json, so the test contradicted itself and the Action shipped two releases
-# behind. packages/npm/ethos-pdf/vendor/manifest.json is the record of the published CLI and is
-# already boundary-gated, so the Action now follows it without a per-release edit here.
-_VENDOR_MANIFEST = json.loads(
-    (ROOT / "packages/npm/ethos-pdf/vendor/manifest.json").read_text(encoding="utf-8")
-)
-_PUBLISHED_LINUX = _VENDOR_MANIFEST["targets"]["linux:x64"]
-PUBLISHED_LINUX_ARCHIVE_SHA256 = _PUBLISHED_LINUX["release_asset_sha256"]
+# behind. Sourcing them from packages/npm/ethos-pdf/vendor/manifest.json fixed that and
+# introduced a worse fault: the vendor manifest tracks the ACTIVATED version, because a payload
+# refresh moves it to the next release before that release is published. The URL then followed
+# `version` while the digests followed the manifest, and the only state passing both assertions
+# was a published-version URL carrying next-version digests — an Action that fails at install on
+# every run. Both halves now come from the same published record and move together at publication.
+_RELEASE_STATE = json.loads((ROOT / "docs/release-state.json").read_text(encoding="utf-8"))
+_PUBLISHED_LINUX = _RELEASE_STATE["release"]["published_cli"]["linux-x64"]
+PUBLISHED_LINUX_ARCHIVE_SHA256 = _PUBLISHED_LINUX["archive_sha256"]
 PUBLISHED_LINUX_BINARY_SHA256 = _PUBLISHED_LINUX["binary_sha256"]
 sys.path.insert(0, str(ACTION))
 

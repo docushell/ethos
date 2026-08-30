@@ -60,6 +60,19 @@ class ReleaseStateTests(unittest.TestCase):
             "as_of": "2026-07-02",
             "release": {
                 "version": "0.3.0",
+                "activated": "0.3.0",
+                "published_cli": {
+                    "linux-x64": {
+                        "archive": "ethos-linux-x64.tar.gz",
+                        "archive_sha256": "0" * 64,
+                        "binary_sha256": "1" * 64,
+                    },
+                    "macos-arm64": {
+                        "archive": "ethos-macos-arm64.tar.gz",
+                        "archive_sha256": "2" * 64,
+                        "binary_sha256": "3" * 64,
+                    },
+                },
                 "rust_crates": ["ethos-doc-core", "ethos-verify", "ethos-pdf"],
                 "python_package": {"name": "ethos-pdf", "version": "0.3.0"},
                 "npm_package": {

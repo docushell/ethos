@@ -38,7 +38,17 @@ BEGIN_MARKER = "<!-- BEGIN GENERATED CURRENT RELEASE STATE -->"
 END_MARKER = "<!-- END GENERATED CURRENT RELEASE STATE -->"
 TOP_LEVEL_KEYS = {"schema_version", "as_of", "release", "closed_lanes", "blocked_lanes"}
 RELEASE_KEYS = {
+    # `version` is what is PUBLISHED. `activated` is what the tree is preparing. They differ
+    # for the whole window between a version bump and its publication, and collapsing them
+    # into one field is what deadlocked the v0.6.0 npm payload refresh against the Action
+    # contract: the Action's URL followed the published version while its digests followed
+    # the npm vendor manifest, which tracks the activated one.
     "version",
+    "activated",
+    # Digests of the PUBLISHED CLI archives and their inner binaries. The GitHub Action pins
+    # these. They belong here, next to the published version, rather than in the npm vendor
+    # manifest, which moves ahead of publication during a payload refresh.
+    "published_cli",
     "rust_crates",
     "python_package",
     "npm_package",
@@ -47,6 +57,9 @@ RELEASE_KEYS = {
     "pdfium_environment",
 }
 PACKAGE_KEYS = {"name", "version"}
+PUBLISHED_CLI_TARGETS = {"linux-x64", "macos-arm64"}
+PUBLISHED_CLI_KEYS = {"archive", "archive_sha256", "binary_sha256"}
+SHA256 = re.compile(r"[0-9a-f]{64}")
 GITHUB_RELEASE_KEYS = {
     "tag",
     "version",
@@ -72,6 +85,11 @@ ENVIRONMENT_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
 
 class ReleaseStateError(ValueError):
     """The release state or its generated documentation is invalid."""
+
+
+def _semver_tuple(value: str) -> tuple[int, int, int]:
+    major, minor, patch = value.split(".")
+    return (int(major), int(minor), int(patch))
 
 
 def _exact_keys(value: object, expected: set[str], label: str) -> Mapping[str, object]:
@@ -152,6 +170,22 @@ def load_release_state(root: Path, path: Path) -> dict[str, object]:
             raise ReleaseStateError(
                 f"release.{field}.version must be a stable MAJOR.MINOR.PATCH version"
             )
+
+    activated = _string(release["activated"], "release.activated")
+    if not SEMVER.fullmatch(activated):
+        raise ReleaseStateError("release.activated must be a semantic version")
+    if _semver_tuple(activated) < _semver_tuple(version):
+        raise ReleaseStateError("release.activated must not be behind release.version")
+
+    published_cli = _exact_keys(release["published_cli"], PUBLISHED_CLI_TARGETS, "release.published_cli")
+    for target, entry in published_cli.items():
+        fields = _exact_keys(entry, PUBLISHED_CLI_KEYS, f"release.published_cli.{target}")
+        for digest_field in ("archive_sha256", "binary_sha256"):
+            digest = _string(fields[digest_field], f"release.published_cli.{target}.{digest_field}")
+            if not SHA256.fullmatch(digest):
+                raise ReleaseStateError(
+                    f"release.published_cli.{target}.{digest_field} must be lowercase 64-hex"
+                )
 
     github = _exact_keys(release["github_release"], GITHUB_RELEASE_KEYS, "release.github_release")
     if github["version"] != version or github["tag"] != f"v{version}":

@@ -2,6 +2,43 @@
 
 ## Unreleased
 
+### The ledger separates what is published from what is being prepared
+
+- boundary-exception: `docs/release-state.json` gains `release.activated` and
+  `release.published_cli`. `release.version` continues to mean the published version;
+  `activated` is what the tree is preparing. They differ for the whole window between a version
+  bump and its publication, and having one field carry both meanings is what deadlocked the
+  v0.6.0 npm payload refresh.
+
+- The deadlock, and its origin. The previous release-flow commit repointed
+  `actions/verify/tests/test_action.py` at `packages/npm/ethos-pdf/vendor/manifest.json`,
+  calling it "the record of the published CLI". It is not: a payload refresh moves that manifest
+  to the next release *before* that release is published. The Action's URL followed
+  `release.version` while its digests followed the manifest, so once the payload moved, the only
+  state satisfying both assertions was a v0.5.0 URL carrying v0.6.0 digests — an Action that
+  downloads one archive and checks it against another's digest, failing at install on every run.
+  `ci.yml`'s `released-cli-action-dogfood` executes the Action twice, so this broke for real
+  rather than only in an assertion. Reproduced before changing anything, and reproduced again as
+  passing afterwards with the full 0.6.0 manifest simulated.
+
+- The Action's digests now come from `release.published_cli`, alongside the version its URL
+  already used. Both halves derive from one published record and move together at publication.
+
+- `check_release_state.py` validates the new keys: `activated` must be a semantic version and
+  must not be behind `version`, and every `published_cli` digest must be lowercase 64-hex.
+
+### A vendored binary must report the version the manifest claims
+
+- `scripts/prepare-vendor.js` runs the binary with `--version` and requires
+  `ethos <manifest.cli_version>`. Every other check compared the manifest against itself: the
+  digests prove the manifest and the bytes agree with each other, never that the bytes are the
+  version claimed. That is the hole 1d23604 fell into — a package labelled 0.6.0 whose vendored
+  CLI reported `ethos 0.5.0`, with the full suite green in that state. Verified against the real
+  vendored 0.5.0 binary: a 0.6.0 manifest is now rejected.
+
+- `test/vendor-assembly.test.js` fixtures answer `--version` and carry `cli_version`, because a
+  fake that cannot report its version no longer models a real one.
+
 - boundary-exception: `docs/validation/v0-6-0-release-promotion.md` records all six runbook
   promotion bindings. They were blank because `release.yml` had never completed a run; run
   33325655578 on tag `v0.6.0` is the first green one, and the source commit, artifact names,

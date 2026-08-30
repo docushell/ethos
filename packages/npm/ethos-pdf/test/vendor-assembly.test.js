@@ -27,8 +27,15 @@ function writeFixtureArchive(root, assetName, nestedDir, binaryText) {
   return archive;
 }
 
-const macBinary = '#!/usr/bin/env sh\nif [ "$1" = "--help" ]; then echo "Commands: grounding verify"; fi\n';
-const linuxBinary = '#!/usr/bin/env sh\nif [ "$1" = "--help" ]; then echo "Commands: grounding verify"; fi\n';
+const FIXTURE_CLI_VERSION = "0.5.0";
+// The fakes answer --version because prepare-vendor now binds the reported version to the
+// manifest's cli_version. A fixture that cannot report its version would not model a real one.
+const fakeBinary =
+  '#!/usr/bin/env sh\n' +
+  'if [ "$1" = "--help" ]; then echo "Commands: grounding verify"; fi\n' +
+  'if [ "$1" = "--version" ]; then echo "ethos ' + FIXTURE_CLI_VERSION + '"; fi\n';
+const macBinary = fakeBinary;
+const linuxBinary = fakeBinary;
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "ethos-vendor-assembly-"));
 try {
@@ -50,6 +57,7 @@ try {
     JSON.stringify(
       {
         version: 1,
+        cli_version: FIXTURE_CLI_VERSION,
         targets: {
           "darwin:arm64": {
             binary: "ethos-darwin-arm64",
