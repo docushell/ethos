@@ -156,7 +156,11 @@ def load_release_state(root: Path, path: Path) -> dict[str, object]:
     github = _exact_keys(release["github_release"], GITHUB_RELEASE_KEYS, "release.github_release")
     if github["version"] != version or github["tag"] != f"v{version}":
         raise ReleaseStateError("GitHub release version and tag must match release.version")
-    if github["name"] != f"Release v{version}":
+    # Both conventions are published: v0.1.0-v0.1.2 and v0.3.0-v0.4.0 are "Release vX.Y.Z",
+    # v0.2.0 and v0.5.0 are "Ethos vX.Y.Z". Requiring one of them made the ledger declare a
+    # name the live release did not carry, which check_github_release_metadata.py catches
+    # against the registry. Enforce the version here; the live check owns the exact string.
+    if github["name"] not in (f"Release v{version}", f"Ethos v{version}"):
         raise ReleaseStateError("GitHub release name must match release.version")
     if github["latest"] is not True:
         raise ReleaseStateError("the current GitHub release must be marked latest")

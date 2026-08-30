@@ -2,6 +2,41 @@
 
 ## Unreleased
 
+### The release lane becomes testable, and stops checking itself
+
+- boundary-exception: `release.yml` gains a `pull_request` trigger scoped to
+  `.github/workflows/release.yml`, `.github/scripts/**`, and `scripts/build-*`. This workflow has
+  never completed a run, and every red run so far was a defect in the release machinery itself,
+  found only by pushing a tag: a total YAML parse failure, two README wording assertions, and a
+  plain-scalar quoting bug in a step 75cda78 records as having never executed. It was the only
+  workflow in a repository built on testing that was itself untested. The two scripts that read it
+  grep raw text and passed through all four failures.
+
+- boundary-exception: `release-gates` runs `release-live-state-check` in place of
+  `release-state-check`. `check_github_release_metadata.py` is the only gate that compares the
+  declared ledger against the live registry, and `release-live-state-check` was the sole path to
+  it. The parked suite was validating `docs/release-state.json` against `docs/release-state.json`.
+  The target now requires network access and `gh` auth, which is correct for a pre-publish suite
+  whose purpose is to check reality.
+
+- boundary-exception: deletes the frozen-record layer and four self-referential gate scripts.
+  `frozen_record_guards.json` listed exactly one guard, `test_windows_verify_candidate.py`, which
+  the same `release-gates` run already executes at `windows-verify-candidate-contract` and
+  `release.yml` runs a third time. `cargo_manifest_guard.py` and `frozen_record_guard_wiring.py`
+  had zero references tree-wide, and the latter asserted `ci.yml` contains the frozen-record
+  runner, which 94eeb5c had already moved to the Makefile — a false invariant. `test_rag_chunk_alpha.py`
+  and `test_security_report_alpha.py` asserted only that the Makefile recipe invoking them invokes
+  them; neither carried a behavioural assertion. The `rag-chunk-alpha` and `security-report-alpha`
+  targets keep every real check.
+
+- The ledger recorded a GitHub release name the live release does not carry.
+  `docs/release-state.json` declared `Release v0.5.0`; the published release is `Ethos v0.5.0`.
+  `check_release_state.py` required the `Release vX.Y.Z` form, so the ledger was forced into a
+  false statement about a published fact, and the only gate that could have caught it compares
+  against the registry and was never run. Both conventions are published — `v0.1.0`-`v0.1.2` and
+  `v0.3.0`-`v0.4.0` use `Release`, `v0.2.0` and `v0.5.0` use `Ethos` — so the schema check now
+  accepts either and `check_github_release_metadata.py` owns the exact string against the registry.
+
 ## 0.6.0 - 2026-08-30
 
 ### The public surfaces stop describing Ethos as unreleased
