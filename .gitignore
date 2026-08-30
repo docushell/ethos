@@ -12,3 +12,6 @@ benchmarks/results/fixtures/*.json
 benchmarks/results/gate-zero/*
 !benchmarks/results/gate-zero/README.md
 # Cargo.lock IS committed (determinism: pinned dependency graph). Do not add it here.
+
+# Local agent config (identity policy, rules). Not repo content.
+.agents/
