@@ -159,58 +159,54 @@ Parser adapters should:
 The OpenDataLoader JSON adapter remains the full reference adapter. It is useful for serious
 foreign-parser mapping, but the minimal integration surface is the `GroundingSource` trait above.
 
-## Geometry is required, and where that requirement lives
+## Geometry, and which sources have to carry it
 
-**For adapter authors: your source needs real coordinates.** `ethos.grounding.v1` requires
-`bbox` on every element, span, table, and cell. A text-only parser cannot use this profile
-honestly. Do not submit page-sized boxes, zero boxes, or invented coordinates — a zero-area
-box is rejected outright, so a `[0,0,0,0]` sentinel will not get you through.
+`ethos.grounding.v1` has two schema versions, and what an element must carry depends on the
+version and the media type together. Both are enforced twice — the root `allOf` in
+`schemas/ethos-grounding-source.schema.json` and the intake in
+`crates/ethos-core/src/grounding_json.rs` — so an artifact that slips past one is stopped by the
+other.
 
-The Rust trait types carry `Option<[i64; 4]>`. That is deliberate and it is **not** an
-invitation to send `None`: the wire schema still requires the field, and the reader will
-reject an artifact without it. The `Option` exists so the type system can express a source
-that has no geometry to declare, which is not a thing this profile accepts today.
+| Artifact | `media_type` | Element requires | Element forbids | `pages` / `spans` / `tables` |
+| --- | --- | --- | --- | --- |
+| `1.0.0` | `application/pdf`, and nothing else | `id`, `page`, `bbox`, `kind` | `locator` | pages populated as before |
+| `1.1.0`, paginated | `application/pdf` | `id`, `page`, `bbox`, `kind` | `locator` | unchanged from `1.0.0` |
+| `1.1.0`, page-less | one of the eight office types | `id`, `kind`, `locator` | `page`, `bbox` | all three must be empty |
 
-**For maintainers: the constraint is narrower than it looks.** The verifier already binds
-text evidence with no geometry at all. An evidence ref of `{element_id, expected_text}`
-with no page locator and no bbox reaches `AnchorStatus::Bound` at `AnchorLevel::Text` and
-pushes no capability limit. That behaviour is covered by tests in `ethos-verify` named
-`geometry_free_*` and `absent_page_locator_resolves_to_not_checked_never_not_found` — do
-not remove them, they are what keeps the path open.
+The eight page-less media types are DOCX, XLSX, PPTX, ODT, ODS, ODP, RTF and EPUB, spelled in
+full in `PAGE_LESS_MEDIA` in `grounding_json.rs`. A `1.0.0` artifact is byte-for-byte the shape
+it always was; the version gate is what lets that stay true while `1.1.0` admits something else
+entirely.
 
-Geometry is mandatory in the **artifact and its validator**, not in the verification
-algorithm. Five gates enforce it, all in one layer:
+**For adapter authors of a paginated source: you still need real coordinates.** Do not submit
+page-sized boxes, zero boxes, or invented coordinates — a zero-area box is rejected outright, so
+a `[0,0,0,0]` sentinel will not get you through. Positive-area and in-page-bounds enforcement
+lives in `grounding_json.rs`, and it means an off-canvas shape carrying legitimately negative
+coordinates is rejected today. That is arguably a security-report finding rather than a parse
+error, and it remains an open call for any future paginated format.
 
-| # | Gate | Where |
-| --- | --- | --- |
-| 1 | `media_type` is `const "application/pdf"` | `schemas/ethos-grounding-source.schema.json` |
-| 2 | the same media-type check | `crates/ethos-core/src/grounding_json.rs` |
-| 3 | `coordinate_system` pins `unit: centipoint`, `origin: top-left` | schema |
-| 4 | `bbox` required on element, span, table, cell | schema |
-| 5 | positive-area and in-page-bounds enforcement | `grounding_json.rs` |
+**For adapter authors of a page-less source: do not synthesise what you do not have.** State
+`pages: []`, leave `spans` and `tables` empty, and give every element a non-empty `locator` of at
+most 2048 bytes in your own address language — a paragraph index, a sheet cell, a slide and shape
+id. The locator is opaque to verification, which resolves by element id; it exists so a citation
+can be displayed and round-tripped in terms the source itself uses. Evidence binds at
+`element_scoped` precision, which is what a page-less address can honestly claim, and page-scoped
+is not available to you because there is no page to scope to.
 
-Gate 5 is why any future change must make `bbox` *absent* rather than empty. It also means
-an off-canvas PPTX shape, which legitimately carries negative coordinates, is rejected
-today — arguably a security-report finding rather than a parse error, and that call is a
-prerequisite to PPTX support rather than a detail.
+The Rust trait types carry `Option<[i64; 4]>` for `bbox`. Since `1.1.0` that is no longer a
+type-system courtesy with no wire counterpart: `None` arrives from the wire on every page-less
+element, and every read of it fails closed.
 
-**If format support is ever taken up**, the order is DOCX, then XLSX, then PPTX. That is
-the reverse of the intuition that the format with visible geometry is the cheap one:
+**For maintainers: the verification algorithm never required geometry.** The verifier already
+binds text evidence with none at all — an evidence ref of `{element_id, expected_text}` with no
+page locator and no bbox reaches `AnchorStatus::Bound` at `AnchorLevel::Text` and pushes no
+capability limit. That behaviour is covered by tests in `ethos-verify` named `geometry_free_*`
+and `absent_page_locator_resolves_to_not_checked_never_not_found`. Do not remove them: they were
+what kept this path open while the artifact still refused it, and they are now what keeps the
+page-less lane honest.
 
-- **DOCX** exercises the geometry-absent path, which is the only genuinely new behaviour.
-  Paragraph order in `word/document.xml` is document order — deterministic, no layout
-  engine, no font metrics. Pagination does not exist in the file and must not be
-  synthesised.
-- **XLSX** reuses that path and adds an `R1C1` locator convention. `GroundingCell` already
-  carries `row`, `col`, `row_span`, and `col_span`, so a sheet maps onto the existing table
-  model with no new locator concept. Do not compute column geometry: the same nominal
-  8.43-character column measures 4800 centipoints under Calibri 11 and 5400 under Verdana
-  11, a 12.5% swing driven by system font metrics that ADR-0003's font policy does not
-  cover.
-- **PPTX** last, despite clean arithmetic (127 EMU = 1 centipoint, and 127 is odd so
-  rounding ties are impossible), because gate 5 must be resolved first.
-
-Full analysis, including the measurements above and why rendering to PDF fails both the
-footprint and licence gates, is in `docs/v0-6-0-release.md` §10.1. Multi-format support is
-out of scope for v0.6.0 — `docs/proof-statement-v1.md` §7 records the trigger for
-revisiting it.
+Two things a page-less lane still cannot do, both worth knowing before building on it. A page
+citation can never address such a source — it returns `page_not_found` — and an element id
+supplied alongside a page returns `locator_conflict`. And `grounding check --source-artifact`
+enforces PDF magic bytes unconditionally, so the one check that binds an artifact to the bytes it
+names is unavailable for exactly the formats `1.1.0` exists to admit.

@@ -918,5 +918,64 @@ class PythonSurfaceTests(unittest.TestCase):
             )
 
 
+class ErrorCodeSurfaceTest(unittest.TestCase):
+    """`EthosCommandError.error_code` carries what the CLI already classified.
+
+    Before 0.6.0 exit 2 was a bare English line, so the only way to tell a malformed
+    citations file from an unwritable output directory was to match message text
+    `SPEC.md` forbids parsing. The envelope made that classification available; this
+    is the surface that makes it reachable from Python.
+    """
+
+    def test_a_coded_usage_failure_exposes_its_code(self) -> None:
+        error = EthosCommandError(
+            ["ethos", "verify"],
+            2,
+            "",
+            '{"error":{"code":"invalid_input","message":"citations file is not JSON"}}',
+        )
+        self.assertEqual(error.error_code, "invalid_input")
+
+    def test_a_coded_error_exit_exposes_its_code(self) -> None:
+        error = EthosCommandError(
+            ["ethos", "doc", "parse"],
+            3,
+            "",
+            '{"error":{"code":"invalid_pdf","message":"not a pdf"}}',
+        )
+        self.assertEqual(error.error_code, "invalid_pdf")
+
+    def test_the_plain_text_shapes_carry_no_code(self) -> None:
+        # Argument-parser rejections exit 2 before the command is dispatched, and a
+        # message that will not canonicalise falls back to the human line. Neither is
+        # a distinct failure class; both are simply unclassified.
+        for stderr in [
+            "error: unexpected argument '--nope' found",
+            "error (usage): --citations is required",
+            "",
+        ]:
+            error = EthosCommandError(["ethos", "verify"], 2, "", stderr)
+            self.assertIsNone(error.error_code, stderr)
+
+    def test_an_unrecognised_code_is_carried_rather_than_dropped(self) -> None:
+        # A reserved code becoming live must not need a wrapper release to be visible.
+        error = EthosCommandError(
+            ["ethos", "verify"],
+            2,
+            "",
+            '{"error":{"code":"input_limit_exceeded","message":"too many checks"}}',
+        )
+        self.assertEqual(error.error_code, "input_limit_exceeded")
+
+    def test_a_subclass_carries_the_code_too(self) -> None:
+        error = CorruptPdfError(
+            ["ethos", "doc", "parse"],
+            4,
+            "",
+            '{"error":{"code":"corrupt_pdf","message":"broken xref"}}',
+        )
+        self.assertEqual(error.error_code, "corrupt_pdf")
+
+
 if __name__ == "__main__":
     unittest.main()

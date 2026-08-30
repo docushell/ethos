@@ -85,6 +85,22 @@ class EthosCommandError(EthosPythonSurfaceError):
         self.returncode = returncode
         self.stdout = stdout
         self.stderr = stderr
+        #: The CLI's stable error code, or `None` when it emitted no envelope.
+        #:
+        #: Every coded failure (exits 3-12) has always carried
+        #: `{"error":{"code","message"}}` on stderr, and since 0.6.0 usage failures
+        #: detected by the command carry it at exit 2 as well — `invalid_arguments`,
+        #: `invalid_input`, `host_io`. Only three of those map onto a dedicated
+        #: exception class, so without this attribute the rest arrive as a bare
+        #: `EthosCommandError` and a caller has to re-parse `stderr` to learn
+        #: anything the CLI already told it.
+        #:
+        #: `None` is not an error. Argument-parser rejections also exit 2 but are
+        #: written before the command is dispatched, in plain text and with no code
+        #: (`SPEC.md` §6.4), and a message that will not canonicalise falls back to
+        #: the same plain-text form. Treat `None` as "the CLI did not classify this",
+        #: never as a distinct failure class.
+        self.error_code = _stable_error_code(stderr)
 
 
 class PdfiumNotFoundError(EthosCommandError):
@@ -272,7 +288,17 @@ class EthosCli:
         output_format: str = "json",
         timeout: Optional[float] = 30.0,
     ) -> Any:
-        """Run `ethos verify` and return the JSON verification report.
+        """Run `ethos verify` and return the in-toto Statement it writes.
+
+        **The verification report is `result["predicate"]`, not the return value.**
+        Since Ethos 0.6.0 every verdict-bearing command wraps its artifact in an
+        in-toto Statement (`_type` / `subject` / `predicateType` / `predicate`),
+        and this wrapper returns what the CLI wrote rather than reaching into it —
+        the envelope carries the subject digest binding the verdict to the bytes
+        Ethos read, and discarding it here would discard that. `predicateType` is
+        `https://docushell.com/ethos/grounding/v1`; the predicate validates against
+        `urn:ethos:schema:verification-report:1` and is byte-for-byte the artifact
+        this call returned before 0.6.0.
 
         This wrapper intentionally supports JSON output only. Missing source,
         citations, or config paths raise the built-in `FileNotFoundError`
@@ -316,7 +342,11 @@ class EthosCli:
         output_format: str = "json",
         timeout: Optional[float] = 30.0,
     ) -> Any:
-        """Run `ethos evidence anchor` and return the JSON anchor report.
+        """Run `ethos evidence anchor` and return the in-toto Statement it writes.
+
+        **The anchor report is `result["predicate"]`, not the return value**, on the
+        same terms as `verify`. `predicateType` is
+        `https://docushell.com/ethos/evidence-anchor/v1`.
 
         This wrapper intentionally supports JSON output only. Missing source or
         evidence-ref paths raise the built-in `FileNotFoundError` before
@@ -596,7 +626,9 @@ def verify(
     timeout: Optional[float] = 30.0,
     env: Optional[Mapping[str, str]] = None,
 ) -> Any:
-    """Verify citations through a local ethos binary and return JSON.
+    """Verify citations through a local ethos binary and return the Statement.
+
+    The verification report is `result["predicate"]`; see `EthosCli.verify`.
 
     Missing source, citations, or config paths raise the built-in
     `FileNotFoundError` before invoking the CLI.

@@ -4,6 +4,29 @@
 
 ## 0.6.0 - 2026-08-30
 
+### The Python wrapper and the mapper guide catch up to what shipped
+
+- `EthosCli.verify` and `EthosCli.anchor` returned the in-toto Statement while their
+  docstrings promised the report, and the word `predicate` appeared nowhere in `python/`. They
+  now say what they return and where the report is — `result["predicate"]` — and say why the
+  wrapper does not unwrap it for you: the envelope carries the subject digest binding the
+  verdict to the bytes Ethos read, and reaching past it here would discard that.
+- `EthosCommandError.error_code` exposes the CLI's stable code. Every coded failure has carried
+  `{"error":{"code","message"}}` for releases and exit 2 joined them in 0.6.0, but only three
+  codes map onto a dedicated exception class, so everything else arrived as a bare
+  `EthosCommandError` and a caller had to re-parse `stderr` to learn what the CLI had already
+  worked out. `None` is not a failure class: argument-parser rejections and the c14n fallback
+  are plain text and carry no code, which the attribute documents rather than papering over.
+- `docs/bring-your-own-parser.md` described a world with one artifact shape. Its five-gate table
+  stated `media_type` is `const "application/pdf"` and `bbox` is required on every element,
+  and it closed by saying multi-format support was out of scope for this release — which it was
+  when written and stopped being three commits later. The section is now a version-and-media-type
+  matrix covering all three cases a mapper author can be in, and states the two things a
+  page-less lane still cannot do: a page citation returns `page_not_found`, and
+  `grounding check --source-artifact` enforces PDF magic bytes unconditionally, so the check
+  that binds an artifact to the bytes it names is unavailable for exactly the formats 1.1.0
+  admits.
+
 ### The proof statement has a schema, so a consumer has something to validate against
 
 - `schemas/ethos-proof-statement.schema.json` (`urn:ethos:schema:proof-statement:1`) describes
