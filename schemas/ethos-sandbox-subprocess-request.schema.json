@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:sandbox-subprocess-request:1",
   "title": "Ethos sandbox_subprocess v1 request",
-  "description": "Source-only pre-alpha request envelope for the future sandbox_subprocess v1 contract. The current executable carrier remains the existing PDF worker process until sandbox hardening is explicitly added.",
+  "description": "Request envelope for the future sandbox_subprocess v1 contract. The current executable carrier remains the existing PDF worker process until sandbox hardening is explicitly added.",
   "type": "object",
   "required": [
     "artifact_type",

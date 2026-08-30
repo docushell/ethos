@@ -9,7 +9,7 @@
         "A missing capability produces an explicit limitation, never a silent guess.",
         "PDF parsing additionally needs caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`.",
         "GitHub Release `v0.5.0` also provides CLI archives for macOS arm64 and Linux x64.",
-        "We publish no speed, footprint, or parser-quality comparisons, because we have not run a benchmark whose numbers we would be willing to defend.",
+        "We publish no speed, footprint, or parser-quality comparisons.",
         "cargo add ethos-doc-core@0.5.0",
         "cargo add ethos-verify@0.5.0",
         "cargo add ethos-pdf@0.5.0",
@@ -17,10 +17,10 @@
         "The Python wheel is a thin wrapper around a caller-provided local `ethos` CLI binary.",
         "It does not bundle the CLI or PDFium.",
         "The JSON verification and evidence-anchor wrapper calls use the caller-provided CLI and do not require PDFium unless the chosen command path invokes PDFium-backed parser, crop, or render behavior.",
-        "The npm package vendors only the approved macOS arm64 and Linux x64 CLI binaries.",
+        "The npm package vendors only the supported macOS arm64 and Linux x64 CLI binaries.",
         "npm install -g @docushell/ethos-pdf@0.5.0",
         "Unsupported platforms fail before invoking a binary.",
-        "Windows packaged artifacts, bundled project-maintained PDFium builds, hosted surfaces, public benchmark reports, and launch announcements are tracked as separate release-scope work."
+        "Windows packaged artifacts, bundled project-maintained PDFium builds, and hosted surfaces are outside the distribution scope"
       ]
     },
     "python_readme": {

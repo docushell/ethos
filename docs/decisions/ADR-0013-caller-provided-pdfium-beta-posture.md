@@ -3,7 +3,7 @@
 - Status: Proposed
 - Date: 2026-07-10
 - Decider: Gate Zero decider
-- Governs: PDFium distribution posture for public beta surfaces; amends ADR-0002's phase model;
+- Governs: PDFium distribution posture for public surfaces; amends ADR-0002's phase model;
   `ETHOS_PDFIUM_LIBRARY_PATH`; `scripts/fetch-pdfium.sh`.
 
 ## Context
@@ -26,14 +26,14 @@ scattered validation prose.
 
 ## Decision
 
-1. **Caller-provided PDFium is the accepted distribution posture for public beta evaluation
+1. **Caller-provided PDFium is the accepted distribution posture for public
    surfaces.** Ethos ships no PDFium binaries in any published artifact. PDFium-backed commands
    require `ETHOS_PDFIUM_LIBRARY_PATH`; JSON verification and evidence-anchor paths require no
    PDFium at all.
 
 2. **ADR-0002's Phase 2 gate is re-scoped, not removed.** "Public Beta is blocked on Phase 2"
    applied to beta surfaces that *distribute* PDFium. Because the shipped beta distributes none,
-   the current `public-beta` status does not violate ADR-0002. Phase 2 project-maintained builds
+   the current distribution status does not violate ADR-0002. Phase 2 project-maintained builds
    remain a hard blocker for: bundled-PDFium artifacts of any kind, Windows packaged artifacts
    that include PDFium, and hosted surfaces. Those surfaces stay blocked in
    `docs/execution-status.md` until Phase 2 lands.
@@ -52,12 +52,12 @@ scattered validation prose.
 
 ## Consequences
 
-- The README `public-beta` badge, ADR-0002, and shipped reality are reconciled in one record;
+- The README status badge, ADR-0002, and shipped reality are reconciled in one record;
   future "why is beta live if Phase 2 isn't done" questions resolve here.
 - First-run setup cost drops for evaluators (one script instead of a manual pinned download),
   without changing the trust boundary: hashes verified are the same hashes already recorded.
 - Phase 2 remains on the roadmap with a sharper purpose: it gates *bundling*, Windows packaged
-  artifacts with PDFium, and hosted surfaces — not the existence of a public beta.
+  artifacts with PDFium, and hosted surfaces.
 - Pin updates now touch three places in the same PR: `docs/pdfium-profile.md`,
   `profiles/ethos-deterministic-v1.json`, and `scripts/fetch-pdfium.sh`. A drift check between
   them is cheap CI follow-up work.

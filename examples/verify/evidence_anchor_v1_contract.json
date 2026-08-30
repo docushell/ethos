@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "evidence_anchor.v1",
-  "status": "source-only-public-beta-evaluation",
+  "status": "supported",
   "carrier": "ethos evidence anchor",
   "request_schema": "schemas/ethos-evidence-anchor-request.schema.json",
   "report_schema": "schemas/ethos-evidence-anchor-report.schema.json",

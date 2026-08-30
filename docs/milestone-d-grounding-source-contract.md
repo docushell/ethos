@@ -1,6 +1,6 @@
 # Milestone D `grounding_source` v1 Contract
 
-Status: source-only pre-alpha contract work for internal Milestone D continuation.
+Status: internal contract record for Milestone D continuation.
 
 This note defines the narrow `grounding_source` contract-prep slice for Milestone D. It does
 not add a new public command, binding surface, adapter behavior, crop surface, or sandbox
@@ -57,5 +57,5 @@ This first `grounding_source` slice does not add:
 - claim-kind expansion or semantic verification.
 
 Until those blockers are explicitly handled, public language remains limited to source-only
-pre-alpha internal continuation, evidence grounding, diagnostics, fixture-backed validation, and
+internal continuation, evidence grounding, diagnostics, fixture-backed validation, and
 explicit blockers.

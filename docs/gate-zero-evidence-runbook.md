@@ -1,7 +1,7 @@
 # Gate Zero Evidence Runbook
 
 This runbook starts the controlled evidence path required before Ethos can move beyond
-source-only pre-alpha language.
+approved public language.
 
 It does not approve benchmark publication, package publication, release artifacts, or launch
 claims. Generated Gate Zero result files and evidence bundles belong in the sibling
@@ -158,7 +158,7 @@ Gate Zero passes.
 Even after ADR-0005 acceptance, public language remains:
 
 ```text
-Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across
+Ethos is a deterministic document evidence layer. It verifies whether AI citations are grounded in document evidence across
 native Ethos JSON and supported foreign parser outputs.
 ```
 

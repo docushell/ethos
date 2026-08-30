@@ -126,7 +126,7 @@ class PdfiumManualSetupContractTests(unittest.TestCase):
         self.assertIn("ethos doc parse fixtures/synthetic/simple-text/document.pdf --format text", text)
         self.assertIn("caller-provided through `ETHOS_PDFIUM_LIBRARY_PATH`", text)
         self.assertIn("does not download, install, repair, or vet untrusted dynamic libraries", text)
-        self.assertIn("evaluation smoke path, not a benchmark", text)
+        self.assertIn("smoke path, not a benchmark", text)
         self.assertIn("born-digital", text)
 
     def test_rust_backend_missing_pdfium_error_names_env_var(self) -> None:

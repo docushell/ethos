@@ -12,7 +12,7 @@ behind `make release-gates` and run manually before any real publish.
 This is a deliberate scope decision, not decay. Before it, CI ran 81 steps across a
 269-line workflow, and roughly two thirds of the scripts under `.github/scripts/`
 were tests asserting that the release machinery was wired correctly rather than tests
-of Ethos. That cost was worth paying for a public beta defending live claims. It is
+of Ethos. That cost was worth paying while defending live claims. It is
 not worth paying while nothing is published.
 
 ## What CI runs

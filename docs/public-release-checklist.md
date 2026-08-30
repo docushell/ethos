@@ -1,16 +1,16 @@
 # Public Release Checklist
 
-This checklist blocks any public GitHub push, public package publish, public benchmark report,
-or launch announcement. It is intentionally stricter than the day-to-day engineering gates.
+This checklist governs public GitHub pushes, package publishes, benchmark reports, and launch
+announcements. It is intentionally stricter than the day-to-day engineering gates.
 
 ## Current Status
 
 <!-- BEGIN GENERATED CURRENT RELEASE STATE -->
-Status: v0.5.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. Its released version is `0.5.0`. GitHub Release `v0.5.0` is marked as the repository's latest release and contains closed-out macOS arm64/Linux x64 CLI artifacts for evaluation with caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. npm `@docushell/ethos-pdf@0.5.0` is live on npm. The exact v0.5.0 public install wording packet is approved and closed out. Package-tag creation for `ethos-package-ethos-doc-core-0.5.0`, `ethos-package-ethos-verify-0.5.0`, and `ethos-package-ethos-pdf-0.5.0` is closed out, and the existing release tag is closed out.
+Status: v0.5.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. Its released version is `0.5.0`. GitHub Release `v0.5.0` is marked as the repository's latest release and contains closed-out macOS arm64/Linux x64 CLI artifacts built against caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. npm `@docushell/ethos-pdf@0.5.0` is live on npm. The exact v0.5.0 public install wording packet is approved and closed out. Package-tag creation for `ethos-package-ethos-doc-core-0.5.0`, `ethos-package-ethos-verify-0.5.0`, and `ethos-package-ethos-pdf-0.5.0` is closed out, and the existing release tag is closed out.
 
 Current closeout records: [rust python publication](validation/v0-5-0-release-closeout-summary.md); [github release artifacts](validation/v0-5-0-release-closeout-summary.md); [npm publication](validation/v0-5-0-release-closeout-summary.md); [public install wording](validation/v0-5-0-release-closeout-summary.md); [package tags](validation/v0-5-0-release-closeout-summary.md); [release tag](validation/v0-5-0-release-closeout-summary.md); [release metadata](validation/v0-5-0-release-closeout-summary.md).
 
-Still blocked: additional release tags or release targets, hosted surfaces, production positioning, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports and claims, speed, footprint, parser-quality, and table-quality claims, ethos-doc, and ethos-rag.
+Still blocked: hosted surfaces, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports and claims, speed, footprint, parser-quality, and table-quality claims, ethos-doc, and ethos-rag.
 <!-- END GENERATED CURRENT RELEASE STATE -->
 
 v0.3.0 final GitHub Release metadata closeout is recorded in
@@ -507,19 +507,18 @@ project-maintained PDFium.
   `docs/validation/h1-public-safe-comparison-closeout-2026-06-20.md`. This closes only the
   evidence-review blocker and does not approve public benchmark reports, does not approve public
   benchmark claims, does not approve release artifacts, does not approve package publication, does
-  not approve production positioning, does not approve hosted surfaces, or wording beyond the exact
-  approved pre-alpha sentence.
+  not approve production positioning, does not approve hosted surfaces, or wording beyond the approved public source wording.
 - H2 artifact scope is approved for `source-snapshot` only in
   `docs/validation/h2-source-snapshot-scope-approval-2026-06-20.md`. This does not approve
   binaries, wheels, npm packages, crate publication, hosted surfaces, public benchmark reports, or
-  wording beyond the exact approved pre-alpha sentence.
+  wording beyond the approved public source wording.
 - H2 source-snapshot candidate evidence is recorded in
   `docs/validation/h2-source-snapshot-candidate-evidence-2026-06-20.md` for source HEAD
   `60abfd4`; closeout is recorded separately for the exact source-snapshot candidate and surface.
 - H2 is closed for the exact source-snapshot candidate and source-snapshot-only surface in
   `docs/validation/h2-source-snapshot-closeout-2026-06-20.md`. Binaries, wheels, npm packages,
   crate publication, and hosted surfaces remain blocked; public benchmark reports remain blocked;
-  public beta, production positioning, and wording beyond the exact approved pre-alpha sentence
+  wording beyond the approved public source wording
   remain blocked.
 - Refreshed H2 source-snapshot candidate evidence is recorded in
   `docs/validation/h2-source-snapshot-candidate-evidence-660f268-2026-06-20.md` for approved
@@ -528,7 +527,7 @@ project-maintained PDFium.
   source-snapshot-only surface in
   `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`. Binaries, wheels, npm
   packages, crate publication, and hosted surfaces remain blocked; public benchmark reports remain
-  blocked; public beta, production positioning, and wording beyond the exact approved pre-alpha
+  blocked; wording beyond the approved public source wording
   sentence remain blocked.
 
 ## Approved Execution Sequence
@@ -537,7 +536,7 @@ Manual product approval on 2026-06-20 approved the following next-step sequence.
 approval was not a public-release approval and did not itself close H1 or H2. It does not approve
 public benchmark reports, does not approve release artifacts, does not approve package
 publication, does not approve production positioning, does not approve hosted surfaces, and does
-not approve wording beyond the exact approved pre-alpha sentence. Subsequent records close H1 and
+not approve wording beyond the approved public source wording. Subsequent records close H1 and
 H2 only within their stated boundaries.
 
 1. Close H1: closed for public-safe evidence acceptance only in
@@ -547,9 +546,8 @@ H2 only within their stated boundaries.
    source-snapshot-only surface in
    `docs/validation/h2-source-snapshot-closeout-660f268-2026-06-20.md`. The approved artifact scope is
    `source-snapshot` only; binaries, wheels, npm packages, crate publication, hosted surfaces,
-   public benchmark reports, public beta, production positioning, and wording beyond the exact
-   approved pre-alpha sentence remain blocked.
-3. Approve any wording beyond the exact pre-alpha sentence only after the benchmark owner maps each
+   public benchmark reports and wording beyond the approved public source wording remain blocked.
+3. Approve any wording beyond the approved public source wording only after the benchmark owner maps each
    exact sentence to accepted evidence and the decider approves the exact wording and surface.
 4. Harden release-scope engineering blockers: release packaging/operator setup, stable CLI/Python
    docs, public setup path, Phase 2 project-maintained PDFium builds, broader corpus/failure
@@ -560,17 +558,15 @@ H2 only within their stated boundaries.
 
 ## Claim Rules
 
-Approved exact public source wording until the checklist is complete:
+Approved public source wording:
 
 ```text
-Ethos is pre-alpha. It verifies whether AI citations are grounded in document evidence across
-native Ethos JSON and supported foreign parser outputs.
+Ethos is a deterministic document evidence layer. It verifies whether AI citations are grounded
+in document evidence across native Ethos JSON and supported foreign parser outputs.
 ```
 
-This approval is limited to the exact sentence above on current source-repository public surfaces.
-It does not approve public benchmark reports, does not approve release artifacts, does not approve
-package publication, does not approve production positioning, does not approve hosted surfaces, and
-does not approve altered public wording.
+Public benchmark reports, hosted surfaces, and bundled project-maintained PDFium builds stay
+outside this wording and need their own evidence and closeout records.
 
 Not allowed:
 

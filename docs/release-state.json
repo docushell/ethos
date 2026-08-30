@@ -56,9 +56,7 @@
     "release_metadata": "docs/validation/v0-5-0-release-closeout-summary.md"
   },
   "blocked_lanes": [
-    "additional release tags or release targets",
     "hosted surfaces",
-    "production positioning",
     "Windows packaged artifacts",
     "bundled project-maintained PDFium builds",
     "public benchmark reports and claims",

@@ -1,6 +1,6 @@
 # Milestone D `capability_downgrade` v1 Contract
 
-Status: source-only pre-alpha contract work for internal Milestone D continuation.
+Status: internal contract record for Milestone D continuation.
 
 This note defines the narrow `capability_downgrade` contract-prep slice for Milestone D. It does
 not add a new public command, binding, Node surface, MCP surface, hosted surface, adapter
@@ -62,5 +62,5 @@ This first `capability_downgrade` slice does not add:
 - sandbox backend expansion;
 - semantic or arithmetic verification.
 
-Public-facing language remains limited to source-only pre-alpha internal continuation, evidence
+Public-facing language remains limited to internal continuation, evidence
 grounding, diagnostics, fixture-backed validation, and explicit blockers.

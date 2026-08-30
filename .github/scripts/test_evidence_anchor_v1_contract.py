@@ -187,7 +187,7 @@ class EvidenceAnchorV1ContractTests(unittest.TestCase):
 
         self.assertEqual(inventory["schema_version"], 1)
         self.assertEqual(inventory["contract"], "evidence_anchor.v1")
-        self.assertEqual(inventory["status"], "source-only-public-beta-evaluation")
+        self.assertEqual(inventory["status"], "supported")
         self.assertEqual(inventory["carrier"], "ethos evidence anchor")
         for key in ["request_schema", "report_schema"]:
             self.assertTrue((ROOT / inventory[key]).is_file(), key)
@@ -217,8 +217,8 @@ class EvidenceAnchorV1ContractTests(unittest.TestCase):
             self.assertIn("make evidence-anchor-v1-contract", text, path)
 
         readme = README.read_text(encoding="utf-8")
-        self.assertIn("Status: public beta evaluation.", readme)
-        self.assertNotIn("production-ready", readme.lower())
+        self.assertIn("deterministic document evidence layer", readme)
+        self.assertNotIn("public beta", readme.lower())
 
     def test_anchor_statuses_match_inventory(self) -> None:
         inventory = load_json(CONTRACT_INVENTORY)

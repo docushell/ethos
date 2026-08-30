@@ -1,6 +1,6 @@
 # Milestone D `claim_kind_boundary` v1 Contract
 
-Status: source-only pre-alpha contract work for internal Milestone D continuation.
+Status: internal contract record for Milestone D continuation.
 
 This note defines the narrow `claim_kind_boundary` contract-prep slice for Milestone D. It does
 not add new claim-kind support, a new command, a binding surface, Node surface, MCP surface, hosted
@@ -55,5 +55,5 @@ This first `claim_kind_boundary` slice does not add:
 - foreign-adapter broadening beyond committed fixtures.
 
 Until those blockers are explicitly handled, public language remains limited to source-only
-pre-alpha internal continuation, evidence grounding, diagnostics, fixture-backed validation, and
+internal continuation, evidence grounding, diagnostics, fixture-backed validation, and
 explicit blockers.

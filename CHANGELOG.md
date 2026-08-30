@@ -4,6 +4,46 @@
 
 ## 0.6.0 - 2026-08-30
 
+### The public surfaces stop describing Ethos as unreleased
+
+- boundary-exception: removes the public-beta posture from `README.md` — the `status: public
+  beta` badge and the "Status: public beta evaluation" blockquote enumerating the evaluation
+  surfaces. It read as "not ready yet" to anyone arriving at a 0.6.0 release. The replacement
+  states what Ethos is and where it ships, and drops the version enumeration so the header
+  stops going stale on every release. Capability boundaries are untouched: no OCR, no hosted
+  API, no bundled PDFium, and no benchmark numbers are still stated as facts about scope.
+
+- boundary-exception: the posture gates now enforce the new stance instead of the old one.
+  `test_public_surface_posture.py` asserted the beta blockquote was present — that assertion
+  was the reason 3777cc9 was reverted in 8c2d13f. It now asserts the beta wording is absent,
+  and `claims_gate.py` trades its `production-ready` / `release-ready` / `launch-ready` /
+  `package-ready` bans for `pre-alpha` / `public beta` / `beta evaluation`. The unearned-claim
+  bans — superlatives, speed, benchmark-validated — are untouched, so removing hesitation
+  still buys no overclaim. `docs/public-boundary-claims.json` follows the reworded sentences.
+
+- boundary-exception: `docs/release-state.json` drops `production positioning` and `additional
+  release tags or release targets` from `blocked_lanes`; both blocked the release this section
+  describes. The remaining blockers — hosted surfaces, Windows artifacts, bundled PDFium,
+  benchmark claims, `ethos-doc`, `ethos-rag` — are unchanged. Published-version facts are
+  unchanged: the generated block still reports 0.5.0 as the published baseline, because
+  0.6.0 packages are not published yet.
+
+- boundary-exception: the contract inventories carry `"status": "supported"` in place of
+  `"source-only-pre-alpha"` and `"source-only-public-beta-evaluation"`. Schema `const`s and
+  their examples changed together, and `validate_examples.py` stays green. The CLI's runtime
+  warning for the opt-in crop surface says `crop_element is an unstable opt-in surface`
+  rather than `source-only pre-alpha and unsupported`: it is still gated and still unstable,
+  which is a fact about that surface rather than about the project.
+
+- `README.md` no longer calls Grounding JSON "a proposal, not a current feature". It shipped
+  in this release — `ethos grounding check`, `ethos.grounding.v1` schema 1.1.0 — so the
+  section described the repository as it stood before the work it now sits above.
+
+Dated records under `docs/validation/`, and the sections of `docs/execution-status.md` that
+its own header marks as superseded by the generated block, keep their original wording. They
+record what was approved when, and rewriting them would falsify an audit trail rather than
+update a posture.
+
 ### The Python wrapper and the mapper guide catch up to what shipped
 
 - `EthosCli.verify` and `EthosCli.anchor` returned the in-toto Statement while their

@@ -30,7 +30,7 @@
 //!   and therefore can never see parser internals. CI builds it that way to prove it.
 //! - `verify-types` — verification report/config schema types + stable warning codes.
 //! - `full` (default) — canonical model, c14n, fingerprints, geometry, config, traits.
-//! - `crop-element` — source-only pre-alpha crop descriptor API, intentionally opt-in.
+//! - `crop-element` — unstable crop descriptor API, intentionally opt-in.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]

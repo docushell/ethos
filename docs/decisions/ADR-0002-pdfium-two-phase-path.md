@@ -1,7 +1,7 @@
 # ADR-0002: PDFium Two-Phase Distribution Path
 
 - Status: Accepted (recorded from PRD v3.5 §6.1, §15); amended by ADR-0013 (caller-provided
-  PDFium beta posture: the shipped public beta distributes no PDFium, so the Phase 2 blocker is
+  PDFium posture: the shipped releases distribute no PDFium, so the Phase 2 blocker is
   re-scoped to bundled/Windows-with-PDFium/hosted surfaces)
 - Date: 2026-06-11
 - Governs: IMPLEMENTATION_PLAN §2 row 0.4, §6.1; PRD §6.1

@@ -7,8 +7,8 @@ listed fixture path is missing, if a report golden is not covered by the invento
 real OpenDataLoader fixture manifest hashes drift, or if this README stops naming an inventory
 case.
 
-`verify_citations_v1_contract.json` classifies the same executable cases for the current
-Milestone D source-only pre-alpha `verify_citations` v1 contract. The focused
+`verify_citations_v1_contract.json` classifies the same executable cases for the
+`verify_citations` v1 contract. The focused
 `make milestone-d-verify-citations-contract` target schema-validates this contract inventory and
 checks that it stays aligned with `cases.json` and the report goldens. The contract inventory also
 records expected derived proof status, reusable grounded check IDs, request certification, and proof

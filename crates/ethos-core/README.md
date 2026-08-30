@@ -35,7 +35,7 @@ duplicate claim IDs before building release lists.
 
 - Public installation from crates.io is available at `0.2.0`.
 - The reserved crates.io placeholder remains historical; `0.2.0` is the current public package.
-- Source-only pre-alpha crop descriptor APIs are not part of the default public surface. They
+- Opt-in, unstable crop descriptor APIs are not part of the default public surface. They
   require the explicit Cargo feature `crop-element`, which exists for in-tree CLI contract work.
 
 ## Metadata Notes

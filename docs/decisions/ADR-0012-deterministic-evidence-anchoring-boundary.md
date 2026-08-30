@@ -52,7 +52,7 @@ production-readiness gating.
 - Evidence anchoring becomes a first-class source-bound primitive rather than being squeezed through
   citation-claim input.
 - Existing `ethos verify` report semantics and goldens must remain unchanged.
-- Public docs must describe evidence anchoring generically and preserve the public beta evaluation
+- Public docs must describe evidence anchoring generically and preserve the approved
   posture.
 - Future parser adapters can participate when they expose the required data through
   `GroundingSource`; missing capabilities must remain explicit diagnostics.

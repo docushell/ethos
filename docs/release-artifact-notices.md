@@ -1,6 +1,6 @@
 # Release Artifact Notices
 
-Ethos has prepared `v0.1.1` public beta evaluation surfaces for source, Rust crates, Python wheel,
+Ethos has prepared `v0.1.1` release surfaces for source, Rust crates, Python wheel,
 macOS arm64 CLI artifact, Linux x64 CLI artifact, and npm `@docushell/ethos-pdf@0.1.1`. This
 document defines the license and NOTICE bundle contract for release artifacts; it does not
 authorize additional releases, package publication, binaries, wheels, npm updates, hosted surfaces,
@@ -65,7 +65,7 @@ draft archives must include SHA256 checksums and an
 
 ## Release Gate
 
-The current approved public beta evaluation surfaces are bound by their validation and decider
+The current approved release surfaces are bound by their validation and decider
 records, including the first-public-release and npm-publication records under `docs/validation/`.
 Those records do not approve hosted surfaces, production positioning, Windows packaged artifacts,
 bundled project-maintained PDFium builds, `ethos-doc`, `ethos-rag`, public benchmark reports, or

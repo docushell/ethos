@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "crop_element.v1",
-  "status": "source-only-pre-alpha",
+  "status": "supported",
   "carrier": "ethos crop_element",
   "cases": [
     {

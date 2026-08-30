@@ -25,7 +25,7 @@ use crate::cmd::crop_artifacts::{
 use crate::{read_document, read_file_limited, write_output, CropElementArgs, Failure};
 
 pub(crate) fn crop_element(args: CropElementArgs) -> Result<(), Failure> {
-    eprintln!("warning: crop_element is source-only pre-alpha and unsupported");
+    eprintln!("warning: crop_element is an unstable opt-in surface");
     let document = read_document(&args.input)?;
     let request = read_crop_element_request(&args.request)?;
     let mut descriptor = resolve_crop_element_descriptor(&document, &request, &args.check_id)

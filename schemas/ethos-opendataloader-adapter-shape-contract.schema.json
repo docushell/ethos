@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:opendataloader-adapter-shape-contract:1",
   "title": "Ethos opendataloader_adapter_shape v1 contract inventory",
-  "description": "Source-only pre-alpha Milestone D inventory for the current opendataloader_adapter_shape v1 contract carried by the opendataloader-json adapter. This validates inventory shape and vocabulary; fixture/test/golden alignment stays in the repository guard.",
+  "description": "Contract inventory for the current opendataloader_adapter_shape v1 contract carried by the opendataloader-json adapter. This validates inventory shape and vocabulary; fixture/test/golden alignment stays in the repository guard.",
   "type": "object",
   "required": [
     "schema_version",
@@ -17,7 +17,7 @@
   "properties": {
     "schema_version": { "const": 1 },
     "contract": { "const": "opendataloader_adapter_shape.v1" },
-    "status": { "const": "source-only-pre-alpha" },
+    "status": { "const": "supported" },
     "carrier": { "const": "opendataloader-json adapter" },
     "accepted_shapes": {
       "type": "array",

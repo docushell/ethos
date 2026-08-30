@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "opendataloader_adapter_shape.v1",
-  "status": "source-only-pre-alpha",
+  "status": "supported",
   "carrier": "opendataloader-json adapter",
   "accepted_shapes": [
     {

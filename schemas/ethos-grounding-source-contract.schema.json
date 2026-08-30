@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:grounding-source-contract:1",
   "title": "Ethos grounding_source v1 contract inventory",
-  "description": "Source-only pre-alpha Milestone D inventory for the current grounding_source v1 contract carried by the GroundingSource trait and ethos verify report grounding metadata. This validates inventory shape and vocabulary; trait/report alignment stays in the repository guard.",
+  "description": "Contract inventory for the current grounding_source v1 contract carried by the GroundingSource trait and ethos verify report grounding metadata. This validates inventory shape and vocabulary; trait/report alignment stays in the repository guard.",
   "type": "object",
   "required": [
     "schema_version",
@@ -20,7 +20,7 @@
   "properties": {
     "schema_version": { "const": 1 },
     "contract": { "const": "grounding_source.v1" },
-    "status": { "const": "source-only-pre-alpha" },
+    "status": { "const": "supported" },
     "carrier": { "const": "GroundingSource trait" },
     "trait_module": { "$ref": "#/$defs/repo_path" },
     "report_schema": { "$ref": "#/$defs/repo_path" },

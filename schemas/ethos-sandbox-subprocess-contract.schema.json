@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:sandbox-subprocess-contract:1",
   "title": "Ethos sandbox_subprocess v1 contract inventory",
-  "description": "Source-only pre-alpha Milestone D inventory for the future sandbox_subprocess v1 backend contract. This validates inventory shape and vocabulary; executable behavior remains on the existing PDF worker-process carrier until sandbox hardening is explicitly added.",
+  "description": "Contract inventory for the future sandbox_subprocess v1 backend contract. This validates inventory shape and vocabulary; executable behavior remains on the existing PDF worker-process carrier until sandbox hardening is explicitly added.",
   "type": "object",
   "required": [
     "schema_version",
@@ -20,7 +20,7 @@
   "properties": {
     "schema_version": { "const": 1 },
     "contract": { "const": "sandbox_subprocess.v1" },
-    "status": { "const": "source-only-pre-alpha" },
+    "status": { "const": "supported" },
     "carrier": { "const": "pdfium worker process" },
     "cases": {
       "type": "array",

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ethos:schema:capability-downgrade-contract:1",
   "title": "Ethos capability_downgrade v1 contract inventory",
-  "description": "Source-only pre-alpha Milestone D inventory for the current capability_downgrade v1 contract carried by ethos verify. This validates inventory shape and vocabulary; report-golden alignment stays in the repository guard.",
+  "description": "Contract inventory for the current capability_downgrade v1 contract carried by ethos verify. This validates inventory shape and vocabulary; report-golden alignment stays in the repository guard.",
   "type": "object",
   "required": [
     "schema_version",
@@ -17,7 +17,7 @@
   "properties": {
     "schema_version": { "const": 1 },
     "contract": { "const": "capability_downgrade.v1" },
-    "status": { "const": "source-only-pre-alpha" },
+    "status": { "const": "supported" },
     "carrier": { "const": "ethos verify" },
     "report_cases": {
       "type": "array",

@@ -64,7 +64,7 @@ Gate Zero metrics:
 
 - G1 - Throughput: at least `max(120 pages/sec p50, 2x in-harness remeasured OpenDataLoader pages/sec)` on the manifest's born-digital subset, single CPU core per host. G1 must pass independently on every recorded Gate Zero performance host in `benchmarks/gate-zero/manifest.json`; averaging or substituting results across hosts is not allowed. EdgeParse and LiteParse results are recorded as context, not as gating thresholds.
 - G2 - Footprint: base distributable install footprint no more than 30 MB, with PDFium V8 and XFA disabled. The measurement includes CLI, native dynamic libraries, PDFium sidecar/static payload, default schemas, bundled deterministic font assets, and all assets required to run the base parser without network access. The Ethos/OpenDataLoader installed-footprint ratio is still measured; the "no more than one tenth of OpenDataLoader" statement is a public claim threshold, not a hard parser-core decision threshold (ADR-0008).
-- G3 - Determinism: byte-identical canonical document payload across the Gate Zero supported platforms, at minimum macOS arm64 and Linux x64 under the deterministic profile on the full frozen manifest. Windows x64 determinism is a public-beta release blocker even if it is not part of the first local Gate Zero hardware set.
+- G3 - Determinism: byte-identical canonical document payload across the Gate Zero supported platforms, at minimum macOS arm64 and Linux x64 under the deterministic profile on the full frozen manifest. Windows x64 determinism is a release blocker even if it is not part of the first local Gate Zero hardware set.
 
 Decision rule:
 
@@ -90,7 +90,7 @@ Ethos does not claim pixel-level proof, semantic entailment, arithmetic truth, O
 
 `ethos-verify` is an early product surface, not fallback-only salvage.
 
-The first alpha must prove that Ethos can verify citation evidence over at least one foreign parser output before the full native parser reaches public beta. The alpha scope is:
+The first alpha must prove that Ethos can verify citation evidence over at least one foreign parser output before the full native parser ships. The alpha scope is:
 
 - `GroundingSource` trait and verification schemas.
 - `ethos verify` CLI command.
