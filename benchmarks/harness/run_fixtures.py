@@ -105,7 +105,19 @@ def check_equal(name: str, actual: Any, expected: Any, failures: list[str]) -> N
         failures.append(f"{name} does not match golden")
 
 
-def run_command(args: list[str], timeout_sec: float) -> tuple[subprocess.CompletedProcess[bytes] | None, float, str | None]:
+def run_command(
+    args: list[str],
+    timeout_sec: float,
+    env_overlay: dict[str, str] | None = None,
+) -> tuple[subprocess.CompletedProcess[bytes] | None, float, str | None]:
+    # Some failure fixtures describe an error only reachable through a debug-build hook —
+    # a simulated worker memory limit, for one. Without a way to set that variable the
+    # fixture declares an `expected_error` the harness can never induce, so it fails
+    # permanently and says nothing about the product. The fixture declares its own env.
+    env = None
+    if env_overlay:
+        env = dict(os.environ)
+        env.update(env_overlay)
     start = time.perf_counter()
     try:
         completed = subprocess.run(
@@ -114,6 +126,7 @@ def run_command(args: list[str], timeout_sec: float) -> tuple[subprocess.Complet
             stderr=subprocess.PIPE,
             timeout=timeout_sec,
             check=False,
+            env=env,
         )
         return completed, (time.perf_counter() - start) * 1000.0, None
     except subprocess.TimeoutExpired:
@@ -205,6 +218,7 @@ def failure_fixture_result(
     completed, duration_ms, timeout = run_command(
         [str(ethos_bin), "doc", "parse", str(fixture_file), "--format", "json"],
         timeout_sec,
+        metadata.get("env"),
     )
     envelope: dict[str, Any] | None = None
     if timeout is not None:

@@ -138,6 +138,38 @@
   per-release edit. No lifecycle adjective is claimed in either direction, so the approval records
   that withheld production positioning stay true as written.
 
+### The two fixtures the PDF determinism gate was hiding
+
+- golden-change: `fixtures/synthetic/rotation-90/extraction.json` and `layout.json` are
+  regenerated. The goldens were written 2026-06-16 and record text coordinates with page rotation
+  **not** applied. `c7d893d` applied it — "apply page rotation when mapping PDFium text
+  coordinates" — and the goldens were never regenerated, so every box in them is the pre-fix
+  transpose. Nothing noticed, because the only check that compares them is the step that had been
+  skipping.
+
+  Verified as a stale golden rather than a regression before regenerating. The fixture's MediaBox
+  is `[0 0 144 300]` with `/Rotate 90`, so the display box is 300×144 and `pages` reports exactly
+  that, rotation applied, as `PageSpace`'s contract requires. The transform checks out against the
+  content stream: `36 72 Td (Rotate Ninety) Tj` at 18pt gives `y_disp = x_user` starting at 37.42
+  for a baseline at x=36, and `x_disp = y_user` spanning 71.80-84.89 for a baseline at y=72.
+
+  One observation worth recording rather than fixing here: that text is about 109pt wide from
+  x=36, so it runs to x≈144.88 and overflows its own 144pt-wide MediaBox. Legal PDF. Before the
+  rotation fix the overflow sat on the x axis against a 300pt width and was invisible; it now sits
+  on the y axis against a 144pt height. So Ethos can emit, from a legal PDF, geometry that
+  `grounding_json.rs` would reject as `invalid_bbox` — "submit a positive bounding box within its
+  page". That tension predates this release and is not narrowed by it.
+
+- `benchmarks/harness/run_fixtures.py` honours a per-fixture `env` block, and
+  `fixtures/failure/memory-limit-simulated/fixture.json` declares the one it needs. That fixture
+  expects `memory_limit_exceeded`, which is reachable only through the debug-build hook at
+  `worker.rs:846` behind `ETHOS_INTERNAL_TEST_PDFIUM_WORKER_MEMORY_LIMIT`. The harness never set
+  it, so the fixture declared an `expected_error` the harness could not induce and failed
+  permanently while saying nothing about the product. Data-driven rather than special-cased, so
+  the next such fixture declares its own hook.
+
+  With both fixed the corpus is 14/14 and `run_fixtures.py` exits 0.
+
 - `docs/validation/README.md` now indexes all twelve records rather than four, and the DocuShell
   acceptance commit is cited as `docushell@cc652ec` rather than a bare hex ref that cannot resolve
   in this repository. Both were surfaced by `validation_record_integrity.py` on its first run
