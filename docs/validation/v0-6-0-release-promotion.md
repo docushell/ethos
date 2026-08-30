@@ -1,6 +1,6 @@
 # v0.6.0 Release Promotion Record
 
-Status: **operator named; artifact bindings outstanding** (2026-08-30).
+Status: **operator named; artifact bindings recorded** (2026-08-30).
 
 Discharges the promotion gate in
 [`RELEASE_OPERATOR_RUNBOOK.md`](../RELEASE_OPERATOR_RUNBOOK.md) §"Promotion Gate". Until this
@@ -20,21 +20,49 @@ benchmark reports, `ethos-doc`, or `ethos-rag`, all of which remain in `blocked_
 
 ## Promotion bindings
 
-The runbook requires six bindings. Four can be recorded now. Two cannot exist until a green
-release run produces real artifacts, and are deliberately left blank rather than estimated.
+All six bindings the runbook requires, recorded from release run
+[33325655578](https://github.com/docushell/ethos/actions/runs/33325655578) on tag `v0.6.0` —
+the first green run of `release.yml` in the project's history.
 
 | Binding | Value |
 | --- | --- |
-| Exact source commit | pending — the commit of the green `release.yml` run |
-| Artifact names and platform targets | pending — `ethos-macos-arm64.tar.gz`, `ethos-linux-x64.tar.gz` and their sidecars, on a run that has not yet succeeded |
-| SHA256 checksums | pending — from that run's `.sha256` sidecars, never from a local build |
-| License/NOTICE bundle | `LICENSE` and `NOTICE`, copied into each archive by `release.yml` |
-| PDFium posture | caller-provided via `ETHOS_PDFIUM_LIBRARY_PATH`, per ADR-0013. No bundled PDFium in the base archives |
+| Exact source commit | `8adda91cd01baae487c9f2b18e4054b58a378a20` (`main`, merge of #239) |
+| Artifact names and platform targets | `ethos-macos-arm64.tar.gz` (macOS arm64), `ethos-linux-x64.tar.gz` (Linux x64), plus `ethos-full-0.6.0-*` for both |
+| License/NOTICE bundle | `LICENSE` and `NOTICE`, present in each archive; smoke evidence records `required_files` as `ethos`, `LICENSE`, `NOTICE`, `pdfium-manual-setup.md` |
+| PDFium posture | caller-provided via `ETHOS_PDFIUM_LIBRARY_PATH`, per ADR-0013. `doc parse` exits `12` with the caller-provided guidance when unset; no bundled PDFium in the base archives |
 | Exact public wording | approved in [`v0-6-0-public-wording-request.md`](v0-6-0-public-wording-request.md), applied at publication only |
 
-**The three pending rows are the gate.** `release.yml` has never completed a run. Filling them
-from anything other than that run — a local build, a previous release, an estimate — would
-manufacture the evidence this record exists to bind, so they stay blank until the run is green.
+### SHA256 checksums
+
+```text
+c12772255ba8a85b020bd9b6bb8bf77d01eaf11a6928a0d7348536eff7c378f2  ethos-linux-x64.tar.gz
+c116b3449a3de1f4bddc6217e7717a1307a6ef58c240e5404be0850af81789bb  ethos-macos-arm64.tar.gz
+d8cf121f111ff6ecb73670c79db4fc1c81e05d02b8cd5d8367104f5cbf3b38ac  ethos-full-0.6.0-linux-x64.tar.gz
+a0fe3df1b572f47c42b8fc4d456d6ce0983277191a8324b889747407bddd2625  ethos-full-0.6.0-macos-arm64.tar.gz
+```
+
+Each value was recomputed from the downloaded archive and compared against the `.sha256` sidecar
+the run published. That is a weaker check than it looks — the sidecar is generated in the same
+workflow step as the archive — so it verifies transport, not provenance. What binds provenance is
+the source commit above and the run that produced them.
+
+The binaries report `ethos 0.6.0`, confirmed both from the run's smoke evidence
+(`version_stdout`) and by extracting the macOS archive and executing `ethos --version`.
+
+### Windows is not part of this promotion
+
+The same run produced `ethos-windows-x64.zip`
+(`db9559dfe0c7a0e9866081af1d6ec110868bb74b3e077eb20ac4b3e4baed4216`) from the verify-only
+candidate lane. Windows packaged artifacts remain in `blocked_lanes` in
+[`../release-state.json`](../release-state.json) and are **not** authorized by this record. The
+archive is draft evidence for that lane only.
+
+### The inventories still say blocked
+
+Every `*.inventory.json` in the run carries `"status": "draft_not_release_ready"` and
+`"publication": "blocked"`, because `write_release_artifact_inventory.py` hard-codes both. That is
+a known limitation of the inventory writer, not a statement about this record: the sidecars cannot
+currently describe an approved artifact. Read this record, not the inventory, for promotion state.
 
 ## Consumer acceptance
 

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- boundary-exception: `docs/validation/v0-6-0-release-promotion.md` records all six runbook
+  promotion bindings. They were blank because `release.yml` had never completed a run; run
+  33325655578 on tag `v0.6.0` is the first green one, and the source commit, artifact names,
+  and SHA256 values come from it. Each checksum was recomputed from the downloaded archive, and
+  the record states plainly that comparing against a sidecar generated in the same workflow step
+  verifies transport rather than provenance. The binaries report `ethos 0.6.0`, confirmed from
+  the run's smoke evidence and by executing the extracted macOS binary. Windows is explicitly
+  excluded: the run produces a verify-only candidate, and Windows packaged artifacts stay in
+  `blocked_lanes`.
+
 ### The release lane becomes testable, and stops checking itself
 
 - boundary-exception: `release.yml` gains a `pull_request` trigger scoped to
