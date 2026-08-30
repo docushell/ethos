@@ -139,6 +139,7 @@ def success_fixture_result(
     entry: dict[str, Any],
     iterations: int,
     timeout_sec: float,
+    emit_projections: Path | None = None,
 ) -> dict[str, Any]:
     fixture_file = fixtures_root / entry["file"]
     fixture_dir = fixture_file.parent
@@ -177,6 +178,16 @@ def success_fixture_result(
 
     if first_doc is not None:
         extraction, layout = c14n_projection_from_document(first_doc)
+        # "does not match golden" says nothing about what differs, which is useless when the
+        # goldens match one platform and not another. Write what this run actually produced so
+        # it can be diffed against the checked-in goldens off the runner.
+        if emit_projections is not None:
+            emit_projections.mkdir(parents=True, exist_ok=True)
+            for stage, value in (("extraction", extraction), ("layout", layout)):
+                text = json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+                (emit_projections / f"{entry['id']}.{stage}.json").write_text(
+                    text + "\n", encoding="utf-8"
+                )
         check_equal("extraction", extraction, extraction_golden, failures)
         check_equal("layout", layout, layout_golden, failures)
 
@@ -278,6 +289,7 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                     entry,
                     args.iterations,
                     args.timeout_sec,
+                    args.emit_projections,
                 )
             )
 
@@ -335,6 +347,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--ethos-bin", type=Path, default=ROOT / "target" / "release" / "ethos")
     parser.add_argument("--out", type=Path, default=DEFAULT_RESULTS)
     parser.add_argument("--stdout", action="store_true", help="write report to stdout instead of --out")
+    parser.add_argument(
+        "--emit-projections",
+        type=Path,
+        default=None,
+        help="write each fixture's actual c14n projection here, for diffing against the goldens",
+    )
     parser.add_argument("--iterations", type=int, default=3)
     parser.add_argument("--timeout-sec", type=float, default=30.0)
     args = parser.parse_args(argv)

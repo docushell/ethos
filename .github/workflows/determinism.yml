@@ -76,7 +76,8 @@ jobs:
             python benchmarks/harness/run_fixtures.py \
               --repo-root "${GITHUB_WORKSPACE}" \
               --ethos-bin "${ethos_bin}" \
-              --out "${RUNNER_TEMP}/fixture-baseline.json"
+              --out "${RUNNER_TEMP}/fixture-baseline.json" \
+              --emit-projections "${RUNNER_TEMP}/projections"
             rc=$?
             set -e
             if [ "$rc" -ne 0 ]; then
@@ -97,3 +98,9 @@ jobs:
           else
             echo "deferred: caller-provided PDFium runtime is not configured on this runner"
           fi
+      - name: upload actual projections
+        if: failure() && runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: projections-${{ matrix.os }}
+          path: ${{ runner.temp }}/projections
