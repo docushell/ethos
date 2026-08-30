@@ -47,6 +47,30 @@ function verifyGroundingSupport(binaryPath) {
   return true;
 }
 
+/**
+ * The manifest's cli_version must describe the bytes, not just sit beside them.
+ *
+ * Every other check here compares the manifest against itself: the digests prove the manifest
+ * and the binary agree with each other, never that the binary is the version claimed. That is
+ * exactly the hole 1d23604 fell into — a package labelled 0.6.0 whose vendored CLI reported
+ * ethos 0.5.0, with the full suite green in that state. Nothing else in the tree closes it.
+ */
+function verifyReportedVersion(binaryPath, cliVersion) {
+  const result = spawnSync(binaryPath, ["--version"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  const reported = `${result.stdout || ""}`.trim();
+  const expected = `ethos ${cliVersion}`;
+  if (result.status !== 0 || reported !== expected) {
+    throw new Error(
+      `Binary reports ${JSON.stringify(reported)}, manifest cli_version requires ` +
+        `${JSON.stringify(expected)}: ${binaryPath}`
+    );
+  }
+  return true;
+}
+
 function findEthosBinary(root) {
   const stack = [root];
   while (stack.length > 0) {
@@ -107,6 +131,7 @@ function prepareVendor({
       const sourceBinary = findEthosBinary(tempDir);
       verifyBinaryChecksum(targetKey, target, sourceBinary);
       verifyGroundingSupport(sourceBinary);
+      verifyReportedVersion(sourceBinary, manifest.cli_version);
       const vendorBinary = path.join(vendorDir, target.binary);
       fs.copyFileSync(sourceBinary, vendorBinary);
       fs.chmodSync(vendorBinary, 0o755);
