@@ -37,6 +37,14 @@
   `v0.3.0`-`v0.4.0` use `Release`, `v0.2.0` and `v0.5.0` use `Ethos` — so the schema check now
   accepts either and `check_github_release_metadata.py` owns the exact string against the registry.
 
+- The live v0.5.0 release body and asset list disagreed with the repository. The published body
+  still read `Ethos v0.5.0 release candidate.` — RELEASE_OPERATOR_RUNBOOK.md's "Final GitHub
+  Release Metadata Promotion" step 1 was never performed for v0.5.0 — and is now set from
+  `docs/releases/v0.5.0.md`. The ledger also declared 10 release assets where 16 are published;
+  the six missing entries are the `ethos-full` `.sha256`, `.inventory.json`, and `.smoke.json`
+  sidecars, and `docs/release-state.json` now lists what actually shipped. Neither fact was
+  reachable by any gate that ran.
+
 ## 0.6.0 - 2026-08-30
 
 ### The public surfaces stop describing Ethos as unreleased

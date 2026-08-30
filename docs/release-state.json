@@ -27,16 +27,22 @@
         "Linux x64"
       ],
       "assets": [
-        "ethos-linux-x64.tar.gz",
-        "ethos-linux-x64.tar.gz.sha256",
+        "ethos-full-0.5.0-linux-x64.inventory.json",
+        "ethos-full-0.5.0-linux-x64.smoke.json",
+        "ethos-full-0.5.0-linux-x64.tar.gz",
+        "ethos-full-0.5.0-linux-x64.tar.gz.sha256",
+        "ethos-full-0.5.0-macos-arm64.inventory.json",
+        "ethos-full-0.5.0-macos-arm64.smoke.json",
+        "ethos-full-0.5.0-macos-arm64.tar.gz",
+        "ethos-full-0.5.0-macos-arm64.tar.gz.sha256",
         "ethos-linux-x64.inventory.json",
         "ethos-linux-x64.smoke.json",
-        "ethos-macos-arm64.tar.gz",
-        "ethos-macos-arm64.tar.gz.sha256",
+        "ethos-linux-x64.tar.gz",
+        "ethos-linux-x64.tar.gz.sha256",
         "ethos-macos-arm64.inventory.json",
         "ethos-macos-arm64.smoke.json",
-        "ethos-full-0.5.0-linux-x64.tar.gz",
-        "ethos-full-0.5.0-macos-arm64.tar.gz"
+        "ethos-macos-arm64.tar.gz",
+        "ethos-macos-arm64.tar.gz.sha256"
       ]
     },
     "package_tags": [
