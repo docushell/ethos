@@ -5,6 +5,18 @@
 [![bench](https://github.com/docushell/ethos/actions/workflows/bench.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/bench.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 ![Rust: 1.87+](https://img.shields.io/badge/rust-1.87%2B-orange)
+![status: public beta](https://img.shields.io/badge/status-public--beta-blue)
+
+> **Status: public beta evaluation.**
+> Ethos is a deterministic document evidence layer for source-grounded verification and
+> citation checking across native Ethos JSON and supported foreign parser outputs. The current
+> beta includes the GitHub source repository, Rust library crates `ethos-doc-core`,
+> `ethos-verify`, and `ethos-pdf` at `0.5.0`, the Python `ethos-pdf` wheel at `0.5.0`, the npm
+> `@docushell/ethos-pdf@0.5.0` package, and GitHub Release `v0.5.0` macOS arm64/Linux x64 CLI
+> artifacts. PDFium-backed commands use caller-provided PDFium through
+> `ETHOS_PDFIUM_LIBRARY_PATH`.
+> Current execution status and release-scope notes live in `docs/execution-status.md`;
+> public-release hygiene gates live in `docs/public-release-checklist.md`.
 
 **Ethos checks whether an AI's claims about a document are actually in the document.**
 
