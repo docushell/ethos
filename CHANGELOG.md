@@ -85,6 +85,26 @@
   this change was committed: `double_parse_is_byte_identical_when_pdfium_is_configured` passes,
   and `benchmarks/harness/run_fixtures.py` completes over all 14 fixtures.
 
+### Publication gates run on every pull request
+
+- boundary-exception: `ci.yml` gains a `gates` job running `make light-check` and
+  `make registry-surface-check`, plus the three gate unit tests
+  (`test_check_verify_dependency_boundary.py`, `test_check_golden_change_rationale.py`,
+  `test_validation_record_integrity.py`) that were referenced by no workflow and no Makefile
+  target and had therefore never run anywhere. `fetch-depth: 0` is required because
+  `_lightcheck.base_ref()` resolves `origin/main` and exits without it.
+
+- This is step 2 of `docs/ci-scope.md` §"Restoring the gates", written when the gates were
+  parked and now performed. The parking decision was sound while nothing was published; what it
+  did not survive is that the gates kept drifting while parked. Four real defects were found the
+  first time the parked suite was run against reality, and none of them was caused by having too
+  many gates. `docs/ci-scope.md` records the outcome rather than the intention, including that
+  the prediction behind removing `test_gate_reachability.py` was tested and did not hold.
+
+- What stays parked is what genuinely cannot run on a pull request: live release metadata,
+  readiness, execution status, validation record source, version activation, the `ethos-full`
+  and Windows candidate contracts, and publication dry-run smoke.
+
 ## 0.6.0 - 2026-08-30
 
 ### The public surfaces stop describing Ethos as unreleased
