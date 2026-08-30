@@ -5,7 +5,9 @@
 [![bench](https://github.com/docushell/ethos/actions/workflows/bench.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/bench.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 ![Rust: 1.87+](https://img.shields.io/badge/rust-1.87%2B-orange)
-![status: stable](https://img.shields.io/badge/status-stable-brightgreen)
+[![crates.io](https://img.shields.io/crates/v/ethos-doc-core?label=crates.io)](https://crates.io/crates/ethos-doc-core)
+[![PyPI](https://img.shields.io/pypi/v/ethos-pdf?label=PyPI)](https://pypi.org/project/ethos-pdf/)
+[![npm](https://img.shields.io/npm/v/%40docushell%2Fethos-pdf?label=npm)](https://www.npmjs.com/package/@docushell/ethos-pdf)
 
 > Ethos is a deterministic document evidence layer for source-grounded verification and
 > citation checking across native Ethos JSON and supported foreign parser outputs. It ships as

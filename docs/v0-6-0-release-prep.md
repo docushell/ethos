@@ -187,9 +187,39 @@ v0.6.0 succeeds only if all of these are supported by tests and release evidence
   JavaScript.
 - The JavaScript mapper, Python mapper, and DocuShell acceptance mapper emit byte-identical output
   on two runs for the same input and configuration.
-- A clean-room developer completes emit, check, and verify without undocumented steps. Any
-  required private knowledge blocks release.
+- ~~A clean-room developer completes emit, check, and verify without undocumented steps. Any
+  required private knowledge blocks release.~~ **Removed by decider decision, 2026-08-30.**
+  See §5.1.1.
 - Every new output artifact is byte-identical on repeated runs under identical inputs.
+
+#### 5.1.1 The clean-room criterion, and its removal
+
+The criterion above required a developer who did not implement the feature to complete emit,
+check, and verify using only the published documentation. It was removed on 2026-08-30 by decider
+decision, permanently rather than waived for this release.
+
+Recorded plainly, because removing a success criterion is not the same as meeting it. What the
+criterion protected was discoverability: whether a stranger can follow
+[`writing-a-mapper.md`](writing-a-mapper.md) without knowledge that exists only in the author's
+head. Nothing else in the release evidence covers that.
+
+What remains evidenced is narrower and should not be read as a substitute:
+
+- [`v0-6-0-clean-room-walkthrough.md`](validation/v0-6-0-clean-room-walkthrough.md) establishes
+  that the documented procedure is complete and executable end to end against a parser shape it
+  was not written for. Its author wrote the guide, so it cannot detect knowledge that is on neither
+  the page nor the reader's side.
+- The JavaScript, Python, and DocuShell mappers establish the *capability* claim — that any parser
+  can reach the verifier through one mapper, with no Rust and no PDFium.
+
+The distinction matters and the wording approval already drew it: capability is evidenced,
+documentation quality is not. v0.6.0 therefore ships the Grounding JSON path with its capability
+proven and its discoverability unproven. If integrators report that the guide is unclear, that is
+the untested surface, and the revision clause in
+[`v0-6-0-public-wording-request.md`](validation/v0-6-0-public-wording-request.md) is the route to
+fix it.
+
+Removing the criterion does not narrow what the release claims. It removes a check, not a promise.
 
 ### 5.2 Included scope
 

@@ -105,6 +105,44 @@
   readiness, execution status, validation record source, version activation, the `ethos-full`
   and Windows candidate contracts, and publication dry-run smoke.
 
+### Four decider decisions on the v0.6.0 release lane
+
+- boundary-exception: `docs/validation/v0-6-0-release-promotion.md` names the release operator.
+  Nothing under `docs/validation/` named one, and `RELEASE_OPERATOR_RUNBOOK.md` holds that
+  repository write access alone is not release authority — so every artifact `release.yml` could
+  produce was draft evidence regardless of how green it ran. Four of the runbook's six promotion
+  bindings are recorded; the three that require real artifacts are left blank rather than
+  estimated, because `release.yml` has never completed a run and filling them from a local build
+  would manufacture the evidence the record exists to bind.
+
+- boundary-exception: release-prep §5.1, the clean-room developer criterion, is **removed by
+  decider decision**, permanently rather than waived for this release. Recorded in §5.1.1 with what
+  it protected and what is lost: the capability claim stays evidenced by the JavaScript, Python and
+  DocuShell mappers, and discoverability — whether a stranger can follow the mapper guide — is now
+  evidenced by nothing and is not claimed. `v0-6-0-clean-room-walkthrough.md` and
+  `v0-6-0-public-wording-request.md` are updated so neither reads as satisfying a gate that no
+  longer exists.
+
+- boundary-exception: the validator peak-RSS ceiling is revised from 2 KB to 3 KB per element by
+  decider decision. The 2 KB figure was accepted from shape A measurements alone and never tested
+  against a spans-bearing artifact, which is the only condition under which raising a ceiling to
+  match the code is legitimate. Recorded in the baseline record as a deliberate revision with the
+  shape B evidence, alongside a plain statement that peak RSS is prose and not enforced in code —
+  only the 40 µs wall clock is.
+
+- the README `status: stable` badge is replaced by live crates.io, PyPI, and npm version badges.
+  `stable` was a compatibility promise the repository has not made: no semver or stability policy
+  exists in `README.md`, `SPEC.md`, or `docs/CLAIMS.md`, and v0.6.0's own notes record that
+  `TextNormalization` gains a variant which breaks exhaustive Rust matches. The registry badges
+  resolve to whatever is actually published, so they state a fact, cannot go stale, and remove a
+  per-release edit. No lifecycle adjective is claimed in either direction, so the approval records
+  that withheld production positioning stay true as written.
+
+- `docs/validation/README.md` now indexes all twelve records rather than four, and the DocuShell
+  acceptance commit is cited as `docushell@cc652ec` rather than a bare hex ref that cannot resolve
+  in this repository. Both were surfaced by `validation_record_integrity.py` on its first run
+  inside the new CI `gates` job.
+
 ## 0.6.0 - 2026-08-30
 
 ### The public surfaces stop describing Ethos as unreleased

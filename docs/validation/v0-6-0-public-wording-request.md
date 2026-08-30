@@ -28,8 +28,11 @@ quality**: whether a stranger can follow the guide.
 
 A poor walkthrough result means the guide needs work. It does not make the capability claim false.
 
-The walkthrough still gates **publication**, because release-prep §5.1 makes an undocumented step a
-release blocker. It does not gate this approval.
+The walkthrough gated **publication** when this was written, because release-prep §5.1 made an
+undocumented step a release blocker. That criterion was removed by decider decision on 2026-08-30
+(release-prep §5.1.1), so the walkthrough now gates nothing. This approval was never contingent on
+it, so the approval below stands exactly as written; what changed is that the publication gate
+behind it is gone.
 
 Release-prep §12 requires that exact public wording be separately approved. This document is the
 request. It proposes the minimum wording change v0.6.0 needs, and states plainly what it does not
@@ -121,11 +124,12 @@ what makes the claim credible:
 | --- | --- |
 | Any language can reach the verifier | JavaScript and Python mappers, byte-identical output |
 | No PDFium needed | Full path exercised on a host with no usable PDFium |
-| A stranger can write a mapper | **Pending** — outsider walkthrough |
-| A real consumer uses public surfaces only | DocuShell `cc652ec` |
+| A stranger can write a mapper | **Not evidenced.** The gate requiring it was removed 2026-08-30; see release-prep §5.1.1 |
+| A real consumer uses public surfaces only | DocuShell `docushell@cc652ec` |
 
-The third row is documentation quality, not capability. It gates publication under §5.1 and feeds
-the revision clause above; it does not gate this approval.
+The third row is documentation quality, not capability. It gated publication under §5.1 until that
+criterion was removed on 2026-08-30; it still feeds the revision clause above, and it never gated
+this approval.
 
 ## Decision
 
