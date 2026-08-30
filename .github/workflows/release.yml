@@ -54,7 +54,13 @@ jobs:
       - name: derive candidate version
         id: version
         shell: bash
-        run: echo "value=$(python3 -c \"import tomllib; print(tomllib.load(open('Cargo.toml','rb'))['workspace']['package']['version'])\")" >> "$GITHUB_OUTPUT"
+        # A block scalar, not a plain one. YAML plain scalars do not process `\"` as an escape,
+        # so the backslashes reached bash literally and broke the command substitution's quoting
+        # — `syntax error near unexpected token \'tomllib.load\'`, on every run this step ever had.
+        # The pwsh sibling below was always written this way and always worked.
+        run: |
+          value="$(python3 -c "import tomllib; print(tomllib.load(open('Cargo.toml','rb'))['workspace']['package']['version'])")"
+          echo "value=$value" >> "$GITHUB_OUTPUT"
       - name: assemble draft artifact
         shell: bash
         run: |
