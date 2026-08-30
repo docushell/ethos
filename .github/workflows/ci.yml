@@ -39,6 +39,36 @@ jobs:
         with:
           command: check
 
+  gates:
+    # Publication-safety gates, on every PR instead of only inside `make release-gates`.
+    # docs/ci-scope.md parked these because nothing was being published; the cost of parking
+    # them is that they fail in a batch at release time and read as "the release is blocked
+    # on twenty things". They are the same checks either way — this is only about when.
+    #
+    # fetch-depth: 0 is required: _lightcheck.base_ref() resolves origin/main and SystemExits
+    # without it. On push to main the merge-base equals HEAD, so the diff-scoped members
+    # (check_release_boundary_paths, check_golden_change_rationale) pass vacuously there and
+    # do their real work on pull_request.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: claims, posture, ledger, boundary paths, golden rationale, validation records
+        run: make light-check
+      - name: claims-gate registry surface coverage
+        # Not `make registry-surface-check`: four of its five members are already in
+        # light-check above, and its `npm test` needs `npm ci` and is already run by the
+        # `test` job. This is the one member covered nowhere else.
+        run: python3 .github/scripts/test_claims_gate_registry_surfaces.py
+      - name: gate unit tests
+        # These three test the gate scripts themselves and were referenced by no workflow and
+        # no Makefile target, so they had never run anywhere.
+        run: |
+          python3 .github/scripts/test_check_verify_dependency_boundary.py
+          python3 .github/scripts/test_check_golden_change_rationale.py
+          python3 .github/scripts/test_validation_record_integrity.py
+
   test:
     # unit + fixture tests, c14n idempotence property tests, contract vectors,
     # deterministic-profile pin
@@ -55,6 +85,11 @@ jobs:
         run: make validator-ceiling-check
       - name: fixture manifest validation
         run: python3 fixtures/validate_fixtures.py
+      - name: published Action contract
+        # Reachable from nothing before this. While it was unreachable the Action stayed
+        # pinned to v0.4.0 with v0.4.0 checksums, two releases behind, and the contract test
+        # that would have said so was never executed.
+        run: make ethos-verify-action-contract
       - name: layout evaluator alpha
         run: make layout-evaluator-alpha
       - name: citation emission v1 contract
@@ -90,6 +125,39 @@ jobs:
           code=$?
           set -e
           test "$code" = "1"
+
+  released-cli-action-dogfood:
+    # This validates the current Action wrapper against its checksum-pinned public
+    # CLI. Current-source verifier behavior is covered by the test and determinism jobs.
+    # Deleted in c7d893d during the v0.6.0 work, which left the published Action with no
+    # coverage at all; the test that asserts this job exists was itself unreachable.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Accept the grounded README fixture
+        id: grounded
+        uses: ./actions/verify
+        with:
+          source: schemas/examples/document.example.json
+          citations: examples/verify/native_grounded_citations.json
+          report: target/action-dogfood/grounded.json
+      - name: Reject the fabricated README fixture
+        id: fabricated
+        continue-on-error: true
+        uses: ./actions/verify
+        with:
+          source: schemas/examples/document.example.json
+          citations: examples/verify/native_ungrounded_citations.json
+          report: target/action-dogfood/fabricated.json
+      - name: Assert the expected verification outcomes
+        if: always()
+        shell: bash
+        env:
+          GROUNDED_OUTCOME: ${{ steps.grounded.outcome }}
+          FABRICATED_OUTCOME: ${{ steps.fabricated.outcome }}
+        run: |
+          test "$GROUNDED_OUTCOME" = "success"
+          test "$FABRICATED_OUTCOME" = "failure"
 
   verify-portability:
     # Invariant 4: ethos-verify compiles against the grounding trait module alone and

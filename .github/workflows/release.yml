@@ -8,6 +8,14 @@ on:
   workflow_dispatch: {}
   push:
     tags: ["v*"]
+  # The release lane is the one workflow a tag cannot dry-run. Every red release run so far
+  # was a defect in this file or in the scripts it calls, found only by tagging. Run it on
+  # pull requests that touch the release machinery so those defects surface on the PR.
+  pull_request:
+    paths:
+      - ".github/workflows/release.yml"
+      - ".github/scripts/**"
+      - "scripts/build-*"
 
 jobs:
   preflight:

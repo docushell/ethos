@@ -2,6 +2,204 @@
 
 ## Unreleased
 
+### The release lane becomes testable, and stops checking itself
+
+- boundary-exception: `release.yml` gains a `pull_request` trigger scoped to
+  `.github/workflows/release.yml`, `.github/scripts/**`, and `scripts/build-*`. This workflow has
+  never completed a run, and every red run so far was a defect in the release machinery itself,
+  found only by pushing a tag: a total YAML parse failure, two README wording assertions, and a
+  plain-scalar quoting bug in a step 75cda78 records as having never executed. It was the only
+  workflow in a repository built on testing that was itself untested. The two scripts that read it
+  grep raw text and passed through all four failures.
+
+- boundary-exception: `release-gates` runs `release-live-state-check` in place of
+  `release-state-check`. `check_github_release_metadata.py` is the only gate that compares the
+  declared ledger against the live registry, and `release-live-state-check` was the sole path to
+  it. The parked suite was validating `docs/release-state.json` against `docs/release-state.json`.
+  The target now requires network access and `gh` auth, which is correct for a pre-publish suite
+  whose purpose is to check reality.
+
+- boundary-exception: deletes the frozen-record layer and four self-referential gate scripts.
+  `frozen_record_guards.json` listed exactly one guard, `test_windows_verify_candidate.py`, which
+  the same `release-gates` run already executes at `windows-verify-candidate-contract` and
+  `release.yml` runs a third time. `cargo_manifest_guard.py` and `frozen_record_guard_wiring.py`
+  had zero references tree-wide, and the latter asserted `ci.yml` contains the frozen-record
+  runner, which 94eeb5c had already moved to the Makefile — a false invariant. `test_rag_chunk_alpha.py`
+  and `test_security_report_alpha.py` asserted only that the Makefile recipe invoking them invokes
+  them; neither carried a behavioural assertion. The `rag-chunk-alpha` and `security-report-alpha`
+  targets keep every real check.
+
+- The ledger recorded a GitHub release name the live release does not carry.
+  `docs/release-state.json` declared `Release v0.5.0`; the published release is `Ethos v0.5.0`.
+  `check_release_state.py` required the `Release vX.Y.Z` form, so the ledger was forced into a
+  false statement about a published fact, and the only gate that could have caught it compares
+  against the registry and was never run. Both conventions are published — `v0.1.0`-`v0.1.2` and
+  `v0.3.0`-`v0.4.0` use `Release`, `v0.2.0` and `v0.5.0` use `Ethos` — so the schema check now
+  accepts either and `check_github_release_metadata.py` owns the exact string against the registry.
+
+- The live v0.5.0 release body and asset list disagreed with the repository. The published body
+  still read `Ethos v0.5.0 release candidate.` — RELEASE_OPERATOR_RUNBOOK.md's "Final GitHub
+  Release Metadata Promotion" step 1 was never performed for v0.5.0 — and is now set from
+  `docs/releases/v0.5.0.md`. The ledger also declared 10 release assets where 16 are published;
+  the six missing entries are the `ethos-full` `.sha256`, `.inventory.json`, and `.smoke.json`
+  sidecars, and `docs/release-state.json` now lists what actually shipped. Neither fact was
+  reachable by any gate that ran.
+
+### The published GitHub Action stops shipping two releases behind
+
+- boundary-exception: `actions/verify/action.yml` downloaded
+  `releases/download/v0.4.0/ethos-linux-x64.tar.gz` with v0.4.0 checksums while v0.5.0 was the
+  published release, so every consumer of the Action installed a two-release-old CLI. It is now
+  pinned to v0.5.0.
+
+- `test_action.py` caused this rather than catching it. It derived the expected version from
+  `docs/release-state.json` but hard-coded the two v0.4.0 checksums at `:35-36`, so the test
+  contradicted itself and could never pass — and `make ethos-verify-action-contract` was reachable
+  from nothing, so nobody saw it fail. The checksums are now read from
+  `packages/npm/ethos-pdf/vendor/manifest.json`, the record of the published CLI, which is already
+  boundary-gated. The Action follows the published release with no per-release edit here.
+
+- boundary-exception: restores the `released-cli-action-dogfood` job to `ci.yml`, deleted in
+  c7d893d during the v0.6.0 work. It is the only thing that runs the published Action end to end —
+  accepting the grounded fixture and rejecting the fabricated one — and its absence left the
+  Action with no coverage. The contract target now also runs in the `test` job, so neither the
+  pin nor the job can rot unobserved again.
+
+### The PDF determinism gate stops reporting green while skipping
+
+- boundary-exception: `determinism.yml` configures the profile-pinned PDFium runtime on the two
+  Gate Zero platforms. Its `configured PDFium fixture corpus and double-parse equality` step is
+  guarded on `ETHOS_PDFIUM_LIBRARY_PATH`, and that variable was set nowhere in the repository —
+  `determinism.yml:52` was its only occurrence under `.github/workflows/`. The step therefore took
+  its `else` branch on every run of every platform since it was written, printed
+  `deferred: caller-provided PDFium runtime is not configured on this runner`, and the job
+  reported green. The PDF path, which is the riskiest code in the product, was first exercised at
+  tag time after a live download.
+
+- The fix reuses `scripts/fetch-pdfium.sh` rather than adding machinery: it already downloads the
+  archive pinned in `profiles/ethos-deterministic-v1.json`, verifies its sha256 *before*
+  extraction, and verifies the runtime library sha256 after. It supports exactly the two Gate Zero
+  platforms, so Windows continues to defer, which is what the matrix comment says it should do.
+
+- Both halves of the previously-dead branch were run locally against the pinned runtime before
+  this change was committed: `double_parse_is_byte_identical_when_pdfium_is_configured` passes,
+  and `benchmarks/harness/run_fixtures.py` completes over all 14 fixtures.
+
+### Publication gates run on every pull request
+
+- boundary-exception: `ci.yml` gains a `gates` job running `make light-check` and
+  `make registry-surface-check`, plus the three gate unit tests
+  (`test_check_verify_dependency_boundary.py`, `test_check_golden_change_rationale.py`,
+  `test_validation_record_integrity.py`) that were referenced by no workflow and no Makefile
+  target and had therefore never run anywhere. `fetch-depth: 0` is required because
+  `_lightcheck.base_ref()` resolves `origin/main` and exits without it.
+
+- This is step 2 of `docs/ci-scope.md` §"Restoring the gates", written when the gates were
+  parked and now performed. The parking decision was sound while nothing was published; what it
+  did not survive is that the gates kept drifting while parked. Four real defects were found the
+  first time the parked suite was run against reality, and none of them was caused by having too
+  many gates. `docs/ci-scope.md` records the outcome rather than the intention, including that
+  the prediction behind removing `test_gate_reachability.py` was tested and did not hold.
+
+- What stays parked is what genuinely cannot run on a pull request: live release metadata,
+  readiness, execution status, validation record source, version activation, the `ethos-full`
+  and Windows candidate contracts, and publication dry-run smoke.
+
+### Four decider decisions on the v0.6.0 release lane
+
+- boundary-exception: `docs/validation/v0-6-0-release-promotion.md` names the release operator.
+  Nothing under `docs/validation/` named one, and `RELEASE_OPERATOR_RUNBOOK.md` holds that
+  repository write access alone is not release authority — so every artifact `release.yml` could
+  produce was draft evidence regardless of how green it ran. Four of the runbook's six promotion
+  bindings are recorded; the three that require real artifacts are left blank rather than
+  estimated, because `release.yml` has never completed a run and filling them from a local build
+  would manufacture the evidence the record exists to bind.
+
+- boundary-exception: release-prep §5.1, the clean-room developer criterion, is **removed by
+  decider decision**, permanently rather than waived for this release. Recorded in §5.1.1 with what
+  it protected and what is lost: the capability claim stays evidenced by the JavaScript, Python and
+  DocuShell mappers, and discoverability — whether a stranger can follow the mapper guide — is now
+  evidenced by nothing and is not claimed. `v0-6-0-clean-room-walkthrough.md` and
+  `v0-6-0-public-wording-request.md` are updated so neither reads as satisfying a gate that no
+  longer exists.
+
+- boundary-exception: the validator peak-RSS ceiling is revised from 2 KB to 3 KB per element by
+  decider decision. The 2 KB figure was accepted from shape A measurements alone and never tested
+  against a spans-bearing artifact, which is the only condition under which raising a ceiling to
+  match the code is legitimate. Recorded in the baseline record as a deliberate revision with the
+  shape B evidence, alongside a plain statement that peak RSS is prose and not enforced in code —
+  only the 40 µs wall clock is.
+
+- the README `status: stable` badge is replaced by live crates.io, PyPI, and npm version badges.
+  `stable` was a compatibility promise the repository has not made: no semver or stability policy
+  exists in `README.md`, `SPEC.md`, or `docs/CLAIMS.md`, and v0.6.0's own notes record that
+  `TextNormalization` gains a variant which breaks exhaustive Rust matches. The registry badges
+  resolve to whatever is actually published, so they state a fact, cannot go stale, and remove a
+  per-release edit. No lifecycle adjective is claimed in either direction, so the approval records
+  that withheld production positioning stay true as written.
+
+### The two fixtures the PDF determinism gate was hiding
+
+- golden-change: `fixtures/synthetic/rotation-90/extraction.json` and `layout.json` are
+  regenerated. The goldens were written 2026-06-16 and record text coordinates with page rotation
+  **not** applied. `c7d893d` applied it — "apply page rotation when mapping PDFium text
+  coordinates" — and the goldens were never regenerated, so every box in them is the pre-fix
+  transpose. Nothing noticed, because the only check that compares them is the step that had been
+  skipping.
+
+  Verified as a stale golden rather than a regression before regenerating. The fixture's MediaBox
+  is `[0 0 144 300]` with `/Rotate 90`, so the display box is 300×144 and `pages` reports exactly
+  that, rotation applied, as `PageSpace`'s contract requires. The transform checks out against the
+  content stream: `36 72 Td (Rotate Ninety) Tj` at 18pt gives `y_disp = x_user` starting at 37.42
+  for a baseline at x=36, and `x_disp = y_user` spanning 71.80-84.89 for a baseline at y=72.
+
+  One observation worth recording rather than fixing here: that text is about 109pt wide from
+  x=36, so it runs to x≈144.88 and overflows its own 144pt-wide MediaBox. Legal PDF. Before the
+  rotation fix the overflow sat on the x axis against a 300pt width and was invisible; it now sits
+  on the y axis against a 144pt height. So Ethos can emit, from a legal PDF, geometry that
+  `grounding_json.rs` would reject as `invalid_bbox` — "submit a positive bounding box within its
+  page". That tension predates this release and is not narrowed by it.
+
+- `benchmarks/harness/run_fixtures.py` honours a per-fixture `env` block, and
+  `fixtures/failure/memory-limit-simulated/fixture.json` declares the one it needs. That fixture
+  expects `memory_limit_exceeded`, which is reachable only through the debug-build hook at
+  `worker.rs:846` behind `ETHOS_INTERNAL_TEST_PDFIUM_WORKER_MEMORY_LIMIT`. The harness never set
+  it, so the fixture declared an `expected_error` the harness could not induce and failed
+  permanently while saying nothing about the product. Data-driven rather than special-cased, so
+  the next such fixture declares its own hook.
+
+  With both fixed the corpus is 14/14 and `run_fixtures.py` exits 0.
+
+### Reading order stops depending on platform-sensitive geometry
+
+- Layout ordering keys off the span's `origin_locator` baseline instead of its `bbox` centre.
+  `span_line_order` sorted primarily on `center_y`, derived from `bbox`. The determinism
+  contract excludes `bbox` and `bboxes` from the stable payload projection precisely because
+  "PDFium reports platform-sensitive rectangle dimensions for otherwise identical text", while
+  `origin_locator` is fingerprint-critical and stable. Ordering on the excluded field fed
+  platform-sensitive geometry straight back into `span_refs`, element `text`, and element
+  `type` — all of which are *in* the stable projection.
+
+  Measured, not assumed. On the pinned chromium/7881 PDFium, `synthetic-list-items` produced
+  `"- Verify cited evidence"` typed `list_item` on macOS arm64 and `"Verify cited evidence -"`
+  typed `text_block` on Linux x64, because the bullet's bbox centre lands 1 quantum below the
+  word's on macOS and 23 above it on Linux. The baseline origins are byte-identical on both
+  platforms: `[7200, 7200]` and `[7933, 7200]`. Per the contract's own words a stable-projection
+  difference across supported platforms is a release-blocking bug, so this was one.
+
+  Sixteen of eighteen projections differed across the two platforms; fifteen differed only in
+  `bbox`/`bboxes`, which the contract permits, and `origin_locator` was identical across all
+  forty spans. This was the one real divergence.
+
+  The change rewrites no goldens: macOS projections are byte-identical before and after, because
+  ordering by baseline agrees with what the bbox centre happened to produce there. Spans without
+  a locator — every non-PDF source — keep the bbox-centre fallback.
+
+- `docs/validation/README.md` now indexes all twelve records rather than four, and the DocuShell
+  acceptance commit is cited as `docushell@cc652ec` rather than a bare hex ref that cannot resolve
+  in this repository. Both were surfaced by `validation_record_integrity.py` on its first run
+  inside the new CI `gates` job.
+
 ## 0.6.0 - 2026-08-30
 
 ### The public surfaces stop describing Ethos as unreleased

@@ -1,7 +1,8 @@
 # v0.6.0 Grounding JSON Validator Resource Baseline
 
-Status: **accepted** (2026-07-31). Ceiling set at 40 µs and 2 KB per element. Frozen structural
-limits unchanged; the working set is documented rather than reduced.
+Status: **accepted** (2026-07-31); **peak-RSS ceiling revised to 3 KB per element (2026-08-30)**.
+Ceiling is 40 µs and 3 KB per element. Frozen structural limits unchanged; the working set is
+documented rather than reduced.
 
 Release-prep §12 asks for resource and performance evidence showing no unacceptable regression
 against the frozen v0.5.0 verification baseline, with a numeric ceiling set before implementation
@@ -105,16 +106,16 @@ Replaces the §12 v0.5.0 regression comparison with a bounded per-element resour
 validator. Measured values with roughly 1.5× headroom:
 
 - **40 µs per element wall clock**, release profile
-- **2 KB per element peak RSS**
+- **3 KB per element peak RSS** (revised 2026-08-30; originally 2 KB — see Revisions)
 
-At the frozen 1,000,000-element limit that permits 40 s and 2 GB.
+At the frozen 1,000,000-element limit that permits 40 s and 3 GB.
 
 **Wall clock: holds on both shapes.** 26.5 µs/element (shape A) and 13.0 µs/element (shape B),
 against the 40 µs ceiling.
 
-**Peak RSS: holds on shape A, exceeded on shape B.** 1.29 KB/element against the 2 KB ceiling for
-shape A; **2.66 KB/element for shape B, which is 33% over.** The ceiling was set from shape A
-measurements and no spans-bearing artifact was measured before it was accepted. See Outstanding.
+**Peak RSS: holds on both shapes against the revised ceiling.** 1.29 KB/element (shape A) and
+2.66 KB/element (shape B), against the 3 KB ceiling. Shape B exceeded the original 2 KB figure by
+33%, which is what forced the revision recorded below.
 
 Wall clock is enforced by two tests in `crates/ethos-core/src/grounding_json.rs` —
 `validator_stays_within_the_accepted_resource_ceiling` (shape A) and
@@ -135,20 +136,39 @@ representative while staying fast enough to run on every PR.
 Peak RSS is not asserted in-process; measuring it portably would cost more than it proves. It is
 recorded here and re-measured on any change to the strict parser.
 
-## Outstanding
+## Revisions
 
-**The 2 KB/element peak-RSS ceiling is exceeded by shape B (2.66 KB/element, 33% over).** The
-ceiling was accepted on 2026-07-31 from shape A measurements only; no spans-bearing artifact was
-measured before acceptance. The wall-clock half of the ceiling holds on both shapes.
+**2026-08-30 — peak-RSS ceiling raised from 2 KB to 3 KB per element. Decided by the decider;
+recorded as a deliberate revision, not absorbed.**
 
-This needs a decision, not a silent re-baseline. The options are to raise the RSS ceiling to
-roughly 3 KB/element with the shape B evidence above, or to treat 2 KB as binding and reduce the
-working set, which means the streaming or two-pass validation already recorded as a v0.7.0 input.
-Raising a ceiling to match what the code does is only legitimate when the number was never
-measured against the relevant shape — which is the case here, but it should be recorded as a
-deliberate revision rather than absorbed.
+The 2 KB figure was accepted on 2026-07-31 from shape A measurements alone. No spans-bearing
+artifact was measured before acceptance, so the number was never tested against the shape it now
+governs. Shape B measures 2.66 KB/element — 33% over — and the wall-clock half held on both shapes
+throughout.
 
-Until that decision lands, `docs/writing-a-mapper.md` §9 publishes the shape B numbers so
-integrators size workers against the larger figure.
+The alternative was to treat 2 KB as binding and reduce the working set through streaming or
+two-pass validation. That work stays recorded as a v0.7.0 input; it was not done here and this
+revision does not claim it was.
 
-§12's resource and performance evidence requirement is otherwise met.
+Raising a ceiling to match what the code does is legitimate only when the number was never
+measured against the relevant shape. That condition holds here and is the whole basis of the
+decision. It does not license a future revision on any other grounds: a ceiling that was measured
+against the shape it governs and is then exceeded is a regression, and the answer to a regression
+is the code, not the number.
+
+3 KB carries roughly 1.13× headroom over shape B, tighter than the ~1.5× the original figures
+used. That is deliberate. The measured value is now known rather than assumed, so the headroom
+covers measurement noise rather than an unmeasured shape.
+
+`docs/writing-a-mapper.md` §9 already publishes the shape B numbers, so integrators have been
+sizing workers against the larger figure since before this revision.
+
+§12's resource and performance evidence requirement is met.
+
+## Enforcement gap, recorded
+
+Wall clock is enforced in code. Peak RSS is not, and this revision does not change that: the
+figure above is prose, re-measured by hand when the strict parser changes. `grounding_json.rs`
+asserts `CEILING_MICROS_PER_ELEMENT` and nothing else, so a peak-RSS regression would not fail a
+build. Measuring RSS portably in-process was judged to cost more than it proves; that judgement is
+unchanged, but the consequence should be stated plainly rather than left to be discovered.

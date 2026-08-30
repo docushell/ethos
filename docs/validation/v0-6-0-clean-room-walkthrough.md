@@ -1,6 +1,10 @@
 # v0.6.0 Clean-Room Mapper Walkthrough
 
-Status: **procedure validated; independent-developer gate still outstanding** (2026-07-30).
+Status: **procedure validated** (2026-07-30). The independent-developer gate this record was
+written against was **removed by decider decision on 2026-08-30**, so it is no longer outstanding
+— it no longer exists. See release-prep §5.1.1. The honest limitation below is unchanged and is
+the reason that removal is worth reading: this record does not establish discoverability, and
+after the removal nothing else does either.
 
 ## What this records
 

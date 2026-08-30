@@ -46,18 +46,72 @@ jobs:
             --repo-root "${GITHUB_WORKSPACE}" \
             --ethos-bin "${ethos_bin}" \
             --out-dir "${RUNNER_TEMP}/verify-alpha"
+      # Without this the step below always took its else branch: nothing in this repository
+      # set ETHOS_PDFIUM_LIBRARY_PATH, so the PDF corpus and the double-parse equality test
+      # printed "deferred" and the job reported green. The riskiest path in the product was
+      # first exercised at tag time. scripts/fetch-pdfium.sh verifies the pinned archive hash
+      # before extraction and the runtime library hash after it, and supports exactly the two
+      # Gate Zero platforms; Windows keeps deferring, as the matrix comment says it should.
+      - name: configure the profile-pinned PDFium runtime
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/fetch-pdfium.sh "${RUNNER_TEMP}/pdfium"
+          if [ "${RUNNER_OS}" = "macOS" ]; then
+            lib="${RUNNER_TEMP}/pdfium/lib/libpdfium.dylib"
+          else
+            lib="${RUNNER_TEMP}/pdfium/lib/libpdfium.so"
+          fi
+          echo "ETHOS_PDFIUM_LIBRARY_PATH=${lib}" >> "$GITHUB_ENV"
       - name: configured PDFium fixture corpus and double-parse equality
         shell: bash
         run: |
           if [ -n "${ETHOS_PDFIUM_LIBRARY_PATH:-}" ] && [ -f "${ETHOS_PDFIUM_LIBRARY_PATH:-}" ]; then
             ethos_bin="${GITHUB_WORKSPACE}/target/debug/ethos"
             if [ "${RUNNER_OS}" = "Windows" ]; then ethos_bin="${ethos_bin}.exe"; fi
+            # run_fixtures.py records failures in its JSON and prints nothing, so a red
+            # step gave no clue which fixture broke. Report them before exiting.
+            # The checked-in goldens were generated on macOS arm64 and carry bbox values.
+            # docs/determinism-contract.md computes the stable payload projection "after
+            # recursively excluding object keys named bbox and bboxes", because PDFium reports
+            # platform-sensitive rectangle dimensions for otherwise identical text. Comparing
+            # bbox off the golden platform therefore asserts more than the contract guarantees.
+            # macOS compares everything; the other platforms compare what is actually promised.
+            compare_scope=""
+            if [ "${RUNNER_OS}" != "macOS" ]; then
+              compare_scope="--stable-only"
+            fi
+            set +e
             python benchmarks/harness/run_fixtures.py \
               --repo-root "${GITHUB_WORKSPACE}" \
               --ethos-bin "${ethos_bin}" \
-              --out "${RUNNER_TEMP}/fixture-baseline.json"
+              --out "${RUNNER_TEMP}/fixture-baseline.json" \
+              --emit-projections "${RUNNER_TEMP}/projections" \
+              ${compare_scope}
+            rc=$?
+            set -e
+            if [ "$rc" -ne 0 ]; then
+              python - "${RUNNER_TEMP}/fixture-baseline.json" <<'PY'
+          import json, sys
+          d = json.load(open(sys.argv[1]))
+          print("status:", d.get("status"))
+          for f in d.get("fixtures", []):
+              if f.get("status") == "fail":
+                  print(f"FAIL {f.get('id')}")
+                  for reason in f.get("failures", []):
+                      print(f"     {reason}")
+          PY
+              exit "$rc"
+            fi
             cargo test --locked -p ethos-cli --test pdf_parse \
               double_parse_is_byte_identical_when_pdfium_is_configured -- --exact --nocapture
           else
             echo "deferred: caller-provided PDFium runtime is not configured on this runner"
           fi
+      - name: upload actual projections
+        if: failure() && runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: projections-${{ matrix.os }}
+          path: ${{ runner.temp }}/projections

@@ -9,6 +9,9 @@
     "worker memory-limit stable error-envelope relay",
     "memory_limit_exceeded exit code"
   ],
+  "env": {
+    "ETHOS_INTERNAL_TEST_PDFIUM_WORKER_MEMORY_LIMIT": "1"
+  },
   "expected_error": {
     "code": "memory_limit_exceeded",
     "message": "parse exceeded memory limit"

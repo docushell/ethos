@@ -15,7 +15,7 @@ LAYOUT_EVALUATOR_OUT ?= $(ROOT)/target/layout-evaluator-alpha
 
 .PHONY: verify-alpha verify-alpha-tree rag-chunk-alpha security-report-alpha evidence-anchor-v1-contract citation-emission-v1-contract rag-framework-examples trust-benchmark-corpus ethos-full-candidate-contract windows-verify-candidate-contract ethos-verify-action-contract light-check package-publication-dry-run-smoke verify-rendered-crops compare-rendered-crops layout-evaluator-alpha python-surface-test release-hygiene release-advisory third-party-license-manifest release-notice-draft
 .PHONY: app-answer-release-contract app-answer-release-demo
-.PHONY: frozen-record-guards release-state-check release-live-state-check registry-surface-check
+.PHONY: release-state-check release-live-state-check registry-surface-check
 .PHONY: validator-ceiling-check
 .PHONY: release-gates
 
@@ -25,11 +25,14 @@ $(ETHOS_BIN):
 # Publication gates. Parked out of CI during stealth (docs/ci-scope.md) because nothing
 # is being published; run this before any real publish. Keep every parked gate reachable
 # from here so nothing rots unnoticed.
+#
+# This calls release-live-state-check, not release-state-check: check_github_release_metadata.py
+# is the only gate comparing the declared ledger against the real registry, and that target is
+# the sole path to it. Requires network access and gh auth.
 release-gates:
 	$(MAKE) light-check
 	$(MAKE) registry-surface-check
-	$(MAKE) release-state-check
-	$(MAKE) frozen-record-guards
+	$(MAKE) release-live-state-check
 	$(MAKE) release-hygiene
 	$(MAKE) ethos-full-candidate-contract
 	$(MAKE) windows-verify-candidate-contract
@@ -61,14 +64,12 @@ verify-alpha: $(ETHOS_BIN)
 rag-chunk-alpha:
 	cargo test --locked -p ethos-cli --test rag
 	$(PYTHON) schemas/validate_examples.py
-	$(PYTHON) .github/scripts/test_rag_chunk_alpha.py
 	git diff --check
 
 security-report-alpha:
 	cargo test --locked -p ethos-cli --test security_report
 	$(PYTHON) schemas/validate_examples.py
 	$(PYTHON) schemas/test_security_report_validation.py
-	$(PYTHON) .github/scripts/test_security_report_alpha.py
 	git diff --check
 
 evidence-anchor-v1-contract:
@@ -144,9 +145,6 @@ release-state-check:
 
 release-live-state-check: release-state-check
 	$(PYTHON) .github/scripts/check_github_release_metadata.py --repo docushell/ethos
-
-frozen-record-guards:
-	$(PYTHON) .github/scripts/run_frozen_record_guards.py --python $(PYTHON)
 
 package-publication-dry-run-smoke:
 	cargo package --locked --offline -p ethos-doc-core --allow-dirty --no-verify

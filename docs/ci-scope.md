@@ -6,8 +6,16 @@ Status: active. Governs what runs on every PR and what is deliberately parked.
 
 **CI enforces product correctness and architectural invariants. Nothing else.**
 
-Publication gates do not run on PRs while Ethos is pre-publication. They are parked
-behind `make release-gates` and run manually before any real publish.
+Publication gates that protect public statements run on every PR, in the `gates` job.
+Gates that need release artifacts, a live registry, or a candidate build stay parked behind
+`make release-gates` and run before any real publish.
+
+The split moved in the direction "Restoring the gates" below prescribes. What forced it was
+not policy but evidence: while parked, the gates did not stay still. The published GitHub
+Action drifted two releases behind its own contract test, `docs/release-state.json` disagreed
+with the live release in three places, and the PDF determinism step reported green while
+skipping. Every one of those was invisible because the check that would have caught it was
+unreachable, and every one surfaced within an hour of making them reachable again.
 
 This is a deliberate scope decision, not decay. Before it, CI ran 81 steps across a
 269-line workflow, and roughly two thirds of the scripts under `.github/scripts/`
@@ -27,6 +35,7 @@ not worth paying while nothing is published.
 | `verify-portability` | invariant 4 — `ethos-verify` builds against the grounding trait alone, with no parser internals in its tree |
 | `schema-validate` | published schemas validate their examples |
 | `no-network-runtime` | invariant 5c — the CLI runs with zero egress under a network-denied namespace |
+| `gates` | public claims and wording, posture, ledger consistency, boundary paths, golden-change rationale, validation records, registry surfaces |
 | `dco` | sign-offs on every commit |
 
 The determinism workflow (`determinism.yml`) is separate and unchanged. Byte-equality
@@ -34,13 +43,18 @@ goldens are not negotiable and never move into this document's scope decision.
 
 ## What is parked
 
-Everything under `make release-gates`: release state, GitHub release metadata, registry
-source consistency, claims and public-wording gates, boundary paths, frozen closed-lane
-records, readiness, execution status, validation record source, version activation,
-candidate contracts, and publication dry-run smoke.
+What is left under `make release-gates` is what genuinely cannot run on a PR: live GitHub
+release metadata, readiness, execution status, validation record source, version activation,
+the `ethos-full` and Windows candidate contracts, and publication dry-run smoke. These need a
+published registry, a release artifact, or a candidate build.
 
-`make release-gates` is the single home for these. If you park another gate, add it there
-in the same commit so it stays findable.
+`make release-gates` is still the single home for those, and it now calls
+`release-live-state-check` rather than `release-state-check`, so it compares the ledger against
+the real registry instead of against itself. If you park another gate, add it there in the same
+commit so it stays findable. If a gate can run on a PR, it belongs in `gates` instead.
+
+The frozen closed-lane record layer is gone. Its manifest listed one guard that the same suite
+already ran twice elsewhere.
 
 ## Why `test_gate_reachability.py` was removed
 
@@ -50,15 +64,25 @@ rotted for months. But it enforces "every gate runs on every PR," which is the e
 policy this document changes. Parked gates are now reachable from one target instead,
 and that target is the thing to check.
 
+Recorded honestly, because the prediction was tested and the guard was right: within three
+weeks of its removal, `cargo_manifest_guard.py` and `frozen_record_guard_wiring.py` had zero
+references tree-wide, `make ethos-verify-action-contract` and
+`make app-answer-release-demo` had rotted into failure, and the published Action was two
+releases behind. "That target is the thing to check" only works if someone checks it.
+
 ## Restoring the gates
 
-Exiting stealth is the trigger. When Ethos publishes again:
+Exiting stealth was the trigger, and v0.6.0 fired it.
 
-1. Run `make release-gates` and fix whatever has drifted.
-2. Move the claims and wording gates back into CI first. They protect public statements
-   and public statements are the thing that returns.
-3. Decide then whether reachability enforcement comes back, and if so, scope it to the
-   keeper set rather than to every script in the tree.
+1. **Done.** `make release-gates` was run and four real defects were fixed: the v0.5.0 release
+   body, the declared asset list, the declared release name, and the published GitHub Action's
+   version pin.
+2. **Done.** The claims and wording gates are back in CI, in `gates`. They protect public
+   statements and public statements are the thing that returned.
+3. **Open.** Whether reachability enforcement comes back. The case for it is stronger than
+   when `test_gate_reachability.py` was removed: three weeks after that deletion, six scripts
+   had zero references tree-wide and two `make` targets had rotted into failure without anyone
+   noticing. If it returns, scope it to the keeper set rather than to every script in the tree.
 
 ## Closed-milestone guards
 

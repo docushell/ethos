@@ -43,7 +43,6 @@ HEAVY_EXACT = {
     "docs/pdfium-manual-setup.md",
     "docs/release-artifact-notices.md",
     "docs/RELEASE_OPERATOR_RUNBOOK.md",
-    ".github/scripts/frozen_record_guards.json",
     "packages/npm/ethos-pdf/package.json",
     "packages/npm/ethos-pdf/vendor/manifest.json",
 }

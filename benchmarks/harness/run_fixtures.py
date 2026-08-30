@@ -100,12 +100,44 @@ def c14n_projection_from_document(doc: dict[str, Any]) -> tuple[dict[str, Any], 
     return extraction, layout
 
 
-def check_equal(name: str, actual: Any, expected: Any, failures: list[str]) -> None:
+def strip_unstable_geometry(value: Any) -> Any:
+    """Drop `bbox`/`bboxes`, recursively — the stable payload projection of the contract.
+
+    docs/determinism-contract.md computes the stable payload projection "after recursively
+    excluding object keys named `bbox` and `bboxes`", because "PDFium reports platform-sensitive
+    rectangle dimensions for otherwise identical text". The guarantee is over that projection.
+    """
+    if isinstance(value, dict):
+        return {k: strip_unstable_geometry(v) for k, v in value.items() if k not in ("bbox", "bboxes")}
+    if isinstance(value, list):
+        return [strip_unstable_geometry(v) for v in value]
+    return value
+
+
+def check_equal(
+    name: str, actual: Any, expected: Any, failures: list[str], stable_only: bool = False
+) -> None:
+    if stable_only:
+        actual = strip_unstable_geometry(actual)
+        expected = strip_unstable_geometry(expected)
     if actual != expected:
-        failures.append(f"{name} does not match golden")
+        suffix = " (stable projection)" if stable_only else ""
+        failures.append(f"{name} does not match golden{suffix}")
 
 
-def run_command(args: list[str], timeout_sec: float) -> tuple[subprocess.CompletedProcess[bytes] | None, float, str | None]:
+def run_command(
+    args: list[str],
+    timeout_sec: float,
+    env_overlay: dict[str, str] | None = None,
+) -> tuple[subprocess.CompletedProcess[bytes] | None, float, str | None]:
+    # Some failure fixtures describe an error only reachable through a debug-build hook —
+    # a simulated worker memory limit, for one. Without a way to set that variable the
+    # fixture declares an `expected_error` the harness can never induce, so it fails
+    # permanently and says nothing about the product. The fixture declares its own env.
+    env = None
+    if env_overlay:
+        env = dict(os.environ)
+        env.update(env_overlay)
     start = time.perf_counter()
     try:
         completed = subprocess.run(
@@ -114,6 +146,7 @@ def run_command(args: list[str], timeout_sec: float) -> tuple[subprocess.Complet
             stderr=subprocess.PIPE,
             timeout=timeout_sec,
             check=False,
+            env=env,
         )
         return completed, (time.perf_counter() - start) * 1000.0, None
     except subprocess.TimeoutExpired:
@@ -126,6 +159,8 @@ def success_fixture_result(
     entry: dict[str, Any],
     iterations: int,
     timeout_sec: float,
+    emit_projections: Path | None = None,
+    stable_only: bool = False,
 ) -> dict[str, Any]:
     fixture_file = fixtures_root / entry["file"]
     fixture_dir = fixture_file.parent
@@ -164,8 +199,18 @@ def success_fixture_result(
 
     if first_doc is not None:
         extraction, layout = c14n_projection_from_document(first_doc)
-        check_equal("extraction", extraction, extraction_golden, failures)
-        check_equal("layout", layout, layout_golden, failures)
+        # "does not match golden" says nothing about what differs, which is useless when the
+        # goldens match one platform and not another. Write what this run actually produced so
+        # it can be diffed against the checked-in goldens off the runner.
+        if emit_projections is not None:
+            emit_projections.mkdir(parents=True, exist_ok=True)
+            for stage, value in (("extraction", extraction), ("layout", layout)):
+                text = json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+                (emit_projections / f"{entry['id']}.{stage}.json").write_text(
+                    text + "\n", encoding="utf-8"
+                )
+        check_equal("extraction", extraction, extraction_golden, failures, stable_only)
+        check_equal("layout", layout, layout_golden, failures, stable_only)
 
     pages = len(first_doc["payload"]["pages"]) if first_doc is not None else entry["pages"]
     p50 = percentile(durations, 0.50)
@@ -205,6 +250,7 @@ def failure_fixture_result(
     completed, duration_ms, timeout = run_command(
         [str(ethos_bin), "doc", "parse", str(fixture_file), "--format", "json"],
         timeout_sec,
+        metadata.get("env"),
     )
     envelope: dict[str, Any] | None = None
     if timeout is not None:
@@ -264,6 +310,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                     entry,
                     args.iterations,
                     args.timeout_sec,
+                    args.emit_projections,
+                    args.stable_only,
                 )
             )
 
@@ -321,6 +369,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--ethos-bin", type=Path, default=ROOT / "target" / "release" / "ethos")
     parser.add_argument("--out", type=Path, default=DEFAULT_RESULTS)
     parser.add_argument("--stdout", action="store_true", help="write report to stdout instead of --out")
+    parser.add_argument(
+        "--emit-projections",
+        type=Path,
+        default=None,
+        help="write each fixture's actual c14n projection here, for diffing against the goldens",
+    )
+    parser.add_argument(
+        "--stable-only",
+        action="store_true",
+        help=(
+            "compare the contract's stable payload projection, excluding bbox/bboxes. "
+            "Required off the platform the goldens were generated on, because bbox is "
+            "platform-sensitive by the contract's own statement."
+        ),
+    )
     parser.add_argument("--iterations", type=int, default=3)
     parser.add_argument("--timeout-sec", type=float, default=30.0)
     args = parser.parse_args(argv)
