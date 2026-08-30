@@ -301,7 +301,7 @@ export ETHOS_PDFIUM_LIBRARY_PATH=/absolute/path/to/libpdfium.dylib
 ./target/debug/ethos doc parse fixtures/synthetic/simple-text/document.pdf --format text
 ```
 
-The fixture is synthetic and born-digital. This is a smoke path, not a benchmark or a
+The fixture is synthetic and born-digital. This is an evaluation smoke path, not a benchmark or a
 claim about broader PDF, OCR, table, production, hosted, or bundled-PDFium support.
 
 ## Minimal end-to-end example
