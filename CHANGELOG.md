@@ -46,6 +46,18 @@
   the Action downloads "the fixed v0.4.0 Linux x64 release archive" — three releases stale, and
   asserted by nothing — and is now version-neutral.
 
+- **The published GitHub Action was broken by v0.6.0 and is fixed here.** `run_verify.py` read
+  `checks` at the top level of the verification report. Since 0.6.0 every verdict-bearing command
+  emits an in-toto Statement and that report is its `predicate` — `README.md` says so under
+  "Upgrading from 0.5" — so the Action failed with `verification report must contain a checks
+  array` against its own pinned CLI. It now unwraps the statement when present and reads the bare
+  report otherwise, detected by shape rather than version, so it works against both 0.5.x and
+  0.6.x. Surfaced only because the Action pin moved to v0.6.0 in this change and `ci.yml`'s
+  `released-cli-action-dogfood` actually executes it; no test covered the report shape.
+
+- `test_npm_binary_package_scaffold.py` derives the published npm version from the ledger and the
+  vendored CLI version from the payload manifest, rather than transcribing either.
+
 ### The npm payload carries the v0.6.0 CLI
 
 - boundary-exception: refresh the v0.6.0 npm B payload from frozen core-A. Both vendored
