@@ -2,6 +2,50 @@
 
 ## Unreleased
 
+### v0.6.0 publication closeout
+
+- boundary-exception: `docs/release-state.json` records 0.6.0 as published. `release.version`
+  moves to `0.6.0`, `published_cli` carries the published archive and binary digests for both
+  targets, `github_release` describes the live release and its 16 assets, `package_tags` names the
+  0.6.0 triple, and every `closed_lanes` entry points at the new closeout record. All six surfaces
+  were verified against the live registries before this landed, not asserted from the tree.
+
+- boundary-exception: install pins across `README.md`, `python/README.md`, `python/QUICKSTART.md`,
+  the two npm surfaces, and `docs/public-boundary-claims.json` move to `0.6.0`. This is the exact
+  wording packet approved on 2026-07-31, applied at publication, which is the only point at which
+  it was authorised to land.
+
+- The live GitHub Release body still read `This release prepares:`, `The intended v0.6.0 release
+  surfaces are:`, and listed both archive checksums as `pending — recorded here from the approved
+  archives before publication`. `docs/releases/v0.6.0.md` is the canonical body, so it is corrected
+  to published tense with the four real digests, and the corrected text is pushed to the release.
+  This is the same defect this CHANGELOG records for v0.5.0, whose body read `release candidate`
+  until it was retrofitted; it recurred because the notes were written before publication and
+  nothing rereads them at publication time.
+
+- The release notes now state that the eight published `*.inventory.json` sidecars still read
+  `draft_not_release_ready`. `write_release_artifact_inventory.py` hard-codes that value and cannot
+  describe an approved artifact, so without the caveat the machine-readable evidence attached to
+  the release contradicts the release itself.
+
+- boundary-exception: `test_v0_6_0_version_activation.py` is retired and replaced by
+  `test_version_activation_lockstep.py`, which reads the activated and published versions from the
+  ledger instead of hard-coding them. It was the sixth hand-written generation of one gate, and its
+  premise — that 0.6.0 is activated but unpublished — is now false. Both durable assertions are
+  preserved: core metadata moving in lockstep, and the npm payload's four version fields moving as
+  one set with a recorded boundary exception. The second is the guard that forced `1d23604`'s
+  revert, and retiring it without replacement would have reopened that defect.
+
+- `test_public_surface_posture.py` derives its install literals from the ledger rather than
+  transcribing them, and gains exact-set assertions that no install command in `README.md` names
+  any version other than the published one. The retired module held the only negative assertions
+  against stale install strings; without a replacement a leftover `0.5.0` pin would have passed
+  every gate.
+
+- The published GitHub Action pin follows the ledger to `v0.6.0`. `actions/verify/README.md` said
+  the Action downloads "the fixed v0.4.0 Linux x64 release archive" — three releases stale, and
+  asserted by nothing — and is now version-neutral.
+
 ### The npm payload carries the v0.6.0 CLI
 
 - boundary-exception: refresh the v0.6.0 npm B payload from frozen core-A. Both vendored

@@ -7,6 +7,7 @@ summary. Completed per-lane historical validation records were retired.
 - [v0.4.0 release closeout summary](v0-4-0-release-closeout-summary.md)
 - [v0.5.0 release closeout summary](v0-5-0-release-closeout-summary.md)
 - [NIP-5.2 ethos-full build evidence](nip-5-2-ethos-full-build-evidence-2026-07-20.md)
+- [v0.6.0 release closeout summary](v0-6-0-release-closeout-summary.md)
 - [v0.6.0 clean-room mapper walkthrough](v0-6-0-clean-room-walkthrough.md)
 - [v0.6.0 DocuShell consumer acceptance](v0-6-0-docushell-acceptance.md)
 - [v0.6.0 double-run determinism evidence](v0-6-0-double-run-determinism.md)

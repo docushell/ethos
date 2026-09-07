@@ -23,10 +23,10 @@ PDFium dynamic library.
 Install the current published npm package with:
 
 ```sh
-npm install -g @docushell/ethos-pdf@0.5.0
+npm install -g @docushell/ethos-pdf@0.6.0
 ```
 
-The current published npm package is `@docushell/ethos-pdf@0.5.0`. Its vendored CLI binaries report
+The current published npm package is `@docushell/ethos-pdf@0.6.0`. Its vendored CLI binaries report
 `ethos 0.6.0`.
 
 ## Vendor Binary Assembly
