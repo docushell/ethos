@@ -3,9 +3,9 @@
 Date: 2026-07-20
 Owner: product / decider
 <!-- BEGIN GENERATED CURRENT RELEASE STATE -->
-Status: v0.5.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. Its released version is `0.5.0`. GitHub Release `v0.5.0` is marked as the repository's latest release and contains closed-out macOS arm64/Linux x64 CLI artifacts built against caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. npm `@docushell/ethos-pdf@0.5.0` is live on npm. The exact v0.5.0 public install wording packet is approved and closed out. Package-tag creation for `ethos-package-ethos-doc-core-0.5.0`, `ethos-package-ethos-verify-0.5.0`, and `ethos-package-ethos-pdf-0.5.0` is closed out, and the existing release tag is closed out.
+Status: v0.6.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI. Its released version is `0.6.0`. GitHub Release `v0.6.0` is marked as the repository's latest release and contains closed-out macOS arm64/Linux x64 CLI artifacts built against caller-provided PDFium through `ETHOS_PDFIUM_LIBRARY_PATH`. npm `@docushell/ethos-pdf@0.6.0` is live on npm. The exact v0.6.0 public install wording packet is approved and closed out. Package-tag creation for `ethos-package-ethos-doc-core-0.6.0`, `ethos-package-ethos-verify-0.6.0`, and `ethos-package-ethos-pdf-0.6.0` is closed out, and the existing release tag is closed out.
 
-Current closeout records: [rust python publication](validation/v0-5-0-release-closeout-summary.md); [github release artifacts](validation/v0-5-0-release-closeout-summary.md); [npm publication](validation/v0-5-0-release-closeout-summary.md); [public install wording](validation/v0-5-0-release-closeout-summary.md); [package tags](validation/v0-5-0-release-closeout-summary.md); [release tag](validation/v0-5-0-release-closeout-summary.md); [release metadata](validation/v0-5-0-release-closeout-summary.md).
+Current closeout records: [rust python publication](validation/v0-6-0-release-closeout-summary.md); [github release artifacts](validation/v0-6-0-release-closeout-summary.md); [npm publication](validation/v0-6-0-release-closeout-summary.md); [public install wording](validation/v0-6-0-release-closeout-summary.md); [package tags](validation/v0-6-0-release-closeout-summary.md); [release tag](validation/v0-6-0-release-closeout-summary.md); [release metadata](validation/v0-6-0-release-closeout-summary.md).
 
 Still blocked: hosted surfaces, Windows packaged artifacts, bundled project-maintained PDFium builds, public benchmark reports and claims, speed, footprint, parser-quality, and table-quality claims, ethos-doc, and ethos-rag.
 <!-- END GENERATED CURRENT RELEASE STATE -->
@@ -13,7 +13,7 @@ Still blocked: hosted surfaces, Windows packaged artifacts, bundled project-main
 The generated block above is the sole current public-release authority in this historical ledger.
 Sections below preserve dated milestone and wording records for auditability; version statements
 inside them describe their recorded point in time and are not the current release state unless the
-generated block explicitly repeats them. The published public baseline is `0.5.0`.
+generated block explicitly repeats them. The published public baseline is `0.6.0`.
 
 ## v0.6.0 scope expanded to the major format release (2026-08-09)
 
@@ -67,7 +67,7 @@ availability claim, and npm SDK availability wording all remain blocked.
 Two decider rulings landed on 2026-07-30. The Grounding JSON fingerprint is
 `representation_sha256`, the hash of the accepted artifact bytes, with `source.sha256` remaining a
 separate optional PDF binding; `docs/v0-6-0-release-prep.md` §6.4 and §8.1 were corrected to match
-ADR-0016. Separately, the public install wording is advanced to the published `0.5.0` baseline
+ADR-0016. Separately, the public install wording is advanced to the published `0.6.0` baseline
 after registry verification, retiring the pre-publication hold in
 `.github/scripts/test_v0_5_0_version_activation.py`.
 

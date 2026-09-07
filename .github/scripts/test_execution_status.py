@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import json
 import unittest
 from pathlib import Path
 
@@ -29,23 +30,33 @@ def status_text() -> str:
     return EXECUTION_STATUS.read_text(encoding="utf-8")
 
 
+def published_version() -> str:
+    """The published release, from the ledger the status block is rendered from."""
+    return json.loads((ROOT / "docs/release-state.json").read_text(encoding="utf-8"))["release"]["version"]
+
+
 class ExecutionStatusTests(unittest.TestCase):
     def test_status_is_scoped_to_internal_continuation(self) -> None:
         text = status_text()
 
+        # Derived from the ledger. These sentences are RENDERED from docs/release-state.json by
+        # check_release_state.py, so transcribing the version here made a generated block need a
+        # hand edit in its own test every release — and the test then asserted the previous
+        # release's prose against a block that had correctly moved on.
+        published = published_version()
         self.assertIn(
-            "Status: v0.5.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` "
-            "are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI.",
+            f"Status: v{published} Rust library crates `ethos-doc-core`, `ethos-verify`, and "
+            "`ethos-pdf` are live on crates.io, and the Python `ethos-pdf` wheel is live on PyPI.",
             text,
         )
         self.assertIn(
-            "The exact v0.5.0 public install wording packet is approved and closed out",
+            f"The exact v{published} public install wording packet is approved and closed out",
             text,
         )
         self.assertIn("docs/validation/v0-3-0-public-install-wording-approval-decision-validation-2026-07-02.md", text)
         self.assertIn("docs/validation/v0-3-0-public-install-wording-closeout-validation-2026-07-02.md", text)
         self.assertIn("GitHub Release `v0.3.0`", text)
-        self.assertIn("npm `@docushell/ethos-pdf@0.5.0` is live on npm", text)
+        self.assertIn(f"npm `@docushell/ethos-pdf@{published}` is live on npm", text)
         self.assertIn("v0.3.0 npm publication closeout", text)
         self.assertIn("DocuShell integration remain blocked", text)
         self.assertIn("Internal Milestone D source-only closeout remains complete", text)
@@ -89,6 +100,7 @@ class ExecutionStatusTests(unittest.TestCase):
 
     def test_public_posture_boundary_remains_explicit(self) -> None:
         text = status_text()
+        published = published_version()
 
         self.assertIn(
             "Public language may use this exact approved sentence on the current source, Rust crate, Python wheel, "
@@ -106,15 +118,15 @@ class ExecutionStatusTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            "v0.5.0 Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io",
+            f"v{published} Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf` are live on crates.io",
             text,
         )
         self.assertIn("the Python `ethos-pdf` wheel is live on PyPI", text)
-        self.assertIn("npm `@docushell/ethos-pdf@0.5.0` is live on npm", text)
-        self.assertIn("The exact v0.5.0 public install wording packet is approved and closed out", text)
-        self.assertIn("GitHub Release `v0.5.0`", text)
+        self.assertIn(f"npm `@docushell/ethos-pdf@{published}` is live on npm", text)
+        self.assertIn(f"The exact v{published} public install wording packet is approved and closed out", text)
+        self.assertIn(f"GitHub Release `v{published}`", text)
         self.assertIn("macOS arm64/Linux x64 CLI artifacts", text)
-        self.assertIn("`@docushell/ethos-pdf@0.5.0`", text)
+        self.assertIn(f"`@docushell/ethos-pdf@{published}`", text)
         self.assertIn("docs/validation/v0-3-0-publication-closeout-validation-2026-07-01.md", text)
         self.assertIn("ethos-doc-core", text)
         self.assertIn("ethos-verify", text)

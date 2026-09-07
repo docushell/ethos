@@ -165,8 +165,17 @@ class NpmBinaryPackageScaffoldTests(unittest.TestCase):
         self.assertIn("does not bundle PDFium", text)
         self.assertIn("ETHOS_PDFIUM_LIBRARY_PATH", text)
         self.assertIn("QUICKSTART.md", text)
-        self.assertIn("current published npm package is `@docushell/ethos-pdf@0.5.0`", text)
-        self.assertIn("`ethos 0.6.0`", text)
+        # Derived: the published npm version comes from the ledger, the vendored CLI version
+        # from the payload manifest. They differ during a refresh window and transcribing either
+        # made this gate need a hand edit every release.
+        published_npm = json.loads(
+            (ROOT / "docs/release-state.json").read_text(encoding="utf-8")
+        )["release"]["npm_package"]["version"]
+        vendored = json.loads(VENDOR_MANIFEST.read_text(encoding="utf-8"))["cli_version"]
+        self.assertIn(
+            f"current published npm package is `@docushell/ethos-pdf@{published_npm}`", text
+        )
+        self.assertIn(f"`ethos {vendored}`", text)
         self.assertIn("release-archive and extracted-executable SHA256 values", text)
         self.assertIn("does not include public benchmark reports or claims", normalized)
 

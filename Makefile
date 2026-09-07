@@ -40,7 +40,7 @@ release-gates:
 	$(PYTHON) .github/scripts/test_readiness_gate.py
 	$(PYTHON) .github/scripts/test_execution_status.py
 	$(PYTHON) .github/scripts/test_validation_record_source.py
-	$(PYTHON) .github/scripts/test_v0_6_0_version_activation.py
+	$(PYTHON) .github/scripts/test_version_activation_lockstep.py
 
 verify-alpha-tree:
 	cargo check --locked -p ethos-verify

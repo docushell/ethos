@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "as_of": "2026-07-21",
+  "as_of": "2026-09-07",
   "release": {
-    "version": "0.5.0",
+    "version": "0.6.0",
     "activated": "0.6.0",
     "rust_crates": [
       "ethos-doc-core",
@@ -11,31 +11,31 @@
     ],
     "python_package": {
       "name": "ethos-pdf",
-      "version": "0.5.0"
+      "version": "0.6.0"
     },
     "npm_package": {
       "name": "@docushell/ethos-pdf",
-      "version": "0.5.0"
+      "version": "0.6.0"
     },
     "github_release": {
-      "tag": "v0.5.0",
-      "version": "0.5.0",
-      "name": "Ethos v0.5.0",
+      "tag": "v0.6.0",
+      "version": "0.6.0",
+      "name": "Ethos v0.6.0",
       "latest": true,
-      "notes": "docs/releases/v0.5.0.md",
+      "notes": "docs/releases/v0.6.0.md",
       "platforms": [
         "macOS arm64",
         "Linux x64"
       ],
       "assets": [
-        "ethos-full-0.5.0-linux-x64.inventory.json",
-        "ethos-full-0.5.0-linux-x64.smoke.json",
-        "ethos-full-0.5.0-linux-x64.tar.gz",
-        "ethos-full-0.5.0-linux-x64.tar.gz.sha256",
-        "ethos-full-0.5.0-macos-arm64.inventory.json",
-        "ethos-full-0.5.0-macos-arm64.smoke.json",
-        "ethos-full-0.5.0-macos-arm64.tar.gz",
-        "ethos-full-0.5.0-macos-arm64.tar.gz.sha256",
+        "ethos-full-0.6.0-linux-x64.inventory.json",
+        "ethos-full-0.6.0-linux-x64.smoke.json",
+        "ethos-full-0.6.0-linux-x64.tar.gz",
+        "ethos-full-0.6.0-linux-x64.tar.gz.sha256",
+        "ethos-full-0.6.0-macos-arm64.inventory.json",
+        "ethos-full-0.6.0-macos-arm64.smoke.json",
+        "ethos-full-0.6.0-macos-arm64.tar.gz",
+        "ethos-full-0.6.0-macos-arm64.tar.gz.sha256",
         "ethos-linux-x64.inventory.json",
         "ethos-linux-x64.smoke.json",
         "ethos-linux-x64.tar.gz",
@@ -47,32 +47,32 @@
       ]
     },
     "package_tags": [
-      "ethos-package-ethos-doc-core-0.5.0",
-      "ethos-package-ethos-verify-0.5.0",
-      "ethos-package-ethos-pdf-0.5.0"
+      "ethos-package-ethos-doc-core-0.6.0",
+      "ethos-package-ethos-verify-0.6.0",
+      "ethos-package-ethos-pdf-0.6.0"
     ],
     "pdfium_environment": "ETHOS_PDFIUM_LIBRARY_PATH",
     "published_cli": {
       "linux-x64": {
         "archive": "ethos-linux-x64.tar.gz",
-        "archive_sha256": "592b175c00d147625f2f2ccc8bc5c74fb8a00ee37f178c363757f2c72404876e",
-        "binary_sha256": "7b6b7cb03c1d16183b6cdd56f6d2ebe593a25ef257baa5b6553a0055c53e8f44"
+        "archive_sha256": "c12772255ba8a85b020bd9b6bb8bf77d01eaf11a6928a0d7348536eff7c378f2",
+        "binary_sha256": "ba9c648edecd3579c4d9acf2b901d9ac9a2e194bd108ae0a4c485a17bf47e7a6"
       },
       "macos-arm64": {
         "archive": "ethos-macos-arm64.tar.gz",
-        "archive_sha256": "30fa34afda745d168e1af39a134e2281f4a409d425765f3dc85c2e312fcbbcc2",
-        "binary_sha256": "df2d46efb96501b8071cd8665ca525ee5af4787804cd04d07262354199ead913"
+        "archive_sha256": "c116b3449a3de1f4bddc6217e7717a1307a6ef58c240e5404be0850af81789bb",
+        "binary_sha256": "038bfd4f4443784c9410278e63709e21d6f40dc4d204a5842a6df73d1b165180"
       }
     }
   },
   "closed_lanes": {
-    "rust_python_publication": "docs/validation/v0-5-0-release-closeout-summary.md",
-    "github_release_artifacts": "docs/validation/v0-5-0-release-closeout-summary.md",
-    "npm_publication": "docs/validation/v0-5-0-release-closeout-summary.md",
-    "public_install_wording": "docs/validation/v0-5-0-release-closeout-summary.md",
-    "package_tags": "docs/validation/v0-5-0-release-closeout-summary.md",
-    "release_tag": "docs/validation/v0-5-0-release-closeout-summary.md",
-    "release_metadata": "docs/validation/v0-5-0-release-closeout-summary.md"
+    "rust_python_publication": "docs/validation/v0-6-0-release-closeout-summary.md",
+    "github_release_artifacts": "docs/validation/v0-6-0-release-closeout-summary.md",
+    "npm_publication": "docs/validation/v0-6-0-release-closeout-summary.md",
+    "public_install_wording": "docs/validation/v0-6-0-release-closeout-summary.md",
+    "package_tags": "docs/validation/v0-6-0-release-closeout-summary.md",
+    "release_tag": "docs/validation/v0-6-0-release-closeout-summary.md",
+    "release_metadata": "docs/validation/v0-6-0-release-closeout-summary.md"
   },
   "blocked_lanes": [
     "hosted surfaces",

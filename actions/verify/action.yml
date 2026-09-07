@@ -25,9 +25,9 @@ runs:
     - name: Install pinned Ethos CLI
       shell: bash
       env:
-        ETHOS_ACTION_ARCHIVE_URL: https://github.com/docushell/ethos/releases/download/v0.5.0/ethos-linux-x64.tar.gz
-        ETHOS_ACTION_ARCHIVE_SHA256: 592b175c00d147625f2f2ccc8bc5c74fb8a00ee37f178c363757f2c72404876e
-        ETHOS_ACTION_BINARY_SHA256: 7b6b7cb03c1d16183b6cdd56f6d2ebe593a25ef257baa5b6553a0055c53e8f44
+        ETHOS_ACTION_ARCHIVE_URL: https://github.com/docushell/ethos/releases/download/v0.6.0/ethos-linux-x64.tar.gz
+        ETHOS_ACTION_ARCHIVE_SHA256: c12772255ba8a85b020bd9b6bb8bf77d01eaf11a6928a0d7348536eff7c378f2
+        ETHOS_ACTION_BINARY_SHA256: ba9c648edecd3579c4d9acf2b901d9ac9a2e194bd108ae0a4c485a17bf47e7a6
       run: |
         python3 "$GITHUB_ACTION_PATH/install_cli.py" \
           --url "$ETHOS_ACTION_ARCHIVE_URL" \

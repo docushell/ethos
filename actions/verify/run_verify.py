@@ -44,6 +44,17 @@ def load_report(path: Path) -> dict[str, Any]:
         report = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         raise ValueError(f"verification report is missing or invalid: {error}") from error
+
+    # Since 0.6.0 every verdict-bearing command emits an in-toto Statement and the report the
+    # Action parses is its `predicate`. Unwrap it when present and keep reading the bare report
+    # otherwise, so the Action works against both the 0.5.x and 0.6.x CLI. Detected by shape
+    # rather than by version, because the Action only knows the binary it downloaded.
+    if isinstance(report, dict) and "predicate" in report and "checks" not in report:
+        predicate = report.get("predicate")
+        if not isinstance(predicate, dict):
+            raise ValueError("verification statement predicate must be an object")
+        report = predicate
+
     if not isinstance(report, dict) or not isinstance(report.get("checks"), list):
         raise ValueError("verification report must contain a checks array")
     if not isinstance(report.get("all_evidence_grounded"), bool):

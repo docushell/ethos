@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -49,16 +50,31 @@ class PublicSurfacePostureTests(unittest.TestCase):
         self.assertIn("Rust library crates `ethos-doc-core`, `ethos-verify`, and `ethos-pdf`", normalized)
         self.assertIn("Python `ethos-pdf` wheel", normalized)
         self.assertIn("caller-provided PDFium", text)
-        self.assertIn("cargo add ethos-doc-core@0.5.0", text)
-        self.assertIn("cargo add ethos-verify@0.5.0", text)
-        self.assertIn("cargo add ethos-pdf@0.5.0", text)
-        self.assertIn("python3 -m pip install ethos-pdf==0.5.0", text)
-        self.assertIn("npm install -g @docushell/ethos-pdf@0.5.0", text)
-        self.assertIn("GitHub Release `v0.5.0`", text)
-        self.assertNotIn("cargo add ethos-doc-core@0.2.0", text)
-        self.assertNotIn("python3 -m pip install ethos-pdf==0.2.0", text)
-        self.assertNotIn("npm install -g @docushell/ethos-pdf@0.2.1", text)
-        self.assertNotIn("@docushell/ethos-pdf@0.2.0` is deprecated", text)
+        # Derived from the ledger, not transcribed. These were hand-pinned literals that needed
+        # editing every release and were the last version strings in this file anchored to
+        # nothing. `release.version` is what is published, so an install command naming any
+        # other version is by definition wrong.
+        published = json.loads(read(ROOT / "docs/release-state.json"))["release"]["version"]
+        for command in (
+            f"cargo add ethos-doc-core@{published}",
+            f"cargo add ethos-verify@{published}",
+            f"cargo add ethos-pdf@{published}",
+            f"python3 -m pip install ethos-pdf=={published}",
+            f"npm install -g @docushell/ethos-pdf@{published}",
+            f"GitHub Release `v{published}`",
+        ):
+            self.assertIn(command, text, command)
+
+        # No install command may name any version other than the published one. This replaces
+        # the negative assertions retired with test_v0_6_0_version_activation.py, which were
+        # the only guard against a stale install string surviving in README.md.
+        for pattern, label in (
+            (r"cargo add ethos-(?:doc-core|verify|pdf)@([0-9]+\.[0-9]+\.[0-9]+)", "cargo add"),
+            (r"pip install ethos-pdf==([0-9]+\.[0-9]+\.[0-9]+)", "pip install"),
+            (r"npm install -g @docushell/ethos-pdf@([0-9]+\.[0-9]+\.[0-9]+)", "npm install"),
+        ):
+            found = set(re.findall(pattern, text))
+            self.assertEqual({published}, found, f"{label} versions in README.md: {sorted(found)}")
         self.assertNotIn("not production-ready", text.lower())
         self.assertNotIn("not stable production surfaces", text.lower())
         self.assertNotIn("contracts phase", text)
