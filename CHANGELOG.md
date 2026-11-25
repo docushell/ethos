@@ -17,7 +17,8 @@
   executing. `ci.yml` and `bench.yml` are `ubuntu-latest` throughout, and determinism is skipped on
   pull requests without the `contract-change` label, so nothing else covered the platform.
 
-- `determinism.yml` and both `macos-arm64` lanes in `release.yml` move to `macos-15`. The labels
+- boundary-exception: `determinism.yml` and both `macos-arm64` lanes in `release.yml` move to
+  `macos-15`. The labels
   carry a comment stating that they are pinned deliberately and must not become `macos-latest`:
   macOS is the golden platform, so a floating image would change what the goldens are compared
   against without a commit. `scripts/fetch-pdfium.sh` selects by `uname` (`Darwin/arm64`), so the
@@ -27,13 +28,32 @@
   retirement, so the next tag would have failed to build the macOS arm64 CLI artifact — a target
   `docs/execution-status.md` records as closed-out and shipped in v0.6.0.
 
-- A new `determinism-gate` job requires `needs.cross-platform.result` to be exactly `success`, so a
-  cancelled leg, a skipped leg, or a runner label that is no longer served fails the workflow. It
-  mirrors the matrix's `if` condition so unlabeled pull requests still skip, and carries `always()`
-  so it runs when the matrix was cancelled. This is the defect already recorded under "The PDF
-  determinism gate stops reporting green while skipping" — a check that reports green without
-  asserting anything — recurring one level up, at the job. This should be the required status check
-  rather than the individual legs.
+- boundary-exception: a new `determinism-gate` job asserts that every leg of the matrix executed
+  and passed. It mirrors the matrix's `if` condition so unlabeled pull requests still skip, and
+  carries `always()` so it runs when the matrix was cancelled. This is the defect already recorded
+  under "The PDF determinism gate stops reporting green while skipping" — a check that reports green
+  without asserting anything — recurring one level up, at the job. This should be the required
+  status check rather than the individual legs.
+
+- The gate does not rely on `needs.cross-platform.result` alone, which was the first version of
+  this fix. GitHub documents that field for ordinary jobs and says nothing about how it aggregates
+  a matrix, and there are reports of a leg cancelled *before a runner accepted it* leaving the
+  aggregate at `success`, because the aggregate was computed from the legs that actually ran. That
+  is exactly the failure mode here, so trusting the aggregate would have rebuilt the same blind
+  spot one layer up. The gate reads each leg's own conclusion from the jobs API, requires the leg
+  count to equal `EXPECTED_LEGS`, and keeps the aggregate as a second independent condition. A
+  matrix edit that does not update `EXPECTED_LEGS` fails the gate on purpose.
+
+- The gate logic was replayed against the real jobs payloads of the two decisive nightlies before
+  this landed: run 506 (2026-11-05, the last fully green night) exits 0, and run 507 (2026-11-06,
+  the night macOS was assigned no runner) exits 1 and names `cross-platform (macos-14)` as the leg
+  that did not succeed. The missing-leg and empty-response cases exit 1 as well.
+
+- `determinism.yml` gains a top-level `permissions: contents: read`, and the gate widens only its
+  own job to `actions: read` for the jobs API, closing the `excessive-permissions` findings that
+  `zizmor` raises against the default token scope. `release.yml` still has no `permissions:` block
+  and would take `contents: read` safely — its only privileged use is `actions/upload-artifact` —
+  but it is left alone here rather than changing a publication workflow outside this fix's scope.
 
 - Not verified here: that the goldens still match on the `macos-15` image. The pinned PDFium binary
   and font profile (ADR-0003) are unchanged, and `bbox` is excluded from the fingerprint projection

@@ -11,6 +11,10 @@ on:
     types: [opened, synchronize, labeled]
   workflow_dispatch:
 
+# Least privilege by default; determinism-gate widens its own job to actions: read.
+permissions:
+  contents: read
+
 jobs:
   cross-platform:
     if: >-
@@ -132,9 +136,12 @@ jobs:
   # at all. That is the same defect class as the "deferred" echo documented above — a check
   # that reports green without asserting anything — one level up, at the job.
   #
-  # This gate requires the matrix result to be exactly success, so a cancelled leg, a skipped
-  # leg, or a runner label that is no longer served fails the workflow. Make it the required
-  # status check rather than the individual legs.
+  # Checking `needs.cross-platform.result` alone does NOT close this. GitHub documents that
+  # field for ordinary jobs and says nothing about how it aggregates a matrix, and there are
+  # reports of a leg cancelled *before a runner accepted it* leaving the aggregate at success,
+  # because the aggregate was computed from the legs that actually ran. That is precisely the
+  # failure this job exists to catch, so the gate asserts each leg's own conclusion from the
+  # jobs API and keeps the aggregate as a second, independent condition.
   determinism-gate:
     # Mirrors cross-platform's condition so unlabeled PRs skip this too, with always() so the
     # gate still runs when the matrix was cancelled or failed.
@@ -144,18 +151,64 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'contract-change'))
     needs: cross-platform
     runs-on: ubuntu-latest
+    permissions:
+      # Reading this run's own job conclusions.
+      actions: read
+      contents: read
     steps:
       - name: assert every determinism lane executed and passed
         shell: bash
         env:
-          # Aggregated across every matrix leg: success only when all of them succeeded.
+          GH_TOKEN: ${{ github.token }}
+          # Necessary but not sufficient — see the comment above this job.
           MATRIX_RESULT: ${{ needs.cross-platform.result }}
+          # Must equal the number of entries in cross-platform's matrix. A mismatch fails this
+          # gate deliberately: adding or removing a platform without updating this count is the
+          # same silent drift that let the macOS leg vanish for 19 nights.
+          EXPECTED_LEGS: "3"
         run: |
           set -euo pipefail
-          echo "cross-platform matrix result: ${MATRIX_RESULT}"
-          if [ "${MATRIX_RESULT}" != "success" ]; then
-            echo "::error::determinism lanes did not all succeed (matrix result: ${MATRIX_RESULT})"
-            echo "::error::A cancelled or skipped leg means a lane did not execute. Check each runner"
-            echo "::error::label in the matrix is still served before reading this as a fingerprint bug."
-            exit 1
+
+          echo "aggregate needs.cross-platform.result: ${MATRIX_RESULT}"
+          echo "expected cross-platform legs: ${EXPECTED_LEGS}"
+          echo
+
+          legs="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs" \
+            --jq '.jobs[] | select(.name | startswith("cross-platform (")) | {name: .name, status: .status, conclusion: .conclusion, steps: (.steps // [] | length)}')"
+
+          if [ -n "${legs}" ]; then
+            echo "${legs}" | jq -r '"  \(.name): status=\(.status) conclusion=\(.conclusion) steps=\(.steps)"'
+          else
+            echo "  (no cross-platform legs reported by the jobs API)"
           fi
+          echo
+
+          found="$(printf '%s' "${legs}" | jq -s 'length')"
+          bad="$(printf '%s' "${legs}" | jq -s -r '[.[] | select(.conclusion != "success") | .name] | join(", ")')"
+
+          rc=0
+
+          if [ "${found}" -ne "${EXPECTED_LEGS}" ]; then
+            echo "::error::expected ${EXPECTED_LEGS} cross-platform legs, the jobs API reported ${found}."
+            echo "::error::A leg is missing entirely. Either the matrix changed without EXPECTED_LEGS, or a leg was never created."
+            rc=1
+          fi
+
+          if [ -n "${bad}" ]; then
+            echo "::error::these determinism lanes did not succeed: ${bad}"
+            echo "::error::A leg with zero steps and a cancelled conclusion was assigned no runner — check that its"
+            echo "::error::runner label is still served before reading this as a fingerprint bug."
+            rc=1
+          fi
+
+          if [ "${MATRIX_RESULT}" != "success" ]; then
+            echo "::error::aggregate matrix result is ${MATRIX_RESULT}, not success."
+            rc=1
+          fi
+
+          if [ "${rc}" -eq 0 ]; then
+            echo "all ${found} determinism lanes executed and passed"
+          fi
+
+          exit "${rc}"
