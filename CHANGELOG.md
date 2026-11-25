@@ -2,6 +2,46 @@
 
 ## Unreleased
 
+### The determinism gate stops reporting not-failure while a lane does not run
+
+- GitHub retired the `macos-14` runner image on 2026-11-02. From the nightly on 2026-11-06 the
+  `cross-platform (macos-14)` leg was assigned no runner at all: zero steps, empty `runner_name`,
+  and a `cancelled` conclusion one second after it started. The ubuntu and windows legs kept
+  passing, so the run conclusion was `cancelled` rather than `failure`, no notification fired, and
+  19 consecutive nightlies reported not-failure. The last nightly with a real macOS leg was run 506
+  on 2026-11-05.
+
+- macOS is the leg that mattered most here. Every other leg runs `run_fixtures.py --stable-only`;
+  macOS compares the full projection including `bbox`, because the tracked goldens were generated
+  on macOS arm64. The one lane asserting the complete comparison was the lane that stopped
+  executing. `ci.yml` and `bench.yml` are `ubuntu-latest` throughout, and determinism is skipped on
+  pull requests without the `contract-change` label, so nothing else covered the platform.
+
+- `determinism.yml` and both `macos-arm64` lanes in `release.yml` move to `macos-15`. The labels
+  carry a comment stating that they are pinned deliberately and must not become `macos-latest`:
+  macOS is the golden platform, so a floating image would change what the goldens are compared
+  against without a commit. `scripts/fetch-pdfium.sh` selects by `uname` (`Darwin/arm64`), so the
+  pinned PDFium archive is unaffected by the image bump.
+
+- `release.yml` was broken too, and not yet visible. It last ran on 2026-09-07, before the
+  retirement, so the next tag would have failed to build the macOS arm64 CLI artifact — a target
+  `docs/execution-status.md` records as closed-out and shipped in v0.6.0.
+
+- A new `determinism-gate` job requires `needs.cross-platform.result` to be exactly `success`, so a
+  cancelled leg, a skipped leg, or a runner label that is no longer served fails the workflow. It
+  mirrors the matrix's `if` condition so unlabeled pull requests still skip, and carries `always()`
+  so it runs when the matrix was cancelled. This is the defect already recorded under "The PDF
+  determinism gate stops reporting green while skipping" — a check that reports green without
+  asserting anything — recurring one level up, at the job. This should be the required status check
+  rather than the individual legs.
+
+- Not verified here: that the goldens still match on the `macos-15` image. The pinned PDFium binary
+  and font profile (ADR-0003) are unchanged, and `bbox` is excluded from the fingerprint projection
+  by `docs/determinism-contract.md`, so the comparison should hold. But macOS is the one leg that
+  compares `bbox`, and that cannot be confirmed from this workstation. The first nightly on the new
+  image is the check. A `bbox` divergence there is a finding about whether the goldens are bound to
+  an OS version, not something to silence with `--stable-only`.
+
 ### v0.6.0 publication closeout
 
 - boundary-exception: `docs/release-state.json` records 0.6.0 as published. `release.version`
