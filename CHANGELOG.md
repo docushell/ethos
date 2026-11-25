@@ -2,6 +2,41 @@
 
 ## Unreleased
 
+### README gains the ethos-parser pairing, and the header matches it
+
+- `README.md` adopts the centered header, grouped badge rows and navigation line that
+  `docushell/ethos-parser` uses, so the two repositories read as one project. The existing
+  sections, their headings and their anchors are untouched: the restyle is the masthead, not a
+  rewrite, because the anchors are linked from inside this README and from `docs/`.
+
+- A new `## ethos-parser` section records where the two projects meet. `ethos-parser ground`
+  writes `ethos.grounding.v1`, which is the Grounding JSON this repository defines and
+  `ethos grounding check` consumes, and `ethos-parser verify` hands a citation check to a pinned
+  `ethos` binary rather than answering it. Both halves are documented on the producing side; this
+  is a pointer to an existing format contract, not a new integration.
+
+- What the section deliberately does not say: that Ethos depends on ethos-parser, or that
+  ethos-parser is a supported grounding *source* in the `## Supported grounding sources` sense.
+  There is no ethos-parser adapter in this tree — `adapters/grounding/` carries native Ethos JSON
+  and OpenDataLoader-style JSON only — and the pairing works through the language-neutral format,
+  not through an adapter. The table gains a note to that effect and no new row.
+
+- None of ethos-parser's benchmark or comparison framing is carried over. Its README publishes
+  parser-quality tables; approved claim 6 for this surface is that we publish no speed, footprint,
+  or parser-quality comparisons, and `docs/execution-status.md` still lists those as blocked. The
+  badges added here restate only what this README and `deny.toml` already support.
+
+- The output badge reads `stable output: byte-identical`, not `output: byte-identical`. The first
+  wording was wrong and review caught it: `docs/determinism-contract.md` guarantees a byte-identical
+  *stable payload projection*, and this README's own Determinism section already said that exact
+  page boxes and rendered images may differ between platforms. An unqualified badge contradicted
+  the section it linked to. The qualifier is the contract's own.
+
+- All 17 approved README boundary claims, the version-pinned install commands, and the phrases
+  `test_public_surface_posture.py` asserts are preserved verbatim; `make light-check` is green.
+  New README prose is still new public wording, so it is flagged for the approval lane rather than
+  presented as approved.
+
 ### The determinism gate stops reporting not-failure while a lane does not run
 
 - GitHub retired the `macos-14` runner image on 2026-11-02. From the nightly on 2026-11-06 the
@@ -55,12 +90,15 @@
   and would take `contents: read` safely — its only privileged use is `actions/upload-artifact` —
   but it is left alone here rather than changing a publication workflow outside this fix's scope.
 
-- Not verified here: that the goldens still match on the `macos-15` image. The pinned PDFium binary
-  and font profile (ADR-0003) are unchanged, and `bbox` is excluded from the fingerprint projection
-  by `docs/determinism-contract.md`, so the comparison should hold. But macOS is the one leg that
-  compares `bbox`, and that cannot be confirmed from this workstation. The first nightly on the new
-  image is the check. A `bbox` divergence there is a finding about whether the goldens are bound to
-  an OS version, not something to silence with `--stable-only`.
+- Verified after this landed: the goldens do match on the `macos-15` image. Run 529 on `main`
+  (`workflow_dispatch`, 2026-11-25) finished green with all three legs on real runners and 14 steps
+  each, macOS included — so the full projection comparison held, `bbox` and all, which only the
+  macOS leg performs. The pinned PDFium binary and font profile (ADR-0003) carried the image bump,
+  as `docs/determinism-contract.md` implies they should. `determinism-gate` passed its first live
+  run in the same execution, and the workflow badge returned to passing after 20 consecutive
+  nightlies of not-failure. The earlier text here said this was unverified and that the first run
+  on the new image was the check; that run has now happened, so the entry records the result
+  instead of the open question.
 
 ### v0.6.0 publication closeout
 

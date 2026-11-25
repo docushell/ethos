@@ -1,13 +1,36 @@
+<div align="center">
+
 # Ethos
+
+**Ethos checks whether an AI's claims about a document are actually in the document.**
+
+Citation checking you can re-run.<br>
+Same source, same claim, same config, same answer — byte for byte.
 
 [![ci](https://github.com/docushell/ethos/actions/workflows/ci.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/ci.yml)
 [![determinism](https://github.com/docushell/ethos/actions/workflows/determinism.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/determinism.yml)
 [![bench](https://github.com/docushell/ethos/actions/workflows/bench.yml/badge.svg)](https://github.com/docushell/ethos/actions/workflows/bench.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 ![Rust: 1.87+](https://img.shields.io/badge/rust-1.87%2B-orange)
+[![macOS, Linux](https://img.shields.io/badge/macOS%20%7C%20Linux-supported-lightgrey)](#install-or-build)
+
 [![crates.io](https://img.shields.io/crates/v/ethos-doc-core?label=crates.io)](https://crates.io/crates/ethos-doc-core)
 [![PyPI](https://img.shields.io/pypi/v/ethos-pdf?label=PyPI)](https://pypi.org/project/ethos-pdf/)
 [![npm](https://img.shields.io/npm/v/%40docushell%2Fethos-pdf?label=npm)](https://www.npmjs.com/package/@docushell/ethos-pdf)
+
+[![Engine: deterministic](https://img.shields.io/badge/engine-deterministic-success)](#determinism)
+[![Runs offline](https://img.shields.io/badge/runs-offline-success)](#security-and-local-execution)
+[![Stable output: byte-identical](https://img.shields.io/badge/stable%20output-byte--identical-success)](#determinism)
+[![Dependencies: no AGPL](https://img.shields.io/badge/dependencies-no%20AGPL-success)](deny.toml)
+
+[Quick start](#catch-a-fabricated-citation-in-60-seconds) ·
+[How it works](#verification-flow) ·
+[What comes out](#what-comes-out) ·
+[Install](#install-or-build) ·
+[ethos-parser](#ethos-parser) ·
+[Limits](docs/CLAIMS.md)
+
+</div>
 
 > Ethos is a deterministic document evidence layer for source-grounded verification and
 > citation checking across native Ethos JSON and supported foreign parser outputs. It ships as
@@ -16,8 +39,6 @@
 > archives on GitHub Releases. PDFium-backed commands use caller-provided PDFium through
 > `ETHOS_PDFIUM_LIBRARY_PATH`.
 > Supported surfaces and release scope live in `docs/execution-status.md`.
-
-**Ethos checks whether an AI's claims about a document are actually in the document.**
 
 Models reword. They cite page 4 on one run and page 7 on the next. Ethos doesn't move: same
 source, same claim, same config, same answer, byte for byte. So when a verdict changes, you
@@ -39,6 +60,7 @@ Apache-2.0. Runs locally. No account, no API key, no network.
 - [Install or build Ethos](#install-or-build)
 - [Parse a born-digital PDF](#2-minute-pdf-parse-quickstart)
 - [Use another parser](#bring-your-own-parser)
+- [Pair it with ethos-parser](#ethos-parser) — the parser side of the same project
 - [See what works today](#what-works-today)
 - [See what comes out](#what-comes-out)
 - [Read the limits](docs/CLAIMS.md) — what a verdict proves, and what it does not
@@ -424,6 +446,25 @@ citations + document evidence
 Ethos can use its own document JSON or a supported parser adapter. If the source cannot prove a
 requested check, Ethos reports the missing capability instead of treating the check as grounded.
 
+## ethos-parser
+
+[ethos-parser](https://github.com/docushell/ethos-parser) is the parser side of the same project.
+It reads PDFs and office formats, keeps a locator from every text run back into the source, and
+projects one record into Markdown, HTML, element lists and annotated PDFs.
+
+The two programs meet at one format, not at a library. `ethos-parser ground` writes
+`ethos.grounding.v1` — the Grounding JSON this repository defines — and `ethos grounding check`
+consumes it:
+
+```text
+document -> ethos-parser ground -> ethos.grounding.v1 -> ethos grounding check -> report
+```
+
+The split is deliberate on both sides. ethos-parser does not verify citations itself: its `verify`
+command hands the check to a pinned `ethos` binary and relays the answer. Ethos, in turn, does not
+depend on ethos-parser — it is one producer of a format that any parser can emit, and the adapter
+and Grounding JSON paths below work the same way for any other.
+
 ## Bring your own parser
 
 ### Available today
@@ -477,6 +518,10 @@ Background on the format's design in the [Grounding JSON plan](docs/v0-6-0-relea
 | OpenDataLoader-style JSON | Add `--grounding opendataloader-json` |
 
 Other adapters must expose only what their source can prove and report missing capabilities.
+
+This table lists the adapters compiled into this tree. A parser that emits `ethos.grounding.v1`
+directly, as [ethos-parser](#ethos-parser) does, needs no adapter and no row here: it is checked
+with `ethos grounding check` through the language-neutral format above.
 
 ## Determinism
 
