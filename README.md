@@ -20,7 +20,7 @@ Same source, same claim, same config, same answer — byte for byte.
 
 [![Engine: deterministic](https://img.shields.io/badge/engine-deterministic-success)](#determinism)
 [![Runs offline](https://img.shields.io/badge/runs-offline-success)](#security-and-local-execution)
-[![Output: byte-identical](https://img.shields.io/badge/output-byte--identical-success)](#determinism)
+[![Stable output: byte-identical](https://img.shields.io/badge/stable%20output-byte--identical-success)](#determinism)
 [![Dependencies: no AGPL](https://img.shields.io/badge/dependencies-no%20AGPL-success)](deny.toml)
 
 [Quick start](#catch-a-fabricated-citation-in-60-seconds) ·

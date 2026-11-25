@@ -26,6 +26,12 @@
   or parser-quality comparisons, and `docs/execution-status.md` still lists those as blocked. The
   badges added here restate only what this README and `deny.toml` already support.
 
+- The output badge reads `stable output: byte-identical`, not `output: byte-identical`. The first
+  wording was wrong and review caught it: `docs/determinism-contract.md` guarantees a byte-identical
+  *stable payload projection*, and this README's own Determinism section already said that exact
+  page boxes and rendered images may differ between platforms. An unqualified badge contradicted
+  the section it linked to. The qualifier is the contract's own.
+
 - All 17 approved README boundary claims, the version-pinned install commands, and the phrases
   `test_public_surface_posture.py` asserts are preserved verbatim; `make light-check` is green.
   New README prose is still new public wording, so it is flagged for the approval lane rather than
