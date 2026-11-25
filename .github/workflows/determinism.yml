@@ -11,6 +11,10 @@ on:
     types: [opened, synchronize, labeled]
   workflow_dispatch:
 
+# Least privilege by default; determinism-gate widens its own job to actions: read.
+permissions:
+  contents: read
+
 jobs:
   cross-platform:
     if: >-
@@ -22,7 +26,15 @@ jobs:
         # macOS arm64 + Linux x64 are the Gate Zero platforms. Windows x64 is a
         # Milestone B preflight lane and only runs PDFium-backed corpus work when
         # the pinned runtime is explicitly configured on that runner.
-        os: [macos-14, ubuntu-latest, windows-latest]
+        #
+        # These labels are pinned to explicit images and must never become macos-latest
+        # or a floating alias. macOS is the golden platform: the tracked projections were
+        # generated there and it is the only leg that compares bbox (every other leg runs
+        # --stable-only below), so the image this gate runs on is part of what the goldens
+        # are compared against. A floating label would let that platform change without a
+        # commit. When an image is retired, bump it here deliberately and confirm the first
+        # run still matches the goldens.
+        os: [macos-15, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -115,3 +127,88 @@ jobs:
         with:
           name: projections-${{ matrix.os }}
           path: ${{ runner.temp }}/projections
+
+  # A lane that does not execute must be as red as a lane that fails. GitHub retired the
+  # macos-14 image on 2026-11-02; from 2026-11-06 the macOS leg was assigned no runner and
+  # completed as "cancelled" with zero steps in under a second. Because the run conclusion
+  # was "cancelled" rather than "failure", no notification fired, and 19 consecutive nightlies
+  # reported not-failure while the only leg that compares the full projection was not running
+  # at all. That is the same defect class as the "deferred" echo documented above — a check
+  # that reports green without asserting anything — one level up, at the job.
+  #
+  # Checking `needs.cross-platform.result` alone does NOT close this. GitHub documents that
+  # field for ordinary jobs and says nothing about how it aggregates a matrix, and there are
+  # reports of a leg cancelled *before a runner accepted it* leaving the aggregate at success,
+  # because the aggregate was computed from the legs that actually ran. That is precisely the
+  # failure this job exists to catch, so the gate asserts each leg's own conclusion from the
+  # jobs API and keeps the aggregate as a second, independent condition.
+  determinism-gate:
+    # Mirrors cross-platform's condition so unlabeled PRs skip this too, with always() so the
+    # gate still runs when the matrix was cancelled or failed.
+    if: >-
+      always() &&
+      (github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'contract-change'))
+    needs: cross-platform
+    runs-on: ubuntu-latest
+    permissions:
+      # Reading this run's own job conclusions.
+      actions: read
+      contents: read
+    steps:
+      - name: assert every determinism lane executed and passed
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Necessary but not sufficient — see the comment above this job.
+          MATRIX_RESULT: ${{ needs.cross-platform.result }}
+          # Must equal the number of entries in cross-platform's matrix. A mismatch fails this
+          # gate deliberately: adding or removing a platform without updating this count is the
+          # same silent drift that let the macOS leg vanish for 19 nights.
+          EXPECTED_LEGS: "3"
+        run: |
+          set -euo pipefail
+
+          echo "aggregate needs.cross-platform.result: ${MATRIX_RESULT}"
+          echo "expected cross-platform legs: ${EXPECTED_LEGS}"
+          echo
+
+          legs="$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs" \
+            --jq '.jobs[] | select(.name | startswith("cross-platform (")) | {name: .name, status: .status, conclusion: .conclusion, steps: (.steps // [] | length)}')"
+
+          if [ -n "${legs}" ]; then
+            echo "${legs}" | jq -r '"  \(.name): status=\(.status) conclusion=\(.conclusion) steps=\(.steps)"'
+          else
+            echo "  (no cross-platform legs reported by the jobs API)"
+          fi
+          echo
+
+          found="$(printf '%s' "${legs}" | jq -s 'length')"
+          bad="$(printf '%s' "${legs}" | jq -s -r '[.[] | select(.conclusion != "success") | .name] | join(", ")')"
+
+          rc=0
+
+          if [ "${found}" -ne "${EXPECTED_LEGS}" ]; then
+            echo "::error::expected ${EXPECTED_LEGS} cross-platform legs, the jobs API reported ${found}."
+            echo "::error::A leg is missing entirely. Either the matrix changed without EXPECTED_LEGS, or a leg was never created."
+            rc=1
+          fi
+
+          if [ -n "${bad}" ]; then
+            echo "::error::these determinism lanes did not succeed: ${bad}"
+            echo "::error::A leg with zero steps and a cancelled conclusion was assigned no runner — check that its"
+            echo "::error::runner label is still served before reading this as a fingerprint bug."
+            rc=1
+          fi
+
+          if [ "${MATRIX_RESULT}" != "success" ]; then
+            echo "::error::aggregate matrix result is ${MATRIX_RESULT}, not success."
+            rc=1
+          fi
+
+          if [ "${rc}" -eq 0 ]; then
+            echo "all ${found} determinism lanes executed and passed"
+          fi
+
+          exit "${rc}"

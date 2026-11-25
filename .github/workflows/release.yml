@@ -48,7 +48,9 @@ jobs:
       matrix:
         include:
           - artifact_target: macos-arm64
-            os: macos-14
+            # Pinned image, never macos-latest: the published artifact's build platform
+            # must not float underneath a tag. macos-14 was retired 2026-11-02.
+            os: macos-15
             archive_ext: tar.gz
           - artifact_target: linux-x64
             os: ubuntu-latest
@@ -110,7 +112,9 @@ jobs:
       matrix:
         include:
           - artifact_target: macos-arm64
-            os: macos-14
+            # Pinned image, never macos-latest: the published artifact's build platform
+            # must not float underneath a tag. macos-14 was retired 2026-11-02.
+            os: macos-15
           - artifact_target: linux-x64
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
